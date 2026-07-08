@@ -1,0 +1,47 @@
+import type { ReactNode, InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes } from 'react';
+import { cx } from '@/lib/format';
+
+export function Field({
+  label,
+  required,
+  hint,
+  error,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  hint?: string;
+  error?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div>
+      <label className="label-base">
+        {label}
+        {required && <span className="ml-0.5 text-brand-500">*</span>}
+      </label>
+      {children}
+      {error ? (
+        <p className="mt-1 text-xs text-red-500">{error}</p>
+      ) : hint ? (
+        <p className="mt-1 text-xs text-slate-400">{hint}</p>
+      ) : null}
+    </div>
+  );
+}
+
+export function TextInput({ className, error, ...props }: InputHTMLAttributes<HTMLInputElement> & { error?: boolean }) {
+  return <input className={cx('input-base', error && 'border-red-300 focus:border-red-400 focus:ring-red-300/30', className)} {...props} />;
+}
+
+export function TextArea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return <textarea className={cx('input-base min-h-[92px] resize-y', className)} {...props} />;
+}
+
+export function Select({ className, children, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <select className={cx('input-base cursor-pointer appearance-none pr-9', className)} {...props}>
+      {children}
+    </select>
+  );
+}
