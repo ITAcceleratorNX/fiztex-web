@@ -11,6 +11,8 @@ import { ApiError } from '@/lib/api';
 import type { QuestionType, VersionStrategy } from '@/lib/types';
 import {
   QUESTION_TYPE_LABELS,
+  QUESTION_DIFFICULTY_LABELS,
+  QUESTION_DIFFICULTIES,
   buildTestRequest,
   emptyQuestion,
   isChoiceType,
@@ -115,11 +117,19 @@ function QuestionEditor({
           />
         </Field>
         <Field label="Сложность">
-          <TextInput
+          <Select
             value={question.difficulty}
-            onChange={(e) => onChange({ ...question, difficulty: e.target.value })}
-            placeholder="Лёгкий / Средний / Сложный"
-          />
+            onChange={(e) =>
+              onChange({ ...question, difficulty: e.target.value as QuestionDraft['difficulty'] })
+            }
+          >
+            <option value="">Не указана</option>
+            {QUESTION_DIFFICULTIES.map((level) => (
+              <option key={level} value={level}>
+                {QUESTION_DIFFICULTY_LABELS[level]}
+              </option>
+            ))}
+          </Select>
         </Field>
       </div>
 

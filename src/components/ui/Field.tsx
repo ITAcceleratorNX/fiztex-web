@@ -1,5 +1,8 @@
-import type { ReactNode, InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes } from 'react';
+import type { ReactNode, InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import { cx } from '@/lib/format';
+import { Select } from './Select';
+
+export { Select };
 
 export function Field({
   label,
@@ -36,12 +39,4 @@ export function TextInput({ className, error, ...props }: InputHTMLAttributes<HT
 
 export function TextArea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return <textarea className={cx('input-base min-h-[92px] resize-y', className)} {...props} />;
-}
-
-export function Select({ className, children, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <select className={cx('input-base cursor-pointer appearance-none pr-9', className)} {...props}>
-      {children}
-    </select>
-  );
 }

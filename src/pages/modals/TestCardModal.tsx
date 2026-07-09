@@ -8,7 +8,7 @@ import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock
 import { useTest } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import { formatDateTime, versionLabel } from '@/lib/format';
-import { QUESTION_TYPE_LABELS } from '@/lib/testQuestions';
+import { QUESTION_TYPE_LABELS, difficultyLabel } from '@/lib/testQuestions';
 import { TestStatusBadge } from '@/components/ui/TestStatusBadge';
 import { AssignModal } from './AssignModal';
 import { TestQuestionsModal } from './TestQuestionsModal';
@@ -130,7 +130,10 @@ export function TestCardModal({
                         {index + 1}. {q.text}
                       </p>
                       <p className="mt-1 text-xs text-slate-400">
-                        {QUESTION_TYPE_LABELS[q.type]} · {q.maxScore} {q.maxScore === 1 ? 'балл' : 'балла'}
+                        {QUESTION_TYPE_LABELS[q.type]}
+                        {difficultyLabel(q.difficulty) ? ` · ${difficultyLabel(q.difficulty)}` : ''}
+                        {' · '}
+                        {q.maxScore} {q.maxScore === 1 ? 'балл' : 'балла'}
                       </p>
                     </li>
                   ))}

@@ -1,4 +1,4 @@
-import type { QuestionRequest, QuestionResponse, QuestionType, Test, TestRequest, VersionStrategy } from './types';
+import type { QuestionDifficulty, QuestionRequest, QuestionResponse, QuestionType, Test, TestRequest, VersionStrategy } from './types';
 
 export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   SINGLE_CHOICE: 'Один вариант',
@@ -7,6 +7,30 @@ export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   PHOTO: 'Фото',
 };
 
+export const QUESTION_DIFFICULTY_LABELS: Record<QuestionDifficulty, string> = {
+  EASY: 'Лёгкий',
+  MEDIUM: 'Средний',
+  HARD: 'Сложный',
+};
+
+export const QUESTION_DIFFICULTIES: QuestionDifficulty[] = ['EASY', 'MEDIUM', 'HARD'];
+
+export function difficultyLabel(value: QuestionDifficulty | null | undefined): string | null {
+  if (!value) return null;
+  return QUESTION_DIFFICULTY_LABELS[value] ?? null;
+}
+
+export function normalizeDifficulty(value: string | null | undefined): QuestionDifficulty | '' {
+  if (!value) return '';
+  const upper = value.toUpperCase();
+  if (upper === 'EASY' || upper === 'MEDIUM' || upper === 'HARD') return upper as QuestionDifficulty;
+  const lower = value.toLowerCase();
+  if (lower.includes('лёг') || lower.includes('лег') || lower.includes('easy')) return 'EASY';
+  if (lower.includes('сред') || lower.includes('medium')) return 'MEDIUM';
+  if (lower.includes('слож') || lower.includes('hard')) return 'HARD';
+  return '';
+}
+
 export function isChoiceType(type: QuestionType): boolean {
   return type === 'SINGLE_CHOICE' || type === 'MULTIPLE_CHOICE';
 }
@@ -14,7 +38,7 @@ export function isChoiceType(type: QuestionType): boolean {
 export interface QuestionDraft {
   localId: string;
   topic: string;
-  difficulty: string;
+  difficulty: QuestionDifficulty | '';
   type: QuestionType;
   text: string;
   maxScore: number;
@@ -58,7 +82,7 @@ export function questionFromResponse(q: QuestionResponse): QuestionDraft {
   return {
     localId: newLocalId(),
     topic: q.topic ?? '',
-    difficulty: q.difficulty ?? '',
+    difficulty: normalizeDifficulty(q.difficulty),
     type: q.type,
     text: q.text,
     maxScore: q.maxScore,
@@ -76,7 +100,7 @@ export function questionFromResponse(q: QuestionResponse): QuestionDraft {
 export function questionToRequest(q: QuestionDraft, orderIndex: number): QuestionRequest {
   return {
     topic: q.topic.trim() || null,
-    difficulty: q.difficulty.trim() || null,
+    difficulty: q.difficulty || null,
     type: q.type,
     text: q.text.trim(),
     maxScore: q.maxScore,

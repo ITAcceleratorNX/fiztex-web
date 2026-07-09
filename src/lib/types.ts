@@ -4,6 +4,7 @@ export type SubjectStatus = 'ACTIVE' | 'HIDDEN';
 export type TestStatus = 'DRAFT' | 'ACTIVE' | 'COMPLETED';
 export type VersionStrategy = 'KEEP_CURRENT' | 'NEW_VERSION';
 export type QuestionType = 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'OPEN_TEXT' | 'PHOTO';
+export type QuestionDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
 export type AssignmentStatus =
   | 'ASSIGNED'
   | 'NOT_STARTED'
@@ -64,7 +65,7 @@ export interface AnswerOptionResponse {
 export interface QuestionResponse {
   id: number;
   topic: string | null;
-  difficulty: string | null;
+  difficulty: QuestionDifficulty | null;
   type: QuestionType;
   text: string;
   maxScore: number;
@@ -83,7 +84,7 @@ export interface AnswerOptionRequest {
 
 export interface QuestionRequest {
   topic?: string | null;
-  difficulty?: string | null;
+  difficulty?: QuestionDifficulty | null;
   type: QuestionType;
   text: string;
   maxScore: number;
