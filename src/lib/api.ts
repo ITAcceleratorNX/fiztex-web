@@ -161,7 +161,8 @@ export const api = {
     request<AssignResult>(`/admin/tests/${id}/assign`, { method: 'POST', body: { applicantIds } }),
 
   // Review (admin answer checking)
-  listReviews: (signal?: AbortSignal) => request<ReviewDetail[]>('/admin/results', { signal }),
+  listReviews: (status?: string, signal?: AbortSignal) =>
+    request<ReviewDetail[]>(`/admin/results${status ? `?status=${status}` : ''}`, { signal }),
   getReview: (attemptId: number, signal?: AbortSignal) =>
     request<ReviewDetail>(`/admin/results/attempts/${attemptId}`, { signal }),
   scoreAnswer: (attemptId: number, questionId: number, body: ScoreAnswerRequest) =>

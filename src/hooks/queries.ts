@@ -118,8 +118,11 @@ export function useAssignTest() {
 }
 
 // ---- Review (проверка ответов) ----
-export function useReviews() {
-  return useQuery({ queryKey: keys.reviews, queryFn: ({ signal }) => api.listReviews(signal) });
+export function useReviews(status?: string) {
+  return useQuery({
+    queryKey: [...keys.reviews, status ?? 'PENDING'],
+    queryFn: ({ signal }) => api.listReviews(status, signal),
+  });
 }
 
 // ---- Applicants ----
