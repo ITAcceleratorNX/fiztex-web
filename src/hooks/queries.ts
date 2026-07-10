@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import type {
   ApplicantRequest,
+  GenerateTestRequest,
   MaterialUpdateRequest,
   SubjectRequest,
   TestRequest,
@@ -14,6 +15,7 @@ export const keys = {
   applicants: ['applicants'] as const,
   reviews: ['reviews'] as const,
   materials: (subjectId: number) => ['materials', subjectId] as const,
+  generationJob: (id: number) => ['generation-jobs', id] as const,
 };
 
 // ---- Subjects ----
@@ -178,5 +180,27 @@ export function useRetryMaterialExtract(subjectId: number) {
   return useMutation({
     mutationFn: (id: number) => api.retryMaterialExtract(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.materials(subjectId) }),
+  });
+}
+
+// ---- Test generation ----
+export function useGenerateTest() {
+  return useMutation({
+    mutationFn: ({ testId, body }: { testId: number; body: GenerateTestRequest }) =>
+      api.generateTest(testId, body),
+  });
+}
+
+export function useGenerationJob(jobId: number | null) {
+  return useQuery({
+    queryKey: jobId ? keys.generationJob(jobId) : ['generation-jobs', 'none'],
+    queryFn: ({ signal }) => api.getGenerationJob(jobId as number, signal),
+    enabled: jobId != null,
+    refetchInterval: (query) => {
+      const job = query.state.data;
+      if (!job) return 4000;
+      if (job.status === 'PENDING' || job.status === 'RUNNING') return 4000;
+      return false;
+    },
   });
 }

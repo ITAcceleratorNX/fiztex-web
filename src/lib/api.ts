@@ -11,6 +11,8 @@ import type {
   Material,
   MaterialUpdateRequest,
   MaterialDownloadResponse,
+  GenerateTestRequest,
+  GenerationJobResponse,
   Test,
   TestRequest,
 } from './types';
@@ -187,4 +189,10 @@ export const api = {
     request<MaterialDownloadResponse>(`/materials/${id}/download`, { signal }),
   retryMaterialExtract: (id: number) =>
     request<void>(`/materials/${id}/extract`, { method: 'POST' }),
+
+  // Test generation
+  generateTest: (testId: number, body: GenerateTestRequest) =>
+    request<GenerationJobResponse>(`/tests/${testId}/generate`, { method: 'POST', body }),
+  getGenerationJob: (id: number, signal?: AbortSignal) =>
+    request<GenerationJobResponse>(`/generation-jobs/${id}`, { signal }),
 };

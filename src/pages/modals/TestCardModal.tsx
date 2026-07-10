@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { UserPlus, Clock, Target, Repeat, Percent, History, Info, Users, ListChecks } from 'lucide-react';
+import { UserPlus, Clock, Target, Repeat, Percent, History, Info, Users, ListChecks, Sparkles } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -12,6 +12,7 @@ import { QUESTION_TYPE_LABELS, difficultyLabel } from '@/lib/testQuestions';
 import { TestStatusBadge } from '@/components/ui/TestStatusBadge';
 import { AssignModal } from './AssignModal';
 import { TestQuestionsModal } from './TestQuestionsModal';
+import { TestGenerateModal } from './TestGenerateModal';
 
 function Metric({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
@@ -37,6 +38,7 @@ export function TestCardModal({
   const { data: test, isLoading, isError, error, refetch } = useTest(open ? testId : null);
   const [assignOpen, setAssignOpen] = useState(false);
   const [questionsOpen, setQuestionsOpen] = useState(false);
+  const [generateOpen, setGenerateOpen] = useState(false);
 
   return (
     <>
@@ -56,6 +58,13 @@ export function TestCardModal({
               )}
               <Button variant="secondary" onClick={onClose}>
                 Закрыть
+              </Button>
+              <Button
+                variant="secondary"
+                icon={<Sparkles className="h-4 w-4" />}
+                onClick={() => setGenerateOpen(true)}
+              >
+                Сгенерировать вопросы
               </Button>
               <Button
                 variant="secondary"
@@ -188,6 +197,14 @@ export function TestCardModal({
       </Modal>
 
       {test && <AssignModal open={assignOpen} onClose={() => setAssignOpen(false)} test={test} />}
+      {test && (
+        <TestGenerateModal
+          open={generateOpen}
+          onClose={() => setGenerateOpen(false)}
+          test={test}
+          onComplete={() => void refetch()}
+        />
+      )}
       {test && (
         <TestQuestionsModal
           open={questionsOpen}

@@ -279,3 +279,27 @@ export interface MaterialUpdateRequest {
 export interface MaterialDownloadResponse {
   url: string;
 }
+
+// ---- Test generation (AI) ----
+
+export type GenerationJobStatus = 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED';
+
+export interface GenerateTestRequest {
+  materialIds: number[];
+  count: number;
+  types: Array<'SINGLE_CHOICE' | 'MULTIPLE_CHOICE'>;
+  difficulty?: QuestionDifficulty | null;
+  topic?: string | null;
+}
+
+export interface GenerationJobResponse {
+  id: number;
+  testId: number;
+  status: GenerationJobStatus;
+  errorMessage: string | null;
+  createdAt: string;
+  finishedAt: string | null;
+  model: string | null;
+  inputTokens: number | null;
+  outputTokens: number | null;
+}
