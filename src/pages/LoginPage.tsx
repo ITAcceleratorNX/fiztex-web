@@ -56,7 +56,7 @@ export function LoginPage() {
           </h2>
           <p className="mt-4 text-slate-300">
             Fiztex объединяет учебные процессы, приём, коммуникацию с семьями и внутренние сервисы
-            Phystech для администраторов и сотрудников.
+            Fiztex для администраторов и сотрудников.
           </p>
 
           <ul className="mt-8 grid grid-cols-2 gap-3">
@@ -73,7 +73,7 @@ export function LoginPage() {
             ))}
           </ul>
         </div>
-        <p className="relative text-sm text-slate-400">Fiztex · Phystech</p>
+        <p className="relative text-sm text-slate-400">Fiztex</p>
       </div>
 
       <div className="flex w-full items-center justify-center bg-slate-50 p-6 lg:w-1/2">

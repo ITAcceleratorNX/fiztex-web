@@ -180,3 +180,72 @@ export interface AssignResult {
   created: AssignmentSummary[];
   skipped: SkippedAssignment[];
 }
+
+// ---- Admin answer review (проверка ответов) ----
+
+export type ResultStatus = 'PENDING' | 'REVIEWED' | 'OPEN_FOR_VIEWING';
+
+export interface ReviewOption {
+  id: number;
+  text: string;
+  correct: boolean;
+  selected: boolean;
+}
+
+export interface AnswerReviewItem {
+  questionId: number;
+  topic: string | null;
+  type: QuestionType;
+  questionText: string;
+  applicantAnswer: string | null;
+  options: ReviewOption[];
+  referenceAnswer: string | null;
+  photoUrl: string | null;
+  autoScore: number | null;
+  aiScore: number | null;
+  aiComment: string | null;
+  finalScore: number | null;
+  maxScore: number;
+  adminComment: string | null;
+}
+
+export interface SuspiciousLogItem {
+  type: string;
+  details: string | null;
+  occurredAt: string;
+}
+
+export interface TopicScore {
+  earned: number;
+  max: number;
+  percent: number;
+}
+
+export interface ReviewDetail {
+  resultId: number | null;
+  attemptId: number;
+  assignmentId: number;
+  applicantName: string;
+  testTitle: string;
+  totalScore: number;
+  percent: number;
+  minScore: number;
+  passed: boolean;
+  status: ResultStatus;
+  schoolComment: string | null;
+  attemptStatus: AssignmentStatus;
+  answers: AnswerReviewItem[];
+  suspiciousLogs: SuspiciousLogItem[];
+  topicBreakdown: Record<string, TopicScore>;
+  weakTopics: string[];
+  finishedAt: string | null;
+}
+
+export interface ScoreAnswerRequest {
+  finalScore: number;
+  adminComment?: string | null;
+}
+
+export interface ConfirmReviewRequest {
+  schoolComment?: string | null;
+}

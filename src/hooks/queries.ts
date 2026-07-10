@@ -11,6 +11,7 @@ export const keys = {
   tests: ['tests'] as const,
   test: (id: number) => ['tests', id] as const,
   applicants: ['applicants'] as const,
+  reviews: ['reviews'] as const,
 };
 
 // ---- Subjects ----
@@ -34,6 +35,14 @@ export function useUpdateSubject() {
       qc.invalidateQueries({ queryKey: keys.subjects });
       qc.invalidateQueries({ queryKey: keys.tests });
     },
+  });
+}
+
+export function useDeleteSubject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteSubject(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.subjects }),
   });
 }
 
@@ -72,6 +81,17 @@ export function useUpdateTest() {
   });
 }
 
+export function useDeleteTest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteTest(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.tests });
+      qc.invalidateQueries({ queryKey: keys.subjects });
+    },
+  });
+}
+
 export function useAssignTest() {
   const qc = useQueryClient();
   return useMutation({
@@ -83,6 +103,11 @@ export function useAssignTest() {
       qc.invalidateQueries({ queryKey: keys.applicants });
     },
   });
+}
+
+// ---- Review (проверка ответов) ----
+export function useReviews() {
+  return useQuery({ queryKey: keys.reviews, queryFn: ({ signal }) => api.listReviews(signal) });
 }
 
 // ---- Applicants ----

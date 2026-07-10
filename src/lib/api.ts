@@ -3,6 +3,9 @@ import type {
   Applicant,
   ApplicantRequest,
   AssignResult,
+  ConfirmReviewRequest,
+  ReviewDetail,
+  ScoreAnswerRequest,
   Subject,
   SubjectRequest,
   Test,
@@ -102,6 +105,7 @@ export const api = {
     request<Subject>('/admin/subjects', { method: 'POST', body }),
   updateSubject: (id: number, body: SubjectRequest) =>
     request<Subject>(`/admin/subjects/${id}`, { method: 'PUT', body }),
+  deleteSubject: (id: number) => request<void>(`/admin/subjects/${id}`, { method: 'DELETE' }),
 
   // Tests
   listTests: (signal?: AbortSignal) => request<Test[]>('/admin/tests', { signal }),
@@ -109,8 +113,23 @@ export const api = {
   createTest: (body: TestRequest) => request<Test>('/admin/tests', { method: 'POST', body }),
   updateTest: (id: number, body: TestRequest) =>
     request<Test>(`/admin/tests/${id}`, { method: 'PUT', body }),
+  deleteTest: (id: number) => request<void>(`/admin/tests/${id}`, { method: 'DELETE' }),
   assignTest: (id: number, applicantIds: number[]) =>
     request<AssignResult>(`/admin/tests/${id}/assign`, { method: 'POST', body: { applicantIds } }),
+
+  // Review (admin answer checking)
+  listReviews: (signal?: AbortSignal) => request<ReviewDetail[]>('/admin/results', { signal }),
+  getReview: (attemptId: number, signal?: AbortSignal) =>
+    request<ReviewDetail>(`/admin/results/attempts/${attemptId}`, { signal }),
+  scoreAnswer: (attemptId: number, questionId: number, body: ScoreAnswerRequest) =>
+    request<ReviewDetail>(`/admin/results/attempts/${attemptId}/answers/${questionId}`, {
+      method: 'PATCH',
+      body,
+    }),
+  confirmReview: (attemptId: number, body: ConfirmReviewRequest) =>
+    request<ReviewDetail>(`/admin/results/attempts/${attemptId}/confirm`, { method: 'POST', body }),
+  openResult: (attemptId: number) =>
+    request<ReviewDetail>(`/admin/results/attempts/${attemptId}/open`, { method: 'POST', body: {} }),
 
   // Applicants
   listApplicants: (signal?: AbortSignal) => request<Applicant[]>('/admin/applicants', { signal }),

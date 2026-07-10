@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Plus, Pencil, Eye, EyeOff, BookMarked, Upload } from 'lucide-react';
-import { useSubjects, useUpdateSubject } from '@/hooks/queries';
+import { Plus, Pencil, Eye, EyeOff, BookMarked, Upload, Trash2 } from 'lucide-react';
+import { useSubjects, useUpdateSubject, useDeleteSubject } from '@/hooks/queries';
 import { useToast } from '@/context/ToastContext';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -17,6 +17,7 @@ import type { Subject, SubjectStatus } from '@/lib/types';
 export function SubjectsTab() {
   const { data, isLoading, isError, error, refetch, isSuccess } = useSubjects();
   const update = useUpdateSubject();
+  const del = useDeleteSubject();
   const toast = useToast();
 
   const [search, setSearch] = useState('');
@@ -24,6 +25,7 @@ export function SubjectsTab() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Subject | null>(null);
   const [hideTarget, setHideTarget] = useState<Subject | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Subject | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -60,6 +62,17 @@ export function SubjectsTab() {
   function toggleStatus(subject: Subject) {
     if (subject.status === 'ACTIVE') setHideTarget(subject);
     else void setStatus(subject, 'ACTIVE');
+  }
+
+  async function handleDelete(subject: Subject) {
+    try {
+      await del.mutateAsync(subject.id);
+      toast.success('Предмет удалён');
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'Не удалось удалить предмет');
+    } finally {
+      setDeleteTarget(null);
+    }
   }
 
   return (
@@ -162,6 +175,18 @@ export function SubjectsTab() {
                       >
                         {s.status === 'ACTIVE' ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                       </button>
+                      <button
+                        onClick={() => setDeleteTarget(s)}
+                        disabled={s.testCount > 0}
+                        title={
+                          s.testCount > 0
+                            ? 'Нельзя удалить: в предмете есть тесты'
+                            : 'Удалить предмет'
+                        }
+                        className="rounded-lg p-2 text-slate-400 transition enabled:hover:bg-red-50 enabled:hover:text-red-600 disabled:cursor-not-allowed disabled:text-slate-200"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -190,6 +215,22 @@ export function SubjectsTab() {
           <>
             Предмет <b>«{hideTarget?.name}»</b> нельзя будет выбрать при создании новых тестов.
             Существующие тесты, версии и назначения не пострадают.
+          </>
+        }
+      />
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget)}
+        title="Удалить предмет?"
+        confirmLabel="Удалить"
+        danger
+        loading={del.isPending}
+        message={
+          <>
+            Предмет <b>«{deleteTarget?.name}»</b> будет удалён безвозвратно. Это действие нельзя
+            отменить.
           </>
         }
       />

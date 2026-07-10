@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Plus, Pencil, Eye, UserPlus, ClipboardList, ListChecks } from 'lucide-react';
-import { useTests } from '@/hooks/queries';
+import { Plus, Pencil, Eye, UserPlus, ClipboardList, ListChecks, Trash2 } from 'lucide-react';
+import { useTests, useDeleteTest } from '@/hooks/queries';
 import { useToast } from '@/context/ToastContext';
 import { Button } from '@/components/ui/Button';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Select } from '@/components/ui/Field';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TestStatusBadge } from '@/components/ui/TestStatusBadge';
 import { TestFormModal } from '@/pages/modals/TestFormModal';
 import { TestCardModal } from '@/pages/modals/TestCardModal';
@@ -17,6 +18,7 @@ import type { Test, TestStatus } from '@/lib/types';
 
 export function TestsTab() {
   const { data, isLoading, isError, error, refetch, isSuccess } = useTests();
+  const del = useDeleteTest();
   const toast = useToast();
 
   const [search, setSearch] = useState('');
@@ -26,6 +28,7 @@ export function TestsTab() {
   const [cardTestId, setCardTestId] = useState<number | null>(null);
   const [questionsTestId, setQuestionsTestId] = useState<number | null>(null);
   const [assignTarget, setAssignTarget] = useState<Test | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Test | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -50,6 +53,17 @@ export function TestsTab() {
       return;
     }
     setAssignTarget(t);
+  }
+
+  async function handleDelete(test: Test) {
+    try {
+      await del.mutateAsync(test.id);
+      toast.success('Тест удалён');
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'Не удалось удалить тест');
+    } finally {
+      setDeleteTarget(null);
+    }
   }
 
   return (
@@ -173,6 +187,18 @@ export function TestsTab() {
                         >
                           <UserPlus className="h-4 w-4" />
                         </button>
+                        <button
+                          onClick={() => setDeleteTarget(t)}
+                          disabled={t.assignmentCount > 0}
+                          title={
+                            t.assignmentCount > 0
+                              ? 'Нельзя удалить: тест назначен поступающим'
+                              : 'Удалить тест'
+                          }
+                          className="rounded-lg p-2 text-slate-400 transition enabled:hover:bg-red-50 enabled:hover:text-red-600 disabled:cursor-not-allowed disabled:text-slate-200"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -199,6 +225,22 @@ export function TestsTab() {
       {assignTarget && (
         <AssignModal open onClose={() => setAssignTarget(null)} test={assignTarget} />
       )}
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget)}
+        title="Удалить тест?"
+        confirmLabel="Удалить"
+        danger
+        loading={del.isPending}
+        message={
+          <>
+            Тест <b>«{deleteTarget?.title}»</b> вместе со всеми вопросами и версиями будет удалён
+            безвозвратно. Это действие нельзя отменить.
+          </>
+        }
+      />
     </div>
   );
 }
