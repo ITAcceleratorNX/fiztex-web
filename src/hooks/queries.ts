@@ -10,7 +10,12 @@ import type {
 
 export const keys = {
   subjects: ['subjects'] as const,
-  tests: ['tests'] as const,
+  tests: (useAiGeneration?: boolean) =>
+    useAiGeneration === true
+      ? (['tests', 'ai'] as const)
+      : useAiGeneration === false
+        ? (['tests', 'admission'] as const)
+        : (['tests', 'all'] as const),
   test: (id: number) => ['tests', id] as const,
   applicants: ['applicants'] as const,
   reviews: ['reviews'] as const,
@@ -37,7 +42,7 @@ export function useUpdateSubject() {
     mutationFn: ({ id, body }: { id: number; body: SubjectRequest }) => api.updateSubject(id, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.subjects });
-      qc.invalidateQueries({ queryKey: keys.tests });
+      qc.invalidateQueries({ queryKey: ['tests'] });
     },
   });
 }
@@ -51,8 +56,11 @@ export function useDeleteSubject() {
 }
 
 // ---- Tests ----
-export function useTests() {
-  return useQuery({ queryKey: keys.tests, queryFn: ({ signal }) => api.listTests(signal) });
+export function useTests(useAiGeneration?: boolean) {
+  return useQuery({
+    queryKey: keys.tests(useAiGeneration),
+    queryFn: ({ signal }) => api.listTests(useAiGeneration, signal),
+  });
 }
 
 export function useTest(id: number | null) {
@@ -68,7 +76,7 @@ export function useCreateTest() {
   return useMutation({
     mutationFn: (body: TestRequest) => api.createTest(body),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: keys.tests });
+      qc.invalidateQueries({ queryKey: ['tests'] });
       qc.invalidateQueries({ queryKey: keys.subjects });
     },
   });
@@ -79,7 +87,7 @@ export function useUpdateTest() {
   return useMutation({
     mutationFn: ({ id, body }: { id: number; body: TestRequest }) => api.updateTest(id, body),
     onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: keys.tests });
+      qc.invalidateQueries({ queryKey: ['tests'] });
       qc.invalidateQueries({ queryKey: keys.test(vars.id) });
     },
   });
@@ -90,7 +98,7 @@ export function useDeleteTest() {
   return useMutation({
     mutationFn: (id: number) => api.deleteTest(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: keys.tests });
+      qc.invalidateQueries({ queryKey: ['tests'] });
       qc.invalidateQueries({ queryKey: keys.subjects });
     },
   });
@@ -102,7 +110,7 @@ export function useAssignTest() {
     mutationFn: ({ id, applicantIds }: { id: number; applicantIds: number[] }) =>
       api.assignTest(id, applicantIds),
     onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: keys.tests });
+      qc.invalidateQueries({ queryKey: ['tests'] });
       qc.invalidateQueries({ queryKey: keys.test(vars.id) });
       qc.invalidateQueries({ queryKey: keys.applicants });
     },

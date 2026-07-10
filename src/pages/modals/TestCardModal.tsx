@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
-import { UserPlus, Clock, Target, Repeat, Percent, History, Info, Users, ListChecks, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { UserPlus, Clock, Target, Repeat, Percent, History, Info, Users, ListChecks, Sparkles, FolderOpen } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -32,11 +33,14 @@ export function TestCardModal({
   open,
   onClose,
   testId,
+  variant = 'admission',
 }: {
   open: boolean;
   onClose: () => void;
   testId: number | null;
+  variant?: 'ai' | 'admission';
 }) {
+  const isAi = variant === 'ai';
   const { data: test, isLoading, isError, error, refetch } = useTest(open ? testId : null);
   const [assignOpen, setAssignOpen] = useState(false);
   const [questionsOpen, setQuestionsOpen] = useState(false);
@@ -56,12 +60,12 @@ export function TestCardModal({
         open={open}
         onClose={onClose}
         size="lg"
-        title={test ? test.title : 'Карточка теста'}
+        title={test ? test.title : isAi ? 'AI-тест' : 'Карточка теста'}
         subtitle={test ? `${test.subjectName} · ${test.grade}` : undefined}
         footer={
           test ? (
             <>
-              {test.status !== 'ACTIVE' && (
+              {!isAi && test.status !== 'ACTIVE' && (
                 <span className="mr-auto text-xs text-amber-600">
                   Черновик нельзя назначать — переведите тест в «Активен».
                 </span>
@@ -69,13 +73,22 @@ export function TestCardModal({
               <Button variant="secondary" onClick={onClose}>
                 Закрыть
               </Button>
-              <Button
-                variant="secondary"
-                icon={<Sparkles className="h-4 w-4" />}
-                onClick={() => setGenerateOpen(true)}
-              >
-                Сгенерировать вопросы
-              </Button>
+              {isAi && (
+                <Link to={`/subjects/${test.subjectId}/materials`}>
+                  <Button variant="secondary" icon={<FolderOpen className="h-4 w-4" />}>
+                    Материалы предмета
+                  </Button>
+                </Link>
+              )}
+              {isAi && (
+                <Button
+                  variant="secondary"
+                  icon={<Sparkles className="h-4 w-4" />}
+                  onClick={() => setGenerateOpen(true)}
+                >
+                  Сгенерировать вопросы
+                </Button>
+              )}
               <Button
                 variant="secondary"
                 icon={<ListChecks className="h-4 w-4" />}
@@ -83,13 +96,15 @@ export function TestCardModal({
               >
                 {questionsLabel}
               </Button>
-              <Button
-                icon={<UserPlus className="h-4 w-4" />}
-                disabled={test.status !== 'ACTIVE'}
-                onClick={() => setAssignOpen(true)}
-              >
-                Назначить поступающих
-              </Button>
+              {!isAi && (
+                <Button
+                  icon={<UserPlus className="h-4 w-4" />}
+                  disabled={test.status !== 'ACTIVE'}
+                  onClick={() => setAssignOpen(true)}
+                >
+                  Назначить поступающих
+                </Button>
+              )}
             </>
           ) : undefined
         }
@@ -132,7 +147,7 @@ export function TestCardModal({
               </div>
             )}
 
-            <DraftReviewBanner draftCount={draftCount} />
+            {isAi && <DraftReviewBanner draftCount={draftCount} />}
 
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
@@ -144,7 +159,11 @@ export function TestCardModal({
               {(test.questions ?? []).length === 0 ? (
                 <EmptyBlock
                   title="Вопросов пока нет"
-                  description="Нажмите «Вопросы» внизу, чтобы добавить задания для поступающих."
+                  description={
+                    isAi
+                      ? 'Загрузите материалы предмета и нажмите «Сгенерировать вопросы», либо добавьте вопросы вручную.'
+                      : 'Нажмите «Вопросы» внизу, чтобы добавить задания для поступающих.'
+                  }
                 />
               ) : (
                 <ul className="divide-y divide-slate-50 rounded-xl ring-1 ring-slate-200">
@@ -189,7 +208,8 @@ export function TestCardModal({
               </ul>
             </div>
 
-            {/* Assigned applicants */}
+            {/* Assigned applicants — только вступительные тесты */}
+            {!isAi && (
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
                 <Users className="h-4 w-4 text-slate-400" /> Назначенные поступающие ({test.assignments.length})
@@ -213,12 +233,13 @@ export function TestCardModal({
                 </ul>
               )}
             </div>
+            )}
           </div>
         )}
       </Modal>
 
-      {test && <AssignModal open={assignOpen} onClose={() => setAssignOpen(false)} test={test} />}
-      {test && (
+      {test && !isAi && <AssignModal open={assignOpen} onClose={() => setAssignOpen(false)} test={test} />}
+      {test && isAi && (
         <TestGenerateModal
           open={generateOpen}
           onClose={() => setGenerateOpen(false)}

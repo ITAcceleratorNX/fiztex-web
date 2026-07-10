@@ -7,6 +7,7 @@ import { AdmissionsPage } from '@/pages/AdmissionsPage';
 import { ReviewPage } from '@/pages/ReviewPage';
 import { SubjectsPage } from '@/pages/SubjectsPage';
 import { SubjectMaterialsPage } from '@/pages/SubjectMaterialsPage';
+import { AiTestsPage } from '@/pages/AiTestsPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import type { ReactNode } from 'react';
@@ -48,7 +49,7 @@ export function App() {
         <Route path="/schedule" element={<PlaceholderPage title="Расписание" />} />
         <Route path="/grades" element={<PlaceholderPage title="Дневник и оценки" />} />
         <Route path="/attendance" element={<PlaceholderPage title="Посещаемость (QR)" />} />
-        <Route path="/ai-tests" element={<PlaceholderPage title="AI-тесты" />} />
+        <Route path="/ai-tests" element={<AiTestsPage />} />
         <Route path="/clubs" element={<PlaceholderPage title="Кружки и события" />} />
         <Route path="/service" element={<PlaceholderPage title="Сервисные заявки" />} />
       </Route>

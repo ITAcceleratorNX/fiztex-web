@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Check, X, AlertTriangle, ShieldAlert, CircleDot } from 'lucide-react';
+import { Check, X, ShieldAlert, CircleDot } from 'lucide-react';
 import { api, ApiError } from '@/lib/api';
 import { keys } from '@/hooks/queries';
 import { useToast } from '@/context/ToastContext';

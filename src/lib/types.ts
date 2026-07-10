@@ -137,6 +137,8 @@ export interface TestRequest {
   maxAttempts?: number;
   shuffleQuestions?: boolean;
   shuffleOptions?: boolean;
+  useAiGeneration?: boolean;
+  showResultAfterReview?: boolean;
   versionStrategy?: VersionStrategy;
   questions?: QuestionRequest[];
 }

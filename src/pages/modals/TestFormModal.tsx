@@ -43,10 +43,13 @@ export function TestFormModal({
   open,
   onClose,
   test,
+  aiTest = false,
 }: {
   open: boolean;
   onClose: () => void;
   test: Test | null;
+  /** When true, creates/updates an AI test (useAiGeneration=true). */
+  aiTest?: boolean;
 }) {
   const isEdit = Boolean(test);
   const subjects = useSubjects();
@@ -113,6 +116,7 @@ export function TestFormModal({
       maxAttempts: Number(form.maxAttempts) || 1,
       shuffleQuestions: form.shuffleQuestions,
       shuffleOptions: form.shuffleOptions,
+      useAiGeneration: aiTest ? true : test?.useAiGeneration ?? false,
       versionStrategy,
     };
   }
@@ -160,8 +164,12 @@ export function TestFormModal({
         open={open}
         onClose={onClose}
         size="lg"
-        title={isEdit ? 'Редактировать тест' : 'Новый тест'}
-        subtitle="Сначала создайте карточку теста, затем добавьте вопросы через кнопку «Вопросы» в списке или карточке."
+        title={isEdit ? 'Редактировать тест' : aiTest ? 'Новый AI-тест' : 'Новый тест'}
+        subtitle={
+          aiTest
+            ? 'Тест по учебным материалам с генерацией вопросов через AI.'
+            : 'Сначала создайте карточку теста, затем добавьте вопросы через кнопку «Вопросы» в списке или карточке.'
+        }
         footer={
           <>
             <Button variant="secondary" onClick={onClose} disabled={pending}>
@@ -201,11 +209,11 @@ export function TestFormModal({
                 ))}
               </Select>
             </Field>
-            <Field label="Класс поступления" required hint="Произвольное значение">
+            <Field label="Класс" required hint={aiTest ? 'Для кого предназначен тест' : 'Произвольное значение'}>
               <TextInput
                 value={form.grade}
                 onChange={(e) => set('grade', e.target.value)}
-                placeholder="Например: 5 класс"
+                placeholder={aiTest ? 'Например: 8 класс' : 'Например: 5 класс'}
               />
             </Field>
           </div>

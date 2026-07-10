@@ -147,7 +147,11 @@ export const api = {
   deleteSubject: (id: number) => request<void>(`/admin/subjects/${id}`, { method: 'DELETE' }),
 
   // Tests
-  listTests: (signal?: AbortSignal) => request<Test[]>('/admin/tests', { signal }),
+  listTests: (useAiGeneration?: boolean, signal?: AbortSignal) => {
+    const query =
+      useAiGeneration === undefined ? '' : `?useAiGeneration=${useAiGeneration}`;
+    return request<Test[]>(`/admin/tests${query}`, { signal });
+  },
   getTest: (id: number, signal?: AbortSignal) => request<Test>(`/admin/tests/${id}`, { signal }),
   createTest: (body: TestRequest) => request<Test>('/admin/tests', { method: 'POST', body }),
   updateTest: (id: number, body: TestRequest) =>

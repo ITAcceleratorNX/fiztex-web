@@ -80,7 +80,7 @@ export function TestGenerateModal({
     if (job.status === 'DONE') {
       handledJobRef.current = job.id;
       void qc.invalidateQueries({ queryKey: keys.test(test.id) });
-      void qc.invalidateQueries({ queryKey: keys.tests });
+      void qc.invalidateQueries({ queryKey: ['tests'] });
       toast.success('Вопросы сгенерированы');
       onComplete?.();
       onClose();

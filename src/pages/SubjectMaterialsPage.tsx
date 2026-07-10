@@ -101,17 +101,23 @@ export function SubjectMaterialsPage() {
     <div>
       <div className="mb-6">
         <Link
+          to="/ai-tests"
+          className="mb-3 mr-4 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-brand-600"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          К AI-тестам
+        </Link>
+        <Link
           to="/subjects"
           className="mb-3 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-brand-600"
         >
-          <ArrowLeft className="h-4 w-4" />
           К предметам
         </Link>
         <h1 className="text-[34px] font-extrabold tracking-tight text-slate-900">
           Материалы
         </h1>
         <p className="mt-1 text-slate-500">
-          {subject?.name ?? 'Предмет'} — учебные файлы для генерации тестов
+          {subject?.name ?? 'Предмет'} — учебные материалы для AI-тестов
         </p>
       </div>
 

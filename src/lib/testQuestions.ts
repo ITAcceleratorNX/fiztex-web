@@ -53,6 +53,10 @@ export function countDraftQuestions(questions: QuestionResponse[] | undefined): 
   return (questions ?? []).filter((q) => q.isDraft).length;
 }
 
+export function countTestsWithDrafts(tests: Test[] | undefined): number {
+  return (tests ?? []).filter((t) => (t.questions ?? []).some((q) => q.isDraft)).length;
+}
+
 export interface AnswerOptionDraft {
   localId: string;
   text: string;
@@ -163,6 +167,7 @@ export function buildTestRequest(
     maxAttempts: test.maxAttempts,
     shuffleQuestions: test.shuffleQuestions,
     shuffleOptions: test.shuffleOptions,
+    useAiGeneration: test.useAiGeneration,
     versionStrategy,
     questions,
   };
