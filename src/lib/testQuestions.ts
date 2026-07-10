@@ -37,6 +37,7 @@ export function isChoiceType(type: QuestionType): boolean {
 
 export interface QuestionDraft {
   localId: string;
+  isDraft: boolean;
   topic: string;
   difficulty: QuestionDifficulty | '';
   type: QuestionType;
@@ -46,6 +47,10 @@ export interface QuestionDraft {
   referenceAnswer: string;
   gradingCriteria: string;
   options: AnswerOptionDraft[];
+}
+
+export function countDraftQuestions(questions: QuestionResponse[] | undefined): number {
+  return (questions ?? []).filter((q) => q.isDraft).length;
 }
 
 export interface AnswerOptionDraft {
@@ -61,6 +66,7 @@ export function newLocalId(): string {
 export function emptyQuestion(type: QuestionType = 'SINGLE_CHOICE'): QuestionDraft {
   return {
     localId: newLocalId(),
+    isDraft: false,
     topic: '',
     difficulty: '',
     type,
@@ -81,6 +87,7 @@ export function emptyQuestion(type: QuestionType = 'SINGLE_CHOICE'): QuestionDra
 export function questionFromResponse(q: QuestionResponse): QuestionDraft {
   return {
     localId: newLocalId(),
+    isDraft: q.isDraft,
     topic: q.topic ?? '',
     difficulty: normalizeDifficulty(q.difficulty),
     type: q.type,

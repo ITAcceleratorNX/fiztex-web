@@ -73,6 +73,7 @@ export interface QuestionResponse {
   referenceAnswer: string | null;
   gradingCriteria: string | null;
   orderIndex: number;
+  isDraft: boolean;
   options: AnswerOptionResponse[];
 }
 

@@ -8,8 +8,10 @@ import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock
 import { useTest } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import { formatDateTime, versionLabel } from '@/lib/format';
-import { QUESTION_TYPE_LABELS, difficultyLabel } from '@/lib/testQuestions';
+import { QUESTION_TYPE_LABELS, countDraftQuestions, difficultyLabel } from '@/lib/testQuestions';
 import { TestStatusBadge } from '@/components/ui/TestStatusBadge';
+import { DraftQuestionBadge } from '@/components/ui/DraftQuestionBadge';
+import { DraftReviewBanner } from '@/components/ui/DraftReviewBanner';
 import { AssignModal } from './AssignModal';
 import { TestQuestionsModal } from './TestQuestionsModal';
 import { TestGenerateModal } from './TestGenerateModal';
@@ -39,6 +41,14 @@ export function TestCardModal({
   const [assignOpen, setAssignOpen] = useState(false);
   const [questionsOpen, setQuestionsOpen] = useState(false);
   const [generateOpen, setGenerateOpen] = useState(false);
+
+  const draftCount = countDraftQuestions(test?.questions);
+  const questionsLabel =
+    test && draftCount > 0
+      ? `Вопросы (${test.questionCount} · ${draftCount} черн.)`
+      : test
+        ? `Вопросы (${test.questionCount})`
+        : 'Вопросы';
 
   return (
     <>
@@ -71,7 +81,7 @@ export function TestCardModal({
                 icon={<ListChecks className="h-4 w-4" />}
                 onClick={() => setQuestionsOpen(true)}
               >
-                Вопросы ({test.questionCount})
+                {questionsLabel}
               </Button>
               <Button
                 icon={<UserPlus className="h-4 w-4" />}
@@ -122,9 +132,14 @@ export function TestCardModal({
               </div>
             )}
 
+            <DraftReviewBanner draftCount={draftCount} />
+
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
                 <ListChecks className="h-4 w-4 text-slate-400" /> Вопросы ({test.questionCount})
+                {draftCount > 0 && (
+                  <span className="text-xs font-normal text-amber-600">· {draftCount} черновиков</span>
+                )}
               </p>
               {(test.questions ?? []).length === 0 ? (
                 <EmptyBlock
@@ -134,10 +149,16 @@ export function TestCardModal({
               ) : (
                 <ul className="divide-y divide-slate-50 rounded-xl ring-1 ring-slate-200">
                   {(test.questions ?? []).map((q, index) => (
-                    <li key={q.id} className="px-4 py-3">
-                      <p className="text-sm font-medium text-slate-800">
-                        {index + 1}. {q.text}
-                      </p>
+                    <li
+                      key={q.id}
+                      className={q.isDraft ? 'border-l-4 border-l-amber-400 bg-amber-50/40 px-4 py-3' : 'px-4 py-3'}
+                    >
+                      <div className="flex flex-wrap items-start gap-2">
+                        <p className="min-w-0 flex-1 text-sm font-medium text-slate-800">
+                          {index + 1}. {q.text}
+                        </p>
+                        {q.isDraft && <DraftQuestionBadge />}
+                      </div>
                       <p className="mt-1 text-xs text-slate-400">
                         {QUESTION_TYPE_LABELS[q.type]}
                         {difficultyLabel(q.difficulty) ? ` · ${difficultyLabel(q.difficulty)}` : ''}
@@ -202,7 +223,10 @@ export function TestCardModal({
           open={generateOpen}
           onClose={() => setGenerateOpen(false)}
           test={test}
-          onComplete={() => void refetch()}
+          onComplete={() => {
+            void refetch();
+            setQuestionsOpen(true);
+          }}
         />
       )}
       {test && (

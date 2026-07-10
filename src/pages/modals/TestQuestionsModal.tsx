@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Plus, Trash2, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput, TextArea, Select } from '@/components/ui/Field';
 import { Toggle } from '@/components/ui/Toggle';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
+import { DraftQuestionBadge } from '@/components/ui/DraftQuestionBadge';
+import { DraftReviewBanner } from '@/components/ui/DraftReviewBanner';
 import { useTest, useUpdateTest } from '@/hooks/queries';
 import { useToast } from '@/context/ToastContext';
 import { ApiError } from '@/lib/api';
@@ -55,11 +57,18 @@ function QuestionEditor({
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
+    <div
+      className={
+        question.isDraft
+          ? 'rounded-xl border border-amber-200 bg-amber-50/40 p-4'
+          : 'rounded-xl border border-slate-200 bg-white p-4'
+      }
+    >
       <div className="mb-4 flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <GripVertical className="h-4 w-4 text-slate-300" />
           <span className="text-sm font-semibold text-slate-800">Вопрос {index + 1}</span>
+          {question.isDraft && <DraftQuestionBadge />}
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -255,12 +264,17 @@ export function TestQuestionsModal({
   const [questions, setQuestions] = useState<QuestionDraft[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
   const [decisionOpen, setDecisionOpen] = useState(false);
+  const [hadDraftsOnOpen, setHadDraftsOnOpen] = useState(false);
+
+  const draftCount = useMemo(() => questions.filter((q) => q.isDraft).length, [questions]);
 
   useEffect(() => {
     if (!open || !test) return;
     setFormError(null);
     setDecisionOpen(false);
-    setQuestions((test.questions ?? []).map(questionFromResponse));
+    const loaded = (test.questions ?? []).map(questionFromResponse);
+    setQuestions(loaded);
+    setHadDraftsOnOpen(loaded.some((q) => q.isDraft));
   }, [open, test]);
 
   const pending = update.isPending;
@@ -281,7 +295,16 @@ export function TestQuestionsModal({
 
     try {
       await update.mutateAsync({ id: test.id, body });
-      toast.success(versionStrategy === 'NEW_VERSION' ? 'Создана новая версия с вопросами' : 'Вопросы сохранены');
+      const publishedDrafts = hadDraftsOnOpen;
+      if (publishedDrafts) {
+        toast.success(
+          versionStrategy === 'NEW_VERSION'
+            ? 'Создана новая версия — черновики опубликованы'
+            : 'Вопросы проверены и опубликованы',
+        );
+      } else {
+        toast.success(versionStrategy === 'NEW_VERSION' ? 'Создана новая версия с вопросами' : 'Вопросы сохранены');
+      }
       setDecisionOpen(false);
       onClose();
     } catch (err) {
@@ -310,15 +333,27 @@ export function TestQuestionsModal({
         onClose={onClose}
         size="lg"
         title={test ? `Вопросы: ${test.title}` : 'Вопросы теста'}
-        subtitle={test ? `${test.subjectName} · ${test.grade}` : undefined}
+        subtitle={
+          test
+            ? draftCount > 0
+              ? `${test.subjectName} · ${test.grade} · ${draftCount} черновиков`
+              : `${test.subjectName} · ${test.grade}`
+            : undefined
+        }
         footer={
           test ? (
             <>
+              {draftCount > 0 && (
+                <span className="mr-auto text-xs text-amber-700">
+                  Сохранение опубликует {draftCount}{' '}
+                  {draftCount === 1 ? 'черновик' : draftCount < 5 ? 'черновика' : 'черновиков'}
+                </span>
+              )}
               <Button variant="secondary" onClick={onClose} disabled={pending}>
                 Отмена
               </Button>
               <Button loading={pending} onClick={() => void save()}>
-                Сохранить вопросы
+                {draftCount > 0 ? 'Сохранить и опубликовать' : 'Сохранить вопросы'}
               </Button>
             </>
           ) : undefined
@@ -338,6 +373,14 @@ export function TestQuestionsModal({
                 {formError}
               </div>
             )}
+
+            <DraftReviewBanner draftCount={draftCount}>
+              {test.assignmentCount > 0 && (
+                <p className="mt-2 text-xs text-amber-800">
+                  Тест уже назначался — при сохранении выберите стратегию версии.
+                </p>
+              )}
+            </DraftReviewBanner>
 
             {questions.length === 0 ? (
               <EmptyBlock
