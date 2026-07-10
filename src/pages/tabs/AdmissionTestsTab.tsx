@@ -16,8 +16,8 @@ import { formatDate, pluralRu, cx } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 import type { Test, TestStatus } from '@/lib/types';
 
-export function TestsTab() {
-  const { data, isLoading, isError, error, refetch, isSuccess } = useTests();
+export function AdmissionTestsTab() {
+  const { data, isLoading, isError, error, refetch, isSuccess } = useTests(false);
   const del = useDeleteTest();
   const toast = useToast();
 
@@ -81,7 +81,7 @@ export function TestsTab() {
         </Select>
         <div className="ml-auto">
           <Button icon={<Plus className="h-4 w-4" />} onClick={openCreate}>
-            Добавить тест
+            Добавить вступительный тест
           </Button>
         </div>
       </div>
@@ -94,16 +94,16 @@ export function TestsTab() {
         ) : filtered.length === 0 ? (
           <EmptyBlock
             icon={<ClipboardList className="h-7 w-7" />}
-            title={data && data.length > 0 ? 'Ничего не найдено' : 'Пока нет тестов'}
+            title={data && data.length > 0 ? 'Ничего не найдено' : 'Пока нет вступительных тестов'}
             description={
               data && data.length > 0
                 ? 'Измените поиск или фильтр.'
-                : 'Создайте карточку теста, чтобы назначать его поступающим.'
+                : 'Создайте тест с ручными вопросами и назначьте его поступающим. Для AI-тестов используйте раздел «AI-тесты».'
             }
             action={
               data && data.length === 0 ? (
                 <Button icon={<Plus className="h-4 w-4" />} onClick={openCreate}>
-                  Добавить тест
+                  Добавить вступительный тест
                 </Button>
               ) : undefined
             }
@@ -215,8 +215,13 @@ export function TestsTab() {
         )}
       </div>
 
-      <TestFormModal open={formOpen} onClose={() => setFormOpen(false)} test={editing} />
-      <TestCardModal open={cardTestId != null} onClose={() => setCardTestId(null)} testId={cardTestId} />
+      <TestFormModal open={formOpen} onClose={() => setFormOpen(false)} test={editing} aiTest={false} />
+      <TestCardModal
+        open={cardTestId != null}
+        onClose={() => setCardTestId(null)}
+        testId={cardTestId}
+        variant="admission"
+      />
       <TestQuestionsModal
         open={questionsTestId != null}
         onClose={() => setQuestionsTestId(null)}

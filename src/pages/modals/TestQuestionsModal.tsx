@@ -34,6 +34,7 @@ function QuestionEditor({
   onRemove,
   onMoveUp,
   onMoveDown,
+  showDraftUi = true,
 }: {
   question: QuestionDraft;
   index: number;
@@ -42,6 +43,7 @@ function QuestionEditor({
   onRemove: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  showDraftUi?: boolean;
 }) {
   function setType(type: QuestionType) {
     const next = { ...question, type };
@@ -59,7 +61,7 @@ function QuestionEditor({
   return (
     <div
       className={
-        question.isDraft
+        showDraftUi && question.isDraft
           ? 'rounded-xl border border-amber-200 bg-amber-50/40 p-4'
           : 'rounded-xl border border-slate-200 bg-white p-4'
       }
@@ -68,7 +70,7 @@ function QuestionEditor({
         <div className="flex flex-wrap items-center gap-2">
           <GripVertical className="h-4 w-4 text-slate-300" />
           <span className="text-sm font-semibold text-slate-800">Вопрос {index + 1}</span>
-          {question.isDraft && <DraftQuestionBadge />}
+          {showDraftUi && question.isDraft && <DraftQuestionBadge />}
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -267,6 +269,8 @@ export function TestQuestionsModal({
   const [hadDraftsOnOpen, setHadDraftsOnOpen] = useState(false);
 
   const draftCount = useMemo(() => questions.filter((q) => q.isDraft).length, [questions]);
+  const isAi = test?.useAiGeneration === true;
+  const showDraftUi = isAi;
 
   useEffect(() => {
     if (!open || !test) return;
@@ -335,7 +339,7 @@ export function TestQuestionsModal({
         title={test ? `Вопросы: ${test.title}` : 'Вопросы теста'}
         subtitle={
           test
-            ? draftCount > 0
+            ? showDraftUi && draftCount > 0
               ? `${test.subjectName} · ${test.grade} · ${draftCount} черновиков`
               : `${test.subjectName} · ${test.grade}`
             : undefined
@@ -343,7 +347,7 @@ export function TestQuestionsModal({
         footer={
           test ? (
             <>
-              {draftCount > 0 && (
+              {showDraftUi && draftCount > 0 && (
                 <span className="mr-auto text-xs text-amber-700">
                   Сохранение опубликует {draftCount}{' '}
                   {draftCount === 1 ? 'черновик' : draftCount < 5 ? 'черновика' : 'черновиков'}
@@ -353,7 +357,7 @@ export function TestQuestionsModal({
                 Отмена
               </Button>
               <Button loading={pending} onClick={() => void save()}>
-                {draftCount > 0 ? 'Сохранить и опубликовать' : 'Сохранить вопросы'}
+                {showDraftUi && draftCount > 0 ? 'Сохранить и опубликовать' : 'Сохранить вопросы'}
               </Button>
             </>
           ) : undefined
@@ -374,13 +378,15 @@ export function TestQuestionsModal({
               </div>
             )}
 
-            <DraftReviewBanner draftCount={draftCount}>
-              {test.assignmentCount > 0 && (
-                <p className="mt-2 text-xs text-amber-800">
-                  Тест уже назначался — при сохранении выберите стратегию версии.
-                </p>
-              )}
-            </DraftReviewBanner>
+            {showDraftUi && (
+              <DraftReviewBanner draftCount={draftCount}>
+                {test.assignmentCount > 0 && (
+                  <p className="mt-2 text-xs text-amber-800">
+                    Тест уже назначался — при сохранении выберите стратегию версии.
+                  </p>
+                )}
+              </DraftReviewBanner>
+            )}
 
             {questions.length === 0 ? (
               <EmptyBlock
@@ -401,6 +407,7 @@ export function TestQuestionsModal({
                       question={q}
                       index={index}
                       total={questions.length}
+                      showDraftUi={showDraftUi}
                       onChange={(next) =>
                         setQuestions((prev) => prev.map((item, i) => (i === index ? next : item)))
                       }

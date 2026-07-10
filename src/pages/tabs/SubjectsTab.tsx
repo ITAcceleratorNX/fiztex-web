@@ -144,12 +144,7 @@ export function SubjectsTab() {
                   <td className="px-6 py-3.5">
                     <div className="flex items-center gap-3">
                       <Avatar name={s.name} />
-                      <Link
-                        to={`/subjects/${s.id}/materials`}
-                        className="font-semibold text-slate-800 transition hover:text-brand-600"
-                      >
-                        {s.name}
-                      </Link>
+                      <span className="font-semibold text-slate-800">{s.name}</span>
                     </div>
                   </td>
                   <td className="px-6 py-3.5">
@@ -169,7 +164,7 @@ export function SubjectsTab() {
                     <div className="flex items-center justify-end gap-1">
                       <Link
                         to={`/subjects/${s.id}/materials`}
-                        title="Материалы"
+                        title="Материалы (AI)"
                         className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                       >
                         <FolderOpen className="h-4 w-4" />

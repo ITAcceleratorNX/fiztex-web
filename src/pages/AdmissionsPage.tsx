@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useApplicants, useTests } from '@/hooks/queries';
 import { StatCard } from '@/components/ui/StatCard';
 import { cx } from '@/lib/format';
-import { TestsTab } from './tabs/TestsTab';
+import { AdmissionTestsTab } from './tabs/AdmissionTestsTab';
 import { ApplicantsTab } from './tabs/ApplicantsTab';
 
 type TabKey = 'tests' | 'applicants';
@@ -15,7 +15,7 @@ const TABS: { key: TabKey; label: string }[] = [
 export function AdmissionsPage() {
   const [tab, setTab] = useState<TabKey>('tests');
 
-  const tests = useTests();
+  const tests = useTests(false);
   const applicants = useApplicants();
 
   const activeTests = tests.data?.filter((t) => t.status === 'ACTIVE').length ?? 0;
@@ -49,7 +49,7 @@ export function AdmissionsPage() {
       </div>
 
       <div className="mt-6">
-        {tab === 'tests' && <TestsTab />}
+        {tab === 'tests' && <AdmissionTestsTab />}
         {tab === 'applicants' && <ApplicantsTab />}
       </div>
     </div>

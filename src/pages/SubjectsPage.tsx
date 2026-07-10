@@ -10,7 +10,7 @@ export function SubjectsPage() {
       <h1 className="text-[34px] font-extrabold leading-tight tracking-tight text-slate-900">
         Предметы
       </h1>
-      <p className="mt-1 text-slate-500">Справочник предметов для вступительных и других тестов.</p>
+      <p className="mt-1 text-slate-500">Справочник предметов. Материалы используются для AI-тестов.</p>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Всего предметов" value={subjects.data?.length ?? '—'} />

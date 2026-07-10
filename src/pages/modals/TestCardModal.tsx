@@ -48,7 +48,7 @@ export function TestCardModal({
 
   const draftCount = countDraftQuestions(test?.questions);
   const questionsLabel =
-    test && draftCount > 0
+    test && isAi && draftCount > 0
       ? `Вопросы (${test.questionCount} · ${draftCount} черн.)`
       : test
         ? `Вопросы (${test.questionCount})`
@@ -152,7 +152,7 @@ export function TestCardModal({
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
                 <ListChecks className="h-4 w-4 text-slate-400" /> Вопросы ({test.questionCount})
-                {draftCount > 0 && (
+                {isAi && draftCount > 0 && (
                   <span className="text-xs font-normal text-amber-600">· {draftCount} черновиков</span>
                 )}
               </p>
@@ -170,13 +170,17 @@ export function TestCardModal({
                   {(test.questions ?? []).map((q, index) => (
                     <li
                       key={q.id}
-                      className={q.isDraft ? 'border-l-4 border-l-amber-400 bg-amber-50/40 px-4 py-3' : 'px-4 py-3'}
+                      className={
+                        isAi && q.isDraft
+                          ? 'border-l-4 border-l-amber-400 bg-amber-50/40 px-4 py-3'
+                          : 'px-4 py-3'
+                      }
                     >
                       <div className="flex flex-wrap items-start gap-2">
                         <p className="min-w-0 flex-1 text-sm font-medium text-slate-800">
                           {index + 1}. {q.text}
                         </p>
-                        {q.isDraft && <DraftQuestionBadge />}
+                        {isAi && q.isDraft && <DraftQuestionBadge />}
                       </div>
                       <p className="mt-1 text-xs text-slate-400">
                         {QUESTION_TYPE_LABELS[q.type]}
