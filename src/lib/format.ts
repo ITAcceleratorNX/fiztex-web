@@ -59,6 +59,25 @@ export function pluralRu(n: number, forms: [string, string, string]): string {
   return forms[2];
 }
 
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} Б`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} КБ`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
+}
+
+const MIME_LABELS: Record<string, string> = {
+  'application/pdf': 'PDF',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PPTX',
+  'text/plain': 'TXT',
+};
+
+export function formatFileType(mimeType: string, filename: string): string {
+  if (MIME_LABELS[mimeType]) return MIME_LABELS[mimeType];
+  const ext = filename.split('.').pop()?.toUpperCase();
+  return ext || mimeType;
+}
+
 export function cx(...classes: Array<string | false | null | undefined>): string {
   return classes.filter(Boolean).join(' ');
 }

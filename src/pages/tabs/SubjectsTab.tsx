@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Plus, Pencil, Eye, EyeOff, BookMarked, Upload, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Plus, Pencil, Eye, EyeOff, BookMarked, Upload, Trash2, FolderOpen } from 'lucide-react';
 import { useSubjects, useUpdateSubject, useDeleteSubject } from '@/hooks/queries';
 import { useToast } from '@/context/ToastContext';
 import { Button } from '@/components/ui/Button';
@@ -143,7 +144,12 @@ export function SubjectsTab() {
                   <td className="px-6 py-3.5">
                     <div className="flex items-center gap-3">
                       <Avatar name={s.name} />
-                      <span className="font-semibold text-slate-800">{s.name}</span>
+                      <Link
+                        to={`/subjects/${s.id}/materials`}
+                        className="font-semibold text-slate-800 transition hover:text-brand-600"
+                      >
+                        {s.name}
+                      </Link>
                     </div>
                   </td>
                   <td className="px-6 py-3.5">
@@ -161,6 +167,13 @@ export function SubjectsTab() {
                   <td className="px-6 py-3.5 text-sm text-slate-500">{formatDate(s.createdAt)}</td>
                   <td className="px-6 py-3.5">
                     <div className="flex items-center justify-end gap-1">
+                      <Link
+                        to={`/subjects/${s.id}/materials`}
+                        title="Материалы"
+                        className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                      >
+                        <FolderOpen className="h-4 w-4" />
+                      </Link>
                       <button
                         onClick={() => openEdit(s)}
                         title="Редактировать"

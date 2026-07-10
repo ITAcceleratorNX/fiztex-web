@@ -6,6 +6,7 @@ import { EntranceFlow } from '@/pages/entrance/EntranceFlow';
 import { AdmissionsPage } from '@/pages/AdmissionsPage';
 import { ReviewPage } from '@/pages/ReviewPage';
 import { SubjectsPage } from '@/pages/SubjectsPage';
+import { SubjectMaterialsPage } from '@/pages/SubjectMaterialsPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import type { ReactNode } from 'react';
@@ -38,6 +39,7 @@ export function App() {
       >
         <Route path="/" element={<DashboardPage />} />
         <Route path="/subjects" element={<SubjectsPage />} />
+        <Route path="/subjects/:subjectId/materials" element={<SubjectMaterialsPage />} />
         <Route path="/admissions" element={<AdmissionsPage />} />
         <Route path="/review" element={<ReviewPage />} />
         <Route path="/students" element={<PlaceholderPage title="Ученики" />} />

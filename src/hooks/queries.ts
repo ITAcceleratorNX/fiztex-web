@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import type {
   ApplicantRequest,
+  MaterialUpdateRequest,
   SubjectRequest,
   TestRequest,
 } from '@/lib/types';
@@ -12,6 +13,7 @@ export const keys = {
   test: (id: number) => ['tests', id] as const,
   applicants: ['applicants'] as const,
   reviews: ['reviews'] as const,
+  materials: (subjectId: number) => ['materials', subjectId] as const,
 };
 
 // ---- Subjects ----
@@ -128,5 +130,53 @@ export function useUpdateApplicant() {
   return useMutation({
     mutationFn: ({ id, body }: { id: number; body: ApplicantRequest }) => api.updateApplicant(id, body),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.applicants }),
+  });
+}
+
+// ---- Materials ----
+export function useMaterials(subjectId: number) {
+  return useQuery({
+    queryKey: keys.materials(subjectId),
+    queryFn: ({ signal }) => api.listMaterials(subjectId, signal),
+    refetchInterval: (query) => {
+      const materials = query.state.data;
+      if (materials?.some((m) => m.status === 'EXTRACTING' || m.status === 'UPLOADED')) {
+        return 3000;
+      }
+      return false;
+    },
+  });
+}
+
+export function useUploadMaterial(subjectId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (formData: FormData) => api.uploadMaterial(formData),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.materials(subjectId) }),
+  });
+}
+
+export function useUpdateMaterial(subjectId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: number; body: MaterialUpdateRequest }) =>
+      api.updateMaterial(id, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.materials(subjectId) }),
+  });
+}
+
+export function useDeleteMaterial(subjectId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteMaterial(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.materials(subjectId) }),
+  });
+}
+
+export function useRetryMaterialExtract(subjectId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.retryMaterialExtract(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.materials(subjectId) }),
   });
 }

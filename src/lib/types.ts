@@ -249,3 +249,33 @@ export interface ScoreAnswerRequest {
 export interface ConfirmReviewRequest {
   schoolComment?: string | null;
 }
+
+// ---- Subject materials library ----
+
+export type MaterialStatus = 'UPLOADED' | 'EXTRACTING' | 'READY' | 'EXTRACTION_FAILED';
+
+export interface Material {
+  id: number;
+  subjectId: number;
+  title: string;
+  description: string | null;
+  topic: string | null;
+  originalFilename: string;
+  mimeType: string;
+  fileSize: number;
+  status: MaterialStatus;
+  visibleToStudents: boolean;
+  createdAt: string;
+  errorMessage: string | null;
+}
+
+export interface MaterialUpdateRequest {
+  title?: string;
+  description?: string | null;
+  topic?: string | null;
+  visibleToStudents?: boolean;
+}
+
+export interface MaterialDownloadResponse {
+  url: string;
+}

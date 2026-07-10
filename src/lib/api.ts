@@ -8,6 +8,9 @@ import type {
   ScoreAnswerRequest,
   Subject,
   SubjectRequest,
+  Material,
+  MaterialUpdateRequest,
+  MaterialDownloadResponse,
   Test,
   TestRequest,
 } from './types';
@@ -86,6 +89,40 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return data as T;
 }
 
+async function requestMultipart<T>(path: string, formData: FormData, signal?: AbortSignal): Promise<T> {
+  const headers: Record<string, string> = {};
+  if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+
+  let response: Response;
+  try {
+    response = await fetch(`/api${path}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+      signal,
+    });
+  } catch {
+    throw new ApiError(0, 'Не удалось соединиться с сервером. Проверьте, запущен ли backend.');
+  }
+
+  if (response.status === 401) {
+    setToken(null);
+    throw new ApiError(401, 'Сессия истекла. Войдите снова.');
+  }
+
+  const text = await response.text();
+  const data = text ? safeParse(text) : undefined;
+
+  if (!response.ok) {
+    const message =
+      (data && typeof data === 'object' && 'message' in data && (data as { message?: string }).message) ||
+      `Ошибка ${response.status}`;
+    throw new ApiError(response.status, String(message));
+  }
+
+  return data as T;
+}
+
 function safeParse(text: string): unknown {
   try {
     return JSON.parse(text);
@@ -137,4 +174,17 @@ export const api = {
     request<Applicant>('/admin/applicants', { method: 'POST', body }),
   updateApplicant: (id: number, body: ApplicantRequest) =>
     request<Applicant>(`/admin/applicants/${id}`, { method: 'PUT', body }),
+
+  // Materials
+  listMaterials: (subjectId: number, signal?: AbortSignal) =>
+    request<Material[]>(`/materials?subjectId=${subjectId}`, { signal }),
+  uploadMaterial: (formData: FormData, signal?: AbortSignal) =>
+    requestMultipart<Material>('/materials', formData, signal),
+  updateMaterial: (id: number, body: MaterialUpdateRequest) =>
+    request<Material>(`/materials/${id}`, { method: 'PATCH', body }),
+  deleteMaterial: (id: number) => request<void>(`/materials/${id}`, { method: 'DELETE' }),
+  getMaterialDownloadUrl: (id: number, signal?: AbortSignal) =>
+    request<MaterialDownloadResponse>(`/materials/${id}/download`, { signal }),
+  retryMaterialExtract: (id: number) =>
+    request<void>(`/materials/${id}/extract`, { method: 'POST' }),
 };
