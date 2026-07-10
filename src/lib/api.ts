@@ -8,6 +8,11 @@ import type {
   ScoreAnswerRequest,
   Subject,
   SubjectRequest,
+  Material,
+  MaterialUpdateRequest,
+  MaterialDownloadResponse,
+  GenerateTestRequest,
+  GenerationJobResponse,
   Test,
   TestRequest,
 } from './types';
@@ -86,6 +91,40 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return data as T;
 }
 
+async function requestMultipart<T>(path: string, formData: FormData, signal?: AbortSignal): Promise<T> {
+  const headers: Record<string, string> = {};
+  if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+
+  let response: Response;
+  try {
+    response = await fetch(`/api${path}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+      signal,
+    });
+  } catch {
+    throw new ApiError(0, 'Не удалось соединиться с сервером. Проверьте, запущен ли backend.');
+  }
+
+  if (response.status === 401) {
+    setToken(null);
+    throw new ApiError(401, 'Сессия истекла. Войдите снова.');
+  }
+
+  const text = await response.text();
+  const data = text ? safeParse(text) : undefined;
+
+  if (!response.ok) {
+    const message =
+      (data && typeof data === 'object' && 'message' in data && (data as { message?: string }).message) ||
+      `Ошибка ${response.status}`;
+    throw new ApiError(response.status, String(message));
+  }
+
+  return data as T;
+}
+
 function safeParse(text: string): unknown {
   try {
     return JSON.parse(text);
@@ -108,7 +147,11 @@ export const api = {
   deleteSubject: (id: number) => request<void>(`/admin/subjects/${id}`, { method: 'DELETE' }),
 
   // Tests
-  listTests: (signal?: AbortSignal) => request<Test[]>('/admin/tests', { signal }),
+  listTests: (useAiGeneration?: boolean, signal?: AbortSignal) => {
+    const query =
+      useAiGeneration === undefined ? '' : `?useAiGeneration=${useAiGeneration}`;
+    return request<Test[]>(`/admin/tests${query}`, { signal });
+  },
   getTest: (id: number, signal?: AbortSignal) => request<Test>(`/admin/tests/${id}`, { signal }),
   createTest: (body: TestRequest) => request<Test>('/admin/tests', { method: 'POST', body }),
   updateTest: (id: number, body: TestRequest) =>
@@ -137,4 +180,23 @@ export const api = {
     request<Applicant>('/admin/applicants', { method: 'POST', body }),
   updateApplicant: (id: number, body: ApplicantRequest) =>
     request<Applicant>(`/admin/applicants/${id}`, { method: 'PUT', body }),
+
+  // Materials
+  listMaterials: (subjectId: number, signal?: AbortSignal) =>
+    request<Material[]>(`/materials?subjectId=${subjectId}`, { signal }),
+  uploadMaterial: (formData: FormData, signal?: AbortSignal) =>
+    requestMultipart<Material>('/materials', formData, signal),
+  updateMaterial: (id: number, body: MaterialUpdateRequest) =>
+    request<Material>(`/materials/${id}`, { method: 'PATCH', body }),
+  deleteMaterial: (id: number) => request<void>(`/materials/${id}`, { method: 'DELETE' }),
+  getMaterialDownloadUrl: (id: number, signal?: AbortSignal) =>
+    request<MaterialDownloadResponse>(`/materials/${id}/download`, { signal }),
+  retryMaterialExtract: (id: number) =>
+    request<void>(`/materials/${id}/extract`, { method: 'POST' }),
+
+  // Test generation
+  generateTest: (testId: number, body: GenerateTestRequest) =>
+    request<GenerationJobResponse>(`/tests/${testId}/generate`, { method: 'POST', body }),
+  getGenerationJob: (id: number, signal?: AbortSignal) =>
+    request<GenerationJobResponse>(`/generation-jobs/${id}`, { signal }),
 };

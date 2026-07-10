@@ -73,6 +73,7 @@ export interface QuestionResponse {
   referenceAnswer: string | null;
   gradingCriteria: string | null;
   orderIndex: number;
+  isDraft: boolean;
   options: AnswerOptionResponse[];
 }
 
@@ -136,6 +137,8 @@ export interface TestRequest {
   maxAttempts?: number;
   shuffleQuestions?: boolean;
   shuffleOptions?: boolean;
+  useAiGeneration?: boolean;
+  showResultAfterReview?: boolean;
   versionStrategy?: VersionStrategy;
   questions?: QuestionRequest[];
 }
@@ -248,4 +251,58 @@ export interface ScoreAnswerRequest {
 
 export interface ConfirmReviewRequest {
   schoolComment?: string | null;
+}
+
+// ---- Subject materials library ----
+
+export type MaterialStatus = 'UPLOADED' | 'EXTRACTING' | 'READY' | 'EXTRACTION_FAILED';
+
+export interface Material {
+  id: number;
+  subjectId: number;
+  title: string;
+  description: string | null;
+  topic: string | null;
+  originalFilename: string;
+  mimeType: string;
+  fileSize: number;
+  status: MaterialStatus;
+  visibleToStudents: boolean;
+  createdAt: string;
+  errorMessage: string | null;
+}
+
+export interface MaterialUpdateRequest {
+  title?: string;
+  description?: string | null;
+  topic?: string | null;
+  visibleToStudents?: boolean;
+}
+
+export interface MaterialDownloadResponse {
+  url: string;
+}
+
+// ---- Test generation (AI) ----
+
+export type GenerationJobStatus = 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED';
+
+export interface GenerateTestRequest {
+  materialIds: number[];
+  count: number;
+  types: Array<'SINGLE_CHOICE' | 'MULTIPLE_CHOICE'>;
+  difficulty?: QuestionDifficulty | null;
+  topic?: string | null;
+}
+
+export interface GenerationJobResponse {
+  id: number;
+  testId: number;
+  status: GenerationJobStatus;
+  errorMessage: string | null;
+  createdAt: string;
+  finishedAt: string | null;
+  model: string | null;
+  inputTokens: number | null;
+  outputTokens: number | null;
 }
