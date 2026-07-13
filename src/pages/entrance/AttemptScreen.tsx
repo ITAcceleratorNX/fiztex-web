@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Clock, ArrowLeft, ArrowRight, Flag } from 'lucide-react';
+import { Clock, ArrowLeft, ArrowRight, Flag, AlertTriangle } from 'lucide-react';
 import { entranceApi } from '@/lib/entranceApi';
 import { ApiError } from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
-import { cx } from '@/lib/format';
+import { cx, pluralRu } from '@/lib/format';
 import { EntranceShell } from './EntranceShell';
 import { Button } from '@/components/ui/Button';
 import { TextArea } from '@/components/ui/Field';
@@ -67,7 +67,11 @@ export function AttemptScreen({
   const expiredRef = useRef(false);
   const submittingRef = useRef(false);
 
-  useAttemptEvents(attemptId, !submitting);
+  const { tabSwitchCount, showTabSwitchWarning, dismissTabSwitchWarning } = useAttemptEvents(
+    attemptId,
+    !submitting,
+    attempt.tabSwitchCount ?? 0,
+  );
 
   // Seed "already saved" fingerprints so resumed answers are not needlessly re-sent.
   useEffect(() => {
@@ -216,18 +220,50 @@ export function AttemptScreen({
             Вопрос {index + 1} / {questions.length} · отвечено {answeredCount}
           </p>
         </div>
-        <div
-          className={cx(
-            'flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold tabular-nums ring-1',
-            lowTime
-              ? 'bg-red-50 text-red-600 ring-red-200'
-              : 'bg-slate-50 text-slate-700 ring-slate-200',
+        <div className="flex shrink-0 items-center gap-2">
+          {tabSwitchCount > 0 && (
+            <div
+              className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 ring-1 ring-amber-200"
+              title="Переключения вкладки фиксируются и передаются школе"
+            >
+              <AlertTriangle className="h-3.5 w-3.5" />
+              {tabSwitchCount}{' '}
+              {pluralRu(tabSwitchCount, ['переключение', 'переключения', 'переключений'])}
+            </div>
           )}
-        >
-          <Clock className="h-4 w-4" />
-          {formatClock(remaining)}
+          <div
+            className={cx(
+              'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold tabular-nums ring-1',
+              lowTime
+                ? 'bg-red-50 text-red-600 ring-red-200'
+                : 'bg-slate-50 text-slate-700 ring-slate-200',
+            )}
+          >
+            <Clock className="h-4 w-4" />
+            {formatClock(remaining)}
+          </div>
         </div>
       </div>
+
+      {showTabSwitchWarning && tabSwitchCount > 0 && (
+        <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">Вы покинули вкладку с тестом</p>
+            <p className="mt-0.5 text-amber-700">
+              Переключений зафиксировано: {tabSwitchCount}. Школа видит эти данные при проверке.
+              Пожалуйста, оставайтесь на этой вкладке до завершения теста.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={dismissTabSwitchWarning}
+            className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-amber-700 transition hover:bg-amber-100"
+          >
+            Понятно
+          </button>
+        </div>
+      )}
 
       {/* Progress bar */}
       <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-slate-200">

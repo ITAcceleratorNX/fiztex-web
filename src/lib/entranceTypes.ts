@@ -1,7 +1,12 @@
 // Types mirror the Spring backend `/api/admissions/*` DTOs (Sprint 2A applicant flow).
 
-export type EntranceListStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'AWAITING_REVIEW' | 'UNAVAILABLE';
-export type AvailableAction = 'START' | 'CONTINUE' | 'NONE';
+export type EntranceListStatus =
+  | 'NOT_STARTED'
+  | 'IN_PROGRESS'
+  | 'AWAITING_REVIEW'
+  | 'OPEN_FOR_VIEWING'
+  | 'UNAVAILABLE';
+export type AvailableAction = 'START' | 'CONTINUE' | 'VIEW_RESULT' | 'NONE';
 export type EntranceQuestionType = 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'OPEN_TEXT' | 'PHOTO';
 
 export interface ApplicantView {
@@ -76,6 +81,7 @@ export interface AttemptDetail {
   allowBackNavigation: boolean;
   maxAttempts: number;
   warningText: string;
+  tabSwitchCount: number;
   startedAt: string | null;
   durationSeconds: number;
   remainingSeconds: number;
@@ -97,7 +103,27 @@ export type AttemptEventType =
   | 'started'
   | 'focus_lost'
   | 'focus_returned'
+  | 'tab_switch'
+  | 'window_blur'
   | 'page_closed'
   | 'resumed'
   | 'time_expired'
   | 'submitted';
+
+export interface TopicScore {
+  earned: number;
+  max: number;
+  percent: number;
+}
+
+export interface ApplicantResult {
+  testTitle: string;
+  subject: string;
+  totalScore: number;
+  percent: number;
+  minScore: number;
+  passed: boolean;
+  schoolComment: string | null;
+  topicBreakdown: Record<string, TopicScore>;
+  weakTopics: string[];
+}

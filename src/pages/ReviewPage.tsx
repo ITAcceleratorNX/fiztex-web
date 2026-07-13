@@ -98,6 +98,7 @@ export function ReviewPage() {
                   <th className="px-6 py-3.5">Поступающий</th>
                   <th className="px-6 py-3.5">Тест</th>
                   <th className="px-6 py-3.5">Завершён</th>
+                  <th className="px-6 py-3.5">Вкладки</th>
                   <th className="px-6 py-3.5">События</th>
                   <th className="px-6 py-3.5">Статус</th>
                   <th className="px-6 py-3.5 text-right">Действие</th>
@@ -109,6 +110,17 @@ export function ReviewPage() {
                     <td className="px-6 py-3.5 font-semibold text-slate-800">{r.applicantName}</td>
                     <td className="px-6 py-3.5 text-sm text-slate-600">{r.testTitle}</td>
                     <td className="px-6 py-3.5 text-sm text-slate-500">{formatDateTime(r.finishedAt)}</td>
+                    <td className="px-6 py-3.5">
+                      {(r.tabSwitchCount ?? 0) > 0 ? (
+                        <Badge tone="amber" dot>
+                          <AlertTriangle className="h-3.5 w-3.5" />
+                          {r.tabSwitchCount}{' '}
+                          {pluralRu(r.tabSwitchCount, ['раз', 'раза', 'раз'])}
+                        </Badge>
+                      ) : (
+                        <span className="text-sm text-slate-400">0</span>
+                      )}
+                    </td>
                     <td className="px-6 py-3.5">
                       {r.suspiciousLogs.length > 0 ? (
                         <Badge tone="amber" dot>

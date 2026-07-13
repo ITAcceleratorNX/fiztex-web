@@ -1,15 +1,19 @@
 import { useState } from 'react';
-import { BookOpen, Clock, LogOut, RefreshCw } from 'lucide-react';
+import { BookOpen, Clock, LogOut, RefreshCw, Trophy } from 'lucide-react';
 import { EntranceShell } from './EntranceShell';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { pluralRu } from '@/lib/format';
 import type { ApplicantView, AssignmentItem, EntranceListStatus } from '@/lib/entranceTypes';
 
-const STATUS_META: Record<EntranceListStatus, { label: string; tone: 'gray' | 'blue' | 'amber' }> = {
+const STATUS_META: Record<
+  EntranceListStatus,
+  { label: string; tone: 'gray' | 'blue' | 'amber' | 'green' }
+> = {
   NOT_STARTED: { label: 'Не начат', tone: 'gray' },
   IN_PROGRESS: { label: 'В процессе', tone: 'blue' },
   AWAITING_REVIEW: { label: 'Ожидает проверки', tone: 'amber' },
+  OPEN_FOR_VIEWING: { label: 'Результат доступен', tone: 'green' },
   UNAVAILABLE: { label: 'Недоступен', tone: 'gray' },
 };
 
@@ -19,12 +23,14 @@ export function AssignmentsScreen({
   assignments,
   onStart,
   onContinue,
+  onViewResult,
   onExit,
 }: {
   applicant: ApplicantView;
   assignments: AssignmentItem[];
   onStart: (item: AssignmentItem) => void;
   onContinue: (item: AssignmentItem) => Promise<void>;
+  onViewResult: (item: AssignmentItem) => Promise<void>;
   onExit: () => void;
 }) {
   const [busyId, setBusyId] = useState<number | null>(null);
@@ -33,6 +39,15 @@ export function AssignmentsScreen({
     setBusyId(item.assignmentId);
     try {
       await onContinue(item);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleViewResult(item: AssignmentItem) {
+    setBusyId(item.assignmentId);
+    try {
+      await onViewResult(item);
     } finally {
       setBusyId(null);
     }
@@ -94,6 +109,16 @@ export function AssignmentsScreen({
                       onClick={() => handleContinue(item)}
                     >
                       Продолжить
+                    </Button>
+                  )}
+                  {item.availableAction === 'VIEW_RESULT' && (
+                    <Button
+                      size="sm"
+                      icon={<Trophy className="h-4 w-4" />}
+                      loading={busyId === item.assignmentId}
+                      onClick={() => handleViewResult(item)}
+                    >
+                      Посмотреть результат
                     </Button>
                   )}
                   {item.availableAction === 'NONE' && (

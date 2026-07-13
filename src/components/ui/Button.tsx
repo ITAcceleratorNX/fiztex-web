@@ -22,8 +22,8 @@ const variants: Record<Variant, string> = {
 };
 
 const sizes: Record<Size, string> = {
-  sm: 'h-9 px-3.5 text-sm gap-1.5',
-  md: 'h-11 px-5 text-sm gap-2',
+  sm: 'h-9 px-3.5 text-sm',
+  md: 'h-11 px-5 text-sm',
 };
 
 export function Button({
@@ -48,8 +48,22 @@ export function Button({
       disabled={disabled || loading}
       {...props}
     >
-      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : icon}
-      {children}
+      <span
+        className={cx(
+          'inline-flex items-center',
+          (loading || icon) && (size === 'sm' ? 'gap-1.5' : 'gap-2'),
+        )}
+      >
+        <span
+          className={cx(
+            'inline-flex size-4 shrink-0 items-center justify-center',
+            !loading && !icon && 'hidden',
+          )}
+        >
+          {loading ? <Loader2 className="size-4 animate-spin" /> : icon}
+        </span>
+        {children}
+      </span>
     </button>
   );
 }

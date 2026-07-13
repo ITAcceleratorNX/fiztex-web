@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Check, X, ShieldAlert, CircleDot } from 'lucide-react';
 import { api, ApiError } from '@/lib/api';
@@ -58,23 +58,43 @@ export function ReviewModal({
   const [savingQ, setSavingQ] = useState<number | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [opening, setOpening] = useState(false);
+  const activeAttemptRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!open || attemptId == null) return;
+    if (!open) {
+      activeAttemptRef.current = null;
+      setDetail(null);
+      setLoadError(null);
+      setLoading(false);
+      setDrafts({});
+      setSchoolComment('');
+      setSavingQ(null);
+      setConfirming(false);
+      setOpening(false);
+      return;
+    }
+
+    if (attemptId == null) return;
+    activeAttemptRef.current = attemptId;
     let cancelled = false;
     setLoading(true);
     setLoadError(null);
+    setDetail(null);
+    setDrafts({});
+    setSchoolComment('');
     api
       .getReview(attemptId)
       .then((d) => {
-        if (cancelled) return;
+        if (cancelled || activeAttemptRef.current !== attemptId) return;
         applyDetail(d);
       })
       .catch((e) => {
-        if (cancelled) return;
+        if (cancelled || activeAttemptRef.current !== attemptId) return;
         setLoadError(e instanceof ApiError ? e.message : 'Не удалось загрузить попытку');
       })
-      .finally(() => !cancelled && setLoading(false));
+      .finally(() => {
+        if (!cancelled && activeAttemptRef.current === attemptId) setLoading(false);
+      });
     return () => {
       cancelled = true;
     };
@@ -103,7 +123,7 @@ export function ReviewModal({
   const maxTotal = (detail?.answers ?? []).reduce((s, a) => s + a.maxScore, 0);
 
   async function saveAnswer(a: AnswerReviewItem) {
-    if (attemptId == null) return;
+    if (attemptId == null || activeAttemptRef.current !== attemptId) return;
     const draft = drafts[a.questionId];
     const score = Number(draft?.score ?? 0);
     if (Number.isNaN(score) || score < 0 || score > a.maxScore) {
@@ -116,76 +136,72 @@ export function ReviewModal({
         finalScore: score,
         adminComment: draft?.comment || null,
       });
+      if (activeAttemptRef.current !== attemptId) return;
       setDetail(updated);
       toast.success('Балл сохранён');
     } catch (e) {
+      if (activeAttemptRef.current !== attemptId) return;
       toast.error(e instanceof ApiError ? e.message : 'Не удалось сохранить балл');
     } finally {
-      setSavingQ(null);
+      if (activeAttemptRef.current === attemptId) setSavingQ(null);
     }
   }
 
   async function confirm() {
-    if (attemptId == null) return;
+    if (attemptId == null || activeAttemptRef.current !== attemptId) return;
     setConfirming(true);
     try {
       const updated = await api.confirmReview(attemptId, { schoolComment: schoolComment || null });
+      if (activeAttemptRef.current !== attemptId) return;
       setDetail(updated);
       qc.invalidateQueries({ queryKey: keys.reviews });
       toast.success('Проверка подтверждена');
     } catch (e) {
+      if (activeAttemptRef.current !== attemptId) return;
       toast.error(e instanceof ApiError ? e.message : 'Не удалось подтвердить проверку');
     } finally {
-      setConfirming(false);
+      if (activeAttemptRef.current === attemptId) setConfirming(false);
     }
   }
 
   async function openForViewing() {
-    if (attemptId == null) return;
+    if (attemptId == null || activeAttemptRef.current !== attemptId) return;
     setOpening(true);
     try {
       const updated = await api.openResult(attemptId);
+      if (activeAttemptRef.current !== attemptId) return;
       setDetail(updated);
       qc.invalidateQueries({ queryKey: keys.reviews });
       toast.success('Результат открыт для просмотра');
     } catch (e) {
+      if (activeAttemptRef.current !== attemptId) return;
       toast.error(e instanceof ApiError ? e.message : 'Не удалось открыть результат');
     } finally {
-      setOpening(false);
+      if (activeAttemptRef.current === attemptId) setOpening(false);
     }
   }
 
   function handleClose() {
-    setDetail(null);
-    setDrafts({});
-    setSchoolComment('');
     onClose();
   }
 
-  const footer =
-    detail == null ? null : detail.status === 'PENDING' ? (
-      <>
-        <Button variant="secondary" onClick={handleClose}>
-          Закрыть
-        </Button>
-        <Button loading={confirming} onClick={confirm}>
-          Подтвердить проверку
-        </Button>
-      </>
-    ) : detail.status === 'REVIEWED' ? (
-      <>
-        <Button variant="secondary" onClick={handleClose}>
-          Закрыть
-        </Button>
-        <Button loading={opening} onClick={openForViewing}>
-          Открыть результат по коду
-        </Button>
-      </>
-    ) : (
-      <Button variant="secondary" onClick={handleClose}>
+  const footer = (
+    <>
+      <Button variant="secondary" onClick={handleClose} disabled={confirming || opening}>
         Закрыть
       </Button>
-    );
+      {detail?.status === 'PENDING' && (
+        <Button loading={confirming} disabled={loading || !detail} onClick={confirm}>
+          Подтвердить проверку
+        </Button>
+      )}
+      {detail?.status === 'REVIEWED' && (
+        <Button loading={opening} disabled={loading || !detail} onClick={openForViewing}>
+          Открыть результат по коду
+        </Button>
+      )}
+    </>
+  );
 
   return (
     <Modal
@@ -231,6 +247,16 @@ export function ReviewModal({
               <span className="text-sm font-semibold text-slate-700">
                 Античит-события ({detail.suspiciousLogs.length})
               </span>
+              {(detail.tabSwitchCount ?? 0) > 0 && (
+                <Badge tone="amber" dot>
+                  {detail.tabSwitchCount}{' '}
+                  {detail.tabSwitchCount === 1
+                    ? 'переключение вкладки'
+                    : detail.tabSwitchCount < 5
+                      ? 'переключения вкладки'
+                      : 'переключений вкладки'}
+                </Badge>
+              )}
             </div>
             {detail.suspiciousLogs.length === 0 ? (
               <p className="mt-2 text-sm text-slate-400">Событий не зафиксировано.</p>

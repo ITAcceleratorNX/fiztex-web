@@ -239,6 +239,7 @@ export interface ReviewDetail {
   attemptStatus: AssignmentStatus;
   answers: AnswerReviewItem[];
   suspiciousLogs: SuspiciousLogItem[];
+  tabSwitchCount: number;
   topicBreakdown: Record<string, TopicScore>;
   weakTopics: string[];
   finishedAt: string | null;

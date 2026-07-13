@@ -59,6 +59,14 @@ export function InstructionScreen({
           </div>
         ) : null}
 
+        <div className="mt-5 flex items-start gap-2.5 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600 ring-1 ring-slate-200">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+          <span>
+            Не переключайте вкладку во время теста — каждое переключение фиксируется и передаётся
+            школе при проверке.
+          </span>
+        </div>
+
         <div className="mt-5 flex items-start gap-2.5 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700 ring-1 ring-amber-200">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{WARNING}</span>

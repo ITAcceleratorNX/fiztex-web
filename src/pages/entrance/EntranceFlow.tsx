@@ -16,9 +16,10 @@ import { AssignmentsScreen } from './AssignmentsScreen';
 import { InstructionScreen } from './InstructionScreen';
 import { AttemptScreen } from './AttemptScreen';
 import { FinishedScreen } from './FinishedScreen';
-import type { ApplicantView, AssignmentItem, AttemptDetail, AttemptStatus } from '@/lib/entranceTypes';
+import { ResultScreen } from './ResultScreen';
+import type { ApplicantView, ApplicantResult, AssignmentItem, AttemptDetail, AttemptStatus } from '@/lib/entranceTypes';
 
-type Screen = 'loading' | 'code' | 'confirm' | 'list' | 'instruction' | 'attempt' | 'finished';
+type Screen = 'loading' | 'code' | 'confirm' | 'list' | 'instruction' | 'attempt' | 'finished' | 'result';
 
 const FINISHED_STATUSES: AttemptStatus[] = [
   'AWAITING_REVIEW',
@@ -40,6 +41,7 @@ export function EntranceFlow() {
   const [assignments, setAssignments] = useState<AssignmentItem[]>([]);
   const [selected, setSelected] = useState<AssignmentItem | null>(null);
   const [attempt, setAttempt] = useState<AttemptDetail | null>(null);
+  const [result, setResult] = useState<ApplicantResult | null>(null);
   const [busy, setBusy] = useState(false);
 
   // Responsive viewport for the applicant flow — the admin panel keeps its fixed 1280px layout.
@@ -75,6 +77,13 @@ export function EntranceFlow() {
           if (detail.status === 'IN_PROGRESS') {
             setAttempt(detail);
             setScreen('attempt');
+            return;
+          }
+          if (detail.status === 'OPEN_FOR_VIEWING') {
+            setActiveAttemptId(null);
+            await loadAssignments();
+            if (cancelled) return;
+            setScreen('list');
             return;
           }
           if (FINISHED_STATUSES.includes(detail.status)) {
@@ -126,6 +135,7 @@ export function EntranceFlow() {
     setApplicant(null);
     setAssignments([]);
     setAttempt(null);
+    setResult(null);
     setSelected(null);
     setScreen('code');
   }
@@ -167,9 +177,21 @@ export function EntranceFlow() {
     setScreen('finished');
   }
 
+  async function handleViewResult(item: AssignmentItem) {
+    try {
+      const data = await entranceApi.getResult(item.assignmentId);
+      setResult(data);
+      setSelected(item);
+      setScreen('result');
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'Не удалось загрузить результат');
+    }
+  }
+
   async function handleBackToList() {
     setActiveAttemptId(null);
     setAttempt(null);
+    setResult(null);
     setSelected(null);
     setBusy(true);
     try {
@@ -212,6 +234,7 @@ export function EntranceFlow() {
         assignments={assignments}
         onStart={handleStart}
         onContinue={handleContinue}
+        onViewResult={handleViewResult}
         onExit={handleExit}
       />
     );
@@ -239,6 +262,12 @@ export function EntranceFlow() {
         onBackToList={handleBackToList}
         onExit={handleExit}
       />
+    );
+  }
+
+  if (screen === 'result' && result) {
+    return (
+      <ResultScreen result={result} onBack={handleBackToList} onExit={handleExit} />
     );
   }
 

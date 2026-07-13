@@ -1,6 +1,7 @@
 import { ApiError } from './api';
 import type {
   AssignmentListResponse,
+  ApplicantResult,
   AttemptDetail,
   AttemptEventType,
   SaveAnswerResponse,
@@ -107,6 +108,9 @@ export const entranceApi = {
   },
 
   getAssignments: () => request<AssignmentListResponse>('/admissions/applicant/assignments'),
+
+  getResult: (assignmentId: number) =>
+    request<ApplicantResult>(`/admissions/assignments/${assignmentId}/result`),
 
   startAttempt: (assignmentId: number) =>
     request<AttemptDetail>('/admissions/attempts/start', { method: 'POST', body: { assignmentId } }),

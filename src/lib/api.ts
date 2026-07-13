@@ -135,8 +135,8 @@ function safeParse(text: string): unknown {
 
 export const api = {
   // Auth
-  login: (email: string, password: string) =>
-    request<Admin>('/auth/login', { method: 'POST', body: { email, password } }),
+  login: (login: string, password: string) =>
+    request<Admin>('/auth/login', { method: 'POST', body: { login, password } }),
 
   // Subjects
   listSubjects: (signal?: AbortSignal) => request<Subject[]>('/admin/subjects', { signal }),
