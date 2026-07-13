@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Clock, ArrowLeft, ArrowRight, Flag, AlertTriangle } from 'lucide-react';
+import { Clock, ArrowLeft, ArrowRight, Flag, AlertTriangle, X } from 'lucide-react';
 import { entranceApi } from '@/lib/entranceApi';
 import { ApiError } from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
@@ -9,27 +9,45 @@ import { Button } from '@/components/ui/Button';
 import { TextArea } from '@/components/ui/Field';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useAttemptEvents } from './useAttemptEvents';
-import type { AttemptDetail, AttemptQuestion } from '@/lib/entranceTypes';
+import { PhotoAnswerBlock } from './PhotoAnswerBlock';
+import { SaveStatusChip, type SaveStatus } from './SaveStatusChip';
+import type { AnswerPhotoRef, AttemptDetail, AttemptQuestion } from '@/lib/entranceTypes';
 
 interface LocalAnswer {
   selectedOptionIds: number[];
   openTextAnswer: string;
+  photos: AnswerPhotoRef[];
 }
 
 function buildInitial(attempt: AttemptDetail): Record<number, LocalAnswer> {
   const map: Record<number, LocalAnswer> = {};
-  for (const q of attempt.questions) map[q.id] = { selectedOptionIds: [], openTextAnswer: '' };
+  for (const q of attempt.questions) {
+    map[q.id] = { selectedOptionIds: [], openTextAnswer: '', photos: [] };
+  }
   for (const a of attempt.answers) {
     map[a.questionId] = {
       selectedOptionIds: a.selectedOptionIds ?? [],
       openTextAnswer: a.openTextAnswer ?? '',
+      photos: a.photos ?? [],
     };
   }
   return map;
 }
 
 function serialize(a: LocalAnswer): string {
-  return JSON.stringify({ s: [...a.selectedOptionIds].sort((x, y) => x - y), t: a.openTextAnswer });
+  return JSON.stringify({
+    s: [...a.selectedOptionIds].sort((x, y) => x - y),
+    t: a.openTextAnswer,
+    p: [...a.photos.map((photo) => photo.id)].sort((x, y) => x - y),
+  });
+}
+
+function isQuestionAnswered(a: LocalAnswer | undefined): boolean {
+  if (!a) return false;
+  if (a.photos.length > 0) return true;
+  if (a.selectedOptionIds.length > 0) return true;
+  if (a.openTextAnswer.trim().length > 0) return true;
+  return false;
 }
 
 function formatClock(totalSeconds: number): string {
@@ -38,6 +56,9 @@ function formatClock(totalSeconds: number): string {
   const sec = s % 60;
   return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
 }
+
+const CONNECTION_ISSUE_THROTTLE_MS = 60_000;
+const SAVE_RETRY_DELAY_MS = 5_000;
 
 /** Sections 8–11 — taking the test with a backend-driven timer, autosave and finish. */
 export function AttemptScreen({
@@ -52,20 +73,28 @@ export function AttemptScreen({
   const questions = attempt.questions;
   const allowBack = attempt.allowBackNavigation;
 
+  const warnThreshold = attempt.durationMinutes >= 10 ? 600 : 60;
+  const warnLabel =
+    attempt.durationMinutes >= 10 ? '10 минут' : '1 минуту';
+
   const [answers, setAnswers] = useState<Record<number, LocalAnswer>>(() => buildInitial(attempt));
+  const [saveStatus, setSaveStatus] = useState<Record<number, SaveStatus>>({});
   const [index, setIndex] = useState(0);
   const [remaining, setRemaining] = useState(attempt.remainingSeconds);
   const [submitting, setSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [showTimeWarning, setShowTimeWarning] = useState(false);
 
-  // Keep the latest answers reachable from the timer / save callbacks without re-binding them.
   const answersRef = useRef(answers);
   answersRef.current = answers;
   const saveTimers = useRef<Record<number, number>>({});
+  const retryTimers = useRef<Record<number, number>>({});
   const savedRef = useRef<Record<number, string>>({});
   const deadlineRef = useRef(Date.now() + attempt.remainingSeconds * 1000);
   const expiredRef = useRef(false);
   const submittingRef = useRef(false);
+  const timeWarnShownRef = useRef(false);
+  const lastConnectionIssueRef = useRef(0);
 
   const { tabSwitchCount, showTabSwitchWarning, dismissTabSwitchWarning } = useAttemptEvents(
     attemptId,
@@ -73,26 +102,51 @@ export function AttemptScreen({
     attempt.tabSwitchCount ?? 0,
   );
 
-  // Seed "already saved" fingerprints so resumed answers are not needlessly re-sent.
   useEffect(() => {
     const seed: Record<number, string> = {};
     for (const a of attempt.answers) {
       seed[a.questionId] = serialize({
         selectedOptionIds: a.selectedOptionIds ?? [],
         openTextAnswer: a.openTextAnswer ?? '',
+        photos: a.photos ?? [],
       });
     }
     savedRef.current = seed;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const logConnectionIssue = useCallback(
+    (detail = 'autosave failed') => {
+      const now = Date.now();
+      if (now - lastConnectionIssueRef.current < CONNECTION_ISSUE_THROTTLE_MS) return;
+      lastConnectionIssueRef.current = now;
+      void entranceApi.logEvent(attemptId, 'connection_issue', detail);
+    },
+    [attemptId],
+  );
+
+  const cancelSaveRetry = useCallback((questionId: number) => {
+    window.clearTimeout(retryTimers.current[questionId]);
+  }, []);
+
+  const saveQuestionRef = useRef<(questionId: number) => Promise<void>>(async () => {});
+
   const saveQuestion = useCallback(
     async (questionId: number) => {
       const question = questions.find((q) => q.id === questionId);
       if (!question) return;
-      const answer = answersRef.current[questionId] ?? { selectedOptionIds: [], openTextAnswer: '' };
+      const answer = answersRef.current[questionId] ?? {
+        selectedOptionIds: [],
+        openTextAnswer: '',
+        photos: [],
+      };
       const fingerprint = serialize(answer);
-      if (savedRef.current[questionId] === fingerprint) return;
+      if (savedRef.current[questionId] === fingerprint) {
+        setSaveStatus((prev) => ({ ...prev, [questionId]: 'saved' }));
+        cancelSaveRetry(questionId);
+        return;
+      }
+      setSaveStatus((prev) => ({ ...prev, [questionId]: 'saving' }));
       try {
         const res = await entranceApi.saveAnswer(attemptId, {
           questionId,
@@ -100,14 +154,22 @@ export function AttemptScreen({
           openTextAnswer: question.type === 'OPEN_TEXT' ? answer.openTextAnswer : undefined,
         });
         savedRef.current[questionId] = fingerprint;
-        // Resync the timer to the backend's authoritative remaining time (section 9).
+        setSaveStatus((prev) => ({ ...prev, [questionId]: 'saved' }));
+        cancelSaveRetry(questionId);
         deadlineRef.current = Date.now() + res.remainingSeconds * 1000;
       } catch {
-        /* Autosave is best-effort; the applicant can retry by editing again. */
+        setSaveStatus((prev) => ({ ...prev, [questionId]: 'error' }));
+        logConnectionIssue();
+        cancelSaveRetry(questionId);
+        retryTimers.current[questionId] = window.setTimeout(() => {
+          void saveQuestionRef.current(questionId);
+        }, SAVE_RETRY_DELAY_MS);
       }
     },
-    [attemptId, questions],
+    [attemptId, questions, logConnectionIssue, cancelSaveRetry],
   );
+
+  saveQuestionRef.current = saveQuestion;
 
   const finishByTimeout = useCallback(async () => {
     if (submittingRef.current) return;
@@ -123,11 +185,14 @@ export function AttemptScreen({
     onFinished();
   }, [attemptId, onFinished, toast]);
 
-  // Single 1s ticker driven by the backend-synced deadline.
   useEffect(() => {
     const tick = () => {
       const secondsLeft = Math.max(0, Math.round((deadlineRef.current - Date.now()) / 1000));
       setRemaining(secondsLeft);
+      if (secondsLeft <= warnThreshold && secondsLeft > 0 && !timeWarnShownRef.current) {
+        timeWarnShownRef.current = true;
+        setShowTimeWarning(true);
+      }
       if (secondsLeft <= 0 && !expiredRef.current) {
         expiredRef.current = true;
         void finishByTimeout();
@@ -136,9 +201,10 @@ export function AttemptScreen({
     tick();
     const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
-  }, [finishByTimeout]);
+  }, [finishByTimeout, warnThreshold]);
 
   function scheduleSave(questionId: number) {
+    cancelSaveRetry(questionId);
     window.clearTimeout(saveTimers.current[questionId]);
     saveTimers.current[questionId] = window.setTimeout(() => void saveQuestion(questionId), 700);
   }
@@ -148,28 +214,49 @@ export function AttemptScreen({
     scheduleSave(questionId);
   }
 
+  function setPhotos(questionId: number, photos: AnswerPhotoRef[]) {
+    setAnswers((prev) => ({
+      ...prev,
+      [questionId]: {
+        ...(prev[questionId] ?? { selectedOptionIds: [], openTextAnswer: '', photos: [] }),
+        photos,
+      },
+    }));
+    setSaveStatus((prev) => ({ ...prev, [questionId]: 'saved' }));
+    savedRef.current[questionId] = serialize({
+      ...(answersRef.current[questionId] ?? { selectedOptionIds: [], openTextAnswer: '', photos: [] }),
+      photos,
+    });
+  }
+
   function pickSingle(question: AttemptQuestion, optionId: number) {
+    const current = answersRef.current[question.id];
     updateAnswer(question.id, {
       selectedOptionIds: [optionId],
-      openTextAnswer: answersRef.current[question.id]?.openTextAnswer ?? '',
+      openTextAnswer: current?.openTextAnswer ?? '',
+      photos: current?.photos ?? [],
     });
   }
 
   function toggleMulti(question: AttemptQuestion, optionId: number) {
-    const current = answersRef.current[question.id]?.selectedOptionIds ?? [];
-    const next = current.includes(optionId)
-      ? current.filter((id) => id !== optionId)
-      : [...current, optionId];
+    const current = answersRef.current[question.id];
+    const selected = current?.selectedOptionIds ?? [];
+    const next = selected.includes(optionId)
+      ? selected.filter((id) => id !== optionId)
+      : [...selected, optionId];
     updateAnswer(question.id, {
       selectedOptionIds: next,
-      openTextAnswer: answersRef.current[question.id]?.openTextAnswer ?? '',
+      openTextAnswer: current?.openTextAnswer ?? '',
+      photos: current?.photos ?? [],
     });
   }
 
   function setText(question: AttemptQuestion, text: string) {
+    const current = answersRef.current[question.id];
     updateAnswer(question.id, {
-      selectedOptionIds: answersRef.current[question.id]?.selectedOptionIds ?? [],
+      selectedOptionIds: current?.selectedOptionIds ?? [],
       openTextAnswer: text,
+      photos: current?.photos ?? [],
     });
   }
 
@@ -202,17 +289,15 @@ export function AttemptScreen({
   }
 
   const question = questions[index];
-  const answer = answers[question.id] ?? { selectedOptionIds: [], openTextAnswer: '' };
-  const answeredCount = questions.filter((q) => {
-    const a = answers[q.id];
-    return a && (a.selectedOptionIds.length > 0 || a.openTextAnswer.trim().length > 0);
-  }).length;
-  const lowTime = remaining <= 60;
+  const answer = answers[question.id] ?? { selectedOptionIds: [], openTextAnswer: '', photos: [] };
+  const answeredCount = questions.filter((q) => isQuestionAnswered(answers[q.id])).length;
+  const unansweredCount = questions.length - answeredCount;
+  const lowTime = remaining <= warnThreshold;
   const isLast = index === questions.length - 1;
+  const currentSaveStatus = saveStatus[question.id] ?? 'idle';
 
   return (
     <EntranceShell size="lg">
-      {/* Sticky header: title, progress, backend timer */}
       <div className="card sticky top-4 z-10 mb-4 flex items-center justify-between gap-4 px-4 py-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-slate-800">{attempt.testTitle}</p>
@@ -245,6 +330,27 @@ export function AttemptScreen({
         </div>
       </div>
 
+      {showTimeWarning && (
+        <div className="mb-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">До конца теста осталось {warnLabel}</p>
+            <p className="mt-0.5 text-red-700">
+              Проверьте ответы и завершите тест вовремя. После истечения времени тест отправится
+              автоматически.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowTimeWarning(false)}
+            className="shrink-0 rounded-lg p-1 text-red-600 transition hover:bg-red-100"
+            aria-label="Закрыть"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {showTabSwitchWarning && tabSwitchCount > 0 && (
         <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -265,7 +371,6 @@ export function AttemptScreen({
         </div>
       )}
 
-      {/* Progress bar */}
       <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
         <div
           className="h-full rounded-full bg-brand-500 transition-all"
@@ -273,11 +378,20 @@ export function AttemptScreen({
         />
       </div>
 
-      {/* Question card */}
       <div className="card p-5 sm:p-6">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-          Вопрос {index + 1}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+            Вопрос {index + 1}
+          </p>
+          <SaveStatusChip
+            status={currentSaveStatus}
+            onRetry={
+              currentSaveStatus === 'error'
+                ? () => void saveQuestion(question.id)
+                : undefined
+            }
+          />
+        </div>
         <h2 className="mt-1.5 text-base font-semibold leading-relaxed text-slate-800">
           {question.text}
         </h2>
@@ -332,24 +446,39 @@ export function AttemptScreen({
               );
             })}
 
-          {question.type === 'OPEN_TEXT' && (
-            <TextArea
-              value={answer.openTextAnswer}
-              onChange={(e) => setText(question, e.target.value)}
-              placeholder="Введите ответ…"
-              rows={5}
-            />
+          {(question.type === 'OPEN_TEXT' || question.type === 'PHOTO') &&
+            question.type === 'OPEN_TEXT' && (
+              <TextArea
+                value={answer.openTextAnswer}
+                onChange={(e) => setText(question, e.target.value)}
+                placeholder="Введите ответ…"
+                rows={5}
+              />
+            )}
+
+          {question.type === 'PHOTO' && !question.allowPhoto && (
+            <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <p>
+                Этот вопрос настроен некорректно. Обратитесь к сотруднику школы.
+              </p>
+            </div>
           )}
 
-          {question.type === 'PHOTO' && (
-            <p className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500 ring-1 ring-slate-200">
-              Фото-ответы недоступны в этой версии.
-            </p>
+          {question.allowPhoto && (
+            <PhotoAnswerBlock
+              attemptId={attemptId}
+              questionId={question.id}
+              maxPhotos={question.maxPhotos ?? 1}
+              photos={answer.photos}
+              disabled={submitting}
+              onPhotosChange={(photos) => setPhotos(question.id, photos)}
+              onUploadFailed={() => logConnectionIssue('photo upload failed')}
+            />
           )}
         </div>
       </div>
 
-      {/* Navigation */}
       <div className="mt-4 flex items-center justify-between gap-3">
         <Button
           variant="secondary"
@@ -385,8 +514,7 @@ export function AttemptScreen({
       {allowBack && (
         <div className="mt-4 flex flex-wrap gap-1.5">
           {questions.map((q, i) => {
-            const a = answers[q.id];
-            const done = a && (a.selectedOptionIds.length > 0 || a.openTextAnswer.trim().length > 0);
+            const done = isQuestionAnswered(answers[q.id]);
             return (
               <button
                 key={q.id}
@@ -419,6 +547,17 @@ export function AttemptScreen({
           <>
             После завершения тест будет отправлен на проверку школы и его нельзя будет пройти
             повторно. Отвечено на {answeredCount} из {questions.length} вопросов.
+            {unansweredCount > 0 && (
+              <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-amber-900">
+                <p className="font-semibold">
+                  Внимание: {unansweredCount}{' '}
+                  {pluralRu(unansweredCount, ['вопрос', 'вопроса', 'вопросов'])} без ответа
+                </p>
+                <p className="mt-1 text-sm text-amber-800">
+                  Вы всё равно можете завершить тест — пустые ответы останутся незаполненными.
+                </p>
+              </div>
+            )}
           </>
         }
       />

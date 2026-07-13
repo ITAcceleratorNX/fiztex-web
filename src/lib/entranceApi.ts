@@ -6,6 +6,7 @@ import type {
   AttemptEventType,
   SaveAnswerResponse,
   SubmitResponse,
+  UploadAnswerPhotoResponse,
   VerifyCodeResponse,
 } from './entranceTypes';
 
@@ -97,6 +98,56 @@ function safeParse(text: string): unknown {
   }
 }
 
+async function requestMultipart<T>(path: string, formData: FormData): Promise<T> {
+  const headers: Record<string, string> = {};
+  if (entranceToken) headers['Authorization'] = `Bearer ${entranceToken}`;
+
+  let response: Response;
+  try {
+    response = await fetch(`/api${path}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+  } catch {
+    throw new ApiError(0, 'Не удалось соединиться с сервером. Проверьте, запущен ли backend.');
+  }
+
+  if (response.status === 401) {
+    clearEntranceSession();
+    throw new ApiError(401, 'Сессия истекла. Войдите по коду заново.');
+  }
+
+  const text = await response.text();
+  const data = text ? safeParse(text) : undefined;
+
+  if (!response.ok) {
+    const message =
+      (data && typeof data === 'object' && 'message' in data && (data as { message?: string }).message) ||
+      `Ошибка ${response.status}`;
+    throw new ApiError(response.status, String(message));
+  }
+
+  return data as T;
+}
+
+/** Load a protected photo URL with the entrance token (img tags cannot send Authorization). */
+export async function fetchEntrancePhotoBlob(photoUrl: string): Promise<string> {
+  const headers: Record<string, string> = {};
+  if (entranceToken) headers['Authorization'] = `Bearer ${entranceToken}`;
+  const path = photoUrl.startsWith('/api') ? photoUrl : `/api${photoUrl}`;
+  const response = await fetch(path, { headers });
+  if (response.status === 401) {
+    clearEntranceSession();
+    throw new ApiError(401, 'Сессия истекла. Войдите по коду заново.');
+  }
+  if (!response.ok) {
+    throw new ApiError(response.status, 'Не удалось загрузить фото');
+  }
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
 export const entranceApi = {
   verifyCode: async (code: string): Promise<VerifyCodeResponse> => {
     const result = await request<VerifyCodeResponse>('/admissions/access-code/verify', {
@@ -136,5 +187,19 @@ export const entranceApi = {
       keepalive,
     }).catch(() => {
       /* Anti-cheat logging is best-effort and must never break the attempt UX. */
+    }),
+
+  uploadAnswerPhoto: (attemptId: number, questionId: number, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return requestMultipart<UploadAnswerPhotoResponse>(
+      `/admissions/attempts/${attemptId}/answers/${questionId}/photos`,
+      formData,
+    );
+  },
+
+  deleteAnswerPhoto: (attemptId: number, questionId: number, photoId: number) =>
+    request<void>(`/admissions/attempts/${attemptId}/answers/${questionId}/photos/${photoId}`, {
+      method: 'DELETE',
     }),
 };

@@ -52,12 +52,25 @@ export interface AttemptQuestion {
   text: string;
   orderIndex: number;
   options: AttemptOption[];
+  allowPhoto: boolean;
+  maxPhotos: number;
+}
+
+export interface AnswerPhotoRef {
+  id: number;
+  url: string;
 }
 
 export interface SavedAnswer {
   questionId: number;
   selectedOptionIds: number[];
   openTextAnswer: string | null;
+  photos: AnswerPhotoRef[];
+}
+
+export interface UploadAnswerPhotoResponse {
+  id: number;
+  url: string;
 }
 
 /** Attempt lifecycle status as reported by the backend. */
@@ -108,7 +121,8 @@ export type AttemptEventType =
   | 'page_closed'
   | 'resumed'
   | 'time_expired'
-  | 'submitted';
+  | 'submitted'
+  | 'connection_issue';
 
 export interface TopicScore {
   earned: number;
