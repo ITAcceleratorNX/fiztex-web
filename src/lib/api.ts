@@ -4,6 +4,9 @@ import type {
   ApplicantRequest,
   AssignResult,
   ConfirmReviewRequest,
+  MonitoringAttemptItem,
+  NotificationItem,
+  Page,
   ReviewDetail,
   ScoreAnswerRequest,
   Subject,
@@ -13,9 +16,11 @@ import type {
   MaterialDownloadResponse,
   GenerateTestRequest,
   GenerationJobResponse,
+  SuspiciousLogItem,
   Test,
   TestAssignmentView,
   TestRequest,
+  UnreadCountResponse,
 } from './types';
 
 const TOKEN_KEY = 'fiztex.token';
@@ -134,6 +139,17 @@ function safeParse(text: string): unknown {
   }
 }
 
+function pageQuery(params: Record<string, string | number | boolean | undefined | null>): string {
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== '') {
+      qs.set(key, String(value));
+    }
+  }
+  const query = qs.toString();
+  return query ? `?${query}` : '';
+}
+
 export const api = {
   // Auth
   login: (login: string, password: string) =>
@@ -206,4 +222,43 @@ export const api = {
     request<GenerationJobResponse>(`/tests/${testId}/generate`, { method: 'POST', body }),
   getGenerationJob: (id: number, signal?: AbortSignal) =>
     request<GenerationJobResponse>(`/generation-jobs/${id}`, { signal }),
+
+  // Admissions admin (monitoring & notifications)
+  listAdmissionsNotifications: (
+    params: { unread?: boolean; page?: number; size?: number } = {},
+    signal?: AbortSignal,
+  ) =>
+    request<Page<NotificationItem>>(
+      `/admin/admissions/notifications${pageQuery({
+        unread: params.unread,
+        page: params.page ?? 0,
+        size: params.size ?? 20,
+      })}`,
+      { signal },
+    ),
+  getAdmissionsUnreadCount: (signal?: AbortSignal) =>
+    request<UnreadCountResponse>('/admin/admissions/notifications/unread-count', { signal }),
+  markAdmissionsNotificationRead: (id: number) =>
+    request<void>(`/admin/admissions/notifications/${id}/read`, { method: 'POST' }),
+  markAllAdmissionsNotificationsRead: () =>
+    request<void>('/admin/admissions/notifications/read-all', { method: 'POST' }),
+  listMonitoringAttempts: (
+    params: { status?: string; page?: number; size?: number } = {},
+    signal?: AbortSignal,
+  ) =>
+    request<Page<MonitoringAttemptItem>>(
+      `/admin/admissions/attempts${pageQuery({
+        status: params.status,
+        page: params.page ?? 0,
+        size: params.size ?? 100,
+      })}`,
+      { signal },
+    ),
+  getAttemptLogs: (attemptId: number, page = 0, size = 20, signal?: AbortSignal) =>
+    request<Page<SuspiciousLogItem>>(
+      `/admin/admissions/attempts/${attemptId}/logs${pageQuery({ page, size })}`,
+      { signal },
+    ),
+  allowRetake: (assignmentId: number) =>
+    request<void>(`/admin/admissions/assignments/${assignmentId}/allow-retake`, { method: 'POST' }),
 };

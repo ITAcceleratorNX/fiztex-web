@@ -51,7 +51,7 @@ export function Button({
       <span
         className={cx(
           'inline-flex items-center',
-          (loading || icon) && (size === 'sm' ? 'gap-1.5' : 'gap-2'),
+          (loading || (icon != null && icon !== false)) && (size === 'sm' ? 'gap-1.5' : 'gap-2'),
         )}
       >
         <span

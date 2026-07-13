@@ -68,12 +68,28 @@ export function AssignmentsScreen({
       </div>
 
       <p className="mt-4 text-sm text-slate-500">
-        Вам назначено {assignments.length}{' '}
-        {pluralRu(assignments.length, ['тест', 'теста', 'тестов'])}. Выберите, какой пройти.
+        {assignments.length === 0 ? (
+          <>
+            Сейчас нет назначенных тестов. Если вы ожидали тест — обратитесь к сотруднику школы.
+          </>
+        ) : (
+          <>
+            Вам назначено {assignments.length}{' '}
+            {pluralRu(assignments.length, ['тест', 'теста', 'тестов'])}. Выберите, какой пройти.
+          </>
+        )}
       </p>
 
-      <div className="mt-5 space-y-3">
-        {assignments.map((item) => {
+      {assignments.length === 0 ? (
+        <div className="card mt-5 p-6 text-center">
+          <p className="text-sm font-medium text-slate-700">Нет назначенных тестов</p>
+          <p className="mt-2 text-sm text-slate-500">
+            Попросите сотрудника школы проверить, что тест назначен на ваш код доступа.
+          </p>
+        </div>
+      ) : (
+        <div className="mt-5 space-y-3">
+          {assignments.map((item) => {
           const meta = STATUS_META[item.status] ?? STATUS_META.UNAVAILABLE;
           return (
             <div key={item.assignmentId} className="card p-4 sm:p-5">
@@ -131,7 +147,8 @@ export function AssignmentsScreen({
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
       <button
         onClick={onExit}
