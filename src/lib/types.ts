@@ -53,6 +53,7 @@ export interface TestAssignmentView {
   status: AssignmentStatus;
   assignedAt: string;
   assignedBy: string | null;
+  canChangeVersion: boolean;
 }
 
 export interface AnswerOptionResponse {
@@ -207,6 +208,8 @@ export interface AnswerReviewItem {
   autoScore: number | null;
   aiScore: number | null;
   aiComment: string | null;
+  aiConfidence: 'HIGH' | 'MEDIUM' | 'LOW' | null;
+  aiWarning: string | null;
   finalScore: number | null;
   maxScore: number;
   adminComment: string | null;
@@ -236,6 +239,7 @@ export interface ReviewDetail {
   passed: boolean;
   status: ResultStatus;
   schoolComment: string | null;
+  internalComment: string | null;
   attemptStatus: AssignmentStatus;
   answers: AnswerReviewItem[];
   suspiciousLogs: SuspiciousLogItem[];
@@ -252,6 +256,7 @@ export interface ScoreAnswerRequest {
 
 export interface ConfirmReviewRequest {
   schoolComment?: string | null;
+  internalComment?: string | null;
 }
 
 // ---- Subject materials library ----

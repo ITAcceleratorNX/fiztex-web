@@ -14,6 +14,7 @@ import type {
   GenerateTestRequest,
   GenerationJobResponse,
   Test,
+  TestAssignmentView,
   TestRequest,
 } from './types';
 
@@ -159,6 +160,11 @@ export const api = {
   deleteTest: (id: number) => request<void>(`/admin/tests/${id}`, { method: 'DELETE' }),
   assignTest: (id: number, applicantIds: number[]) =>
     request<AssignResult>(`/admin/tests/${id}/assign`, { method: 'POST', body: { applicantIds } }),
+  changeAssignmentVersion: (testId: number, assignmentId: number, versionNumber: number) =>
+    request<TestAssignmentView>(`/admin/tests/${testId}/assignments/${assignmentId}/version`, {
+      method: 'PATCH',
+      body: { versionNumber },
+    }),
 
   // Review (admin answer checking)
   listReviews: (status?: string, signal?: AbortSignal) =>

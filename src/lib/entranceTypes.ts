@@ -125,5 +125,6 @@ export interface ApplicantResult {
   passed: boolean;
   schoolComment: string | null;
   topicBreakdown: Record<string, TopicScore>;
+  strongTopics: string[];
   weakTopics: string[];
 }

@@ -1,7 +1,6 @@
-import { ArrowLeft, CheckCircle2, XCircle, TrendingUp } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, TrendingUp, TrendingDown } from 'lucide-react';
 import { EntranceShell } from './EntranceShell';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { cx } from '@/lib/format';
 import type { ApplicantResult } from '@/lib/entranceTypes';
 
@@ -17,6 +16,7 @@ export function ResultScreen({
 }) {
   const topics = Object.entries(result.topicBreakdown);
   const maxTotal = topics.reduce((sum, [, t]) => sum + t.max, 0) || result.minScore;
+  const hasTopics = result.strongTopics.length > 0 || result.weakTopics.length > 0;
 
   return (
     <EntranceShell size="lg">
@@ -82,42 +82,40 @@ export function ResultScreen({
             </div>
           )}
 
-          {topics.length > 0 && (
-            <div>
-              <div className="mb-3 flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-brand-500" />
-                <h2 className="text-sm font-semibold text-slate-800">Результаты по темам</h2>
-              </div>
-              <ul className="space-y-2.5">
-                {topics.map(([topic, score]) => {
-                  const pct = score.max > 0 ? Math.round(score.percent) : 0;
-                  const weak = result.weakTopics.includes(topic);
-                  return (
-                    <li key={topic} className="rounded-xl border border-slate-200 px-4 py-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-medium text-slate-800">{topic}</span>
-                        <span className="text-sm tabular-nums text-slate-600">
-                          {score.earned} / {score.max}
-                        </span>
-                      </div>
-                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                        <div
-                          className={cx(
-                            'h-full rounded-full transition-all',
-                            weak ? 'bg-amber-400' : 'bg-brand-500',
-                          )}
-                          style={{ width: `${Math.min(100, pct)}%` }}
-                        />
-                      </div>
-                      {weak && (
-                        <div className="mt-2">
-                          <Badge tone="amber">Требует внимания</Badge>
-                        </div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
+          {hasTopics && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {result.strongTopics.length > 0 && (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-emerald-600" />
+                    <h2 className="text-sm font-semibold text-emerald-800">Сильные темы</h2>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {result.strongTopics.map((topic) => (
+                      <li key={topic} className="flex items-center gap-2 text-sm text-slate-700">
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                        {topic}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {result.weakTopics.length > 0 && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <TrendingDown className="h-4 w-4 text-amber-600" />
+                    <h2 className="text-sm font-semibold text-amber-800">Слабые темы</h2>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {result.weakTopics.map((topic) => (
+                      <li key={topic} className="flex items-center gap-2 text-sm text-slate-700">
+                        <XCircle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                        {topic}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 

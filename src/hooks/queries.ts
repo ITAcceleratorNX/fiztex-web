@@ -117,6 +117,19 @@ export function useAssignTest() {
   });
 }
 
+export function useChangeAssignmentVersion(testId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ assignmentId, versionNumber }: { assignmentId: number; versionNumber: number }) =>
+      api.changeAssignmentVersion(testId, assignmentId, versionNumber),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tests'] });
+      qc.invalidateQueries({ queryKey: keys.test(testId) });
+      qc.invalidateQueries({ queryKey: keys.applicants });
+    },
+  });
+}
+
 // ---- Review (проверка ответов) ----
 export function useReviews(status?: string) {
   return useQuery({

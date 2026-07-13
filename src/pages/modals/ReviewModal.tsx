@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Check, X, ShieldAlert, CircleDot } from 'lucide-react';
+import { Check, X, ShieldAlert, CircleDot, Sparkles, AlertTriangle } from 'lucide-react';
 import { api, ApiError } from '@/lib/api';
 import { keys } from '@/hooks/queries';
 import { useToast } from '@/context/ToastContext';
@@ -33,6 +33,12 @@ const EVENT_LABEL: Record<string, string> = {
   RE_ENTRY: 'Повторный вход',
 };
 
+const CONFIDENCE_META: Record<'HIGH' | 'MEDIUM' | 'LOW', { label: string; tone: 'green' | 'amber' | 'red' }> = {
+  HIGH: { label: 'высокая', tone: 'green' },
+  MEDIUM: { label: 'средняя', tone: 'amber' },
+  LOW: { label: 'низкая', tone: 'red' },
+};
+
 interface Draft {
   score: string;
   comment: string;
@@ -55,6 +61,7 @@ export function ReviewModal({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<number, Draft>>({});
   const [schoolComment, setSchoolComment] = useState('');
+  const [internalComment, setInternalComment] = useState('');
   const [savingQ, setSavingQ] = useState<number | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [opening, setOpening] = useState(false);
@@ -68,6 +75,7 @@ export function ReviewModal({
       setLoading(false);
       setDrafts({});
       setSchoolComment('');
+      setInternalComment('');
       setSavingQ(null);
       setConfirming(false);
       setOpening(false);
@@ -82,6 +90,7 @@ export function ReviewModal({
     setDetail(null);
     setDrafts({});
     setSchoolComment('');
+    setInternalComment('');
     api
       .getReview(attemptId)
       .then((d) => {
@@ -104,6 +113,7 @@ export function ReviewModal({
   function applyDetail(d: ReviewDetail) {
     setDetail(d);
     setSchoolComment(d.schoolComment ?? '');
+    setInternalComment(d.internalComment ?? '');
     setDrafts((prev) => {
       const next = { ...prev };
       for (const a of d.answers) {
@@ -151,7 +161,10 @@ export function ReviewModal({
     if (attemptId == null || activeAttemptRef.current !== attemptId) return;
     setConfirming(true);
     try {
-      const updated = await api.confirmReview(attemptId, { schoolComment: schoolComment || null });
+      const updated = await api.confirmReview(attemptId, {
+        schoolComment: schoolComment || null,
+        internalComment: internalComment || null,
+      });
       if (activeAttemptRef.current !== attemptId) return;
       setDetail(updated);
       qc.invalidateQueries({ queryKey: keys.reviews });
@@ -294,13 +307,25 @@ export function ReviewModal({
             ))}
           </div>
 
-          {/* School comment */}
+          {/* School comment — visible to the applicant/parent after the result is opened */}
           <div>
-            <label className="label-base">Комментарий школы (необязательно)</label>
+            <label className="label-base">Комментарий школы (виден поступающему)</label>
             <TextArea
               value={schoolComment}
               onChange={(e) => setSchoolComment(e.target.value)}
-              placeholder="Общий комментарий к проверке…"
+              placeholder="Комментарий, который увидит поступающий после открытия результата…"
+              disabled={locked}
+              rows={3}
+            />
+          </div>
+
+          {/* Internal comment — never shown to the applicant */}
+          <div>
+            <label className="label-base">Внутренний комментарий (только для школы)</label>
+            <TextArea
+              value={internalComment}
+              onChange={(e) => setInternalComment(e.target.value)}
+              placeholder="Заметка для школы/админа — поступающий её не увидит…"
               disabled={locked}
               rows={3}
             />
@@ -397,6 +422,47 @@ function AnswerCard({
               <p className="whitespace-pre-wrap">{answer.referenceAnswer}</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* AI hint — assistant only, never the final decision (open answers) */}
+      {!isChoice && answer.aiScore != null && (
+        <div className="mt-3 rounded-lg border border-violet-200 bg-violet-50/60 px-3 py-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-violet-700">
+              <Sparkles className="h-3.5 w-3.5" />
+              AI-подсказка
+            </span>
+            <span className="text-xs font-medium text-violet-800">
+              Предложенный балл: {answer.aiScore} / {answer.maxScore}
+            </span>
+            {answer.aiConfidence && (
+              <Badge tone={CONFIDENCE_META[answer.aiConfidence].tone}>
+                Уверенность: {CONFIDENCE_META[answer.aiConfidence].label}
+              </Badge>
+            )}
+            {!locked && (
+              <button
+                type="button"
+                onClick={() => onChange({ ...draft, score: String(answer.aiScore) })}
+                className="ml-auto rounded-lg px-2 py-1 text-xs font-semibold text-violet-700 transition hover:bg-violet-100"
+              >
+                Применить балл
+              </button>
+            )}
+          </div>
+          {answer.aiComment && (
+            <p className="mt-1.5 text-sm text-slate-700">{answer.aiComment}</p>
+          )}
+          {answer.aiWarning && (
+            <p className="mt-1.5 flex items-start gap-1.5 text-xs text-amber-700">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              {answer.aiWarning}
+            </p>
+          )}
+          <p className="mt-1.5 text-xs text-slate-400">
+            AI — помощник. Итоговый балл выставляет админ.
+          </p>
         </div>
       )}
 

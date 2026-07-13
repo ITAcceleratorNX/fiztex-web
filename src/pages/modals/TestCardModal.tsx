@@ -5,8 +5,9 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
+import { Select } from '@/components/ui/Select';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
-import { useTest } from '@/hooks/queries';
+import { useTest, useChangeAssignmentVersion } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import { formatDateTime, versionLabel } from '@/lib/format';
 import { QUESTION_TYPE_LABELS, countDraftQuestions, difficultyLabel } from '@/lib/testQuestions';
@@ -16,6 +17,7 @@ import { DraftReviewBanner } from '@/components/ui/DraftReviewBanner';
 import { AssignModal } from './AssignModal';
 import { TestQuestionsModal } from './TestQuestionsModal';
 import { TestGenerateModal } from './TestGenerateModal';
+import type { TestVersionSummary } from '@/lib/types';
 
 function Metric({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
@@ -25,6 +27,53 @@ function Metric({ icon, label, value }: { icon: ReactNode; label: string; value:
         {label}
       </div>
       <p className="mt-1 text-sm font-semibold text-slate-800">{value}</p>
+    </div>
+  );
+}
+
+function AssignmentVersionSelect({
+  testId,
+  assignmentId,
+  currentVersion,
+  versions,
+  onChanged,
+}: {
+  testId: number;
+  assignmentId: number;
+  currentVersion: number | null;
+  versions: TestVersionSummary[];
+  onChanged: () => void;
+}) {
+  const changeVersion = useChangeAssignmentVersion(testId);
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <Select
+        className="w-auto min-w-[8.5rem] py-1.5 text-xs"
+        value={String(currentVersion ?? '')}
+        disabled={changeVersion.isPending}
+        onChange={(e) => {
+          const next = Number(e.target.value);
+          if (!next || next === currentVersion) return;
+          setError(null);
+          changeVersion.mutate(
+            { assignmentId, versionNumber: next },
+            {
+              onSuccess: () => onChanged(),
+              onError: (err) =>
+                setError(err instanceof ApiError ? err.message : 'Не удалось сменить версию'),
+            },
+          );
+        }}
+      >
+        {versions.map((v) => (
+          <option key={v.id} value={v.versionNumber}>
+            Версия {v.versionNumber}
+          </option>
+        ))}
+      </Select>
+      {error && <span className="max-w-[10rem] text-right text-xs text-red-600">{error}</span>}
     </div>
   );
 }
@@ -228,10 +277,22 @@ export function TestCardModal({
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-medium text-slate-800">{a.applicantName}</span>
                         <span className="block truncate text-xs text-slate-400">
-                          {a.grade} · {a.accessCode ?? '—'} · Версия {a.versionNumber ?? '—'}
+                          {a.grade} · {a.accessCode ?? '—'}
+                          {!a.canChangeVersion && ` · Версия ${a.versionNumber ?? '—'}`}
                         </span>
                       </span>
-                      <span className="text-xs text-slate-400">{formatDateTime(a.assignedAt)}</span>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        {a.canChangeVersion && test.versions.length > 1 ? (
+                          <AssignmentVersionSelect
+                            testId={test.id}
+                            assignmentId={a.id}
+                            currentVersion={a.versionNumber}
+                            versions={test.versions}
+                            onChanged={() => void refetch()}
+                          />
+                        ) : null}
+                        <span className="text-xs text-slate-400">{formatDateTime(a.assignedAt)}</span>
+                      </div>
                     </li>
                   ))}
                 </ul>
