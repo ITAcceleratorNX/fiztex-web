@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import type {
   ApplicantRequest,
@@ -21,7 +21,13 @@ export const keys = {
   reviews: ['reviews'] as const,
   materials: (subjectId: number) => ['materials', subjectId] as const,
   generationJob: (id: number) => ['generation-jobs', id] as const,
+  admissionsUnreadCount: ['admissions', 'notifications', 'unread-count'] as const,
+  admissionsNotifications: (unread?: boolean) => ['admissions', 'notifications', 'list', unread] as const,
+  monitoringAttempts: (status?: string) => ['admissions', 'attempts', status ?? 'ALL'] as const,
+  attemptLogs: (attemptId: number) => ['admissions', 'attempts', attemptId, 'logs'] as const,
 };
+
+const ADMISSIONS_POLL_MS = 30_000;
 
 // ---- Subjects ----
 export function useSubjects() {
@@ -225,6 +231,84 @@ export function useGenerationJob(jobId: number | null) {
       if (!job) return 4000;
       if (job.status === 'PENDING' || job.status === 'RUNNING') return 4000;
       return false;
+    },
+  });
+}
+
+// ---- Admissions admin (monitoring & notifications) ----
+
+export function useAdmissionsUnreadCount() {
+  return useQuery({
+    queryKey: keys.admissionsUnreadCount,
+    queryFn: ({ signal }) => api.getAdmissionsUnreadCount(signal),
+    refetchInterval: ADMISSIONS_POLL_MS,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useAdmissionsNotifications(unread?: boolean) {
+  return useQuery({
+    queryKey: keys.admissionsNotifications(unread),
+    queryFn: ({ signal }) => api.listAdmissionsNotifications({ unread, page: 0, size: 15 }, signal),
+    refetchInterval: ADMISSIONS_POLL_MS,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useMarkNotificationRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.markAdmissionsNotificationRead(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admissions', 'notifications'] });
+    },
+  });
+}
+
+export function useMarkAllNotificationsRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.markAllAdmissionsNotificationsRead(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admissions', 'notifications'] });
+    },
+  });
+}
+
+export function useMonitoringAttempts(status?: string) {
+  return useInfiniteQuery({
+    queryKey: keys.monitoringAttempts(status),
+    queryFn: ({ pageParam = 0, signal }) =>
+      api.listMonitoringAttempts(
+        { status: status === 'ALL' ? undefined : status, page: pageParam, size: 50 },
+        signal,
+      ),
+    initialPageParam: 0,
+    getNextPageParam: (last) =>
+      last.number + 1 < last.totalPages ? last.number + 1 : undefined,
+    refetchInterval: ADMISSIONS_POLL_MS,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useAttemptLogs(attemptId: number | null) {
+  return useInfiniteQuery({
+    queryKey: keys.attemptLogs(attemptId ?? 0),
+    queryFn: ({ pageParam = 0, signal }) =>
+      api.getAttemptLogs(attemptId as number, pageParam, 20, signal),
+    enabled: attemptId != null,
+    initialPageParam: 0,
+    getNextPageParam: (last) =>
+      last.number + 1 < last.totalPages ? last.number + 1 : undefined,
+  });
+}
+
+export function useAllowRetake() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (assignmentId: number) => api.allowRetake(assignmentId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admissions', 'attempts'] });
     },
   });
 }

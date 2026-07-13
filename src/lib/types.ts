@@ -312,3 +312,54 @@ export interface GenerationJobResponse {
   inputTokens: number | null;
   outputTokens: number | null;
 }
+
+// ---- Admissions admin (monitoring & notifications) ----
+
+export interface Page<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
+export type AdmissionNotificationType =
+  | 'STARTED'
+  | 'SUBMITTED'
+  | 'TIME_EXPIRED'
+  | 'FOCUS_LOST'
+  | 'FOCUS_RETURNED'
+  | 'RESUMED'
+  | 'CONNECTION_ISSUE';
+
+export interface NotificationItem {
+  id: number;
+  type: AdmissionNotificationType;
+  applicantName: string;
+  testTitle: string;
+  attemptId: number;
+  message: string;
+  createdAt: string;
+  read: boolean;
+}
+
+export interface UnreadCountResponse {
+  count: number;
+}
+
+export interface MonitoringAttemptItem {
+  attemptId: number | null;
+  assignmentId: number;
+  applicantName: string;
+  testTitle: string;
+  status: AssignmentStatus | 'NOT_STARTED';
+  startedAt: string | null;
+  finishedAt: string | null;
+  answeredCount: number;
+  questionCount: number;
+  focusLost: boolean;
+  reentry: boolean;
+  timeExpired: boolean;
+  connectionIssue: boolean;
+  retakeAllowed: boolean;
+}
