@@ -130,6 +130,7 @@ export function AttemptScreen({
   }, []);
 
   const saveQuestionRef = useRef<(questionId: number) => Promise<void>>(async () => {});
+  const flushAllRef = useRef<() => Promise<void>>(async () => {});
 
   const saveQuestion = useCallback(
     async (questionId: number) => {
@@ -171,10 +172,18 @@ export function AttemptScreen({
 
   saveQuestionRef.current = saveQuestion;
 
+  async function flushAll() {
+    Object.values(saveTimers.current).forEach((t) => window.clearTimeout(t));
+    await Promise.all(Object.keys(answersRef.current).map((k) => saveQuestion(Number(k))));
+  }
+
+  flushAllRef.current = flushAll;
+
   const finishByTimeout = useCallback(async () => {
     if (submittingRef.current) return;
     submittingRef.current = true;
     setSubmitting(true);
+    await flushAllRef.current();
     await entranceApi.logEvent(attemptId, 'time_expired', 'client timer reached zero');
     try {
       await entranceApi.submitAttempt(attemptId);
@@ -265,11 +274,6 @@ export function AttemptScreen({
     window.clearTimeout(saveTimers.current[currentId]);
     await saveQuestion(currentId);
     setIndex(nextIndex);
-  }
-
-  async function flushAll() {
-    Object.values(saveTimers.current).forEach((t) => window.clearTimeout(t));
-    await Promise.all(Object.keys(answersRef.current).map((k) => saveQuestion(Number(k))));
   }
 
   async function confirmSubmit() {
