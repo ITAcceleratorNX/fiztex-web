@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Users,
   Calendar,
@@ -23,10 +23,14 @@ const FEATURES: { icon: LucideIcon; label: string }[] = [
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('admin@fiztex.local');
   const [password, setPassword] = useState('admin123');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const from = (location.state as { from?: string } | null)?.from;
+  const redirectTo = from?.startsWith('/') ? from : '/admin';
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -34,7 +38,7 @@ export function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      navigate('/', { replace: true });
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Не удалось войти');
     } finally {
@@ -87,13 +91,13 @@ export function LoginPage() {
           </p>
 
           <div className="mt-6 space-y-4">
-            <Field label="Email" required>
+            <Field label="Телефон / email" required>
               <TextInput
-                type="email"
+                type="text"
                 autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@fiztex.local"
+                placeholder="admin@fiztex.local или +77001112233"
                 required
               />
             </Field>
@@ -120,7 +124,7 @@ export function LoginPage() {
           </div>
 
           <p className="mt-6 text-center text-xs text-slate-400">
-            Dev-доступ: admin@fiztex.local / admin123
+            Dev: admin@fiztex.local / admin123 · без бэка тоже сработает (mock)
           </p>
         </form>
       </div>

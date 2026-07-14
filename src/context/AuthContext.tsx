@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
-import { api, getToken, setToken } from '@/lib/api';
+import { api, ApiError, getToken, setToken } from '@/lib/api';
+import { mockLogin } from '@/platform/services/auth';
 import type { Admin } from '@/lib/types';
 
 const PROFILE_KEY = 'fiztex.profile';
@@ -25,14 +26,31 @@ function loadProfile(): Admin | null {
   }
 }
 
+function persist(admin: Admin): void {
+  setToken(admin.token);
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(admin));
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [admin, setAdmin] = useState<Admin | null>(loadProfile);
 
   const login = useCallback(async (email: string, password: string) => {
-    const result = await api.login(email, password);
-    setToken(result.token);
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(result));
-    setAdmin(result);
+    try {
+      const result = await api.login(email, password);
+      persist(result);
+      setAdmin(result);
+      return;
+    } catch (err) {
+      // PHYCORE-003: mock fallback when backend is down or rejects (shell can run offline).
+      const mock = await mockLogin(email, password);
+      if (mock) {
+        persist(mock);
+        setAdmin(mock);
+        return;
+      }
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(0, 'Не удалось войти');
+    }
   }, []);
 
   const logout = useCallback(() => {

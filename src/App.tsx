@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { LoginPage } from '@/pages/LoginPage';
@@ -10,11 +10,24 @@ import { SubjectMaterialsPage } from '@/pages/SubjectMaterialsPage';
 import { AiTestsPage } from '@/pages/AiTestsPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
+import {
+  AdminLayout,
+  AdminDashboardPage,
+  UsersPage,
+  ClassesPage,
+  AcademicYearPage,
+  PeriodsPage,
+  AccessCodesPage,
+  ImportPage,
+} from '@/platform';
 import type { ReactNode } from 'react';
 
 function Protected({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  const location = useLocation();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
   return <>{children}</>;
 }
 
@@ -23,14 +36,33 @@ export function App() {
 
   return (
     <Routes>
-      {/* Public applicant flow (Sprint 2A) — no admin auth, its own responsive layout. */}
+      {/* Public applicant flow — separate from Platform Core / Admissions admin. */}
       <Route path="/entrance" element={<EntranceFlow />} />
 
       <Route
         path="/login"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
+        element={isAuthenticated ? <Navigate to="/admin" replace /> : <LoginPage />}
       />
 
+      {/* PHYCORE-003: Platform Core Lite admin shell */}
+      <Route
+        path="/admin"
+        element={
+          <Protected>
+            <AdminLayout />
+          </Protected>
+        }
+      >
+        <Route index element={<AdminDashboardPage />} />
+        <Route path="users" element={<UsersPage />} />
+        <Route path="classes" element={<ClassesPage />} />
+        <Route path="academic-year" element={<AcademicYearPage />} />
+        <Route path="periods" element={<PeriodsPage />} />
+        <Route path="access-codes" element={<AccessCodesPage />} />
+        <Route path="import" element={<ImportPage />} />
+      </Route>
+
+      {/* Scope 1: Admissions Testing admin (untouched by PHYCORE-003 pages) */}
       <Route
         element={
           <Protected>
@@ -54,7 +86,7 @@ export function App() {
         <Route path="/service" element={<PlaceholderPage title="Сервисные заявки" />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/admin" replace />} />
     </Routes>
   );
 }
