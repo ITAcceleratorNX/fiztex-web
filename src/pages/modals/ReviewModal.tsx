@@ -1,6 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Check, X, ShieldAlert, CircleDot, Sparkles, AlertTriangle } from 'lucide-react';
+import {
+  Check,
+  X,
+  ShieldAlert,
+  CircleDot,
+  Sparkles,
+  AlertTriangle,
+  ZoomIn,
+  ZoomOut,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { api, ApiError } from '@/lib/api';
 import { keys } from '@/hooks/queries';
 import { useToast } from '@/context/ToastContext';
@@ -10,7 +21,7 @@ import { Badge } from '@/components/ui/Badge';
 import { TextArea } from '@/components/ui/Field';
 import { Spinner, ErrorBlock } from '@/components/ui/StateBlock';
 import { cx, formatDateTime } from '@/lib/format';
-import type { AnswerReviewItem, QuestionType, ReviewDetail } from '@/lib/types';
+import type { AnswerReviewItem, QuestionType, ReviewDetail, ReviewPhoto } from '@/lib/types';
 
 const TYPE_LABEL: Record<QuestionType, string> = {
   SINGLE_CHOICE: 'Один вариант',
@@ -336,6 +347,164 @@ export function ReviewModal({
   );
 }
 
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 4;
+const ZOOM_STEP = 0.25;
+
+function ReviewPhotoGallery({ photos }: { photos: ReviewPhoto[] }) {
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const [zoom, setZoom] = useState(1);
+
+  const open = openIdx !== null;
+  const photo = openIdx !== null ? photos[openIdx] : null;
+
+  const close = useCallback(() => {
+    setOpenIdx(null);
+    setZoom(1);
+  }, []);
+
+  const adjustZoom = useCallback((delta: number) => {
+    setZoom((z) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, +(z + delta).toFixed(2))));
+  }, []);
+
+  const goPrev = useCallback(() => {
+    setOpenIdx((idx) => (idx != null && idx > 0 ? idx - 1 : idx));
+    setZoom(1);
+  }, []);
+
+  const goNext = useCallback(() => {
+    setOpenIdx((idx) => (idx != null && idx < photos.length - 1 ? idx + 1 : idx));
+    setZoom(1);
+  }, [photos.length]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close();
+      else if (e.key === 'ArrowLeft') goPrev();
+      else if (e.key === 'ArrowRight') goNext();
+      else if (e.key === '+' || e.key === '=') adjustZoom(ZOOM_STEP);
+      else if (e.key === '-') adjustZoom(-ZOOM_STEP);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, close, goPrev, goNext, adjustZoom]);
+
+  function handleWheel(e: { preventDefault: () => void; deltaY: number }) {
+    e.preventDefault();
+    adjustZoom(e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP);
+  }
+
+  return (
+    <>
+      <div className="flex flex-wrap gap-2">
+        {photos.map((item, photoIdx) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => {
+              setOpenIdx(photoIdx);
+              setZoom(1);
+            }}
+            className="group relative block overflow-hidden rounded-lg ring-1 ring-slate-200 transition hover:ring-brand-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+          >
+            <img
+              src={item.url}
+              alt={`Фото ${photoIdx + 1}`}
+              className="h-28 w-28 object-cover transition group-hover:opacity-90"
+              loading="lazy"
+            />
+            <span className="absolute inset-0 flex items-center justify-center bg-slate-900/0 transition group-hover:bg-slate-900/20">
+              <ZoomIn className="h-5 w-5 text-white opacity-0 drop-shadow transition group-hover:opacity-100" />
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {open && photo && (
+        <div
+          className="fixed inset-0 z-[70] flex flex-col bg-slate-950/90 backdrop-blur-sm animate-fade-in"
+          onClick={close}
+        >
+          <div
+            className="flex shrink-0 items-center justify-between gap-3 px-4 py-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-sm font-medium text-white/90">
+              Фото {openIdx! + 1} из {photos.length}
+            </p>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => adjustZoom(-ZOOM_STEP)}
+                disabled={zoom <= MIN_ZOOM}
+                className="rounded-lg p-2 text-white/80 transition hover:bg-white/10 disabled:opacity-40"
+                aria-label="Уменьшить"
+              >
+                <ZoomOut className="h-5 w-5" />
+              </button>
+              <span className="min-w-[3.5rem] text-center text-sm tabular-nums text-white/90">
+                {Math.round(zoom * 100)}%
+              </span>
+              <button
+                type="button"
+                onClick={() => adjustZoom(ZOOM_STEP)}
+                disabled={zoom >= MAX_ZOOM}
+                className="rounded-lg p-2 text-white/80 transition hover:bg-white/10 disabled:opacity-40"
+                aria-label="Увеличить"
+              >
+                <ZoomIn className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={close}
+                className="ml-2 rounded-lg p-2 text-white/80 transition hover:bg-white/10"
+                aria-label="Закрыть"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          <div
+            className="relative flex min-h-0 flex-1 items-center justify-center overflow-auto px-4 pb-4"
+            onWheel={handleWheel}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {openIdx! > 0 && (
+              <button
+                type="button"
+                onClick={goPrev}
+                className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white transition hover:bg-black/60 sm:left-4"
+                aria-label="Предыдущее фото"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+            )}
+            <img
+              src={photo.url}
+              alt={`Фото ${openIdx! + 1}`}
+              draggable={false}
+              className="max-h-full max-w-full select-none object-contain transition-transform duration-150 ease-out"
+              style={{ transform: `scale(${zoom})` }}
+            />
+            {openIdx! < photos.length - 1 && (
+              <button
+                type="button"
+                onClick={goNext}
+                className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white transition hover:bg-black/60 sm:right-4"
+                aria-label="Следующее фото"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 function AnswerCard({
   index,
   answer,
@@ -404,16 +573,29 @@ function AnswerCard({
         </ul>
       ) : (
         <div className="mt-3 space-y-2">
-          <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-200">
-            <p className="mb-0.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Ответ ученика
-            </p>
-            {answer.applicantAnswer?.trim() ? (
+          {answer.applicantAnswer?.trim() ? (
+            <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-200">
+              <p className="mb-0.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Ответ ученика
+              </p>
               <p className="whitespace-pre-wrap">{answer.applicantAnswer}</p>
-            ) : (
+            </div>
+          ) : (answer.photos ?? []).length === 0 ? (
+            <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-200">
+              <p className="mb-0.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Ответ ученика
+              </p>
               <p className="italic text-slate-400">Нет ответа</p>
-            )}
-          </div>
+            </div>
+          ) : null}
+          {(answer.photos ?? []).length > 0 && (
+            <div className="rounded-lg bg-slate-50 px-3 py-2 ring-1 ring-slate-200">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Фото ({(answer.photos ?? []).length})
+              </p>
+              <ReviewPhotoGallery photos={answer.photos ?? []} />
+            </div>
+          )}
           {answer.referenceAnswer?.trim() && (
             <div className="rounded-lg bg-emerald-50/60 px-3 py-2 text-sm text-emerald-800 ring-1 ring-emerald-200">
               <p className="mb-0.5 text-xs font-semibold uppercase tracking-wide text-emerald-600">
@@ -451,18 +633,21 @@ function AnswerCard({
               </button>
             )}
           </div>
-          {answer.aiComment && (
-            <p className="mt-1.5 text-sm text-slate-700">{answer.aiComment}</p>
-          )}
-          {answer.aiWarning && (
-            <p className="mt-1.5 flex items-start gap-1.5 text-xs text-amber-700">
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              {answer.aiWarning}
+          {(answer.aiComment || answer.aiWarning) && (
+            <p
+              className={cx(
+                'mt-1.5 text-sm',
+                answer.aiWarning || answer.aiConfidence === 'LOW'
+                  ? 'text-amber-800'
+                  : 'text-slate-700',
+              )}
+            >
+              {(answer.aiWarning || answer.aiConfidence === 'LOW') && (
+                <AlertTriangle className="mr-1 inline h-3.5 w-3.5 shrink-0 align-text-bottom" />
+              )}
+              {[answer.aiComment, answer.aiWarning].filter(Boolean).join(' · ')}
             </p>
           )}
-          <p className="mt-1.5 text-xs text-slate-400">
-            AI — помощник. Итоговый балл выставляет админ.
-          </p>
         </div>
       )}
 

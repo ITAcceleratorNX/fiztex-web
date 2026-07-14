@@ -196,6 +196,11 @@ export interface ReviewOption {
   selected: boolean;
 }
 
+export interface ReviewPhoto {
+  id: number;
+  url: string;
+}
+
 export interface AnswerReviewItem {
   questionId: number;
   topic: string | null;
@@ -204,7 +209,7 @@ export interface AnswerReviewItem {
   applicantAnswer: string | null;
   options: ReviewOption[];
   referenceAnswer: string | null;
-  photoUrl: string | null;
+  photos: ReviewPhoto[];
   autoScore: number | null;
   aiScore: number | null;
   aiComment: string | null;

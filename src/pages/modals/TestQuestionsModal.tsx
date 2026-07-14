@@ -13,6 +13,7 @@ import { ApiError } from '@/lib/api';
 import type { QuestionType, VersionStrategy } from '@/lib/types';
 import {
   QUESTION_TYPE_LABELS,
+  SELECTABLE_QUESTION_TYPES,
   QUESTION_DIFFICULTY_LABELS,
   QUESTION_DIFFICULTIES,
   buildTestRequest,
@@ -54,7 +55,6 @@ function QuestionEditor({
       ];
     }
     if (!isChoiceType(type)) next.options = [];
-    if (type === 'PHOTO') next.allowPhoto = true;
     onChange(next);
   }
 
@@ -105,7 +105,7 @@ function QuestionEditor({
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Тип вопроса" required>
           <Select value={question.type} onChange={(e) => setType(e.target.value as QuestionType)}>
-            {(Object.keys(QUESTION_TYPE_LABELS) as QuestionType[]).map((type) => (
+            {SELECTABLE_QUESTION_TYPES.map((type) => (
               <option key={type} value={type}>
                 {QUESTION_TYPE_LABELS[type]}
               </option>
@@ -218,7 +218,7 @@ function QuestionEditor({
         </div>
       )}
 
-      {(question.type === 'OPEN_TEXT' || question.type === 'PHOTO') && (
+      {question.type === 'OPEN_TEXT' && (
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Эталонный ответ">
             <TextArea

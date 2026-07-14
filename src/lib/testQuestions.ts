@@ -4,8 +4,16 @@ export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   SINGLE_CHOICE: 'Один вариант',
   MULTIPLE_CHOICE: 'Несколько вариантов',
   OPEN_TEXT: 'Открытый ответ',
-  PHOTO: 'Фото',
+  // Legacy: kept only for labelling old data. New questions use OPEN_TEXT + allowPhoto.
+  PHOTO: 'Открытый ответ',
 };
+
+/** Types offered in the question editor. «Фото» is folded into «Открытый ответ» + переключатель. */
+export const SELECTABLE_QUESTION_TYPES: QuestionType[] = [
+  'SINGLE_CHOICE',
+  'MULTIPLE_CHOICE',
+  'OPEN_TEXT',
+];
 
 export const QUESTION_DIFFICULTY_LABELS: Record<QuestionDifficulty, string> = {
   EASY: 'Лёгкий',
@@ -89,15 +97,17 @@ export function emptyQuestion(type: QuestionType = 'SINGLE_CHOICE'): QuestionDra
 }
 
 export function questionFromResponse(q: QuestionResponse): QuestionDraft {
+  // Legacy «Фото» questions collapse into «Открытый ответ» with photos enabled.
+  const isLegacyPhoto = q.type === 'PHOTO';
   return {
     localId: newLocalId(),
     isDraft: q.isDraft,
     topic: q.topic ?? '',
     difficulty: normalizeDifficulty(q.difficulty),
-    type: q.type,
+    type: isLegacyPhoto ? 'OPEN_TEXT' : q.type,
     text: q.text,
     maxScore: q.maxScore,
-    allowPhoto: q.allowPhoto,
+    allowPhoto: isLegacyPhoto ? true : q.allowPhoto,
     referenceAnswer: q.referenceAnswer ?? '',
     gradingCriteria: q.gradingCriteria ?? '',
     options: (q.options ?? []).map((o) => ({

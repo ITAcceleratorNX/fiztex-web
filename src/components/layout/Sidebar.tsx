@@ -2,7 +2,6 @@ import { NavLink } from 'react-router-dom';
 import {
   Home,
   ClipboardList,
-  ClipboardCheck,
   Users,
   Heart,
   GraduationCap,
@@ -30,7 +29,6 @@ const NAV: NavItem[] = [
   { to: '/', label: 'Главная', icon: Home },
   { to: '/subjects', label: 'Предметы', icon: BookMarked },
   { to: '/admissions', label: 'Вступительные тесты', icon: ClipboardList },
-  { to: '/review', label: 'Проверка ответов', icon: ClipboardCheck },
   { to: '/students', label: 'Ученики', icon: Users },
   { to: '/parents', label: 'Родители', icon: Heart },
   { to: '/teachers', label: 'Учителя', icon: GraduationCap },

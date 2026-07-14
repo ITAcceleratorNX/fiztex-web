@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ClipboardList, Clock, LogIn, MonitorOff, WifiOff } from 'lucide-react';
+import { ClipboardList, Clock, Eye, LogIn, MonitorOff, ScrollText, WifiOff } from 'lucide-react';
 import { useMonitoringAttempts } from '@/hooks/queries';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Select } from '@/components/ui/Field';
@@ -7,17 +7,27 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
 import { AttemptLogsModal } from '@/pages/modals/AttemptLogsModal';
+import { ReviewModal } from '@/pages/modals/ReviewModal';
 import { formatDateTime, pluralRu, cx } from '@/lib/format';
+import { isFinalAttemptStatus } from '@/lib/admissionStatus';
 import { ApiError } from '@/lib/api';
 import type { MonitoringAttemptItem } from '@/lib/types';
 
-export type AttemptsStatusFilter = 'ALL' | 'NOT_STARTED' | 'IN_PROGRESS' | 'AWAITING_REVIEW';
+export type AttemptsStatusFilter =
+  | 'ALL'
+  | 'NOT_STARTED'
+  | 'IN_PROGRESS'
+  | 'AWAITING_REVIEW'
+  | 'REVIEWED'
+  | 'OPEN_FOR_VIEWING';
 
 const STATUS_OPTIONS: { value: AttemptsStatusFilter; label: string }[] = [
   { value: 'ALL', label: 'Статус: Все' },
   { value: 'NOT_STARTED', label: 'Не начат' },
   { value: 'IN_PROGRESS', label: 'В процессе' },
   { value: 'AWAITING_REVIEW', label: 'Ожидает проверки' },
+  { value: 'REVIEWED', label: 'Проверено' },
+  { value: 'OPEN_FOR_VIEWING', label: 'Результат открыт' },
 ];
 
 function statusBadge(status: MonitoringAttemptItem['status'], retakeAllowed: boolean) {
@@ -73,6 +83,7 @@ export function AttemptsTab({
 }) {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<MonitoringAttemptItem | null>(null);
+  const [reviewAttemptId, setReviewAttemptId] = useState<number | null>(null);
 
   const attemptsQuery = useMonitoringAttempts(statusFilter);
   const { data, isLoading, isError, error, refetch, isSuccess, fetchNextPage, hasNextPage, isFetchingNextPage } =
@@ -101,7 +112,12 @@ export function AttemptsTab({
     if (focusAttemptId == null) return;
     const match = allRows.find((row) => row.attemptId === focusAttemptId);
     if (match) {
-      setSelected(match);
+      // Finished attempts open the review dialog; live ones open the event log.
+      if (isFinalAttemptStatus(match.status)) {
+        setReviewAttemptId(match.attemptId);
+      } else {
+        setSelected(match);
+      }
       onFocusHandled();
       return;
     }
@@ -148,7 +164,7 @@ export function AttemptsTab({
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[960px]">
+            <table className="w-full min-w-[1040px]">
               <thead>
                 <tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">
                   <th className="px-6 py-3.5">Поступающий</th>
@@ -158,34 +174,62 @@ export function AttemptsTab({
                   <th className="px-6 py-3.5">Завершение</th>
                   <th className="px-6 py-3.5">Прогресс</th>
                   <th className="px-6 py-3.5">События</th>
+                  <th className="px-6 py-3.5 text-right">Действия</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {rows.map((row) => (
-                  <tr
-                    key={row.attemptId ?? `assignment-${row.assignmentId}`}
-                    onClick={() => row.attemptId != null && setSelected(row)}
-                    className={cx(
-                      'transition',
-                      row.attemptId != null && 'cursor-pointer hover:bg-slate-50/70',
-                      focusAttemptId != null && row.attemptId === focusAttemptId && 'bg-brand-50/50',
-                    )}
-                  >
-                    <td className="px-6 py-3.5 font-semibold text-slate-800">{row.applicantName}</td>
-                    <td className="px-6 py-3.5 text-sm text-slate-600">{row.testTitle}</td>
-                    <td className="px-6 py-3.5">{statusBadge(row.status, row.retakeAllowed)}</td>
-                    <td className="px-6 py-3.5 text-sm text-slate-500">{formatDateTime(row.startedAt)}</td>
-                    <td className="px-6 py-3.5 text-sm text-slate-500">{formatDateTime(row.finishedAt)}</td>
-                    <td className="px-6 py-3.5 text-sm text-slate-600">
-                      {row.questionCount > 0
-                        ? `${row.answeredCount}/${row.questionCount}`
-                        : '—'}
-                    </td>
-                    <td className="px-6 py-3.5">
-                      <EventFlags row={row} />
-                    </td>
-                  </tr>
-                ))}
+                {rows.map((row) => {
+                  const finished = row.attemptId != null && isFinalAttemptStatus(row.status);
+                  return (
+                    <tr
+                      key={row.attemptId ?? `assignment-${row.assignmentId}`}
+                      className={cx(
+                        'transition',
+                        focusAttemptId != null && row.attemptId === focusAttemptId && 'bg-brand-50/50',
+                      )}
+                    >
+                      <td className="px-6 py-3.5 font-semibold text-slate-800">{row.applicantName}</td>
+                      <td className="px-6 py-3.5 text-sm text-slate-600">{row.testTitle}</td>
+                      <td className="px-6 py-3.5">{statusBadge(row.status, row.retakeAllowed)}</td>
+                      <td className="px-6 py-3.5 text-sm text-slate-500">{formatDateTime(row.startedAt)}</td>
+                      <td className="px-6 py-3.5 text-sm text-slate-500">{formatDateTime(row.finishedAt)}</td>
+                      <td className="px-6 py-3.5 text-sm text-slate-600">
+                        {row.questionCount > 0
+                          ? `${row.answeredCount}/${row.questionCount}`
+                          : '—'}
+                      </td>
+                      <td className="px-6 py-3.5">
+                        <EventFlags row={row} />
+                      </td>
+                      <td className="px-6 py-3.5">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {finished && (
+                            <Button
+                              size="sm"
+                              variant={row.status === 'AWAITING_REVIEW' ? 'primary' : 'secondary'}
+                              icon={<Eye className="h-4 w-4" />}
+                              onClick={() => setReviewAttemptId(row.attemptId)}
+                            >
+                              {row.status === 'AWAITING_REVIEW' ? 'Проверить' : 'Посмотреть'}
+                            </Button>
+                          )}
+                          {row.attemptId != null ? (
+                            <button
+                              onClick={() => setSelected(row)}
+                              title="События и повтор"
+                              className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                            >
+                              <ScrollText className="h-4 w-4" />
+                              <span className="sr-only">События и повтор</span>
+                            </button>
+                          ) : (
+                            <span className="text-sm text-slate-400">—</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -216,6 +260,12 @@ export function AttemptsTab({
         open={selected != null}
         attempt={selected}
         onClose={() => setSelected(null)}
+      />
+
+      <ReviewModal
+        open={reviewAttemptId != null}
+        attemptId={reviewAttemptId}
+        onClose={() => setReviewAttemptId(null)}
       />
     </div>
   );

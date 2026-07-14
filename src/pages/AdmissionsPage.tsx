@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useApplicants, useTests } from '@/hooks/queries';
 import { StatCard } from '@/components/ui/StatCard';
 import { NotificationsBell } from '@/components/admissions/NotificationsBell';
@@ -12,13 +13,28 @@ type TabKey = 'tests' | 'applicants' | 'attempts';
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'tests', label: 'Тесты' },
   { key: 'applicants', label: 'Поступающие' },
-  { key: 'attempts', label: 'Попытки' },
+  { key: 'attempts', label: 'Попытки и проверка' },
 ];
 
+function parseTab(value: string | null): TabKey {
+  if (value === 'applicants' || value === 'attempts') return value;
+  return 'tests';
+}
+
 export function AdmissionsPage() {
-  const [tab, setTab] = useState<TabKey>('tests');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tab, setTab] = useState<TabKey>(() => parseTab(searchParams.get('tab')));
   const [focusAttemptId, setFocusAttemptId] = useState<number | null>(null);
   const [attemptsStatusFilter, setAttemptsStatusFilter] = useState<AttemptsStatusFilter>('ALL');
+
+  useEffect(() => {
+    setTab(parseTab(searchParams.get('tab')));
+  }, [searchParams]);
+
+  function selectTab(next: TabKey) {
+    setTab(next);
+    setSearchParams(next === 'tests' ? {} : { tab: next }, { replace: true });
+  }
 
   const tests = useTests(false);
   const applicants = useApplicants();
@@ -27,8 +43,8 @@ export function AdmissionsPage() {
 
   function openAttemptFromNotification(attemptId: number) {
     setAttemptsStatusFilter('ALL');
-    setTab('attempts');
     setFocusAttemptId(attemptId);
+    selectTab('attempts');
   }
 
   return (
@@ -44,7 +60,7 @@ export function AdmissionsPage() {
         {TABS.map((t) => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key)}
+            onClick={() => selectTab(t.key)}
             className={cx(
               'rounded-xl px-6 py-2.5 text-sm font-semibold transition',
               tab === t.key
