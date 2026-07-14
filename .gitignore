@@ -10,3 +10,4 @@ dist-ssr
 .idea
 *.log
 package-lock.json
+docs/
