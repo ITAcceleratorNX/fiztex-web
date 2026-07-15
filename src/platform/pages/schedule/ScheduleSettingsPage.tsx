@@ -1,10 +1,11 @@
 import { useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Bell, CalendarDays, CalendarRange } from 'lucide-react';
+import { CalendarDays, CalendarRange } from 'lucide-react';
 import { Select } from '@/components/ui/Field';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useAcademicYears } from '@/platform/hooks/useScheduleSettings';
+import { BellTemplatesTab } from './BellTemplatesTab';
 
 type TabId = 'templates' | 'days' | 'calendar';
 
@@ -33,6 +34,11 @@ export function ScheduleSettingsPage() {
     }
     return years.find((y) => y.status === 'ACTIVE')?.id ?? years[0]?.id ?? null;
   }, [yearParam, years]);
+
+  const selectedYearName = useMemo(
+    () => years.find((y) => y.id === selectedYearId)?.name ?? '',
+    [years, selectedYearId],
+  );
 
   useEffect(() => {
     if (selectedYearId == null) return;
@@ -106,11 +112,7 @@ export function ScheduleSettingsPage() {
           </TabsList>
 
           <TabsContent value="templates">
-            <EmptyBlock
-              icon={<Bell className="h-7 w-7" />}
-              title="Шаблоны звонков"
-              description="Список, редактор уроков, копии и привязки появятся на следующем этапе."
-            />
+            <BellTemplatesTab yearId={selectedYearId} yearName={selectedYearName} />
           </TabsContent>
           <TabsContent value="days">
             <EmptyBlock

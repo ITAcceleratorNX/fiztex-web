@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import {
   useMutation,
+  useQueries,
   useQuery,
   useQueryClient,
   type UseMutationOptions,
@@ -18,11 +19,10 @@ import type {
   CopyBellTemplateRequest,
   CreateBellTemplateRequest,
   CreateCalendarEventRequest,
-  CreateLessonPeriodRequest,
   ScheduleSettingsEntityType,
+  TemplateBinding,
   UpdateBellTemplateRequest,
   UpdateCalendarEventRequest,
-  UpdateLessonPeriodRequest,
   UpdateWorkingDaysRequest,
 } from '@/lib/scheduleSettingsTypes';
 
@@ -71,6 +71,21 @@ export function useBellTemplate(id: number | null) {
   });
 }
 
+/**
+ * List DTO ships periods=[] (BellScheduleTemplateView.from without periods).
+ * Warm get-by-id for count/range columns and form cache — list stays small.
+ */
+export function useManyBellTemplates(templateIds: number[]) {
+  return useQueries({
+    queries: templateIds.map((id) => ({
+      queryKey: scheduleSettingsKeys.bellTemplate(id),
+      queryFn: ({ signal }: { signal?: AbortSignal }) =>
+        scheduleSettingsApi.getBellTemplate(id, signal),
+      enabled: id > 0,
+    })),
+  });
+}
+
 export function useTemplateUsage(id: number | null) {
   return useQuery({
     queryKey: scheduleSettingsKeys.templateUsage(id ?? 0),
@@ -85,6 +100,44 @@ export function useTemplateBindings(id: number | null) {
     queryFn: ({ signal }) => scheduleSettingsApi.listBindings(id!, signal),
     enabled: id != null && id > 0,
   });
+}
+
+/** Parallel bindings fetch for list summaries / occupied-class map (lists stay small). */
+export function useManyTemplateBindings(templateIds: number[]) {
+  return useQueries({
+    queries: templateIds.map((id) => ({
+      queryKey: scheduleSettingsKeys.templateBindings(id),
+      queryFn: ({ signal }: { signal?: AbortSignal }) =>
+        scheduleSettingsApi.listBindings(id, signal),
+      enabled: id > 0,
+    })),
+  });
+}
+
+export type OccupiedClassInfo = {
+  templateId: number;
+  templateName: string;
+  binding: TemplateBinding;
+};
+
+export function buildOccupiedClassMap(
+  templates: Array<{ id: number; name: string }>,
+  bindingsByTemplate: Array<TemplateBinding[] | undefined>,
+  excludeTemplateId?: number,
+): Map<number, OccupiedClassInfo> {
+  const map = new Map<number, OccupiedClassInfo>();
+  templates.forEach((template, index) => {
+    if (excludeTemplateId != null && template.id === excludeTemplateId) return;
+    const bindings = bindingsByTemplate[index] ?? [];
+    for (const binding of bindings) {
+      map.set(binding.classId, {
+        templateId: template.id,
+        templateName: template.name,
+        binding,
+      });
+    }
+  });
+  return map;
 }
 
 export function useWorkingDays(yearId: number | null) {
@@ -214,51 +267,37 @@ export function useCopyBellTemplate(yearId: number | null) {
   return useMutation({
     mutationFn: ({ id, body }: { id: number; body?: CopyBellTemplateRequest }) =>
       scheduleSettingsApi.copyBellTemplate(id, body),
-    onSuccess: () => {
+    onSuccess: (data) => {
       if (yearId != null) {
         void qc.invalidateQueries({ queryKey: scheduleSettingsKeys.bellTemplates(yearId) });
       }
+      void qc.invalidateQueries({ queryKey: scheduleSettingsKeys.bellTemplate(data.id) });
     },
   });
 }
 
-type UpdatePeriodVars = UpdateLessonPeriodRequest & { periodId: number };
-
-export function useUpdateLessonPeriod(templateId: number | null, yearId: number | null) {
+export function useHideBellTemplate(yearId: number | null) {
   const qc = useQueryClient();
-  return useConfirmableMutation({
-    mutationFn: ({ periodId, ...body }: UpdatePeriodVars) => {
-      if (templateId == null) throw new Error('templateId required');
-      return scheduleSettingsApi.updatePeriod(templateId, periodId, body);
-    },
-    withConfirmImpact: (vars) => ({ ...vars, confirmImpact: true }),
-    onSuccess: () => {
-      if (templateId != null) {
-        void qc.invalidateQueries({ queryKey: scheduleSettingsKeys.bellTemplate(templateId) });
-        void qc.invalidateQueries({ queryKey: scheduleSettingsKeys.templateUsage(templateId) });
-      }
+  return useMutation({
+    mutationFn: (id: number) => scheduleSettingsApi.hideBellTemplate(id),
+    onSuccess: (_data, id) => {
       if (yearId != null) {
         void qc.invalidateQueries({ queryKey: scheduleSettingsKeys.bellTemplates(yearId) });
       }
+      void qc.invalidateQueries({ queryKey: scheduleSettingsKeys.bellTemplate(id) });
     },
   });
 }
 
-export function useAddLessonPeriod(templateId: number | null, yearId: number | null) {
+export function useActivateBellTemplate(yearId: number | null) {
   const qc = useQueryClient();
-  return useConfirmableMutation({
-    mutationFn: (body: CreateLessonPeriodRequest) => {
-      if (templateId == null) throw new Error('templateId required');
-      return scheduleSettingsApi.addPeriod(templateId, body);
-    },
-    withConfirmImpact: (vars) => ({ ...vars, confirmImpact: true }),
-    onSuccess: () => {
-      if (templateId != null) {
-        void qc.invalidateQueries({ queryKey: scheduleSettingsKeys.bellTemplate(templateId) });
-      }
+  return useMutation({
+    mutationFn: (id: number) => scheduleSettingsApi.activateBellTemplate(id),
+    onSuccess: (_data, id) => {
       if (yearId != null) {
         void qc.invalidateQueries({ queryKey: scheduleSettingsKeys.bellTemplates(yearId) });
       }
+      void qc.invalidateQueries({ queryKey: scheduleSettingsKeys.bellTemplate(id) });
     },
   });
 }
@@ -278,6 +317,27 @@ export function useAssignBindings(templateId: number | null, yearId: number | nu
       if (yearId != null) {
         void qc.invalidateQueries({ queryKey: scheduleSettingsKeys.bellTemplates(yearId) });
       }
+      void qc.invalidateQueries({ queryKey: ['template-bindings'] });
+    },
+  });
+}
+
+export function useUnassignBinding(templateId: number | null, yearId: number | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (classId: number) => {
+      if (templateId == null) throw new Error('templateId required');
+      return scheduleSettingsApi.unassignBinding(templateId, classId);
+    },
+    onSuccess: () => {
+      if (templateId != null) {
+        void qc.invalidateQueries({ queryKey: scheduleSettingsKeys.templateBindings(templateId) });
+        void qc.invalidateQueries({ queryKey: scheduleSettingsKeys.templateUsage(templateId) });
+      }
+      if (yearId != null) {
+        void qc.invalidateQueries({ queryKey: scheduleSettingsKeys.bellTemplates(yearId) });
+      }
+      void qc.invalidateQueries({ queryKey: ['template-bindings'] });
     },
   });
 }

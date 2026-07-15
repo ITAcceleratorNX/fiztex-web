@@ -32,9 +32,14 @@ export function isTemplateInUseError(error: unknown): error is ApiError {
 }
 
 export function isClassesAlreadyBoundError(error: unknown): error is ApiError & {
-  details: BoundClassConflict[];
+  details?: BoundClassConflict[] | unknown;
 } {
   return error instanceof ApiError && error.status === 409 && error.code === 'CLASSES_ALREADY_BOUND';
+}
+
+/** Normalize CLASSES_ALREADY_BOUND details — race path may send undefined / empty list. */
+export function boundConflictsFromError(error: ApiError): BoundClassConflict[] {
+  return Array.isArray(error.details) ? (error.details as BoundClassConflict[]) : [];
 }
 
 export function isWorkingDaysInUseError(error: unknown): error is ApiError & {
