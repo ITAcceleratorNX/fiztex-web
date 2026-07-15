@@ -40,9 +40,16 @@ export function setToken(token: string | null): void {
 
 export class ApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  /** Backend conflict / business code, e.g. BELL_TEMPLATE_IN_USE_PUBLISHED. */
+  code?: string;
+  /** Optional structured payload (usage counters, bound-class conflicts, …). */
+  details?: unknown;
+
+  constructor(status: number, message: string, code?: string, details?: unknown) {
     super(message);
     this.status = status;
+    this.code = code;
+    this.details = details;
     this.name = 'ApiError';
   }
 
@@ -52,13 +59,14 @@ export class ApiError extends Error {
   }
 }
 
-interface RequestOptions {
+export interface RequestOptions {
   method?: string;
   body?: unknown;
   signal?: AbortSignal;
 }
 
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+/** Shared JSON request helper — used by admissions `api` and schedule-settings client. */
+export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {};
   if (options.body !== undefined) headers['Content-Type'] = 'application/json';
   if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
@@ -88,10 +96,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const data = text ? safeParse(text) : undefined;
 
   if (!response.ok) {
-    const message =
-      (data && typeof data === 'object' && 'message' in data && (data as { message?: string }).message) ||
-      `Ошибка ${response.status}`;
-    throw new ApiError(response.status, String(message));
+    throw toApiError(response.status, data);
   }
 
   return data as T;
@@ -122,10 +127,7 @@ async function requestMultipart<T>(path: string, formData: FormData, signal?: Ab
   const data = text ? safeParse(text) : undefined;
 
   if (!response.ok) {
-    const message =
-      (data && typeof data === 'object' && 'message' in data && (data as { message?: string }).message) ||
-      `Ошибка ${response.status}`;
-    throw new ApiError(response.status, String(message));
+    throw toApiError(response.status, data);
   }
 
   return data as T;
@@ -139,7 +141,15 @@ function safeParse(text: string): unknown {
   }
 }
 
-function pageQuery(params: Record<string, string | number | boolean | undefined | null>): string {
+function toApiError(status: number, data: unknown): ApiError {
+  const body = data && typeof data === 'object' ? (data as Record<string, unknown>) : undefined;
+  const message = (body && typeof body.message === 'string' && body.message) || `Ошибка ${status}`;
+  const code = body && typeof body.code === 'string' ? body.code : undefined;
+  const details = body && 'details' in body ? body.details : undefined;
+  return new ApiError(status, message, code, details);
+}
+
+export function pageQuery(params: Record<string, string | number | boolean | undefined | null>): string {
   const qs = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== null && value !== '') {

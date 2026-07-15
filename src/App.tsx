@@ -19,6 +19,7 @@ import {
   PeriodsPage,
   AccessCodesPage,
   ImportPage,
+  ScheduleSettingsPage,
 } from '@/platform';
 import type { ReactNode } from 'react';
 
@@ -58,6 +59,7 @@ export function App() {
         <Route path="classes" element={<ClassesPage />} />
         <Route path="academic-year" element={<AcademicYearPage />} />
         <Route path="periods" element={<PeriodsPage />} />
+        <Route path="schedule-settings" element={<ScheduleSettingsPage />} />
         <Route path="access-codes" element={<AccessCodesPage />} />
         <Route path="import" element={<ImportPage />} />
       </Route>

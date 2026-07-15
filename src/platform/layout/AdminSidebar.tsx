@@ -5,6 +5,7 @@ import {
   School,
   CalendarRange,
   CalendarDays,
+  CalendarClock,
   KeyRound,
   Upload,
   LogOut,
@@ -27,6 +28,7 @@ const NAV: NavItem[] = [
   { to: '/admin/classes', label: 'Классы', icon: School },
   { to: '/admin/academic-year', label: 'Учебный год', icon: CalendarRange },
   { to: '/admin/periods', label: 'Учебные периоды', icon: CalendarDays },
+  { to: '/admin/schedule-settings', label: 'Расписание', icon: CalendarClock },
   { to: '/admin/access-codes', label: 'Доступы / коды', icon: KeyRound },
   { to: '/admin/import', label: 'Импорт', icon: Upload },
 ];

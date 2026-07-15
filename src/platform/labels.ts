@@ -70,6 +70,7 @@ export const ADMIN_PAGE_TITLES: Record<string, string> = {
   '/admin/classes': 'Классы',
   '/admin/academic-year': 'Учебный год',
   '/admin/periods': 'Учебные периоды',
+  '/admin/schedule-settings': 'Расписание',
   '/admin/access-codes': 'Доступы / коды',
   '/admin/import': 'Импорт данных',
 };
