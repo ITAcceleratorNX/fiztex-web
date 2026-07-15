@@ -8,6 +8,12 @@ import type {
   ImportEntityType,
   SchoolRecordStatus,
 } from './types';
+import type {
+  CalendarEventEffect,
+  CalendarEventStatus,
+  CalendarEventType,
+  Weekday,
+} from '@/lib/scheduleSettingsTypes';
 
 export const ROLE_LABELS: Record<AccountRole, string> = {
   SUPER_ADMIN: 'Супер-админ',
@@ -61,6 +67,62 @@ export const IMPORT_TYPE_LABELS: Record<ImportEntityType, string> = {
   PARENTS: 'Родители',
   TEACHERS: 'Учителя',
   CLASSES: 'Классы',
+};
+
+export const WEEKDAYS_ORDER: Weekday[] = [
+  'MONDAY',
+  'TUESDAY',
+  'WEDNESDAY',
+  'THURSDAY',
+  'FRIDAY',
+  'SATURDAY',
+  'SUNDAY',
+];
+
+export const WEEKDAY_SHORT_LABELS: Record<Weekday, string> = {
+  MONDAY: 'Пн',
+  TUESDAY: 'Вт',
+  WEDNESDAY: 'Ср',
+  THURSDAY: 'Чт',
+  FRIDAY: 'Пт',
+  SATURDAY: 'Сб',
+  SUNDAY: 'Вс',
+};
+
+export const WEEKDAY_LABELS: Record<Weekday, string> = {
+  MONDAY: 'Понедельник',
+  TUESDAY: 'Вторник',
+  WEDNESDAY: 'Среда',
+  THURSDAY: 'Четверг',
+  FRIDAY: 'Пятница',
+  SATURDAY: 'Суббота',
+  SUNDAY: 'Воскресенье',
+};
+
+export const CALENDAR_EVENT_TYPE_LABELS: Record<CalendarEventType, string> = {
+  HOLIDAY: 'Праздник',
+  VACATION: 'Каникулы',
+  NON_SCHOOL_DAY: 'Неучебный день',
+  EXAM_DAY: 'Экзамен / аттестация',
+  OTHER: 'Другое',
+};
+
+export const CALENDAR_EVENT_EFFECT_LABELS: Record<CalendarEventEffect, string> = {
+  NO_LESSONS: 'Занятий нет',
+  INFO: 'Информационное',
+};
+
+export const CALENDAR_EVENT_STATUS_LABELS: Record<CalendarEventStatus, string> = {
+  ACTIVE: 'Активно',
+  HIDDEN: 'Скрыто',
+};
+
+export const CALENDAR_EVENT_TYPE_DOT: Record<CalendarEventType, string> = {
+  HOLIDAY: 'bg-rose-500',
+  VACATION: 'bg-sky-500',
+  NON_SCHOOL_DAY: 'bg-amber-500',
+  EXAM_DAY: 'bg-violet-500',
+  OTHER: 'bg-slate-400',
 };
 
 /** Route path → page title for AdminHeader */

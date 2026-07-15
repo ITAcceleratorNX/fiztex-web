@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
@@ -17,7 +17,7 @@ import {
   useTemplateBindings,
   useUnassignBinding,
 } from '@/platform/hooks/useScheduleSettings';
-import { cx } from '@/lib/format';
+import { ClassGradePicker } from './ClassGradePicker';
 
 export function BellTemplateBindingsModal({
   open,
@@ -214,70 +214,38 @@ export function BellTemplateBindingsModal({
         )}
 
         {!bindingsLoading && !isHidden && gradeGroups.length > 0 && (
-          <div className="max-h-[28rem] space-y-4 overflow-y-auto">
-            {gradeGroups.map((group) => {
-              const ids = group.classes.map((c) => c.id);
-              const selectedCount = ids.filter((id) => selected.has(id)).length;
-              const allOn = selectedCount === ids.length && ids.length > 0;
-              const someOn = selectedCount > 0 && !allOn;
-
+          <ClassGradePicker
+            gradeGroups={gradeGroups}
+            selectedClassIds={selected}
+            onToggleClass={toggleClass}
+            onToggleGrade={toggleGrade}
+            classMeta={(classId) => {
+              const occupiedBy = occupied.get(classId);
+              const isOwn = ownClassIds.has(classId);
               return (
-                <div key={group.grade} className="rounded-xl border border-slate-100 p-3">
-                  <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
-                    <GradeCheckbox
-                      checked={allOn}
-                      indeterminate={someOn}
-                      onChange={() => toggleGrade(ids)}
-                    />
-                    Параллель {group.grade}
-                    <span className="font-normal text-slate-400">
-                      ({selectedCount}/{ids.length})
+                <>
+                  {isOwn && <span className="text-xs text-emerald-600">этот шаблон</span>}
+                  {occupiedBy && (
+                    <span className="truncate text-xs text-amber-700">
+                      занят: {occupiedBy.templateName}
                     </span>
-                  </label>
-                  <ul className="space-y-1.5 pl-6">
-                    {group.classes.map((schoolClass) => {
-                      const occupiedBy = occupied.get(schoolClass.id);
-                      const isOwn = ownClassIds.has(schoolClass.id);
-                      return (
-                        <li
-                          key={schoolClass.id}
-                          className="flex items-center justify-between gap-2 text-sm"
-                        >
-                          <label className="flex min-w-0 flex-1 items-center gap-2">
-                            <input
-                              type="checkbox"
-                              className="rounded border-slate-300"
-                              checked={selected.has(schoolClass.id)}
-                              onChange={() => toggleClass(schoolClass.id)}
-                            />
-                            <span className="font-medium text-slate-800">{schoolClass.name}</span>
-                            {isOwn && (
-                              <span className="text-xs text-emerald-600">этот шаблон</span>
-                            )}
-                            {occupiedBy && (
-                              <span className="truncate text-xs text-amber-700">
-                                занят: {occupiedBy.templateName}
-                              </span>
-                            )}
-                          </label>
-                          {isOwn && (
-                            <button
-                              type="button"
-                              className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"
-                              aria-label={`Снять ${schoolClass.name}`}
-                              onClick={() => setUnassignClassId(schoolClass.id)}
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
+                  )}
+                </>
               );
-            })}
-          </div>
+            }}
+            classTrailing={(classId) =>
+              ownClassIds.has(classId) ? (
+                <button
+                  type="button"
+                  className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                  aria-label="Снять привязку"
+                  onClick={() => setUnassignClassId(classId)}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              ) : null
+            }
+          />
         )}
 
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
@@ -324,30 +292,5 @@ export function BellTemplateBindingsModal({
         onConfirm={() => void confirmUnassign()}
       />
     </>
-  );
-}
-
-function GradeCheckbox({
-  checked,
-  indeterminate,
-  onChange,
-}: {
-  checked: boolean;
-  indeterminate: boolean;
-  onChange: () => void;
-}) {
-  const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (ref.current) ref.current.indeterminate = indeterminate;
-  }, [indeterminate]);
-
-  return (
-    <input
-      ref={ref}
-      type="checkbox"
-      className={cx('rounded border-slate-300')}
-      checked={checked}
-      onChange={onChange}
-    />
   );
 }

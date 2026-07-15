@@ -355,15 +355,17 @@ export function useUpdateWorkingDays(yearId: number | null) {
   });
 }
 
+function invalidateCalendar(qc: ReturnType<typeof useQueryClient>, yearId: number | null) {
+  if (yearId != null) {
+    void qc.invalidateQueries({ queryKey: ['calendar-events', yearId] });
+  }
+}
+
 export function useCreateCalendarEvent(yearId: number | null) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateCalendarEventRequest) => scheduleSettingsApi.createCalendarEvent(body),
-    onSuccess: () => {
-      if (yearId != null) {
-        void qc.invalidateQueries({ queryKey: ['calendar-events', yearId] });
-      }
-    },
+    onSuccess: () => invalidateCalendar(qc, yearId),
   });
 }
 
@@ -372,10 +374,30 @@ export function useUpdateCalendarEvent(yearId: number | null) {
   return useMutation({
     mutationFn: ({ id, body }: { id: number; body: UpdateCalendarEventRequest }) =>
       scheduleSettingsApi.updateCalendarEvent(id, body),
-    onSuccess: () => {
-      if (yearId != null) {
-        void qc.invalidateQueries({ queryKey: ['calendar-events', yearId] });
-      }
-    },
+    onSuccess: () => invalidateCalendar(qc, yearId),
+  });
+}
+
+export function useHideCalendarEvent(yearId: number | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => scheduleSettingsApi.hideCalendarEvent(id),
+    onSuccess: () => invalidateCalendar(qc, yearId),
+  });
+}
+
+export function useActivateCalendarEvent(yearId: number | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => scheduleSettingsApi.activateCalendarEvent(id),
+    onSuccess: () => invalidateCalendar(qc, yearId),
+  });
+}
+
+export function useDeleteCalendarEvent(yearId: number | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => scheduleSettingsApi.deleteCalendarEvent(id),
+    onSuccess: () => invalidateCalendar(qc, yearId),
   });
 }

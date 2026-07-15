@@ -1,26 +1,70 @@
 import { useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { CalendarDays, CalendarRange } from 'lucide-react';
 import { Select } from '@/components/ui/Field';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useAcademicYears } from '@/platform/hooks/useScheduleSettings';
 import { BellTemplatesTab } from './BellTemplatesTab';
+import { WorkingDaysTab } from './WorkingDaysTab';
+import {
+  CalendarTab,
+  DEFAULT_CALENDAR_FILTERS,
+  type CalendarFilterState,
+} from './CalendarTab';
 
 type TabId = 'templates' | 'days' | 'calendar';
 
 const TAB_PARAM = 'tab';
 const YEAR_PARAM = 'year';
+const C_TYPE = 'cType';
+const C_STATUS = 'cStatus';
+const C_FROM = 'cFrom';
+const C_TO = 'cTo';
+const C_PAGE = 'cPage';
 
 function parseTab(raw: string | null): TabId {
   if (raw === 'days' || raw === 'calendar' || raw === 'templates') return raw;
   return 'templates';
 }
 
+function parseCalendarFilters(params: URLSearchParams): CalendarFilterState {
+  const type = params.get(C_TYPE) ?? '';
+  const statusRaw = params.get(C_STATUS);
+  const status: CalendarFilterState['status'] =
+    statusRaw === 'HIDDEN' || statusRaw === 'ALL' || statusRaw === 'ACTIVE'
+      ? statusRaw
+      : 'ACTIVE';
+  const page = Number(params.get(C_PAGE) ?? '0');
+  return {
+    type: type as CalendarFilterState['type'],
+    status,
+    dateFrom: params.get(C_FROM) ?? '',
+    dateTo: params.get(C_TO) ?? '',
+    page: Number.isFinite(page) && page >= 0 ? page : 0,
+  };
+}
+
+function writeCalendarFilters(next: URLSearchParams, filters: CalendarFilterState) {
+  if (filters.type) next.set(C_TYPE, filters.type);
+  else next.delete(C_TYPE);
+
+  if (filters.status === DEFAULT_CALENDAR_FILTERS.status) next.delete(C_STATUS);
+  else next.set(C_STATUS, filters.status);
+
+  if (filters.dateFrom) next.set(C_FROM, filters.dateFrom);
+  else next.delete(C_FROM);
+  if (filters.dateTo) next.set(C_TO, filters.dateTo);
+  else next.delete(C_TO);
+
+  if (filters.page > 0) next.set(C_PAGE, String(filters.page));
+  else next.delete(C_PAGE);
+}
+
 export function ScheduleSettingsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = parseTab(searchParams.get(TAB_PARAM));
   const yearParam = searchParams.get(YEAR_PARAM);
+  const calendarFilters = useMemo(() => parseCalendarFilters(searchParams), [searchParams]);
 
   const yearsQuery = useAcademicYears();
   const years = yearsQuery.data?.content ?? [];
@@ -59,6 +103,12 @@ export function ScheduleSettingsPage() {
     const next = new URLSearchParams(searchParams);
     next.set(TAB_PARAM, nextTab);
     if (selectedYearId != null) next.set(YEAR_PARAM, String(selectedYearId));
+    setSearchParams(next, { replace: true });
+  }
+
+  function setCalendarFilters(filters: CalendarFilterState) {
+    const next = new URLSearchParams(searchParams);
+    writeCalendarFilters(next, filters);
     setSearchParams(next, { replace: true });
   }
 
@@ -115,17 +165,13 @@ export function ScheduleSettingsPage() {
             <BellTemplatesTab yearId={selectedYearId} yearName={selectedYearName} />
           </TabsContent>
           <TabsContent value="days">
-            <EmptyBlock
-              icon={<CalendarDays className="h-7 w-7" />}
-              title="Учебные дни"
-              description="Выбор рабочих дней недели и предупреждения о занятости — на этапе 9."
-            />
+            <WorkingDaysTab yearId={selectedYearId} />
           </TabsContent>
           <TabsContent value="calendar">
-            <EmptyBlock
-              icon={<CalendarRange className="h-7 w-7" />}
-              title="Школьный календарь"
-              description="События с типом, эффектом и областью применения — на этапе 9."
+            <CalendarTab
+              yearId={selectedYearId}
+              filters={calendarFilters}
+              onFiltersChange={setCalendarFilters}
             />
           </TabsContent>
         </Tabs>
