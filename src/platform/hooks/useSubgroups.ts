@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { subgroupsApi, type GroupSetListFilters } from '@/lib/schedule2bApi';
 import type { AutoSplitRequest } from '@/lib/schedule2bTypes';
 import { platformCoreApi } from '@/lib/platformCoreApi';
@@ -36,21 +36,6 @@ export function useUnassignedStudents(setId: number | null) {
     queryKey: subgroupsKeys.unassigned(setId ?? 0),
     queryFn: ({ signal }) => subgroupsApi.unassignedStudents(setId!, signal),
     enabled: setId != null && setId > 0,
-  });
-}
-
-/** Count-only fetches for set-list badges (ТЗ §6.7). Prefer list DTO field later. */
-export function useUnassignedCounts(setIds: number[]) {
-  return useQueries({
-    queries: setIds.map((setId) => ({
-      queryKey: [...subgroupsKeys.unassigned(setId), 'count'] as const,
-      queryFn: async ({ signal }: { signal?: AbortSignal }) => {
-        const list = await subgroupsApi.unassignedStudents(setId, signal);
-        return list.length;
-      },
-      enabled: setId > 0,
-      staleTime: 60_000,
-    })),
   });
 }
 

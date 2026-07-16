@@ -74,6 +74,8 @@ export type GroupSet = {
   status: SchoolRecordStatus;
   subgroupCount: number;
   assignedStudentCount: number;
+  /** Class members not yet in any active subgroup of this set. */
+  unassignedStudentCount: number;
   createdAt: string;
   updatedAt: string;
 };

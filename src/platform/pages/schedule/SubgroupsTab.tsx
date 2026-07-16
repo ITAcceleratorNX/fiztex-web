@@ -15,7 +15,6 @@ import {
   useArchiveGroupSet,
   useGroupSets,
   useSchoolSubjects,
-  useUnassignedCounts,
 } from '@/platform/hooks/useSubgroups';
 import { CreateGroupSetModal } from './CreateGroupSetModal';
 import { GroupSetScreen } from './GroupSetScreen';
@@ -82,17 +81,6 @@ export function SubgroupsTab({
     for (const p of periodsQuery.data ?? []) map.set(p.id, p.name);
     return map;
   }, [periodsQuery.data]);
-
-  const setIds = sets.map((s) => s.id);
-  const unassignedQueries = useUnassignedCounts(setIds);
-  const unassignedBySetId = useMemo(() => {
-    const map = new Map<number, number>();
-    setIds.forEach((id, index) => {
-      const count = unassignedQueries[index]?.data;
-      if (typeof count === 'number') map.set(id, count);
-    });
-    return map;
-  }, [setIds, unassignedQueries]);
 
   const selectedClass = classes.find((c) => c.id === state.classId) ?? null;
 
@@ -245,7 +233,7 @@ export function SubgroupsTab({
           {sets.length > 0 && (
             <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white">
               {sets.map((set) => {
-                const unassigned = unassignedBySetId.get(set.id) ?? 0;
+                const unassigned = set.unassignedStudentCount ?? 0;
                 return (
                   <li key={set.id}>
                     <div
