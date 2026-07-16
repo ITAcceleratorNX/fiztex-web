@@ -41,6 +41,22 @@ export function isGroupSetNotEmpty(error: unknown): error is ApiError {
   );
 }
 
+export function isClassHasNoStudents(error: unknown): error is ApiError {
+  return (
+    error instanceof ApiError &&
+    error.status === 409 &&
+    error.code === 'CLASS_HAS_NO_STUDENTS'
+  );
+}
+
+export function isStudentNotInClass(error: unknown): error is ApiError {
+  return (
+    error instanceof ApiError &&
+    error.status === 409 &&
+    error.code === 'STUDENT_NOT_IN_CLASS'
+  );
+}
+
 export const teacherAvailabilityApi = {
   get: (teacherId: number, signal?: AbortSignal) =>
     request<TeacherAvailability>(`/admin/teachers/${teacherId}/availability`, { signal }),

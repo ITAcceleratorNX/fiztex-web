@@ -48,6 +48,21 @@ export const platformCoreApi = {
       })}`,
       { signal },
     ),
+
+  listPeriods: (academicYearId: number, signal?: AbortSignal) =>
+    request<AcademicPeriodRef[]>(`/admin/academic-years/${academicYearId}/periods`, {
+      signal,
+    }),
+};
+
+export type AcademicPeriodRef = {
+  id: number;
+  academicYearId: number;
+  name: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  status: string;
 };
 
 /** Group active classes by grade for bindings / calendar target pickers. */

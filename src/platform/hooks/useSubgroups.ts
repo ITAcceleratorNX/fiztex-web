@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
 import { subgroupsApi, type GroupSetListFilters } from '@/lib/schedule2bApi';
 import type { AutoSplitRequest } from '@/lib/schedule2bTypes';
 import { platformCoreApi } from '@/lib/platformCoreApi';
@@ -12,6 +12,7 @@ export const subgroupsKeys = {
   groupSet: (setId: number) => [...subgroupsKeys.groupSetRoot(setId), 'aggregate'] as const,
   unassigned: (setId: number) => [...subgroupsKeys.groupSetRoot(setId), 'unassigned'] as const,
   subjects: ['school-subjects', 'active'] as const,
+  periods: (yearId: number) => ['academic-periods', yearId] as const,
 };
 
 export function useGroupSets(filters: GroupSetListFilters | null) {
@@ -38,10 +39,33 @@ export function useUnassignedStudents(setId: number | null) {
   });
 }
 
+/** Count-only fetches for set-list badges (ТЗ §6.7). Prefer list DTO field later. */
+export function useUnassignedCounts(setIds: number[]) {
+  return useQueries({
+    queries: setIds.map((setId) => ({
+      queryKey: [...subgroupsKeys.unassigned(setId), 'count'] as const,
+      queryFn: async ({ signal }: { signal?: AbortSignal }) => {
+        const list = await subgroupsApi.unassignedStudents(setId, signal);
+        return list.length;
+      },
+      enabled: setId > 0,
+      staleTime: 60_000,
+    })),
+  });
+}
+
 export function useSchoolSubjects() {
   return useQuery({
     queryKey: subgroupsKeys.subjects,
     queryFn: ({ signal }) => platformCoreApi.listSubjects(signal),
+  });
+}
+
+export function useAcademicPeriods(yearId: number | null) {
+  return useQuery({
+    queryKey: subgroupsKeys.periods(yearId ?? 0),
+    queryFn: ({ signal }) => platformCoreApi.listPeriods(yearId!, signal),
+    enabled: yearId != null && yearId > 0,
   });
 }
 
@@ -72,6 +96,57 @@ export function useCreateGroupSet(classId: number | null) {
           queryKey: [...subgroupsKeys.all, 'group-sets'],
         });
       }
+    },
+  });
+}
+
+export function useArchiveGroupSet() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ setId, confirmImpact }: { setId: number; confirmImpact?: boolean }) =>
+      subgroupsApi.archiveGroupSet(setId, confirmImpact ?? false),
+    onSuccess: (_data, vars) => {
+      invalidateGroupSetAndList(queryClient, vars.setId);
+    },
+  });
+}
+
+export function useCreateSubgroup(setId: number | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => {
+      if (setId == null) throw new Error('setId is required');
+      return subgroupsApi.createSubgroup({ groupSetId: setId, name });
+    },
+    onSuccess: () => {
+      if (setId != null) invalidateGroupSetAndList(queryClient, setId);
+    },
+  });
+}
+
+export function usePatchSubgroup(setId: number | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ subgroupId, name }: { subgroupId: number; name: string }) =>
+      subgroupsApi.patchSubgroup(subgroupId, { name }),
+    onSuccess: () => {
+      if (setId != null) invalidateGroupSetAndList(queryClient, setId);
+    },
+  });
+}
+
+export function useArchiveSubgroup(setId: number | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      subgroupId,
+      confirmImpact,
+    }: {
+      subgroupId: number;
+      confirmImpact?: boolean;
+    }) => subgroupsApi.archiveSubgroup(subgroupId, confirmImpact ?? false),
+    onSuccess: () => {
+      if (setId != null) invalidateGroupSetAndList(queryClient, setId);
     },
   });
 }
