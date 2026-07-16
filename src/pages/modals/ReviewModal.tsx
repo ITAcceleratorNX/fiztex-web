@@ -5,7 +5,6 @@ import {
   X,
   ShieldAlert,
   CircleDot,
-  Sparkles,
   AlertTriangle,
   ZoomIn,
   ZoomOut,
@@ -42,12 +41,6 @@ const EVENT_LABEL: Record<string, string> = {
   WINDOW_BLUR: 'Потеря фокуса окна',
   PAGE_CLOSE: 'Закрытие страницы',
   RE_ENTRY: 'Повторный вход',
-};
-
-const CONFIDENCE_META: Record<'HIGH' | 'MEDIUM' | 'LOW', { label: string; tone: 'green' | 'amber' | 'red' }> = {
-  HIGH: { label: 'высокая', tone: 'green' },
-  MEDIUM: { label: 'средняя', tone: 'amber' },
-  LOW: { label: 'низкая', tone: 'red' },
 };
 
 interface Draft {
@@ -607,45 +600,30 @@ function AnswerCard({
         </div>
       )}
 
-      {/* AI hint — assistant only, never the final decision (open answers) */}
+      {/* Length heuristic draft — not AI; admin must set the final score */}
       {!isChoice && answer.aiScore != null && (
-        <div className="mt-3 rounded-lg border border-violet-200 bg-violet-50/60 px-3 py-2.5">
+        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/70 px-3 py-2.5">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-violet-700">
-              <Sparkles className="h-3.5 w-3.5" />
-              AI-подсказка
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-800">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Черновая эвристика
             </span>
-            <span className="text-xs font-medium text-violet-800">
-              Предложенный балл: {answer.aiScore} / {answer.maxScore}
+            <span className="text-xs font-medium text-amber-900">
+              Ориентир балла: {answer.aiScore} / {answer.maxScore}
             </span>
-            {answer.aiConfidence && (
-              <Badge tone={CONFIDENCE_META[answer.aiConfidence].tone}>
-                Уверенность: {CONFIDENCE_META[answer.aiConfidence].label}
-              </Badge>
-            )}
             {!locked && (
               <button
                 type="button"
                 onClick={() => onChange({ ...draft, score: String(answer.aiScore) })}
-                className="ml-auto rounded-lg px-2 py-1 text-xs font-semibold text-violet-700 transition hover:bg-violet-100"
+                className="ml-auto rounded-lg px-2 py-1 text-xs font-semibold text-amber-900 transition hover:bg-amber-100"
               >
-                Применить балл
+                Подставить балл
               </button>
             )}
           </div>
           {(answer.aiComment || answer.aiWarning) && (
-            <p
-              className={cx(
-                'mt-1.5 text-sm',
-                answer.aiWarning || answer.aiConfidence === 'LOW'
-                  ? 'text-amber-800'
-                  : 'text-slate-700',
-              )}
-            >
-              {(answer.aiWarning || answer.aiConfidence === 'LOW') && (
-                <AlertTriangle className="mr-1 inline h-3.5 w-3.5 shrink-0 align-text-bottom" />
-              )}
-              {[answer.aiComment, answer.aiWarning].filter(Boolean).join(' · ')}
+            <p className="mt-1.5 text-sm text-amber-900">
+              {[answer.aiWarning, answer.aiComment].filter(Boolean).join(' · ')}
             </p>
           )}
         </div>
