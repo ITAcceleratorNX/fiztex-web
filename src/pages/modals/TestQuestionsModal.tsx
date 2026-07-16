@@ -285,7 +285,7 @@ export function TestQuestionsModal({
 
   async function save(versionStrategy?: VersionStrategy) {
     if (!test) return;
-    const validation = validateQuestions(questions);
+    const validation = validateQuestions(questions, test.minScore);
     if (validation) {
       setFormError(validation);
       return;

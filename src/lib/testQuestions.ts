@@ -139,7 +139,7 @@ export function questionToRequest(q: QuestionDraft, orderIndex: number): Questio
   };
 }
 
-export function validateQuestions(questions: QuestionDraft[]): string | null {
+export function validateQuestions(questions: QuestionDraft[], minScore?: number): string | null {
   if (questions.length === 0) return 'Добавьте хотя бы один вопрос';
 
   for (let i = 0; i < questions.length; i++) {
@@ -154,6 +154,15 @@ export function validateQuestions(questions: QuestionDraft[]): string | null {
       const correct = q.options.filter((o) => o.isCorrect).length;
       if (correct === 0) return `Вопрос ${n}: отметьте правильный ответ`;
       if (q.type === 'SINGLE_CHOICE' && correct !== 1) return `Вопрос ${n}: для одного варианта нужен ровно один правильный ответ`;
+    }
+  }
+
+  if (minScore != null && Number.isFinite(minScore)) {
+    const totalMax = questions
+      .filter((q) => !q.isDraft)
+      .reduce((sum, q) => sum + (Number.isFinite(q.maxScore) ? q.maxScore : 0), 0);
+    if (totalMax > 0 && minScore > totalMax) {
+      return `Минимальный балл (${minScore}) не может превышать сумму баллов вопросов (${totalMax})`;
     }
   }
 

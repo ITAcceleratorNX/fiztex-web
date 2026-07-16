@@ -100,6 +100,9 @@ export function TestFormModal({
     if (!Number.isFinite(dur) || dur < 1) return 'Длительность должна быть не меньше 1 минуты';
     const min = Number(form.minScore);
     if (!Number.isFinite(min) || min < 0) return 'Минимальный балл не может быть отрицательным';
+    if (test?.maxScore != null && test.maxScore > 0 && min > test.maxScore) {
+      return `Минимальный балл не может превышать сумму баллов вопросов (${test.maxScore})`;
+    }
     return null;
   }
 
