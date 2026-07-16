@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Field, Select, TextInput } from '@/components/ui/Field';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
-import { SCHOOL_STATUS_LABELS, WEEKDAY_LABELS } from '../labels';
+import { ACCOUNT_STATUS_LABELS, SCHOOL_STATUS_LABELS, WEEKDAY_LABELS } from '../labels';
 import type { Weekday } from '@/lib/scheduleSettingsTypes';
 import {
   archiveTeacherAssignment,
@@ -210,8 +210,12 @@ export function TeacherDetailModal({
                 <dd>{detail.phone}</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-400">Статус</dt>
+                <dt className="text-xs text-slate-400">Профиль</dt>
                 <dd>{SCHOOL_STATUS_LABELS[detail.status]}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-400">Вход</dt>
+                <dd>{ACCOUNT_STATUS_LABELS[detail.accountStatus]}</dd>
               </div>
             </dl>
           )}

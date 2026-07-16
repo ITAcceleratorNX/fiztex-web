@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
 import { LoadingBlock, ErrorBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
-import { SCHOOL_STATUS_LABELS, STUDENT_STATUS_LABELS } from '../labels';
+import { ACCOUNT_STATUS_LABELS, SCHOOL_STATUS_LABELS, STUDENT_STATUS_LABELS } from '../labels';
 import { getStudent, updateStudent } from '../services';
 import type { StudentProfile, StudentProfileDetail } from '../types';
 import { formatPersonName } from '../types';
@@ -145,8 +145,12 @@ export function StudentDetailModal({
           ) : (
             <dl className="grid grid-cols-2 gap-3">
               <div>
-                <dt className="text-xs text-slate-400">Статус</dt>
+                <dt className="text-xs text-slate-400">Профиль</dt>
                 <dd>{STUDENT_STATUS_LABELS[detail.status]}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-400">Вход</dt>
+                <dd>{ACCOUNT_STATUS_LABELS[detail.accountStatus]}</dd>
               </div>
               <div>
                 <dt className="text-xs text-slate-400">Account ID</dt>

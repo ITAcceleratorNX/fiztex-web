@@ -54,8 +54,12 @@ export function UserDetailModal({
     >
       <dl className="grid gap-3 text-sm sm:grid-cols-2">
         <div>
-          <dt className="text-xs uppercase tracking-wide text-slate-400">Статус</dt>
+          <dt className="text-xs uppercase tracking-wide text-slate-400">Статус входа</dt>
           <dd className="mt-1 font-medium text-slate-800">{ACCOUNT_STATUS_LABELS[user.status]}</dd>
+          <p className="mt-1 text-xs text-slate-500">
+            Блокировка отключает вход, но не убирает человека из школьных списков. Архив
+            закрывает и вход, и школьный профиль.
+          </p>
         </div>
         <div>
           <dt className="text-xs uppercase tracking-wide text-slate-400">Связи</dt>

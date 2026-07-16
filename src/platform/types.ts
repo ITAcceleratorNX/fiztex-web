@@ -199,6 +199,8 @@ export interface StudentProfile {
   middleName: string | null;
   birthDate: string | null;
   status: StudentProfileStatus;
+  /** Login lifecycle; BLOCKED blocks sign-in without archiving the school card. */
+  accountStatus: AccountStatus;
   createdAt: string;
   updatedAt: string;
 }
@@ -216,6 +218,8 @@ export interface ParentProfile {
   middleName: string | null;
   phone: string;
   status: SchoolRecordStatus;
+  /** Login lifecycle; BLOCKED blocks sign-in without archiving the school card. */
+  accountStatus: AccountStatus;
   createdAt: string;
   updatedAt: string;
 }
@@ -241,6 +245,8 @@ export interface TeacherProfile {
   middleName: string | null;
   phone: string;
   status: SchoolRecordStatus;
+  /** Login lifecycle; BLOCKED blocks sign-in without archiving the school card. */
+  accountStatus: AccountStatus;
   createdAt: string;
   updatedAt: string;
 }
