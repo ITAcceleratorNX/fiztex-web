@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Select } from '@/components/ui/Field';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
@@ -80,6 +81,11 @@ function writeCalendarFilters(next: URLSearchParams, filters: CalendarFilterStat
   else next.delete(C_PAGE);
 }
 
+function applyTab(next: URLSearchParams, nextTab: string, selectedYearId: number | null) {
+  next.set(TAB_PARAM, nextTab);
+  if (selectedYearId != null) next.set(YEAR_PARAM, String(selectedYearId));
+}
+
 export function ScheduleSettingsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = parseTab(searchParams.get(TAB_PARAM));
@@ -87,6 +93,12 @@ export function ScheduleSettingsPage() {
   const calendarFilters = useMemo(() => parseCalendarFilters(searchParams), [searchParams]);
   const teachersState = useMemo(() => parseTeachersTabState(searchParams), [searchParams]);
   const subgroupsState = useMemo(() => parseSubgroupsTabState(searchParams), [searchParams]);
+
+  const [teachersDirty, setTeachersDirty] = useState(false);
+  const [pendingTab, setPendingTab] = useState<string | null>(null);
+  const handleTeachersDirty = useCallback((dirty: boolean) => {
+    setTeachersDirty(dirty);
+  }, []);
 
   const yearsQuery = useAcademicYears();
   const years = yearsQuery.data?.content ?? [];
@@ -115,17 +127,42 @@ export function ScheduleSettingsPage() {
     setSearchParams(next, { replace: true });
   }, [selectedYearId, yearParam, searchParams, setSearchParams, tab]);
 
+  useEffect(() => {
+    if (!teachersDirty) return;
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [teachersDirty]);
+
   function setYear(nextYearId: string) {
     const next = new URLSearchParams(searchParams);
     next.set(YEAR_PARAM, nextYearId);
     setSearchParams(next, { replace: true });
   }
 
-  function setTab(nextTab: string) {
+  function commitTab(nextTab: string) {
     const next = new URLSearchParams(searchParams);
-    next.set(TAB_PARAM, nextTab);
-    if (selectedYearId != null) next.set(YEAR_PARAM, String(selectedYearId));
+    applyTab(next, nextTab, selectedYearId);
     setSearchParams(next, { replace: true });
+  }
+
+  function setTab(nextTab: string) {
+    if (nextTab === tab) return;
+    if (teachersDirty) {
+      setPendingTab(nextTab);
+      return;
+    }
+    commitTab(nextTab);
+  }
+
+  function confirmTabLeave() {
+    if (!pendingTab) return;
+    setTeachersDirty(false);
+    commitTab(pendingTab);
+    setPendingTab(null);
   }
 
   function setCalendarFilters(filters: CalendarFilterState) {
@@ -211,7 +248,11 @@ export function ScheduleSettingsPage() {
             />
           </TabsContent>
           <TabsContent value="teachers">
-            <TeachersAvailabilityTab state={teachersState} onStateChange={setTeachersState} />
+            <TeachersAvailabilityTab
+              state={teachersState}
+              onStateChange={setTeachersState}
+              onDirtyChange={handleTeachersDirty}
+            />
           </TabsContent>
           <TabsContent value="subgroups">
             <SubgroupsTab
@@ -222,6 +263,17 @@ export function ScheduleSettingsPage() {
           </TabsContent>
         </Tabs>
       )}
+
+      <ConfirmDialog
+        open={pendingTab != null}
+        onClose={() => setPendingTab(null)}
+        onConfirm={confirmTabLeave}
+        title="Несохранённые изменения"
+        message="В карточке доступности учителя есть несохранённые изменения. Уйти со вкладки без сохранения?"
+        confirmLabel="Уйти"
+        cancelLabel="Остаться"
+        danger
+      />
     </div>
   );
 }

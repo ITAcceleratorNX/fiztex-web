@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, GraduationCap } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import {
@@ -10,6 +11,7 @@ import {
 } from '@/platform/hooks/useTeacherAvailability';
 import type { TeacherAvailability, TeacherRef } from '@/lib/schedule2bTypes';
 import { cx } from '@/lib/format';
+import { TeacherAvailabilityCard } from './TeacherAvailabilityCard';
 
 const TEACHER_ID_PARAM = 'teacherId';
 const TEACHER_PAGE_PARAM = 'tPage';
@@ -85,13 +87,27 @@ function AvailabilityStatusBadge({
 export function TeachersAvailabilityTab({
   state,
   onStateChange,
+  onDirtyChange,
 }: {
   state: TeachersTabState;
   onStateChange: (next: TeachersTabState) => void;
+  /** Bubbles draft dirty up (e.g. gate tab switches on ScheduleSettingsPage). */
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const [searchInput, setSearchInput] = useState('');
   const [debouncedName, setDebouncedName] = useState('');
+  const [cardDirty, setCardDirty] = useState(false);
+  const [leaveConfirm, setLeaveConfirm] = useState<
+    null | { kind: 'switch'; teacherId: number } | { kind: 'close' }
+  >(null);
   const skipPageReset = useRef(true);
+  const handleDirtyChange = useCallback(
+    (dirty: boolean) => {
+      setCardDirty(dirty);
+      onDirtyChange?.(dirty);
+    },
+    [onDirtyChange],
+  );
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
@@ -110,17 +126,53 @@ export function TeachersAvailabilityTab({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reset page only when name filter changes
   }, [debouncedName]);
 
+  useEffect(() => {
+    if (state.teacherId == null) {
+      setCardDirty(false);
+      onDirtyChange?.(false);
+    }
+  }, [state.teacherId, onDirtyChange]);
+
   const teachersQuery = useTeachersList(debouncedName, state.page);
   const selectedAvailability = useTeacherAvailability(state.teacherId);
 
   const teachers = teachersQuery.data?.content ?? [];
   const totalPages = teachersQuery.data?.totalPages ?? 0;
+  const selectedTeacher = teachers.find((t) => t.id === state.teacherId) ?? null;
+
+  function requestSelectTeacher(teacherId: number) {
+    if (state.teacherId === teacherId) return;
+    if (cardDirty && state.teacherId != null) {
+      setLeaveConfirm({ kind: 'switch', teacherId });
+      return;
+    }
+    onStateChange({ ...state, teacherId });
+  }
+
+  function requestCloseCard() {
+    if (cardDirty) {
+      setLeaveConfirm({ kind: 'close' });
+      return;
+    }
+    onStateChange({ ...state, teacherId: null });
+  }
+
+  function confirmLeave() {
+    if (!leaveConfirm) return;
+    handleDirtyChange(false);
+    if (leaveConfirm.kind === 'close') {
+      onStateChange({ ...state, teacherId: null });
+    } else {
+      onStateChange({ ...state, teacherId: leaveConfirm.teacherId });
+    }
+    setLeaveConfirm(null);
+  }
 
   return (
     <div>
       <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Доступность учителей для конструктора расписания. Выберите учителя, чтобы открыть
-        карточку графика (stage 7).
+        Доступность учителей для конструктора расписания. Выберите учителя слева — справа
+        откроется карточка графика.
       </p>
 
       <div className="mb-4 sm:max-w-md">
@@ -156,68 +208,93 @@ export function TeachersAvailabilityTab({
       )}
 
       {teachers.length > 0 && (
-        <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-          {teachers.map((teacher) => {
-            const selected = state.teacherId === teacher.id;
-            return (
-              <li key={teacher.id}>
-                <button
-                  type="button"
-                  onClick={() => onStateChange({ ...state, teacherId: teacher.id })}
-                  className={cx(
-                    'flex w-full items-center gap-4 px-4 py-3.5 text-left transition',
-                    selected ? 'bg-brand-50/60' : 'hover:bg-slate-50',
-                  )}
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-slate-800">
-                      {teacherFullName(teacher)}
-                    </p>
-                    <p className="truncate text-xs text-slate-500">{teacher.phone}</p>
-                  </div>
-                  <AvailabilityStatusBadge
-                    known={selected}
-                    availability={selected ? selectedAvailability.data : undefined}
-                    loading={selected && selectedAvailability.isLoading}
-                  />
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+          <div>
+            <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+              {teachers.map((teacher) => {
+                const selected = state.teacherId === teacher.id;
+                return (
+                  <li key={teacher.id}>
+                    <button
+                      type="button"
+                      onClick={() => requestSelectTeacher(teacher.id)}
+                      className={cx(
+                        'flex w-full items-center gap-4 px-4 py-3.5 text-left transition',
+                        selected ? 'bg-brand-50/60' : 'hover:bg-slate-50',
+                      )}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-slate-800">
+                          {teacherFullName(teacher)}
+                        </p>
+                        <p className="truncate text-xs text-slate-500">{teacher.phone}</p>
+                      </div>
+                      <AvailabilityStatusBadge
+                        known={selected}
+                        availability={selected ? selectedAvailability.data : undefined}
+                        loading={selected && selectedAvailability.isLoading}
+                      />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
 
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={state.page <= 0 || teachersQuery.isFetching}
-            onClick={() => onStateChange({ ...state, page: state.page - 1 })}
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Назад
-          </Button>
-          <p className="text-xs text-slate-500">
-            Стр. {state.page + 1} из {totalPages}
-          </p>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={state.page + 1 >= totalPages || teachersQuery.isFetching}
-            onClick={() => onStateChange({ ...state, page: state.page + 1 })}
-          >
-            Вперёд
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+            {totalPages > 1 && (
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={state.page <= 0 || teachersQuery.isFetching}
+                  onClick={() => onStateChange({ ...state, page: state.page - 1 })}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Назад
+                </Button>
+                <p className="text-xs text-slate-500">
+                  Стр. {state.page + 1} из {totalPages}
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={state.page + 1 >= totalPages || teachersQuery.isFetching}
+                  onClick={() => onStateChange({ ...state, page: state.page + 1 })}
+                >
+                  Вперёд
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div>
+            {state.teacherId == null ? (
+              <div className="flex min-h-[16rem] items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+                Выберите учителя, чтобы открыть карточку доступности
+              </div>
+            ) : (
+              <TeacherAvailabilityCard
+                key={state.teacherId}
+                teacherId={state.teacherId}
+                teacher={selectedTeacher}
+                onDirtyChange={handleDirtyChange}
+                onClose={requestCloseCard}
+              />
+            )}
+          </div>
         </div>
       )}
 
-      {state.teacherId != null && (
-        <p className="mt-6 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-          Карточка доступности учителя #{state.teacherId} — stage 7.
-        </p>
-      )}
+      <ConfirmDialog
+        open={leaveConfirm != null}
+        onClose={() => setLeaveConfirm(null)}
+        onConfirm={confirmLeave}
+        title="Несохранённые изменения"
+        message="В карточке есть несохранённые изменения. Уйти без сохранения?"
+        confirmLabel="Уйти"
+        cancelLabel="Остаться"
+        danger
+      />
     </div>
   );
 }
