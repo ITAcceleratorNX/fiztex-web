@@ -24,6 +24,8 @@ interface CreateAccountResponseDto {
   role: AccountRole;
   status: AccountStatus;
   issuedCode: string | null;
+  /** Present for TEACHER / PARENT / STUDENT; null for ADMIN. */
+  schoolProfileId: number | null;
 }
 
 function mapUser(dto: AccountDto): PlatformUser {
@@ -69,7 +71,9 @@ export async function getUser(id: string): Promise<PlatformUser | null> {
   return users.find((u) => u.id === id) ?? null;
 }
 
-export async function createUser(input: CreateUserInput): Promise<PlatformUser & { issuedCode?: string | null }> {
+export async function createUser(
+  input: CreateUserInput,
+): Promise<PlatformUser & { issuedCode?: string | null; schoolProfileId?: number | null }> {
   const fullName = input.fullName.trim();
   if (!fullName) throw new Error('Укажите ФИО');
   if (!input.role) throw new Error('Укажите роль');
@@ -94,6 +98,7 @@ export async function createUser(input: CreateUserInput): Promise<PlatformUser &
     relationLabel: null,
     createdAt: new Date().toISOString(),
     issuedCode: created.issuedCode,
+    schoolProfileId: created.schoolProfileId ?? null,
   };
 }
 
@@ -119,4 +124,15 @@ export async function blockUser(id: string): Promise<PlatformUser> {
     };
   }
   return { ...user, status: 'BLOCKED' };
+}
+
+export async function unblockUser(id: string): Promise<PlatformUser> {
+  await request<void>(`/admin/accounts/${id}/unblock`, { method: 'POST' });
+  const user = await getUser(id);
+  if (!user) throw new Error('Пользователь не найден');
+  return user;
+}
+
+export async function archiveUser(id: string): Promise<void> {
+  await request<void>(`/admin/accounts/${id}/archive`, { method: 'POST' });
 }

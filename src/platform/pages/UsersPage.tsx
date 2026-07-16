@@ -8,7 +8,7 @@ import { useToast } from '@/context/ToastContext';
 import { ACCOUNT_STATUS_LABELS, ROLE_LABELS } from '../labels';
 import { UserDetailModal } from '../modals/UserDetailModal';
 import { UserFormModal } from '../modals/UserFormModal';
-import { blockUser, listUsers } from '../services';
+import { archiveUser, blockUser, listUsers, unblockUser } from '../services';
 import type { AccountRole, AccountStatus, PlatformUser } from '../types';
 
 const FILTER_ROLES: Array<AccountRole | 'ALL'> = ['ALL', 'ADMIN', 'TEACHER', 'STUDENT', 'PARENT'];
@@ -65,11 +65,34 @@ export function UsersPage() {
     }
   }
 
+  async function handleUnblock(user: PlatformUser) {
+    try {
+      await unblockUser(user.id);
+      toast.success('Пользователь разблокирован');
+      setDetailOpen(false);
+      await reload();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Не удалось разблокировать');
+    }
+  }
+
+  async function handleArchive(user: PlatformUser) {
+    if (!window.confirm(`Архивировать ${user.fullName}?`)) return;
+    try {
+      await archiveUser(user.id);
+      toast.success('Пользователь архивирован');
+      setDetailOpen(false);
+      await reload();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Не удалось архивировать');
+    }
+  }
+
   return (
     <div>
       <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Пользователи Platform Core с реального API. Поиск — клиентский по загруженной
-        странице; редактирование профиля пока недоступно (только создание и блок).
+        При создании учителя, родителя или ученика сразу создаётся школьная карточка (по ФИО).
+        Доступны блок / разблок / архив аккаунта.
       </p>
 
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
@@ -164,9 +187,19 @@ export function UsersPage() {
                       >
                         Изменить
                       </Button>
-                      {user.status !== 'BLOCKED' && (
+                      {user.status !== 'BLOCKED' && user.status !== 'ARCHIVED' && (
                         <Button variant="ghost" size="sm" onClick={() => void handleBlock(user)}>
                           Блок
+                        </Button>
+                      )}
+                      {user.status === 'BLOCKED' && (
+                        <Button variant="ghost" size="sm" onClick={() => void handleUnblock(user)}>
+                          Разблок
+                        </Button>
+                      )}
+                      {user.status !== 'ARCHIVED' && (
+                        <Button variant="ghost" size="sm" onClick={() => void handleArchive(user)}>
+                          Архив
                         </Button>
                       )}
                     </div>
@@ -195,6 +228,12 @@ export function UsersPage() {
         }}
         onBlock={() => {
           if (selected) void handleBlock(selected);
+        }}
+        onUnblock={() => {
+          if (selected) void handleUnblock(selected);
+        }}
+        onArchive={() => {
+          if (selected) void handleArchive(selected);
         }}
       />
     </div>

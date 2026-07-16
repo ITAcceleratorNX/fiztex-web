@@ -10,12 +10,16 @@ export function UserDetailModal({
   user,
   onEdit,
   onBlock,
+  onUnblock,
+  onArchive,
 }: {
   open: boolean;
   onClose: () => void;
   user: PlatformUser | null;
   onEdit: () => void;
   onBlock: () => void;
+  onUnblock: () => void;
+  onArchive: () => void;
 }) {
   if (!user) return null;
 
@@ -33,9 +37,16 @@ export function UserDetailModal({
           <Button variant="ghost" onClick={onEdit}>
             Редактировать
           </Button>
-          {user.status !== 'BLOCKED' && (
+          {user.status === 'BLOCKED' ? (
+            <Button onClick={onUnblock}>Разблокировать</Button>
+          ) : user.status !== 'ARCHIVED' ? (
             <Button variant="danger" onClick={onBlock}>
               Заблокировать
+            </Button>
+          ) : null}
+          {user.status !== 'ARCHIVED' && (
+            <Button variant="ghost" onClick={onArchive}>
+              Архив
             </Button>
           )}
         </>

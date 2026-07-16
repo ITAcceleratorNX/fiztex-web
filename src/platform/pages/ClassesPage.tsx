@@ -5,16 +5,19 @@ import { Select } from '@/components/ui/Field';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { SCHOOL_STATUS_LABELS } from '../labels';
 import { ClassFormModal } from '../modals/ClassFormModal';
-import { listAcademicYears, listClasses } from '../services';
+import { archiveClass, listAcademicYears, listClasses } from '../services';
 import type { AcademicYear, SchoolClass } from '../types';
+import { useToast } from '@/context/ToastContext';
 
 export function ClassesPage() {
+  const toast = useToast();
   const [yearId, setYearId] = useState<string | 'ALL'>('ALL');
   const [years, setYears] = useState<AcademicYear[]>([]);
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<SchoolClass | null>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -37,6 +40,17 @@ export function ClassesPage() {
     void reload();
   }, [reload]);
 
+  async function handleArchive(item: SchoolClass) {
+    if (!window.confirm(`Архивировать класс ${item.name}?`)) return;
+    try {
+      await archiveClass(item.id);
+      toast.success('Класс архивирован');
+      await reload();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Не удалось архивировать');
+    }
+  }
+
   return (
     <div>
       <p className="mb-4 max-w-2xl text-sm text-slate-500">
@@ -54,7 +68,13 @@ export function ClassesPage() {
             ))}
           </Select>
         </div>
-        <Button icon={<Plus className="h-4 w-4" />} onClick={() => setFormOpen(true)}>
+        <Button
+          icon={<Plus className="h-4 w-4" />}
+          onClick={() => {
+            setEditing(null);
+            setFormOpen(true);
+          }}
+        >
           Создать класс
         </Button>
       </div>
@@ -75,6 +95,7 @@ export function ClassesPage() {
                 <th className="px-4 py-3 font-semibold">Учебный год</th>
                 <th className="px-4 py-3 font-semibold">Учеников</th>
                 <th className="px-4 py-3 font-semibold">Статус</th>
+                <th className="px-4 py-3 font-semibold">Действия</th>
               </tr>
             </thead>
             <tbody>
@@ -84,6 +105,27 @@ export function ClassesPage() {
                   <td className="px-4 py-3 text-slate-600">{item.academicYearName}</td>
                   <td className="px-4 py-3 text-slate-600">{item.studentCount}</td>
                   <td className="px-4 py-3 text-slate-600">{SCHOOL_STATUS_LABELS[item.status]}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-2">
+                      {item.status === 'ACTIVE' && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditing(item);
+                              setFormOpen(true);
+                            }}
+                          >
+                            Изменить
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => void handleArchive(item)}>
+                            Архив
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -93,9 +135,13 @@ export function ClassesPage() {
 
       <ClassFormModal
         open={formOpen}
-        onClose={() => setFormOpen(false)}
+        onClose={() => {
+          setFormOpen(false);
+          setEditing(null);
+        }}
         years={years}
         defaultYearId={yearId === 'ALL' ? undefined : yearId}
+        editing={editing}
         onSaved={() => void reload()}
       />
     </div>

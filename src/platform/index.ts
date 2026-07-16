@@ -5,3 +5,8 @@ export { PeriodsPage } from './pages/PeriodsPage';
 export { AccessCodesPage } from './pages/AccessCodesPage';
 export { ImportPage } from './pages/ImportPage';
 export { ScheduleSettingsPage } from './pages/schedule/ScheduleSettingsPage';
+export { StudentsPage } from './pages/StudentsPage';
+export { ParentsPage } from './pages/ParentsPage';
+export { TeachersPage } from './pages/TeachersPage';
+export { SchoolSubjectsPage } from './pages/SchoolSubjectsPage';
+export { LessonSchedulePage } from './pages/LessonSchedulePage';

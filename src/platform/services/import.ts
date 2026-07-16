@@ -11,8 +11,8 @@ export async function getLatestImportResult(
 }
 
 /**
- * Mock Excel import: validates extension client-side, returns fixture result for the type.
- * Real parsing is out of scope (PHYCORE-003).
+ * @deprecated Mock Excel import (PHYCORE-003 fixture). Real flow: ImportPage + importApi.ts.
+ * Kept only for reference; do not wire into UI.
  */
 export async function runMockImport(
   entityType: ImportEntityType,

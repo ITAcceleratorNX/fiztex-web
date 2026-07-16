@@ -154,3 +154,178 @@ export interface UpdatePeriodInput {
   endDate?: string;
   status?: AcademicPeriodStatus;
 }
+
+// --- School structure (students / parents / teachers) ---
+
+export type StudentProfileStatus = 'ACTIVE' | 'ARCHIVED';
+
+export type ParentRelationType = 'MOTHER' | 'FATHER' | 'GUARDIAN' | 'OTHER';
+
+export type ImportType =
+  | 'CLASSES'
+  | 'STUDENTS'
+  | 'STUDENTS_WITH_PARENTS'
+  | 'PARENTS'
+  | 'TEACHERS';
+
+export type ImportRunStatus =
+  | 'UPLOADED'
+  | 'ANALYZING'
+  | 'PREVIEW_READY'
+  | 'ANALYSIS_FAILED'
+  | 'QUEUED'
+  | 'RUNNING'
+  | 'COMPLETED'
+  | 'COMPLETED_WITH_ERRORS'
+  | 'FAILED';
+
+export type ImportDuplicateStrategy = 'SKIP' | 'UPDATE';
+
+export interface ClassMembership {
+  id: number;
+  academicYearId: number;
+  academicYearName: string;
+  classId: number;
+  className: string;
+  status: SchoolRecordStatus;
+  createdAt: string;
+}
+
+export interface StudentProfile {
+  id: number;
+  accountId: number;
+  firstName: string;
+  lastName: string;
+  middleName: string | null;
+  birthDate: string | null;
+  status: StudentProfileStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StudentProfileDetail extends StudentProfile {
+  currentMembership: ClassMembership | null;
+  membershipHistory: ClassMembership[];
+}
+
+export interface ParentProfile {
+  id: number;
+  accountId: number;
+  firstName: string;
+  lastName: string;
+  middleName: string | null;
+  phone: string;
+  status: SchoolRecordStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LinkedStudent {
+  studentProfileId: number;
+  firstName: string;
+  lastName: string;
+  middleName: string | null;
+  relationType: ParentRelationType;
+  linkStatus: SchoolRecordStatus;
+}
+
+export interface ParentProfileDetail extends ParentProfile {
+  linkedStudents: LinkedStudent[];
+}
+
+export interface TeacherProfile {
+  id: number;
+  accountId: number;
+  firstName: string;
+  lastName: string;
+  middleName: string | null;
+  phone: string;
+  status: SchoolRecordStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeacherAssignment {
+  id: number;
+  teacherProfileId: number;
+  teacherName: string;
+  schoolSubjectId: number;
+  schoolSubjectName: string;
+  classId: number;
+  className: string;
+  academicYearId: number;
+  academicYearName: string;
+  status: SchoolRecordStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeacherProfileDetail extends TeacherProfile {
+  assignments: TeacherAssignment[];
+}
+
+export interface SchoolSubject {
+  id: number;
+  name: string;
+  status: SchoolRecordStatus;
+}
+
+export interface ImportFieldDef {
+  key: string;
+  label: string;
+  required: boolean;
+}
+
+export interface ImportTypeInfo {
+  type: ImportType;
+  label: string;
+  fields: ImportFieldDef[];
+}
+
+export interface ImportRunUploader {
+  id: number;
+  fullName: string;
+  email: string | null;
+}
+
+export interface ImportRun {
+  id: number;
+  importType: ImportType;
+  importTypeLabel: string;
+  status: ImportRunStatus;
+  fileName: string;
+  uploadedBy: ImportRunUploader | null;
+  createdAt: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+  totalRows: number | null;
+  processedRows: number;
+  createdCount: number;
+  updatedCount: number;
+  skippedCount: number;
+  errorCount: number;
+}
+
+export interface ImportRunDetail extends ImportRun {
+  columnNames: string[];
+  mapping: Record<string, string> | null;
+  duplicateStrategy: ImportDuplicateStrategy | null;
+  errorMessage: string | null;
+  updatedAt: string | null;
+}
+
+export interface ImportRunError {
+  rowNumber: number;
+  field: string | null;
+  errorCode: string;
+  message: string;
+  rawRow: string | null;
+}
+
+export function formatPersonName(
+  lastName: string,
+  firstName: string,
+  middleName?: string | null,
+): string {
+  return [lastName, firstName, middleName].filter(Boolean).join(' ');
+}

@@ -72,6 +72,16 @@ export async function createAcademicYear(input: CreateAcademicYearInput): Promis
   return created;
 }
 
+export async function activateAcademicYear(id: string): Promise<AcademicYear> {
+  return mapYear(
+    await request<AcademicYearDto>(`/admin/academic-years/${id}/activate`, { method: 'POST' }),
+  );
+}
+
+export async function archiveAcademicYear(id: string): Promise<void> {
+  await request<void>(`/admin/academic-years/${id}/archive`, { method: 'POST' });
+}
+
 export async function updateAcademicYear(
   id: string,
   input: UpdateAcademicYearInput,

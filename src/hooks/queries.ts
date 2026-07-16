@@ -21,6 +21,7 @@ export const keys = {
   reviews: ['reviews'] as const,
   materials: (subjectId: number) => ['materials', subjectId] as const,
   generationJob: (id: number) => ['generation-jobs', id] as const,
+  generationJobs: (testId: number) => ['tests', testId, 'generation-jobs'] as const,
   admissionsUnreadCount: ['admissions', 'notifications', 'unread-count'] as const,
   admissionsNotifications: (unread?: boolean) => ['admissions', 'notifications', 'list', unread] as const,
   monitoringAttempts: (status?: string) => ['admissions', 'attempts', status ?? 'ALL'] as const,
@@ -232,6 +233,14 @@ export function useGenerationJob(jobId: number | null) {
       if (job.status === 'PENDING' || job.status === 'RUNNING') return 4000;
       return false;
     },
+  });
+}
+
+export function useGenerationJobs(testId: number | null) {
+  return useQuery({
+    queryKey: testId != null ? keys.generationJobs(testId) : ['generation-jobs', 'list', 'none'],
+    queryFn: ({ signal }) => api.listGenerationJobs(testId as number, signal),
+    enabled: testId != null,
   });
 }
 

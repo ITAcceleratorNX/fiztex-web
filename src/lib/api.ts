@@ -102,7 +102,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   return data as T;
 }
 
-async function requestMultipart<T>(path: string, formData: FormData, signal?: AbortSignal): Promise<T> {
+export async function requestMultipart<T>(path: string, formData: FormData, signal?: AbortSignal): Promise<T> {
   const headers: Record<string, string> = {};
   if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
 
@@ -214,6 +214,8 @@ export const api = {
 
   // Applicants
   listApplicants: (signal?: AbortSignal) => request<Applicant[]>('/admin/applicants', { signal }),
+  getApplicant: (id: number, signal?: AbortSignal) =>
+    request<Applicant>(`/admin/applicants/${id}`, { signal }),
   createApplicant: (body: ApplicantRequest) =>
     request<Applicant>('/admin/applicants', { method: 'POST', body }),
   updateApplicant: (id: number, body: ApplicantRequest) =>
@@ -237,6 +239,8 @@ export const api = {
     request<GenerationJobResponse>(`/tests/${testId}/generate`, { method: 'POST', body }),
   getGenerationJob: (id: number, signal?: AbortSignal) =>
     request<GenerationJobResponse>(`/generation-jobs/${id}`, { signal }),
+  listGenerationJobs: (testId: number, signal?: AbortSignal) =>
+    request<GenerationJobResponse[]>(`/tests/${testId}/generation-jobs`, { signal }),
 
   // Admissions admin (monitoring & notifications)
   listAdmissionsNotifications: (

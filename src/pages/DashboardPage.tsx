@@ -33,8 +33,14 @@ const PLATFORM_LINKS: { to: string; label: string; hint: string; icon: LucideIco
     hint: 'Звонки, рабочие дни, календарь',
     icon: CalendarClock,
   },
+  {
+    to: '/admin/school-subjects',
+    label: 'Школьные предметы',
+    hint: 'Для назначений и расписания',
+    icon: BookMarked,
+  },
   { to: '/admin/access-codes', label: 'Доступы / коды', hint: 'PIN и коды активации', icon: KeyRound },
-  { to: '/admin/import', label: 'Импорт', hint: 'Excel-заготовка', icon: Upload },
+  { to: '/admin/import', label: 'Импорт', hint: 'Excel upload → commit', icon: Upload },
 ];
 
 function LinkCard({

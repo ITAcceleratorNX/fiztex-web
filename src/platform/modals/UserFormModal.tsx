@@ -80,10 +80,14 @@ export function UserFormModal({
           status,
           relationLabel,
         });
+        const profileHint =
+          role === 'TEACHER' || role === 'PARENT' || role === 'STUDENT'
+            ? ' Карточка в школе создана автоматически.'
+            : '';
         if (created.issuedCode) {
-          toast.success(`Пользователь создан. Код активации: ${created.issuedCode}`);
+          toast.success(`Пользователь создан.${profileHint} Код активации: ${created.issuedCode}`);
         } else {
-          toast.success('Пользователь создан');
+          toast.success(`Пользователь создан.${profileHint}`);
         }
       }
       onSaved();
@@ -112,7 +116,12 @@ export function UserFormModal({
       }
     >
       <form onSubmit={onSubmit} className="space-y-4">
-        <Field label="ФИО" required error={error && !fullName.trim() ? error : undefined}>
+        <Field
+          label="ФИО"
+          required
+          hint={!isEdit ? 'Формат: Фамилия Имя Отчество — так заполняется карточка в школе' : undefined}
+          error={error && !fullName.trim() ? error : undefined}
+        >
           <TextInput value={fullName} onChange={(e) => setFullName(e.target.value)} required />
         </Field>
 

@@ -3,20 +3,22 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput, Select } from '@/components/ui/Field';
 import { useToast } from '@/context/ToastContext';
-import { createClass } from '../services';
-import type { AcademicYear } from '../types';
+import { createClass, updateClass } from '../services';
+import type { AcademicYear, SchoolClass } from '../types';
 
 export function ClassFormModal({
   open,
   onClose,
   years,
   defaultYearId,
+  editing,
   onSaved,
 }: {
   open: boolean;
   onClose: () => void;
   years: AcademicYear[];
   defaultYearId?: string;
+  editing?: SchoolClass | null;
   onSaved: () => void;
 }) {
   const toast = useToast();
@@ -26,17 +28,25 @@ export function ClassFormModal({
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
+  const isEdit = Boolean(editing);
   const name = `${grade.trim()}${letter.trim()}`;
 
   useEffect(() => {
     if (!open) return;
-    setGrade('');
-    setLetter('');
-    setAcademicYearId(
-      defaultYearId || years.find((y) => y.status === 'ACTIVE')?.id || years[0]?.id || '',
-    );
+    if (editing) {
+      const match = editing.name.match(/^(\d+)(.*)$/);
+      setGrade(match?.[1] ?? '');
+      setLetter((match?.[2] ?? '').trim());
+      setAcademicYearId(editing.academicYearId);
+    } else {
+      setGrade('');
+      setLetter('');
+      setAcademicYearId(
+        defaultYearId || years.find((y) => y.status === 'ACTIVE')?.id || years[0]?.id || '',
+      );
+    }
     setError(null);
-  }, [open, defaultYearId, years]);
+  }, [open, defaultYearId, years, editing]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -45,23 +55,33 @@ export function ClassFormModal({
       setError('Укажите параллель и букву класса');
       return;
     }
-    if (!academicYearId) {
-      setError('Выберите учебный год');
-      return;
-    }
     setPending(true);
     try {
-      await createClass({
-        name,
-        academicYearId,
-        grade: grade.trim(),
-        letter: letter.trim().toUpperCase(),
-      });
-      toast.success(`Класс «${name}» создан`);
+      if (editing) {
+        await updateClass(editing.id, {
+          name,
+          grade: grade.trim(),
+          letter: letter.trim().toUpperCase(),
+        });
+        toast.success(`Класс «${name}» обновлён`);
+      } else {
+        if (!academicYearId) {
+          setError('Выберите учебный год');
+          setPending(false);
+          return;
+        }
+        await createClass({
+          name,
+          academicYearId,
+          grade: grade.trim(),
+          letter: letter.trim().toUpperCase(),
+        });
+        toast.success(`Класс «${name}» создан`);
+      }
       onSaved();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось создать класс');
+      setError(err instanceof Error ? err.message : 'Не удалось сохранить класс');
     } finally {
       setPending(false);
     }
@@ -71,14 +91,14 @@ export function ClassFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title="Создать класс"
+      title={isEdit ? 'Редактировать класс' : 'Создать класс'}
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={pending}>
             Отмена
           </Button>
           <Button onClick={onSubmit} loading={pending}>
-            Создать
+            Сохранить
           </Button>
         </>
       }
@@ -101,15 +121,17 @@ export function ClassFormModal({
         <Field label="Название" hint="Собирается автоматически">
           <TextInput value={name || '—'} disabled readOnly />
         </Field>
-        <Field label="Учебный год" required>
-          <Select value={academicYearId} onChange={(e) => setAcademicYearId(e.target.value)}>
-            {years.map((year) => (
-              <option key={year.id} value={year.id}>
-                {year.name}
-              </option>
-            ))}
-          </Select>
-        </Field>
+        {!isEdit && (
+          <Field label="Учебный год" required>
+            <Select value={academicYearId} onChange={(e) => setAcademicYearId(e.target.value)}>
+              {years.map((year) => (
+                <option key={year.id} value={year.id}>
+                  {year.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        )}
         {error && <p className="text-sm text-red-500">{error}</p>}
       </form>
     </Modal>

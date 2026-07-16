@@ -10,7 +10,7 @@ import { Select } from '@/components/ui/Field';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
 import { ApplicantFormModal } from '@/pages/modals/ApplicantFormModal';
 import { formatDate, pluralRu } from '@/lib/format';
-import { ApiError } from '@/lib/api';
+import { ApiError, api } from '@/lib/api';
 import type { Applicant } from '@/lib/types';
 
 function CopyCode({ code }: { code: string | null }) {
@@ -71,8 +71,13 @@ export function ApplicantsTab() {
     setEditing(null);
     setFormOpen(true);
   }
-  function openEdit(a: Applicant) {
-    setEditing(a);
+  async function openEdit(a: Applicant) {
+    try {
+      const fresh = await api.getApplicant(a.id);
+      setEditing(fresh);
+    } catch {
+      setEditing(a);
+    }
     setFormOpen(true);
   }
 
@@ -167,7 +172,7 @@ export function ApplicantsTab() {
                     <td className="px-6 py-3.5">
                       <div className="flex items-center justify-end gap-1">
                         <button
-                          onClick={() => openEdit(a)}
+                          onClick={() => void openEdit(a)}
                           title="Редактировать"
                           className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                         >

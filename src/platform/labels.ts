@@ -6,7 +6,10 @@ import type {
   AccountStatus,
   CredentialStatus,
   ImportEntityType,
+  ImportRunStatus,
+  ParentRelationType,
   SchoolRecordStatus,
+  StudentProfileStatus,
 } from './types';
 import type {
   CalendarEventEffect,
@@ -33,6 +36,30 @@ export const ACCOUNT_STATUS_LABELS: Record<AccountStatus, string> = {
 export const SCHOOL_STATUS_LABELS: Record<SchoolRecordStatus, string> = {
   ACTIVE: 'Активен',
   ARCHIVED: 'Архив',
+};
+
+export const STUDENT_STATUS_LABELS: Record<StudentProfileStatus, string> = {
+  ACTIVE: 'Активен',
+  ARCHIVED: 'Архив',
+};
+
+export const PARENT_RELATION_LABELS: Record<ParentRelationType, string> = {
+  MOTHER: 'Мать',
+  FATHER: 'Отец',
+  GUARDIAN: 'Опекун',
+  OTHER: 'Другое',
+};
+
+export const IMPORT_RUN_STATUS_LABELS: Record<ImportRunStatus, string> = {
+  UPLOADED: 'Загружен',
+  ANALYZING: 'Анализ…',
+  PREVIEW_READY: 'Готов к импорту',
+  ANALYSIS_FAILED: 'Ошибка анализа',
+  QUEUED: 'В очереди',
+  RUNNING: 'Выполняется',
+  COMPLETED: 'Завершён',
+  COMPLETED_WITH_ERRORS: 'С ошибками',
+  FAILED: 'Ошибка',
 };
 
 export const YEAR_STATUS_LABELS: Record<AcademicYearStatus, string> = {
@@ -133,6 +160,11 @@ export const ADMIN_PAGE_TITLES: Record<string, string> = {
   '/admin/academic-year': 'Учебный год',
   '/admin/periods': 'Учебные периоды',
   '/admin/schedule-settings': 'Настройки расписания',
+  '/admin/school-subjects': 'Школьные предметы',
   '/admin/access-codes': 'Доступы / коды',
   '/admin/import': 'Импорт данных',
+  '/students': 'Ученики',
+  '/parents': 'Родители',
+  '/teachers': 'Учителя',
+  '/lesson-schedule': 'Расписание уроков',
 };

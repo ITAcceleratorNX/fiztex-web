@@ -1,65 +1,63 @@
-import { nextId, store } from '../mock/store';
-import { buildExportCsv } from '../mock/importResults';
-import type { AccessCodeRow } from '../types';
-import { mockDelay } from './delay';
+import { request } from '@/lib/api';
+import type { AccountRole, PlatformUser } from '../types';
+import { listUsers } from './users';
 
-export async function listAccessCodes(): Promise<AccessCodeRow[]> {
-  await mockDelay();
-  return store.accessCodes.map((item) => ({ ...item }));
+export interface AccessCredentialActionResult {
+  issuedCode?: string | null;
+  message: string;
 }
 
-export async function resetPin(id: string): Promise<AccessCodeRow> {
-  await mockDelay(200);
-  return { ...requireCode(id) };
+/** List accounts that can have credential actions (not SUPER_ADMIN). */
+export async function listAccessCodes(params: {
+  query?: string;
+  role?: AccountRole | 'ALL';
+} = {}): Promise<PlatformUser[]> {
+  const role = params.role && params.role !== 'ALL' ? params.role : undefined;
+  const users = await listUsers({ query: params.query, role });
+  return users.filter((u) => u.role !== 'SUPER_ADMIN');
 }
 
-export async function reissueCode(id: string): Promise<AccessCodeRow> {
-  await mockDelay(200);
-  const index = store.accessCodes.findIndex((item) => item.id === id);
-  if (index < 0) throw new Error('Код не найден');
-  const current = store.accessCodes[index]!;
-  const replaced: AccessCodeRow = {
-    ...current,
-    status: 'REPLACED',
-  };
-  store.accessCodes[index] = replaced;
-
-  const fresh: AccessCodeRow = {
-    id: nextId('code'),
-    userId: current.userId,
-    userFullName: current.userFullName,
-    role: current.role,
-    codeHint: current.codeHint.replace(/\*{2,}.*/, '****NW'),
-    status: 'ACTIVE',
-    issuedAt: new Date().toISOString(),
-    usedAt: null,
-  };
-  store.accessCodes.unshift(fresh);
-  return { ...fresh };
+/** Account id — backend AccountAdminController. */
+export async function resetPin(accountId: string): Promise<AccessCredentialActionResult> {
+  await request<void>(`/admin/students/${accountId}/reset-pin`, { method: 'POST' });
+  return { message: 'PIN сброшен. Ученику нужна повторная активация.' };
 }
 
-export async function resetAccess(id: string): Promise<AccessCodeRow> {
-  await mockDelay(200);
-  const index = store.accessCodes.findIndex((item) => item.id === id);
-  if (index < 0) throw new Error('Код не найден');
-  const updated: AccessCodeRow = {
-    ...store.accessCodes[index]!,
-    status: 'BLOCKED',
-  };
-  store.accessCodes[index] = updated;
-  return { ...updated };
+export async function reissueCode(accountId: string): Promise<AccessCredentialActionResult> {
+  const res = await request<{ issuedCode: string }>(
+    `/admin/students/${accountId}/reissue-code`,
+    { method: 'POST' },
+  );
+  return { issuedCode: res.issuedCode, message: `Новый код: ${res.issuedCode}` };
+}
+
+export async function resetAccess(
+  accountId: string,
+  role: 'PARENT' | 'TEACHER',
+): Promise<AccessCredentialActionResult> {
+  const path =
+    role === 'PARENT'
+      ? `/admin/parents/${accountId}/reset-access`
+      : `/admin/teachers/${accountId}/reset-access`;
+  const res = await request<{ issuedCode: string }>(path, { method: 'POST' });
+  return { issuedCode: res.issuedCode, message: `Новый код активации: ${res.issuedCode}` };
 }
 
 export async function exportAccessCodesCsv(): Promise<{ fileName: string; content: string }> {
-  await mockDelay(150);
+  const users = await listAccessCodes();
+  const header = 'id,fullName,role,status,phone,email\n';
+  const rows = users
+    .map((u) =>
+      [u.id, csv(u.fullName), u.role, u.status, csv(u.phone ?? ''), csv(u.email ?? '')].join(','),
+    )
+    .join('\n');
   return {
-    fileName: `access-codes-${new Date().toISOString().slice(0, 10)}.csv`,
-    content: buildExportCsv(store.accessCodes),
+    fileName: `accounts-${new Date().toISOString().slice(0, 10)}.csv`,
+    content: header + rows,
   };
 }
 
-function requireCode(id: string): AccessCodeRow {
-  const item = store.accessCodes.find((row) => row.id === id);
-  if (!item) throw new Error('Код не найден');
-  return item;
+function csv(value: string): string {
+  if (/[",\n]/.test(value)) return `"${value.replace(/"/g, '""')}"`;
+  return value;
 }

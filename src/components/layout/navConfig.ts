@@ -5,6 +5,7 @@ import {
   CalendarRange,
   CalendarDays,
   CalendarClock,
+  BookText,
   KeyRound,
   Upload,
   ClipboardList,
@@ -25,6 +26,8 @@ export interface NavItem {
   label: string;
   icon: LucideIcon;
   end?: boolean;
+  /** Shown when route has no backend yet */
+  noApi?: boolean;
 }
 
 export interface NavSection {
@@ -49,6 +52,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { to: '/admin/academic-year', label: 'Учебный год', icon: CalendarRange },
       { to: '/admin/periods', label: 'Учебные периоды', icon: CalendarDays },
       { to: '/admin/schedule-settings', label: 'Настройки расписания', icon: CalendarClock },
+      { to: '/admin/school-subjects', label: 'Школьные предметы', icon: BookText },
       { to: '/admin/access-codes', label: 'Доступы / коды', icon: KeyRound },
       { to: '/admin/import', label: 'Импорт', icon: Upload },
     ],
@@ -57,16 +61,16 @@ export const NAV_SECTIONS: NavSection[] = [
     id: 'school',
     label: 'Учебный процесс',
     items: [
-      { to: '/subjects', label: 'Предметы', icon: BookMarked },
+      { to: '/subjects', label: 'Предметы (приём)', icon: BookMarked },
       { to: '/students', label: 'Ученики', icon: Users },
       { to: '/parents', label: 'Родители', icon: Heart },
       { to: '/teachers', label: 'Учителя', icon: GraduationCap },
       { to: '/lesson-schedule', label: 'Расписание уроков', icon: Calendar },
-      { to: '/grades', label: 'Дневник и оценки', icon: BookOpen },
-      { to: '/attendance', label: 'Посещаемость (QR)', icon: QrCode },
+      { to: '/grades', label: 'Дневник и оценки', icon: BookOpen, noApi: true },
+      { to: '/attendance', label: 'Посещаемость (QR)', icon: QrCode, noApi: true },
       { to: '/ai-tests', label: 'AI-тесты', icon: Sparkles },
-      { to: '/clubs', label: 'Кружки и события', icon: Star },
-      { to: '/service', label: 'Сервисные заявки', icon: Briefcase },
+      { to: '/clubs', label: 'Кружки и события', icon: Star, noApi: true },
+      { to: '/service', label: 'Сервисные заявки', icon: Briefcase, noApi: true },
     ],
   },
   {

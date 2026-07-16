@@ -66,11 +66,13 @@ function SidebarLink({
   label,
   icon: Icon,
   end,
+  noApi,
 }: {
   to: string;
   label: string;
   icon: LucideIcon;
   end?: boolean;
+  noApi?: boolean;
 }) {
   return (
     <NavLink
@@ -91,6 +93,16 @@ function SidebarLink({
             className={cx('h-5 w-5 shrink-0', isActive ? 'text-brand-500' : 'text-slate-300/80')}
           />
           <span className="truncate">{label}</span>
+          {noApi ? (
+            <span
+              className={cx(
+                'ml-auto shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide',
+                isActive ? 'bg-slate-100 text-slate-500' : 'bg-white/10 text-slate-400',
+              )}
+            >
+              нет API
+            </span>
+          ) : null}
         </>
       )}
     </NavLink>

@@ -18,6 +18,11 @@ import {
   AccessCodesPage,
   ImportPage,
   ScheduleSettingsPage,
+  StudentsPage,
+  ParentsPage,
+  TeachersPage,
+  SchoolSubjectsPage,
+  LessonSchedulePage,
 } from '@/platform';
 import type { ReactNode } from 'react';
 
@@ -58,6 +63,7 @@ export function App() {
         <Route path="/admin/academic-year" element={<AcademicYearPage />} />
         <Route path="/admin/periods" element={<PeriodsPage />} />
         <Route path="/admin/schedule-settings" element={<ScheduleSettingsPage />} />
+        <Route path="/admin/school-subjects" element={<SchoolSubjectsPage />} />
         <Route path="/admin/access-codes" element={<AccessCodesPage />} />
         <Route path="/admin/import" element={<ImportPage />} />
 
@@ -66,16 +72,48 @@ export function App() {
         <Route path="/subjects/:subjectId/materials" element={<SubjectMaterialsPage />} />
         <Route path="/admissions" element={<AdmissionsPage />} />
         <Route path="/review" element={<ReviewPage />} />
-        <Route path="/students" element={<PlaceholderPage title="Ученики" />} />
-        <Route path="/parents" element={<PlaceholderPage title="Родители" />} />
-        <Route path="/teachers" element={<PlaceholderPage title="Учителя" />} />
+        <Route path="/students" element={<StudentsPage />} />
+        <Route path="/parents" element={<ParentsPage />} />
+        <Route path="/teachers" element={<TeachersPage />} />
         <Route path="/schedule" element={<Navigate to="/admin/schedule-settings" replace />} />
-        <Route path="/lesson-schedule" element={<PlaceholderPage title="Расписание уроков" />} />
-        <Route path="/grades" element={<PlaceholderPage title="Дневник и оценки" />} />
-        <Route path="/attendance" element={<PlaceholderPage title="Посещаемость (QR)" />} />
+        <Route path="/lesson-schedule" element={<LessonSchedulePage />} />
+        <Route
+          path="/grades"
+          element={
+            <PlaceholderPage
+              title="Дневник и оценки"
+              reason="Backend API для оценок ещё не реализован. Эндпойнтов нет."
+            />
+          }
+        />
+        <Route
+          path="/attendance"
+          element={
+            <PlaceholderPage
+              title="Посещаемость (QR)"
+              reason="Backend API для посещаемости ещё не реализован. Эндпойнтов нет."
+            />
+          }
+        />
         <Route path="/ai-tests" element={<AiTestsPage />} />
-        <Route path="/clubs" element={<PlaceholderPage title="Кружки и события" />} />
-        <Route path="/service" element={<PlaceholderPage title="Сервисные заявки" />} />
+        <Route
+          path="/clubs"
+          element={
+            <PlaceholderPage
+              title="Кружки и события"
+              reason="Backend API для кружков ещё не реализован. Эндпойнтов нет."
+            />
+          }
+        />
+        <Route
+          path="/service"
+          element={
+            <PlaceholderPage
+              title="Сервисные заявки"
+              reason="Backend API для сервисных заявок ещё не реализован. Эндпойнтов нет."
+            />
+          }
+        />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

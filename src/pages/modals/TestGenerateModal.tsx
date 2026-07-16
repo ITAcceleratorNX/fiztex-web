@@ -8,6 +8,7 @@ import { EmptyBlock, LoadingBlock, Spinner } from '@/components/ui/StateBlock';
 import {
   useGenerateTest,
   useGenerationJob,
+  useGenerationJobs,
   useMaterials,
   keys,
 } from '@/hooks/queries';
@@ -60,6 +61,7 @@ export function TestGenerateModal({
   const handledJobRef = useRef<number | null>(null);
 
   const { data: job } = useGenerationJob(open ? jobId : null);
+  const { data: jobHistory } = useGenerationJobs(open ? test.id : null);
   const readyMaterials = (materials ?? []).filter((m) => m.status === 'READY');
   const isGenerating = jobId != null && job?.status !== 'DONE' && job?.status !== 'FAILED';
 
@@ -81,6 +83,7 @@ export function TestGenerateModal({
       handledJobRef.current = job.id;
       void qc.invalidateQueries({ queryKey: keys.test(test.id) });
       void qc.invalidateQueries({ queryKey: ['tests'] });
+      void qc.invalidateQueries({ queryKey: keys.generationJobs(test.id) });
       toast.success('Вопросы сгенерированы');
       onComplete?.();
       onClose();
@@ -224,6 +227,28 @@ export function TestGenerateModal({
           {error && (
             <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-100">
               {error}
+            </div>
+          )}
+
+          {jobHistory && jobHistory.length > 0 && (
+            <div>
+              <p className="mb-2 text-sm font-semibold text-slate-700">История генераций</p>
+              <ul className="max-h-28 space-y-1 overflow-y-auto rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                {jobHistory.slice(0, 8).map((j) => (
+                  <li key={j.id} className="flex justify-between gap-2">
+                    <span>
+                      #{j.id} · {STATUS_LABELS[j.status]}
+                    </span>
+                    <button
+                      type="button"
+                      className="text-brand-600 hover:underline"
+                      onClick={() => setJobId(j.id)}
+                    >
+                      Открыть
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 

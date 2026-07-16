@@ -5,10 +5,13 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock
 import { formatDate } from '@/lib/format';
 import { YEAR_STATUS_LABELS } from '../labels';
 import { AcademicYearFormModal } from '../modals/AcademicYearFormModal';
-import { listAcademicYears } from '../services';
+import { activateAcademicYear, archiveAcademicYear, listAcademicYears } from '../services';
 import type { AcademicYear } from '../types';
+import { useToast } from '@/context/ToastContext';
+import { ApiError } from '@/lib/api';
 
 export function AcademicYearPage() {
+  const toast = useToast();
   const [years, setYears] = useState<AcademicYear[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,11 +34,37 @@ export function AcademicYearPage() {
     void reload();
   }, [reload]);
 
+  async function handleActivate(year: AcademicYear) {
+    try {
+      await activateAcademicYear(year.id);
+      toast.success('Учебный год активирован');
+      await reload();
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'ANOTHER_YEAR_ACTIVE') {
+        toast.error('Сначала архивируйте текущий ACTIVE год, затем активируйте этот');
+      } else {
+        toast.error(err instanceof Error ? err.message : 'Не удалось активировать');
+      }
+    }
+  }
+
+  async function handleArchive(year: AcademicYear) {
+    if (!window.confirm(`Архивировать «${year.name}»?`)) return;
+    try {
+      await archiveAcademicYear(year.id);
+      toast.success('Учебный год архивирован');
+      await reload();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Не удалось архивировать');
+    }
+  }
+
   return (
     <div>
       <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Учебные годы с реального backend. Создание/редактирование и смена статуса
-        (activate / archive) через API.
+        Учебные годы с реального backend. Одновременно активен только один год: при ошибке{' '}
+        <code className="rounded bg-slate-100 px-1">ANOTHER_YEAR_ACTIVE</code> сначала архивируйте
+        текущий ACTIVE, затем активируйте нужный.
       </p>
 
       <div className="mb-4">
@@ -77,16 +106,28 @@ export function AcademicYearPage() {
                   <td className="px-4 py-3 text-slate-600">{formatDate(year.endDate)}</td>
                   <td className="px-4 py-3 text-slate-600">{YEAR_STATUS_LABELS[year.status]}</td>
                   <td className="px-4 py-3">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setEditing(year);
-                        setFormOpen(true);
-                      }}
-                    >
-                      Изменить
-                    </Button>
+                    <div className="flex flex-wrap gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditing(year);
+                          setFormOpen(true);
+                        }}
+                      >
+                        Изменить
+                      </Button>
+                      {year.status === 'DRAFT' && (
+                        <Button variant="ghost" size="sm" onClick={() => void handleActivate(year)}>
+                          Активировать
+                        </Button>
+                      )}
+                      {year.status !== 'ARCHIVED' && (
+                        <Button variant="ghost" size="sm" onClick={() => void handleArchive(year)}>
+                          Архив
+                        </Button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

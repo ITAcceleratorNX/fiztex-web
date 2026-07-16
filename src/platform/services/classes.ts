@@ -80,3 +80,24 @@ export async function createClass(input: CreateClassInput): Promise<SchoolClass>
   const yearName = years.find((y) => y.id === String(dto.academicYearId))?.name ?? '';
   return mapClass(dto, yearName);
 }
+
+export async function updateClass(
+  id: string,
+  input: { name?: string; grade?: string; letter?: string },
+): Promise<SchoolClass> {
+  const dto = await request<SchoolClassDto>(`/admin/classes/${id}`, {
+    method: 'PATCH',
+    body: {
+      name: input.name?.trim() || null,
+      grade: input.grade?.trim() || null,
+      letter: input.letter?.trim() || null,
+    },
+  });
+  const years = await listAcademicYears();
+  const yearName = years.find((y) => y.id === String(dto.academicYearId))?.name ?? '';
+  return mapClass(dto, yearName);
+}
+
+export async function archiveClass(id: string): Promise<void> {
+  await request<void>(`/admin/classes/${id}/archive`, { method: 'POST' });
+}
