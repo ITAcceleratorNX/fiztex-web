@@ -72,7 +72,7 @@ export function UserFormModal({
         });
         toast.success('Пользователь обновлён');
       } else {
-        await createUser({
+        const created = await createUser({
           fullName,
           role,
           email,
@@ -80,7 +80,11 @@ export function UserFormModal({
           status,
           relationLabel,
         });
-        toast.success('Пользователь создан');
+        if (created.issuedCode) {
+          toast.success(`Пользователь создан. Код активации: ${created.issuedCode}`);
+        } else {
+          toast.success('Пользователь создан');
+        }
       }
       onSaved();
       onClose();

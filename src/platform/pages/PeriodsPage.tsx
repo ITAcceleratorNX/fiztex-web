@@ -58,7 +58,7 @@ export function PeriodsPage() {
   return (
     <div>
       <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Периоды внутри выбранного учебного года. Добавление и редактирование на mock data.
+        Периоды внутри выбранного учебного года — реальный API.
       </p>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">

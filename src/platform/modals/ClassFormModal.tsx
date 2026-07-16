@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Field, TextInput, Select } from '@/components/ui/Field';
 import { useToast } from '@/context/ToastContext';
 import { createClass } from '../services';
-import type { AcademicYear, SchoolRecordStatus } from '../types';
+import type { AcademicYear } from '../types';
 
 export function ClassFormModal({
   open,
@@ -20,25 +20,29 @@ export function ClassFormModal({
   onSaved: () => void;
 }) {
   const toast = useToast();
-  const [name, setName] = useState('');
+  const [grade, setGrade] = useState('');
+  const [letter, setLetter] = useState('');
   const [academicYearId, setAcademicYearId] = useState('');
-  const [status, setStatus] = useState<SchoolRecordStatus>('ACTIVE');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
+  const name = `${grade.trim()}${letter.trim()}`;
+
   useEffect(() => {
     if (!open) return;
-    setName('');
-    setAcademicYearId(defaultYearId || years.find((y) => y.status === 'ACTIVE')?.id || years[0]?.id || '');
-    setStatus('ACTIVE');
+    setGrade('');
+    setLetter('');
+    setAcademicYearId(
+      defaultYearId || years.find((y) => y.status === 'ACTIVE')?.id || years[0]?.id || '',
+    );
     setError(null);
   }, [open, defaultYearId, years]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!name.trim()) {
-      setError('Укажите название класса');
+    if (!grade.trim() || !letter.trim()) {
+      setError('Укажите параллель и букву класса');
       return;
     }
     if (!academicYearId) {
@@ -47,8 +51,13 @@ export function ClassFormModal({
     }
     setPending(true);
     try {
-      await createClass({ name, academicYearId, status });
-      toast.success('Класс создан');
+      await createClass({
+        name,
+        academicYearId,
+        grade: grade.trim(),
+        letter: letter.trim().toUpperCase(),
+      });
+      toast.success(`Класс «${name}» создан`);
       onSaved();
       onClose();
     } catch (err) {
@@ -75,8 +84,22 @@ export function ClassFormModal({
       }
     >
       <form onSubmit={onSubmit} className="space-y-4">
-        <Field label="Название" required>
-          <TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="7А" required />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Параллель" required hint="Например, 5">
+            <TextInput value={grade} onChange={(e) => setGrade(e.target.value)} placeholder="5" required />
+          </Field>
+          <Field label="Буква" required hint="Например, А">
+            <TextInput
+              value={letter}
+              onChange={(e) => setLetter(e.target.value)}
+              placeholder="А"
+              maxLength={2}
+              required
+            />
+          </Field>
+        </div>
+        <Field label="Название" hint="Собирается автоматически">
+          <TextInput value={name || '—'} disabled readOnly />
         </Field>
         <Field label="Учебный год" required>
           <Select value={academicYearId} onChange={(e) => setAcademicYearId(e.target.value)}>
@@ -85,12 +108,6 @@ export function ClassFormModal({
                 {year.name}
               </option>
             ))}
-          </Select>
-        </Field>
-        <Field label="Статус">
-          <Select value={status} onChange={(e) => setStatus(e.target.value as SchoolRecordStatus)}>
-            <option value="ACTIVE">Активен</option>
-            <option value="ARCHIVED">Архив</option>
           </Select>
         </Field>
         {error && <p className="text-sm text-red-500">{error}</p>}

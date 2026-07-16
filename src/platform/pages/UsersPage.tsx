@@ -68,7 +68,8 @@ export function UsersPage() {
   return (
     <div>
       <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Пользователи Platform Core на mock data. Поиск, фильтры и формы готовы к замене на API.
+        Пользователи Platform Core с реального API. Поиск — клиентский по загруженной
+        странице; редактирование профиля пока недоступно (только создание и блок).
       </p>
 
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">

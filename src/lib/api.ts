@@ -161,9 +161,14 @@ export function pageQuery(params: Record<string, string | number | boolean | und
 }
 
 export const api = {
-  // Auth
-  login: (login: string, password: string) =>
-    request<Admin>('/auth/login', { method: 'POST', body: { login, password } }),
+  // Auth — backend returns { token, role, fullName }; map login → email for Admin profile.
+  login: async (login: string, password: string): Promise<Admin> => {
+    const res = await request<{ token: string; role: string; fullName: string }>('/auth/login', {
+      method: 'POST',
+      body: { login, password },
+    });
+    return { token: res.token, email: login, fullName: res.fullName };
+  },
 
   // Subjects
   listSubjects: (signal?: AbortSignal) => request<Subject[]>('/admin/subjects', { signal }),

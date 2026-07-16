@@ -1,76 +1,122 @@
-import { nextId, store } from '../mock/store';
-import type { CreateUserInput, ListUsersParams, PlatformUser, UpdateUserInput } from '../types';
-import { mockDelay } from './delay';
+import { pageQuery, request } from '@/lib/api';
+import type { Page } from '@/lib/types';
+import type {
+  AccountRole,
+  AccountStatus,
+  CreateUserInput,
+  ListUsersParams,
+  PlatformUser,
+  UpdateUserInput,
+} from '../types';
 
-function matchesQuery(user: PlatformUser, query: string): boolean {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
-  return [user.fullName, user.email, user.phone]
-    .filter(Boolean)
-    .some((value) => value!.toLowerCase().includes(q));
+interface AccountDto {
+  id: number;
+  role: AccountRole;
+  status: AccountStatus;
+  fullName: string;
+  phone: string | null;
+  email: string | null;
+  createdAt: string;
+}
+
+interface CreateAccountResponseDto {
+  id: number;
+  role: AccountRole;
+  status: AccountStatus;
+  issuedCode: string | null;
+}
+
+function mapUser(dto: AccountDto): PlatformUser {
+  return {
+    id: String(dto.id),
+    fullName: dto.fullName,
+    role: dto.role,
+    email: dto.email,
+    phone: dto.phone,
+    status: dto.status,
+    relationLabel: null,
+    createdAt: dto.createdAt,
+  };
 }
 
 export async function listUsers(params: ListUsersParams = {}): Promise<PlatformUser[]> {
-  await mockDelay();
-  const role = params.role ?? 'ALL';
-  const status = params.status ?? 'ALL';
-  const query = params.query ?? '';
+  const role = params.role && params.role !== 'ALL' ? params.role : undefined;
+  const status = params.status && params.status !== 'ALL' ? params.status : undefined;
 
-  return store.users
-    .filter((user) => {
-      if (role !== 'ALL' && user.role !== role) return false;
-      if (status !== 'ALL' && user.status !== status) return false;
-      return matchesQuery(user, query);
-    })
-    .map((user) => ({ ...user }));
+  const page = await request<Page<AccountDto>>(
+    `/admin/accounts${pageQuery({
+      role,
+      status,
+      page: 0,
+      size: 200,
+    })}`,
+  );
+
+  let users = page.content.map(mapUser);
+  const query = params.query?.trim().toLowerCase() ?? '';
+  if (query) {
+    users = users.filter((user) =>
+      [user.fullName, user.email, user.phone]
+        .filter(Boolean)
+        .some((value) => value!.toLowerCase().includes(query)),
+    );
+  }
+  return users;
 }
 
 export async function getUser(id: string): Promise<PlatformUser | null> {
-  await mockDelay();
-  const user = store.users.find((item) => item.id === id);
-  return user ? { ...user } : null;
+  const users = await listUsers();
+  return users.find((u) => u.id === id) ?? null;
 }
 
-export async function createUser(input: CreateUserInput): Promise<PlatformUser> {
-  await mockDelay();
+export async function createUser(input: CreateUserInput): Promise<PlatformUser & { issuedCode?: string | null }> {
   const fullName = input.fullName.trim();
   if (!fullName) throw new Error('Укажите ФИО');
   if (!input.role) throw new Error('Укажите роль');
 
-  const created: PlatformUser = {
-    id: nextId('u'),
+  const created = await request<CreateAccountResponseDto>('/admin/accounts', {
+    method: 'POST',
+    body: {
+      role: input.role,
+      fullName,
+      phone: input.phone?.trim() || null,
+      email: input.email?.trim() || null,
+    },
+  });
+
+  return {
+    id: String(created.id),
     fullName,
-    role: input.role,
+    role: created.role,
     email: input.email?.trim() || null,
     phone: input.phone?.trim() || null,
-    status: input.status ?? 'NOT_ACTIVATED',
-    relationLabel: input.relationLabel?.trim() || null,
+    status: created.status,
+    relationLabel: null,
     createdAt: new Date().toISOString(),
+    issuedCode: created.issuedCode,
   };
-  store.users.unshift(created);
-  return { ...created };
 }
 
-export async function updateUser(id: string, input: UpdateUserInput): Promise<PlatformUser> {
-  await mockDelay();
-  const index = store.users.findIndex((item) => item.id === id);
-  if (index < 0) throw new Error('Пользователь не найден');
-  const current = store.users[index]!;
-  const updated: PlatformUser = {
-    ...current,
-    fullName: input.fullName?.trim() ?? current.fullName,
-    email: input.email !== undefined ? input.email?.trim() || null : current.email,
-    phone: input.phone !== undefined ? input.phone?.trim() || null : current.phone,
-    status: input.status ?? current.status,
-    relationLabel:
-      input.relationLabel !== undefined
-        ? input.relationLabel?.trim() || null
-        : current.relationLabel,
-  };
-  store.users[index] = updated;
-  return { ...updated };
+export async function updateUser(_id: string, _input: UpdateUserInput): Promise<PlatformUser> {
+  throw new Error(
+    'Редактирование аккаунта через API пока не доступно. Используйте блок/разблок или создайте нового пользователя.',
+  );
 }
 
 export async function blockUser(id: string): Promise<PlatformUser> {
-  return updateUser(id, { status: 'BLOCKED' });
+  await request<void>(`/admin/accounts/${id}/block`, { method: 'POST' });
+  const user = await getUser(id);
+  if (!user) {
+    return {
+      id,
+      fullName: '',
+      role: 'STUDENT',
+      email: null,
+      phone: null,
+      status: 'BLOCKED',
+      relationLabel: null,
+      createdAt: new Date().toISOString(),
+    };
+  }
+  return { ...user, status: 'BLOCKED' };
 }

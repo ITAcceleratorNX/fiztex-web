@@ -1,6 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
-import { api, ApiError, getToken, setToken } from '@/lib/api';
-import { mockLogin } from '@/platform/services/auth';
+import { getToken, setToken, api } from '@/lib/api';
 import type { Admin } from '@/lib/types';
 
 const PROFILE_KEY = 'fiztex.profile';
@@ -17,6 +16,12 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 function loadProfile(): Admin | null {
   const token = getToken();
   if (!token) return null;
+  // Reject leftover mock tokens from PHYCORE-003 offline login.
+  if (token.startsWith('mock-platform.')) {
+    setToken(null);
+    localStorage.removeItem(PROFILE_KEY);
+    return null;
+  }
   const raw = localStorage.getItem(PROFILE_KEY);
   if (!raw) return null;
   try {
@@ -35,22 +40,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [admin, setAdmin] = useState<Admin | null>(loadProfile);
 
   const login = useCallback(async (email: string, password: string) => {
-    try {
-      const result = await api.login(email, password);
-      persist(result);
-      setAdmin(result);
-      return;
-    } catch (err) {
-      // PHYCORE-003: mock fallback when backend is down or rejects (shell can run offline).
-      const mock = await mockLogin(email, password);
-      if (mock) {
-        persist(mock);
-        setAdmin(mock);
-        return;
-      }
-      if (err instanceof ApiError) throw err;
-      throw new ApiError(0, 'Не удалось войти');
-    }
+    const result = await api.login(email, password);
+    persist(result);
+    setAdmin(result);
   }, []);
 
   const logout = useCallback(() => {

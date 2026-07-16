@@ -22,8 +22,8 @@ export function AdminDashboardPage() {
   return (
     <div>
       <p className="mb-6 max-w-2xl text-sm text-slate-500">
-        Каркас админки Platform Core Lite (PHYCORE-003). Данные пока mock — страницы готовы к
-        подключению API из PHYCORE-001 и PHYCORE-002.
+        Каркас админки Platform Core Lite. Учебные годы, классы, периоды и пользователи —
+        реальный API; доступы и импорт пока заготовки.
       </p>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {LINKS.map(({ to, label, hint, icon: Icon }) => (

@@ -40,7 +40,7 @@ export function ClassesPage() {
   return (
     <div>
       <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Классы на mock data. Фильтр по учебному году и создание класса.
+        Классы с реального backend. Создание требует параллель и букву.
       </p>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">

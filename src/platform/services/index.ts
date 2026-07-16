@@ -15,4 +15,3 @@ export {
   exportAccessCodesCsv,
 } from './accessCodes';
 export { getLatestImportResult, runMockImport } from './import';
-export { mockLogin } from './auth';

@@ -119,6 +119,8 @@ export interface UpdateUserInput {
 export interface CreateClassInput {
   name: string;
   academicYearId: string;
+  grade: string;
+  letter: string;
   status?: SchoolRecordStatus;
 }
 

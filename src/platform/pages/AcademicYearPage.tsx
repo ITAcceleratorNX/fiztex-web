@@ -34,7 +34,8 @@ export function AcademicYearPage() {
   return (
     <div>
       <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Учебные годы на mock data. Создание и редактирование с валидацией дат.
+        Учебные годы с реального backend. Создание/редактирование и смена статуса
+        (activate / archive) через API.
       </p>
 
       <div className="mb-4">
