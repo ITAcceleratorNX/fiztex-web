@@ -11,8 +11,20 @@ import {
   DEFAULT_CALENDAR_FILTERS,
   type CalendarFilterState,
 } from './CalendarTab';
+import {
+  parseTeachersTabState,
+  TeachersAvailabilityTab,
+  writeTeachersTabState,
+  type TeachersTabState,
+} from './TeachersAvailabilityTab';
+import {
+  parseSubgroupsTabState,
+  SubgroupsTab,
+  writeSubgroupsTabState,
+  type SubgroupsTabState,
+} from './SubgroupsTab';
 
-type TabId = 'templates' | 'days' | 'calendar';
+type TabId = 'templates' | 'days' | 'calendar' | 'teachers' | 'subgroups';
 
 const TAB_PARAM = 'tab';
 const YEAR_PARAM = 'year';
@@ -23,7 +35,15 @@ const C_TO = 'cTo';
 const C_PAGE = 'cPage';
 
 function parseTab(raw: string | null): TabId {
-  if (raw === 'days' || raw === 'calendar' || raw === 'templates') return raw;
+  if (
+    raw === 'days' ||
+    raw === 'calendar' ||
+    raw === 'templates' ||
+    raw === 'teachers' ||
+    raw === 'subgroups'
+  ) {
+    return raw;
+  }
   return 'templates';
 }
 
@@ -65,6 +85,8 @@ export function ScheduleSettingsPage() {
   const tab = parseTab(searchParams.get(TAB_PARAM));
   const yearParam = searchParams.get(YEAR_PARAM);
   const calendarFilters = useMemo(() => parseCalendarFilters(searchParams), [searchParams]);
+  const teachersState = useMemo(() => parseTeachersTabState(searchParams), [searchParams]);
+  const subgroupsState = useMemo(() => parseSubgroupsTabState(searchParams), [searchParams]);
 
   const yearsQuery = useAcademicYears();
   const years = yearsQuery.data?.content ?? [];
@@ -112,11 +134,23 @@ export function ScheduleSettingsPage() {
     setSearchParams(next, { replace: true });
   }
 
+  function setTeachersState(state: TeachersTabState) {
+    const next = new URLSearchParams(searchParams);
+    writeTeachersTabState(next, state);
+    setSearchParams(next, { replace: true });
+  }
+
+  function setSubgroupsState(state: SubgroupsTabState) {
+    const next = new URLSearchParams(searchParams);
+    writeSubgroupsTabState(next, state);
+    setSearchParams(next, { replace: true });
+  }
+
   return (
     <div>
       <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Базовые настройки расписания: шаблоны звонков, учебные дни школы и школьный календарь.
-        Данные загружаются с backend (`feat/schedule-settings`).
+        Базовые настройки расписания: шаблоны звонков, учебные дни, календарь, доступность
+        учителей и подгруппы классов.
       </p>
 
       <div className="mb-5 sm:w-64">
@@ -159,6 +193,8 @@ export function ScheduleSettingsPage() {
             <TabsTrigger value="templates">Шаблоны звонков</TabsTrigger>
             <TabsTrigger value="days">Учебные дни</TabsTrigger>
             <TabsTrigger value="calendar">Школьный календарь</TabsTrigger>
+            <TabsTrigger value="teachers">Учителя</TabsTrigger>
+            <TabsTrigger value="subgroups">Подгруппы</TabsTrigger>
           </TabsList>
 
           <TabsContent value="templates">
@@ -172,6 +208,16 @@ export function ScheduleSettingsPage() {
               yearId={selectedYearId}
               filters={calendarFilters}
               onFiltersChange={setCalendarFilters}
+            />
+          </TabsContent>
+          <TabsContent value="teachers">
+            <TeachersAvailabilityTab state={teachersState} onStateChange={setTeachersState} />
+          </TabsContent>
+          <TabsContent value="subgroups">
+            <SubgroupsTab
+              yearId={selectedYearId}
+              state={subgroupsState}
+              onStateChange={setSubgroupsState}
             />
           </TabsContent>
         </Tabs>

@@ -1,5 +1,6 @@
 import { pageQuery, request } from '@/lib/api';
 import type { Page } from '@/lib/types';
+import type { SubjectRef, TeacherRef } from '@/lib/schedule2bTypes';
 import type {
   AcademicYearRef,
   GradeClassGroup,
@@ -21,6 +22,26 @@ export const platformCoreApi = {
     request<Page<SchoolClassRef>>(
       `/admin/classes${pageQuery({
         academicYearId,
+        status: 'ACTIVE',
+        page: 0,
+        size: 200,
+      })}`,
+      { signal },
+    ),
+
+  listTeachers: (params: { name?: string; page?: number; size?: number } = {}, signal?: AbortSignal) =>
+    request<Page<TeacherRef>>(
+      `/admin/teachers${pageQuery({
+        name: params.name || undefined,
+        page: params.page ?? 0,
+        size: params.size ?? 20,
+      })}`,
+      { signal },
+    ),
+
+  listSubjects: (signal?: AbortSignal) =>
+    request<Page<SubjectRef>>(
+      `/admin/school-subjects${pageQuery({
         status: 'ACTIVE',
         page: 0,
         size: 200,
