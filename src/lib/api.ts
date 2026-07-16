@@ -28,6 +28,29 @@ const TOKEN_KEY = 'fiztex.token';
 // The auth token is a session credential (not application data), so persisting it is fine.
 let authToken: string | null = localStorage.getItem(TOKEN_KEY);
 
+type SessionExpiredListener = () => void;
+const sessionExpiredListeners = new Set<SessionExpiredListener>();
+
+/** Subscribe to admin-session expiry (HTTP 401). Returns unsubscribe. */
+export function onSessionExpired(listener: SessionExpiredListener): () => void {
+  sessionExpiredListeners.add(listener);
+  return () => {
+    sessionExpiredListeners.delete(listener);
+  };
+}
+
+function notifySessionExpired(): void {
+  for (const listener of sessionExpiredListeners) {
+    listener();
+  }
+}
+
+function handleUnauthorized(): never {
+  setToken(null);
+  notifySessionExpired();
+  throw new ApiError(401, 'Сессия истекла. Войдите снова.');
+}
+
 export function getToken(): string | null {
   return authToken;
 }
@@ -84,8 +107,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
 
   if (response.status === 401) {
-    setToken(null);
-    throw new ApiError(401, 'Сессия истекла. Войдите снова.');
+    handleUnauthorized();
   }
 
   if (response.status === 204) {
@@ -119,8 +141,7 @@ export async function requestMultipart<T>(path: string, formData: FormData, sign
   }
 
   if (response.status === 401) {
-    setToken(null);
-    throw new ApiError(401, 'Сессия истекла. Войдите снова.');
+    handleUnauthorized();
   }
 
   const text = await response.text();
