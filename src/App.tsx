@@ -11,8 +11,6 @@ import { AiTestsPage } from '@/pages/AiTestsPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import {
-  AdminLayout,
-  AdminDashboardPage,
   UsersPage,
   ClassesPage,
   AcademicYearPage,
@@ -37,34 +35,13 @@ export function App() {
 
   return (
     <Routes>
-      {/* Public applicant flow — separate from Platform Core / Admissions admin. */}
       <Route path="/entrance" element={<EntranceFlow />} />
 
       <Route
         path="/login"
-        element={isAuthenticated ? <Navigate to="/admin" replace /> : <LoginPage />}
+        element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
       />
 
-      {/* PHYCORE-003: Platform Core Lite admin shell */}
-      <Route
-        path="/admin"
-        element={
-          <Protected>
-            <AdminLayout />
-          </Protected>
-        }
-      >
-        <Route index element={<AdminDashboardPage />} />
-        <Route path="users" element={<UsersPage />} />
-        <Route path="classes" element={<ClassesPage />} />
-        <Route path="academic-year" element={<AcademicYearPage />} />
-        <Route path="periods" element={<PeriodsPage />} />
-        <Route path="schedule-settings" element={<ScheduleSettingsPage />} />
-        <Route path="access-codes" element={<AccessCodesPage />} />
-        <Route path="import" element={<ImportPage />} />
-      </Route>
-
-      {/* Scope 1: Admissions Testing admin (untouched by PHYCORE-003 pages) */}
       <Route
         element={
           <Protected>
@@ -73,6 +50,18 @@ export function App() {
         }
       >
         <Route path="/" element={<DashboardPage />} />
+
+        {/* Platform Core Lite */}
+        <Route path="/admin" element={<Navigate to="/" replace />} />
+        <Route path="/admin/users" element={<UsersPage />} />
+        <Route path="/admin/classes" element={<ClassesPage />} />
+        <Route path="/admin/academic-year" element={<AcademicYearPage />} />
+        <Route path="/admin/periods" element={<PeriodsPage />} />
+        <Route path="/admin/schedule-settings" element={<ScheduleSettingsPage />} />
+        <Route path="/admin/access-codes" element={<AccessCodesPage />} />
+        <Route path="/admin/import" element={<ImportPage />} />
+
+        {/* Admissions & school modules */}
         <Route path="/subjects" element={<SubjectsPage />} />
         <Route path="/subjects/:subjectId/materials" element={<SubjectMaterialsPage />} />
         <Route path="/admissions" element={<AdmissionsPage />} />
@@ -80,7 +69,8 @@ export function App() {
         <Route path="/students" element={<PlaceholderPage title="Ученики" />} />
         <Route path="/parents" element={<PlaceholderPage title="Родители" />} />
         <Route path="/teachers" element={<PlaceholderPage title="Учителя" />} />
-        <Route path="/schedule" element={<PlaceholderPage title="Расписание" />} />
+        <Route path="/schedule" element={<Navigate to="/admin/schedule-settings" replace />} />
+        <Route path="/lesson-schedule" element={<PlaceholderPage title="Расписание уроков" />} />
         <Route path="/grades" element={<PlaceholderPage title="Дневник и оценки" />} />
         <Route path="/attendance" element={<PlaceholderPage title="Посещаемость (QR)" />} />
         <Route path="/ai-tests" element={<AiTestsPage />} />
@@ -88,7 +78,7 @@ export function App() {
         <Route path="/service" element={<PlaceholderPage title="Сервисные заявки" />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/admin" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

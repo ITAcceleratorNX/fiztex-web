@@ -30,7 +30,7 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const from = (location.state as { from?: string } | null)?.from;
-  const redirectTo = from?.startsWith('/') ? from : '/admin';
+  const redirectTo = from?.startsWith('/') ? from : '/';
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -124,7 +124,7 @@ export function LoginPage() {
           </div>
 
           <p className="mt-6 text-center text-xs text-slate-400">
-            Dev: admin@fiztex.local / admin123 · без бэка тоже сработает (mock)
+            Dev: super@fiztex.local / super123 или admin@fiztex.local / admin123
           </p>
         </form>
       </div>

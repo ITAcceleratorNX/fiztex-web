@@ -125,14 +125,14 @@ export const CALENDAR_EVENT_TYPE_DOT: Record<CalendarEventType, string> = {
   OTHER: 'bg-slate-400',
 };
 
-/** Route path → page title for AdminHeader */
+/** Route path → page title for AppHeader on /admin/* routes. */
 export const ADMIN_PAGE_TITLES: Record<string, string> = {
   '/admin': 'Главная',
   '/admin/users': 'Пользователи',
   '/admin/classes': 'Классы',
   '/admin/academic-year': 'Учебный год',
   '/admin/periods': 'Учебные периоды',
-  '/admin/schedule-settings': 'Расписание',
+  '/admin/schedule-settings': 'Настройки расписания',
   '/admin/access-codes': 'Доступы / коды',
   '/admin/import': 'Импорт данных',
 };

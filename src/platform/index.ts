@@ -1,5 +1,3 @@
-export { AdminLayout } from './layout/AdminLayout';
-export { AdminDashboardPage } from './pages/AdminDashboardPage';
 export { UsersPage } from './pages/UsersPage';
 export { ClassesPage } from './pages/ClassesPage';
 export { AcademicYearPage } from './pages/AcademicYearPage';

@@ -1,8 +1,11 @@
 import { useLocation } from 'react-router-dom';
-import { ADMIN_PAGE_TITLES } from '../labels';
+import { ADMIN_PAGE_TITLES } from '@/platform/labels';
 
-export function AdminHeader() {
+/** Shown for Platform Core routes that don't render their own page title. */
+export function AppHeader() {
   const { pathname } = useLocation();
+  if (!pathname.startsWith('/admin')) return null;
+
   const title = ADMIN_PAGE_TITLES[pathname] ?? 'Админка';
 
   return (
