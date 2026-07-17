@@ -214,7 +214,7 @@ export function LessonSchedulePage() {
       toast.success(`Скопировано уроков: ${res.copiedLessons}`);
       setCopyOpen(false);
       await reloadSchedules();
-      await loadDetail(res.scheduleId);
+      await loadDetail(res.schedule.id);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Ошибка копирования');
     } finally {

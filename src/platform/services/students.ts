@@ -6,6 +6,7 @@ import type {
   StudentProfile,
   StudentProfileDetail,
   StudentProfileStatus,
+  AccountStatus,
 } from '../types';
 
 interface StudentDto {
@@ -16,6 +17,7 @@ interface StudentDto {
   middleName: string | null;
   birthDate: string | null;
   status: StudentProfileStatus;
+  accountStatus: AccountStatus;
   createdAt: string;
   updatedAt: string;
 }

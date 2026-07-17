@@ -7,6 +7,7 @@ import type {
   ParentProfileDetail,
   ParentRelationType,
   SchoolRecordStatus,
+  AccountStatus,
 } from '../types';
 
 interface ParentDto {
@@ -17,6 +18,7 @@ interface ParentDto {
   middleName: string | null;
   phone: string;
   status: SchoolRecordStatus;
+  accountStatus: AccountStatus;
   createdAt: string;
   updatedAt: string;
 }

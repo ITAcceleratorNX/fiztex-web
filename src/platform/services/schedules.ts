@@ -86,15 +86,30 @@ export async function archiveSchedule(id: number): Promise<ClassSchedule> {
   return request<ClassSchedule>(`/admin/schedules/${id}/archive`, { method: 'POST' });
 }
 
+export interface ScheduleLessonWarning {
+  code: string;
+  message: string;
+}
+
 export async function copySchedule(
   id: number,
-  input: { targetAcademicPeriodId: number; targetClassId?: number; bellTemplateId?: number },
-): Promise<{ scheduleId: number; copiedLessons: number }> {
-  const res = await request<{
+  input: {
+    targetAcademicPeriodId: number;
+    targetClassId?: number;
+    bellTemplateId?: number;
+    overwriteExistingDraft?: boolean;
+    subgroupMapping?: Record<number, number>;
+  },
+): Promise<{
+  schedule: ClassSchedule;
+  copiedLessons: number;
+  warnings: ScheduleLessonWarning[];
+}> {
+  return request<{
     schedule: ClassSchedule;
     copiedLessons: number;
+    warnings: ScheduleLessonWarning[];
   }>(`/admin/schedules/${id}/copy`, { method: 'POST', body: input });
-  return { scheduleId: res.schedule.id, copiedLessons: res.copiedLessons };
 }
 
 export async function listScheduleLessons(scheduleId: number): Promise<ScheduleLesson[]> {

@@ -3,6 +3,7 @@ import type { Page } from '@/lib/types';
 import { createUser } from './users';
 import { listSchoolSubjects as listSchoolSubjectsBase } from './schoolSubjects';
 import type {
+  AccountStatus,
   SchoolRecordStatus,
   SchoolSubject,
   TeacherAssignment,
@@ -18,6 +19,7 @@ interface TeacherDto {
   middleName: string | null;
   phone: string;
   status: SchoolRecordStatus;
+  accountStatus: AccountStatus;
   createdAt: string;
   updatedAt: string;
 }
