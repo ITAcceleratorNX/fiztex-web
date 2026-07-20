@@ -4,8 +4,12 @@ import { Button } from '@/components/ui/Button';
 import { Field, TextInput, TextArea } from '@/components/ui/Field';
 import { useCreateApplicant, useUpdateApplicant } from '@/hooks/queries';
 import { useToast } from '@/context/ToastContext';
-import { ApiError } from '@/lib/api';
 import type { Applicant } from '@/lib/types';
+import {
+  mapApplicantApiError,
+  normalizeParentPhone,
+  validateParentPhone,
+} from './applicantFormHelpers';
 
 export function ApplicantFormModal({
   open,
@@ -26,6 +30,7 @@ export function ApplicantFormModal({
   const [parentFullName, setParentFullName] = useState('');
   const [parentPhone, setParentPhone] = useState('');
   const [comment, setComment] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ parentPhone?: string }>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,10 +40,19 @@ export function ApplicantFormModal({
     setParentFullName(applicant?.parentFullName ?? '');
     setParentPhone(applicant?.parentPhone ?? '');
     setComment(applicant?.comment ?? '');
+    setFieldErrors({});
     setError(null);
   }, [open, applicant]);
 
   const pending = create.isPending || update.isPending;
+
+  function handlePhoneBlur() {
+    const message = validateParentPhone(parentPhone);
+    setFieldErrors((prev) => ({
+      ...prev,
+      parentPhone: message ?? undefined,
+    }));
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -50,13 +64,26 @@ export function ApplicantFormModal({
       setError('Укажите класс поступления');
       return;
     }
+
+    const phoneError = validateParentPhone(parentPhone);
+    if (phoneError) {
+      setFieldErrors({ parentPhone: phoneError });
+      setError(null);
+      return;
+    }
+
+    const normalizedPhone = normalizeParentPhone(parentPhone);
     const body = {
       childFullName: childFullName.trim(),
       grade: grade.trim(),
       parentFullName: parentFullName.trim() || null,
-      parentPhone: parentPhone.trim() || null,
+      parentPhone: normalizedPhone,
       comment: comment.trim() || null,
     };
+
+    setFieldErrors({});
+    setError(null);
+
     try {
       if (isEdit && applicant) {
         await update.mutateAsync({ id: applicant.id, body });
@@ -67,7 +94,9 @@ export function ApplicantFormModal({
       }
       onClose();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Не удалось сохранить');
+      const mapped = mapApplicantApiError(err);
+      setFieldErrors(mapped.fields);
+      setError(mapped.form ?? null);
     }
   }
 
@@ -115,11 +144,22 @@ export function ApplicantFormModal({
               placeholder="Иванова Мария"
             />
           </Field>
-          <Field label="Телефон родителя" hint="Необязательно">
+          <Field
+            label="Телефон родителя"
+            hint="Необязательно"
+            error={fieldErrors.parentPhone}
+          >
             <TextInput
               value={parentPhone}
-              onChange={(e) => setParentPhone(e.target.value)}
-              placeholder="+7 ..."
+              onChange={(e) => {
+                setParentPhone(e.target.value);
+                if (fieldErrors.parentPhone) {
+                  setFieldErrors((prev) => ({ ...prev, parentPhone: undefined }));
+                }
+              }}
+              onBlur={handlePhoneBlur}
+              placeholder="+7 705 123 45 67"
+              error={Boolean(fieldErrors.parentPhone)}
             />
           </Field>
         </div>
