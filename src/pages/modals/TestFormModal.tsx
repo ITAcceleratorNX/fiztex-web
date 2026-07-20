@@ -8,6 +8,10 @@ import { useToast } from '@/context/ToastContext';
 import { ApiError } from '@/lib/api';
 import type { Test, TestRequest, TestStatus, VersionStrategy } from '@/lib/types';
 import { VersionDecisionModal } from './VersionDecisionModal';
+import {
+  mapTestActivationError,
+  type TestActivationViolation,
+} from './testActivationHelpers';
 
 interface FormState {
   title: string;
@@ -59,11 +63,13 @@ export function TestFormModal({
 
   const [form, setForm] = useState<FormState>(emptyState);
   const [error, setError] = useState<string | null>(null);
+  const [activationViolations, setActivationViolations] = useState<TestActivationViolation[]>([]);
   const [decisionOpen, setDecisionOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setError(null);
+    setActivationViolations([]);
     setDecisionOpen(false);
     if (test) {
       setForm({
@@ -142,7 +148,9 @@ export function TestFormModal({
         return;
       }
       setDecisionOpen(false);
-      setError(err instanceof ApiError ? err.message : 'Не удалось сохранить тест');
+      const mapped = mapTestActivationError(err);
+      setActivationViolations(mapped.violations);
+      setError(mapped.form ?? (mapped.violations.length > 0 ? null : 'Не удалось сохранить тест'));
     }
   }
 
@@ -188,6 +196,23 @@ export function TestFormModal({
           {error && (
             <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-100">
               {error}
+            </div>
+          )}
+
+          {activationViolations.length > 0 && (
+            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-100">
+              <p className="mb-2 font-medium">Тест нельзя активировать:</p>
+              <ul className="list-inside list-disc space-y-1">
+                {activationViolations.map((v, i) => (
+                  <li key={`${v.code}-${v.questionOrderIndex ?? 'g'}-${i}`}>{v.message}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {form.status === 'ACTIVE' && (test?.questionCount ?? 0) === 0 && (
+            <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-amber-100">
+              Добавьте хотя бы один вопрос, чтобы активировать тест.
             </div>
           )}
 

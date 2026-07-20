@@ -26,6 +26,11 @@ import {
   type QuestionDraft,
 } from '@/lib/testQuestions';
 import { VersionDecisionModal } from './VersionDecisionModal';
+import {
+  mapTestActivationError,
+  violationsByQuestionIndex,
+  type TestActivationViolation,
+} from './testActivationHelpers';
 
 function QuestionEditor({
   question,
@@ -36,6 +41,7 @@ function QuestionEditor({
   onMoveUp,
   onMoveDown,
   showDraftUi = true,
+  invalidMessages = [],
 }: {
   question: QuestionDraft;
   index: number;
@@ -45,6 +51,7 @@ function QuestionEditor({
   onMoveUp: () => void;
   onMoveDown: () => void;
   showDraftUi?: boolean;
+  invalidMessages?: string[];
 }) {
   function setType(type: QuestionType) {
     const next = { ...question, type };
@@ -60,10 +67,13 @@ function QuestionEditor({
 
   return (
     <div
+      id={`question-card-${index}`}
       className={
-        showDraftUi && question.isDraft
-          ? 'rounded-xl border border-amber-200 bg-amber-50/40 p-4'
-          : 'rounded-xl border border-slate-200 bg-white p-4'
+        invalidMessages.length > 0
+          ? 'rounded-xl border border-red-300 bg-red-50/40 p-4'
+          : showDraftUi && question.isDraft
+            ? 'rounded-xl border border-amber-200 bg-amber-50/40 p-4'
+            : 'rounded-xl border border-slate-200 bg-white p-4'
       }
     >
       <div className="mb-4 flex items-start justify-between gap-3">
@@ -71,6 +81,11 @@ function QuestionEditor({
           <GripVertical className="h-4 w-4 text-slate-300" />
           <span className="text-sm font-semibold text-slate-800">Вопрос {index + 1}</span>
           {showDraftUi && question.isDraft && <DraftQuestionBadge />}
+          {invalidMessages.length > 0 && (
+            <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+              Невалиден
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -246,6 +261,14 @@ function QuestionEditor({
           />
         </div>
       )}
+
+      {invalidMessages.length > 0 && (
+        <ul className="mt-4 list-inside list-disc space-y-1 text-xs text-red-600">
+          {invalidMessages.map((msg) => (
+            <li key={msg}>{msg}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -265,21 +288,42 @@ export function TestQuestionsModal({
 
   const [questions, setQuestions] = useState<QuestionDraft[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
+  const [activationViolations, setActivationViolations] = useState<TestActivationViolation[]>([]);
   const [decisionOpen, setDecisionOpen] = useState(false);
   const [hadDraftsOnOpen, setHadDraftsOnOpen] = useState(false);
 
   const draftCount = useMemo(() => questions.filter((q) => q.isDraft).length, [questions]);
+  const invalidByIndex = useMemo(
+    () => violationsByQuestionIndex(activationViolations),
+    [activationViolations],
+  );
   const isAi = test?.useAiGeneration === true;
   const showDraftUi = isAi;
 
   useEffect(() => {
     if (!open || !test) return;
     setFormError(null);
+    setActivationViolations([]);
     setDecisionOpen(false);
     const loaded = (test.questions ?? []).map(questionFromResponse);
     setQuestions(loaded);
     setHadDraftsOnOpen(loaded.some((q) => q.isDraft));
   }, [open, test]);
+
+  useEffect(() => {
+    if (activationViolations.length === 0) return;
+    const firstIndex = activationViolations
+      .map((v) => v.questionOrderIndex)
+      .filter((index): index is number => index != null)
+      .sort((a, b) => a - b)[0];
+    if (firstIndex == null) return;
+    requestAnimationFrame(() => {
+      document.getElementById(`question-card-${firstIndex}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    });
+  }, [activationViolations]);
 
   const pending = update.isPending;
 
@@ -288,8 +332,12 @@ export function TestQuestionsModal({
     const validation = validateQuestions(questions, test.minScore);
     if (validation) {
       setFormError(validation);
+      setActivationViolations([]);
       return;
     }
+
+    setFormError(null);
+    setActivationViolations([]);
 
     const body = buildTestRequest(
       test,
@@ -316,7 +364,9 @@ export function TestQuestionsModal({
         setDecisionOpen(true);
         return;
       }
-      setFormError(err instanceof ApiError ? err.message : 'Не удалось сохранить вопросы');
+      const mapped = mapTestActivationError(err);
+      setActivationViolations(mapped.violations);
+      setFormError(mapped.form ?? (mapped.violations.length > 0 ? null : 'Не удалось сохранить вопросы'));
     }
   }
 
@@ -378,6 +428,18 @@ export function TestQuestionsModal({
               </div>
             )}
 
+            {activationViolations.some((v) => v.questionOrderIndex == null) && (
+              <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-100">
+                <ul className="list-inside list-disc space-y-1">
+                  {activationViolations
+                    .filter((v) => v.questionOrderIndex == null)
+                    .map((v) => (
+                      <li key={v.code}>{v.message}</li>
+                    ))}
+                </ul>
+              </div>
+            )}
+
             {showDraftUi && (
               <DraftReviewBanner draftCount={draftCount}>
                 {test.assignmentCount > 0 && (
@@ -391,7 +453,7 @@ export function TestQuestionsModal({
             {questions.length === 0 ? (
               <EmptyBlock
                 title="В тесте пока нет вопросов"
-                description="Добавьте вопросы вручную — они будут показаны поступающим при прохождении теста."
+                description="Добавьте хотя бы один вопрос, чтобы активировать тест."
                 action={
                   <Button icon={<Plus className="h-4 w-4" />} onClick={() => setQuestions([emptyQuestion()])}>
                     Добавить первый вопрос
@@ -408,6 +470,7 @@ export function TestQuestionsModal({
                       index={index}
                       total={questions.length}
                       showDraftUi={showDraftUi}
+                      invalidMessages={(invalidByIndex.get(index) ?? []).map((v) => v.message)}
                       onChange={(next) =>
                         setQuestions((prev) => prev.map((item, i) => (i === index ? next : item)))
                       }
