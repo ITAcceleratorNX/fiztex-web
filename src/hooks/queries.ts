@@ -54,14 +54,6 @@ export function useUpdateSubject() {
   });
 }
 
-export function useDeleteSubject() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: number) => api.deleteSubject(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.subjects }),
-  });
-}
-
 // ---- Tests ----
 export function useTests(useAiGeneration?: boolean) {
   return useQuery({

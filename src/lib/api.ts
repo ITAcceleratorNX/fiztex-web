@@ -197,7 +197,6 @@ export const api = {
     request<Subject>('/admin/subjects', { method: 'POST', body }),
   updateSubject: (id: number, body: SubjectRequest) =>
     request<Subject>(`/admin/subjects/${id}`, { method: 'PUT', body }),
-  deleteSubject: (id: number) => request<void>(`/admin/subjects/${id}`, { method: 'DELETE' }),
 
   // Tests
   listTests: (useAiGeneration?: boolean, signal?: AbortSignal) => {
