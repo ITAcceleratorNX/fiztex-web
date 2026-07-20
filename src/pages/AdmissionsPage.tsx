@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApplicants, useTests } from '@/hooks/queries';
 import { StatCard } from '@/components/ui/StatCard';
 import { NotificationsBell } from '@/components/admissions/NotificationsBell';
@@ -22,9 +22,9 @@ function parseTab(value: string | null): TabKey {
 }
 
 export function AdmissionsPage() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState<TabKey>(() => parseTab(searchParams.get('tab')));
-  const [focusAttemptId, setFocusAttemptId] = useState<number | null>(null);
   const [attemptsStatusFilter, setAttemptsStatusFilter] = useState<AttemptsStatusFilter>('ALL');
 
   useEffect(() => {
@@ -42,9 +42,7 @@ export function AdmissionsPage() {
   const activeTests = tests.data?.filter((t) => t.status === 'ACTIVE').length ?? 0;
 
   function openAttemptFromNotification(attemptId: number) {
-    setAttemptsStatusFilter('ALL');
-    setFocusAttemptId(attemptId);
-    selectTab('attempts');
+    navigate(`/results/attempts/${attemptId}`);
   }
 
   return (
@@ -85,8 +83,6 @@ export function AdmissionsPage() {
           <AttemptsTab
             statusFilter={attemptsStatusFilter}
             onStatusFilterChange={setAttemptsStatusFilter}
-            focusAttemptId={focusAttemptId}
-            onFocusHandled={() => setFocusAttemptId(null)}
           />
         )}
       </div>

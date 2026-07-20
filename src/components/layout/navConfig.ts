@@ -9,6 +9,7 @@ import {
   KeyRound,
   Upload,
   ClipboardList,
+  FileCheck2,
   BookMarked,
   GraduationCap,
   Heart,
@@ -76,6 +77,9 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     id: 'admissions',
     label: 'Приём',
-    items: [{ to: '/admissions', label: 'Вступительные тесты', icon: ClipboardList }],
+    items: [
+      { to: '/admissions', label: 'Вступительные тесты', icon: ClipboardList },
+      { to: '/results', label: 'Результаты', icon: FileCheck2 },
+    ],
   },
 ];

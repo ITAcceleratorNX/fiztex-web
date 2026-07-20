@@ -233,6 +233,17 @@ export interface TopicScore {
   percent: number;
 }
 
+export interface ResultListItem {
+  attemptId: number;
+  applicantName: string;
+  testTitle: string;
+  status: ResultStatus;
+  totalScore: number;
+  maxScore: number;
+  minScore: number;
+  finishedAt: string | null;
+}
+
 export interface ReviewDetail {
   resultId: number | null;
   attemptId: number;

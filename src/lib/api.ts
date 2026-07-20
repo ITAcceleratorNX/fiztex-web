@@ -8,6 +8,7 @@ import type {
   NotificationItem,
   Page,
   ReviewDetail,
+  ResultListItem,
   ScoreAnswerRequest,
   Subject,
   SubjectRequest,
@@ -217,9 +218,20 @@ export const api = {
       body: { versionNumber },
     }),
 
-  // Review (admin answer checking)
-  listReviews: (status?: string, signal?: AbortSignal) =>
-    request<ReviewDetail[]>(`/admin/results${status ? `?status=${status}` : ''}`, { signal }),
+  // Review / results (admin answer checking)
+  listResultsPage: (
+    params: { status?: string; search?: string; page?: number; size?: number } = {},
+    signal?: AbortSignal,
+  ) =>
+    request<Page<ResultListItem>>(
+      `/admin/results${pageQuery({
+        status: params.status,
+        search: params.search,
+        page: params.page ?? 0,
+        size: params.size ?? 20,
+      })}`,
+      { signal },
+    ),
   getReview: (attemptId: number, signal?: AbortSignal) =>
     request<ReviewDetail>(`/admin/results/attempts/${attemptId}`, { signal }),
   scoreAnswer: (attemptId: number, questionId: number, body: ScoreAnswerRequest) =>

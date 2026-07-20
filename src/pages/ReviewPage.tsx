@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
 
-/** Legacy route — review now lives inside the «Попытки» tab of «Вступительные тесты». */
+/** Legacy route kept for old links — canonical review lives in the Results section. */
 export function ReviewPage() {
-  return <Navigate to="/admissions?tab=attempts" replace />;
+  return <Navigate to="/results" replace />;
 }

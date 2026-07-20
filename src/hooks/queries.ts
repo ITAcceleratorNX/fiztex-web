@@ -19,6 +19,8 @@ export const keys = {
   test: (id: number) => ['tests', id] as const,
   applicants: ['applicants'] as const,
   reviews: ['reviews'] as const,
+  resultsPage: (status: string, search: string, page: number, size: number) =>
+    ['results', 'page', status, search, page, size] as const,
   materials: (subjectId: number) => ['materials', subjectId] as const,
   generationJob: (id: number) => ['generation-jobs', id] as const,
   generationJobs: (testId: number) => ['tests', testId, 'generation-jobs'] as const,
@@ -129,11 +131,20 @@ export function useChangeAssignmentVersion(testId: number) {
   });
 }
 
-// ---- Review (проверка ответов) ----
-export function useReviews(status?: string) {
+// ---- Review / results ----
+export function useResultsPage(status: string, search: string, page: number, size: number) {
   return useQuery({
-    queryKey: [...keys.reviews, status ?? 'PENDING'],
-    queryFn: ({ signal }) => api.listReviews(status, signal),
+    queryKey: keys.resultsPage(status, search, page, size),
+    queryFn: ({ signal }) =>
+      api.listResultsPage(
+        {
+          status: status === 'ALL' ? undefined : status,
+          search: search.trim() || undefined,
+          page,
+          size,
+        },
+        signal,
+      ),
   });
 }
 

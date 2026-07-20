@@ -4,6 +4,8 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { LoginPage } from '@/pages/LoginPage';
 import { EntranceFlow } from '@/pages/entrance/EntranceFlow';
 import { AdmissionsPage } from '@/pages/AdmissionsPage';
+import { ResultsPage } from '@/pages/ResultsPage';
+import { ResultReviewPage } from '@/pages/ResultReviewPage';
 import { ReviewPage } from '@/pages/ReviewPage';
 import { SubjectsPage } from '@/pages/SubjectsPage';
 import { SubjectMaterialsPage } from '@/pages/SubjectMaterialsPage';
@@ -71,6 +73,8 @@ export function App() {
         <Route path="/subjects" element={<SubjectsPage />} />
         <Route path="/subjects/:subjectId/materials" element={<SubjectMaterialsPage />} />
         <Route path="/admissions" element={<AdmissionsPage />} />
+        <Route path="/results" element={<ResultsPage />} />
+        <Route path="/results/attempts/:attemptId" element={<ResultReviewPage />} />
         <Route path="/review" element={<ReviewPage />} />
         <Route path="/students" element={<StudentsPage />} />
         <Route path="/parents" element={<ParentsPage />} />

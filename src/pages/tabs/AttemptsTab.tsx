@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ClipboardList, Clock, Eye, LogIn, MonitorOff, ScrollText, WifiOff } from 'lucide-react';
 import { useMonitoringAttempts } from '@/hooks/queries';
 import { SearchInput } from '@/components/ui/SearchInput';
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
 import { AttemptLogsModal } from '@/pages/modals/AttemptLogsModal';
 import { ReviewModal } from '@/pages/modals/ReviewModal';
-import { formatDateTime, pluralRu, cx } from '@/lib/format';
+import { formatDateTime, pluralRu } from '@/lib/format';
 import { isFinalAttemptStatus } from '@/lib/admissionStatus';
 import { ApiError } from '@/lib/api';
 import type { MonitoringAttemptItem } from '@/lib/types';
@@ -73,13 +73,9 @@ function EventFlags({ row }: { row: MonitoringAttemptItem }) {
 export function AttemptsTab({
   statusFilter,
   onStatusFilterChange,
-  focusAttemptId,
-  onFocusHandled,
 }: {
   statusFilter: AttemptsStatusFilter;
   onStatusFilterChange: (value: AttemptsStatusFilter) => void;
-  focusAttemptId: number | null;
-  onFocusHandled: () => void;
 }) {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<MonitoringAttemptItem | null>(null);
@@ -107,24 +103,6 @@ export function AttemptsTab({
 
   const totalLoaded = allRows.length;
   const totalElements = data?.pages[0]?.totalElements ?? totalLoaded;
-
-  useEffect(() => {
-    if (focusAttemptId == null) return;
-    const match = allRows.find((row) => row.attemptId === focusAttemptId);
-    if (match) {
-      // Finished attempts open the review dialog; live ones open the event log.
-      if (isFinalAttemptStatus(match.status)) {
-        setReviewAttemptId(match.attemptId);
-      } else {
-        setSelected(match);
-      }
-      onFocusHandled();
-      return;
-    }
-    if (hasNextPage && !isFetchingNextPage && !isLoading) {
-      fetchNextPage();
-    }
-  }, [focusAttemptId, allRows, hasNextPage, isFetchingNextPage, isLoading, fetchNextPage, onFocusHandled]);
 
   return (
     <div>
@@ -183,10 +161,7 @@ export function AttemptsTab({
                   return (
                     <tr
                       key={row.attemptId ?? `assignment-${row.assignmentId}`}
-                      className={cx(
-                        'transition',
-                        focusAttemptId != null && row.attemptId === focusAttemptId && 'bg-brand-50/50',
-                      )}
+                      className="transition"
                     >
                       <td className="px-6 py-3.5 font-semibold text-slate-800">{row.applicantName}</td>
                       <td className="px-6 py-3.5 text-sm text-slate-600">{row.testTitle}</td>
