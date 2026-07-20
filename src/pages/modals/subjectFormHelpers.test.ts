@@ -3,6 +3,8 @@ import {
   charCounterText,
   mapSubjectApiError,
   parseSubjectValidationDetails,
+  SUBJECT_NAME_TAKEN,
+  SUBJECT_NAME_TAKEN_HIDDEN,
 } from './subjectFormHelpers';
 import { SUBJECT_MAX_DESCRIPTION_LENGTH, SUBJECT_MAX_NAME_LENGTH } from './subjectConstraints';
 
@@ -47,7 +49,7 @@ describe('parseSubjectValidationDetails', () => {
 
 describe('mapSubjectApiError', () => {
   function apiError(status: number, message: string, details?: unknown) {
-    const err = new Error(message) as Error & { status: number; details?: unknown; name: string };
+    const err = new Error(message) as Error & { status: number; details?: unknown; code?: string; name: string };
     err.name = 'ApiError';
     err.status = status;
     err.details = details;
@@ -73,6 +75,24 @@ describe('mapSubjectApiError', () => {
   it('returns form error when no field mapping', () => {
     const err = apiError(500, 'Internal error');
     expect(mapSubjectApiError(err)).toEqual({ fields: {}, form: 'Internal error' });
+  });
+
+  it('maps duplicate name conflict to name field', () => {
+    const err = apiError(409, 'Предмет с таким названием уже существует', undefined);
+    err.code = SUBJECT_NAME_TAKEN;
+    expect(mapSubjectApiError(err)).toEqual({
+      fields: { name: 'Предмет с таким названием уже существует' },
+      showHiddenCta: false,
+    });
+  });
+
+  it('maps hidden duplicate conflict with CTA flag', () => {
+    const err = apiError(409, 'Предмет скрыт — активируйте его', undefined);
+    err.code = SUBJECT_NAME_TAKEN_HIDDEN;
+    expect(mapSubjectApiError(err)).toEqual({
+      fields: { name: 'Предмет скрыт — активируйте его' },
+      showHiddenCta: true,
+    });
   });
 });
 

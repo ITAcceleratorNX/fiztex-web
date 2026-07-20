@@ -12,10 +12,12 @@ export function SubjectFormModal({
   open,
   onClose,
   subject,
+  onShowHiddenSubjects,
 }: {
   open: boolean;
   onClose: () => void;
   subject: Subject | null;
+  onShowHiddenSubjects?: () => void;
 }) {
   const isEdit = Boolean(subject);
   const create = useCreateSubject();
@@ -27,6 +29,7 @@ export function SubjectFormModal({
   const [status, setStatus] = useState<SubjectStatus>('ACTIVE');
   const [fieldErrors, setFieldErrors] = useState<{ name?: string; description?: string }>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const [showHiddenCta, setShowHiddenCta] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -35,6 +38,7 @@ export function SubjectFormModal({
       setStatus(subject?.status ?? 'ACTIVE');
       setFieldErrors({});
       setFormError(null);
+      setShowHiddenCta(false);
     }
   }, [open, subject]);
 
@@ -45,11 +49,13 @@ export function SubjectFormModal({
     if (!name.trim()) {
       setFieldErrors({ name: 'Укажите название предмета' });
       setFormError(null);
+      setShowHiddenCta(false);
       return;
     }
-    const body = { name: name.trim(), description: description.trim() || null, status };
+    const body = { name, description: description.trim() || null, status };
     setFieldErrors({});
     setFormError(null);
+    setShowHiddenCta(false);
     try {
       if (isEdit && subject) {
         await update.mutateAsync({ id: subject.id, body });
@@ -63,6 +69,7 @@ export function SubjectFormModal({
       const mapped = mapSubjectApiError(err);
       setFieldErrors(mapped.fields);
       setFormError(mapped.form ?? null);
+      setShowHiddenCta(Boolean(mapped.showHiddenCta));
     }
   }
 
@@ -99,6 +106,18 @@ export function SubjectFormModal({
           <p className="mt-1 text-xs text-slate-400">
             {charCounterText(name.length, SUBJECT_MAX_NAME_LENGTH)}
           </p>
+          {showHiddenCta && onShowHiddenSubjects ? (
+            <button
+              type="button"
+              className="mt-2 text-xs font-medium text-brand-600 hover:text-brand-700"
+              onClick={() => {
+                onShowHiddenSubjects();
+                onClose();
+              }}
+            >
+              Показать скрытый предмет
+            </button>
+          ) : null}
         </Field>
         <Field label="Описание" hint="Необязательно" error={fieldErrors.description}>
           <TextArea

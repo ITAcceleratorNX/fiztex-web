@@ -28,16 +28,29 @@ function mockUpdateMutation(mutateAsync: ReturnType<typeof vi.fn>) {
   } as unknown as ReturnType<typeof useUpdateSubject>);
 }
 
-function apiError(message: string, details?: unknown) {
-  const err = new Error(message) as Error & { name: string; status: number; details?: unknown };
+function apiError(message: string, code?: string, details?: unknown, status = 409) {
+  const err = new Error(message) as Error & {
+    name: string;
+    status: number;
+    code?: string;
+    details?: unknown;
+  };
   err.name = 'ApiError';
-  err.status = 400;
+  err.status = status;
+  err.code = code;
   err.details = details;
   return err;
 }
 
-function renderModal() {
-  render(<SubjectFormModal open onClose={() => {}} subject={null} />);
+function renderModal(onShowHiddenSubjects?: () => void) {
+  render(
+    <SubjectFormModal
+      open
+      onClose={() => {}}
+      subject={null}
+      onShowHiddenSubjects={onShowHiddenSubjects}
+    />,
+  );
   return within(screen.getByRole('dialog'));
 }
 
@@ -84,9 +97,12 @@ describe('SubjectFormModal', () => {
   it('shows server validation error under the name field', async () => {
     const user = userEvent.setup();
     const mutateAsync = vi.fn().mockRejectedValue(
-      apiError('name: fallback', [
-        { field: 'name', message: 'Название предмета не должно превышать 120 символов' },
-      ]),
+      apiError(
+        'Название предмета не должно превышать 120 символов',
+        undefined,
+        [{ field: 'name', message: 'Название предмета не должно превышать 120 символов' }],
+        400,
+      ),
     );
     mockCreateMutation(mutateAsync);
 
@@ -101,15 +117,17 @@ describe('SubjectFormModal', () => {
       ).toBeInTheDocument();
     });
     expect(dialog.getByPlaceholderText('Например: Математика')).toHaveClass('border-red-300');
-    expect(dialog.queryByText('fallback')).not.toBeInTheDocument();
   });
 
   it('shows server validation error under the description field', async () => {
     const user = userEvent.setup();
     const mutateAsync = vi.fn().mockRejectedValue(
-      apiError('description: fallback', [
-        { field: 'description', message: 'Описание не должно превышать 2000 символов' },
-      ]),
+      apiError(
+        'Описание не должно превышать 2000 символов',
+        undefined,
+        [{ field: 'description', message: 'Описание не должно превышать 2000 символов' }],
+        400,
+      ),
     );
     mockCreateMutation(mutateAsync);
 
@@ -123,5 +141,26 @@ describe('SubjectFormModal', () => {
       expect(dialog.getByText('Описание не должно превышать 2000 символов')).toBeInTheDocument();
     });
     expect(dialog.getByPlaceholderText('Краткое описание предмета')).toHaveClass('border-red-300');
+  });
+
+  it('shows hidden duplicate CTA and calls filter callback', async () => {
+    const user = userEvent.setup();
+    const onShowHiddenSubjects = vi.fn();
+    const mutateAsync = vi.fn().mockRejectedValue(
+      apiError('Предмет скрыт — активируйте его', 'SUBJECT_NAME_TAKEN_HIDDEN'),
+    );
+    mockCreateMutation(mutateAsync);
+
+    const dialog = renderModal(onShowHiddenSubjects);
+
+    await user.type(dialog.getByPlaceholderText('Например: Математика'), 'Math');
+    await user.click(dialog.getByRole('button', { name: 'Создать' }));
+
+    await waitFor(() => {
+      expect(dialog.getByText('Предмет скрыт — активируйте его')).toBeInTheDocument();
+    });
+
+    await user.click(dialog.getByRole('button', { name: 'Показать скрытый предмет' }));
+    expect(onShowHiddenSubjects).toHaveBeenCalledOnce();
   });
 });

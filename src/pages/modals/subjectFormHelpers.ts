@@ -1,7 +1,11 @@
 export type SubjectField = 'name' | 'description';
 
+export const SUBJECT_NAME_TAKEN = 'SUBJECT_NAME_TAKEN';
+export const SUBJECT_NAME_TAKEN_HIDDEN = 'SUBJECT_NAME_TAKEN_HIDDEN';
+
 type ApiErrorLike = {
   message: string;
+  code?: string;
   details?: unknown;
 };
 
@@ -33,13 +37,21 @@ export function parseSubjectValidationDetails(
   return fields;
 }
 
-/** Map API validation payload onto form fields; fall back to top-level message. */
+/** Map API validation/conflict payload onto form fields; fall back to top-level message. */
 export function mapSubjectApiError(err: unknown): {
   fields: Partial<Record<SubjectField, string>>;
   form?: string;
+  showHiddenCta?: boolean;
 } {
   if (!isApiError(err)) {
     return { fields: {}, form: 'Не удалось сохранить' };
+  }
+
+  if (err.code === SUBJECT_NAME_TAKEN || err.code === SUBJECT_NAME_TAKEN_HIDDEN) {
+    return {
+      fields: { name: err.message },
+      showHiddenCta: err.code === SUBJECT_NAME_TAKEN_HIDDEN,
+    };
   }
 
   const fields = parseSubjectValidationDetails(err.details);

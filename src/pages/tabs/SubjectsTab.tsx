@@ -210,7 +210,12 @@ export function SubjectsTab() {
         )}
       </div>
 
-      <SubjectFormModal open={formOpen} onClose={() => setFormOpen(false)} subject={editing} />
+      <SubjectFormModal
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        subject={editing}
+        onShowHiddenSubjects={() => setStatusFilter('HIDDEN')}
+      />
 
       <ConfirmDialog
         open={Boolean(hideTarget)}
