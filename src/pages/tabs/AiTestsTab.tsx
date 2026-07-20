@@ -13,7 +13,6 @@ import { TestFormModal } from '@/pages/modals/TestFormModal';
 import { TestCardModal } from '@/pages/modals/TestCardModal';
 import { TestQuestionsModal } from '@/pages/modals/TestQuestionsModal';
 import { formatDate, pluralRu } from '@/lib/format';
-import { countDraftQuestions } from '@/lib/testQuestions';
 import { ApiError } from '@/lib/api';
 import type { Test, TestStatus } from '@/lib/types';
 
@@ -124,7 +123,7 @@ export function AiTestsTab() {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {filtered.map((t) => {
-                  const drafts = countDraftQuestions(t.questions);
+                  const drafts = t.draftQuestionCount;
                   return (
                     <tr key={t.id} className="transition hover:bg-slate-50/70">
                       <td className="px-6 py-3.5">

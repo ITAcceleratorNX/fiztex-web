@@ -62,7 +62,7 @@ export function countDraftQuestions(questions: QuestionResponse[] | undefined): 
 }
 
 export function countTestsWithDrafts(tests: Test[] | undefined): number {
-  return (tests ?? []).filter((t) => (t.questions ?? []).some((q) => q.isDraft)).length;
+  return (tests ?? []).filter((t) => t.draftQuestionCount > 0).length;
 }
 
 export interface AnswerOptionDraft {

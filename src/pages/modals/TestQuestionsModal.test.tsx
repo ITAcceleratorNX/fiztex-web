@@ -25,6 +25,7 @@ const baseTest: Test = {
   maxScore: 2,
   minPercent: null,
   questionCount: 2,
+  draftQuestionCount: 0,
   rules: null,
   status: 'ACTIVE',
   allowBackNavigation: true,

@@ -148,7 +148,12 @@ export function AdmissionTestsTab() {
                     </td>
                     <td className="px-6 py-3.5 text-sm text-slate-600">{t.durationMinutes} мин</td>
                     <td className="px-6 py-3.5 text-sm text-slate-600">{t.minScore}</td>
-                    <td className="px-6 py-3.5 text-sm text-slate-600">{t.questionCount}</td>
+                    <td className="px-6 py-3.5 text-sm text-slate-600">
+                      {t.questionCount}
+                      {t.draftQuestionCount > 0 && (
+                        <span className="ml-2 text-xs text-amber-700">+{t.draftQuestionCount} чернов.</span>
+                      )}
+                    </td>
                     <td className="px-6 py-3.5">
                       <TestStatusBadge status={t.status} />
                     </td>

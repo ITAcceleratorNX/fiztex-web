@@ -10,7 +10,7 @@ import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock
 import { useTest, useChangeAssignmentVersion } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import { formatDateTime, versionLabel } from '@/lib/format';
-import { QUESTION_TYPE_LABELS, countDraftQuestions, difficultyLabel } from '@/lib/testQuestions';
+import { QUESTION_TYPE_LABELS, difficultyLabel } from '@/lib/testQuestions';
 import { TestStatusBadge } from '@/components/ui/TestStatusBadge';
 import { DraftQuestionBadge } from '@/components/ui/DraftQuestionBadge';
 import { DraftReviewBanner } from '@/components/ui/DraftReviewBanner';
@@ -95,7 +95,7 @@ export function TestCardModal({
   const [questionsOpen, setQuestionsOpen] = useState(false);
   const [generateOpen, setGenerateOpen] = useState(false);
 
-  const draftCount = countDraftQuestions(test?.questions);
+  const draftCount = test?.draftQuestionCount ?? 0;
   const questionsLabel =
     test && isAi && draftCount > 0
       ? `Вопросы (${test.questionCount} · ${draftCount} черн.)`

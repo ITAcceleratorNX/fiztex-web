@@ -137,7 +137,7 @@ export function TestFormModal({
         toast.success(versionStrategy === 'NEW_VERSION' ? 'Создана новая версия теста' : 'Тест обновлён');
       } else {
         await create.mutateAsync(buildBody());
-        toast.success('Тест создан');
+        toast.success(aiTest ? 'Тест создан' : 'Карточка теста создана. Теперь добавьте вопросы.');
       }
       setDecisionOpen(false);
       onClose();

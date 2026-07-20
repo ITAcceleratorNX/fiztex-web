@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestFormModal } from './TestFormModal';
 import { useCreateTest, useSubjects, useUpdateTest } from '@/hooks/queries';
 
+const toast = { success: vi.fn(), error: vi.fn() };
+
 vi.mock('@/hooks/queries', () => ({
   useSubjects: vi.fn(),
   useCreateTest: vi.fn(),
@@ -11,7 +13,7 @@ vi.mock('@/hooks/queries', () => ({
 }));
 
 vi.mock('@/context/ToastContext', () => ({
-  useToast: () => ({ success: vi.fn(), error: vi.fn() }),
+  useToast: () => toast,
 }));
 
 function apiError422(details: unknown) {
@@ -28,11 +30,13 @@ function apiError422(details: unknown) {
   return err;
 }
 
-describe('TestFormModal activation errors', () => {
+describe('TestFormModal', () => {
   afterEach(() => cleanup());
 
   beforeEach(() => {
     vi.clearAllMocks();
+    toast.success.mockReset();
+    toast.error.mockReset();
     vi.mocked(useSubjects).mockReturnValue({
       data: [{ id: 1, name: 'Math', status: 'ACTIVE', testCount: 0, createdAt: '', description: null }],
     } as ReturnType<typeof useSubjects>);
@@ -74,6 +78,7 @@ describe('TestFormModal activation errors', () => {
           maxScore: 1,
           minPercent: null,
           questionCount: 1,
+          draftQuestionCount: 0,
           rules: null,
           status: 'DRAFT',
           allowBackNavigation: true,
@@ -119,6 +124,7 @@ describe('TestFormModal activation errors', () => {
           maxScore: 0,
           minPercent: null,
           questionCount: 0,
+          draftQuestionCount: 0,
           rules: null,
           status: 'DRAFT',
           allowBackNavigation: true,
@@ -143,5 +149,33 @@ describe('TestFormModal activation errors', () => {
     await user.click(screen.getByRole('option', { name: 'Активен' }));
 
     expect(screen.getByText(/Добавьте хотя бы один вопрос, чтобы активировать тест/i)).toBeInTheDocument();
+  });
+
+  it('explains next step after creating non-ai test', async () => {
+    const user = userEvent.setup();
+    const mutateAsync = vi.fn().mockResolvedValue({ id: 10 });
+    vi.mocked(useCreateTest).mockReturnValue({
+      isPending: false,
+      mutateAsync,
+    } as ReturnType<typeof useCreateTest>);
+
+    render(<TestFormModal open onClose={() => {}} test={null} aiTest={false} />);
+
+    await user.type(screen.getByPlaceholderText(/Например: Математика/i), 'Новый тест');
+    await user.click(screen.getByRole('button', { name: 'Выберите предмет…' }));
+    await user.click(screen.getByRole('option', { name: /Math/ }));
+    await user.type(screen.getByPlaceholderText(/Например: 5 класс/i), '5 класс');
+    await user.click(screen.getByRole('button', { name: 'Создать тест' }));
+
+    await waitFor(() => {
+      expect(mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Новый тест',
+          subjectId: 1,
+          grade: '5 класс',
+        }),
+      );
+      expect(toast.success).toHaveBeenCalledWith('Карточка теста создана. Теперь добавьте вопросы.');
+    });
   });
 });

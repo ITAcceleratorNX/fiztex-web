@@ -108,6 +108,7 @@ export interface Test {
   maxScore: number | null;
   minPercent: number | null;
   questionCount: number;
+  draftQuestionCount: number;
   rules: string | null;
   status: TestStatus;
   allowBackNavigation: boolean;
