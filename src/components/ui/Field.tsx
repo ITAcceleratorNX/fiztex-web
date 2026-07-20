@@ -37,6 +37,19 @@ export function TextInput({ className, error, ...props }: InputHTMLAttributes<HT
   return <input className={cx('input-base', error && 'border-red-300 focus:border-red-400 focus:ring-red-300/30', className)} {...props} />;
 }
 
-export function TextArea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea className={cx('input-base min-h-[92px] resize-y', className)} {...props} />;
+export function TextArea({
+  className,
+  error,
+  ...props
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & { error?: boolean }) {
+  return (
+    <textarea
+      className={cx(
+        'input-base min-h-[92px] resize-y',
+        error && 'border-red-300 focus:border-red-400 focus:ring-red-300/30',
+        className,
+      )}
+      {...props}
+    />
+  );
 }
