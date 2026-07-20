@@ -11,7 +11,8 @@ import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
-import { Logo, FiztexMark } from '@/components/layout/Logo';
+import { Logo, PhysTechMark } from '@/components/layout/Logo';
+import { APP_NAME } from '@/lib/branding';
 
 const FEATURES: { icon: LucideIcon; label: string }[] = [
   { icon: Users, label: 'Ученики, родители и учителя' },
@@ -24,7 +25,7 @@ export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState('admin@fiztex.local');
+  const [email, setEmail] = useState('admin@phystech.local');
   const [password, setPassword] = useState('admin123');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -49,7 +50,7 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen">
       <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-navy-700 p-12 lg:flex">
-        <FiztexMark className="pointer-events-none absolute -right-16 top-1/2 h-[520px] w-[520px] -translate-y-1/2 text-white/[0.06]" />
+        <PhysTechMark className="pointer-events-none absolute -right-16 top-1/2 h-[520px] w-[520px] -translate-y-1/2 text-white/[0.06]" />
         <Logo className="w-[17.5rem] max-w-full h-auto" />
         <div className="relative max-w-lg">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-300/90">
@@ -59,8 +60,8 @@ export function LoginPage() {
             Всё управление школой — в одном месте
           </h2>
           <p className="mt-4 text-slate-300">
-            Fiztex объединяет учебные процессы, приём, коммуникацию с семьями и внутренние сервисы
-            Fiztex для администраторов и сотрудников.
+            {APP_NAME} объединяет учебные процессы, приём, коммуникацию с семьями и внутренние сервисы. {APP_NAME}{' '}
+            для администраторов и сотрудников.
           </p>
 
           <ul className="mt-8 grid grid-cols-2 gap-3">
@@ -77,7 +78,7 @@ export function LoginPage() {
             ))}
           </ul>
         </div>
-        <p className="relative text-sm text-slate-400">Fiztex</p>
+        <p className="relative text-sm text-slate-400">{APP_NAME}</p>
       </div>
 
       <div className="flex w-full items-center justify-center bg-slate-50 p-6 lg:w-1/2">
@@ -85,7 +86,7 @@ export function LoginPage() {
           <div className="mb-8 lg:hidden">
             <Logo className="w-60 max-w-full h-auto" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Вход в Fiztex</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Вход в {APP_NAME}</h1>
           <p className="mt-1 text-sm text-slate-500">
             Войдите под учётной записью администратора школы.
           </p>
@@ -97,7 +98,7 @@ export function LoginPage() {
                 autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@fiztex.local или +77001112233"
+                placeholder="admin@phystech.local или +77001112233"
                 required
               />
             </Field>
@@ -124,7 +125,7 @@ export function LoginPage() {
           </div>
 
           <p className="mt-6 text-center text-xs text-slate-400">
-            Dev: super@fiztex.local / super123 или admin@fiztex.local / admin123
+            Dev: super@phystech.local / super123 или admin@phystech.local / admin123
           </p>
         </form>
       </div>

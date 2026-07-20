@@ -1,21 +1,22 @@
 import { NavLink } from 'react-router-dom';
 import { LogOut, type LucideIcon } from 'lucide-react';
-import { Logo, FiztexMark } from './Logo';
+import { Logo, PhysTechMark } from './Logo';
 import { useAuth } from '@/context/AuthContext';
 import { cx, initials } from '@/lib/format';
 import { NAV_SECTIONS } from './navConfig';
+import { APP_NAME } from '@/lib/branding';
 
 export function Sidebar() {
   const { admin, logout } = useAuth();
 
   return (
     <aside className="relative flex w-[264px] shrink-0 flex-col overflow-hidden bg-navy-700">
-      <FiztexMark className="pointer-events-none absolute -bottom-6 left-1/2 h-56 w-56 -translate-x-1/2 text-white/[0.06]" />
+      <PhysTechMark className="pointer-events-none absolute -bottom-6 left-1/2 h-56 w-56 -translate-x-1/2 text-white/[0.06]" />
 
       <div className="px-6 pb-3 pt-7">
         <Logo className="h-10" />
         <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-300/90">
-          Fiztex Admin
+          {APP_NAME} Admin
         </p>
       </div>
 

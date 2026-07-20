@@ -16,6 +16,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { useApplicants, useSubjects, useTests } from '@/hooks/queries';
 import { StatCard } from '@/components/ui/StatCard';
+import { APP_NAME } from '@/lib/branding';
 
 const PLATFORM_LINKS: { to: string; label: string; hint: string; icon: LucideIcon }[] = [
   { to: '/admin/users', label: 'Пользователи', hint: 'Роли, статусы, связи', icon: Users },
@@ -92,7 +93,9 @@ export function DashboardPage() {
       <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
         Здравствуйте, {admin?.fullName?.split(' ')[0] ?? 'Администратор'}
       </h1>
-      <p className="mt-1 text-slate-500">Обзор системы Fiztex — Platform Core и учебные модули.</p>
+      <p className="mt-1 text-slate-500">
+        Обзор системы {APP_NAME} — Platform Core и учебные модули.
+      </p>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Предметов" value={subjects.data?.length ?? '—'} />

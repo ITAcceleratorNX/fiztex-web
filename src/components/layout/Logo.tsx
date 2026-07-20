@@ -1,12 +1,17 @@
 import { cx } from '@/lib/format';
-import logoLockup from '@/assets/fiztex-logo-lockup.png';
+import { APP_NAME } from '@/lib/branding';
+
+const logoLockups = import.meta.glob('@/assets/*logo-lockup.png', {
+  eager: true,
+  import: 'default',
+});
+const logoLockup = Object.values(logoLockups)[0] as string;
 
 /**
- * Real Fiztex icon mark (swoosh/arrows forming the Ф), traced from the brand asset.
- * Uses currentColor so it can be recolored via a text-* class — the source asset is white on
- * the brand blue #274185 (see fiztex-logo-lockup.png for the full lockup).
+ * Brand icon mark (swoosh/arrows forming the Ф), traced from the lockup asset.
+ * Uses `currentColor` so it can be recolored via a `text-*` class.
  */
-export function FiztexMark({ className }: { className?: string }) {
+export function PhysTechMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 89 96" fill="none" className={className} aria-hidden>
       <path
@@ -29,12 +34,12 @@ export function FiztexMark({ className }: { className?: string }) {
   );
 }
 
-/** Full "ΦIZTEX" wordmark lockup — the real brand asset (blue #274185 bg, white type). */
+/** Full wordmark lockup (brand blue #274185 bg, white type). */
 export function Logo({ className }: { className?: string }) {
   return (
     <img
       src={logoLockup}
-      alt="Fiztex"
+      alt={APP_NAME}
       className={cx(
         'shrink-0 self-start object-contain rounded-md',
         className ?? 'h-9 w-auto',

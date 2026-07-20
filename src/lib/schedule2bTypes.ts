@@ -1,4 +1,4 @@
-// Types mirror fiztex-back schedule-2B DTOs (feat/schedule-2b).
+// Types mirror backend schedule-2B DTOs (feat/schedule-2b).
 
 import type { Weekday } from '@/lib/scheduleSettingsTypes';
 

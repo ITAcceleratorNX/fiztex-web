@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { FiztexMark } from '@/components/layout/Logo';
+import { PhysTechMark } from '@/components/layout/Logo';
 import { cx } from '@/lib/format';
+import { APP_NAME } from '@/lib/branding';
 
 /**
  * Minimal branded shell for the applicant flow. Deliberately simple (per TЗ section 2 — final
@@ -18,10 +19,10 @@ export function EntranceShell({
       <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-navy-700 text-white">
-            <FiztexMark className="h-5 w-5" />
+            <PhysTechMark className="h-5 w-5" />
           </span>
           <div className="leading-tight">
-            <p className="text-sm font-bold text-navy-800">Fiztex</p>
+            <p className="text-sm font-bold text-navy-800">{APP_NAME}</p>
             <p className="text-xs text-slate-500">Вступительное тестирование</p>
           </div>
         </div>

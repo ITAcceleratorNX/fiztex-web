@@ -1,5 +1,5 @@
 /**
- * Mirrors TeacherAvailabilityValidatorTest (fiztex-back) — keep cases in sync.
+ * Mirrors TeacherAvailabilityValidatorTest — keep cases in sync.
  */
 import { describe, expect, it } from 'vitest';
 import type { Weekday } from '@/lib/scheduleSettingsTypes';

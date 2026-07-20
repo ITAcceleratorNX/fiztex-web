@@ -1,6 +1,6 @@
 /**
  * Client-side mirror of TeacherAvailabilityValidator (В1–В5).
- * Cases synced with fiztex-back TeacherAvailabilityValidatorTest.
+ * Cases synced with backend TeacherAvailabilityValidatorTest.
  */
 
 import { isValidTime, normalizeTimeInput } from '@/components/ui/TimeInput';

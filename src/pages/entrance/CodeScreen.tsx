@@ -5,6 +5,7 @@ import { EntranceShell } from './EntranceShell';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
 import type { ApplicantView } from '@/lib/entranceTypes';
+import { APP_NAME } from '@/lib/branding';
 
 /** Section 4.1 — personal code entry. */
 export function CodeScreen({ onVerified }: { onVerified: (applicant: ApplicantView) => void }) {
@@ -29,7 +30,7 @@ export function CodeScreen({ onVerified }: { onVerified: (applicant: ApplicantVi
   return (
     <EntranceShell>
       <div className="card p-6 sm:p-8">
-        <h1 className="text-xl font-bold text-slate-900">Вступительное тестирование Fiztex</h1>
+        <h1 className="text-xl font-bold text-slate-900">Вступительное тестирование {APP_NAME}</h1>
         <p className="mt-1.5 text-sm text-slate-500">
           Введите персональный код, который выдала школа.
         </p>

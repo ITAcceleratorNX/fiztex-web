@@ -1,4 +1,4 @@
-// Types mirror fiztex-back schedule-settings DTOs (feat/schedule-settings).
+// Types mirror backend schedule-settings DTOs (feat/schedule-settings).
 
 export type Weekday =
   | 'MONDAY'
