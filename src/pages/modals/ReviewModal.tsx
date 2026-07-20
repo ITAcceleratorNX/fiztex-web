@@ -123,9 +123,10 @@ export function ReviewModal({
       for (const a of d.answers) {
         // Keep the admin's in-progress edits; only seed rows we have not touched yet.
         if (next[a.questionId] === undefined) {
+          const scoreSeed = a.finalScore ?? a.autoScore ?? a.aiScore ?? 0;
           next[a.questionId] = {
-            score: String(a.finalScore ?? a.autoScore ?? 0),
-            comment: a.adminComment ?? '',
+            score: String(scoreSeed),
+            comment: a.adminComment ?? a.aiComment ?? '',
           };
         }
       }
@@ -611,6 +612,12 @@ function AnswerCard({
             <span className="text-xs font-medium text-amber-900">
               Ориентир балла: {answer.aiScore} / {answer.maxScore}
             </span>
+            {((draft?.score ?? '') !== String(answer.aiScore)
+              || (draft?.comment ?? '') !== (answer.aiComment ?? '')) && (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-900">
+                Изменено админом
+              </span>
+            )}
             {!locked && (
               <button
                 type="button"
