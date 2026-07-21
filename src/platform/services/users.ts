@@ -2,6 +2,7 @@ import { pageQuery, request } from '@/lib/api';
 import type { Page } from '@/lib/types';
 import type {
   AccountRole,
+  AccountStats,
   AccountStatus,
   CreateUserInput,
   ListUsersParams,
@@ -16,7 +17,17 @@ interface AccountDto {
   fullName: string;
   phone: string | null;
   email: string | null;
+  /** Class name for a student, children names for a parent, assignments for a teacher; null for admin. */
+  relation: string | null;
   createdAt: string;
+}
+
+interface AccountStatsDto {
+  total: number;
+  active: number;
+  notActivated: number;
+  blocked: number;
+  archived: number;
 }
 
 interface CreateAccountResponseDto {
@@ -36,7 +47,7 @@ function mapUser(dto: AccountDto): PlatformUser {
     email: dto.email,
     phone: dto.phone,
     status: dto.status,
-    relationLabel: null,
+    relationLabel: dto.relation,
     createdAt: dto.createdAt,
   };
 }
@@ -49,21 +60,47 @@ export async function listUsers(params: ListUsersParams = {}): Promise<PlatformU
     `/admin/accounts${pageQuery({
       role,
       status,
+      query: params.query?.trim() || undefined,
       page: 0,
       size: 200,
     })}`,
   );
 
-  let users = page.content.map(mapUser);
-  const query = params.query?.trim().toLowerCase() ?? '';
-  if (query) {
-    users = users.filter((user) =>
-      [user.fullName, user.email, user.phone]
-        .filter(Boolean)
-        .some((value) => value!.toLowerCase().includes(query)),
-    );
-  }
-  return users;
+  return page.content.map(mapUser);
+}
+
+export interface UsersPageResult {
+  users: PlatformUser[];
+  totalElements: number;
+  totalPages: number;
+}
+
+/** Server-side paginated + searched account list, for the unified "Пользователи" table. */
+export async function listUsersPage(
+  params: ListUsersParams & { page?: number; size?: number } = {},
+): Promise<UsersPageResult> {
+  const role = params.role && params.role !== 'ALL' ? params.role : undefined;
+  const status = params.status && params.status !== 'ALL' ? params.status : undefined;
+
+  const page = await request<Page<AccountDto>>(
+    `/admin/accounts${pageQuery({
+      role,
+      status,
+      query: params.query?.trim() || undefined,
+      page: params.page ?? 0,
+      size: params.size ?? 20,
+    })}`,
+  );
+
+  return {
+    users: page.content.map(mapUser),
+    totalElements: page.totalElements,
+    totalPages: page.totalPages,
+  };
+}
+
+export async function getUserStats(signal?: AbortSignal): Promise<AccountStats> {
+  return request<AccountStatsDto>('/admin/accounts/stats', { signal });
 }
 
 export async function getUser(id: string): Promise<PlatformUser | null> {

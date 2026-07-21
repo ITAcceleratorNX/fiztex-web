@@ -1,8 +1,10 @@
 import { ApiError, pageQuery, request } from '@/lib/api';
 import type { Page } from '@/lib/types';
-import { createUser } from './users';
 import type {
   ClassMembership,
+  LinkedParent,
+  ParentRelationType,
+  SchoolRecordStatus,
   StudentProfile,
   StudentProfileDetail,
   StudentProfileStatus,
@@ -32,9 +34,20 @@ interface MembershipDto {
   createdAt: string;
 }
 
+interface LinkedParentDto {
+  parentProfileId: number;
+  firstName: string;
+  lastName: string;
+  middleName: string | null;
+  phone: string;
+  relationType: ParentRelationType;
+  linkStatus: SchoolRecordStatus;
+}
+
 interface StudentDetailDto extends StudentDto {
   currentMembership: MembershipDto | null;
   membershipHistory: MembershipDto[];
+  linkedParents: LinkedParentDto[];
 }
 
 function mapStudent(dto: StudentDto): StudentProfile {
@@ -42,6 +55,10 @@ function mapStudent(dto: StudentDto): StudentProfile {
 }
 
 function mapMembership(dto: MembershipDto): ClassMembership {
+  return { ...dto };
+}
+
+function mapLinkedParent(dto: LinkedParentDto): LinkedParent {
   return { ...dto };
 }
 
@@ -64,17 +81,25 @@ export async function listStudents(params: {
   return page.content.map(mapStudent);
 }
 
+/** Resolves the student profile from an account id — the account and profile are one person. */
+export async function getStudentByAccount(accountId: number): Promise<StudentProfileDetail> {
+  const dto = await request<StudentDetailDto>(`/admin/students/by-account/${accountId}`);
+  return {
+    ...mapStudent(dto),
+    currentMembership: dto.currentMembership ? mapMembership(dto.currentMembership) : null,
+    membershipHistory: (dto.membershipHistory ?? []).map(mapMembership),
+    linkedParents: (dto.linkedParents ?? []).map(mapLinkedParent),
+  };
+}
+
 export async function getStudent(id: number): Promise<StudentProfileDetail> {
   const dto = await request<StudentDetailDto>(`/admin/students/${id}`);
   return {
     ...mapStudent(dto),
     currentMembership: dto.currentMembership ? mapMembership(dto.currentMembership) : null,
     membershipHistory: (dto.membershipHistory ?? []).map(mapMembership),
+    linkedParents: (dto.linkedParents ?? []).map(mapLinkedParent),
   };
-}
-
-export async function archiveStudent(id: number): Promise<void> {
-  await request<void>(`/admin/students/${id}/archive`, { method: 'POST' });
 }
 
 export async function updateStudent(
@@ -106,33 +131,6 @@ export async function addClassMembership(
     { method: 'POST', body: { classId } },
   );
   return mapMembership(dto);
-}
-
-/** Create STUDENT account (provisions school profile) and optionally add to class. */
-export async function createStudentWithAccount(input: {
-  fullName: string;
-  classId?: number | null;
-}): Promise<{ profileId: number; issuedCode: string | null }> {
-  const created = await createUser({
-    fullName: input.fullName,
-    role: 'STUDENT',
-  });
-  const profileId = created.schoolProfileId;
-  if (profileId == null) {
-    throw new Error('Сервер не вернул schoolProfileId для ученика');
-  }
-  if (input.classId != null) {
-    try {
-      await addClassMembership(profileId, input.classId);
-    } catch (err) {
-      if (err instanceof ApiError && err.code === 'STUDENT_DUPLICATE_SUSPECTED') {
-        await addClassMembership(profileId, input.classId, { force: true });
-      } else {
-        throw err;
-      }
-    }
-  }
-  return { profileId, issuedCode: created.issuedCode ?? null };
 }
 
 export function isDuplicateStudentError(err: unknown): boolean {

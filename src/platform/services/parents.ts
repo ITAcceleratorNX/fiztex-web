@@ -1,6 +1,5 @@
 import { pageQuery, request } from '@/lib/api';
 import type { Page } from '@/lib/types';
-import { createUser } from './users';
 import type {
   LinkedStudent,
   ParentProfile,
@@ -59,6 +58,15 @@ export async function listParents(params: {
   return page.content.map(mapParent);
 }
 
+/** Resolves the parent profile from an account id — the account and profile are one person. */
+export async function getParentByAccount(accountId: number): Promise<ParentProfileDetail> {
+  const dto = await request<ParentDetailDto>(`/admin/parents/by-account/${accountId}`);
+  return {
+    ...mapParent(dto),
+    linkedStudents: (dto.linkedStudents ?? []).map(mapLinked),
+  };
+}
+
 export async function getParent(id: number): Promise<ParentProfileDetail> {
   const dto = await request<ParentDetailDto>(`/admin/parents/${id}`);
   return {
@@ -100,19 +108,4 @@ export async function unlinkStudent(parentId: number, studentProfileId: number):
     method: 'POST',
     body: { studentProfileId },
   });
-}
-
-export async function createParentWithAccount(input: {
-  fullName: string;
-  phone: string;
-}): Promise<{ profileId: number; issuedCode: string | null }> {
-  const created = await createUser({
-    fullName: input.fullName,
-    role: 'PARENT',
-    phone: input.phone,
-  });
-  if (created.schoolProfileId == null) {
-    throw new Error('Сервер не вернул schoolProfileId для родителя');
-  }
-  return { profileId: created.schoolProfileId, issuedCode: created.issuedCode ?? null };
 }

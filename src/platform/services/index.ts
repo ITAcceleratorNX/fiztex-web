@@ -1,4 +1,15 @@
-export { listUsers, getUser, createUser, updateUser, blockUser, unblockUser, archiveUser } from './users';
+export {
+  listUsers,
+  listUsersPage,
+  getUserStats,
+  getUser,
+  createUser,
+  updateUser,
+  blockUser,
+  unblockUser,
+  archiveUser,
+} from './users';
+export type { UsersPageResult } from './users';
 export { listClasses, getClass, createClass, updateClass, archiveClass } from './classes';
 export {
   listAcademicYears,
@@ -19,28 +30,26 @@ export {
 export {
   listStudents,
   getStudent,
-  archiveStudent,
+  getStudentByAccount,
   addClassMembership,
-  createStudentWithAccount,
   isDuplicateStudentError,
   updateStudent,
 } from './students';
 export {
   listParents,
   getParent,
+  getParentByAccount,
   linkStudent,
   unlinkStudent,
-  createParentWithAccount,
   updateParent,
 } from './parents';
 export {
   listTeachers,
   getTeacher,
-  archiveTeacher,
+  getTeacherByAccount,
   createTeacherAssignment,
   archiveTeacherAssignment,
   listActiveSchoolSubjects,
-  createTeacherWithAccount,
   updateTeacher,
   listTeacherWorkingTime,
   createTeacherWorkingTime,

@@ -8,5 +8,8 @@ export { ScheduleSettingsPage } from './pages/schedule/ScheduleSettingsPage';
 export { StudentsPage } from './pages/StudentsPage';
 export { ParentsPage } from './pages/ParentsPage';
 export { TeachersPage } from './pages/TeachersPage';
+export { StudentProfilePage } from './pages/StudentProfilePage';
+export { ParentProfilePage } from './pages/ParentProfilePage';
+export { TeacherProfilePage } from './pages/TeacherProfilePage';
 export { SchoolSubjectsPage } from './pages/SchoolSubjectsPage';
 export { LessonSchedulePage } from './pages/LessonSchedulePage';

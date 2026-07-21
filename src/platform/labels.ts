@@ -1,3 +1,4 @@
+import type { BadgeTone } from '@/components/ui/Badge';
 import type {
   AcademicPeriodStatus,
   AcademicPeriodType,
@@ -31,6 +32,24 @@ export const ACCOUNT_STATUS_LABELS: Record<AccountStatus, string> = {
   ACTIVE: 'Активен',
   BLOCKED: 'Заблокирован',
   ARCHIVED: 'Архив',
+};
+
+/** Badge color per role, matching the Figma "Пользователи" table. */
+export const ROLE_BADGE_TONE: Record<AccountRole, BadgeTone> = {
+  STUDENT: 'blue',
+  PARENT: 'amber',
+  TEACHER: 'purple',
+  ADMIN: 'gray',
+  SUPER_ADMIN: 'gray',
+};
+
+/** Avatar circle color per role. */
+export const ROLE_AVATAR_COLOR: Record<AccountRole, { bg: string; fg: string }> = {
+  STUDENT: { bg: '#3b82f6', fg: '#ffffff' },
+  PARENT: { bg: '#f59e0b', fg: '#ffffff' },
+  TEACHER: { bg: '#7c6cf0', fg: '#ffffff' },
+  ADMIN: { bg: '#16244a', fg: '#ffffff' },
+  SUPER_ADMIN: { bg: '#16244a', fg: '#ffffff' },
 };
 
 export const SCHOOL_STATUS_LABELS: Record<SchoolRecordStatus, string> = {

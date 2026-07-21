@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { cx } from '@/lib/format';
 
-type Tone = 'green' | 'gray' | 'amber' | 'blue' | 'red' | 'purple';
+export type BadgeTone = 'green' | 'gray' | 'amber' | 'blue' | 'red' | 'purple';
+type Tone = BadgeTone;
 
 const tones: Record<Tone, { wrap: string; dot: string }> = {
   green: { wrap: 'bg-emerald-50 text-emerald-700 ring-emerald-200', dot: 'bg-emerald-500' },

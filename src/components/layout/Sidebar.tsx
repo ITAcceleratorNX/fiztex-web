@@ -1,9 +1,10 @@
-import { NavLink } from 'react-router-dom';
-import { LogOut, type LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { ChevronDown, LogOut } from 'lucide-react';
 import { Logo, PhysTechMark } from './Logo';
 import { useAuth } from '@/context/AuthContext';
 import { cx, initials } from '@/lib/format';
-import { NAV_SECTIONS } from './navConfig';
+import { NAV_SECTIONS, type NavItem } from './navConfig';
 
 export function Sidebar() {
   const { admin, logout } = useAuth();
@@ -26,7 +27,7 @@ export function Sidebar() {
             ) : null}
             <div className="space-y-2">
               {section.items.map((item) => (
-                <SidebarLink key={item.to} {...item} />
+                <SidebarNavItem key={item.to} item={item} />
               ))}
             </div>
           </div>
@@ -58,26 +59,50 @@ export function Sidebar() {
   );
 }
 
+function isRouteActive(to: string, end: boolean | undefined, pathname: string): boolean {
+  if (end) return pathname === to;
+  return pathname === to || pathname.startsWith(`${to}/`);
+}
+
+/** Renders one nav item; if it has children, expands them whenever this branch is on-route. */
+function SidebarNavItem({ item }: { item: NavItem }) {
+  const location = useLocation();
+  const children = item.children ?? [];
+  const branchActive =
+    isRouteActive(item.to, item.end, location.pathname) ||
+    children.some((child) => isRouteActive(child.to, child.end, location.pathname));
+
+  return (
+    <div>
+      <SidebarLink {...item} trailing={children.length > 0 ? <ChevronDown className={cx('h-3.5 w-3.5 shrink-0 transition-transform', branchActive ? '' : '-rotate-90 opacity-60')} /> : undefined} />
+      {children.length > 0 && branchActive && (
+        <div className="mt-1 space-y-1 rounded-xl bg-white/5 py-1.5 pl-2 pr-1">
+          {children.map((child) => (
+            <SidebarLink key={child.to} {...child} compact />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SidebarLink({
   to,
   label,
   icon: Icon,
   end,
   noApi,
-}: {
-  to: string;
-  label: string;
-  icon: LucideIcon;
-  end?: boolean;
-  noApi?: boolean;
-}) {
+  trailing,
+  compact,
+}: NavItem & { trailing?: ReactNode; compact?: boolean }) {
   return (
     <NavLink
       to={to}
       end={end}
       className={({ isActive }) =>
         cx(
-          'group relative flex items-center gap-3 rounded-xl border-l-[3px] py-2.5 pl-3 pr-3.5 text-sm font-medium transition',
+          'group relative flex items-center gap-3 rounded-xl border-l-[3px] py-2.5 pr-3.5 text-sm font-medium transition',
+          compact ? 'pl-2.5' : 'pl-3',
           isActive
             ? 'border-brand-500 bg-white font-semibold text-navy-700'
             : 'border-transparent text-slate-300/90 hover:bg-white/10 hover:text-white',
@@ -87,7 +112,7 @@ function SidebarLink({
       {({ isActive }) => (
         <>
           <Icon
-            className={cx('h-5 w-5 shrink-0', isActive ? 'text-navy-700' : 'text-slate-300/80')}
+            className={cx(compact ? 'h-4 w-4' : 'h-5 w-5', 'shrink-0', isActive ? 'text-navy-700' : 'text-slate-300/80')}
           />
           <span className="truncate">{label}</span>
           {noApi ? (
@@ -100,6 +125,7 @@ function SidebarLink({
               нет API
             </span>
           ) : null}
+          {trailing && <span className="ml-auto shrink-0">{trailing}</span>}
         </>
       )}
     </NavLink>

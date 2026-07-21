@@ -95,6 +95,14 @@ export interface ListUsersParams {
   status?: AccountStatus | 'ALL';
 }
 
+export interface AccountStats {
+  total: number;
+  active: number;
+  notActivated: number;
+  blocked: number;
+  archived: number;
+}
+
 export interface ListClassesParams {
   academicYearId?: string | 'ALL';
 }
@@ -205,9 +213,20 @@ export interface StudentProfile {
   updatedAt: string;
 }
 
+export interface LinkedParent {
+  parentProfileId: number;
+  firstName: string;
+  lastName: string;
+  middleName: string | null;
+  phone: string;
+  relationType: ParentRelationType;
+  linkStatus: SchoolRecordStatus;
+}
+
 export interface StudentProfileDetail extends StudentProfile {
   currentMembership: ClassMembership | null;
   membershipHistory: ClassMembership[];
+  linkedParents: LinkedParent[];
 }
 
 export interface ParentProfile {

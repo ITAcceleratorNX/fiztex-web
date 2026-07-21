@@ -28,6 +28,8 @@ export interface NavItem {
   end?: boolean;
   /** Shown when route has no backend yet */
   noApi?: boolean;
+  /** Nested items shown when this item or one of its children is on the current route. */
+  children?: NavItem[];
 }
 
 export interface NavSection {
@@ -47,7 +49,16 @@ export const NAV_SECTIONS: NavSection[] = [
     id: 'platform',
     label: 'Platform Core',
     items: [
-      { to: '/admin/users', label: 'Пользователи', icon: Users },
+      {
+        to: '/admin/users',
+        label: 'Пользователи',
+        icon: Users,
+        children: [
+          { to: '/students', label: 'Ученики', icon: Users },
+          { to: '/parents', label: 'Родители', icon: Heart },
+          { to: '/teachers', label: 'Учителя', icon: GraduationCap },
+        ],
+      },
       { to: '/admin/classes', label: 'Классы', icon: School },
       { to: '/admin/academic-year', label: 'Учебный год', icon: CalendarRange },
       { to: '/admin/periods', label: 'Учебные периоды', icon: CalendarDays },
@@ -61,9 +72,6 @@ export const NAV_SECTIONS: NavSection[] = [
     id: 'school',
     label: 'Учебный процесс',
     items: [
-      { to: '/students', label: 'Ученики', icon: Users },
-      { to: '/parents', label: 'Родители', icon: Heart },
-      { to: '/teachers', label: 'Учителя', icon: GraduationCap },
       { to: '/lesson-schedule', label: 'Расписание уроков', icon: Calendar },
       { to: '/grades', label: 'Дневник и оценки', icon: BookOpen, noApi: true },
       { to: '/attendance', label: 'Посещаемость (QR)', icon: QrCode, noApi: true },

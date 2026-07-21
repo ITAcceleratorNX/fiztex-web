@@ -24,6 +24,9 @@ import {
   StudentsPage,
   ParentsPage,
   TeachersPage,
+  StudentProfilePage,
+  ParentProfilePage,
+  TeacherProfilePage,
   SchoolSubjectsPage,
   LessonSchedulePage,
 } from '@/platform';
@@ -81,8 +84,11 @@ export function App() {
         <Route path="/results/attempts/:attemptId" element={<ResultReviewPage />} />
         <Route path="/review" element={<ReviewPage />} />
         <Route path="/students" element={<StudentsPage />} />
+        <Route path="/students/:accountId" element={<StudentProfilePage />} />
         <Route path="/parents" element={<ParentsPage />} />
+        <Route path="/parents/:accountId" element={<ParentProfilePage />} />
         <Route path="/teachers" element={<TeachersPage />} />
+        <Route path="/teachers/:accountId" element={<TeacherProfilePage />} />
         <Route path="/schedule" element={<Navigate to="/admin/schedule-settings" replace />} />
         <Route path="/lesson-schedule" element={<LessonSchedulePage />} />
         <Route

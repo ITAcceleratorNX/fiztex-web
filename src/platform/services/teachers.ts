@@ -95,6 +95,15 @@ export async function listTeachers(params: {
   return page.content.map(mapTeacher);
 }
 
+/** Resolves the teacher profile from an account id — the account and profile are one person. */
+export async function getTeacherByAccount(accountId: number): Promise<TeacherProfileDetail> {
+  const dto = await request<TeacherDetailDto>(`/admin/teachers/by-account/${accountId}`);
+  return {
+    ...mapTeacher(dto),
+    assignments: (dto.assignments ?? []).map(mapAssignment),
+  };
+}
+
 export async function getTeacher(id: number): Promise<TeacherProfileDetail> {
   const dto = await request<TeacherDetailDto>(`/admin/teachers/${id}`);
   return {
