@@ -211,7 +211,6 @@ export function AiTestsTab() {
         open={cardTestId != null}
         onClose={() => setCardTestId(null)}
         testId={cardTestId}
-        variant="ai"
       />
       <TestQuestionsModal
         open={questionsTestId != null}

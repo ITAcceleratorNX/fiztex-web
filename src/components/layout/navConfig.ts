@@ -10,7 +10,6 @@ import {
   Upload,
   ClipboardList,
   FileCheck2,
-  BookMarked,
   GraduationCap,
   Heart,
   Calendar,
@@ -62,7 +61,6 @@ export const NAV_SECTIONS: NavSection[] = [
     id: 'school',
     label: 'Учебный процесс',
     items: [
-      { to: '/subjects', label: 'Предметы (приём)', icon: BookMarked },
       { to: '/students', label: 'Ученики', icon: Users },
       { to: '/parents', label: 'Родители', icon: Heart },
       { to: '/teachers', label: 'Учителя', icon: GraduationCap },

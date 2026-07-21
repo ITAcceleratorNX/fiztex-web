@@ -5,8 +5,13 @@ import { describe, expect, it, vi } from 'vitest';
 import { AdmissionsPage } from './AdmissionsPage';
 
 vi.mock('@/hooks/queries', () => ({
+  useSubjects: () => ({ data: [] }),
   useTests: () => ({ data: [], isSuccess: true }),
   useApplicants: () => ({ data: [] }),
+}));
+
+vi.mock('./tabs/SubjectsTab', () => ({
+  SubjectsTab: () => <div>subjects-tab</div>,
 }));
 
 vi.mock('./tabs/AdmissionTestsTab', () => ({
@@ -15,10 +20,6 @@ vi.mock('./tabs/AdmissionTestsTab', () => ({
 
 vi.mock('./tabs/ApplicantsTab', () => ({
   ApplicantsTab: () => <div>applicants-tab</div>,
-}));
-
-vi.mock('./tabs/AttemptsTab', () => ({
-  AttemptsTab: () => <div>attempts-tab</div>,
 }));
 
 vi.mock('@/components/admissions/NotificationsBell', () => ({

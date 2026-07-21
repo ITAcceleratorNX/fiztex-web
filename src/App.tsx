@@ -4,10 +4,11 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { LoginPage } from '@/pages/LoginPage';
 import { EntranceFlow } from '@/pages/entrance/EntranceFlow';
 import { AdmissionsPage } from '@/pages/AdmissionsPage';
+import { TestDetailPage } from '@/pages/TestDetailPage';
+import { TestCreatePage } from '@/pages/TestCreatePage';
 import { ResultsPage } from '@/pages/ResultsPage';
 import { ResultReviewPage } from '@/pages/ResultReviewPage';
 import { ReviewPage } from '@/pages/ReviewPage';
-import { SubjectsPage } from '@/pages/SubjectsPage';
 import { SubjectMaterialsPage } from '@/pages/SubjectMaterialsPage';
 import { AiTestsPage } from '@/pages/AiTestsPage';
 import { DashboardPage } from '@/pages/DashboardPage';
@@ -70,9 +71,12 @@ export function App() {
         <Route path="/admin/import" element={<ImportPage />} />
 
         {/* Admissions & school modules */}
-        <Route path="/subjects" element={<SubjectsPage />} />
+        {/* Subjects are now a tab inside Вступительные тесты; keep the path as a deep link. */}
+        <Route path="/subjects" element={<Navigate to="/admissions?tab=subjects" replace />} />
         <Route path="/subjects/:subjectId/materials" element={<SubjectMaterialsPage />} />
         <Route path="/admissions" element={<AdmissionsPage />} />
+        <Route path="/admissions/tests/new" element={<TestCreatePage />} />
+        <Route path="/admissions/tests/:testId" element={<TestDetailPage />} />
         <Route path="/results" element={<ResultsPage />} />
         <Route path="/results/attempts/:attemptId" element={<ResultReviewPage />} />
         <Route path="/review" element={<ReviewPage />} />

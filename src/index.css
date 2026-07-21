@@ -49,4 +49,13 @@
   .label-base {
     @apply mb-1.5 block text-sm font-medium text-slate-700;
   }
+
+  /* Keeps scrolling but hides the scrollbar track (e.g. the sidebar nav). */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }

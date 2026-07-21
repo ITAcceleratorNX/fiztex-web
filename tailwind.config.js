@@ -10,10 +10,10 @@ export default {
           100: '#ffedd5',
           200: '#fed7aa',
           300: '#fdba74',
-          400: '#fb923c',
-          500: '#f5923b',
-          600: '#ea7a1e',
-          700: '#c2620f',
+          400: '#fda55b',
+          500: '#fb923c', // Figma primary — active tab, primary buttons
+          600: '#f97316',
+          700: '#ea580c',
         },
         // Sidebar navy — 700 is the exact brand blue from the Fiztex logo (#274185).
         navy: {

@@ -1,23 +1,23 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useApplicants, useTests } from '@/hooks/queries';
+import { useApplicants, useSubjects, useTests } from '@/hooks/queries';
 import { StatCard } from '@/components/ui/StatCard';
 import { NotificationsBell } from '@/components/admissions/NotificationsBell';
 import { cx } from '@/lib/format';
+import { SubjectsTab } from './tabs/SubjectsTab';
 import { AdmissionTestsTab } from './tabs/AdmissionTestsTab';
 import { ApplicantsTab } from './tabs/ApplicantsTab';
-import { AttemptsTab, type AttemptsStatusFilter } from './tabs/AttemptsTab';
 
-type TabKey = 'tests' | 'applicants' | 'attempts';
+type TabKey = 'subjects' | 'tests' | 'applicants';
 
 const TABS: { key: TabKey; label: string }[] = [
+  { key: 'subjects', label: 'Предметы' },
   { key: 'tests', label: 'Тесты' },
   { key: 'applicants', label: 'Поступающие' },
-  { key: 'attempts', label: 'Попытки и проверка' },
 ];
 
 function parseTab(value: string | null): TabKey {
-  if (value === 'applicants' || value === 'attempts') return value;
+  if (value === 'subjects' || value === 'applicants') return value;
   return 'tests';
 }
 
@@ -25,7 +25,6 @@ export function AdmissionsPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState<TabKey>(() => parseTab(searchParams.get('tab')));
-  const [attemptsStatusFilter, setAttemptsStatusFilter] = useState<AttemptsStatusFilter>('ALL');
 
   useEffect(() => {
     setTab(parseTab(searchParams.get('tab')));
@@ -36,6 +35,7 @@ export function AdmissionsPage() {
     setSearchParams(next === 'tests' ? {} : { tab: next }, { replace: true });
   }
 
+  const subjects = useSubjects();
   const tests = useTests(false);
   const applicants = useApplicants();
 
@@ -71,20 +71,16 @@ export function AdmissionsPage() {
         ))}
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard label="Предметов" value={subjects.data?.length ?? '—'} />
         <StatCard label="Активных тестов" value={tests.isSuccess ? activeTests : '—'} />
         <StatCard label="Поступающих" value={applicants.data?.length ?? '—'} />
       </div>
 
       <div className="mt-6">
+        {tab === 'subjects' && <SubjectsTab />}
         {tab === 'tests' && <AdmissionTestsTab />}
         {tab === 'applicants' && <ApplicantsTab />}
-        {tab === 'attempts' && (
-          <AttemptsTab
-            statusFilter={attemptsStatusFilter}
-            onStatusFilterChange={setAttemptsStatusFilter}
-          />
-        )}
       </div>
     </div>
   );

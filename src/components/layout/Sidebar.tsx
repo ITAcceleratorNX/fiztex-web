@@ -4,7 +4,6 @@ import { Logo, PhysTechMark } from './Logo';
 import { useAuth } from '@/context/AuthContext';
 import { cx, initials } from '@/lib/format';
 import { NAV_SECTIONS } from './navConfig';
-import { APP_NAME } from '@/lib/branding';
 
 export function Sidebar() {
   const { admin, logout } = useAuth();
@@ -13,14 +12,11 @@ export function Sidebar() {
     <aside className="relative flex w-[264px] shrink-0 flex-col overflow-hidden bg-navy-700">
       <PhysTechMark className="pointer-events-none absolute -bottom-6 left-1/2 h-56 w-56 -translate-x-1/2 text-white/[0.06]" />
 
-      <div className="px-6 pb-3 pt-7">
-        <Logo className="h-10" />
-        <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-300/90">
-          {APP_NAME} Admin
-        </p>
+      <div className="px-6 pb-4 pt-7">
+        <Logo className="h-9" />
       </div>
 
-      <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-2">
+      <nav className="no-scrollbar flex-1 space-y-4 overflow-y-auto px-3 py-2">
         {NAV_SECTIONS.map((section) => (
           <div key={section.id}>
             {section.label ? (
@@ -28,7 +24,7 @@ export function Sidebar() {
                 {section.label}
               </p>
             ) : null}
-            <div className="space-y-1">
+            <div className="space-y-2">
               {section.items.map((item) => (
                 <SidebarLink key={item.to} {...item} />
               ))}
@@ -81,17 +77,17 @@ function SidebarLink({
       end={end}
       className={({ isActive }) =>
         cx(
-          'group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition',
+          'group relative flex items-center gap-3 rounded-xl border-l-[3px] py-2.5 pl-3 pr-3.5 text-sm font-medium transition',
           isActive
-            ? 'bg-white text-navy-700 shadow-sm'
-            : 'text-slate-300/90 hover:bg-white/10 hover:text-white',
+            ? 'border-brand-500 bg-white font-semibold text-navy-700'
+            : 'border-transparent text-slate-300/90 hover:bg-white/10 hover:text-white',
         )
       }
     >
       {({ isActive }) => (
         <>
           <Icon
-            className={cx('h-5 w-5 shrink-0', isActive ? 'text-brand-500' : 'text-slate-300/80')}
+            className={cx('h-5 w-5 shrink-0', isActive ? 'text-navy-700' : 'text-slate-300/80')}
           />
           <span className="truncate">{label}</span>
           {noApi ? (

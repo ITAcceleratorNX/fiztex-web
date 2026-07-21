@@ -1,23 +1,19 @@
 import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { UserPlus, Clock, Target, Repeat, Percent, History, Info, Users, ListChecks, Sparkles, FolderOpen } from 'lucide-react';
+import { Clock, Target, Repeat, Percent, History, Info, ListChecks, Sparkles, FolderOpen } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Avatar } from '@/components/ui/Avatar';
-import { Select } from '@/components/ui/Select';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
-import { useTest, useChangeAssignmentVersion } from '@/hooks/queries';
+import { useTest } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import { formatDateTime, versionLabel } from '@/lib/format';
 import { QUESTION_TYPE_LABELS, difficultyLabel } from '@/lib/testQuestions';
 import { TestStatusBadge } from '@/components/ui/TestStatusBadge';
 import { DraftQuestionBadge } from '@/components/ui/DraftQuestionBadge';
 import { DraftReviewBanner } from '@/components/ui/DraftReviewBanner';
-import { AssignModal } from './AssignModal';
 import { TestQuestionsModal } from './TestQuestionsModal';
 import { TestGenerateModal } from './TestGenerateModal';
-import type { TestVersionSummary } from '@/lib/types';
 
 function Metric({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
@@ -31,77 +27,25 @@ function Metric({ icon, label, value }: { icon: ReactNode; label: string; value:
   );
 }
 
-function AssignmentVersionSelect({
-  testId,
-  assignmentId,
-  currentVersion,
-  versions,
-  onChanged,
-}: {
-  testId: number;
-  assignmentId: number;
-  currentVersion: number | null;
-  versions: TestVersionSummary[];
-  onChanged: () => void;
-}) {
-  const changeVersion = useChangeAssignmentVersion(testId);
-  const [error, setError] = useState<string | null>(null);
-
-  return (
-    <div className="flex flex-col items-end gap-1">
-      <Select
-        className="w-auto min-w-[8.5rem] py-1.5 text-xs"
-        value={String(currentVersion ?? '')}
-        disabled={changeVersion.isPending}
-        onChange={(e) => {
-          const next = Number(e.target.value);
-          if (!next || next === currentVersion) return;
-          setError(null);
-          changeVersion.mutate(
-            { assignmentId, versionNumber: next },
-            {
-              onSuccess: () => onChanged(),
-              onError: (err) =>
-                setError(err instanceof ApiError ? err.message : 'Не удалось сменить версию'),
-            },
-          );
-        }}
-      >
-        {versions.map((v) => (
-          <option key={v.id} value={v.versionNumber}>
-            Версия {v.versionNumber}
-          </option>
-        ))}
-      </Select>
-      {error && <span className="max-w-[10rem] text-right text-xs text-red-600">{error}</span>}
-    </div>
-  );
-}
-
 export function TestCardModal({
   open,
   onClose,
   testId,
-  variant = 'admission',
 }: {
   open: boolean;
   onClose: () => void;
   testId: number | null;
-  variant?: 'ai' | 'admission';
 }) {
-  const isAi = variant === 'ai';
   const { data: test, isLoading, isError, error, refetch } = useTest(open ? testId : null);
-  const [assignOpen, setAssignOpen] = useState(false);
   const [questionsOpen, setQuestionsOpen] = useState(false);
   const [generateOpen, setGenerateOpen] = useState(false);
 
   const draftCount = test?.draftQuestionCount ?? 0;
-  const questionsLabel =
-    test && isAi && draftCount > 0
+  const questionsLabel = test
+    ? draftCount > 0
       ? `Вопросы (${test.questionCount} · ${draftCount} черн.)`
-      : test
-        ? `Вопросы (${test.questionCount})`
-        : 'Вопросы';
+      : `Вопросы (${test.questionCount})`
+    : 'Вопросы';
 
   return (
     <>
@@ -109,35 +53,26 @@ export function TestCardModal({
         open={open}
         onClose={onClose}
         size="lg"
-        title={test ? test.title : isAi ? 'AI-тест' : 'Карточка теста'}
+        title={test ? test.title : 'AI-тест'}
         subtitle={test ? `${test.subjectName} · ${test.grade}` : undefined}
         footer={
           test ? (
             <>
-              {!isAi && test.status !== 'ACTIVE' && (
-                <span className="mr-auto text-xs text-amber-600">
-                  Черновик нельзя назначать — переведите тест в «Активен».
-                </span>
-              )}
               <Button variant="secondary" onClick={onClose}>
                 Закрыть
               </Button>
-              {isAi && (
-                <Link to={`/subjects/${test.subjectId}/materials`}>
-                  <Button variant="secondary" icon={<FolderOpen className="h-4 w-4" />}>
-                    Материалы предмета
-                  </Button>
-                </Link>
-              )}
-              {isAi && (
-                <Button
-                  variant="secondary"
-                  icon={<Sparkles className="h-4 w-4" />}
-                  onClick={() => setGenerateOpen(true)}
-                >
-                  Сгенерировать вопросы
+              <Link to={`/subjects/${test.subjectId}/materials`}>
+                <Button variant="secondary" icon={<FolderOpen className="h-4 w-4" />}>
+                  Материалы предмета
                 </Button>
-              )}
+              </Link>
+              <Button
+                variant="secondary"
+                icon={<Sparkles className="h-4 w-4" />}
+                onClick={() => setGenerateOpen(true)}
+              >
+                Сгенерировать вопросы
+              </Button>
               <Button
                 variant="secondary"
                 icon={<ListChecks className="h-4 w-4" />}
@@ -145,15 +80,6 @@ export function TestCardModal({
               >
                 {questionsLabel}
               </Button>
-              {!isAi && (
-                <Button
-                  icon={<UserPlus className="h-4 w-4" />}
-                  disabled={test.status !== 'ACTIVE'}
-                  onClick={() => setAssignOpen(true)}
-                >
-                  Назначить поступающих
-                </Button>
-              )}
             </>
           ) : undefined
         }
@@ -196,23 +122,19 @@ export function TestCardModal({
               </div>
             )}
 
-            {isAi && <DraftReviewBanner draftCount={draftCount} />}
+            <DraftReviewBanner draftCount={draftCount} />
 
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
                 <ListChecks className="h-4 w-4 text-slate-400" /> Вопросы ({test.questionCount})
-                {isAi && draftCount > 0 && (
+                {draftCount > 0 && (
                   <span className="text-xs font-normal text-amber-600">· {draftCount} черновиков</span>
                 )}
               </p>
               {(test.questions ?? []).length === 0 ? (
                 <EmptyBlock
                   title="Вопросов пока нет"
-                  description={
-                    isAi
-                      ? 'Загрузите материалы предмета и нажмите «Сгенерировать вопросы», либо добавьте вопросы вручную.'
-                      : 'Нажмите «Вопросы» внизу, чтобы добавить задания для поступающих.'
-                  }
+                  description="Загрузите материалы предмета и нажмите «Сгенерировать вопросы», либо добавьте вопросы вручную."
                 />
               ) : (
                 <ul className="divide-y divide-slate-50 rounded-xl ring-1 ring-slate-200">
@@ -220,7 +142,7 @@ export function TestCardModal({
                     <li
                       key={q.id}
                       className={
-                        isAi && q.isDraft
+                        q.isDraft
                           ? 'border-l-4 border-l-amber-400 bg-amber-50/40 px-4 py-3'
                           : 'px-4 py-3'
                       }
@@ -229,7 +151,7 @@ export function TestCardModal({
                         <p className="min-w-0 flex-1 text-sm font-medium text-slate-800">
                           {index + 1}. {q.text}
                         </p>
-                        {isAi && q.isDraft && <DraftQuestionBadge />}
+                        {q.isDraft && <DraftQuestionBadge />}
                       </div>
                       <p className="mt-1 text-xs text-slate-400">
                         {QUESTION_TYPE_LABELS[q.type]}
@@ -243,7 +165,6 @@ export function TestCardModal({
               )}
             </div>
 
-            {/* Versions */}
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
                 <History className="h-4 w-4 text-slate-400" /> Версии
@@ -260,51 +181,11 @@ export function TestCardModal({
                 ))}
               </ul>
             </div>
-
-            {/* Assigned applicants — только вступительные тесты */}
-            {!isAi && (
-            <div>
-              <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
-                <Users className="h-4 w-4 text-slate-400" /> Назначенные поступающие ({test.assignments.length})
-              </p>
-              {test.assignments.length === 0 ? (
-                <EmptyBlock title="Пока никого не назначено" description="Нажмите «Назначить поступающих»." />
-              ) : (
-                <ul className="divide-y divide-slate-50 rounded-xl ring-1 ring-slate-200">
-                  {test.assignments.map((a) => (
-                    <li key={a.id} className="flex items-center gap-3 px-4 py-2.5">
-                      <Avatar name={a.applicantName} size="sm" />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium text-slate-800">{a.applicantName}</span>
-                        <span className="block truncate text-xs text-slate-400">
-                          {a.grade} · {a.accessCode ?? '—'}
-                          {!a.canChangeVersion && ` · Версия ${a.versionNumber ?? '—'}`}
-                        </span>
-                      </span>
-                      <div className="flex shrink-0 flex-col items-end gap-1">
-                        {a.canChangeVersion && test.versions.length > 1 ? (
-                          <AssignmentVersionSelect
-                            testId={test.id}
-                            assignmentId={a.id}
-                            currentVersion={a.versionNumber}
-                            versions={test.versions}
-                            onChanged={() => void refetch()}
-                          />
-                        ) : null}
-                        <span className="text-xs text-slate-400">{formatDateTime(a.assignedAt)}</span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            )}
           </div>
         )}
       </Modal>
 
-      {test && !isAi && <AssignModal open={assignOpen} onClose={() => setAssignOpen(false)} test={test} />}
-      {test && isAi && (
+      {test && (
         <TestGenerateModal
           open={generateOpen}
           onClose={() => setGenerateOpen(false)}

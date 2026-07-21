@@ -116,7 +116,7 @@ export function DashboardPage() {
         Учебный процесс и приём
       </h2>
       <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <LinkCard to="/subjects" label="Предметы" hint="Справочник предметов для тестов" icon={BookMarked} />
+        <LinkCard to="/admissions?tab=subjects" label="Предметы" hint="Справочник предметов для тестов" icon={BookMarked} />
         <LinkCard
           to="/admissions"
           label="Вступительные тесты"
