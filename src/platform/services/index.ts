@@ -51,9 +51,11 @@ export {
   archiveTeacherAssignment,
   listActiveSchoolSubjects,
   updateTeacher,
+  archiveTeacher,
   listTeacherWorkingTime,
   createTeacherWorkingTime,
   archiveTeacherWorkingTime,
+  getTeacherTodayLessons,
 } from './teachers';
 export type { TeacherWorkingTime } from './teachers';
 export {

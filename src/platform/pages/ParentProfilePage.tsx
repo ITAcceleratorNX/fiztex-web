@@ -1,17 +1,25 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ChevronRight, Pencil, X } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Copy, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { Avatar } from '@/components/ui/Avatar';
-import { CopyCode } from '@/components/ui/CopyCode';
 import { Field, TextInput } from '@/components/ui/Field';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/context/ToastContext';
-import { formatDate, formatDateTime } from '@/lib/format';
-import { ACCOUNT_STATUS_LABELS, PARENT_RELATION_LABELS, ROLE_AVATAR_COLOR } from '../labels';
+import { formatDate, initials, pluralRu } from '@/lib/format';
+import { ACCOUNT_STATUS_LABELS } from '../labels';
 import { AccountActionsMenu } from '../components/AccountActionsMenu';
+import {
+  IconActionButton,
+  ProfileBreadcrumb,
+  ProfileCard,
+  ProfileCardTitle,
+  ProfileEditButton,
+  ProfileInfoField,
+  ProfileLinkAction,
+  ProfileStatusBadge,
+  SoftBadge,
+} from '../components/ProfileChrome';
 import { LinkStudentModal } from '../modals/LinkStudentModal';
 import {
   archiveUser,
@@ -19,18 +27,46 @@ import {
   getParentByAccount,
   resetAccess,
   unblockUser,
-  unlinkStudent,
   updateParent,
 } from '../services';
-import type { ParentProfileDetail } from '../types';
+import type { AccountStatus, ParentProfileDetail } from '../types';
 import { formatPersonName } from '../types';
 
-function InfoField({ label, value }: { label: string; value: ReactNode }) {
+const CHILD_AVATAR_COLORS = ['#274185', '#059669', '#6b7280', '#4f46e5', '#d97706'];
+
+function formatClassLabel(className: string | null | undefined): string | null {
+  if (!className) return null;
+  const trimmed = className.trim();
+  const quoted = trimmed.match(/^(\d+)\s*[«"']\s*([A-Za-zА-Яа-яЁё])\s*[»"']/);
+  if (quoted) return `${quoted[1]} «${quoted[2].toUpperCase()}» класс`;
+  const plain = trimmed.match(/^(\d+)\s*([A-Za-zА-Яа-яЁё])(?:\s*класс)?$/i);
+  if (plain) return `${plain[1]} «${plain[2].toUpperCase()}» класс`;
+  if (/класс/i.test(trimmed)) return trimmed;
+  return `${trimmed} класс`;
+}
+
+function ChildStatusBadge({ status }: { status: AccountStatus }) {
+  if (status === 'ACTIVE') {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md bg-[#ecfdf5] px-2 py-0.5 text-xs font-semibold text-[#059669]">
+        <span className="size-1.5 rounded-full bg-[#10b981]" />
+        Активен
+      </span>
+    );
+  }
+  if (status === 'BLOCKED') {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md bg-[#fee2e2] px-2 py-0.5 text-xs font-semibold text-[#dc2626]">
+        <span className="size-1.5 rounded-full bg-[#ef4444]" />
+        Заблокирован
+      </span>
+    );
+  }
   return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-slate-800">{value}</p>
-    </div>
+    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">
+      <span className="size-1.5 rounded-full bg-slate-400" />
+      {ACCOUNT_STATUS_LABELS[status]}
+    </span>
   );
 }
 
@@ -103,6 +139,16 @@ export function ParentProfilePage() {
     }
   }
 
+  async function handleCopyCode() {
+    if (!issuedCode) return;
+    try {
+      await navigator.clipboard.writeText(issuedCode);
+      toast.success('Код скопирован');
+    } catch {
+      toast.error('Не удалось скопировать код');
+    }
+  }
+
   async function handleBlock() {
     try {
       await blockUser(String(accountId));
@@ -134,18 +180,6 @@ export function ParentProfilePage() {
     }
   }
 
-  async function handleUnlink(studentProfileId: number) {
-    if (!detail) return;
-    if (!window.confirm('Отвязать ученика?')) return;
-    try {
-      await unlinkStudent(detail.id, studentProfileId);
-      toast.success('Ученик отвязан');
-      await reload();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не удалось отвязать');
-    }
-  }
-
   if (!Number.isFinite(accountId)) {
     return <ErrorBlock message="Некорректный идентификатор родителя." />;
   }
@@ -153,163 +187,194 @@ export function ParentProfilePage() {
   const name = detail ? formatPersonName(detail.lastName, detail.firstName, detail.middleName) : '';
 
   return (
-    <div>
-      <div className="mb-3 flex items-center gap-1.5 text-sm text-slate-400">
-        <Link to="/admin/users" className="font-medium hover:text-brand-600">
-          Пользователи
-        </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <Link to="/parents" className="font-medium hover:text-brand-600">
-          Родители
-        </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="font-medium text-slate-600">{name || '…'}</span>
-      </div>
-
+    <div className="flex flex-col gap-8">
       {loading ? (
-        <div className="card">
+        <ProfileCard>
           <LoadingBlock label="Загрузка родителя…" />
-        </div>
+        </ProfileCard>
       ) : error || !detail ? (
-        <div className="card">
+        <ProfileCard>
           <ErrorBlock message={error ?? 'Родитель не найден'} onRetry={() => void reload()} />
-        </div>
+        </ProfileCard>
       ) : (
         <>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Avatar name={name} size="lg" color={ROLE_AVATAR_COLOR.PARENT} />
-              <h1 className="flex items-center gap-2.5 text-[28px] font-extrabold leading-tight tracking-tight text-slate-900">
-                {name}
-                {detail.accountStatus === 'ACTIVE' ? (
-                  <Badge tone="green" dot>Активен</Badge>
-                ) : (
-                  <Badge tone="gray" dot>{ACCOUNT_STATUS_LABELS[detail.accountStatus]}</Badge>
-                )}
-              </h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="secondary" icon={<Pencil className="h-4 w-4" />} onClick={() => setEditing((v) => !v)}>
-                Редактировать
-              </Button>
-              <AccountActionsMenu
-                status={detail.accountStatus}
-                onBlock={() => void handleBlock()}
-                onUnblock={() => void handleUnblock()}
-                onArchive={() => setArchiveOpen(true)}
-                onResetAccess={() => void handleResetAccess()}
-              />
+          <div className="flex flex-col gap-3">
+            <ProfileBreadcrumb
+              items={[
+                { label: 'Пользователи', to: '/admin/users' },
+                { label: 'Родители', to: '/parents' },
+                { label: name },
+              ]}
+            />
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-4">
+                <h1 className="text-[28px] font-bold leading-none text-[#1a1f36]">{name}</h1>
+                <ProfileStatusBadge status={detail.accountStatus} />
+              </div>
+              <div className="flex items-center gap-3">
+                <ProfileEditButton onClick={() => setEditing((v) => !v)} />
+                <AccountActionsMenu
+                  status={detail.accountStatus}
+                  onBlock={() => void handleBlock()}
+                  onUnblock={() => void handleUnblock()}
+                  onArchive={() => setArchiveOpen(true)}
+                  onResetAccess={() => void handleResetAccess()}
+                />
+              </div>
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="card space-y-5 px-6 py-6 lg:col-span-2">
-              <h2 className="text-base font-bold text-slate-900">Основная информация</h2>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_380px]">
+            <div className="flex flex-col gap-6">
+              <ProfileCard className="flex flex-col gap-5">
+                <ProfileCardTitle>Основная информация</ProfileCardTitle>
 
-              {editing ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <Field label="Фамилия" required>
-                    <TextInput value={lastName} onChange={(e) => setLastName(e.target.value)} />
-                  </Field>
-                  <Field label="Имя" required>
-                    <TextInput value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-                  </Field>
-                  <Field label="Отчество">
-                    <TextInput value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
-                  </Field>
-                  <Field label="Телефон" required>
-                    <TextInput value={phone} onChange={(e) => setPhone(e.target.value)} />
-                  </Field>
-                  <div className="flex items-end gap-2 sm:col-span-2">
-                    <Button loading={saving} onClick={() => void handleSave()}>
-                      Сохранить
-                    </Button>
-                    <Button variant="secondary" onClick={() => setEditing(false)} disabled={saving}>
-                      Отмена
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  <InfoField label="ФИО родителя" value={name} />
-                  <InfoField label="Телефон" value={detail.phone} />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Код активации</p>
-                    <div className="mt-1">
-                      <CopyCode code={issuedCode} />
+                {editing ? (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <Field label="Фамилия" required>
+                      <TextInput value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                    </Field>
+                    <Field label="Имя" required>
+                      <TextInput value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                    </Field>
+                    <Field label="Отчество">
+                      <TextInput value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
+                    </Field>
+                    <Field label="Телефон" required>
+                      <TextInput value={phone} onChange={(e) => setPhone(e.target.value)} />
+                    </Field>
+                    <div className="flex items-end gap-2 sm:col-span-2">
+                      <Button loading={saving} onClick={() => void handleSave()}>
+                        Сохранить
+                      </Button>
+                      <Button variant="secondary" onClick={() => setEditing(false)} disabled={saving}>
+                        Отмена
+                      </Button>
                     </div>
                   </div>
-                  <InfoField
-                    label="Статус активации"
-                    value={
-                      detail.accountStatus === 'ACTIVE' ? (
-                        <Badge tone="green">Аккаунт активирован</Badge>
-                      ) : (
-                        <Badge tone="gray">{ACCOUNT_STATUS_LABELS[detail.accountStatus]}</Badge>
-                      )
-                    }
-                  />
-                </div>
-              )}
-
-              <div className="border-t border-slate-100 pt-5">
-                <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-base font-bold text-slate-900">Связанные ученики</h2>
-                  <button
-                    type="button"
-                    onClick={() => setLinkOpen(true)}
-                    className="text-sm font-semibold text-brand-600 hover:text-brand-700"
-                  >
-                    + Привязать ученика
-                  </button>
-                </div>
-                {detail.linkedStudents.length === 0 ? (
-                  <EmptyBlock title="Дети не привязаны" description="Привяжите ученика к этому родителю." />
                 ) : (
-                  <ul className="divide-y divide-slate-50 rounded-xl ring-1 ring-slate-200">
-                    {detail.linkedStudents.map((s) => (
-                      <li key={s.studentProfileId} className="flex items-center gap-3 px-4 py-3">
-                        <Avatar
-                          name={formatPersonName(s.lastName, s.firstName, s.middleName)}
-                          size="sm"
-                          color={ROLE_AVATAR_COLOR.STUDENT}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-slate-800">
-                            {formatPersonName(s.lastName, s.firstName, s.middleName)}
-                          </p>
-                          <p className="truncate text-xs text-slate-400">{PARENT_RELATION_LABELS[s.relationType]}</p>
+                  <div className="flex flex-col gap-4">
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                      <ProfileInfoField label="ФИО родителя" value={name} />
+                      <ProfileInfoField label="Email" value={detail.email ?? '—'} />
+                    </div>
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                      <ProfileInfoField label="Телефон" value={detail.phone} />
+                      <div className="flex min-w-0 flex-col gap-1.5">
+                        <p className="text-[11px] font-semibold uppercase text-[#9ca3af]">
+                          Код активации
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-navy-700">
+                            {issuedCode ?? '—'}
+                          </span>
+                          {issuedCode && (
+                            <IconActionButton title="Скопировать" onClick={() => void handleCopyCode()}>
+                              <Copy className="size-3" />
+                            </IconActionButton>
+                          )}
                         </div>
-                        <button
-                          onClick={() => void handleUnlink(s.studentProfileId)}
-                          title="Отвязать"
-                          className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                      <ProfileInfoField
+                        label="Статус активации"
+                        value={
+                          detail.accountStatus === 'ACTIVE' ? (
+                            <SoftBadge tone="green">Аккаунт активирован</SoftBadge>
+                          ) : (
+                            <SoftBadge tone="gray">
+                              {ACCOUNT_STATUS_LABELS[detail.accountStatus]}
+                            </SoftBadge>
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
+              </ProfileCard>
+
+              <ProfileCard className="flex flex-col gap-4">
+                <ProfileCardTitle
+                  action={
+                    <ProfileLinkAction onClick={() => setLinkOpen(true)}>
+                      + Привязать ученика
+                    </ProfileLinkAction>
+                  }
+                >
+                  Связанные ученики
+                </ProfileCardTitle>
+
+                {detail.linkedStudents.length === 0 ? (
+                  <EmptyBlock
+                    title="Дети не привязаны"
+                    description="Привяжите ученика к этому родителю."
+                  />
+                ) : (
+                  <ul>
+                    {detail.linkedStudents.map((s, index) => {
+                      const studentName = formatPersonName(s.lastName, s.firstName, s.middleName);
+                      const classLabel = formatClassLabel(s.className);
+                      const avatarBg = CHILD_AVATAR_COLORS[index % CHILD_AVATAR_COLORS.length];
+                      return (
+                        <li
+                          key={s.studentProfileId}
+                          className="flex items-center gap-4 border-b border-[#f3f4f6] py-3 last:border-b-0"
                         >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </li>
-                    ))}
+                          <span
+                            className="inline-flex size-10 shrink-0 items-center justify-center rounded-[20px] text-sm font-bold text-white"
+                            style={{ backgroundColor: avatarBg }}
+                          >
+                            {initials(studentName)}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="truncate text-sm font-semibold text-[#1a1f36]">
+                                {studentName}
+                              </p>
+                              {classLabel && <SoftBadge tone="blue">{classLabel}</SoftBadge>}
+                            </div>
+                            {s.academicYearName && (
+                              <p className="mt-0.5 text-xs text-[#9ca3af]">
+                                Учебный год: {s.academicYearName}
+                              </p>
+                            )}
+                          </div>
+                          <ChildStatusBadge status={s.accountStatus} />
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/students/${s.accountId}`)}
+                            title="Открыть профиль ученика"
+                            className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                          >
+                            <Pencil className="size-4" />
+                          </button>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
-              </div>
+              </ProfileCard>
             </div>
 
-            <div className="card space-y-4 px-6 py-6">
-              <h2 className="text-base font-bold text-slate-900">Сводка</h2>
-              <InfoField
-                label="Статус"
-                value={
-                  detail.accountStatus === 'ACTIVE' ? (
-                    <Badge tone="green" dot>Активен</Badge>
-                  ) : (
-                    <Badge tone="gray" dot>{ACCOUNT_STATUS_LABELS[detail.accountStatus]}</Badge>
-                  )
-                }
-              />
-              <InfoField label="Привязанные дети" value={`${detail.linkedStudents.length}`} />
-              <InfoField label="Дата создания" value={formatDate(detail.createdAt)} />
-              <InfoField label="Последняя активность" value={formatDateTime(detail.updatedAt)} />
-            </div>
+            <ProfileCard className="flex h-fit flex-col gap-5">
+              <ProfileCardTitle>Сводка</ProfileCardTitle>
+              <div className="flex flex-col gap-4">
+                <ProfileInfoField
+                  label="Статус"
+                  value={<ProfileStatusBadge status={detail.accountStatus} />}
+                />
+                <ProfileInfoField
+                  label="Привязанные дети"
+                  value={`${detail.linkedStudents.length} ${pluralRu(detail.linkedStudents.length, ['ученик', 'ученика', 'учеников'])}`}
+                />
+                <ProfileInfoField label="Дата создания" value={formatDate(detail.createdAt)} />
+                <ProfileInfoField
+                  label="Последняя активность"
+                  value={detail.lastLoginAt ? formatDate(detail.lastLoginAt) : '—'}
+                />
+              </div>
+            </ProfileCard>
           </div>
 
           <LinkStudentModal

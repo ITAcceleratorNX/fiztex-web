@@ -1,49 +1,39 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ChevronRight, Pencil, Plus, X } from 'lucide-react';
-import type { Weekday } from '@/lib/scheduleSettingsTypes';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { CalendarDays, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { Avatar } from '@/components/ui/Avatar';
-import { Field, Select, TextInput } from '@/components/ui/Field';
+import { Field, TextInput } from '@/components/ui/Field';
+import { Modal } from '@/components/ui/Modal';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/context/ToastContext';
-import { cx, formatDate, formatDateTime } from '@/lib/format';
-import {
-  ACCOUNT_STATUS_LABELS,
-  ROLE_AVATAR_COLOR,
-  WEEKDAYS_ORDER,
-  WEEKDAY_LABELS,
-  WEEKDAY_SHORT_LABELS,
-} from '../labels';
+import { cx, formatDate, formatWeekdayDayMonth, pluralRu } from '@/lib/format';
+import { WEEKDAYS_ORDER, WEEKDAY_SHORT_LABELS } from '../labels';
 import { AccountActionsMenu } from '../components/AccountActionsMenu';
+import {
+  ProfileBreadcrumb,
+  ProfileCard,
+  ProfileCardTitle,
+  ProfileEditButton,
+  ProfileInfoField,
+  ProfileLinkAction,
+  ProfileStatusBadge,
+} from '../components/ProfileChrome';
 import { CreateAssignmentModal } from '../modals/CreateAssignmentModal';
+import { useTeacherAvailability } from '../hooks/useTeacherAvailability';
+import { TeacherAvailabilityCard } from './schedule/TeacherAvailabilityCard';
 import {
   archiveTeacherAssignment,
-  archiveTeacherWorkingTime,
   archiveUser,
   blockUser,
-  createTeacherWorkingTime,
   getTeacherByAccount,
-  listClasses,
-  listTeacherWorkingTime,
+  getTeacherTodayLessons,
   resetAccess,
   unblockUser,
   updateTeacher,
-  type TeacherWorkingTime,
 } from '../services';
-import type { SchoolClass, TeacherProfileDetail } from '../types';
+import type { TeacherProfileDetail, TeacherTodayLesson } from '../types';
 import { formatPersonName } from '../types';
-
-function InfoField({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-slate-800">{value}</p>
-    </div>
-  );
-}
 
 export function TeacherProfilePage() {
   const { accountId: accountIdParam } = useParams();
@@ -52,8 +42,7 @@ export function TeacherProfilePage() {
   const toast = useToast();
 
   const [detail, setDetail] = useState<TeacherProfileDetail | null>(null);
-  const [workingTime, setWorkingTime] = useState<TeacherWorkingTime[]>([]);
-  const [classes, setClasses] = useState<SchoolClass[]>([]);
+  const [todayLessons, setTodayLessons] = useState<TeacherTodayLesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,22 +56,16 @@ export function TeacherProfilePage() {
   const [issuedCode, setIssuedCode] = useState<string | null>(null);
   const [assignOpen, setAssignOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
-
-  const [wtDay, setWtDay] = useState<Weekday>('MONDAY');
-  const [wtStart, setWtStart] = useState('09:00');
-  const [wtEnd, setWtEnd] = useState('15:00');
-  const [wtPending, setWtPending] = useState(false);
-  const [wtFormOpen, setWtFormOpen] = useState(false);
+  const [availabilityOpen, setAvailabilityOpen] = useState(false);
 
   const reload = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const d = await getTeacherByAccount(accountId);
-      const [wt, cl] = await Promise.all([listTeacherWorkingTime(d.id), listClasses()]);
+      const lessons = await getTeacherTodayLessons(d.id);
       setDetail(d);
-      setWorkingTime(wt);
-      setClasses(cl);
+      setTodayLessons(lessons);
       setLastName(d.lastName);
       setFirstName(d.firstName);
       setMiddleName(d.middleName ?? '');
@@ -98,24 +81,39 @@ export function TeacherProfilePage() {
     if (Number.isFinite(accountId)) void reload();
   }, [accountId, reload]);
 
+  const availabilityQuery = useTeacherAvailability(detail?.id ?? null);
+  const availability = availabilityQuery.data;
+  const workHoursRange = useMemo(() => {
+    const intervals = availability?.intervals ?? [];
+    if (intervals.length === 0) return null;
+    const start = intervals.map((i) => i.startTime).sort()[0];
+    const end = intervals.map((i) => i.endTime).sort().at(-1)!;
+    return `${start.slice(0, 5)} – ${end.slice(0, 5)}`;
+  }, [availability]);
+
   const subjects = useMemo(
     () => Array.from(new Set(detail?.assignments.map((a) => a.schoolSubjectName) ?? [])),
     [detail],
   );
-  const assignedClassIds = useMemo(
-    () => Array.from(new Set(detail?.assignments.map((a) => a.classId) ?? [])),
-    [detail],
-  );
+  const classChips = useMemo(() => {
+    if (!detail) return [];
+    const seen = new Set<number>();
+    return detail.assignments.filter((a) => {
+      if (seen.has(a.classId)) return false;
+      seen.add(a.classId);
+      return true;
+    });
+  }, [detail]);
+  const assignedClassIds = useMemo(() => classChips.map((a) => a.classId), [classChips]);
+  const studentCountByClassId = useMemo(() => {
+    const map = new Map<number, number>();
+    detail?.assignments.forEach((a) => map.set(a.classId, a.studentCount));
+    return map;
+  }, [detail]);
   const totalStudents = useMemo(
-    () =>
-      assignedClassIds.reduce((sum, classId) => {
-        const c = classes.find((cl) => Number(cl.id) === classId);
-        return sum + (c?.studentCount ?? 0);
-      }, 0),
-    [assignedClassIds, classes],
+    () => assignedClassIds.reduce((sum, classId) => sum + (studentCountByClassId.get(classId) ?? 0), 0),
+    [assignedClassIds, studentCountByClassId],
   );
-  const activeDays = useMemo(() => new Set(workingTime.map((w) => w.dayOfWeek)), [workingTime]);
-  const workHours = workingTime[0] ? `${workingTime[0].startTime}–${workingTime[0].endTime}` : '—';
 
   async function handleSave() {
     if (!detail) return;
@@ -174,35 +172,6 @@ export function TeacherProfilePage() {
     }
   }
 
-  async function handleAddWorkingTime() {
-    if (!detail) return;
-    setWtPending(true);
-    try {
-      await createTeacherWorkingTime(detail.id, {
-        dayOfWeek: wtDay,
-        startTime: wtStart.length === 5 ? `${wtStart}:00` : wtStart,
-        endTime: wtEnd.length === 5 ? `${wtEnd}:00` : wtEnd,
-      });
-      toast.success('Интервал добавлен');
-      setWtFormOpen(false);
-      await reload();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не удалось добавить интервал');
-    } finally {
-      setWtPending(false);
-    }
-  }
-
-  async function handleRemoveWorkingTime(id: number) {
-    try {
-      await archiveTeacherWorkingTime(id);
-      toast.success('Интервал удалён');
-      await reload();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не удалось удалить интервал');
-    }
-  }
-
   async function handleRemoveAssignment(id: number) {
     if (!window.confirm('Снять назначение с класса?')) return;
     try {
@@ -221,243 +190,267 @@ export function TeacherProfilePage() {
   const name = detail ? formatPersonName(detail.lastName, detail.firstName, detail.middleName) : '';
 
   return (
-    <div>
-      <div className="mb-3 flex items-center gap-1.5 text-sm text-slate-400">
-        <Link to="/admin/users" className="font-medium hover:text-brand-600">
-          Пользователи
-        </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <Link to="/teachers" className="font-medium hover:text-brand-600">
-          Учителя
-        </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="font-medium text-slate-600">{name || '…'}</span>
-      </div>
-
+    <div className="flex flex-col gap-8">
       {loading ? (
-        <div className="card">
+        <ProfileCard>
           <LoadingBlock label="Загрузка учителя…" />
-        </div>
+        </ProfileCard>
       ) : error || !detail ? (
-        <div className="card">
+        <ProfileCard>
           <ErrorBlock message={error ?? 'Учитель не найден'} onRetry={() => void reload()} />
-        </div>
+        </ProfileCard>
       ) : (
         <>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Avatar name={name} size="lg" color={ROLE_AVATAR_COLOR.TEACHER} />
-              <h1 className="flex items-center gap-2.5 text-[28px] font-extrabold leading-tight tracking-tight text-slate-900">
-                {name}
-                {detail.accountStatus === 'ACTIVE' ? (
-                  <Badge tone="green" dot>Активен</Badge>
-                ) : (
-                  <Badge tone="gray" dot>{ACCOUNT_STATUS_LABELS[detail.accountStatus]}</Badge>
-                )}
-              </h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="secondary" icon={<Pencil className="h-4 w-4" />} onClick={() => setEditing((v) => !v)}>
-                Редактировать
-              </Button>
-              <AccountActionsMenu
-                status={detail.accountStatus}
-                onBlock={() => void handleBlock()}
-                onUnblock={() => void handleUnblock()}
-                onArchive={() => setArchiveOpen(true)}
-                onResetAccess={() => void handleResetAccess()}
-              />
-            </div>
-          </div>
+          <ProfileBreadcrumb
+            items={[
+              { label: 'Пользователи', to: '/admin/users' },
+              { label: 'Учителя', to: '/teachers' },
+              { label: name },
+            ]}
+          />
 
-          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="card space-y-5 px-6 py-6 lg:col-span-2">
-              {editing ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <Field label="Фамилия" required>
-                    <TextInput value={lastName} onChange={(e) => setLastName(e.target.value)} />
-                  </Field>
-                  <Field label="Имя" required>
-                    <TextInput value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-                  </Field>
-                  <Field label="Отчество">
-                    <TextInput value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
-                  </Field>
-                  <Field label="Телефон" required>
-                    <TextInput value={phone} onChange={(e) => setPhone(e.target.value)} />
-                  </Field>
-                  <div className="flex items-end gap-2 sm:col-span-2">
-                    <Button loading={saving} onClick={() => void handleSave()}>
-                      Сохранить
-                    </Button>
-                    <Button variant="secondary" onClick={() => setEditing(false)} disabled={saving}>
-                      Отмена
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  <InfoField label="Роль" value="Учитель" />
-                  <InfoField label="Телефон" value={detail.phone} />
-                  {issuedCode && <InfoField label="Код активации" value={issuedCode} />}
-                </div>
-              )}
-
-              <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Предметы</p>
-                {subjects.length === 0 ? (
-                  <p className="text-sm text-slate-400">Нет назначений</p>
-                ) : (
-                  <div className="flex flex-wrap gap-1.5">
-                    {subjects.map((s) => (
-                      <Badge key={s} tone="blue">{s}</Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Классы</p>
-                {assignedClassIds.length === 0 ? (
-                  <p className="text-sm text-slate-400">Нет назначений</p>
-                ) : (
-                  <div className="flex flex-wrap gap-1.5">
-                    {detail.assignments
-                      .filter((a, i, arr) => arr.findIndex((x) => x.classId === a.classId) === i)
-                      .map((a) => (
-                        <Badge key={a.classId} tone="amber">{a.className}</Badge>
-                      ))}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Рабочие дни и часы</p>
-                  <button
-                    type="button"
-                    onClick={() => setWtFormOpen((v) => !v)}
-                    className="text-xs font-semibold text-brand-600 hover:text-brand-700"
-                  >
-                    {wtFormOpen ? 'Скрыть' : 'Изменить'}
-                  </button>
-                </div>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {WEEKDAYS_ORDER.map((day) => (
-                    <span
-                      key={day}
-                      className={cx(
-                        'flex h-8 w-8 items-center justify-center rounded-lg text-xs font-semibold',
-                        activeDays.has(day) ? 'bg-navy-700 text-white' : 'bg-slate-100 text-slate-400',
-                      )}
-                    >
-                      {WEEKDAY_SHORT_LABELS[day]}
-                    </span>
-                  ))}
-                  <span className="ml-2 text-sm text-slate-600">{workHours}</span>
-                </div>
-
-                {wtFormOpen && (
-                  <div className="mt-3 space-y-2 rounded-xl bg-slate-50 p-3">
-                    {workingTime.length > 0 && (
-                      <ul className="space-y-1">
-                        {workingTime.map((w) => (
-                          <li key={w.id} className="flex items-center justify-between rounded-lg bg-white px-3 py-1.5 text-sm ring-1 ring-slate-200">
-                            <span>
-                              {WEEKDAY_LABELS[w.dayOfWeek as Weekday] ?? w.dayOfWeek}: {w.startTime.slice(0, 5)}–{w.endTime.slice(0, 5)}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => void handleRemoveWorkingTime(w.id)}
-                              className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_420px]">
+            <div className="flex flex-col gap-6">
+              <ProfileCard className="flex flex-col gap-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <h1 className="text-[28px] font-bold leading-none text-[#1a1f36]">{name}</h1>
+                      <ProfileStatusBadge status={detail.accountStatus} />
+                    </div>
+                    {editing ? (
+                      <div className="mt-4 grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
+                        <Field label="Фамилия" required>
+                          <TextInput value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                        </Field>
+                        <Field label="Имя" required>
+                          <TextInput value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                        </Field>
+                        <Field label="Отчество">
+                          <TextInput value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
+                        </Field>
+                        <Field label="Телефон" required>
+                          <TextInput value={phone} onChange={(e) => setPhone(e.target.value)} />
+                        </Field>
+                        <div className="flex items-end gap-2 sm:col-span-2">
+                          <Button loading={saving} onClick={() => void handleSave()}>
+                            Сохранить
+                          </Button>
+                          <Button variant="secondary" onClick={() => setEditing(false)} disabled={saving}>
+                            Отмена
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-[#6b7280]">
+                        <span>Роль: </span>
+                        <span className="font-semibold text-[#1a1f36]">Учитель</span>
+                        <span className="mx-2 text-slate-300">·</span>
+                        <span>Телефон: </span>
+                        <span className="font-semibold text-[#1a1f36]">{detail.phone}</span>
+                        <span className="mx-2 text-slate-300">·</span>
+                        <span>Email: </span>
+                        <span className="font-semibold text-[#1a1f36]">{detail.email ?? '—'}</span>
+                        {issuedCode && (
+                          <>
+                            <span className="mx-2 text-slate-300">·</span>
+                            <span>Код: </span>
+                            <span className="font-semibold text-navy-700">{issuedCode}</span>
+                          </>
+                        )}
+                      </p>
                     )}
-                    <div className="flex flex-wrap items-end gap-2">
-                      <Select className="w-auto" value={wtDay} onChange={(e) => setWtDay(e.target.value as Weekday)}>
-                        {WEEKDAYS_ORDER.map((d) => (
-                          <option key={d} value={d}>
-                            {WEEKDAY_LABELS[d]}
-                          </option>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <ProfileEditButton onClick={() => setEditing((v) => !v)} />
+                    <AccountActionsMenu
+                      status={detail.accountStatus}
+                      onBlock={() => void handleBlock()}
+                      onUnblock={() => void handleUnblock()}
+                      onArchive={() => setArchiveOpen(true)}
+                      onResetAccess={() => void handleResetAccess()}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-2">
+                    <p className="text-[11px] font-semibold uppercase text-[#9ca3af]">Предметы</p>
+                    {subjects.length === 0 ? (
+                      <p className="text-sm text-[#9ca3af]">Нет назначений</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {subjects.map((s) => (
+                          <span
+                            key={s}
+                            className="rounded-md bg-[rgba(39,65,133,0.08)] px-2.5 py-1 text-sm font-semibold text-navy-700"
+                          >
+                            {s}
+                          </span>
                         ))}
-                      </Select>
-                      <TextInput type="time" className="w-auto" value={wtStart} onChange={(e) => setWtStart(e.target.value)} />
-                      <TextInput type="time" className="w-auto" value={wtEnd} onChange={(e) => setWtEnd(e.target.value)} />
-                      <Button size="sm" icon={<Plus className="h-4 w-4" />} loading={wtPending} onClick={() => void handleAddWorkingTime()}>
-                        Добавить
-                      </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <p className="text-[11px] font-semibold uppercase text-[#9ca3af]">Классы</p>
+                    {classChips.length === 0 ? (
+                      <p className="text-sm text-[#9ca3af]">Нет назначений</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {classChips.map((a) => (
+                          <span
+                            key={a.classId}
+                            className="rounded-md bg-[rgba(251,146,60,0.08)] px-2.5 py-1 text-sm font-semibold text-brand-500"
+                          >
+                            {a.className}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-[11px] font-semibold uppercase text-[#9ca3af]">
+                        Рабочие дни и часы
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setAvailabilityOpen(true)}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-[#d1d6de] bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+                      >
+                        <CalendarDays className="size-3.5" />
+                        Открыть занятость
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-1">
+                        {WEEKDAYS_ORDER.map((day) => {
+                          const active = availability?.workingDays.includes(day);
+                          return (
+                            <span
+                              key={day}
+                              className={cx(
+                                'inline-flex items-center justify-center rounded-md px-2 py-1 text-xs font-semibold',
+                                active
+                                  ? 'bg-navy-700 text-white'
+                                  : 'bg-[#f3f4f6] text-[#9ca3af]',
+                              )}
+                            >
+                              {WEEKDAY_SHORT_LABELS[day]}
+                            </span>
+                          );
+                        })}
+                      </div>
+                      {workHoursRange && (
+                        <span className="text-sm font-medium text-[#1a1f36]">{workHoursRange}</span>
+                      )}
+                      {availability && !availability.exists && (
+                        <span className="text-sm text-[#9ca3af]">График не задан</span>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
-
-              <div className="border-t border-slate-100 pt-5">
-                <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-base font-bold text-slate-900">
-                    Назначенные классы <span className="text-sm font-normal text-slate-400">Всего: {assignedClassIds.length}</span>
-                  </h2>
-                  <button
-                    type="button"
-                    onClick={() => setAssignOpen(true)}
-                    className="text-sm font-semibold text-brand-600 hover:text-brand-700"
-                  >
-                    + Назначить класс
-                  </button>
                 </div>
+              </ProfileCard>
+
+              <ProfileCard className="flex flex-col gap-4">
+                <ProfileCardTitle
+                  action={
+                    <ProfileLinkAction onClick={() => setAssignOpen(true)}>
+                      + Назначить класс
+                    </ProfileLinkAction>
+                  }
+                >
+                  <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span>Назначенные классы</span>
+                    <span className="text-sm font-normal text-[#9ca3af]">
+                      Всего классов: {assignedClassIds.length}
+                    </span>
+                  </span>
+                </ProfileCardTitle>
+
                 {detail.assignments.length === 0 ? (
                   <EmptyBlock title="Классы не назначены" description="Назначьте предмет и класс учителю." />
                 ) : (
-                  <ul className="divide-y divide-slate-50 rounded-xl ring-1 ring-slate-200">
-                    {detail.assignments.map((a) => {
-                      const cl = classes.find((c) => Number(c.id) === a.classId);
-                      return (
-                        <li key={a.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                          <span className="font-semibold text-slate-800">{a.className}</span>
-                          <span className="text-slate-500">{a.schoolSubjectName}</span>
-                          <span className="text-slate-400">
-                            {cl ? `${cl.studentCount} учеников` : '—'}
+                  <ul>
+                    {detail.assignments.map((a) => (
+                      <li
+                        key={a.id}
+                        className="group flex items-center justify-between gap-4 border-b border-[#f3f4f6] py-3 text-[13px] last:border-b-0"
+                      >
+                        <span className="font-semibold text-[#1a1f36]">{a.className} класс</span>
+                        <div className="flex items-center gap-6">
+                          <span className="text-[#6b7280]">{a.schoolSubjectName}</span>
+                          <span className="text-[#9ca3af]">
+                            {a.studentCount}{' '}
+                            {pluralRu(a.studentCount, ['ученик', 'ученика', 'учеников'])}
                           </span>
                           <button
                             type="button"
                             onClick={() => void handleRemoveAssignment(a.id)}
                             title="Снять назначение"
-                            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                            className="rounded-lg p-1 text-slate-300 opacity-0 transition group-hover:opacity-100 hover:bg-red-50 hover:text-red-600"
                           >
-                            <X className="h-4 w-4" />
+                            <X className="size-4" />
                           </button>
-                        </li>
-                      );
-                    })}
+                        </div>
+                      </li>
+                    ))}
                   </ul>
                 )}
-              </div>
+              </ProfileCard>
             </div>
 
-            <div className="card space-y-4 px-6 py-6">
-              <h2 className="text-base font-bold text-slate-900">Сводка</h2>
-              <InfoField
-                label="Статус"
-                value={
-                  detail.accountStatus === 'ACTIVE' ? (
-                    <Badge tone="green" dot>Активен</Badge>
-                  ) : (
-                    <Badge tone="gray" dot>{ACCOUNT_STATUS_LABELS[detail.accountStatus]}</Badge>
-                  )
-                }
-              />
-              <InfoField label="Предметов" value={`${subjects.length}`} />
-              <InfoField label="Классов" value={`${assignedClassIds.length}`} />
-              <InfoField label="Учеников всего" value={`${totalStudents}`} />
-              <InfoField
-                label="Рабочий график"
-                value={activeDays.size > 0 ? `${Array.from(activeDays).map((d) => WEEKDAY_SHORT_LABELS[d as keyof typeof WEEKDAY_SHORT_LABELS]).join(', ')}, ${workHours}` : '—'}
-              />
-              <InfoField label="Дата создания" value={formatDate(detail.createdAt)} />
-              <InfoField label="Последняя активность" value={formatDateTime(detail.updatedAt)} />
+            <div className="flex flex-col gap-6">
+              <ProfileCard className="flex h-fit flex-col gap-5">
+                <ProfileCardTitle>Сводка</ProfileCardTitle>
+                <div className="flex flex-col gap-4">
+                  <ProfileInfoField
+                    label="Статус"
+                    value={<ProfileStatusBadge status={detail.accountStatus} />}
+                  />
+                  <ProfileInfoField label="Предметов" value={`${subjects.length}`} />
+                  <ProfileInfoField label="Классов" value={`${assignedClassIds.length}`} />
+                  <ProfileInfoField label="Учеников всего" value={`${totalStudents}`} />
+                  <ProfileInfoField label="Дата создания" value={formatDate(detail.createdAt)} />
+                  <ProfileInfoField
+                    label="Последняя активность"
+                    value={detail.lastLoginAt ? formatDate(detail.lastLoginAt) : '—'}
+                  />
+                </div>
+              </ProfileCard>
+
+              <ProfileCard className="flex h-fit flex-col gap-4">
+                <div>
+                  <h2 className="text-base font-bold text-[#1a1f36]">Расписание на сегодня</h2>
+                  <p className="mt-0.5 text-sm text-[#9ca3af]">{formatWeekdayDayMonth()}</p>
+                </div>
+                {todayLessons.length === 0 ? (
+                  <p className="text-sm text-[#9ca3af]">Уроков нет</p>
+                ) : (
+                  <ul>
+                    {todayLessons.map((l) => (
+                      <li
+                        key={l.lessonId}
+                        className="flex items-center justify-between gap-3 border-b border-[#f3f4f6] py-3 last:border-b-0"
+                      >
+                        <div className="flex min-w-0 items-center gap-4">
+                          <span className="shrink-0 text-sm font-semibold tabular-nums text-navy-700">
+                            {l.startTime.slice(0, 5)}–{l.endTime.slice(0, 5)}
+                          </span>
+                          <span className="truncate text-sm font-medium text-[#1a1f36]">
+                            {l.subjectName}
+                          </span>
+                        </div>
+                        <span className="shrink-0 rounded-md bg-[rgba(251,146,60,0.08)] px-2.5 py-1 text-xs font-semibold text-brand-500">
+                          {l.className}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </ProfileCard>
             </div>
           </div>
 
@@ -467,6 +460,18 @@ export function TeacherProfilePage() {
             teacher={detail}
             onSaved={() => void reload()}
           />
+          <Modal
+            open={availabilityOpen}
+            onClose={() => setAvailabilityOpen(false)}
+            title="Занятость учителя"
+            size="xl"
+          >
+            <TeacherAvailabilityCard
+              teacherId={detail.id}
+              teacher={detail}
+              onClose={() => setAvailabilityOpen(false)}
+            />
+          </Modal>
           <ConfirmDialog
             open={archiveOpen}
             onClose={() => setArchiveOpen(false)}

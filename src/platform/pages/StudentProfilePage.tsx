@@ -1,16 +1,25 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ChevronRight, Copy, Pencil, RotateCw, X } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Copy, Pencil, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { Avatar } from '@/components/ui/Avatar';
 import { Field, TextInput } from '@/components/ui/Field';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/context/ToastContext';
-import { formatDate, formatDateTime } from '@/lib/format';
-import { ACCOUNT_STATUS_LABELS, PARENT_RELATION_LABELS, ROLE_AVATAR_COLOR, SCHOOL_STATUS_LABELS } from '../labels';
+import { formatDate } from '@/lib/format';
+import { ROLE_AVATAR_COLOR, SCHOOL_STATUS_LABELS } from '../labels';
 import { AccountActionsMenu } from '../components/AccountActionsMenu';
+import {
+  IconActionButton,
+  ProfileBreadcrumb,
+  ProfileCard,
+  ProfileCardTitle,
+  ProfileEditButton,
+  ProfileInfoField,
+  ProfileLinkAction,
+  ProfileStatusBadge,
+  SoftBadge,
+} from '../components/ProfileChrome';
 import { AddToClassModal } from '../modals/AddToClassModal';
 import { LinkParentModal } from '../modals/LinkParentModal';
 import {
@@ -20,19 +29,22 @@ import {
   listClasses,
   reissueCode,
   unblockUser,
-  unlinkStudent,
   updateStudent,
 } from '../services';
 import type { SchoolClass, StudentProfileDetail } from '../types';
 import { formatPersonName } from '../types';
+import { initials } from '@/lib/format';
 
-function InfoField({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-slate-800">{value}</p>
-    </div>
-  );
+/** Formats class name to Figma style: `5 «А» класс`. */
+function formatEnrollmentClass(className: string | null | undefined): string {
+  if (!className) return 'Не назначен';
+  const trimmed = className.trim();
+  const quoted = trimmed.match(/^(\d+)\s*[«"']\s*([A-Za-zА-Яа-яЁё])\s*[»"']/);
+  if (quoted) return `${quoted[1]} «${quoted[2].toUpperCase()}» класс`;
+  const plain = trimmed.match(/^(\d+)\s*([A-Za-zА-Яа-яЁё])(?:\s*класс)?$/i);
+  if (plain) return `${plain[1]} «${plain[2].toUpperCase()}» класс`;
+  if (/класс/i.test(trimmed)) return trimmed;
+  return `${trimmed} класс`;
 }
 
 export function StudentProfilePage() {
@@ -86,7 +98,12 @@ export function StudentProfilePage() {
     if (!detail) return;
     setSaving(true);
     try {
-      await updateStudent(detail.id, { lastName, firstName, middleName: middleName || null, birthDate: birthDate || null });
+      await updateStudent(detail.id, {
+        lastName,
+        firstName,
+        middleName: middleName || null,
+        birthDate: birthDate || null,
+      });
       toast.success('Профиль обновлён');
       setEditing(false);
       await reload();
@@ -107,6 +124,16 @@ export function StudentProfilePage() {
       toast.error(err instanceof Error ? err.message : 'Не удалось перевыпустить код');
     } finally {
       setReissuing(false);
+    }
+  }
+
+  async function handleCopyCode() {
+    if (!issuedCode) return;
+    try {
+      await navigator.clipboard.writeText(issuedCode);
+      toast.success('Код скопирован');
+    } catch {
+      toast.error('Не удалось скопировать код');
     }
   }
 
@@ -141,220 +168,254 @@ export function StudentProfilePage() {
     }
   }
 
-  async function handleUnlinkParent(parentProfileId: number) {
-    if (!detail) return;
-    if (!window.confirm('Отвязать родителя?')) return;
-    try {
-      await unlinkStudent(parentProfileId, detail.id);
-      toast.success('Родитель отвязан');
-      await reload();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не удалось отвязать');
-    }
-  }
-
   if (!Number.isFinite(accountId)) {
     return <ErrorBlock message="Некорректный идентификатор ученика." />;
   }
 
   const name = detail ? formatPersonName(detail.lastName, detail.firstName, detail.middleName) : '';
+  const shortName = detail ? `${detail.firstName} ${detail.lastName}`.trim() : '';
 
   return (
-    <div>
-      <div className="mb-3 flex items-center gap-1.5 text-sm text-slate-400">
-        <Link to="/admin/users" className="font-medium hover:text-brand-600">
-          Пользователи
-        </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <Link to="/students" className="font-medium hover:text-brand-600">
-          Ученики
-        </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="font-medium text-slate-600">{name || '…'}</span>
-      </div>
-
+    <div className="flex flex-col gap-8">
       {loading ? (
-        <div className="card">
+        <ProfileCard>
           <LoadingBlock label="Загрузка ученика…" />
-        </div>
+        </ProfileCard>
       ) : error || !detail ? (
-        <div className="card">
+        <ProfileCard>
           <ErrorBlock message={error ?? 'Ученик не найден'} onRetry={() => void reload()} />
-        </div>
+        </ProfileCard>
       ) : (
         <>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Avatar name={name} size="lg" color={ROLE_AVATAR_COLOR.STUDENT} />
-              <div>
-                <h1 className="flex items-center gap-2.5 text-[28px] font-extrabold leading-tight tracking-tight text-slate-900">
-                  {name}
-                  {detail.accountStatus === 'ACTIVE' ? (
-                    <Badge tone="green" dot>Активен</Badge>
-                  ) : (
-                    <Badge tone="gray" dot>{ACCOUNT_STATUS_LABELS[detail.accountStatus]}</Badge>
-                  )}
+          <div className="flex flex-col gap-3">
+            <ProfileBreadcrumb
+              items={[
+                { label: 'Пользователи', to: '/admin/users' },
+                { label: 'Ученики', to: '/students' },
+                { label: shortName || name },
+              ]}
+            />
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-4">
+                <h1 className="text-[28px] font-bold leading-none text-[#1a1f36]">
+                  {shortName || name}
                 </h1>
+                <ProfileStatusBadge status={detail.accountStatus} />
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="secondary" icon={<Pencil className="h-4 w-4" />} onClick={() => setEditing((v) => !v)}>
-                Редактировать
-              </Button>
-              <AccountActionsMenu
-                status={detail.accountStatus}
-                onBlock={() => void handleBlock()}
-                onUnblock={() => void handleUnblock()}
-                onArchive={() => setArchiveOpen(true)}
-              />
+              <div className="flex items-center gap-3">
+                <ProfileEditButton onClick={() => setEditing((v) => !v)} />
+                <AccountActionsMenu
+                  status={detail.accountStatus}
+                  onBlock={() => void handleBlock()}
+                  onUnblock={() => void handleUnblock()}
+                  onArchive={() => setArchiveOpen(true)}
+                />
+              </div>
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="card space-y-5 px-6 py-6 lg:col-span-2">
-              <div className="flex items-center justify-between">
-                <h2 className="text-base font-bold text-slate-900">Основная информация</h2>
-              </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_380px]">
+            <div className="flex flex-col gap-6">
+              <ProfileCard className="flex flex-col gap-5">
+                <ProfileCardTitle>Основная информация</ProfileCardTitle>
+                <div className="h-px w-full bg-slate-100" />
 
-              {editing ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <Field label="Фамилия" required>
-                    <TextInput value={lastName} onChange={(e) => setLastName(e.target.value)} />
-                  </Field>
-                  <Field label="Имя" required>
-                    <TextInput value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-                  </Field>
-                  <Field label="Отчество">
-                    <TextInput value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
-                  </Field>
-                  <Field label="Дата рождения">
-                    <TextInput type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
-                  </Field>
-                  <div className="flex items-end gap-2">
-                    <Button loading={saving} onClick={() => void handleSave()}>
-                      Сохранить
-                    </Button>
-                    <Button variant="secondary" onClick={() => setEditing(false)} disabled={saving}>
-                      Отмена
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  <InfoField label="ФИО ученика" value={name} />
-                  <InfoField label="Учебный год" value={detail.currentMembership?.academicYearName ?? '—'} />
-                  <InfoField label="Класс поступления" value={detail.currentMembership?.className ?? 'Не назначен'} />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Персональный код</p>
-                    <div className="mt-1 flex items-center gap-2">
-                      {issuedCode ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            void navigator.clipboard.writeText(issuedCode);
-                            toast.success('Код скопирован');
-                          }}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1 font-mono text-sm font-medium text-slate-700 transition hover:bg-slate-200"
-                        >
-                          {issuedCode}
-                          <Copy className="h-3.5 w-3.5 text-slate-400" />
-                        </button>
-                      ) : (
-                        <span className="text-sm text-slate-400">Скрыт</span>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => void handleReissue()}
-                        disabled={reissuing}
-                        title="Перевыпустить код"
-                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
-                      >
-                        <RotateCw className="h-3.5 w-3.5" />
-                      </button>
+                {editing ? (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <Field label="Фамилия" required>
+                      <TextInput value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                    </Field>
+                    <Field label="Имя" required>
+                      <TextInput value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                    </Field>
+                    <Field label="Отчество">
+                      <TextInput value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
+                    </Field>
+                    <Field label="Дата рождения">
+                      <TextInput type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+                    </Field>
+                    <div className="flex items-end gap-2 sm:col-span-2">
+                      <Button loading={saving} onClick={() => void handleSave()}>
+                        Сохранить
+                      </Button>
+                      <Button variant="secondary" onClick={() => setEditing(false)} disabled={saving}>
+                        Отмена
+                      </Button>
                     </div>
                   </div>
-                </div>
-              )}
-
-              <div className="border-t border-slate-100 pt-5">
-                <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-base font-bold text-slate-900">Связанные родители</h2>
-                  <button
-                    type="button"
-                    onClick={() => setLinkParentOpen(true)}
-                    className="text-sm font-semibold text-brand-600 hover:text-brand-700"
-                  >
-                    + Привязать родителя
-                  </button>
-                </div>
-                {detail.linkedParents.length === 0 ? (
-                  <EmptyBlock title="Родители не привязаны" description="Привяжите родителя, чтобы он видел данные ученика." />
                 ) : (
-                  <ul className="divide-y divide-slate-50 rounded-xl ring-1 ring-slate-200">
-                    {detail.linkedParents.map((p) => (
-                      <li key={p.parentProfileId} className="flex items-center gap-3 px-4 py-3">
-                        <Avatar
-                          name={formatPersonName(p.lastName, p.firstName, p.middleName)}
-                          size="sm"
-                          color={ROLE_AVATAR_COLOR.PARENT}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-slate-800">
-                            {formatPersonName(p.lastName, p.firstName, p.middleName)}
-                          </p>
-                          <p className="truncate text-xs text-slate-400">
-                            {p.phone} · {PARENT_RELATION_LABELS[p.relationType]}
-                          </p>
+                  <div className="flex flex-col gap-4">
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                      <ProfileInfoField label="ФИО ученика" value={name} />
+                      <ProfileInfoField
+                        label="Учебный год"
+                        value={detail.currentMembership?.academicYearName ?? '—'}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                      <ProfileInfoField
+                        label="Класс поступления"
+                        value={
+                          detail.currentMembership ? (
+                            formatEnrollmentClass(detail.currentMembership.className)
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setAddToClassOpen(true)}
+                              className="font-medium text-brand-500 hover:text-brand-600"
+                            >
+                              Назначить класс
+                            </button>
+                          )
+                        }
+                      />
+                      <div className="flex min-w-0 flex-col gap-1.5">
+                        <p className="text-[11px] font-semibold uppercase text-[#9ca3af]">
+                          Персональный код
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-navy-700">
+                            {issuedCode ?? 'Скрыт'}
+                          </span>
+                          <IconActionButton
+                            title="Скопировать"
+                            disabled={!issuedCode}
+                            onClick={() => void handleCopyCode()}
+                          >
+                            <Copy className="size-3" />
+                          </IconActionButton>
+                          <IconActionButton
+                            title="Перевыпустить код"
+                            disabled={reissuing}
+                            onClick={() => void handleReissue()}
+                          >
+                            <RotateCw className={`size-3.5 ${reissuing ? 'animate-spin' : ''}`} />
+                          </IconActionButton>
                         </div>
-                        <button
-                          onClick={() => void handleUnlinkParent(p.parentProfileId)}
-                          title="Отвязать"
-                          className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                      <ProfileInfoField
+                        label="Статус PIN-кода"
+                        value={
+                          detail.pinSet ? (
+                            <SoftBadge tone="green">Создан</SoftBadge>
+                          ) : (
+                            <SoftBadge tone="gray">Не создан</SoftBadge>
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
+              </ProfileCard>
+
+              <ProfileCard className="flex flex-col gap-4">
+                <ProfileCardTitle
+                  action={
+                    <ProfileLinkAction onClick={() => setLinkParentOpen(true)}>
+                      + Привязать родителя
+                    </ProfileLinkAction>
+                  }
+                >
+                  Связанные родители
+                </ProfileCardTitle>
+                <div className="h-px w-full bg-slate-100" />
+
+                {detail.linkedParents.length === 0 ? (
+                  <EmptyBlock
+                    title="Родители не привязаны"
+                    description="Привяжите родителя, чтобы он видел данные ученика."
+                  />
+                ) : (
+                  <ul>
+                    {detail.linkedParents.map((p) => {
+                      const parentName = formatPersonName(p.lastName, p.firstName, p.middleName);
+                      const color = ROLE_AVATAR_COLOR.PARENT;
+                      return (
+                        <li
+                          key={p.parentProfileId}
+                          className="flex items-center gap-4 border-b border-[#f3f4f6] py-3 last:border-b-0"
                         >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </li>
-                    ))}
+                          <span
+                            className="inline-flex size-10 shrink-0 items-center justify-center rounded-[20px] text-sm font-bold text-white"
+                            style={{ backgroundColor: color.bg }}
+                          >
+                            {initials(parentName)}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-[#1a1f36]">{parentName}</p>
+                            <p className="truncate text-xs text-[#9ca3af]">
+                              {p.phone}
+                              {p.email ? ` · ${p.email}` : ''}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/parents/${p.accountId}`)}
+                            title="Открыть профиль родителя"
+                            className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                          >
+                            <Pencil className="size-4" />
+                          </button>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
-              </div>
+              </ProfileCard>
 
               {detail.membershipHistory.length > 0 && (
-                <div className="border-t border-slate-100 pt-5">
-                  <h2 className="mb-3 text-base font-bold text-slate-900">История классов</h2>
-                  <ul className="divide-y divide-slate-50 rounded-xl ring-1 ring-slate-200">
+                <ProfileCard className="flex flex-col gap-4">
+                  <ProfileCardTitle>История классов</ProfileCardTitle>
+                  <ul className="divide-y divide-slate-100">
                     {detail.membershipHistory.map((m) => (
-                      <li key={m.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                      <li
+                        key={m.id}
+                        className="flex items-center justify-between py-2.5 text-sm first:pt-0"
+                      >
                         <span className="font-medium text-slate-700">
-                          {m.className} · {m.academicYearName}
+                          {formatEnrollmentClass(m.className)} · {m.academicYearName}
                         </span>
                         <span className="text-slate-400">{SCHOOL_STATUS_LABELS[m.status]}</span>
                       </li>
                     ))}
                   </ul>
-                </div>
+                </ProfileCard>
               )}
             </div>
 
-            <div className="card space-y-4 px-6 py-6">
-              <h2 className="text-base font-bold text-slate-900">Сводка</h2>
-              <InfoField
-                label="Статус"
-                value={
-                  detail.accountStatus === 'ACTIVE' ? (
-                    <Badge tone="green" dot>Активен</Badge>
-                  ) : (
-                    <Badge tone="gray" dot>{ACCOUNT_STATUS_LABELS[detail.accountStatus]}</Badge>
-                  )
-                }
-              />
-              <InfoField label="Персональный код" value={issuedCode ?? 'Скрыт'} />
-              <InfoField label="Дата создания" value={formatDate(detail.createdAt)} />
-              <InfoField label="Последняя активность" value={formatDateTime(detail.updatedAt)} />
-              <Button variant="secondary" className="w-full" onClick={() => setAddToClassOpen(true)}>
-                Добавить в класс
-              </Button>
-            </div>
+            <ProfileCard className="flex h-fit flex-col gap-5">
+              <ProfileCardTitle>Сводка</ProfileCardTitle>
+              <div className="flex flex-col gap-4">
+                <ProfileInfoField
+                  label="Статус"
+                  value={<ProfileStatusBadge status={detail.accountStatus} />}
+                />
+                <ProfileInfoField label="Персональный код" value={issuedCode ?? 'Скрыт'} />
+                <ProfileInfoField
+                  label="PIN-код"
+                  value={
+                    detail.pinSet ? (
+                      <span className="inline-flex items-center gap-1.5 font-medium text-[#059669]">
+                        <span className="size-1.5 rounded-full bg-[#10b981]" />
+                        Создан
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 font-medium text-[#9ca3af]">
+                        <span className="size-1.5 rounded-full bg-slate-300" />
+                        Не создан
+                      </span>
+                    )
+                  }
+                />
+                <ProfileInfoField label="Дата создания" value={formatDate(detail.createdAt)} />
+                <ProfileInfoField
+                  label="Последняя активность"
+                  value={detail.lastLoginAt ? formatDate(detail.lastLoginAt) : '—'}
+                />
+              </div>
+            </ProfileCard>
           </div>
 
           <AddToClassModal

@@ -1,29 +1,70 @@
-import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react';
-import { CheckCircle2, FileSpreadsheet, Upload } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  AlertTriangle,
+  Check,
+  ChevronRight,
+  FileSpreadsheet,
+  FileText,
+  Loader2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Field, Select } from '@/components/ui/Field';
-import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
 import { cx } from '@/lib/format';
-import { IMPORT_RUN_STATUS_LABELS } from '../labels';
 import {
   commitImportRun,
   isImportAnalyzing,
   isImportProcessing,
   listImportErrors,
-  listImportRuns,
   listImportTypes,
   pollImportRun,
   uploadImportRun,
 } from '../services';
 import type {
   ImportDuplicateStrategy,
-  ImportRun,
   ImportRunDetail,
   ImportRunError,
   ImportType,
   ImportTypeInfo,
 } from '../types';
+
+type Phase = 'idle' | 'loading' | 'error' | 'done';
+
+const TYPE_ORDER: ImportType[] = [
+  'STUDENTS_WITH_PARENTS',
+  'STUDENTS',
+  'PARENTS',
+  'TEACHERS',
+  'CLASSES',
+];
+
+const TYPE_META: Record<
+  ImportType,
+  { title: string; description: string }
+> = {
+  STUDENTS_WITH_PARENTS: {
+    title: 'Ученики + родители',
+    description: 'Импорт учеников вместе с привязанными родителями.',
+  },
+  STUDENTS: {
+    title: 'Только ученики',
+    description: 'Создание и обновление списка учеников.',
+  },
+  PARENTS: {
+    title: 'Только родители',
+    description: 'Создание родителей и связь с учениками.',
+  },
+  TEACHERS: {
+    title: 'Учителя',
+    description: 'Импорт преподавателей, предметов и классов.',
+  },
+  CLASSES: {
+    title: 'Классы',
+    description: 'Импорт структуры классов и учебных годов.',
+  },
+};
+
+const MAX_BYTES = 10 * 1024 * 1024;
 
 function guessMapping(
   fields: ImportTypeInfo['fields'],
@@ -43,7 +84,6 @@ function guessMapping(
       used.add(byLabel);
       continue;
     }
-    // fuzzy: column contains label words
     const fuzzy = columns.find(
       (c) =>
         !used.has(c) &&
@@ -60,50 +100,66 @@ function guessMapping(
 
 export function ImportPage() {
   const toast = useToast();
+  const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [types, setTypes] = useState<ImportTypeInfo[]>([]);
-  const [importType, setImportType] = useState<ImportType | ''>('');
-  const [runs, setRuns] = useState<ImportRun[]>([]);
+  const [importType, setImportType] = useState<ImportType>('STUDENTS_WITH_PARENTS');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [progress, setProgress] = useState(40);
 
-  const [phase, setPhase] = useState<'idle' | 'uploading' | 'mapping' | 'committing' | 'done'>(
-    'idle',
-  );
+  const [phase, setPhase] = useState<Phase>('idle');
   const [activeRun, setActiveRun] = useState<ImportRunDetail | null>(null);
-  const [mapping, setMapping] = useState<Record<string, string>>({});
-  const [duplicateStrategy, setDuplicateStrategy] =
-    useState<ImportDuplicateStrategy>('SKIP');
   const [errors, setErrors] = useState<ImportRunError[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [typesError, setTypesError] = useState<string | null>(null);
 
-  const selectedTypeInfo = types.find((t) => t.type === importType) ?? null;
+  const availableTypes = useMemo(() => {
+    const fromApi = new Map(types.map((t) => [t.type, t]));
+    return TYPE_ORDER.filter((t) => fromApi.has(t)).map((t) => ({
+      type: t,
+      ...TYPE_META[t],
+      fields: fromApi.get(t)!.fields,
+    }));
+  }, [types]);
 
-  const reloadRuns = useCallback(async () => {
-    try {
-      const list = await listImportRuns();
-      setRuns(list);
-    } catch {
-      /* ignore list errors on side panel */
-    }
-  }, []);
+  const selectedTypeInfo = types.find((t) => t.type === importType) ?? null;
+  const canImport = Boolean(selectedFile && importType && phase === 'idle');
 
   useEffect(() => {
     void listImportTypes()
       .then((list) => {
         setTypes(list);
-        if (list.length > 0) setImportType(list[0].type);
+        const preferred = TYPE_ORDER.find((t) => list.some((x) => x.type === t));
+        if (preferred) setImportType(preferred);
+        else if (list[0]) setImportType(list[0].type);
       })
       .catch((err) =>
         setTypesError(err instanceof Error ? err.message : 'Не удалось загрузить типы импорта'),
       );
-    void reloadRuns();
-  }, [reloadRuns]);
+  }, []);
+
+  useEffect(() => {
+    if (phase !== 'loading') return;
+    setProgress(35);
+    const id = window.setInterval(() => {
+      setProgress((p) => (p >= 90 ? 40 : p + 8));
+    }, 400);
+    return () => window.clearInterval(id);
+  }, [phase]);
+
+  const resetUpload = useCallback(() => {
+    setSelectedFile(null);
+    setActiveRun(null);
+    setErrors([]);
+    setErrorMessage(null);
+    setPhase('idle');
+    if (inputRef.current) inputRef.current.value = '';
+  }, []);
 
   const onFileChosen = useCallback((file: File | null) => {
-    setError(null);
+    setErrorMessage(null);
     setActiveRun(null);
     setErrors([]);
     setPhase('idle');
@@ -112,9 +168,16 @@ export function ImportPage() {
       return;
     }
     const lower = file.name.toLowerCase();
-    if (!/\.(xlsx|xls|csv)$/.test(lower)) {
+    if (!/\.(xlsx|xls)$/.test(lower)) {
       setSelectedFile(null);
-      setError('Выберите файл .xlsx, .xls или .csv');
+      setErrorMessage('Поддерживаются только файлы .xlsx и .xls');
+      setPhase('error');
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      setSelectedFile(null);
+      setErrorMessage('Максимальный размер файла — 10 MB');
+      setPhase('error');
       return;
     }
     setSelectedFile(file);
@@ -126,322 +189,348 @@ export function ImportPage() {
     onFileChosen(e.dataTransfer.files?.[0] ?? null);
   }
 
-  async function startUpload() {
-    if (!selectedFile || !importType) {
-      setError('Выберите тип и файл');
+  async function runImport() {
+    if (!selectedFile || !importType || !selectedTypeInfo) {
+      setErrorMessage('Выберите тип импорта и файл');
+      setPhase('error');
       return;
     }
-    setPhase('uploading');
-    setError(null);
+
+    setPhase('loading');
+    setErrorMessage(null);
     setActiveRun(null);
     setErrors([]);
+
     try {
       const accepted = await uploadImportRun(importType, selectedFile);
-      const run = await pollImportRun(
+      const analyzed = await pollImportRun(
         accepted.id,
         (r) => !isImportAnalyzing(r.status) || r.status === 'ANALYSIS_FAILED',
       );
-      setActiveRun(run);
-      if (run.status === 'ANALYSIS_FAILED') {
-        setError(run.errorMessage || 'Анализ файла не удался');
-        setPhase('idle');
-        return;
-      }
-      if (run.status !== 'PREVIEW_READY') {
-        setError(`Неожиданный статус: ${run.status}`);
-        setPhase('idle');
-        return;
-      }
-      const typeInfo = types.find((t) => t.type === importType);
-      const fields = typeInfo?.fields ?? [];
-      const initial =
-        run.mapping && Object.keys(run.mapping).length > 0
-          ? run.mapping
-          : guessMapping(fields, run.columnNames);
-      setMapping(initial);
-      setDuplicateStrategy(run.duplicateStrategy ?? 'SKIP');
-      setPhase('mapping');
-      await reloadRuns();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка загрузки');
-      setPhase('idle');
-    }
-  }
 
-  async function startCommit() {
-    if (!activeRun || !selectedTypeInfo) return;
-    for (const field of selectedTypeInfo.fields) {
-      if (field.required && !mapping[field.key]) {
-        setError(`Сопоставьте обязательное поле: ${field.label}`);
+      if (analyzed.status === 'ANALYSIS_FAILED') {
+        setActiveRun(analyzed);
+        setErrorMessage(analyzed.errorMessage || 'Не удалось обработать файл');
+        setPhase('error');
         return;
       }
-    }
-    setPhase('committing');
-    setError(null);
-    try {
-      await commitImportRun(activeRun.id, mapping, duplicateStrategy);
-      const run = await pollImportRun(activeRun.id, (r) => !isImportProcessing(r.status), {
-        maxAttempts: 120,
-      });
-      setActiveRun(run);
-      if (run.errorCount > 0 || run.status === 'COMPLETED_WITH_ERRORS' || run.status === 'FAILED') {
-        const errs = await listImportErrors(run.id);
-        setErrors(errs);
+
+      if (analyzed.status !== 'PREVIEW_READY') {
+        setActiveRun(analyzed);
+        setErrorMessage(`Неожиданный статус: ${analyzed.status}`);
+        setPhase('error');
+        return;
+      }
+
+      const mapping =
+        analyzed.mapping && Object.keys(analyzed.mapping).length > 0
+          ? analyzed.mapping
+          : guessMapping(selectedTypeInfo.fields, analyzed.columnNames);
+
+      for (const field of selectedTypeInfo.fields) {
+        if (field.required && !mapping[field.key]) {
+          setActiveRun(analyzed);
+          setErrorMessage(
+            `Не удалось сопоставить обязательное поле «${field.label}». Проверьте колонки файла.`,
+          );
+          setPhase('error');
+          return;
+        }
+      }
+
+      const strategy: ImportDuplicateStrategy = analyzed.duplicateStrategy ?? 'UPDATE';
+      await commitImportRun(analyzed.id, mapping, strategy);
+      const finished = await pollImportRun(
+        analyzed.id,
+        (r) => !isImportProcessing(r.status),
+        { maxAttempts: 120 },
+      );
+
+      setActiveRun(finished);
+      if (finished.errorCount > 0 || finished.status === 'COMPLETED_WITH_ERRORS' || finished.status === 'FAILED') {
+        setErrors(await listImportErrors(finished.id));
       } else {
         setErrors([]);
       }
-      setPhase('done');
-      if (run.status === 'COMPLETED') {
-        toast.success('Импорт завершён');
-      } else if (run.status === 'COMPLETED_WITH_ERRORS') {
-        toast.info(`Импорт завершён с ошибками: ${run.errorCount}`);
-      } else {
-        toast.error(run.errorMessage || 'Импорт завершился с ошибкой');
+
+      if (finished.status === 'FAILED') {
+        setErrorMessage(finished.errorMessage || 'Импорт завершился с ошибкой');
+        setPhase('error');
+        return;
       }
-      await reloadRuns();
+
+      setPhase('done');
+      if (finished.status === 'COMPLETED') {
+        toast.success('Импорт завершён');
+      } else {
+        toast.info(`Импорт завершён с ошибками: ${finished.errorCount}`);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка commit');
-      setPhase('mapping');
+      setErrorMessage(err instanceof Error ? err.message : 'Не удалось обработать файл');
+      setPhase('error');
     }
   }
 
-  const busy = phase === 'uploading' || phase === 'committing';
-
   return (
     <div>
-      <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Реальный импорт через API: загрузка → сопоставление колонок → commit. Типы и поля
-        приходят с сервера.
-      </p>
+      <div className="mb-1 flex items-center gap-2 text-xs">
+        <Link to="/admin/users" className="font-medium text-slate-400 hover:text-brand-600">
+          Пользователи
+        </Link>
+        <ChevronRight className="h-3 w-3 text-slate-300" />
+        <span className="font-semibold text-navy-700">Импорт из Excel</span>
+      </div>
+      <h1 className="text-[28px] font-extrabold tracking-tight text-slate-900">Импорт данных</h1>
 
       {typesError && (
-        <div className="mb-4">
-          <ErrorBlock message={typesError} />
-        </div>
+        <p className="mt-4 text-sm text-red-500">{typesError}</p>
       )}
 
-      <div className="mb-4 max-w-xs">
-        <label className="label-base">Тип импорта</label>
-        <Select
-          value={importType}
-          onChange={(e) => {
-            setImportType(e.target.value as ImportType);
-            setActiveRun(null);
-            setPhase('idle');
-            setError(null);
-          }}
-          disabled={busy || types.length === 0}
-        >
-          {types.map((t) => (
-            <option key={t.type} value={t.type}>
-              {t.label}
-            </option>
-          ))}
-        </Select>
-      </div>
-
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragging(true);
-        }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={onDrop}
-        className={cx(
-          'card flex flex-col items-center justify-center gap-3 border-dashed py-12 text-center transition',
-          dragging && 'ring-2 ring-brand-400/40',
-        )}
-      >
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-          {selectedFile ? (
-            <FileSpreadsheet className="h-7 w-7 text-brand-500" />
-          ) : (
-            <Upload className="h-7 w-7" />
-          )}
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-slate-700">
-            {selectedFile ? selectedFile.name : 'Перетащите Excel сюда или выберите файл'}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">.xlsx / .xls / .csv</p>
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => inputRef.current?.click()}
-            disabled={busy}
-          >
-            Выбрать файл
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => void startUpload()}
-            loading={phase === 'uploading'}
-            disabled={!selectedFile || !importType || busy}
-          >
-            Загрузить и проанализировать
-          </Button>
-        </div>
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
-          className="hidden"
-          onChange={(e) => onFileChosen(e.target.files?.[0] ?? null)}
-        />
-      </div>
-
-      {busy && (
-        <div className="mt-4">
-          <LoadingBlock
-            label={phase === 'uploading' ? 'Анализ файла…' : 'Импорт выполняется…'}
-          />
-        </div>
-      )}
-      {error && !busy && (
-        <div className="mt-4">
-          <ErrorBlock message={error} />
-        </div>
-      )}
-
-      {phase === 'mapping' && activeRun && selectedTypeInfo && (
-        <div className="card mt-4 space-y-4">
-          <div>
-            <h2 className="text-sm font-semibold text-slate-800">Сопоставление колонок</h2>
-            <p className="text-xs text-slate-500">
-              Файл: {activeRun.fileName} · строк: {activeRun.totalRows ?? '—'}
-            </p>
-          </div>
-          <div className="space-y-3">
-            {selectedTypeInfo.fields.map((field) => (
-              <Field
-                key={field.key}
-                label={`${field.label}${field.required ? ' *' : ''}`}
-              >
-                <Select
-                  value={mapping[field.key] ?? ''}
-                  onChange={(e) =>
-                    setMapping((prev) => ({ ...prev, [field.key]: e.target.value }))
-                  }
+      <div className="mt-6 space-y-6">
+        {/* 1. Type selection */}
+        <section className="card space-y-4 p-6">
+          <h2 className="text-base font-bold text-slate-900">1. Выберите тип импорта</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {(availableTypes.length > 0
+              ? availableTypes
+              : TYPE_ORDER.map((t) => ({ type: t, ...TYPE_META[t], fields: [] }))
+            ).map((item) => {
+              const selected = importType === item.type;
+              return (
+                <button
+                  key={item.type}
+                  type="button"
+                  disabled={phase === 'loading'}
+                  onClick={() => {
+                    setImportType(item.type);
+                    if (phase === 'done' || phase === 'error') resetUpload();
+                  }}
+                  className={cx(
+                    'flex h-[110px] flex-col gap-2 rounded-xl p-4 text-left transition',
+                    selected
+                      ? 'border-2 border-navy-700 bg-[#eff6ff]'
+                      : 'border border-slate-200 bg-white hover:border-slate-300',
+                    phase === 'loading' && 'opacity-70',
+                  )}
                 >
-                  <option value="">— не сопоставлять —</option>
-                  {activeRun.columnNames.map((col) => (
-                    <option key={col} value={col}>
-                      {col}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-            ))}
+                  <div className="flex w-full items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <FileText
+                        className={cx(
+                          'h-[18px] w-[18px]',
+                          selected ? 'text-navy-700' : 'text-slate-400',
+                        )}
+                      />
+                      <span className="text-sm font-semibold text-slate-900">{item.title}</span>
+                    </div>
+                    {selected && (
+                      <span className="flex h-[18px] w-[18px] items-center justify-center rounded-[9px] bg-navy-700">
+                        <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs leading-relaxed text-slate-500">{item.description}</p>
+                </button>
+              );
+            })}
           </div>
-          <Field label="Дубликаты">
-            <Select
-              value={duplicateStrategy}
-              onChange={(e) =>
-                setDuplicateStrategy(e.target.value as ImportDuplicateStrategy)
-              }
+        </section>
+
+        {/* 2. Upload / loading / error / results */}
+        <section className="card space-y-4 p-6">
+          <h2 className="text-base font-bold text-slate-900">2. Загрузка Excel-файла</h2>
+
+          {phase === 'idle' && (
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragging(true);
+              }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={onDrop}
+              className={cx(
+                'flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed px-6 py-12 transition',
+                dragging
+                  ? 'border-navy-700 bg-[#eff6ff]'
+                  : 'border-slate-200 bg-slate-50',
+              )}
             >
-              <option value="SKIP">Пропускать (SKIP)</option>
-              <option value="UPDATE">Обновлять (UPDATE)</option>
-            </Select>
-          </Field>
-          <Button onClick={() => void startCommit()} disabled={busy}>
-            Запустить импорт
-          </Button>
-        </div>
-      )}
-
-      {phase === 'done' && activeRun && (
-        <div className="mt-4 space-y-4">
-          {activeRun.status === 'COMPLETED' ? (
-            <div className="flex items-center gap-3 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-100">
-              <CheckCircle2 className="h-5 w-5 shrink-0" />
-              Импорт «{activeRun.importTypeLabel}» завершён для{' '}
-              <span className="font-semibold">{activeRun.fileName}</span>
-            </div>
-          ) : (
-            <div className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-100">
-              Статус: {IMPORT_RUN_STATUS_LABELS[activeRun.status]}
-              {activeRun.errorMessage ? ` — ${activeRun.errorMessage}` : ''}
+              <FileSpreadsheet className="h-12 w-12 text-slate-300" />
+              <div className="text-center">
+                <p className="text-base font-semibold text-slate-900">
+                  {selectedFile ? selectedFile.name : 'Перетащите файл сюда'}
+                </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  {selectedFile
+                    ? `${(selectedFile.size / 1024).toFixed(0)} КБ`
+                    : 'или нажмите «Выбрать файл»'}
+                </p>
+              </div>
+              <Button onClick={() => inputRef.current?.click()}>Выбрать файл</Button>
+              <p className="text-xs text-slate-400">
+                Поддерживаются файлы .xlsx и .xls · Максимум 10 MB
+              </p>
             </div>
           )}
-          <div className="flex flex-wrap gap-3 text-sm">
-            <span className="rounded-lg bg-emerald-50 px-3 py-1.5 text-emerald-700">
-              Создано: {activeRun.createdCount}
-            </span>
-            <span className="rounded-lg bg-sky-50 px-3 py-1.5 text-sky-700">
-              Обновлено: {activeRun.updatedCount}
-            </span>
-            <span className="rounded-lg bg-slate-100 px-3 py-1.5 text-slate-700">
-              Пропущено: {activeRun.skippedCount}
-            </span>
-            <span className="rounded-lg bg-red-50 px-3 py-1.5 text-red-700">
-              Ошибки: {activeRun.errorCount}
-            </span>
-          </div>
-          {errors.length > 0 && (
-            <div className="card overflow-hidden p-0">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-100 bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold">Строка</th>
-                    <th className="px-4 py-3 font-semibold">Поле</th>
-                    <th className="px-4 py-3 font-semibold">Код</th>
-                    <th className="px-4 py-3 font-semibold">Сообщение</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {errors.map((row, i) => (
-                    <tr key={`${row.rowNumber}-${i}`} className="border-b border-slate-50 last:border-0">
-                      <td className="px-4 py-3 text-slate-600">{row.rowNumber}</td>
-                      <td className="px-4 py-3 text-slate-900">{row.field || '—'}</td>
-                      <td className="px-4 py-3 text-slate-500">{row.errorCode}</td>
-                      <td className="px-4 py-3 text-slate-500">{row.message}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+
+          {phase === 'loading' && (
+            <div className="flex flex-col items-center justify-center gap-6 rounded-xl border border-slate-200 bg-slate-50 px-6 py-16">
+              <div className="flex h-12 w-12 items-center justify-center">
+                <Loader2 className="h-12 w-12 animate-spin text-navy-700" strokeWidth={2} />
+              </div>
+              <div className="text-center">
+                <p className="text-base font-semibold text-slate-900">Проверяем файл...</p>
+                <p className="mt-2 text-sm text-slate-500">
+                  Анализируем строки и сопоставляем контакты
+                </p>
+              </div>
+              <div className="h-1.5 w-60 overflow-hidden rounded-full bg-slate-200">
+                <div
+                  className="h-full rounded-full bg-navy-700 transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
             </div>
           )}
-        </div>
-      )}
 
-      <div className="mt-8">
-        <h2 className="mb-3 text-sm font-semibold text-slate-800">Последние запуски</h2>
-        {runs.length === 0 ? (
-          <div className="card">
-            <EmptyBlock title="Запусков пока нет" description="Загрузите первый файл." />
-          </div>
+          {phase === 'error' && (
+            <div className="flex flex-col items-center justify-center gap-5 rounded-xl border border-red-500 bg-red-50 px-6 py-14">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500">
+                <AlertTriangle className="h-6 w-6 text-white" />
+              </div>
+              <div className="max-w-md text-center">
+                <p className="text-base font-bold text-red-500">Не удалось обработать файл</p>
+                <p className="mt-1.5 text-sm text-slate-500">
+                  {errorMessage ||
+                    'Проверьте формат файла, структуру колонок и повторите попытку.'}
+                </p>
+              </div>
+              <Button
+                onClick={() => {
+                  resetUpload();
+                  window.setTimeout(() => inputRef.current?.click(), 0);
+                }}
+              >
+                Повторить загрузку
+              </Button>
+            </div>
+          )}
+
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+            className="hidden"
+            onChange={(e) => onFileChosen(e.target.files?.[0] ?? null)}
+          />
+
+          {phase === 'done' && activeRun && (
+            <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6">
+              <h3 className="text-base font-bold text-slate-900">Результат проверки</h3>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <StatTile
+                  label="Всего записей"
+                  value={activeRun.totalRows ?? activeRun.processedRows}
+                  tone="blue"
+                />
+                <StatTile label="Создано" value={activeRun.createdCount} tone="green" />
+                <StatTile label="Обновлено" value={activeRun.updatedCount} tone="orange" />
+                <StatTile label="Пропущено" value={activeRun.skippedCount} tone="gray" />
+                <StatTile label="Ошибок" value={activeRun.errorCount} tone="red" />
+              </div>
+
+              {errors.length > 0 && (
+                <div className="overflow-hidden rounded-xl border border-slate-200">
+                  <div className="flex bg-slate-50 px-4 py-2.5 text-[11px] font-semibold uppercase text-slate-400">
+                    <span className="w-[100px] shrink-0">Строка</span>
+                    <span className="w-[180px] shrink-0">Поле</span>
+                    <span className="min-w-0 flex-1">Описание ошибки</span>
+                  </div>
+                  <ul>
+                    {errors.map((err, i) => (
+                      <li
+                        key={`${err.rowNumber}-${err.field}-${i}`}
+                        className="flex border-t border-slate-100 bg-red-50 px-4 py-3 text-[13px]"
+                      >
+                        <span className="w-[100px] shrink-0 font-semibold text-red-500">
+                          Строка {err.rowNumber}
+                        </span>
+                        <span className="w-[180px] shrink-0 font-semibold text-slate-900">
+                          {err.field ?? '—'}
+                        </span>
+                        <span className="min-w-0 flex-1 text-slate-500">{err.message}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      </div>
+
+      <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-200 pt-6">
+        <Button
+          variant="secondary"
+          onClick={() => {
+            if (phase === 'done') {
+              navigate('/admin/users');
+              return;
+            }
+            if (phase === 'error') {
+              resetUpload();
+              return;
+            }
+            navigate('/admin/users');
+          }}
+          disabled={phase === 'loading'}
+        >
+          Отмена
+        </Button>
+        {phase === 'done' ? (
+          <Button onClick={() => navigate('/admin/users')}>Готово</Button>
         ) : (
-          <div className="card overflow-hidden p-0">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-100 bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">ID</th>
-                  <th className="px-4 py-3 font-semibold">Тип</th>
-                  <th className="px-4 py-3 font-semibold">Файл</th>
-                  <th className="px-4 py-3 font-semibold">Статус</th>
-                  <th className="px-4 py-3 font-semibold">Создано / ошибки</th>
-                </tr>
-              </thead>
-              <tbody>
-                {runs.map((run) => (
-                  <tr key={run.id} className="border-b border-slate-50 last:border-0">
-                    <td className="px-4 py-3 text-slate-600">{run.id}</td>
-                    <td className="px-4 py-3">{run.importTypeLabel}</td>
-                    <td className="px-4 py-3 text-slate-600">{run.fileName}</td>
-                    <td className="px-4 py-3">{IMPORT_RUN_STATUS_LABELS[run.status]}</td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {run.createdCount} / {run.errorCount}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Button
+            onClick={() => void runImport()}
+            loading={phase === 'loading'}
+            disabled={!canImport}
+            className={!canImport && phase === 'idle' ? 'bg-slate-200 text-slate-400 hover:bg-slate-200' : undefined}
+          >
+            Импортировать
+          </Button>
         )}
       </div>
+    </div>
+  );
+}
+
+function StatTile({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: 'blue' | 'green' | 'orange' | 'gray' | 'red';
+}) {
+  const tones = {
+    blue: 'bg-[#eff6ff] text-navy-700',
+    green: 'bg-emerald-50 text-emerald-500',
+    orange: 'bg-orange-50 text-brand-500',
+    gray: 'bg-slate-50 text-slate-500',
+    red: 'bg-red-50 text-red-500',
+  };
+  const labelTone = {
+    blue: 'text-navy-700',
+    green: 'text-emerald-500',
+    orange: 'text-brand-500',
+    gray: 'text-slate-400',
+    red: 'text-red-500',
+  };
+  return (
+    <div className={cx('flex flex-col gap-1 rounded-lg p-3', tones[tone])}>
+      <p className={cx('text-[11px] font-semibold uppercase', labelTone[tone])}>{label}</p>
+      <p className="text-xl font-bold">{value}</p>
     </div>
   );
 }

@@ -24,15 +24,21 @@ interface ParentDto {
 
 interface LinkedStudentDto {
   studentProfileId: number;
+  accountId: number;
   firstName: string;
   lastName: string;
   middleName: string | null;
   relationType: ParentRelationType;
   linkStatus: SchoolRecordStatus;
+  accountStatus: AccountStatus;
+  className: string | null;
+  academicYearName: string | null;
 }
 
 interface ParentDetailDto extends ParentDto {
   linkedStudents: LinkedStudentDto[];
+  email: string | null;
+  lastLoginAt: string | null;
 }
 
 function mapParent(dto: ParentDto): ParentProfile {
@@ -64,6 +70,8 @@ export async function getParentByAccount(accountId: number): Promise<ParentProfi
   return {
     ...mapParent(dto),
     linkedStudents: (dto.linkedStudents ?? []).map(mapLinked),
+    email: dto.email,
+    lastLoginAt: dto.lastLoginAt,
   };
 }
 
@@ -72,6 +80,8 @@ export async function getParent(id: number): Promise<ParentProfileDetail> {
   return {
     ...mapParent(dto),
     linkedStudents: (dto.linkedStudents ?? []).map(mapLinked),
+    email: dto.email,
+    lastLoginAt: dto.lastLoginAt,
   };
 }
 

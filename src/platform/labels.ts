@@ -43,13 +43,13 @@ export const ROLE_BADGE_TONE: Record<AccountRole, BadgeTone> = {
   SUPER_ADMIN: 'gray',
 };
 
-/** Avatar circle color per role. */
+/** Avatar circle color per role — Figma «Пользователи» table. */
 export const ROLE_AVATAR_COLOR: Record<AccountRole, { bg: string; fg: string }> = {
-  STUDENT: { bg: '#3b82f6', fg: '#ffffff' },
-  PARENT: { bg: '#f59e0b', fg: '#ffffff' },
-  TEACHER: { bg: '#7c6cf0', fg: '#ffffff' },
-  ADMIN: { bg: '#16244a', fg: '#ffffff' },
-  SUPER_ADMIN: { bg: '#16244a', fg: '#ffffff' },
+  STUDENT: { bg: '#274185', fg: '#ffffff' },
+  PARENT: { bg: '#d97706', fg: '#ffffff' },
+  TEACHER: { bg: '#4f46e5', fg: '#ffffff' },
+  ADMIN: { bg: '#374151', fg: '#ffffff' },
+  SUPER_ADMIN: { bg: '#374151', fg: '#ffffff' },
 };
 
 export const SCHOOL_STATUS_LABELS: Record<SchoolRecordStatus, string> = {
@@ -173,17 +173,11 @@ export const CALENDAR_EVENT_TYPE_DOT: Record<CalendarEventType, string> = {
 
 /** Route path → page title for AppHeader on /admin/* routes. */
 export const ADMIN_PAGE_TITLES: Record<string, string> = {
-  '/admin': 'Главная',
-  '/admin/users': 'Пользователи',
   '/admin/classes': 'Классы',
   '/admin/academic-year': 'Учебный год',
   '/admin/periods': 'Учебные периоды',
   '/admin/schedule-settings': 'Настройки расписания',
   '/admin/school-subjects': 'Школьные предметы',
   '/admin/access-codes': 'Доступы / коды',
-  '/admin/import': 'Импорт данных',
-  '/students': 'Ученики',
-  '/parents': 'Родители',
-  '/teachers': 'Учителя',
   '/lesson-schedule': 'Расписание уроков',
 };

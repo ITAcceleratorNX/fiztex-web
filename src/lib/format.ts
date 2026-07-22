@@ -9,7 +9,7 @@ export function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
-  return `${d.getDate().toString().padStart(2, '0')} ${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`;
+  return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 export function formatDateTime(iso: string | null | undefined): string {
@@ -18,6 +18,38 @@ export function formatDateTime(iso: string | null | undefined): string {
   if (Number.isNaN(d.getTime())) return '—';
   const time = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
   return `${formatDate(iso)}, ${time}`;
+}
+
+const WEEKDAYS_LONG = [
+  'Воскресенье',
+  'Понедельник',
+  'Вторник',
+  'Среда',
+  'Четверг',
+  'Пятница',
+  'Суббота',
+];
+
+const MONTHS_GENITIVE = [
+  'января',
+  'февраля',
+  'марта',
+  'апреля',
+  'мая',
+  'июня',
+  'июля',
+  'августа',
+  'сентября',
+  'октября',
+  'ноября',
+  'декабря',
+];
+
+/** "Среда, 16 июля" — for schedule subtitles. */
+export function formatWeekdayDayMonth(iso: string | Date | null | undefined = new Date()): string {
+  const d = iso instanceof Date ? iso : iso ? new Date(iso) : new Date();
+  if (Number.isNaN(d.getTime())) return '—';
+  return `${WEEKDAYS_LONG[d.getDay()]}, ${d.getDate()} ${MONTHS_GENITIVE[d.getMonth()]}`;
 }
 
 /** "Версия 1 · 12 авг. 2026, 10:30" */

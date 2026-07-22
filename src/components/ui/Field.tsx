@@ -21,7 +21,7 @@ export function Field({
     <div>
       <label className="label-base">
         {label}
-        {required && <span className="ml-0.5 text-brand-500">*</span>}
+        {required && <span className="ml-0.5 text-red-500">*</span>}
       </label>
       {children}
       {error ? (

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Archive, Lock, MoreVertical, RotateCw, Unlock } from 'lucide-react';
+import { Ban, Lock, MoreVertical, Trash2, Unlock } from 'lucide-react';
 import { cx } from '@/lib/format';
 import type { AccountStatus } from '../types';
 
@@ -36,12 +36,12 @@ export function AccountActionsMenu({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50"
+        className="inline-flex size-8 items-center justify-center rounded-lg border border-brand-500 bg-white text-slate-500 transition hover:bg-brand-50"
       >
-        <MoreVertical className="h-4 w-4" />
+        <MoreVertical className="size-4" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-10 mt-2 w-56 overflow-hidden rounded-xl bg-white py-1.5 shadow-pop ring-1 ring-slate-200/70">
+        <div className="absolute right-0 top-full z-20 mt-2 w-[220px] overflow-hidden rounded-xl border border-[#f3f4f6] bg-white py-0 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.02)]">
           {onResetAccess && !archived && (
             <button
               type="button"
@@ -49,9 +49,9 @@ export function AccountActionsMenu({
                 setOpen(false);
                 onResetAccess();
               }}
-              className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              className="flex h-10 w-full items-center gap-2.5 px-3 text-left text-[13px] font-semibold text-slate-600 transition hover:bg-slate-50"
             >
-              <RotateCw className="h-4 w-4 text-slate-400" />
+              <Ban className="size-4 text-slate-400" />
               Сбросить доступ
             </button>
           )}
@@ -63,9 +63,9 @@ export function AccountActionsMenu({
                   setOpen(false);
                   onUnblock();
                 }}
-                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                className="flex h-10 w-full items-center gap-2.5 px-3 text-left text-[13px] font-semibold text-slate-600 transition hover:bg-slate-50"
               >
-                <Unlock className="h-4 w-4 text-slate-400" />
+                <Unlock className="size-4 text-slate-400" />
                 Разблокировать аккаунт
               </button>
             ) : (
@@ -75,26 +75,29 @@ export function AccountActionsMenu({
                   setOpen(false);
                   onBlock();
                 }}
-                className={cx(
-                  'flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-red-600 transition hover:bg-red-50',
-                )}
+                className="flex h-10 w-full items-center gap-2.5 px-3 text-left text-[13px] font-semibold text-[#ef4444] transition hover:bg-red-50"
               >
-                <Lock className="h-4 w-4" />
+                <Lock className="size-4" />
                 Заблокировать аккаунт
               </button>
             ))}
           {!archived && (
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false);
-                onArchive();
-              }}
-              className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-            >
-              <Archive className="h-4 w-4 text-slate-400" />
-              Перевести в архив
-            </button>
+            <>
+              <div className="h-px bg-[#f3f4f6]" />
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onArchive();
+                }}
+                className={cx(
+                  'flex h-10 w-full items-center gap-2.5 px-3 text-left text-[13px] font-semibold text-[#6b7280] transition hover:bg-slate-50',
+                )}
+              >
+                <Trash2 className="size-4 text-slate-400" />
+                Перевести в архив
+              </button>
+            </>
           )}
         </div>
       )}

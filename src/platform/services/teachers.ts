@@ -9,6 +9,7 @@ import type {
   TeacherAssignment,
   TeacherProfile,
   TeacherProfileDetail,
+  TeacherTodayLesson,
 } from '../types';
 
 interface TeacherDto {
@@ -37,10 +38,24 @@ interface AssignmentDto {
   status: SchoolRecordStatus;
   createdAt: string;
   updatedAt: string;
+  studentCount: number;
 }
 
 interface TeacherDetailDto extends TeacherDto {
   assignments: AssignmentDto[];
+  email: string | null;
+  lastLoginAt: string | null;
+}
+
+interface TeacherTodayLessonDto {
+  lessonId: number;
+  startTime: string;
+  endTime: string;
+  subjectId: number;
+  subjectName: string;
+  classId: number;
+  className: string;
+  room: string | null;
 }
 
 interface WorkingTimeDto {
@@ -75,6 +90,10 @@ function mapAssignment(dto: AssignmentDto): TeacherAssignment {
   return { ...dto };
 }
 
+function mapTodayLesson(dto: TeacherTodayLessonDto): TeacherTodayLesson {
+  return { ...dto };
+}
+
 /** ACTIVE subjects for selectors (assignments / subgroups). */
 export async function listActiveSchoolSubjects(): Promise<SchoolSubject[]> {
   return listSchoolSubjectsBase({ status: 'ACTIVE' });
@@ -101,6 +120,8 @@ export async function getTeacherByAccount(accountId: number): Promise<TeacherPro
   return {
     ...mapTeacher(dto),
     assignments: (dto.assignments ?? []).map(mapAssignment),
+    email: dto.email,
+    lastLoginAt: dto.lastLoginAt,
   };
 }
 
@@ -109,6 +130,8 @@ export async function getTeacher(id: number): Promise<TeacherProfileDetail> {
   return {
     ...mapTeacher(dto),
     assignments: (dto.assignments ?? []).map(mapAssignment),
+    email: dto.email,
+    lastLoginAt: dto.lastLoginAt,
   };
 }
 
@@ -130,6 +153,11 @@ export async function updateTeacher(
 
 export async function archiveTeacher(id: number): Promise<void> {
   await request<void>(`/admin/teachers/${id}/archive`, { method: 'POST' });
+}
+
+export async function getTeacherTodayLessons(teacherId: number): Promise<TeacherTodayLesson[]> {
+  const list = await request<TeacherTodayLessonDto[]>(`/admin/teachers/${teacherId}/lessons/today`);
+  return list.map(mapTodayLesson);
 }
 
 export async function createTeacherAssignment(input: {

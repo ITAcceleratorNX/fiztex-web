@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput, Select } from '@/components/ui/Field';
+import { Toggle } from '@/components/ui/Toggle';
 import { useToast } from '@/context/ToastContext';
 import { PERIOD_TYPE_LABELS } from '../labels';
 import { createPeriod, updatePeriod } from '../services';
@@ -36,7 +37,7 @@ export function PeriodFormModal({
   const [type, setType] = useState<AcademicPeriodType>('QUARTER');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [status, setStatus] = useState<AcademicPeriodStatus>('ACTIVE');
+  const [active, setActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -53,7 +54,7 @@ export function PeriodFormModal({
     setType(period?.type ?? 'QUARTER');
     setStartDate(period?.startDate ?? '');
     setEndDate(period?.endDate ?? '');
-    setStatus(period?.status ?? 'ACTIVE');
+    setActive(period ? period.status === 'ACTIVE' : false);
     setError(null);
   }, [open, period, defaultYearId, years]);
 
@@ -72,6 +73,8 @@ export function PeriodFormModal({
       setError('Дата окончания раньше даты начала');
       return;
     }
+
+    const status: AcademicPeriodStatus = active ? 'ACTIVE' : 'DISABLED';
 
     setPending(true);
     try {
@@ -100,16 +103,17 @@ export function PeriodFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? 'Редактировать период' : 'Добавить период'}
+      title={isEdit ? 'Редактировать период' : 'Создать период'}
+      subtitle="Настройте параметры учебного периода."
       footer={
-        <>
+        <div className="flex w-full items-center justify-between gap-3">
           <Button variant="secondary" onClick={onClose} disabled={pending}>
             Отмена
           </Button>
           <Button onClick={onSubmit} loading={pending}>
-            {isEdit ? 'Сохранить' : 'Добавить'}
+            {isEdit ? 'Сохранить' : 'Создать'}
           </Button>
-        </>
+        </div>
       }
     >
       <form onSubmit={onSubmit} className="space-y-4">
@@ -124,17 +128,25 @@ export function PeriodFormModal({
             </Select>
           </Field>
         )}
-        <Field label="Название" required hint="1 четверть, триместр, кастомный период">
-          <TextInput value={name} onChange={(e) => setName(e.target.value)} required />
-        </Field>
-        <Field label="Тип">
+        <Field label="Тип периода" required>
           <Select value={type} onChange={(e) => setType(e.target.value as AcademicPeriodType)}>
+            <option value="" disabled>
+              Выберите тип
+            </option>
             {TYPES.map((value) => (
               <option key={value} value={value}>
-                {PERIOD_TYPE_LABELS[value]}
+                {value === 'CUSTOM' ? 'Кастомный' : PERIOD_TYPE_LABELS[value]}
               </option>
             ))}
           </Select>
+        </Field>
+        <Field label="Название периода" required>
+          <TextInput
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="1 четверть"
+            required
+          />
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Дата начала" required>
@@ -144,13 +156,7 @@ export function PeriodFormModal({
             <TextInput type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
           </Field>
         </div>
-        <Field label="Статус">
-          <Select value={status} onChange={(e) => setStatus(e.target.value as AcademicPeriodStatus)}>
-            <option value="ACTIVE">Активен</option>
-            <option value="DISABLED">Отключён</option>
-            <option value="ARCHIVED">Архив</option>
-          </Select>
-        </Field>
+        <Toggle checked={active} onChange={setActive} label="Период активен" />
         {error && <p className="text-sm text-red-500">{error}</p>}
       </form>
     </Modal>

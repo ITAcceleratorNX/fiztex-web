@@ -215,18 +215,24 @@ export interface StudentProfile {
 
 export interface LinkedParent {
   parentProfileId: number;
+  accountId: number;
   firstName: string;
   lastName: string;
   middleName: string | null;
   phone: string;
+  email: string | null;
   relationType: ParentRelationType;
   linkStatus: SchoolRecordStatus;
+  accountStatus: AccountStatus;
 }
 
 export interface StudentProfileDetail extends StudentProfile {
   currentMembership: ClassMembership | null;
   membershipHistory: ClassMembership[];
   linkedParents: LinkedParent[];
+  /** Whether the student has completed activation by setting a PIN (see personal code flow). */
+  pinSet: boolean;
+  lastLoginAt: string | null;
 }
 
 export interface ParentProfile {
@@ -245,15 +251,21 @@ export interface ParentProfile {
 
 export interface LinkedStudent {
   studentProfileId: number;
+  accountId: number;
   firstName: string;
   lastName: string;
   middleName: string | null;
   relationType: ParentRelationType;
   linkStatus: SchoolRecordStatus;
+  accountStatus: AccountStatus;
+  className: string | null;
+  academicYearName: string | null;
 }
 
 export interface ParentProfileDetail extends ParentProfile {
   linkedStudents: LinkedStudent[];
+  email: string | null;
+  lastLoginAt: string | null;
 }
 
 export interface TeacherProfile {
@@ -283,10 +295,24 @@ export interface TeacherAssignment {
   status: SchoolRecordStatus;
   createdAt: string;
   updatedAt: string;
+  studentCount: number;
+}
+
+export interface TeacherTodayLesson {
+  lessonId: number;
+  startTime: string;
+  endTime: string;
+  subjectId: number;
+  subjectName: string;
+  classId: number;
+  className: string;
+  room: string | null;
 }
 
 export interface TeacherProfileDetail extends TeacherProfile {
   assignments: TeacherAssignment[];
+  email: string | null;
+  lastLoginAt: string | null;
 }
 
 export interface SchoolSubject {

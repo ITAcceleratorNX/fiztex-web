@@ -36,18 +36,23 @@ interface MembershipDto {
 
 interface LinkedParentDto {
   parentProfileId: number;
+  accountId: number;
   firstName: string;
   lastName: string;
   middleName: string | null;
   phone: string;
+  email: string | null;
   relationType: ParentRelationType;
   linkStatus: SchoolRecordStatus;
+  accountStatus: AccountStatus;
 }
 
 interface StudentDetailDto extends StudentDto {
   currentMembership: MembershipDto | null;
   membershipHistory: MembershipDto[];
   linkedParents: LinkedParentDto[];
+  pinSet: boolean;
+  lastLoginAt: string | null;
 }
 
 function mapStudent(dto: StudentDto): StudentProfile {
@@ -89,6 +94,8 @@ export async function getStudentByAccount(accountId: number): Promise<StudentPro
     currentMembership: dto.currentMembership ? mapMembership(dto.currentMembership) : null,
     membershipHistory: (dto.membershipHistory ?? []).map(mapMembership),
     linkedParents: (dto.linkedParents ?? []).map(mapLinkedParent),
+    pinSet: dto.pinSet,
+    lastLoginAt: dto.lastLoginAt,
   };
 }
 
@@ -99,6 +106,8 @@ export async function getStudent(id: number): Promise<StudentProfileDetail> {
     currentMembership: dto.currentMembership ? mapMembership(dto.currentMembership) : null,
     membershipHistory: (dto.membershipHistory ?? []).map(mapMembership),
     linkedParents: (dto.linkedParents ?? []).map(mapLinkedParent),
+    pinSet: dto.pinSet,
+    lastLoginAt: dto.lastLoginAt,
   };
 }
 
