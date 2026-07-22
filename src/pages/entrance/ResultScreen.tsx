@@ -1,133 +1,125 @@
-import { ArrowLeft, CheckCircle2, XCircle, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { EntranceShell } from './EntranceShell';
-import { Button } from '@/components/ui/Button';
-import { cx } from '@/lib/format';
-import type { ApplicantResult } from '@/lib/entranceTypes';
+import type { ApplicantResult, ApplicantView } from '@/lib/entranceTypes';
 
-/** Result screen — shown when the school opened the score for viewing. */
+/** Result screen — school opened the score for viewing (Figma). */
 export function ResultScreen({
   result,
+  applicant,
   onBack,
   onExit,
 }: {
   result: ApplicantResult;
+  applicant?: ApplicantView | null;
   onBack: () => void;
   onExit: () => void;
 }) {
-  const topics = Object.entries(result.topicBreakdown);
-  const maxTotal = topics.reduce((sum, [, t]) => sum + t.max, 0) || result.minScore;
-  const hasTopics = result.strongTopics.length > 0 || result.weakTopics.length > 0;
+  const displayScore = Math.round(result.percent > 0 ? result.percent : result.totalScore);
+  const hasStrong = result.strongTopics.length > 0;
+  const hasWeak = result.weakTopics.length > 0;
 
   return (
-    <EntranceShell size="lg">
+    <EntranceShell
+      variant="portal"
+      size="lg"
+      applicantName={applicant?.fullName}
+      onExit={onExit}
+    >
       <button
+        type="button"
         onClick={onBack}
-        className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate-500 transition hover:text-slate-700"
+        className="inline-flex h-11 items-center gap-2 rounded-xl bg-brand-500 px-4 text-sm font-semibold text-white shadow-[0_8px_8px_rgba(251,146,60,0.19)] transition hover:bg-brand-600"
       >
-        <ArrowLeft className="h-4 w-4" />
-        К списку тестов
+        <ArrowLeft className="size-4" />
+        Вернуться к списку тестов
       </button>
 
-      <div className="card overflow-hidden">
-        <div
-          className={cx(
-            'px-6 py-8 text-center',
-            result.passed ? 'bg-emerald-50' : 'bg-red-50',
-          )}
-        >
-          <div
-            className={cx(
-              'mx-auto flex h-16 w-16 items-center justify-center rounded-full',
-              result.passed ? 'bg-emerald-100' : 'bg-red-100',
-            )}
-          >
-            {result.passed ? (
-              <CheckCircle2 className="h-9 w-9 text-emerald-600" />
-            ) : (
-              <XCircle className="h-9 w-9 text-red-500" />
-            )}
+      <div className="mt-8 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+        <div className="rounded-[24px] bg-white p-6 shadow-[0_8px_24px_rgba(39,65,133,0.08)] sm:p-8">
+          <dl className="space-y-3 text-sm">
+            <div className="flex flex-wrap gap-x-2">
+              <dt className="text-slate-400">Название теста:</dt>
+              <dd className="font-semibold text-[#1a1f36]">{result.testTitle}</dd>
+            </div>
+            <div className="flex flex-wrap gap-x-2">
+              <dt className="text-slate-400">Предмет:</dt>
+              <dd className="font-semibold text-[#1a1f36]">{result.subject}</dd>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-2">
+              <dt className="text-slate-400">Статус проверки:</dt>
+              <dd className="inline-flex items-center gap-1.5 font-semibold text-emerald-600">
+                <span className="size-2 rounded-full bg-emerald-500" />
+                Проверено школой
+              </dd>
+            </div>
+          </dl>
+
+          <div className="mt-10 text-center">
+            <p className="text-[64px] font-extrabold leading-none tracking-tight text-navy-700">
+              {displayScore}
+            </p>
+            <p className="mt-2 text-sm text-slate-400">балла из 100</p>
           </div>
-          <p className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">
-            {result.subject}
-          </p>
-          <h1 className="mt-1 text-xl font-bold text-slate-900">{result.testTitle}</h1>
-          <p
-            className={cx(
-              'mt-3 text-2xl font-extrabold',
-              result.passed ? 'text-emerald-700' : 'text-red-600',
-            )}
-          >
-            {result.passed ? 'Зачёт' : 'Недостаточно баллов'}
-          </p>
-          <p className="mt-2 text-sm text-slate-600">
-            Набрано{' '}
-            <span className="font-bold text-slate-900">
-              {result.totalScore}
-              {maxTotal > 0 ? ` / ${maxTotal}` : ''}
-            </span>
-            {result.percent > 0 && (
-              <span className="ml-2 text-slate-500">({Math.round(result.percent)}%)</span>
-            )}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">Минимальный проходной балл: {result.minScore}</p>
-        </div>
 
-        <div className="space-y-5 px-6 py-6">
-          {result.schoolComment?.trim() && (
-            <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Комментарий школы
-              </p>
-              <p className="mt-1.5 text-sm leading-relaxed text-slate-700">{result.schoolComment}</p>
+          <div className="mt-10 grid grid-cols-2 gap-3">
+            <div className="rounded-2xl bg-slate-50 px-4 py-4 text-center">
+              <p className="text-xs text-slate-400">Минимальный проходной балл</p>
+              <p className="mt-1.5 text-2xl font-bold text-[#1a1f36]">{result.minScore}</p>
             </div>
-          )}
-
-          {hasTopics && (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {result.strongTopics.length > 0 && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
-                  <div className="mb-2 flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-emerald-600" />
-                    <h2 className="text-sm font-semibold text-emerald-800">Сильные темы</h2>
-                  </div>
-                  <ul className="space-y-1.5">
-                    {result.strongTopics.map((topic) => (
-                      <li key={topic} className="flex items-center gap-2 text-sm text-slate-700">
-                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                        {topic}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {result.weakTopics.length > 0 && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4">
-                  <div className="mb-2 flex items-center gap-2">
-                    <TrendingDown className="h-4 w-4 text-amber-600" />
-                    <h2 className="text-sm font-semibold text-amber-800">Слабые темы</h2>
-                  </div>
-                  <ul className="space-y-1.5">
-                    {result.weakTopics.map((topic) => (
-                      <li key={topic} className="flex items-center gap-2 text-sm text-slate-700">
-                        <XCircle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
-                        {topic}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-center">
+              <p className="text-xs text-slate-400">Ваш результат</p>
+              <p className="mt-1.5 text-2xl font-bold text-emerald-700">{displayScore}</p>
             </div>
-          )}
-
-          <div className="flex flex-col gap-2.5 sm:flex-row">
-            <Button className="flex-1" onClick={onBack}>
-              К списку тестов
-            </Button>
-            <Button variant="ghost" className="flex-1" onClick={onExit}>
-              Выйти
-            </Button>
           </div>
         </div>
+
+        <div className="flex flex-col gap-5">
+          {hasStrong ? (
+            <div className="rounded-[24px] bg-white p-5 shadow-[0_8px_24px_rgba(39,65,133,0.08)] sm:p-6">
+              <h2 className="text-sm font-bold text-[#1a1f36]">Сильные темы</h2>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {result.strongTopics.map((topic) => (
+                  <span
+                    key={topic}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700"
+                  >
+                    <CheckCircle2 className="size-3.5" />
+                    {topic}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {hasWeak ? (
+            <div className="rounded-[24px] bg-white p-5 shadow-[0_8px_24px_rgba(39,65,133,0.08)] sm:p-6">
+              <h2 className="text-sm font-bold text-[#1a1f36]">Темы для повторения</h2>
+              <ul className="mt-4 space-y-2">
+                {result.weakTopics.map((topic) => (
+                  <li key={topic} className="flex items-start gap-2 text-sm text-navy-700">
+                    <span className="mt-2 size-1.5 shrink-0 rounded-full bg-navy-700" />
+                    {topic}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      {result.schoolComment?.trim() ? (
+        <div className="mt-5 rounded-[24px] bg-white p-6 shadow-[0_8px_24px_rgba(39,65,133,0.08)] sm:p-8">
+          <h2 className="text-base font-bold text-navy-700">Комментарий приёмной комиссии</h2>
+          <p className="mt-3 text-sm leading-relaxed text-[#374151]">{result.schoolComment}</p>
+        </div>
+      ) : null}
+
+      <div className="mt-5 rounded-[24px] border border-[rgba(39,65,133,0.08)] bg-[#f0f4ff] p-6 sm:p-8">
+        <h2 className="text-base font-bold text-navy-700">Что дальше?</h2>
+        <p className="mt-3 text-sm leading-relaxed text-[#374151]">
+          Приёмная комиссия рассмотрит все результаты. Информацию о следующем этапе поступления
+          школа сообщит отдельно.
+        </p>
       </div>
     </EntranceShell>
   );

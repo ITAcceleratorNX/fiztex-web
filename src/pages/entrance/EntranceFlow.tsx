@@ -38,6 +38,7 @@ export function EntranceFlow() {
   const toast = useToast();
   const [screen, setScreen] = useState<Screen>('loading');
   const [applicant, setApplicant] = useState<ApplicantView | null>(null);
+  const [personalCode, setPersonalCode] = useState('');
   const [assignments, setAssignments] = useState<AssignmentItem[]>([]);
   const [selected, setSelected] = useState<AssignmentItem | null>(null);
   const [attempt, setAttempt] = useState<AttemptDetail | null>(null);
@@ -76,6 +77,13 @@ export function EntranceFlow() {
           if (cancelled) return;
           if (detail.status === 'IN_PROGRESS') {
             setAttempt(detail);
+            try {
+              const list = await loadAssignments();
+              if (!cancelled) setApplicant(list.applicant);
+            } catch {
+              /* header name is optional */
+            }
+            if (cancelled) return;
             setScreen('attempt');
             return;
           }
@@ -113,8 +121,9 @@ export function EntranceFlow() {
     setScreen('attempt');
   }, []);
 
-  function handleVerified(view: ApplicantView) {
+  function handleVerified(view: ApplicantView, code: string) {
     setApplicant(view);
+    setPersonalCode(code);
     setScreen('confirm');
   }
 
@@ -133,6 +142,7 @@ export function EntranceFlow() {
   function handleExit() {
     clearEntranceSession();
     setApplicant(null);
+    setPersonalCode('');
     setAssignments([]);
     setAttempt(null);
     setResult(null);
@@ -206,8 +216,10 @@ export function EntranceFlow() {
 
   if (screen === 'loading') {
     return (
-      <EntranceShell>
-        <LoadingBlock />
+      <EntranceShell variant="auth">
+        <div className="rounded-[32px] bg-white p-16 shadow-[0px_8px_24px_0px_rgba(39,65,133,0.13),0px_32px_64px_0px_rgba(0,0,0,0.13)]">
+          <LoadingBlock />
+        </div>
       </EntranceShell>
     );
   }
@@ -220,6 +232,7 @@ export function EntranceFlow() {
     return (
       <ConfirmScreen
         applicant={applicant}
+        personalCode={personalCode}
         onConfirm={handleConfirmed}
         onBack={handleExit}
         loading={busy}
@@ -240,25 +253,36 @@ export function EntranceFlow() {
     );
   }
 
-  if (screen === 'instruction' && selected) {
+  if (screen === 'instruction' && selected && applicant) {
     return (
       <InstructionScreen
         item={selected}
+        applicant={applicant}
         onBegin={handleBeginFromInstruction}
         onBack={() => setScreen('list')}
+        onExit={handleExit}
         loading={busy}
       />
     );
   }
 
   if (screen === 'attempt' && attempt) {
-    return <AttemptScreen key={attempt.attemptId} attempt={attempt} onFinished={handleFinished} />;
+    return (
+      <AttemptScreen
+        key={attempt.attemptId}
+        attempt={attempt}
+        applicant={applicant}
+        onFinished={handleFinished}
+        onExit={handleExit}
+      />
+    );
   }
 
   if (screen === 'finished') {
     return (
       <FinishedScreen
-        testTitle={attempt?.testTitle}
+        attempt={attempt}
+        applicant={applicant}
         onBackToList={handleBackToList}
         onExit={handleExit}
       />
@@ -267,7 +291,12 @@ export function EntranceFlow() {
 
   if (screen === 'result' && result) {
     return (
-      <ResultScreen result={result} onBack={handleBackToList} onExit={handleExit} />
+      <ResultScreen
+        result={result}
+        applicant={applicant}
+        onBack={handleBackToList}
+        onExit={handleExit}
+      />
     );
   }
 

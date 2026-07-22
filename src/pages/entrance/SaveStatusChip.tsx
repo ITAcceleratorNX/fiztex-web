@@ -1,3 +1,4 @@
+import { Check, AlertCircle } from 'lucide-react';
 import { cx } from '@/lib/format';
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
@@ -13,7 +14,7 @@ export function SaveStatusChip({
 
   if (status === 'saving') {
     return (
-      <span className="inline-flex items-center rounded-lg bg-slate-50 px-2 py-1 text-xs text-slate-500 ring-1 ring-slate-200">
+      <span className="inline-flex items-center gap-1.5 text-sm text-slate-400">
         Сохранение…
       </span>
     );
@@ -21,28 +22,28 @@ export function SaveStatusChip({
 
   if (status === 'saved') {
     return (
-      <span className="inline-flex items-center rounded-lg bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
-        Сохранено
+      <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600">
+        <Check className="size-4" strokeWidth={2.5} />
+        Ответ сохранён
       </span>
     );
   }
 
   return (
     <span className="inline-flex flex-wrap items-center gap-2">
-      <span className="inline-flex items-center rounded-lg bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-red-200">
-        Не сохранено — проверьте интернет
+      <span className="inline-flex items-center gap-1.5 text-sm font-medium text-red-600">
+        <AlertCircle className="size-4" />
+        Не сохранено
       </span>
-      {onRetry && (
+      {onRetry ? (
         <button
           type="button"
           onClick={onRetry}
-          className={cx(
-            'rounded-lg px-2 py-1 text-xs font-semibold text-brand-600 transition hover:bg-brand-50',
-          )}
+          className={cx('text-sm font-semibold text-brand-500 transition hover:text-brand-600')}
         >
           Повторить
         </button>
-      )}
+      ) : null}
     </span>
   );
 }

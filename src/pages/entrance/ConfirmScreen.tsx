@@ -1,67 +1,99 @@
-import { useState } from 'react';
-import { User, GraduationCap, AlertCircle } from 'lucide-react';
 import { EntranceShell } from './EntranceShell';
-import { Button } from '@/components/ui/Button';
 import type { ApplicantView } from '@/lib/entranceTypes';
 
-/** Section 5 — confirm the applicant's data before starting. */
+function formatGrade(grade: string): string {
+  const trimmed = grade.trim();
+  if (!trimmed) return '—';
+  if (/класс/i.test(trimmed)) return trimmed;
+  return `${trimmed} класс`;
+}
+
+/** Section 5 — confirm applicant data before starting (Figma). */
 export function ConfirmScreen({
   applicant,
+  personalCode,
   onConfirm,
   onBack,
   loading,
 }: {
   applicant: ApplicantView;
+  personalCode: string;
   onConfirm: () => void;
   onBack: () => void;
   loading: boolean;
 }) {
-  const [mismatch, setMismatch] = useState(false);
-
   return (
-    <EntranceShell>
-      <div className="card p-6 sm:p-8">
-        <h1 className="text-xl font-bold text-slate-900">Проверьте данные перед началом тестирования</h1>
+    <EntranceShell variant="auth">
+      <div className="flex flex-col gap-1 rounded-[32px] bg-white p-8 shadow-[0px_8px_24px_0px_rgba(39,65,133,0.13),0px_32px_64px_0px_rgba(0,0,0,0.13)] sm:p-16">
+        <div className="flex flex-col gap-3">
+          <h1 className="text-[28px] font-bold leading-tight text-[#1a1f36] sm:text-[32px]">
+            Подтверждение данных
+          </h1>
+          <p className="text-[15px] leading-normal text-[#6b7280]">
+            Проверьте данные перед началом тестирования.
+          </p>
+        </div>
 
-        <dl className="mt-6 space-y-3">
-          <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
-            <User className="h-5 w-5 shrink-0 text-slate-400" />
-            <div>
-              <dt className="text-xs text-slate-500">ФИО поступающего</dt>
-              <dd className="text-sm font-semibold text-slate-800">{applicant.fullName}</dd>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
-            <GraduationCap className="h-5 w-5 shrink-0 text-slate-400" />
-            <div>
-              <dt className="text-xs text-slate-500">Класс поступления</dt>
-              <dd className="text-sm font-semibold text-slate-800">{applicant.grade}</dd>
-            </div>
-          </div>
-        </dl>
+        <div className="mt-6 flex flex-col gap-6 rounded-3xl border border-[#e8edf5] bg-[#f9fafb] p-6 sm:p-8">
+          <DataRow label="ФИО" value={applicant.fullName} valueClass="text-lg" />
+          <div className="h-px w-full bg-[#e8edf5]" />
+          <DataRow label="Класс поступления" value={formatGrade(applicant.grade)} valueClass="text-lg" />
+          <div className="h-px w-full bg-[#e8edf5]" />
+          <DataRow
+            label="Персональный код"
+            value={personalCode || '—'}
+            valueClass="text-[15px]"
+          />
+        </div>
 
-        {mismatch ? (
-          <div className="mt-6 flex items-start gap-2.5 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700 ring-1 ring-amber-200">
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>Обратитесь к сотруднику школы.</span>
+        <div className="mt-4 flex flex-col gap-3 rounded-[20px] border border-[rgba(39,65,133,0.06)] bg-[#f0f4ff] p-6">
+          <div className="flex items-center gap-2.5">
+            <span className="flex size-5 shrink-0 items-center justify-center rounded-[10px] bg-navy-700 text-xs font-extrabold text-white">
+              i
+            </span>
+            <p className="text-[13px] font-semibold text-navy-700">Внимание</p>
           </div>
-        ) : null}
+          <p className="text-[13px] leading-relaxed text-[#374151]">
+            Если данные указаны неверно, обратитесь к сотруднику приёмной комиссии школы.
+          </p>
+        </div>
 
-        <div className="mt-6 space-y-2.5">
-          <Button className="w-full" onClick={onConfirm} loading={loading}>
-            Это я
-          </Button>
-          {!mismatch ? (
-            <Button variant="ghost" className="w-full" onClick={() => setMismatch(true)} disabled={loading}>
-              Данные неверные
-            </Button>
-          ) : (
-            <Button variant="secondary" className="w-full" onClick={onBack} disabled={loading}>
-              Ввести другой код
-            </Button>
-          )}
+        <div className="mt-4 flex flex-col items-center gap-5">
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex h-16 w-full items-center justify-center rounded-2xl bg-brand-500 text-base font-semibold text-white shadow-[0px_8px_8px_rgba(251,146,60,0.19)] transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? 'Загрузка…' : 'Подтвердить'}
+          </button>
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={loading}
+            className="text-sm font-semibold text-navy-700 underline underline-offset-2 transition hover:text-navy-800 disabled:opacity-50"
+          >
+            Это не мои данные
+          </button>
         </div>
       </div>
     </EntranceShell>
+  );
+}
+
+function DataRow({
+  label,
+  value,
+  valueClass,
+}: {
+  label: string;
+  value: string;
+  valueClass?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className="text-xs font-semibold uppercase text-[#6b7280]">{label}</p>
+      <p className={`font-bold text-[#1a1f36] ${valueClass ?? 'text-lg'}`}>{value}</p>
+    </div>
   );
 }
