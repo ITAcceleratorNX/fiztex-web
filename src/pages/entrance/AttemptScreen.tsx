@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Clock, ArrowLeft, ArrowRight, AlertTriangle, X } from 'lucide-react';
+import { Clock, AlertTriangle, X } from 'lucide-react';
 import { entranceApi } from '@/lib/entranceApi';
 import { ApiError } from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
@@ -302,63 +302,53 @@ export function AttemptScreen({
   const isLast = index === questions.length - 1;
   const currentSaveStatus = saveStatus[question.id] ?? 'idle';
 
+  const progressPct = Math.round(((index + 1) / questions.length) * 100);
+
   return (
-    <EntranceShell
-      variant="session"
-      size="lg"
-      applicantName={applicant?.fullName}
-      onExit={onExit}
-    >
-      <div className="relative space-y-4">
-        {/* Progress + timer */}
-        <div className="flex flex-col gap-4 rounded-[20px] bg-white px-5 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.08)] sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <div className="min-w-0 flex-1">
-            <p className="text-base font-bold text-navy-700">{attempt.subject || attempt.testTitle}</p>
-            <p className="mt-0.5 text-sm text-slate-400">
-              Вопрос {index + 1} из {questions.length}
+    <EntranceShell variant="session">
+      <div className="flex min-h-[100dvh] flex-col">
+        <header className="shrink-0 bg-white px-5 pb-5 pt-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="truncate text-[17px] font-bold text-navy-700">
+              {attempt.subject || attempt.testTitle}
             </p>
-            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-              <div
-                className="h-full rounded-full bg-brand-500 transition-all"
-                style={{ width: `${((index + 1) / questions.length) * 100}%` }}
-              />
-            </div>
-          </div>
-          <div
-            className={cx(
-              'flex shrink-0 flex-col items-center justify-center rounded-2xl border px-5 py-3',
-              lowTime ? 'border-red-200 bg-red-50' : 'border-slate-200 bg-white',
-            )}
-          >
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-              Осталось
-            </p>
-            <p
+            <div
               className={cx(
-                'mt-0.5 flex items-center gap-1.5 text-xl font-bold tabular-nums',
-                lowTime ? 'text-red-600' : 'text-navy-700',
+                'inline-flex shrink-0 items-center gap-1.5 text-[17px] font-bold tabular-nums',
+                lowTime ? 'text-red-500' : 'text-brand-500',
               )}
             >
-              <Clock className="size-4" />
+              <Clock className="size-[18px]" strokeWidth={2} />
               {formatClock(remaining)}
-            </p>
+            </div>
           </div>
-        </div>
+          <div className="mt-4 flex items-center justify-between text-[13px] font-semibold text-[#64748b]">
+            <span>
+              Вопрос {index + 1} из {questions.length}
+            </span>
+            <span>{progressPct}% завершено</span>
+          </div>
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#e2e8f0]">
+            <div
+              className="h-full rounded-full bg-navy-700 transition-all"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </header>
 
         {showTimeWarning && (
-          <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <div className="mx-5 mt-3 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             <Clock className="mt-0.5 size-4 shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="font-semibold">До конца теста осталось {warnLabel}</p>
               <p className="mt-0.5 text-red-700">
-                Проверьте ответы и завершите тест вовремя. После истечения времени тест отправится
-                автоматически.
+                Проверьте ответы. После истечения времени тест отправится автоматически.
               </p>
             </div>
             <button
               type="button"
               onClick={() => setShowTimeWarning(false)}
-              className="shrink-0 rounded-lg p-1 text-red-600 transition hover:bg-red-100"
+              className="shrink-0 rounded-lg p-1 text-red-600"
               aria-label="Закрыть"
             >
               <X className="size-4" />
@@ -366,16 +356,14 @@ export function AttemptScreen({
           </div>
         )}
 
-        {/* Question card */}
-        <div className="rounded-[24px] bg-white p-5 shadow-[0_8px_24px_rgba(0,0,0,0.08)] sm:p-8">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-            Вопрос {index + 1}
-          </p>
-          <h2 className="mt-2 text-lg font-bold leading-snug text-[#1a1f36] sm:text-xl">
-            {question.text}
-          </h2>
+        <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-5 py-5">
+          <div className="rounded-[28px] bg-white p-7 shadow-[0_4px_16px_rgba(0,0,0,0.03)]">
+            <h2 className="text-center text-xl font-semibold leading-7 text-[#1e293b]">
+              {question.text}
+            </h2>
+          </div>
 
-          <div className="mt-6 space-y-3">
+          <div className="space-y-3">
             {question.type === 'SINGLE_CHOICE' &&
               question.options.map((opt) => {
                 const checked = answer.selectedOptionIds.includes(opt.id);
@@ -383,19 +371,19 @@ export function AttemptScreen({
                   <label
                     key={opt.id}
                     className={cx(
-                      'flex cursor-pointer items-center gap-3 rounded-2xl border-2 px-4 py-3.5 text-sm transition',
+                      'flex h-16 cursor-pointer items-center gap-3 rounded-2xl border px-5 text-[17px] transition',
                       checked
-                        ? 'border-navy-700 bg-[#f0f4ff] text-[#1a1f36]'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300',
+                        ? 'border-2 border-navy-700 bg-[#eff6ff] font-bold text-[#1e293b]'
+                        : 'border border-[#e2e8f0] bg-white font-medium text-[#1e293b]',
                     )}
                   >
                     <span
                       className={cx(
-                        'flex size-5 shrink-0 items-center justify-center rounded-full border-2',
-                        checked ? 'border-navy-700' : 'border-slate-300',
+                        'flex size-6 shrink-0 items-center justify-center rounded-full border-2',
+                        checked ? 'border-navy-700' : 'border-[#e2e8f0]',
                       )}
                     >
-                      {checked ? <span className="size-2.5 rounded-full bg-navy-700" /> : null}
+                      {checked ? <span className="size-3 rounded-full bg-navy-700" /> : null}
                     </span>
                     <input
                       type="radio"
@@ -416,16 +404,16 @@ export function AttemptScreen({
                   <label
                     key={opt.id}
                     className={cx(
-                      'flex cursor-pointer items-center gap-3 rounded-2xl border-2 px-4 py-3.5 text-sm transition',
+                      'flex h-16 cursor-pointer items-center gap-3 rounded-2xl border px-5 text-[17px] transition',
                       checked
-                        ? 'border-navy-700 bg-[#f0f4ff] text-[#1a1f36]'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300',
+                        ? 'border-2 border-navy-700 bg-[#eff6ff] font-bold text-[#1e293b]'
+                        : 'border border-[#e2e8f0] bg-white font-medium text-[#1e293b]',
                     )}
                   >
                     <span
                       className={cx(
-                        'flex size-5 shrink-0 items-center justify-center rounded-[6px] border-2',
-                        checked ? 'border-navy-700 bg-navy-700 text-white' : 'border-slate-300',
+                        'flex size-6 shrink-0 items-center justify-center rounded-md border-2',
+                        checked ? 'border-navy-700 bg-navy-700 text-white' : 'border-[#e2e8f0]',
                       )}
                     >
                       {checked ? (
@@ -451,15 +439,14 @@ export function AttemptScreen({
                 );
               })}
 
-            {(question.type === 'OPEN_TEXT' || question.type === 'PHOTO') &&
-              question.type === 'OPEN_TEXT' && (
-                <TextArea
-                  value={answer.openTextAnswer}
-                  onChange={(e) => setText(question, e.target.value)}
-                  placeholder="Введите ответ…"
-                  rows={5}
-                />
-              )}
+            {question.type === 'OPEN_TEXT' && (
+              <TextArea
+                value={answer.openTextAnswer}
+                onChange={(e) => setText(question, e.target.value)}
+                placeholder="Введите ответ…"
+                rows={5}
+              />
+            )}
 
             {question.type === 'PHOTO' && !question.allowPhoto && (
               <div className="flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -479,153 +466,121 @@ export function AttemptScreen({
                 onUploadFailed={() => logConnectionIssue('photo upload failed')}
               />
             )}
-          </div>
 
-          <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
-            <SaveStatusChip
-              status={currentSaveStatus}
-              onRetry={
-                currentSaveStatus === 'error' ? () => void saveQuestion(question.id) : undefined
-              }
-            />
-            <div className="ml-auto flex items-center gap-3">
-              <button
-                type="button"
-                disabled={!allowBack || index === 0 || submitting}
-                onClick={() => void goTo(index - 1)}
-                className="inline-flex h-11 items-center gap-1.5 rounded-xl border-[1.5px] border-brand-500 px-4 text-sm font-semibold text-brand-500 transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <ArrowLeft className="size-4" />
-                Назад
-              </button>
-              {!isLast ? (
-                <button
-                  type="button"
-                  disabled={submitting}
-                  onClick={() => void goTo(index + 1)}
-                  className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-brand-500 px-5 text-sm font-semibold text-white shadow-[0_8px_8px_rgba(251,146,60,0.19)] transition hover:bg-brand-600 disabled:opacity-50"
-                >
-                  Далее
-                  <ArrowRight className="size-4" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  disabled={submitting}
-                  onClick={() => setConfirmOpen(true)}
-                  className="inline-flex h-11 items-center rounded-xl bg-brand-500 px-5 text-sm font-semibold text-white shadow-[0_8px_8px_rgba(251,146,60,0.19)] transition hover:bg-brand-600 disabled:opacity-50"
-                >
-                  {submitting ? 'Отправка…' : 'Завершить тест'}
-                </button>
-              )}
+            <div className="flex justify-center pt-1">
+              <SaveStatusChip
+                status={currentSaveStatus}
+                onRetry={
+                  currentSaveStatus === 'error' ? () => void saveQuestion(question.id) : undefined
+                }
+              />
             </div>
           </div>
-
-          {allowBack && (
-            <div className="mt-6 flex flex-wrap gap-1.5 border-t border-slate-100 pt-5">
-              {questions.map((q, i) => {
-                const done = isQuestionAnswered(answers[q.id]);
-                return (
-                  <button
-                    key={q.id}
-                    type="button"
-                    onClick={() => void goTo(i)}
-                    disabled={submitting}
-                    className={cx(
-                      'h-8 w-8 rounded-lg text-xs font-semibold transition',
-                      i === index
-                        ? 'bg-navy-700 text-white'
-                        : done
-                          ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200 hover:bg-emerald-100'
-                          : 'bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50',
-                    )}
-                  >
-                    {i + 1}
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
 
-        {/* Always show finish control if not last and allow finishing from any question */}
-        {!isLast && (
-          <div className="flex justify-end">
+        <footer className="shrink-0 border-t border-[#e2e8f0] bg-white px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-5">
+          <div className="flex gap-3">
+            <button
+              type="button"
+              disabled={!allowBack || index === 0 || submitting}
+              onClick={() => void goTo(index - 1)}
+              className="inline-flex h-14 w-[120px] shrink-0 items-center justify-center rounded-2xl border-2 border-navy-700 text-[17px] font-semibold text-navy-700 transition disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Назад
+            </button>
+            {!isLast ? (
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => void goTo(index + 1)}
+                className="inline-flex h-14 flex-1 items-center justify-center rounded-2xl bg-brand-500 text-[17px] font-semibold text-white transition hover:bg-brand-600 disabled:opacity-50"
+              >
+                Далее
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => setConfirmOpen(true)}
+                className="inline-flex h-14 flex-1 items-center justify-center rounded-2xl bg-brand-500 text-[17px] font-semibold text-white transition hover:bg-brand-600 disabled:opacity-50"
+              >
+                {submitting ? 'Отправка…' : 'Завершить'}
+              </button>
+            )}
+          </div>
+          {!isLast ? (
             <button
               type="button"
               disabled={submitting}
               onClick={() => setConfirmOpen(true)}
-              className="text-sm font-semibold text-white/80 underline-offset-2 transition hover:text-white hover:underline disabled:opacity-50"
+              className="mt-3 w-full text-center text-sm font-semibold text-[#64748b] underline-offset-2 hover:underline disabled:opacity-50"
             >
               Завершить тест
             </button>
-          </div>
-        )}
+          ) : null}
+        </footer>
       </div>
 
       {showTabSwitchWarning && tabSwitchCount > 0 && (
-        <div className="fixed bottom-6 right-6 z-40 max-w-sm overflow-hidden rounded-2xl bg-white shadow-[0_12px_40px_rgba(0,0,0,0.18)]">
-          <div className="flex">
-            <div className="w-1.5 shrink-0 bg-brand-500" />
-            <div className="flex gap-3 p-4">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white">
-                !
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-[#1a1f36]">
-                  Зафиксирован выход из окна теста
-                </p>
-                <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                  Система обнаружила, что окно тестирования было покинуто. Это событие будет
-                  передано школе после завершения проверки.
-                </p>
-                <button
-                  type="button"
-                  onClick={dismissTabSwitchWarning}
-                  className="mt-2 text-xs font-semibold text-brand-500 hover:text-brand-600"
-                >
-                  Понятно
-                </button>
-              </div>
-            </div>
+        <div className="fixed inset-x-4 bottom-24 z-40 mx-auto flex max-w-[358px] items-center gap-3 rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-brand-500">
+            <AlertTriangle className="size-5" strokeWidth={2} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-[#1e293b]">Зафиксирован выход из окна теста</p>
+            <p className="text-xs text-[#64748b]">Это событие будет передано школе</p>
           </div>
+          <button
+            type="button"
+            onClick={dismissTabSwitchWarning}
+            aria-label="Закрыть"
+            className="flex size-[18px] shrink-0 items-center justify-center text-[#64748b]"
+          >
+            <X className="size-[15px]" strokeWidth={2} />
+          </button>
         </div>
       )}
 
       {confirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-900/50 p-4">
-          <div className="w-full max-w-md rounded-[24px] bg-white p-6 shadow-[0_24px_64px_rgba(0,0,0,0.25)] sm:p-8">
-            <h3 className="text-xl font-bold text-[#1a1f36]">Завершить тест?</h3>
-            <p className="mt-3 text-sm leading-relaxed text-slate-500">
-              После завершения тест будет отправлен на проверку школы и его нельзя будет пройти
-              повторно. Отвечено на {answeredCount} из {questions.length} вопросов.
-            </p>
-            {unansweredCount > 0 && (
-              <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
-                <p className="text-sm font-semibold">
-                  Внимание: {unansweredCount}{' '}
-                  {pluralRu(unansweredCount, ['вопрос', 'вопроса', 'вопросов'])} без ответа
-                </p>
-                <p className="mt-1 text-xs text-amber-800">
-                  Вы всё равно можете завершить тест — пустые ответы останутся незаполненными.
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
+          <div className="w-full max-w-[390px] rounded-t-[24px] bg-white px-6 pb-[max(44px,env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_32px_rgba(0,0,0,0.1)]">
+            <div className="mx-auto mb-6 h-1 w-10 rounded-full bg-[#e2e8f0]" />
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div className="flex size-16 items-center justify-center rounded-full bg-brand-500/10 text-brand-500">
+                <AlertTriangle className="size-8" strokeWidth={2.5} />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-[22px] font-bold text-[#1e293b]">Завершить тестирование?</h3>
+                <p className="text-base leading-6 text-[#64748b]">
+                  Вы ответили на{' '}
+                  <span className="font-semibold text-[#1e293b]">
+                    {answeredCount} из {questions.length}
+                  </span>{' '}
+                  вопросов. После завершения изменить ответы будет невозможно.
                 </p>
               </div>
+            </div>
+            {unansweredCount > 0 && (
+              <p className="mt-4 text-center text-sm text-amber-700">
+                Без ответа: {unansweredCount}{' '}
+                {pluralRu(unansweredCount, ['вопрос', 'вопроса', 'вопросов'])}
+              </p>
             )}
-            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={() => setConfirmOpen(false)}
-                className="inline-flex h-11 items-center justify-center rounded-xl border-[1.5px] border-slate-200 px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
-              >
-                Продолжить тест
-              </button>
+            <div className="mt-6 flex flex-col gap-3">
               <button
                 type="button"
                 disabled={submitting}
                 onClick={() => void confirmSubmit()}
-                className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-500 px-5 text-sm font-semibold text-white shadow-[0_8px_8px_rgba(251,146,60,0.19)] transition hover:bg-brand-600 disabled:opacity-50"
+                className="flex h-14 items-center justify-center rounded-2xl bg-brand-500 text-[17px] font-semibold text-white disabled:opacity-50"
               >
-                Завершить
+                Завершить тест
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(false)}
+                className="flex h-14 items-center justify-center rounded-2xl border-2 border-navy-700 text-[17px] font-semibold text-navy-700"
+              >
+                Вернуться к вопросам
               </button>
             </div>
           </div>

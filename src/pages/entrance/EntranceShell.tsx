@@ -1,15 +1,18 @@
 import type { ReactNode } from 'react';
+import { FileText, Home, LogOut, User } from 'lucide-react';
 import { Logo, PhysTechMark } from '@/components/layout/Logo';
-import { cx, initials } from '@/lib/format';
+import { cx } from '@/lib/format';
 import { APP_NAME } from '@/lib/branding';
 
-type ShellVariant = 'default' | 'auth' | 'portal' | 'session';
+type ShellVariant = 'default' | 'auth' | 'portal' | 'session' | 'plain';
+type NavKey = 'home' | 'tests' | 'profile' | 'exit';
 
 /**
- * Shell for the applicant entrance flow.
- * - `auth` — navy full-bleed card (code / confirm)
- * - `portal` — light grid + header/footer (tests list / results)
- * - `session` — navy page + white header (instruction / attempt / finished)
+ * Shell for the applicant entrance flow (mobile Figma).
+ * - `auth` — navy full-bleed (code entry)
+ * - `portal` — light list + floating logo + bottom nav
+ * - `session` — light attempt / instruction / success chrome
+ * - `plain` — bare light page (confirm)
  * - `default` — legacy light chrome
  */
 export function EntranceShell({
@@ -18,51 +21,62 @@ export function EntranceShell({
   variant = 'default',
   applicantName,
   onExit,
+  navActive = 'tests',
+  showLogo = true,
 }: {
   children: ReactNode;
   size?: 'md' | 'lg';
   variant?: ShellVariant;
   applicantName?: string;
   onExit?: () => void;
+  navActive?: NavKey;
+  showLogo?: boolean;
 }) {
   if (variant === 'auth') {
     return (
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-navy-700 px-4 py-10">
+      <div className="relative flex min-h-[100dvh] items-start justify-center overflow-hidden bg-navy-700 px-6 pb-10 pt-10 sm:items-center">
         <div
           aria-hidden
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-500/25 blur-[120px]"
+          className="pointer-events-none absolute -left-24 top-20 size-[400px] rounded-full bg-brand-500/30 blur-[100px]"
         />
-        <div className="pointer-events-none absolute bottom-8 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1 opacity-[0.18]">
-          <PhysTechMark className="h-14 w-14 text-white" />
-          <p className="text-2xl font-bold tracking-wide text-white">{APP_NAME}</p>
-        </div>
-        <main className="relative z-10 w-full max-w-[540px]">{children}</main>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+            backgroundSize: '48px 48px',
+          }}
+        />
+        <main className="relative z-10 w-full">{children}</main>
       </div>
     );
   }
 
+  if (variant === 'plain') {
+    return <div className="min-h-[100dvh] bg-[#f8fafc]">{children}</div>;
+  }
+
   if (variant === 'portal') {
     return (
-      <div className="flex min-h-screen flex-col bg-grid">
-        <PortalHeader applicantName={applicantName} onExit={onExit} />
-        <main className="mx-auto w-full max-w-[1100px] flex-1 px-6 py-8 sm:px-10">{children}</main>
-        <PortalFooter />
+      <div className="flex min-h-[100dvh] flex-col bg-[#fafbfc]">
+        <div className="mx-auto w-full max-w-[390px] flex-1 px-4 pb-28 pt-3">
+          {showLogo ? (
+            <div className="mb-4 flex h-14 items-center justify-center rounded-2xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.04),0_1px_4px_rgba(0,0,0,0.02)]">
+              <Logo className="h-8 w-auto" />
+            </div>
+          ) : null}
+          {children}
+        </div>
+        <MobileBottomNav active={navActive} onExit={onExit} applicantName={applicantName} />
       </div>
     );
   }
 
   if (variant === 'session') {
     return (
-      <div className="flex min-h-screen flex-col bg-navy-700">
-        <PortalHeader applicantName={applicantName} onExit={onExit} elevated />
-        <main
-          className={cx(
-            'mx-auto w-full flex-1 px-4 py-6 sm:px-8 sm:py-8',
-            size === 'lg' ? 'max-w-4xl' : 'max-w-3xl',
-          )}
-        >
-          {children}
-        </main>
+      <div className="min-h-[100dvh] bg-[#f8fafc]">
+        <div className="mx-auto w-full max-w-[390px]">{children}</div>
       </div>
     );
   }
@@ -92,56 +106,38 @@ export function EntranceShell({
   );
 }
 
-function PortalHeader({
-  applicantName,
+function MobileBottomNav({
+  active,
   onExit,
-  elevated,
+  applicantName,
 }: {
-  applicantName?: string;
+  active: NavKey;
   onExit?: () => void;
-  elevated?: boolean;
+  applicantName?: string;
 }) {
-  const initial = applicantName ? initials(applicantName).slice(0, 1) : 'А';
-  return (
-    <header
-      className={cx(
-        'relative z-20 bg-white',
-        elevated
-          ? 'rounded-b-2xl shadow-[0_4px_16px_rgba(0,0,0,0.08)]'
-          : 'shadow-[0_1px_0_rgba(15,23,42,0.06)]',
-      )}
-    >
-      <div className="mx-auto flex h-[72px] max-w-[1100px] items-center justify-between gap-4 px-6 sm:px-10">
-        <Logo className="h-8 w-auto" />
-        <div className="flex items-center gap-3">
-          {applicantName ? (
-            <p className="hidden text-sm font-semibold text-navy-700 sm:block">{applicantName}</p>
-          ) : null}
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-navy-700 text-sm font-bold text-white">
-            {initial}
-          </span>
-          {onExit ? (
-            <button
-              type="button"
-              onClick={onExit}
-              className="h-9 rounded-lg border border-navy-700/40 bg-white px-3.5 text-sm font-semibold text-navy-700 transition hover:bg-navy-50"
-            >
-              Выйти
-            </button>
-          ) : null}
-        </div>
-      </div>
-    </header>
-  );
-}
+  const item = (key: NavKey, icon: ReactNode, action?: () => void) => {
+    const isActive = active === key;
+    return (
+      <button
+        type="button"
+        onClick={action}
+        aria-label={key}
+        title={key === 'profile' ? applicantName : undefined}
+        className="flex h-12 w-[72px] items-center justify-center"
+      >
+        <span className={isActive ? 'text-brand-500' : 'text-[#64748b]'}>{icon}</span>
+      </button>
+    );
+  };
 
-function PortalFooter() {
   return (
-    <footer className="border-t border-slate-200/80 bg-white/60">
-      <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-4 px-6 py-5 sm:px-10">
-        <Logo className="h-5 w-auto opacity-70" />
-        <p className="text-xs text-slate-400">© 2026 Phystech. Все права защищены.</p>
+    <nav className="fixed inset-x-0 bottom-0 z-30 flex justify-center pb-[max(12px,env(safe-area-inset-bottom))] pt-2">
+      <div className="flex h-[72px] w-[min(358px,calc(100%-32px))] items-center justify-between rounded-[28px] bg-white px-3 shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
+        {item('home', <Home className="size-6" strokeWidth={2} />)}
+        {item('tests', <FileText className="size-6" strokeWidth={2} />)}
+        {item('profile', <User className="size-6" strokeWidth={2} />)}
+        {item('exit', <LogOut className="size-6" strokeWidth={2} />, onExit)}
       </div>
-    </footer>
+    </nav>
   );
 }

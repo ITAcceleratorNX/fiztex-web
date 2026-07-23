@@ -1,95 +1,93 @@
 import type { ReactNode } from 'react';
 import { Check } from 'lucide-react';
 import { EntranceShell } from './EntranceShell';
+import { pluralRu } from '@/lib/format';
 import type { ApplicantView, AttemptDetail } from '@/lib/entranceTypes';
 
-function formatSubmittedAt(iso: string | null | undefined): { date: string; time: string } {
-  const d = iso ? new Date(iso) : new Date();
-  if (Number.isNaN(d.getTime())) {
-    const now = new Date();
-    return {
-      date: now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }),
-      time: now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
-    };
+function formatElapsed(attempt?: AttemptDetail | null): string {
+  if (!attempt?.startedAt || !attempt.durationSeconds) {
+    const used = Math.max(0, (attempt?.durationMinutes ?? 0) * 60 - (attempt?.remainingSeconds ?? 0));
+    const mins = Math.max(1, Math.round(used / 60));
+    return `${mins} ${pluralRu(mins, ['минута', 'минуты', 'минут'])}`;
   }
-  return {
-    date: d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }),
-    time: d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
-  };
+  const started = new Date(attempt.startedAt).getTime();
+  const elapsedSec = Math.max(60, Math.round((Date.now() - started) / 1000));
+  const mins = Math.round(elapsedSec / 60);
+  return `${mins} ${pluralRu(mins, ['минута', 'минуты', 'минут'])}`;
 }
 
-/** Section 11 — test submitted, awaiting school review (Figma). */
+/** Mobile success — Figma `Test Success` (105:2797). */
 export function FinishedScreen({
   attempt,
-  applicant,
+  applicant: _applicant,
   onBackToList,
-  onExit,
+  onExit: _onExit,
 }: {
   attempt?: AttemptDetail | null;
   applicant?: ApplicantView | null;
   onBackToList: () => void;
   onExit: () => void;
 }) {
-  const { date, time } = formatSubmittedAt(null);
+  const answered = attempt?.answers?.filter(
+    (a) =>
+      (a.photos?.length ?? 0) > 0 ||
+      (a.selectedOptionIds?.length ?? 0) > 0 ||
+      (a.openTextAnswer ?? '').trim().length > 0,
+  ).length;
+  const total = attempt?.questions?.length;
 
   const rows: Array<{ label: string; value: ReactNode }> = [
-    { label: 'Название теста', value: attempt?.testTitle ?? '—' },
-    { label: 'Предмет', value: attempt?.subject ?? '—' },
-    { label: 'Дата отправки', value: date },
-    { label: 'Время отправки', value: time },
+    { label: 'Тест', value: attempt?.testTitle ?? '—' },
     {
-      label: 'Статус',
-      value: (
-        <span className="inline-flex rounded-full bg-brand-500 px-3 py-1 text-xs font-semibold text-white">
-          На проверке
-        </span>
-      ),
+      label: 'Отвечено',
+      value:
+        answered != null && total != null ? `${answered} из ${total}` : '—',
     },
+    { label: 'Время', value: formatElapsed(attempt) },
+    { label: 'Статус', value: 'На проверке' },
   ];
 
   return (
-    <EntranceShell
-      variant="session"
-      size="md"
-      applicantName={applicant?.fullName}
-      onExit={onExit}
-    >
-      <div className="mx-auto max-w-[520px] rounded-[28px] bg-white px-8 py-10 shadow-[0_16px_40px_rgba(0,0,0,0.12)] sm:px-10">
-        <div className="flex flex-col items-center text-center">
-          <div className="flex size-16 items-center justify-center rounded-full bg-navy-700 text-white">
-            <Check className="size-8" strokeWidth={2.5} />
+    <EntranceShell variant="session">
+      <div className="flex min-h-[100dvh] flex-col items-center justify-center gap-10 px-6 py-8">
+        <div className="flex flex-col items-center gap-6 text-center">
+          <div className="flex size-10 items-center justify-center rounded-full bg-navy-700 text-white">
+            <Check className="size-5" strokeWidth={3.5} />
           </div>
-          <h1 className="mt-5 text-[28px] font-bold tracking-tight text-[#1a1f36]">Тест завершён</h1>
-        </div>
-
-        <div className="mt-6 rounded-2xl border border-[rgba(39,65,133,0.08)] bg-[#f0f4ff] px-5 py-4">
-          <div className="flex gap-2.5">
-            <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-[10px] bg-navy-700 text-[11px] font-extrabold text-white">
-              i
-            </span>
-            <p className="text-[13px] leading-relaxed text-[#374151]">
-              Результаты публикуются только после проверки школой. До этого момента баллы, правильные
-              ответы и подробный разбор вопросов недоступны.
-            </p>
+          <div className="space-y-2">
+            <h1 className="text-[28px] font-extrabold tracking-tight text-navy-700">
+              Тест завершён!
+            </h1>
+            <p className="text-[17px] text-[#64748b]">Ваши ответы отправлены на проверку</p>
           </div>
         </div>
 
-        <dl className="mt-6 divide-y divide-slate-100">
-          {rows.map((row) => (
-            <div key={row.label} className="flex items-center justify-between gap-4 py-3.5">
-              <dt className="text-sm text-slate-400">{row.label}</dt>
-              <dd className="text-right text-sm font-semibold text-[#1a1f36]">{row.value}</dd>
-            </div>
-          ))}
-        </dl>
+        <div className="w-full rounded-3xl bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.03)]">
+          <dl className="space-y-4">
+            {rows.map((row, i) => (
+              <div key={row.label}>
+                {i > 0 ? <div className="mb-4 h-px w-full bg-[#e2e8f0]" /> : null}
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-[15px] font-medium text-[#64748b]">{row.label}</dt>
+                  <dd className="text-right text-[15px] font-bold text-[#1e293b]">{row.value}</dd>
+                </div>
+              </div>
+            ))}
+          </dl>
+        </div>
 
-        <button
-          type="button"
-          onClick={onBackToList}
-          className="mt-8 inline-flex h-12 w-full items-center justify-center rounded-xl bg-navy-700 text-sm font-semibold text-white transition hover:bg-navy-800"
-        >
-          Вернуться к списку тестов
-        </button>
+        <div className="flex w-full flex-col gap-6">
+          <p className="text-center text-sm leading-relaxed text-[#64748b]">
+            Результаты будут доступны после проверки приёмной комиссией школы.
+          </p>
+          <button
+            type="button"
+            onClick={onBackToList}
+            className="flex h-14 w-full items-center justify-center rounded-2xl bg-brand-500 text-[17px] font-semibold text-white transition hover:bg-brand-600"
+          >
+            Вернуться к списку тестов
+          </button>
+        </div>
       </div>
     </EntranceShell>
   );

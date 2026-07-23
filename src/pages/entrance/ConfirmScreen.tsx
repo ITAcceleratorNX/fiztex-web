@@ -1,3 +1,4 @@
+import { Info } from 'lucide-react';
 import { EntranceShell } from './EntranceShell';
 import type { ApplicantView } from '@/lib/entranceTypes';
 
@@ -8,7 +9,7 @@ function formatGrade(grade: string): string {
   return `${trimmed} класс`;
 }
 
-/** Section 5 — confirm applicant data before starting (Figma). */
+/** Mobile confirm — Figma `mobile-Экран подтверждения данных` (105:4221). */
 export function ConfirmScreen({
   applicant,
   personalCode,
@@ -22,48 +23,49 @@ export function ConfirmScreen({
   onBack: () => void;
   loading: boolean;
 }) {
+  const rows = [
+    { label: 'ФИО', value: applicant.fullName || '—' },
+    { label: 'Класс', value: formatGrade(applicant.grade) },
+    ...(applicant.parentFullName
+      ? [{ label: 'Родитель', value: applicant.parentFullName }]
+      : []),
+    ...(personalCode ? [{ label: 'Персональный код', value: personalCode }] : []),
+  ];
+
   return (
-    <EntranceShell variant="auth">
-      <div className="flex flex-col gap-1 rounded-[32px] bg-white p-8 shadow-[0px_8px_24px_0px_rgba(39,65,133,0.13),0px_32px_64px_0px_rgba(0,0,0,0.13)] sm:p-16">
-        <div className="flex flex-col gap-3">
-          <h1 className="text-[28px] font-bold leading-tight text-[#1a1f36] sm:text-[32px]">
-            Подтверждение данных
-          </h1>
-          <p className="text-[15px] leading-normal text-[#6b7280]">
-            Проверьте данные перед началом тестирования.
-          </p>
-        </div>
+    <EntranceShell variant="plain">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[390px] flex-col bg-[#f8fafc]">
+        <header className="flex h-14 shrink-0 items-center justify-center px-5">
+          <h1 className="text-[17px] font-semibold text-[#1e293b]">Подтверждение данных</h1>
+        </header>
 
-        <div className="mt-6 flex flex-col gap-6 rounded-3xl border border-[#e8edf5] bg-[#f9fafb] p-6 sm:p-8">
-          <DataRow label="ФИО" value={applicant.fullName} valueClass="text-lg" />
-          <div className="h-px w-full bg-[#e8edf5]" />
-          <DataRow label="Класс поступления" value={formatGrade(applicant.grade)} valueClass="text-lg" />
-          <div className="h-px w-full bg-[#e8edf5]" />
-          <DataRow
-            label="Персональный код"
-            value={personalCode || '—'}
-            valueClass="text-[15px]"
-          />
-        </div>
-
-        <div className="mt-4 flex flex-col gap-3 rounded-[20px] border border-[rgba(39,65,133,0.06)] bg-[#f0f4ff] p-6">
-          <div className="flex items-center gap-2.5">
-            <span className="flex size-5 shrink-0 items-center justify-center rounded-[10px] bg-navy-700 text-xs font-extrabold text-white">
-              i
-            </span>
-            <p className="text-[13px] font-semibold text-navy-700">Внимание</p>
+        <div className="flex flex-1 flex-col gap-6 px-5 pb-5 pt-1">
+          <div className="rounded-3xl bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
+            {rows.map((row, i) => (
+              <div key={row.label}>
+                {i > 0 ? <div className="h-px w-full bg-[#e2e8f0]" /> : null}
+                <div className="flex flex-col gap-1 py-3">
+                  <p className="text-[13px] font-medium text-[#64748b]">{row.label}</p>
+                  <p className="text-[17px] font-semibold text-[#1e293b]">{row.value}</p>
+                </div>
+              </div>
+            ))}
           </div>
-          <p className="text-[13px] leading-relaxed text-[#374151]">
-            Если данные указаны неверно, обратитесь к сотруднику приёмной комиссии школы.
-          </p>
+
+          <div className="flex gap-3 px-2">
+            <Info className="mt-0.5 size-5 shrink-0 text-[#64748b]" strokeWidth={2} />
+            <p className="text-sm leading-relaxed text-[#64748b]">
+              Если данные указаны неверно, обратитесь в приёмную комиссию для исправления.
+            </p>
+          </div>
         </div>
 
-        <div className="mt-4 flex flex-col items-center gap-5">
+        <div className="flex shrink-0 flex-col gap-3 px-5 pb-8 pt-2">
           <button
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className="flex h-16 w-full items-center justify-center rounded-2xl bg-brand-500 text-base font-semibold text-white shadow-[0px_8px_8px_rgba(251,146,60,0.19)] transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex h-14 w-full items-center justify-center rounded-2xl bg-brand-500 text-[17px] font-semibold text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? 'Загрузка…' : 'Подтвердить'}
           </button>
@@ -71,29 +73,12 @@ export function ConfirmScreen({
             type="button"
             onClick={onBack}
             disabled={loading}
-            className="text-sm font-semibold text-navy-700 underline underline-offset-2 transition hover:text-navy-800 disabled:opacity-50"
+            className="flex h-14 w-full items-center justify-center rounded-2xl border-2 border-navy-700 bg-white text-[17px] font-semibold text-navy-700 transition hover:bg-navy-50 disabled:opacity-50"
           >
             Это не мои данные
           </button>
         </div>
       </div>
     </EntranceShell>
-  );
-}
-
-function DataRow({
-  label,
-  value,
-  valueClass,
-}: {
-  label: string;
-  value: string;
-  valueClass?: string;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <p className="text-xs font-semibold uppercase text-[#6b7280]">{label}</p>
-      <p className={`font-bold text-[#1a1f36] ${valueClass ?? 'text-lg'}`}>{value}</p>
-    </div>
   );
 }

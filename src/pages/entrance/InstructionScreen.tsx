@@ -1,30 +1,16 @@
 import { useState } from 'react';
-import {
-  ArrowLeft,
-  BookOpen,
-  Clock,
-  GraduationCap,
-  HelpCircle,
-  RotateCcw,
-} from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Clock, HelpCircle } from 'lucide-react';
 import { EntranceShell } from './EntranceShell';
 import { cx } from '@/lib/format';
 import type { ApplicantView, AssignmentItem } from '@/lib/entranceTypes';
 
-function formatGrade(grade: string): string {
-  const trimmed = grade.trim();
-  if (!trimmed) return '—';
-  if (/класс/i.test(trimmed)) return trimmed;
-  return `${trimmed} класс`;
-}
-
-/** Section 7 — instruction / rules before the attempt (Figma). */
+/** Mobile instructions — Figma `Instructions Screen` (105:2697). */
 export function InstructionScreen({
   item,
-  applicant,
+  applicant: _applicant,
   onBegin,
   onBack,
-  onExit,
+  onExit: _onExit,
   loading,
 }: {
   item: AssignmentItem;
@@ -36,112 +22,114 @@ export function InstructionScreen({
 }) {
   const [agreed, setAgreed] = useState(false);
 
-  const rows = [
-    { icon: BookOpen, label: 'Предмет', value: item.subject },
-    { icon: GraduationCap, label: 'Класс', value: formatGrade(applicant.grade) },
-    { icon: Clock, label: 'Длительность', value: `${item.durationMinutes} минут` },
-    {
-      icon: RotateCcw,
-      label: 'Возврат к вопросам',
-      value: item.allowBackNavigation ? 'Разрешён' : 'Запрещён',
-    },
-    { icon: HelpCircle, label: 'Количество попыток', value: String(item.maxAttempts) },
+  const defaultRules = [
+    'На каждый вопрос один правильный ответ',
+    item.allowBackNavigation
+      ? 'Можно вернуться к предыдущим вопросам'
+      : 'Вернуться к предыдущему вопросу нельзя',
+    'Используйте черновик для расчётов',
   ];
 
+  const customRules = item.rules
+    ?.split(/\n|•/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const rules = customRules && customRules.length > 0 ? customRules : defaultRules;
+
   return (
-    <EntranceShell
-      variant="session"
-      size="lg"
-      applicantName={applicant.fullName}
-      onExit={onExit}
-    >
-      <div className="rounded-[28px] bg-white p-6 shadow-[0_16px_40px_rgba(0,0,0,0.12)] sm:p-10">
-        <div className="border-b border-slate-100 pb-6">
-          <h1 className="text-[28px] font-bold tracking-tight text-[#1a1f36]">{item.testTitle}</h1>
-          <p className="mt-2 text-sm text-[#6b7280]">Подготовьтесь перед началом тестирования</p>
-        </div>
+    <EntranceShell variant="session">
+      <div className="flex min-h-[100dvh] flex-col">
+        <header className="relative flex h-14 shrink-0 items-center justify-center px-5">
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Назад"
+            className="absolute left-5 flex size-6 items-center justify-center text-navy-700"
+          >
+            <ArrowLeft className="size-6" strokeWidth={2} />
+          </button>
+          <h1 className="text-[17px] font-semibold text-[#1e293b]">Инструкция</h1>
+        </header>
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <ul className="space-y-4">
-            {rows.map((row) => (
-              <li key={row.label} className="flex items-center gap-3 text-sm">
-                <row.icon className="size-4 shrink-0 text-slate-400" />
-                <span className="min-w-[150px] text-[#6b7280]">{row.label}</span>
-                <span className="font-semibold text-[#1a1f36]">{row.value}</span>
-              </li>
-            ))}
-          </ul>
-
-          <div className="space-y-3">
-            <div className="rounded-2xl border border-[rgba(39,65,133,0.08)] bg-[#f0f4ff] p-5">
-              <div className="flex gap-2.5">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-[10px] bg-navy-700 text-[11px] font-extrabold text-white">
-                  i
-                </span>
-                <p className="text-[13px] leading-relaxed text-[#374151]">
-                  После завершения тест будет отправлен на проверку школы. Результат будет доступен
-                  позже после подтверждения.
-                </p>
-              </div>
+        <div className="flex flex-1 flex-col gap-4 px-5 pb-4">
+          <div className="rounded-3xl bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.03)]">
+            <h2 className="text-[22px] font-bold text-[#1e293b]">{item.testTitle}</h2>
+            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm font-medium text-[#64748b]">
+              <span className="inline-flex items-center gap-1.5">
+                <Clock className="size-4" strokeWidth={2} />
+                {item.durationMinutes} минут
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <HelpCircle className="size-4" strokeWidth={2} />
+                {item.subject}
+              </span>
             </div>
-            <div className="rounded-2xl border border-red-200/60 bg-red-50 p-5">
-              <div className="flex gap-2.5">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-[10px] bg-red-500 text-[11px] font-extrabold text-white">
-                  !
-                </span>
-                <div>
-                  <p className="text-[13px] font-semibold text-red-600">Во время тестирования</p>
-                  <p className="mt-1 text-[13px] leading-relaxed text-red-600/90">
-                    Не закрывайте страницу, не обновляйте браузер и не переключайте вкладки — каждое
-                    такое действие фиксируется.
-                  </p>
-                </div>
-              </div>
-            </div>
-            {item.rules ? (
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                  Правила
-                </p>
-                <p className="mt-2 text-[13px] leading-relaxed text-slate-600">{item.rules}</p>
-              </div>
-            ) : null}
           </div>
-        </div>
 
-        <div className="mt-10 flex flex-col gap-4 border-t border-slate-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <label className="flex cursor-pointer items-start gap-3 text-sm text-[#374151]">
+          <div className="rounded-3xl bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.03)]">
+            <h3 className="text-[17px] font-semibold text-[#1e293b]">Правила проведения</h3>
+            <ul className="mt-3 space-y-2">
+              {rules.map((rule) => (
+                <li key={rule} className="flex gap-2.5 text-[15px] leading-[21px] text-[#1e293b]">
+                  <span className="mt-0.5 font-bold text-navy-700">•</span>
+                  <span>{rule}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex gap-4 rounded-[20px] border border-brand-500/40 bg-brand-500/[0.06] p-5">
+            <AlertTriangle className="size-6 shrink-0 text-brand-500" strokeWidth={2} />
+            <div className="min-w-0">
+              <p className="text-[15px] font-bold text-brand-500">Важное предупреждение</p>
+              <p className="mt-1 text-sm leading-relaxed text-[#1e293b]">
+                Не покидайте окно теста и не переключайте вкладки. Все выходы фиксируются системой.
+              </p>
+            </div>
+          </div>
+
+          <label className="flex cursor-pointer items-center gap-3 py-3">
+            <span
+              className={cx(
+                'flex size-6 shrink-0 items-center justify-center rounded-md border-2 border-navy-700 bg-white',
+                agreed && 'bg-navy-700',
+              )}
+            >
+              {agreed ? (
+                <svg viewBox="0 0 12 12" className="size-3.5 text-white" fill="none" aria-hidden>
+                  <path
+                    d="M2.5 6.2L5 8.7L9.5 3.5"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              ) : null}
+            </span>
             <input
               type="checkbox"
               checked={agreed}
               onChange={(e) => setAgreed(e.target.checked)}
-              className="mt-0.5 size-4 rounded border-slate-300 accent-navy-700"
+              className="sr-only"
             />
-            <span>Я ознакомился(ась) с правилами прохождения тестирования</span>
+            <span className="text-[15px] font-medium text-[#1e293b]">Я ознакомился с правилами</span>
           </label>
+        </div>
 
-          <div className="flex shrink-0 items-center gap-3">
-            <button
-              type="button"
-              onClick={onBack}
-              disabled={loading}
-              className="inline-flex h-11 items-center gap-1.5 rounded-xl border-[1.5px] border-brand-500 px-4 text-sm font-semibold text-brand-500 transition hover:bg-brand-50 disabled:opacity-50"
-            >
-              <ArrowLeft className="size-4" />
-              Назад
-            </button>
-            <button
-              type="button"
-              onClick={onBegin}
-              disabled={!agreed || loading}
-              className={cx(
-                'inline-flex h-11 items-center rounded-xl bg-brand-500 px-5 text-sm font-semibold text-white shadow-[0_8px_8px_rgba(251,146,60,0.19)] transition hover:bg-brand-600',
-                (!agreed || loading) && 'cursor-not-allowed opacity-50',
-              )}
-            >
-              {loading ? 'Загрузка…' : 'Начать тест'}
-            </button>
-          </div>
+        <div className="shrink-0 px-5 pb-8 pt-2">
+          <button
+            type="button"
+            onClick={onBegin}
+            disabled={!agreed || loading}
+            className={cx(
+              'flex h-14 w-full items-center justify-center rounded-2xl bg-brand-500 text-[17px] font-semibold text-white transition hover:bg-brand-600',
+              (!agreed || loading) && 'cursor-not-allowed opacity-50',
+            )}
+          >
+            {loading ? 'Загрузка…' : 'Начать тестирование'}
+          </button>
         </div>
       </div>
     </EntranceShell>

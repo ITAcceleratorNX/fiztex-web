@@ -3,10 +3,12 @@ import { Loader2 } from 'lucide-react';
 import { entranceApi } from '@/lib/entranceApi';
 import { ApiError } from '@/lib/api';
 import { cx } from '@/lib/format';
+import { PhysTechMark } from '@/components/layout/Logo';
+import { APP_NAME } from '@/lib/branding';
 import { EntranceShell } from './EntranceShell';
 import type { ApplicantView } from '@/lib/entranceTypes';
 
-/** Section 4.1 — personal code entry (Figma: idle / loading / error). */
+/** Mobile login — Figma `phystech-mobile-login` (105:2828 / 105:2875). */
 export function CodeScreen({
   onVerified,
 }: {
@@ -39,63 +41,60 @@ export function CodeScreen({
 
   return (
     <EntranceShell variant="auth">
-      <div className="rounded-[32px] bg-white p-8 shadow-[0px_8px_24px_0px_rgba(39,65,133,0.13),0px_32px_64px_0px_rgba(0,0,0,0.13)] sm:p-16">
-        <div className="flex flex-col gap-4 text-center">
-          <h1 className="text-[28px] font-bold leading-tight text-[#1a1f36] sm:text-[32px]">
-            Вступительный тест
-          </h1>
-          <p className="text-sm leading-relaxed text-[#6b7280]">
-            Введите персональный код, который вы получили после регистрации на вступительные
-            испытания.
-          </p>
+      <div className="mx-auto flex w-full max-w-[390px] flex-col items-center gap-8 px-1">
+        <div className="flex flex-col items-center gap-5 text-center">
+          <div className="flex items-center gap-2.5 text-white">
+            <PhysTechMark className="h-8 w-8" />
+            <span className="text-[28px] font-bold tracking-tight">{APP_NAME}</span>
+          </div>
+          <h1 className="text-[28px] font-bold leading-[1.3] text-white">Вступительный тест</h1>
         </div>
 
-        <form onSubmit={submit} className="mt-12 flex flex-col gap-8">
+        <form
+          onSubmit={submit}
+          className="w-full rounded-3xl bg-white p-6 shadow-[0px_8px_24px_0px_rgba(39,65,133,0.13),0px_32px_64px_0px_rgba(0,0,0,0.13)]"
+        >
           <div className="flex flex-col gap-2">
-            <label htmlFor="personal-code" className="text-[13px] font-semibold text-[#374151]">
+            <label htmlFor="personal-code" className="text-[13px] font-semibold text-[#1a1f36]">
               Персональный код
             </label>
-            <input
-              id="personal-code"
-              value={code}
-              onChange={(e) => {
-                setCode(e.target.value.toUpperCase());
-                if (error) setError(null);
-              }}
-              placeholder="#PT-4E82"
-              autoFocus
-              autoComplete="off"
-              autoCapitalize="characters"
-              spellCheck={false}
-              disabled={loading}
+            <div
               className={cx(
-                'h-14 w-full rounded-xl border-[1.5px] bg-[#f9fafb] px-4 text-base font-semibold text-[#374151] outline-none transition placeholder:font-normal placeholder:text-navy-700/40',
-                error
-                  ? 'border-[#ef4444] focus:border-[#ef4444]'
-                  : 'border-[#e8edf5] focus:border-navy-700',
+                'flex h-14 items-center gap-3 rounded-xl border-[1.5px] bg-[#f9fafb] px-4',
+                error ? 'border-[#ef4444]' : 'border-[#e8edf5] focus-within:border-navy-700',
               )}
-            />
-            {!error && (
+            >
+              <span className="text-base font-semibold text-navy-700">#</span>
+              <input
+                id="personal-code"
+                value={code}
+                onChange={(e) => {
+                  setCode(e.target.value.toUpperCase().replace(/^#/, ''));
+                  if (error) setError(null);
+                }}
+                placeholder="PT-4E82"
+                autoFocus
+                autoComplete="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                disabled={loading}
+                className="h-full min-w-0 flex-1 bg-transparent text-base font-semibold text-[#374151] outline-none placeholder:font-normal placeholder:text-[#9ca3af]"
+              />
+            </div>
+            {error ? (
+              <p className="text-center text-xs leading-relaxed text-[#6b7280]">{error}</p>
+            ) : (
               <p className="text-xs leading-relaxed text-[#6b7280]">
                 Персональный код указан в приглашении на вступительные испытания.
               </p>
             )}
           </div>
 
-          {error && (
-            <div className="flex items-center gap-2.5 rounded-[20px] border border-[rgba(239,68,68,0.13)] bg-[#fef2f2] px-6 py-5">
-              <span className="flex size-5 shrink-0 items-center justify-center rounded-[10px] bg-[#ef4444] text-xs font-extrabold text-white">
-                !
-              </span>
-              <p className="text-[13px] font-semibold text-[#ef4444]">{error}</p>
-            </div>
-          )}
-
-          <div className="flex flex-col items-center gap-5">
+          <div className="mt-6 flex flex-col items-center gap-5">
             <button
               type="submit"
               disabled={!code.trim() || loading}
-              className="flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 text-base font-semibold text-white shadow-[0px_8px_8px_rgba(251,146,60,0.19)] transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 text-base font-semibold text-white shadow-[0px_8px_16px_rgba(251,146,60,0.19)] transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? (
                 <>
@@ -103,7 +102,7 @@ export function CodeScreen({
                   Проверка кода...
                 </>
               ) : (
-                'Продолжить'
+                'Войти в систему'
               )}
             </button>
             <button
@@ -117,14 +116,9 @@ export function CodeScreen({
 
           <div
             ref={helpRef}
-            className="flex flex-col gap-3 rounded-[20px] border border-[rgba(39,65,133,0.06)] bg-[#f0f4ff] p-6"
+            className="mt-6 flex flex-col gap-2 rounded-[20px] border border-[rgba(39,65,133,0.06)] bg-[#f0f4ff] p-4"
           >
-            <div className="flex items-center gap-2.5">
-              <span className="flex size-5 shrink-0 items-center justify-center rounded-[10px] bg-navy-700 text-xs font-extrabold text-white">
-                i
-              </span>
-              <p className="text-[13px] font-semibold text-navy-700">Нет персонального кода?</p>
-            </div>
+            <p className="text-[13px] font-semibold text-navy-700">Нет персонального кода?</p>
             <p className="text-[13px] leading-relaxed text-[#374151]">
               Если вы потеряли персональный код, обратитесь в приёмную комиссию вашей школы.
             </p>
