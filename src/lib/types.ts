@@ -225,6 +225,9 @@ export interface SuspiciousLogItem {
   type: string;
   details: string | null;
   occurredAt: string;
+  questionId?: number | null;
+  /** 1-based position of the question the applicant was on when the event fired (TZ §5). */
+  questionOrder?: number | null;
 }
 
 export interface TopicScore {
@@ -261,6 +264,7 @@ export interface ReviewDetail {
   answers: AnswerReviewItem[];
   suspiciousLogs: SuspiciousLogItem[];
   tabSwitchCount: number;
+  violationCount: number;
   topicBreakdown: Record<string, TopicScore>;
   weakTopics: string[];
   finishedAt: string | null;

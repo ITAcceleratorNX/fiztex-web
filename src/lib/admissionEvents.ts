@@ -9,9 +9,11 @@ export const ADMISSION_EVENT_LABEL: Record<string, string> = {
   CONNECTION_ISSUE: 'Проблема с сохранением',
   TAB_SWITCH: 'Переключение вкладки',
   WINDOW_BLUR: 'Потеря фокуса окна',
+  APP_BACKGROUND: 'Свернул приложение',
   PAGE_CLOSED: 'Закрыл / обновил страницу',
   PAGE_CLOSE: 'Закрытие страницы',
   RE_ENTRY: 'Повторный вход',
+  SCREENSHOT_ATTEMPT: 'Попытка скриншота',
 };
 
 export function eventLabel(type: string): string {

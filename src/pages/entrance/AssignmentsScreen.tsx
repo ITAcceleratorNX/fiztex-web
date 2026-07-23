@@ -5,10 +5,10 @@ import { cx } from '@/lib/format';
 import type { ApplicantView, AssignmentItem, EntranceListStatus } from '@/lib/entranceTypes';
 
 const STATUS_LABEL: Record<EntranceListStatus, string> = {
-  NOT_STARTED: '',
+  NOT_STARTED: 'Не начат',
   IN_PROGRESS: 'В процессе',
   AWAITING_REVIEW: 'На проверке',
-  OPEN_FOR_VIEWING: 'Результат доступен',
+  OPEN_FOR_VIEWING: 'Завершён',
   UNAVAILABLE: 'Недоступен',
 };
 
@@ -19,7 +19,7 @@ function formatGrade(grade: string): string {
   return `${trimmed} класс`;
 }
 
-/** Mobile list — Figma `phystech-mobile-v2` (105:2923). */
+/** Applicant test list — mobile Figma + desktop 3-column mockup. */
 export function AssignmentsScreen({
   applicant,
   assignments,
@@ -56,7 +56,12 @@ export function AssignmentsScreen({
   }
 
   return (
-    <EntranceShell variant="portal" applicantName={applicant.fullName} onExit={onExit}>
+    <EntranceShell
+      variant="portal"
+      applicantName={applicant.fullName}
+      onExit={onExit}
+      title="Мои тесты"
+    >
       {assignments.length === 0 ? (
         <div className="flex min-h-[420px] flex-col items-center justify-center text-center">
           <div className="flex size-20 items-center justify-center rounded-2xl bg-navy-50 text-navy-400">
@@ -68,7 +73,7 @@ export function AssignmentsScreen({
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3.5">
+        <div className="flex flex-col gap-3.5 lg:grid lg:grid-cols-3 lg:gap-5">
           {assignments.map((item) => (
             <TestCard
               key={item.assignmentId}
@@ -106,12 +111,15 @@ function TestCard({
     item.status === 'UNAVAILABLE' ||
     item.status === 'OPEN_FOR_VIEWING';
   const statusText = STATUS_LABEL[item.status];
+  const showMobileStatus =
+    (item.availableAction === 'CONTINUE' && statusText) ||
+    (item.availableAction === 'NONE' && item.status === 'AWAITING_REVIEW' && statusText);
 
   return (
     <article className="flex flex-col overflow-hidden rounded-[20px] bg-white shadow-[0_6px_20px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.02)]">
       <div
         className={cx(
-          'relative h-[72px] overflow-hidden',
+          'relative h-[72px] overflow-hidden lg:h-[88px]',
           mutedCover
             ? 'bg-gradient-to-br from-slate-400 to-slate-500'
             : 'bg-gradient-to-br from-navy-600 to-navy-800',
@@ -126,9 +134,14 @@ function TestCard({
             backgroundSize: '56px 48px',
           }}
         />
+        {statusText ? (
+          <span className="absolute right-3 top-3 hidden rounded-full bg-brand-500 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white lg:inline-flex">
+            {statusText}
+          </span>
+        ) : null}
       </div>
 
-      <div className="flex flex-col gap-2 px-4 pb-4 pt-3.5">
+      <div className="flex flex-1 flex-col gap-2 px-4 pb-4 pt-3.5 lg:px-5 lg:pb-5">
         <div className="flex flex-col gap-0.5">
           <h2 className="text-lg font-bold text-[#111827]">{item.testTitle}</h2>
           {gradeLabel ? <p className="text-[13px] text-[#6b7280]">{gradeLabel}</p> : null}
@@ -137,14 +150,14 @@ function TestCard({
           {item.subject} · {item.durationMinutes} мин
         </p>
 
-        <div className="mt-2 flex flex-col gap-3">
-          {statusText && item.availableAction === 'CONTINUE' ? (
-            <p className="text-[11px] font-bold uppercase tracking-wide text-brand-500">
-              {statusText}
-            </p>
-          ) : null}
-          {statusText && item.availableAction === 'NONE' && item.status === 'AWAITING_REVIEW' ? (
-            <p className="text-[11px] font-bold uppercase tracking-wide text-[#6b7280]">
+        <div className="mt-auto flex flex-col gap-3 pt-2">
+          {showMobileStatus ? (
+            <p
+              className={cx(
+                'text-[11px] font-bold uppercase tracking-wide lg:hidden',
+                item.availableAction === 'CONTINUE' ? 'text-brand-500' : 'text-[#6b7280]',
+              )}
+            >
               {statusText}
             </p>
           ) : null}
@@ -161,7 +174,7 @@ function TestCard({
           )}
           {item.availableAction === 'VIEW_RESULT' && (
             <CardButton onClick={onViewResult} tone="success" disabled={busy}>
-              {busy ? 'Загрузка…' : 'Посмотреть результат'}
+              {busy ? 'Загрузка…' : 'Посмотреть результаты'}
             </CardButton>
           )}
           {item.availableAction === 'NONE' && item.status === 'AWAITING_REVIEW' && (

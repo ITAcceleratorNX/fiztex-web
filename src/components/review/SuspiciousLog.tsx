@@ -6,10 +6,10 @@ import { EVENT_LABEL } from './constants';
 
 export function SuspiciousLog({
   logs,
-  tabSwitchCount,
+  violationCount,
 }: {
   logs: SuspiciousLogItem[];
-  tabSwitchCount: number;
+  violationCount: number;
 }) {
   return (
     <div className="rounded-xl border border-slate-200 p-4">
@@ -18,14 +18,9 @@ export function SuspiciousLog({
         <span className="text-sm font-semibold text-slate-700">
           Античит-события ({logs.length})
         </span>
-        {tabSwitchCount > 0 && (
+        {violationCount > 0 && (
           <Badge tone="amber" dot>
-            {tabSwitchCount}{' '}
-            {tabSwitchCount === 1
-              ? 'переключение вкладки'
-              : tabSwitchCount < 5
-                ? 'переключения вкладки'
-                : 'переключений вкладки'}
+            Нарушений: {violationCount}
           </Badge>
         )}
       </div>
@@ -40,6 +35,9 @@ export function SuspiciousLog({
                 {EVENT_LABEL[log.type] ?? log.type}
               </span>
               <span className="text-slate-400">· {formatDateTime(log.occurredAt)}</span>
+              {log.questionOrder != null && (
+                <span className="text-slate-400">· Вопрос {log.questionOrder}</span>
+              )}
             </li>
           ))}
         </ul>

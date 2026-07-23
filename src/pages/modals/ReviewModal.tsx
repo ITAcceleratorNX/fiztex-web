@@ -211,7 +211,7 @@ export function ReviewModal({
         </div>
       </div>
 
-      <SuspiciousLog logs={detail.suspiciousLogs} tabSwitchCount={detail.tabSwitchCount ?? 0} />
+      <SuspiciousLog logs={detail.suspiciousLogs} violationCount={detail.violationCount ?? 0} />
 
       <div className="space-y-4">
         {detail.answers.map((a, idx) => (

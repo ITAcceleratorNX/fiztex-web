@@ -8,12 +8,9 @@ type ShellVariant = 'default' | 'auth' | 'portal' | 'session' | 'plain';
 type NavKey = 'home' | 'tests' | 'profile' | 'exit';
 
 /**
- * Shell for the applicant entrance flow (mobile Figma).
- * - `auth` — navy full-bleed (code entry)
- * - `portal` — light list + floating logo + bottom nav
- * - `session` — light attempt / instruction / success chrome
- * - `plain` — bare light page (confirm)
- * - `default` — legacy light chrome
+ * Shell for the applicant entrance flow.
+ * Mobile keeps the Figma phone chrome (`max-w-[390px]` + bottom nav).
+ * From `lg` up, portal/session switch to the desktop mockups (top bar, wider canvas).
  */
 export function EntranceShell({
   children,
@@ -23,6 +20,7 @@ export function EntranceShell({
   onExit,
   navActive = 'tests',
   showLogo = true,
+  title,
 }: {
   children: ReactNode;
   size?: 'md' | 'lg';
@@ -31,6 +29,8 @@ export function EntranceShell({
   onExit?: () => void;
   navActive?: NavKey;
   showLogo?: boolean;
+  /** Optional page title shown under the desktop header (portal). */
+  title?: string;
 }) {
   if (variant === 'auth') {
     return (
@@ -59,24 +59,46 @@ export function EntranceShell({
 
   if (variant === 'portal') {
     return (
-      <div className="flex min-h-[100dvh] flex-col bg-[#fafbfc]">
-        <div className="mx-auto w-full max-w-[390px] flex-1 px-4 pb-28 pt-3">
+      <div className="flex min-h-[100dvh] flex-col bg-[#fafbfc] lg:bg-grid">
+        <DesktopTopBar
+          className="hidden lg:flex"
+          applicantName={applicantName}
+          onExit={onExit}
+        />
+
+        <div className="mx-auto w-full max-w-[390px] flex-1 px-4 pb-28 pt-3 lg:max-w-6xl lg:px-8 lg:pb-12 lg:pt-8">
           {showLogo ? (
-            <div className="mb-4 flex h-14 items-center justify-center rounded-2xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.04),0_1px_4px_rgba(0,0,0,0.02)]">
+            <div className="mb-4 flex h-14 items-center justify-center rounded-2xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.04),0_1px_4px_rgba(0,0,0,0.02)] lg:hidden">
               <Logo className="h-8 w-auto" />
             </div>
           ) : null}
+          {title ? (
+            <h1 className="mb-6 hidden text-2xl font-bold text-navy-800 lg:block">{title}</h1>
+          ) : null}
           {children}
         </div>
-        <MobileBottomNav active={navActive} onExit={onExit} applicantName={applicantName} />
+
+        <div className="lg:hidden">
+          <MobileBottomNav active={navActive} onExit={onExit} applicantName={applicantName} />
+        </div>
+
+        <DesktopFooter className="mt-auto hidden lg:flex" />
       </div>
     );
   }
 
   if (variant === 'session') {
     return (
-      <div className="min-h-[100dvh] bg-[#f8fafc]">
-        <div className="mx-auto w-full max-w-[390px]">{children}</div>
+      <div className="min-h-[100dvh] bg-[#f8fafc] lg:bg-navy-700">
+        <DesktopTopBar
+          className="hidden lg:flex"
+          applicantName={applicantName}
+          onExit={onExit}
+          rounded
+        />
+        <div className="mx-auto w-full max-w-[390px] lg:max-w-5xl lg:px-8 lg:pb-12 lg:pt-6">
+          {children}
+        </div>
       </div>
     );
   }
@@ -103,6 +125,70 @@ export function EntranceShell({
         {children}
       </main>
     </div>
+  );
+}
+
+export function DesktopTopBar({
+  applicantName,
+  onExit,
+  className,
+  rounded = false,
+}: {
+  applicantName?: string;
+  onExit?: () => void;
+  className?: string;
+  /** Soft bottom corners — used on navy session screens. */
+  rounded?: boolean;
+}) {
+  const initial = (applicantName?.trim()?.[0] ?? 'У').toUpperCase();
+
+  return (
+    <header
+      className={cx(
+        'w-full shrink-0 bg-white shadow-[0_1px_8px_rgba(0,0,0,0.06)]',
+        rounded && 'rounded-b-2xl',
+        className,
+      )}
+    >
+      <div className="mx-auto flex h-[72px] w-full max-w-6xl items-center justify-between px-8">
+        <Logo className="h-9 w-auto" />
+        <div className="flex items-center gap-3">
+          {applicantName ? (
+            <div className="flex items-center gap-2.5">
+              <span className="text-sm font-semibold text-navy-800">{applicantName}</span>
+              <span className="flex size-9 items-center justify-center rounded-full bg-navy-700 text-sm font-bold text-white">
+                {initial}
+              </span>
+            </div>
+          ) : null}
+          {onExit ? (
+            <button
+              type="button"
+              onClick={onExit}
+              className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-navy-800 transition hover:bg-slate-50"
+            >
+              Выйти
+            </button>
+          ) : null}
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function DesktopFooter({ className }: { className?: string }) {
+  return (
+    <footer
+      className={cx(
+        'w-full border-t border-slate-200/80 bg-white/80',
+        className,
+      )}
+    >
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-8">
+        <Logo className="h-7 w-auto opacity-80" />
+        <p className="text-sm text-slate-500">© 2026 Phystech. Все права защищены.</p>
+      </div>
+    </footer>
   );
 }
 

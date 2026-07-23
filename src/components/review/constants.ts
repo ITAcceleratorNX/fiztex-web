@@ -17,8 +17,11 @@ export const EVENT_LABEL: Record<string, string> = {
   SUBMITTED: 'Отправлено на проверку',
   TAB_SWITCH: 'Переключение вкладки',
   WINDOW_BLUR: 'Потеря фокуса окна',
+  APP_BACKGROUND: 'Свернул приложение',
   PAGE_CLOSE: 'Закрытие страницы',
   RE_ENTRY: 'Повторный вход',
+  SCREENSHOT_ATTEMPT: 'Попытка скриншота',
+  CONNECTION_ISSUE: 'Проблема с сохранением',
 };
 
 export interface ScoreDraft {

@@ -98,11 +98,13 @@ export function AttemptScreen({
   const timeWarnShownRef = useRef(false);
   const lastConnectionIssueRef = useRef(0);
 
-  const { tabSwitchCount, showTabSwitchWarning, dismissTabSwitchWarning } = useAttemptEvents(
-    attemptId,
-    !submitting,
-    attempt.tabSwitchCount ?? 0,
-  );
+  // Current question id, kept in a ref so anti-cheat / autosave events can tag the question
+  // the applicant was on (TZ §4) without re-subscribing listeners on every navigation.
+  const currentQuestionIdRef = useRef<number | null>(null);
+  currentQuestionIdRef.current = questions[index]?.id ?? null;
+
+  const { contentHidden, resume, showTabSwitchWarning, dismissTabSwitchWarning } =
+    useAttemptEvents(attemptId, !submitting, attempt.tabSwitchCount ?? 0, () => currentQuestionIdRef.current);
 
   useEffect(() => {
     const seed: Record<number, string> = {};
@@ -122,7 +124,9 @@ export function AttemptScreen({
       const now = Date.now();
       if (now - lastConnectionIssueRef.current < CONNECTION_ISSUE_THROTTLE_MS) return;
       lastConnectionIssueRef.current = now;
-      void entranceApi.logEvent(attemptId, 'connection_issue', detail);
+      void entranceApi.logEvent(attemptId, 'connection_issue', detail, {
+        questionId: currentQuestionIdRef.current,
+      });
     },
     [attemptId],
   );
@@ -186,7 +190,9 @@ export function AttemptScreen({
     submittingRef.current = true;
     setSubmitting(true);
     await flushAllRef.current();
-    await entranceApi.logEvent(attemptId, 'time_expired', 'client timer reached zero');
+    await entranceApi.logEvent(attemptId, 'time_expired', 'client timer reached zero', {
+      questionId: currentQuestionIdRef.current,
+    });
     try {
       await entranceApi.submitAttempt(attemptId);
     } catch {
@@ -304,9 +310,179 @@ export function AttemptScreen({
 
   const progressPct = Math.round(((index + 1) / questions.length) * 100);
 
+  const renderAnswerOptions = () => (
+    <div className="space-y-3">
+      {question.type === 'SINGLE_CHOICE' &&
+        question.options.map((opt) => {
+          const checked = answer.selectedOptionIds.includes(opt.id);
+          return (
+            <label
+              key={opt.id}
+              className={cx(
+                'flex min-h-16 cursor-pointer items-center gap-3 rounded-2xl border px-5 py-3 text-[17px] transition',
+                checked
+                  ? 'border-2 border-navy-700 bg-[#eff6ff] font-bold text-[#1e293b]'
+                  : 'border border-[#e2e8f0] bg-white font-medium text-[#1e293b]',
+              )}
+            >
+              <span
+                className={cx(
+                  'flex size-6 shrink-0 items-center justify-center rounded-full border-2',
+                  checked ? 'border-navy-700' : 'border-[#e2e8f0]',
+                )}
+              >
+                {checked ? <span className="size-3 rounded-full bg-navy-700" /> : null}
+              </span>
+              <input
+                type="radio"
+                name={`q-${question.id}`}
+                className="sr-only"
+                checked={checked}
+                onChange={() => pickSingle(question, opt.id)}
+              />
+              {opt.text}
+            </label>
+          );
+        })}
+
+      {question.type === 'MULTIPLE_CHOICE' &&
+        question.options.map((opt) => {
+          const checked = answer.selectedOptionIds.includes(opt.id);
+          return (
+            <label
+              key={opt.id}
+              className={cx(
+                'flex min-h-16 cursor-pointer items-center gap-3 rounded-2xl border px-5 py-3 text-[17px] transition',
+                checked
+                  ? 'border-2 border-navy-700 bg-[#eff6ff] font-bold text-[#1e293b]'
+                  : 'border border-[#e2e8f0] bg-white font-medium text-[#1e293b]',
+              )}
+            >
+              <span
+                className={cx(
+                  'flex size-6 shrink-0 items-center justify-center rounded-md border-2',
+                  checked ? 'border-navy-700 bg-navy-700 text-white' : 'border-[#e2e8f0]',
+                )}
+              >
+                {checked ? (
+                  <svg viewBox="0 0 12 12" className="size-3" fill="none" aria-hidden>
+                    <path
+                      d="M2.5 6.2L5 8.7L9.5 3.5"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                ) : null}
+              </span>
+              <input
+                type="checkbox"
+                className="sr-only"
+                checked={checked}
+                onChange={() => toggleMulti(question, opt.id)}
+              />
+              {opt.text}
+            </label>
+          );
+        })}
+
+      {question.type === 'OPEN_TEXT' && (
+        <TextArea
+          value={answer.openTextAnswer}
+          onChange={(e) => setText(question, e.target.value)}
+          placeholder="Введите ответ…"
+          rows={5}
+        />
+      )}
+
+      {question.type === 'PHOTO' && !question.allowPhoto && (
+        <div className="flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+          <p>Этот вопрос настроен некорректно. Обратитесь к сотруднику школы.</p>
+        </div>
+      )}
+
+      {question.allowPhoto && (
+        <PhotoAnswerBlock
+          attemptId={attemptId}
+          questionId={question.id}
+          maxPhotos={question.maxPhotos ?? 1}
+          photos={answer.photos}
+          disabled={submitting}
+          onPhotosChange={(photos) => setPhotos(question.id, photos)}
+          onUploadFailed={() => logConnectionIssue('photo upload failed')}
+        />
+      )}
+
+      <div className="flex justify-center pt-1 lg:justify-start">
+        <SaveStatusChip
+          status={currentSaveStatus}
+          onRetry={
+            currentSaveStatus === 'error' ? () => void saveQuestion(question.id) : undefined
+          }
+        />
+      </div>
+    </div>
+  );
+
+  const renderTimeWarning = () =>
+    showTimeWarning ? (
+    <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+      <Clock className="mt-0.5 size-4 shrink-0" />
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold">До конца теста осталось {warnLabel}</p>
+        <p className="mt-0.5 text-red-700">
+          Проверьте ответы. После истечения времени тест отправится автоматически.
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={() => setShowTimeWarning(false)}
+        className="shrink-0 rounded-lg p-1 text-red-600"
+        aria-label="Закрыть"
+      >
+        <X className="size-4" />
+      </button>
+    </div>
+    ) : null;
+
+  const renderNavButtons = () => (
+    <>
+      <button
+        type="button"
+        disabled={!allowBack || index === 0 || submitting}
+        onClick={() => void goTo(index - 1)}
+        className="inline-flex h-14 w-[120px] shrink-0 items-center justify-center rounded-2xl border-2 border-navy-700 text-[17px] font-semibold text-navy-700 transition disabled:cursor-not-allowed disabled:opacity-40 lg:h-12 lg:w-auto lg:rounded-xl lg:border-brand-500 lg:px-5 lg:text-sm lg:text-brand-500"
+      >
+        Назад
+      </button>
+      {!isLast ? (
+        <button
+          type="button"
+          disabled={submitting}
+          onClick={() => void goTo(index + 1)}
+          className="inline-flex h-14 flex-1 items-center justify-center rounded-2xl bg-brand-500 text-[17px] font-semibold text-white transition hover:bg-brand-600 disabled:opacity-50 lg:h-12 lg:flex-none lg:rounded-xl lg:px-6 lg:text-sm"
+        >
+          Далее
+        </button>
+      ) : (
+        <button
+          type="button"
+          disabled={submitting}
+          onClick={() => setConfirmOpen(true)}
+          className="inline-flex h-14 flex-1 items-center justify-center rounded-2xl bg-brand-500 text-[17px] font-semibold text-white transition hover:bg-brand-600 disabled:opacity-50 lg:h-12 lg:flex-none lg:rounded-xl lg:px-6 lg:text-sm"
+        >
+          {submitting ? 'Отправка…' : 'Завершить'}
+        </button>
+      )}
+    </>
+  );
+
   return (
-    <EntranceShell variant="session">
-      <div className="flex min-h-[100dvh] flex-col">
+    <EntranceShell variant="session" applicantName={applicant?.fullName} onExit={onExit}>
+      {/* —— Mobile —— */}
+      <div className="flex min-h-[100dvh] flex-col lg:hidden">
         <header className="shrink-0 bg-white px-5 pb-5 pt-3">
           <div className="flex items-center justify-between gap-3">
             <p className="truncate text-[17px] font-bold text-navy-700">
@@ -336,25 +512,7 @@ export function AttemptScreen({
           </div>
         </header>
 
-        {showTimeWarning && (
-          <div className="mx-5 mt-3 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-            <Clock className="mt-0.5 size-4 shrink-0" />
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold">До конца теста осталось {warnLabel}</p>
-              <p className="mt-0.5 text-red-700">
-                Проверьте ответы. После истечения времени тест отправится автоматически.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowTimeWarning(false)}
-              className="shrink-0 rounded-lg p-1 text-red-600"
-              aria-label="Закрыть"
-            >
-              <X className="size-4" />
-            </button>
-          </div>
-        )}
+        {showTimeWarning ? <div className="mx-5 mt-3">{renderTimeWarning()}</div> : null}
 
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-5 py-5">
           <div className="rounded-[28px] bg-white p-7 shadow-[0_4px_16px_rgba(0,0,0,0.03)]">
@@ -362,152 +520,11 @@ export function AttemptScreen({
               {question.text}
             </h2>
           </div>
-
-          <div className="space-y-3">
-            {question.type === 'SINGLE_CHOICE' &&
-              question.options.map((opt) => {
-                const checked = answer.selectedOptionIds.includes(opt.id);
-                return (
-                  <label
-                    key={opt.id}
-                    className={cx(
-                      'flex h-16 cursor-pointer items-center gap-3 rounded-2xl border px-5 text-[17px] transition',
-                      checked
-                        ? 'border-2 border-navy-700 bg-[#eff6ff] font-bold text-[#1e293b]'
-                        : 'border border-[#e2e8f0] bg-white font-medium text-[#1e293b]',
-                    )}
-                  >
-                    <span
-                      className={cx(
-                        'flex size-6 shrink-0 items-center justify-center rounded-full border-2',
-                        checked ? 'border-navy-700' : 'border-[#e2e8f0]',
-                      )}
-                    >
-                      {checked ? <span className="size-3 rounded-full bg-navy-700" /> : null}
-                    </span>
-                    <input
-                      type="radio"
-                      name={`q-${question.id}`}
-                      className="sr-only"
-                      checked={checked}
-                      onChange={() => pickSingle(question, opt.id)}
-                    />
-                    {opt.text}
-                  </label>
-                );
-              })}
-
-            {question.type === 'MULTIPLE_CHOICE' &&
-              question.options.map((opt) => {
-                const checked = answer.selectedOptionIds.includes(opt.id);
-                return (
-                  <label
-                    key={opt.id}
-                    className={cx(
-                      'flex h-16 cursor-pointer items-center gap-3 rounded-2xl border px-5 text-[17px] transition',
-                      checked
-                        ? 'border-2 border-navy-700 bg-[#eff6ff] font-bold text-[#1e293b]'
-                        : 'border border-[#e2e8f0] bg-white font-medium text-[#1e293b]',
-                    )}
-                  >
-                    <span
-                      className={cx(
-                        'flex size-6 shrink-0 items-center justify-center rounded-md border-2',
-                        checked ? 'border-navy-700 bg-navy-700 text-white' : 'border-[#e2e8f0]',
-                      )}
-                    >
-                      {checked ? (
-                        <svg viewBox="0 0 12 12" className="size-3" fill="none" aria-hidden>
-                          <path
-                            d="M2.5 6.2L5 8.7L9.5 3.5"
-                            stroke="currentColor"
-                            strokeWidth="1.8"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      ) : null}
-                    </span>
-                    <input
-                      type="checkbox"
-                      className="sr-only"
-                      checked={checked}
-                      onChange={() => toggleMulti(question, opt.id)}
-                    />
-                    {opt.text}
-                  </label>
-                );
-              })}
-
-            {question.type === 'OPEN_TEXT' && (
-              <TextArea
-                value={answer.openTextAnswer}
-                onChange={(e) => setText(question, e.target.value)}
-                placeholder="Введите ответ…"
-                rows={5}
-              />
-            )}
-
-            {question.type === 'PHOTO' && !question.allowPhoto && (
-              <div className="flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-                <p>Этот вопрос настроен некорректно. Обратитесь к сотруднику школы.</p>
-              </div>
-            )}
-
-            {question.allowPhoto && (
-              <PhotoAnswerBlock
-                attemptId={attemptId}
-                questionId={question.id}
-                maxPhotos={question.maxPhotos ?? 1}
-                photos={answer.photos}
-                disabled={submitting}
-                onPhotosChange={(photos) => setPhotos(question.id, photos)}
-                onUploadFailed={() => logConnectionIssue('photo upload failed')}
-              />
-            )}
-
-            <div className="flex justify-center pt-1">
-              <SaveStatusChip
-                status={currentSaveStatus}
-                onRetry={
-                  currentSaveStatus === 'error' ? () => void saveQuestion(question.id) : undefined
-                }
-              />
-            </div>
-          </div>
+          {renderAnswerOptions()}
         </div>
 
         <footer className="shrink-0 border-t border-[#e2e8f0] bg-white px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-5">
-          <div className="flex gap-3">
-            <button
-              type="button"
-              disabled={!allowBack || index === 0 || submitting}
-              onClick={() => void goTo(index - 1)}
-              className="inline-flex h-14 w-[120px] shrink-0 items-center justify-center rounded-2xl border-2 border-navy-700 text-[17px] font-semibold text-navy-700 transition disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Назад
-            </button>
-            {!isLast ? (
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={() => void goTo(index + 1)}
-                className="inline-flex h-14 flex-1 items-center justify-center rounded-2xl bg-brand-500 text-[17px] font-semibold text-white transition hover:bg-brand-600 disabled:opacity-50"
-              >
-                Далее
-              </button>
-            ) : (
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={() => setConfirmOpen(true)}
-                className="inline-flex h-14 flex-1 items-center justify-center rounded-2xl bg-brand-500 text-[17px] font-semibold text-white transition hover:bg-brand-600 disabled:opacity-50"
-              >
-                {submitting ? 'Отправка…' : 'Завершить'}
-              </button>
-            )}
-          </div>
+          <div className="flex gap-3">{renderNavButtons()}</div>
           {!isLast ? (
             <button
               type="button"
@@ -521,8 +538,92 @@ export function AttemptScreen({
         </footer>
       </div>
 
-      {showTabSwitchWarning && tabSwitchCount > 0 && (
-        <div className="fixed inset-x-4 bottom-24 z-40 mx-auto flex max-w-[358px] items-center gap-3 rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
+      {/* —— Desktop —— */}
+      <div className="hidden flex-col gap-5 lg:flex">
+        <div className="flex items-center justify-between gap-6 rounded-2xl bg-white px-8 py-5 shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-xl font-bold text-navy-700">
+              {attempt.subject || attempt.testTitle}
+            </h1>
+            <p className="mt-1 text-sm font-medium text-slate-500">
+              Вопрос {index + 1} из {questions.length}
+            </p>
+            <div className="mt-3 h-2 max-w-md overflow-hidden rounded-full bg-[#e2e8f0]">
+              <div
+                className="h-full rounded-full bg-brand-500 transition-all"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          </div>
+          <div
+            className={cx(
+              'flex shrink-0 flex-col items-center rounded-2xl px-8 py-3',
+              lowTime ? 'bg-red-50' : 'bg-slate-50',
+            )}
+          >
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              Осталось
+            </span>
+            <span
+              className={cx(
+                'mt-0.5 text-3xl font-bold tabular-nums',
+                lowTime ? 'text-red-600' : 'text-navy-700',
+              )}
+            >
+              {formatClock(remaining)}
+            </span>
+          </div>
+        </div>
+
+        {renderTimeWarning()}
+
+        <div className="rounded-2xl bg-white px-8 py-7 shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Вопрос {index + 1}
+          </p>
+          <h2 className="mt-2 text-xl font-bold leading-7 text-[#1e293b]">{question.text}</h2>
+          <div className="mt-6">{renderAnswerOptions()}</div>
+
+          <div className="mt-8 flex items-center justify-between gap-4 border-t border-slate-100 pt-6">
+            <div className="flex gap-3">{renderNavButtons()}</div>
+            {!isLast ? (
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => setConfirmOpen(true)}
+                className="text-sm font-semibold text-slate-500 underline-offset-2 hover:underline disabled:opacity-50"
+              >
+                Завершить тест
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      {contentHidden && (
+        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-5 bg-navy-700 px-8 text-center">
+          <span className="flex size-16 items-center justify-center rounded-3xl bg-white/10 text-white">
+            <AlertTriangle className="size-8" strokeWidth={2} />
+          </span>
+          <div className="space-y-2">
+            <h2 className="text-[22px] font-bold text-white">Тест приостановлен</h2>
+            <p className="max-w-[300px] text-[15px] leading-6 text-white/70 lg:max-w-md">
+              Вы вышли из окна теста — событие зафиксировано и будет передано школе. Ваши ответы
+              сохранены. Нажмите «Продолжить», чтобы вернуться к тесту.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={resume}
+            className="mt-1 inline-flex h-14 items-center justify-center rounded-2xl bg-white px-8 text-[17px] font-semibold text-navy-700"
+          >
+            Продолжить
+          </button>
+        </div>
+      )}
+
+      {showTabSwitchWarning && (
+        <div className="fixed inset-x-4 bottom-24 z-40 mx-auto flex max-w-[358px] items-center gap-3 rounded-2xl border-l-4 border-brand-500 bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,0.08)] lg:inset-x-auto lg:bottom-8 lg:right-8 lg:mx-0 lg:max-w-sm">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-brand-500">
             <AlertTriangle className="size-5" strokeWidth={2} />
           </span>
@@ -542,15 +643,15 @@ export function AttemptScreen({
       )}
 
       {confirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
-          <div className="w-full max-w-[390px] rounded-t-[24px] bg-white px-6 pb-[max(44px,env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_32px_rgba(0,0,0,0.1)]">
-            <div className="mx-auto mb-6 h-1 w-10 rounded-full bg-[#e2e8f0]" />
-            <div className="flex flex-col items-center gap-4 text-center">
-              <div className="flex size-16 items-center justify-center rounded-full bg-brand-500/10 text-brand-500">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 lg:items-center lg:p-6">
+          <div className="w-full max-w-[390px] rounded-t-[24px] bg-white px-6 pb-[max(44px,env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_32px_rgba(0,0,0,0.1)] lg:max-w-md lg:rounded-2xl lg:px-8 lg:pb-8 lg:pt-8 lg:shadow-[0_16px_48px_rgba(0,0,0,0.2)]">
+            <div className="mx-auto mb-6 h-1 w-10 rounded-full bg-[#e2e8f0] lg:hidden" />
+            <div className="flex flex-col items-center gap-4 text-center lg:items-start lg:text-left">
+              <div className="flex size-16 items-center justify-center rounded-full bg-brand-500/10 text-brand-500 lg:hidden">
                 <AlertTriangle className="size-8" strokeWidth={2.5} />
               </div>
               <div className="space-y-2">
-                <h3 className="text-[22px] font-bold text-[#1e293b]">Завершить тестирование?</h3>
+                <h3 className="text-[22px] font-bold text-[#1e293b]">Завершить тест?</h3>
                 <p className="text-base leading-6 text-[#64748b]">
                   Вы ответили на{' '}
                   <span className="font-semibold text-[#1e293b]">
@@ -561,26 +662,29 @@ export function AttemptScreen({
               </div>
             </div>
             {unansweredCount > 0 && (
-              <p className="mt-4 text-center text-sm text-amber-700">
-                Без ответа: {unansweredCount}{' '}
-                {pluralRu(unansweredCount, ['вопрос', 'вопроса', 'вопросов'])}
-              </p>
+              <div className="mt-4 rounded-xl bg-brand-500/10 px-4 py-3 text-sm text-brand-700">
+                <p className="font-bold text-brand-600">Есть вопросы без ответа</p>
+                <p className="mt-0.5">
+                  Без ответа: {unansweredCount}{' '}
+                  {pluralRu(unansweredCount, ['вопрос', 'вопроса', 'вопросов'])}
+                </p>
+              </div>
             )}
-            <div className="mt-6 flex flex-col gap-3">
+            <div className="mt-6 flex flex-col gap-3 lg:flex-row-reverse">
               <button
                 type="button"
                 disabled={submitting}
                 onClick={() => void confirmSubmit()}
-                className="flex h-14 items-center justify-center rounded-2xl bg-brand-500 text-[17px] font-semibold text-white disabled:opacity-50"
+                className="flex h-14 flex-1 items-center justify-center rounded-2xl bg-brand-500 text-[17px] font-semibold text-white disabled:opacity-50 lg:h-12 lg:rounded-xl lg:text-sm"
               >
                 Завершить тест
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmOpen(false)}
-                className="flex h-14 items-center justify-center rounded-2xl border-2 border-navy-700 text-[17px] font-semibold text-navy-700"
+                className="flex h-14 flex-1 items-center justify-center rounded-2xl border-2 border-navy-700 text-[17px] font-semibold text-navy-700 lg:h-12 lg:rounded-xl lg:text-sm"
               >
-                Вернуться к вопросам
+                Вернуться к тесту
               </button>
             </div>
           </div>

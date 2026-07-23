@@ -180,11 +180,16 @@ export const entranceApi = {
   submitAttempt: (attemptId: number) =>
     request<SubmitResponse>(`/admissions/attempts/${attemptId}/submit`, { method: 'POST', body: {} }),
 
-  logEvent: (attemptId: number, type: AttemptEventType, details?: string, keepalive = false) =>
+  logEvent: (
+    attemptId: number,
+    type: AttemptEventType,
+    details?: string,
+    opts: { questionId?: number | null; keepalive?: boolean } = {},
+  ) =>
     request<void>(`/admissions/attempts/${attemptId}/events`, {
       method: 'POST',
-      body: { type, details },
-      keepalive,
+      body: { type, details, questionId: opts.questionId ?? null },
+      keepalive: opts.keepalive,
     }).catch(() => {
       /* Anti-cheat logging is best-effort and must never break the attempt UX. */
     }),
