@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { CalendarDays, X } from 'lucide-react';
+import { CalendarDays, Copy, RotateCw, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
 import { Modal } from '@/components/ui/Modal';
@@ -11,6 +11,7 @@ import { cx, formatDate, formatWeekdayDayMonth, pluralRu } from '@/lib/format';
 import { WEEKDAYS_ORDER, WEEKDAY_SHORT_LABELS } from '../labels';
 import { AccountActionsMenu } from '../components/AccountActionsMenu';
 import {
+  IconActionButton,
   ProfileBreadcrumb,
   ProfileCard,
   ProfileCardTitle,
@@ -54,6 +55,7 @@ export function TeacherProfilePage() {
   const [saving, setSaving] = useState(false);
 
   const [issuedCode, setIssuedCode] = useState<string | null>(null);
+  const [reissuing, setReissuing] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [availabilityOpen, setAvailabilityOpen] = useState(false);
@@ -131,6 +133,7 @@ export function TeacherProfilePage() {
   }
 
   async function handleResetAccess() {
+    setReissuing(true);
     try {
       const res = await resetAccess(String(accountId), 'TEACHER');
       setIssuedCode(res.issuedCode ?? null);
@@ -138,6 +141,18 @@ export function TeacherProfilePage() {
       await reload();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Не удалось сбросить доступ');
+    } finally {
+      setReissuing(false);
+    }
+  }
+
+  async function handleCopyCode() {
+    if (!issuedCode) return;
+    try {
+      await navigator.clipboard.writeText(issuedCode);
+      toast.success('Код скопирован');
+    } catch {
+      toast.error('Не удалось скопировать код');
     }
   }
 
@@ -251,13 +266,6 @@ export function TeacherProfilePage() {
                         <span className="mx-2 text-slate-300">·</span>
                         <span>Email: </span>
                         <span className="font-semibold text-[#1a1f36]">{detail.email ?? '—'}</span>
-                        {issuedCode && (
-                          <>
-                            <span className="mx-2 text-slate-300">·</span>
-                            <span>Код: </span>
-                            <span className="font-semibold text-navy-700">{issuedCode}</span>
-                          </>
-                        )}
                       </p>
                     )}
                   </div>
@@ -270,6 +278,27 @@ export function TeacherProfilePage() {
                       onArchive={() => setArchiveOpen(true)}
                       onResetAccess={() => void handleResetAccess()}
                     />
+                  </div>
+                </div>
+
+                <div className="flex min-w-0 flex-col gap-1.5">
+                  <p className="text-[11px] font-semibold uppercase text-[#9ca3af]">Код активации</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-navy-700">{issuedCode ?? '—'}</span>
+                    <IconActionButton
+                      title="Скопировать"
+                      disabled={!issuedCode}
+                      onClick={() => void handleCopyCode()}
+                    >
+                      <Copy className="size-3" />
+                    </IconActionButton>
+                    <IconActionButton
+                      title="Перевыпустить код"
+                      disabled={reissuing}
+                      onClick={() => void handleResetAccess()}
+                    >
+                      <RotateCw className={`size-3.5 ${reissuing ? 'animate-spin' : ''}`} />
+                    </IconActionButton>
                   </div>
                 </div>
 

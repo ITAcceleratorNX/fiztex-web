@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Copy, Pencil } from 'lucide-react';
+import { Copy, Pencil, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
@@ -88,6 +88,7 @@ export function ParentProfilePage() {
   const [saving, setSaving] = useState(false);
 
   const [issuedCode, setIssuedCode] = useState<string | null>(null);
+  const [reissuing, setReissuing] = useState(false);
 
   const [linkOpen, setLinkOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
@@ -129,6 +130,7 @@ export function ParentProfilePage() {
   }
 
   async function handleResetAccess() {
+    setReissuing(true);
     try {
       const res = await resetAccess(String(accountId), 'PARENT');
       setIssuedCode(res.issuedCode ?? null);
@@ -136,6 +138,8 @@ export function ParentProfilePage() {
       await reload();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Не удалось сбросить доступ');
+    } finally {
+      setReissuing(false);
     }
   }
 
@@ -268,11 +272,20 @@ export function ParentProfilePage() {
                           <span className="text-sm font-semibold text-navy-700">
                             {issuedCode ?? '—'}
                           </span>
-                          {issuedCode && (
-                            <IconActionButton title="Скопировать" onClick={() => void handleCopyCode()}>
-                              <Copy className="size-3" />
-                            </IconActionButton>
-                          )}
+                          <IconActionButton
+                            title="Скопировать"
+                            disabled={!issuedCode}
+                            onClick={() => void handleCopyCode()}
+                          >
+                            <Copy className="size-3" />
+                          </IconActionButton>
+                          <IconActionButton
+                            title="Перевыпустить код"
+                            disabled={reissuing}
+                            onClick={() => void handleResetAccess()}
+                          >
+                            <RotateCw className={`size-3.5 ${reissuing ? 'animate-spin' : ''}`} />
+                          </IconActionButton>
                         </div>
                       </div>
                     </div>
