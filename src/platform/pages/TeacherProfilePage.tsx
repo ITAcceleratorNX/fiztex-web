@@ -282,7 +282,7 @@ export function TeacherProfilePage() {
                 </div>
 
                 <div className="flex min-w-0 flex-col gap-1.5">
-                  <p className="text-[11px] font-semibold uppercase text-[#9ca3af]">Код активации</p>
+                  <p className="text-11 font-semibold uppercase text-[#9ca3af]">Код активации</p>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-navy-700">{issuedCode ?? '—'}</span>
                     <IconActionButton
@@ -304,7 +304,7 @@ export function TeacherProfilePage() {
 
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-2">
-                    <p className="text-[11px] font-semibold uppercase text-[#9ca3af]">Предметы</p>
+                    <p className="text-11 font-semibold uppercase text-[#9ca3af]">Предметы</p>
                     {subjects.length === 0 ? (
                       <p className="text-sm text-[#9ca3af]">Нет назначений</p>
                     ) : (
@@ -322,7 +322,7 @@ export function TeacherProfilePage() {
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <p className="text-[11px] font-semibold uppercase text-[#9ca3af]">Классы</p>
+                    <p className="text-11 font-semibold uppercase text-[#9ca3af]">Классы</p>
                     {classChips.length === 0 ? (
                       <p className="text-sm text-[#9ca3af]">Нет назначений</p>
                     ) : (
@@ -341,7 +341,7 @@ export function TeacherProfilePage() {
 
                   <div className="flex flex-col gap-2">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-[11px] font-semibold uppercase text-[#9ca3af]">
+                      <p className="text-11 font-semibold uppercase text-[#9ca3af]">
                         Рабочие дни и часы
                       </p>
                       <button
@@ -406,7 +406,7 @@ export function TeacherProfilePage() {
                     {detail.assignments.map((a) => (
                       <li
                         key={a.id}
-                        className="group flex items-center justify-between gap-4 border-b border-[#f3f4f6] py-3 text-[13px] last:border-b-0"
+                        className="group flex items-center justify-between gap-4 border-b border-[#f3f4f6] py-3 text-13 last:border-b-0"
                       >
                         <span className="font-semibold text-[#1a1f36]">{a.className} класс</span>
                         <div className="flex items-center gap-6">

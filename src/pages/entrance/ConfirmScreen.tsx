@@ -45,7 +45,7 @@ export function ConfirmScreen({
               <div key={row.label}>
                 {i > 0 ? <div className="h-px w-full bg-[#e2e8f0]" /> : null}
                 <div className="flex flex-col gap-1 py-3">
-                  <p className="text-[13px] font-medium text-[#64748b]">{row.label}</p>
+                  <p className="text-13 font-medium text-[#64748b]">{row.label}</p>
                   <p className="text-[17px] font-semibold text-[#1e293b]">{row.value}</p>
                 </div>
               </div>

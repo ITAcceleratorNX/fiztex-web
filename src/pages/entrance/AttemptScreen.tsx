@@ -498,7 +498,7 @@ export function AttemptScreen({
               {formatClock(remaining)}
             </div>
           </div>
-          <div className="mt-4 flex items-center justify-between text-[13px] font-semibold text-[#64748b]">
+          <div className="mt-4 flex items-center justify-between text-13 font-semibold text-[#64748b]">
             <span>
               Вопрос {index + 1} из {questions.length}
             </span>
@@ -561,7 +561,7 @@ export function AttemptScreen({
               lowTime ? 'bg-red-50' : 'bg-slate-50',
             )}
           >
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            <span className="text-11 font-semibold uppercase tracking-wide text-slate-400">
               Осталось
             </span>
             <span

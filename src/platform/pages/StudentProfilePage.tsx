@@ -270,7 +270,7 @@ export function StudentProfilePage() {
                         }
                       />
                       <div className="flex min-w-0 flex-col gap-1.5">
-                        <p className="text-[11px] font-semibold uppercase text-[#9ca3af]">
+                        <p className="text-11 font-semibold uppercase text-[#9ca3af]">
                           Персональный код
                         </p>
                         <div className="flex items-center gap-2">

@@ -49,7 +49,7 @@ export function AccountActionsMenu({
                 setOpen(false);
                 onResetAccess();
               }}
-              className="flex h-10 w-full items-center gap-2.5 px-3 text-left text-[13px] font-semibold text-slate-600 transition hover:bg-slate-50"
+              className="flex h-10 w-full items-center gap-2.5 px-3 text-left text-13 font-semibold text-slate-600 transition hover:bg-slate-50"
             >
               <Ban className="size-4 text-slate-400" />
               Сбросить доступ
@@ -63,7 +63,7 @@ export function AccountActionsMenu({
                   setOpen(false);
                   onUnblock();
                 }}
-                className="flex h-10 w-full items-center gap-2.5 px-3 text-left text-[13px] font-semibold text-slate-600 transition hover:bg-slate-50"
+                className="flex h-10 w-full items-center gap-2.5 px-3 text-left text-13 font-semibold text-slate-600 transition hover:bg-slate-50"
               >
                 <Unlock className="size-4 text-slate-400" />
                 Разблокировать аккаунт
@@ -75,7 +75,7 @@ export function AccountActionsMenu({
                   setOpen(false);
                   onBlock();
                 }}
-                className="flex h-10 w-full items-center gap-2.5 px-3 text-left text-[13px] font-semibold text-[#ef4444] transition hover:bg-red-50"
+                className="flex h-10 w-full items-center gap-2.5 px-3 text-left text-13 font-semibold text-[#ef4444] transition hover:bg-red-50"
               >
                 <Lock className="size-4" />
                 Заблокировать аккаунт
@@ -91,7 +91,7 @@ export function AccountActionsMenu({
                   onArchive();
                 }}
                 className={cx(
-                  'flex h-10 w-full items-center gap-2.5 px-3 text-left text-[13px] font-semibold text-[#6b7280] transition hover:bg-slate-50',
+                  'flex h-10 w-full items-center gap-2.5 px-3 text-left text-13 font-semibold text-[#6b7280] transition hover:bg-slate-50',
                 )}
               >
                 <Trash2 className="size-4 text-slate-400" />

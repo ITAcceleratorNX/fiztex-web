@@ -54,7 +54,7 @@ export function ScheduleWeeklyGrid({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[860px] border-collapse text-left text-sm">
           <thead>
-            <tr className="bg-slate-50/90 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            <tr className="bg-slate-50/90 text-11 font-semibold uppercase tracking-wide text-slate-500">
               <th className="sticky left-0 z-10 w-24 bg-slate-50 px-3 py-3 text-left">
                 № урока
               </th>
@@ -82,7 +82,7 @@ export function ScheduleWeeklyGrid({
                   <div className="text-lg font-bold leading-none text-navy-900">
                     {period.lessonNumber}
                   </div>
-                  <div className="mt-1 text-[11px] text-slate-400">
+                  <div className="mt-1 text-11 text-slate-400">
                     {period.startTime.slice(0, 5)}–{period.endTime.slice(0, 5)}
                   </div>
                 </td>
@@ -145,7 +145,7 @@ export function ScheduleWeeklyGrid({
                               <div className="truncate text-[12px] font-semibold text-navy-900">
                                 {lesson.subjectName}
                               </div>
-                              <div className="mt-0.5 truncate text-[11px] text-slate-600">
+                              <div className="mt-0.5 truncate text-11 text-slate-600">
                                 {shortTeacherName(lesson.teacherFullName)}
                               </div>
                               {lesson.targetType === 'SUBGROUP' && lesson.subgroupName && (
@@ -195,7 +195,7 @@ export function ScheduleLegendBar() {
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
       {items.map((item) => (
-        <div key={item.label} className="flex items-center gap-2 text-[11px] text-slate-500">
+        <div key={item.label} className="flex items-center gap-2 text-11 text-slate-500">
           <span className={cx('inline-block h-3.5 w-5 rounded-sm border', item.className)} />
           {item.label}
         </div>

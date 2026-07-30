@@ -117,7 +117,7 @@ export function NotificationsBell({ onOpenAttempt }: { onOpenAttempt: (attemptId
                           <p className="mt-0.5 text-sm font-semibold text-slate-800">{item.applicantName}</p>
                           <p className="truncate text-xs text-slate-500">{item.testTitle}</p>
                           <p className="mt-1 text-xs text-slate-500">{item.message}</p>
-                          <p className="mt-1 text-[11px] text-slate-400">{formatDateTime(item.createdAt)}</p>
+                          <p className="mt-1 text-11 text-slate-400">{formatDateTime(item.createdAt)}</p>
                         </div>
                         {!item.read && (
                           <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-500" />

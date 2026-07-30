@@ -2,6 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Дизайн-токены.
+ *
+ * Источник — макет Figma `Copy of fiztex`, страница «Admin schedule »
+ * (node 2015:4887). В самом файле объявлены только две переменные
+ * (brandcolor, 2brandcolor); остальные значения выведены из фактических
+ * стилей репрезентативных узлов, поэтому в комментариях указано, где
+ * значение совпадает с дефолтной палитрой Tailwind.
+ *
+ * Правило: не хардкодить hex и не писать text-[13px] — брать токен.
+ * Если токена нет, сначала завести его здесь.
+ *
+ * Ограничение: цвета объявлены как hex, поэтому модификаторы прозрачности
+ * (bg-info-bg/50) на них НЕ работают. Если понадобится — заменить значение
+ * на RGB-каналы и обернуть в rgb(var(--…) / <alpha-value>) в конфиге.
+ */
+:root {
+  /* Бренд — единственные две переменные, объявленные в Figma */
+  --color-brand-navy: #274185; /* Figma: brandcolor */
+  --color-brand-orange: #fb923c; /* Figma: 2brandcolor, = tailwind orange-400 */
+
+  /* Текст */
+  --color-text-primary: #1a1f36; /* вне палитры Tailwind */
+  --color-text-muted: #6b7280; /* = gray-500 */
+
+  /* Поверхности и границы */
+  --color-surface: #ffffff;
+  --color-border-default: #e5e7eb; /* = gray-200 */
+  --color-bg-disabled: #d1d5db; /* = gray-300 */
+
+  /* Статусы */
+  --color-info-bg: #eff6ff; /* = blue-50 */
+  --color-success-bg: #dcfce7; /* = green-100 */
+  --color-success-fg: #16a34a; /* = green-600 */
+
+  /* Кегли вне шкалы Tailwind. Имена числовые намеренно:
+   * семантику (caption/label) дизайнер не выражал. */
+  --text-11: 11px;
+  --text-13: 13px;
+
+  /* Единственная тень в макете — на dropdown-popover.
+   * Карточки в Figma без тени, только 1px граница. */
+  --shadow-popover: 0 4px 6px rgb(0 0 0 / 0.06);
+}
+
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
@@ -48,6 +92,59 @@
 
   .label-base {
     @apply mb-1.5 block text-sm font-medium text-slate-700;
+  }
+
+  /* Figma 2015:7798 «decor» — вогнутые сопряжения у правой кромки активного
+   * пункта сайдбара. Белый пункт расширяется вверх и вниз дугой и читается
+   * как язычок вкладки, сопряжённый с областью контента.
+   *
+   * Дуга из макета — четверть эллипса 21×20 (сверено по точкам с безье
+   * из ассета, расхождение ≤0.4px), поэтому берётся радиальным градиентом,
+   * а не SVG: ноль лишних узлов в DOM, всё на псевдоэлементах.
+   *
+   * Требует position: relative на самом пункте.
+   *
+   * ВАЖНО, почему псевдоэлементы висят на ВСЕХ пунктах, а не только на активном.
+   * Они рисуются за пределами бокса ссылки (bottom/top: 100%). Если навешивать
+   * их вместе с активным состоянием, то при снятии класса движок инвалидирует
+   * только сам бокс, и дуга снаружи может остаться на экране — выглядит как
+   * «след» от каждой ранее нажатой вкладки. Поэтому область покраски постоянна,
+   * а переключается только цвет: перерисовка тогда всегда попадает куда надо. */
+  .nav-fillets {
+    --fillet-color: transparent;
+  }
+
+  .nav-fillets-active {
+    --fillet-color: theme('colors.white');
+  }
+
+  .nav-fillets::before,
+  .nav-fillets::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    width: 21px;
+    pointer-events: none;
+  }
+
+  .nav-fillets::before {
+    bottom: 100%;
+    height: 20px;
+    background: radial-gradient(
+      21px 20px at left top,
+      transparent 99.5%,
+      var(--fillet-color) 100%
+    );
+  }
+
+  .nav-fillets::after {
+    top: 100%;
+    height: 20.5px;
+    background: radial-gradient(
+      21px 20.5px at left bottom,
+      transparent 99.5%,
+      var(--fillet-color) 100%
+    );
   }
 
   /* Keeps scrolling but hides the scrollbar track (e.g. the sidebar nav). */

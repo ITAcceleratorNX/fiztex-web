@@ -265,7 +265,7 @@ export function ParentProfilePage() {
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                       <ProfileInfoField label="Телефон" value={detail.phone} />
                       <div className="flex min-w-0 flex-col gap-1.5">
-                        <p className="text-[11px] font-semibold uppercase text-[#9ca3af]">
+                        <p className="text-11 font-semibold uppercase text-[#9ca3af]">
                           Код активации
                         </p>
                         <div className="flex items-center gap-2">

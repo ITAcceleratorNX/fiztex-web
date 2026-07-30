@@ -15,7 +15,7 @@ export function SaveStatusChip({
 
   if (status === 'saving') {
     return (
-      <span className="inline-flex items-center gap-2 text-[13px] font-medium text-[#64748b]">
+      <span className="inline-flex items-center gap-2 text-13 font-medium text-[#64748b]">
         <span className="size-2 animate-pulse rounded-full bg-[#94a3b8]" />
         Сохранение…
       </span>
@@ -24,7 +24,7 @@ export function SaveStatusChip({
 
   if (status === 'saved') {
     return (
-      <span className="inline-flex items-center gap-2 text-[13px] font-medium text-[#64748b]">
+      <span className="inline-flex items-center gap-2 text-13 font-medium text-[#64748b]">
         <span className="size-2 rounded-full bg-[#22c55e]" />
         Ответ сохранён
       </span>
@@ -33,7 +33,7 @@ export function SaveStatusChip({
 
   return (
     <span className="inline-flex flex-wrap items-center gap-2">
-      <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-red-600">
+      <span className="inline-flex items-center gap-1.5 text-13 font-medium text-red-600">
         <AlertCircle className="size-4" />
         Не сохранено
       </span>
@@ -41,7 +41,7 @@ export function SaveStatusChip({
         <button
           type="button"
           onClick={onRetry}
-          className={cx('text-[13px] font-semibold text-brand-500 transition hover:text-brand-600')}
+          className={cx('text-13 font-semibold text-brand-500 transition hover:text-brand-600')}
         >
           Повторить
         </button>

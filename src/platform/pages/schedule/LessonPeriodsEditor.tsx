@@ -105,7 +105,7 @@ export function LessonPeriodsEditor({
                       }
                     />
                     {err?.duplicateNumber && (
-                      <p className="mt-1 text-[11px] text-red-500">Дубль номера</p>
+                      <p className="mt-1 text-11 text-red-500">Дубль номера</p>
                     )}
                   </td>
                   <td className="px-3 py-2 align-top">
@@ -132,10 +132,10 @@ export function LessonPeriodsEditor({
                       }}
                     />
                     {err?.endBeforeStart && (
-                      <p className="mt-1 text-[11px] text-red-500">Конец позже начала</p>
+                      <p className="mt-1 text-11 text-red-500">Конец позже начала</p>
                     )}
                     {err?.overlapWithKeys && err.overlapWithKeys.length > 0 && (
-                      <p className="mt-1 text-[11px] text-red-500">Пересечение с другим уроком</p>
+                      <p className="mt-1 text-11 text-red-500">Пересечение с другим уроком</p>
                     )}
                   </td>
                   <td

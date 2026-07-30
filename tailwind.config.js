@@ -27,13 +27,38 @@ export default {
           900: '#182a5c',
           950: '#101d42',
         },
+        // Семантические токены из макета Figma — см. :root в src/index.css.
+        // Добавлены поверх шкал brand/navy, которые сознательно не тронуты:
+        // на них висит вся существующая вёрстка.
+        ink: 'var(--color-text-primary)',
+        muted: 'var(--color-text-muted)',
+        line: 'var(--color-border-default)',
+        surface: 'var(--color-surface)',
+        disabled: 'var(--color-bg-disabled)',
+        info: {
+          bg: 'var(--color-info-bg)',
+        },
+        success: {
+          bg: 'var(--color-success-bg)',
+          fg: 'var(--color-success-fg)',
+        },
       },
       fontFamily: {
+        // ВНИМАНИЕ: в макете шрифт Geist (Regular/Medium/SemiBold/Bold).
+        // Здесь оставлен Inter — Geist не добавлен в зависимости,
+        // подстановка сломала бы рендер. Решение по шрифту не принято.
         sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+      },
+      fontSize: {
+        // Кегли макета, которых нет в шкале Tailwind.
+        // Заменяют text-[11px] / text-[13px] в вёрстке.
+        11: 'var(--text-11)',
+        13: 'var(--text-13)',
       },
       boxShadow: {
         card: '0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.08)',
         pop: '0 10px 30px -10px rgba(15, 23, 42, 0.25)',
+        popover: 'var(--shadow-popover)',
       },
       keyframes: {
         'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },

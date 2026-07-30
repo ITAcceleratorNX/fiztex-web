@@ -49,7 +49,7 @@ export function ProfileStatusBadge({ status }: { status: AccountStatus }) {
   return (
     <span
       className={cx(
-        'inline-flex items-center gap-1.5 rounded-[20px] px-2.5 py-1 text-[13px] font-semibold',
+        'inline-flex items-center gap-1.5 rounded-[20px] px-2.5 py-1 text-13 font-semibold',
         styles[status],
       )}
     >
@@ -102,7 +102,7 @@ export function ProfileInfoField({
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
-      <p className="text-[11px] font-semibold uppercase text-[#9ca3af]">{label}</p>
+      <p className="text-11 font-semibold uppercase text-[#9ca3af]">{label}</p>
       <div className="text-sm font-medium text-[#1a1f36]">{value}</div>
     </div>
   );
@@ -137,7 +137,7 @@ export function ProfileLinkAction({
     <button
       type="button"
       onClick={onClick}
-      className="text-[13px] font-semibold text-brand-500 transition hover:text-brand-600"
+      className="text-13 font-semibold text-brand-500 transition hover:text-brand-600"
     >
       {children}
     </button>

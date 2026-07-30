@@ -135,7 +135,7 @@ function OutlineButton({
       type="button"
       onClick={onClick}
       className={cx(
-        'inline-flex items-center rounded-lg border-[1.5px] px-4 py-2 text-[13px] font-semibold transition',
+        'inline-flex items-center rounded-lg border-[1.5px] px-4 py-2 text-13 font-semibold transition',
         tone === 'navy'
           ? 'border-navy-700 text-navy-700 hover:bg-navy-50'
           : 'border-[#9ca3af] text-[#6b7280] hover:bg-slate-50',
@@ -297,9 +297,9 @@ export function DashboardPage() {
                             Активен
                           </span>
                         </div>
-                        <p className="text-[13px] text-[#6b7280]">Активный учебный год</p>
+                        <p className="text-13 text-[#6b7280]">Активный учебный год</p>
                       </div>
-                      <p className="text-[13px] text-[#6b7280]">
+                      <p className="text-13 text-[#6b7280]">
                         Начало: {formatDotDate(activeYear.startDate)}
                         <span className="mx-2">|</span>
                         Окончание: {formatDotDate(activeYear.endDate)}
@@ -356,14 +356,14 @@ export function DashboardPage() {
                               setEditingYear(year);
                               setYearFormOpen(true);
                             }}
-                            className="text-[13px] font-semibold text-navy-700 hover:text-navy-800"
+                            className="text-13 font-semibold text-navy-700 hover:text-navy-800"
                           >
                             Изменить
                           </button>
                           <button
                             type="button"
                             onClick={() => void handleActivateYear(year)}
-                            className="text-[13px] font-semibold text-brand-500 hover:text-brand-600"
+                            className="text-13 font-semibold text-brand-500 hover:text-brand-600"
                           >
                             Активировать
                           </button>
@@ -394,7 +394,7 @@ export function DashboardPage() {
                           </div>
                           <Link
                             to="/admin/academic-year"
-                            className="shrink-0 text-[13px] font-semibold text-navy-700 hover:text-navy-800"
+                            className="shrink-0 text-13 font-semibold text-navy-700 hover:text-navy-800"
                           >
                             Открыть →
                           </Link>
@@ -462,7 +462,7 @@ export function DashboardPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[780px]">
                     <thead>
-                      <tr className="h-10 border-b border-[#e5e7eb] bg-[#f9fafb] text-left text-[11px] font-semibold uppercase text-[#9ca3af]">
+                      <tr className="h-10 border-b border-[#e5e7eb] bg-[#f9fafb] text-left text-11 font-semibold uppercase text-[#9ca3af]">
                         <th className="w-[140px] px-6 font-semibold">Тип</th>
                         <th className="px-2 font-semibold">Название</th>
                         <th className="w-40 px-2 font-semibold">Дата начала</th>
@@ -494,10 +494,10 @@ export function DashboardPage() {
                             <td className="px-2 text-sm font-semibold text-[#1a1f36]">
                               {period.name}
                             </td>
-                            <td className="px-2 text-[13px] text-[#6b7280]">
+                            <td className="px-2 text-13 text-[#6b7280]">
                               {formatDotDate(period.startDate)}
                             </td>
-                            <td className="px-2 text-[13px] text-[#6b7280]">
+                            <td className="px-2 text-13 text-[#6b7280]">
                               {formatDotDate(period.endDate)}
                             </td>
                             <td className="px-2">
@@ -517,7 +517,7 @@ export function DashboardPage() {
                                   setEditingPeriod(period);
                                   setPeriodFormOpen(true);
                                 }}
-                                className="text-[13px] font-semibold text-navy-700 transition hover:text-navy-800"
+                                className="text-13 font-semibold text-navy-700 transition hover:text-navy-800"
                               >
                                 Редактировать
                               </button>
@@ -551,7 +551,7 @@ export function DashboardPage() {
                     )}
                     <Link
                       to="/admin/periods"
-                      className="text-[13px] font-semibold text-navy-700 hover:text-navy-800"
+                      className="text-13 font-semibold text-navy-700 hover:text-navy-800"
                     >
                       Все периоды →
                     </Link>
@@ -594,7 +594,7 @@ export function DashboardPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[700px]">
                     <thead>
-                      <tr className="h-10 border-b border-[#e5e7eb] bg-[#f9fafb] text-left text-[11px] font-semibold uppercase text-[#9ca3af]">
+                      <tr className="h-10 border-b border-[#e5e7eb] bg-[#f9fafb] text-left text-11 font-semibold uppercase text-[#9ca3af]">
                         <th className="w-[180px] px-6 font-semibold">Класс</th>
                         <th className="px-2 font-semibold">Учебный год</th>
                         <th className="w-[200px] px-2 font-semibold">Кол-во учеников</th>
@@ -611,10 +611,10 @@ export function DashboardPage() {
                           <td className="px-6 text-sm font-bold text-navy-700">
                             {formatClassLabel(item.name)}
                           </td>
-                          <td className="px-2 text-[13px] text-[#6b7280]">
+                          <td className="px-2 text-13 text-[#6b7280]">
                             {item.academicYearName}
                           </td>
-                          <td className="px-2 text-[13px] text-[#6b7280]">{item.studentCount}</td>
+                          <td className="px-2 text-13 text-[#6b7280]">{item.studentCount}</td>
                           <td className="px-2">
                             <span
                               className={cx(
@@ -632,7 +632,7 @@ export function DashboardPage() {
                           <td className="px-2 text-right">
                             <Link
                               to="/admin/classes"
-                              className="text-[13px] font-semibold text-navy-700 transition hover:text-navy-800"
+                              className="text-13 font-semibold text-navy-700 transition hover:text-navy-800"
                             >
                               Просмотреть
                             </Link>
@@ -642,7 +642,7 @@ export function DashboardPage() {
                     </tbody>
                   </table>
                 </div>
-                <div className="flex items-center justify-between border-t border-[#e5e7eb] bg-[#f9fafb] px-6 py-3 text-[13px] text-[#9ca3af]">
+                <div className="flex items-center justify-between border-t border-[#e5e7eb] bg-[#f9fafb] px-6 py-3 text-13 text-[#9ca3af]">
                   <span>
                     {classes.length === 0
                       ? '0'

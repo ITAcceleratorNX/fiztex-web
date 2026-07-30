@@ -358,7 +358,7 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Поиск по ФИО, телефону или Email..."
-                className="h-full w-full bg-transparent text-[13px] text-slate-800 outline-none placeholder:text-[#9ca3af]"
+                className="h-full w-full bg-transparent text-13 text-slate-800 outline-none placeholder:text-[#9ca3af]"
               />
             </div>
 
@@ -371,7 +371,7 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
                     type="button"
                     onClick={() => selectRole(r.value)}
                     className={cx(
-                      'rounded-md px-3.5 py-1.5 text-[13px] transition',
+                      'rounded-md px-3.5 py-1.5 text-13 transition',
                       selected
                         ? 'bg-navy-700 font-semibold text-white'
                         : 'font-medium text-[#6b7280] hover:text-slate-800',
@@ -412,7 +412,7 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
                 type="button"
                 onClick={() => setStatus(t.value)}
                 className={cx(
-                  'rounded-md px-3 py-1.5 text-[13px] transition',
+                  'rounded-md px-3 py-1.5 text-13 transition',
                   selected
                     ? 'bg-navy-700 font-semibold text-white'
                     : 'border border-[#e5e7eb] bg-[#f3f4f6] font-medium text-[#6b7280] hover:border-slate-300 hover:text-slate-800',
@@ -437,7 +437,7 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[980px]">
               <thead>
-                <tr className="h-10 border-b border-[#e5e7eb] bg-[#f9fafb] text-left text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">
+                <tr className="h-10 border-b border-[#e5e7eb] bg-[#f9fafb] text-left text-11 font-semibold uppercase tracking-wide text-[#9ca3af]">
                   <th className="px-6 font-semibold">ФИО</th>
                   <th className="w-[130px] px-2 font-semibold">Роль</th>
                   <th className="w-[180px] px-2 font-semibold">Телефон / Email</th>
@@ -465,16 +465,16 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
                     <td className="px-2">
                       <RoleBadge role={user.role} />
                     </td>
-                    <td className="max-w-[180px] truncate px-2 text-[13px] text-[#6b7280]">
+                    <td className="max-w-[180px] truncate px-2 text-13 text-[#6b7280]">
                       {user.phone ?? user.email ?? '—'}
                     </td>
-                    <td className="max-w-[200px] truncate px-2 text-[13px] text-[#1a1f36]">
+                    <td className="max-w-[200px] truncate px-2 text-13 text-[#1a1f36]">
                       {user.relationLabel ?? '—'}
                     </td>
                     <td className="px-2">
                       <StatusBadge status={user.status} />
                     </td>
-                    <td className="px-2 text-[13px] text-[#6b7280]">{formatDate(user.createdAt)}</td>
+                    <td className="px-2 text-13 text-[#6b7280]">{formatDate(user.createdAt)}</td>
                     <td className="px-2">
                       <div className="flex items-center justify-center">
                         <button
@@ -503,7 +503,7 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
         )}
 
         {!loading && !error && totalElements > 0 && (
-          <div className="flex h-11 items-center justify-between rounded-b-2xl bg-[#f9fafb] px-6 text-[13px] text-[#9ca3af]">
+          <div className="flex h-11 items-center justify-between rounded-b-2xl bg-[#f9fafb] px-6 text-13 text-[#9ca3af]">
             <span>
               {rangeFrom}–{rangeTo} из {formatCount(totalElements)}{' '}
               {pluralRu(totalElements, ['пользователя', 'пользователей', 'пользователей'])}

@@ -28,7 +28,7 @@ export function IssuedCodeResult({
   return (
     <div className="space-y-5">
       <div className="rounded-xl bg-[#f8fafc] px-4 py-5 ring-1 ring-[#e5e7eb]">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">
+        <p className="text-11 font-semibold uppercase tracking-wide text-[#9ca3af]">
           Код активации · {roleLabel}
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-3">

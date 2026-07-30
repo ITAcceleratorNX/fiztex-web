@@ -131,7 +131,7 @@ function WorkingDaysChips({
               {WEEKDAY_SHORT_LABELS[day]}
             </button>
             {err && (
-              <p id={`day-err-${day}`} className="max-w-[7rem] text-[11px] leading-tight text-red-500">
+              <p id={`day-err-${day}`} className="max-w-[7rem] text-11 leading-tight text-red-500">
                 {err}
               </p>
             )}

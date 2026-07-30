@@ -10,10 +10,11 @@ export function Sidebar() {
 
   return (
     <aside className="relative flex w-[220px] shrink-0 flex-col overflow-hidden bg-navy-700">
-      <PhysTechMark className="pointer-events-none absolute -bottom-4 left-1/2 h-52 w-52 -translate-x-1/2 text-white/[0.07]" />
+      {/* Figma 2015:7789 — 140px, bottom 120px, 8% белого */}
+      <PhysTechMark className="pointer-events-none absolute bottom-[120px] left-1/2 size-[140px] -translate-x-1/2 text-white/[0.08]" />
 
       <div className="flex items-center justify-center px-6 pb-6 pt-12">
-        <Logo className="h-9 w-auto" />
+        <Logo className="h-20 w-auto" />
       </div>
 
       <nav className="no-scrollbar relative z-10 flex-1 space-y-5 overflow-y-auto pb-4 pt-3">
@@ -39,10 +40,10 @@ export function Sidebar() {
             {admin ? initials(admin.fullName) : 'A'}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-semibold text-white">
+            <p className="truncate text-13 font-semibold text-white">
               {admin?.fullName ?? 'Администратор'}
             </p>
-            <p className="truncate text-[11px] text-white/60">Администратор</p>
+            <p className="truncate text-11 text-white/60">Администратор</p>
           </div>
           <button
             type="button"
@@ -80,18 +81,22 @@ function SidebarNavItem({ item }: { item: NavItem }) {
   return (
     <div
       className={cx(
-        branchOpen && 'overflow-hidden rounded-tl-[24px] rounded-bl-[24px] bg-white/45',
+        // Без overflow-hidden: верхнее сопряжение декора выходит за пределы ветки.
+        // Нижний радиус поэтому задан на последнем пункте, а не обрезкой.
+        branchOpen && 'rounded-tl-[24px] rounded-bl-[24px] bg-white/45',
       )}
     >
       <NavLink
         to={item.to}
         end={item.end}
         className={cx(
-          'flex h-[52px] items-center gap-3 pl-7 pr-3 text-sm transition',
+          'nav-fillets relative z-10 flex h-[52px] items-center gap-3 pl-7 pr-3 text-sm transition',
           branchOpen
             ? cx(
                 'font-semibold text-navy-700',
-                selfActive && !childActive ? 'bg-white rounded-tl-[24px]' : 'bg-transparent',
+                selfActive && !childActive
+                  ? 'nav-fillets-active rounded-tl-[24px] bg-white'
+                  : 'bg-transparent',
               )
             : 'font-normal text-white/45 hover:text-white/80',
         )}
@@ -102,7 +107,7 @@ function SidebarNavItem({ item }: { item: NavItem }) {
         <span className="min-w-0 flex-1 truncate">{item.label}</span>
         <ChevronDown
           className={cx(
-            'size-5 shrink-0 transition-transform',
+            'size-6 shrink-0 transition-transform',
             branchOpen ? 'text-navy-700' : 'text-white/45 -rotate-90',
           )}
         />
@@ -128,9 +133,9 @@ function TopLevelLink({ item }: { item: NavItem }) {
       end={item.end}
       className={({ isActive }) =>
         cx(
-          'flex h-12 items-center gap-3 pl-6 pr-3 text-sm transition',
+          'nav-fillets relative z-10 flex h-12 items-center gap-3 pl-6 pr-3 text-sm transition',
           isActive
-            ? 'rounded-tl-[24px] rounded-bl-[24px] bg-white font-semibold text-navy-700'
+            ? 'nav-fillets-active rounded-tl-[24px] rounded-bl-[24px] bg-white font-semibold text-navy-700'
             : 'font-normal text-white/45 hover:text-white/80',
         )
       }
@@ -163,9 +168,11 @@ function ChildLink({ item, isLast }: { item: NavItem; isLast: boolean }) {
       end={item.end}
       className={({ isActive }) =>
         cx(
-          'flex h-[52px] items-center gap-3 pl-7 pr-3 text-sm transition',
+          'nav-fillets relative z-10 flex h-[52px] items-center gap-3 pl-7 pr-3 text-sm transition',
+          // Радиус на последнем пункте безусловно: обёртка больше не режет по overflow.
+          isLast && 'rounded-bl-[24px]',
           isActive
-            ? cx('bg-white font-semibold text-navy-700', isLast && 'rounded-bl-[24px]')
+            ? 'nav-fillets-active bg-white font-semibold text-navy-700'
             : 'font-normal text-navy-700/80 hover:bg-white/40 hover:text-navy-700',
         )
       }

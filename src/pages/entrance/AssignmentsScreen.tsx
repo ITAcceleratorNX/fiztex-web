@@ -135,7 +135,7 @@ function TestCard({
           }}
         />
         {statusText ? (
-          <span className="absolute right-3 top-3 hidden rounded-full bg-brand-500 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white lg:inline-flex">
+          <span className="absolute right-3 top-3 hidden rounded-full bg-brand-500 px-3 py-1 text-11 font-bold uppercase tracking-wide text-white lg:inline-flex">
             {statusText}
           </span>
         ) : null}
@@ -144,7 +144,7 @@ function TestCard({
       <div className="flex flex-1 flex-col gap-2 px-4 pb-4 pt-3.5 lg:px-5 lg:pb-5">
         <div className="flex flex-col gap-0.5">
           <h2 className="text-lg font-bold text-[#111827]">{item.testTitle}</h2>
-          {gradeLabel ? <p className="text-[13px] text-[#6b7280]">{gradeLabel}</p> : null}
+          {gradeLabel ? <p className="text-13 text-[#6b7280]">{gradeLabel}</p> : null}
         </div>
         <p className="text-xs text-[#9ca3af]">
           {item.subject} · {item.durationMinutes} мин
@@ -154,7 +154,7 @@ function TestCard({
           {showMobileStatus ? (
             <p
               className={cx(
-                'text-[11px] font-bold uppercase tracking-wide lg:hidden',
+                'text-11 font-bold uppercase tracking-wide lg:hidden',
                 item.availableAction === 'CONTINUE' ? 'text-brand-500' : 'text-[#6b7280]',
               )}
             >

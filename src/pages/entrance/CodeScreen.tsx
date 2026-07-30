@@ -55,7 +55,7 @@ export function CodeScreen({
           className="w-full rounded-3xl bg-white p-6 shadow-[0px_8px_24px_0px_rgba(39,65,133,0.13),0px_32px_64px_0px_rgba(0,0,0,0.13)]"
         >
           <div className="flex flex-col gap-2">
-            <label htmlFor="personal-code" className="text-[13px] font-semibold text-[#1a1f36]">
+            <label htmlFor="personal-code" className="text-13 font-semibold text-[#1a1f36]">
               Персональный код
             </label>
             <div
@@ -118,8 +118,8 @@ export function CodeScreen({
             ref={helpRef}
             className="mt-6 flex flex-col gap-2 rounded-[20px] border border-[rgba(39,65,133,0.06)] bg-[#f0f4ff] p-4"
           >
-            <p className="text-[13px] font-semibold text-navy-700">Нет персонального кода?</p>
-            <p className="text-[13px] leading-relaxed text-[#374151]">
+            <p className="text-13 font-semibold text-navy-700">Нет персонального кода?</p>
+            <p className="text-13 leading-relaxed text-[#374151]">
               Если вы потеряли персональный код, обратитесь в приёмную комиссию вашей школы.
             </p>
           </div>

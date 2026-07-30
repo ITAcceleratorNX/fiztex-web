@@ -137,7 +137,7 @@ export function ResultScreen({
 
             <div className="mt-6 grid grid-cols-2 gap-3">
               <div className="rounded-xl bg-slate-50 px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-11 font-semibold uppercase tracking-wide text-slate-400">
                   Минимальный проходной балл
                 </p>
                 <p className="mt-1 text-lg font-bold text-[#111827]">{result.minScore}</p>
@@ -150,7 +150,7 @@ export function ResultScreen({
                     : 'border-red-200 bg-red-50',
                 )}
               >
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-11 font-semibold uppercase tracking-wide text-slate-400">
                   Ваш результат
                 </p>
                 <p
@@ -227,7 +227,7 @@ export function ResultScreen({
 function MetaRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
-      <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</dt>
+      <dt className="text-11 font-semibold uppercase tracking-wide text-slate-400">{label}</dt>
       <dd className="text-right text-sm font-semibold text-[#111827]">{value}</dd>
     </div>
   );
