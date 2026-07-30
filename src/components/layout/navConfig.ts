@@ -72,7 +72,7 @@ export const NAV_SECTIONS: NavSection[] = [
     id: 'school',
     label: 'Учебный процесс',
     items: [
-      { to: '/lesson-schedule', label: 'Расписание уроков', icon: Calendar },
+      { to: '/lesson-schedule', label: 'Расписание', icon: Calendar },
       { to: '/grades', label: 'Дневник и оценки', icon: BookOpen, noApi: true },
       { to: '/attendance', label: 'Посещаемость (QR)', icon: QrCode, noApi: true },
       { to: '/ai-tests', label: 'AI-тесты', icon: Sparkles },

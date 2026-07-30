@@ -42,6 +42,12 @@ export default {
           bg: 'var(--color-success-bg)',
           fg: 'var(--color-success-fg)',
         },
+        danger: {
+          bg: 'var(--color-danger-bg)',
+        },
+        warning: {
+          bg: 'var(--color-warning-bg)',
+        },
       },
       fontFamily: {
         // ВНИМАНИЕ: в макете шрифт Geist (Regular/Medium/SemiBold/Bold).
@@ -51,7 +57,8 @@ export default {
       },
       fontSize: {
         // Кегли макета, которых нет в шкале Tailwind.
-        // Заменяют text-[11px] / text-[13px] в вёрстке.
+        // Заменяют text-[10px] / text-[11px] / text-[13px] в вёрстке.
+        10: 'var(--text-10)',
         11: 'var(--text-11)',
         13: 'var(--text-13)',
       },
@@ -59,6 +66,11 @@ export default {
         card: '0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.08)',
         pop: '0 10px 30px -10px rgba(15, 23, 42, 0.25)',
         popover: 'var(--shadow-popover)',
+        panel: 'var(--shadow-panel)',
+        slot: 'var(--shadow-slot)',
+        dialog: 'var(--shadow-dialog)',
+        toast: 'var(--shadow-toast)',
+        'toast-error': 'var(--shadow-toast-error)',
       },
       keyframes: {
         'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },

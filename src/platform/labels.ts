@@ -179,5 +179,5 @@ export const ADMIN_PAGE_TITLES: Record<string, string> = {
   '/admin/schedule-settings': 'Настройки расписания',
   '/admin/school-subjects': 'Школьные предметы',
   '/admin/access-codes': 'Доступы / коды',
-  '/lesson-schedule': 'Расписание уроков',
+  '/lesson-schedule': 'Расписание',
 };

@@ -7,6 +7,14 @@ import type {
 } from '@/platform/services/schedules';
 import { cx } from '@/lib/format';
 
+/**
+ * Недельная сетка расписания. Свёрстана по Figma 2015:5786 «Расписание — Просмотр»:
+ * шапка 2015:5871, строка 2015:5884.
+ *
+ * Геометрия из макета: строка 80px, колонка номера 110px, дни — равные доли.
+ * Рамка #e5e7eb на каждой ячейке (border-collapse), шапка на gray-50.
+ */
+
 function lessonsInSlot(
   lessons: ScheduleLesson[],
   weekday: Weekday,
@@ -50,154 +58,163 @@ export function ScheduleWeeklyGrid({
   );
 
   return (
-    <div className="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/80">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[860px] border-collapse text-left text-sm">
-          <thead>
-            <tr className="bg-slate-50/90 text-11 font-semibold uppercase tracking-wide text-slate-500">
-              <th className="sticky left-0 z-10 w-24 bg-slate-50 px-3 py-3 text-left">
-                № урока
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[900px] table-fixed border-collapse">
+        <colgroup>
+          <col className="w-[110px]" />
+          {weekdays.map((day) => (
+            <col key={day} />
+          ))}
+        </colgroup>
+
+        <thead>
+          {/* Figma 2015:5871 — шапка 36px, дни 13px SemiBold брендовым синим */}
+          <tr className="h-9 bg-gray-50">
+            <th className="border border-line text-center text-11 font-semibold uppercase text-gray-400">
+              № урока
+            </th>
+            {weekdays.map((day) => (
+              <th
+                key={day}
+                className="border border-line text-center text-13 font-semibold text-navy-700"
+              >
+                {WEEKDAY_LABELS[day] ?? day}
               </th>
-              {weekdays.map((day) => (
-                <th key={day} className="px-2 py-3 text-center font-semibold normal-case tracking-normal text-slate-600">
-                  {WEEKDAY_LABELS[day] ?? day}
-                </th>
-              ))}
+            ))}
+          </tr>
+        </thead>
+
+        <tbody>
+          {periods.length === 0 && (
+            <tr>
+              <td
+                colSpan={weekdays.length + 1}
+                className="border border-line px-3 py-16 text-center text-13 text-muted"
+              >
+                Нет слотов звонков — назначьте шаблон классу
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {periods.length === 0 && (
-              <tr>
-                <td
-                  colSpan={weekdays.length + 1}
-                  className="px-3 py-16 text-center text-slate-400"
-                >
-                  Нет слотов звонков — назначьте шаблон классу
-                </td>
-              </tr>
-            )}
-            {periods.map((period) => (
-              <tr key={period.id} className="border-t border-slate-100">
-                <td className="sticky left-0 z-10 bg-white px-3 py-2 align-top">
-                  <div className="text-lg font-bold leading-none text-navy-900">
-                    {period.lessonNumber}
-                  </div>
-                  <div className="mt-1 text-11 text-slate-400">
-                    {period.startTime.slice(0, 5)}–{period.endTime.slice(0, 5)}
-                  </div>
-                </td>
-                {weekdays.map((day) => {
-                  const cellLessons = lessonsInSlot(grid.lessons, day, period.lessonNumber);
-                  const hasCritical = criticals.some(
+          )}
+
+          {periods.map((period) => (
+            <tr key={period.id} className="h-20">
+              {/* Figma 2015:5885 — time-cell 110×80 */}
+              <td className="border border-line p-3 text-center align-middle">
+                <div className="text-13 font-bold text-ink">{period.lessonNumber}</div>
+                <div className="text-10 text-gray-400">
+                  {period.startTime.slice(0, 5)}–{period.endTime.slice(0, 5)}
+                </div>
+              </td>
+
+              {weekdays.map((day) => {
+                const cellLessons = lessonsInSlot(grid.lessons, day, period.lessonNumber);
+                const hasCritical = criticals.some(
+                  (f) => f.weekday === day && f.lessonNumber === period.lessonNumber,
+                );
+                const hasWarning =
+                  !hasCritical &&
+                  warnings.some(
                     (f) => f.weekday === day && f.lessonNumber === period.lessonNumber,
                   );
-                  const hasWarning =
-                    !hasCritical &&
-                    warnings.some(
-                      (f) => f.weekday === day && f.lessonNumber === period.lessonNumber,
-                    );
-                  const isSubgroup = cellLessons.some((l) => l.targetType === 'SUBGROUP');
+                const isSubgroup = cellLessons.some((l) => l.targetType === 'SUBGROUP');
 
-                  return (
-                    <td key={`${day}-${period.id}`} className="p-1.5 align-top">
-                      {cellLessons.length === 0 ? (
-                        readOnly ? (
-                          <div className="min-h-[4.75rem] rounded-xl border border-dashed border-slate-200 bg-slate-50/40" />
-                        ) : (
+                return (
+                  <td key={`${day}-${period.id}`} className="border border-line p-1 align-middle">
+                    {cellLessons.length === 0 ? (
+                      readOnly ? (
+                        // Легенда «Пустой слот»: прозрачный, пунктир #d1d5db
+                        <div className="h-[72px] rounded-lg border border-dashed border-gray-300" />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => onAddSlot(day, period.id, period.lessonNumber)}
+                          className="flex h-[72px] w-full items-center justify-center rounded-lg border border-dashed border-gray-300 text-13 text-gray-400 transition hover:border-brand-400 hover:text-brand-600"
+                        >
+                          +
+                        </button>
+                      )
+                    ) : (
+                      // Figma 2015:5889 — filled-slot: rounded-8, p-10, gap-4, тень 0 1px 1px
+                      <div
+                        className={cx(
+                          'flex h-[72px] gap-1 rounded-lg border p-1 shadow-slot',
+                          hasCritical && 'border-red-500 bg-red-50',
+                          hasWarning && 'border-brand-500 bg-brand-50',
+                          !hasCritical && !hasWarning && isSubgroup && 'border-navy-700 bg-info-bg',
+                          !hasCritical && !hasWarning && !isSubgroup && 'border-line bg-white',
+                        )}
+                      >
+                        {cellLessons.map((lesson) => (
+                          <button
+                            key={lesson.id}
+                            type="button"
+                            disabled={readOnly}
+                            onClick={() => onEditLesson(lesson)}
+                            className={cx(
+                              'flex min-w-0 flex-1 flex-col gap-1 rounded-md px-1.5 py-1 text-left transition',
+                              readOnly ? 'cursor-default' : 'hover:bg-white/70',
+                            )}
+                          >
+                            {/* Figma 2015:5890 — subject-row: предмет слева, бейдж справа */}
+                            <span className="flex w-full items-center justify-between gap-1">
+                              <span className="truncate text-xs font-bold text-ink">
+                                {lesson.subjectName}
+                              </span>
+                              {lesson.targetType === 'SUBGROUP' && lesson.subgroupName ? (
+                                <span className="shrink-0 rounded bg-info-bg px-1 text-10 font-semibold text-navy-700">
+                                  {lesson.subgroupName}
+                                </span>
+                              ) : null}
+                            </span>
+                            <span className="truncate text-11 text-muted">
+                              {shortTeacherName(lesson.teacherFullName)}
+                            </span>
+                            {lesson.room ? (
+                              <span className="truncate text-10 text-gray-400">
+                                Каб. {lesson.room}
+                              </span>
+                            ) : null}
+                          </button>
+                        ))}
+
+                        {!readOnly && isSubgroup && (
                           <button
                             type="button"
                             onClick={() => onAddSlot(day, period.id, period.lessonNumber)}
-                            className="flex min-h-[4.75rem] w-full items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white text-xs text-slate-400 transition hover:border-brand-400 hover:bg-brand-50/40 hover:text-brand-600"
+                            className="flex w-5 shrink-0 items-center justify-center rounded-md text-gray-400 transition hover:bg-white hover:text-brand-500"
+                            title="Добавить подгруппу"
                           >
                             +
                           </button>
-                        )
-                      ) : (
-                        <div
-                          className={cx(
-                            'flex min-h-[4.75rem] gap-1 rounded-xl border p-1',
-                            hasCritical && 'border-red-300 bg-red-50/70',
-                            hasWarning && !hasCritical && 'border-amber-300 bg-amber-50/60',
-                            !hasCritical &&
-                              !hasWarning &&
-                              isSubgroup &&
-                              'border-blue-200 bg-blue-50/50',
-                            !hasCritical &&
-                              !hasWarning &&
-                              !isSubgroup &&
-                              'border-slate-200 bg-white',
-                          )}
-                        >
-                          {cellLessons.map((lesson) => (
-                            <button
-                              key={lesson.id}
-                              type="button"
-                              disabled={readOnly}
-                              onClick={() => onEditLesson(lesson)}
-                              className={cx(
-                                'flex min-w-0 flex-1 flex-col rounded-lg px-2 py-1.5 text-left transition',
-                                readOnly
-                                  ? 'cursor-default'
-                                  : 'hover:bg-white/80',
-                                cellLessons.length > 1 && 'bg-white/70 ring-1 ring-blue-100',
-                              )}
-                            >
-                              <div className="truncate text-[12px] font-semibold text-navy-900">
-                                {lesson.subjectName}
-                              </div>
-                              <div className="mt-0.5 truncate text-11 text-slate-600">
-                                {shortTeacherName(lesson.teacherFullName)}
-                              </div>
-                              {lesson.targetType === 'SUBGROUP' && lesson.subgroupName && (
-                                <span className="mt-1 inline-flex w-fit rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-navy-700">
-                                  {lesson.subgroupName}
-                                </span>
-                              )}
-                              {lesson.room ? (
-                                <div className="mt-0.5 text-[10px] text-slate-400">
-                                  Каб. {lesson.room}
-                                </div>
-                              ) : null}
-                            </button>
-                          ))}
-                          {!readOnly && isSubgroup && (
-                            <button
-                              type="button"
-                              onClick={() => onAddSlot(day, period.id, period.lessonNumber)}
-                              className="flex w-6 shrink-0 items-center justify-center rounded-lg text-slate-300 hover:bg-white hover:text-brand-500"
-                              title="Добавить подгруппу"
-                            >
-                              +
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
 
+/** Figma 2015:5854 — legend-bar: gap 16, образец 14×14 с радиусом 3. */
 export function ScheduleLegendBar() {
   const items = [
-    { label: 'Обычный урок', className: 'border-slate-200 bg-white' },
-    { label: 'Урок с подгруппами', className: 'border-blue-200 bg-blue-50' },
-    { label: 'Критичный конфликт', className: 'border-red-300 bg-red-50' },
-    { label: 'Предупреждение', className: 'border-amber-300 bg-amber-50' },
-    { label: 'Пустой слот', className: 'border-dashed border-slate-300 bg-transparent' },
+    { label: 'Обычный урок', className: 'border-line bg-white' },
+    { label: 'Урок с подгруппами', className: 'border-navy-700 bg-info-bg' },
+    { label: 'Критичный конфликт', className: 'border-red-500 bg-red-50' },
+    { label: 'Предупреждение', className: 'border-brand-500 bg-brand-50' },
+    { label: 'Пустой слот', className: 'border-dashed border-gray-300' },
   ];
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+    <div className="flex flex-wrap items-center gap-4 pl-1">
       {items.map((item) => (
-        <div key={item.label} className="flex items-center gap-2 text-11 text-slate-500">
-          <span className={cx('inline-block h-3.5 w-5 rounded-sm border', item.className)} />
-          {item.label}
+        <div key={item.label} className="flex items-center gap-2">
+          <span className={cx('size-3.5 shrink-0 rounded-[3px] border', item.className)} />
+          <span className="text-11 font-medium text-muted">{item.label}</span>
         </div>
       ))}
     </div>

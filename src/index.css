@@ -35,15 +35,24 @@
   --color-info-bg: #eff6ff; /* = blue-50 */
   --color-success-bg: #dcfce7; /* = green-100 */
   --color-success-fg: #16a34a; /* = green-600 */
+  /* Подложки баннеров проверки (2015:5448 / 2015:5454) — вне палитры Tailwind */
+  --color-danger-bg: #fdecec;
+  --color-warning-bg: #fdf7ec;
 
   /* Кегли вне шкалы Tailwind. Имена числовые намеренно:
-   * семантику (caption/label) дизайнер не выражал. */
+   * семантику (caption/label) дизайнер не выражал.
+   * 10px подтверждён экраном расписания (время урока, номер кабинета). */
+  --text-10: 10px;
   --text-11: 11px;
   --text-13: 13px;
 
-  /* Единственная тень в макете — на dropdown-popover.
-   * Карточки в Figma без тени, только 1px граница. */
-  --shadow-popover: 0 4px 6px rgb(0 0 0 / 0.06);
+  /* Тени. В макете их всего три, все очень слабые. */
+  --shadow-popover: 0 4px 6px rgb(0 0 0 / 0.06); /* dropdown-popover */
+  --shadow-panel: 0 4px 6px rgb(0 0 0 / 0.03); /* top-control-panel */
+  --shadow-slot: 0 1px 1px rgb(0 0 0 / 0.02); /* filled-slot в сетке */
+  --shadow-dialog: 0 16px 16px rgb(0 0 0 / 0.12); /* modal-centered-card */
+  --shadow-toast: 0 4px 8px rgb(0 0 0 / 0.05); /* success-toast 2015:15062 */
+  --shadow-toast-error: 0 4px 6px rgb(0 0 0 / 0.08); /* toast-error 2015:8351 */
 }
 
 @layer base {

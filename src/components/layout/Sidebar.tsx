@@ -14,7 +14,10 @@ export function Sidebar() {
       <PhysTechMark className="pointer-events-none absolute bottom-[120px] left-1/2 size-[140px] -translate-x-1/2 text-white/[0.08]" />
 
       <div className="flex items-center justify-center px-6 pb-6 pt-12">
-        <Logo className="h-20 w-auto" />
+        {/* Figma 2015:7728 — высота лого 36px. Ширину не фиксирую на 133px:
+         * в макете это обрезанный фрагмент (соотношение 3.69), а наш ассет —
+         * 496×198 (2.505), растягивание исказило бы знак. */}
+        <Logo className="h-9 w-auto" />
       </div>
 
       <nav className="no-scrollbar relative z-10 flex-1 space-y-5 overflow-y-auto pb-4 pt-3">

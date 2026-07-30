@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ButtonHTMLAttributes,
+  type FormEvent,
+  type ReactNode,
+} from 'react';
 import { Link } from 'react-router-dom';
 import {
   Bell,
@@ -19,8 +27,14 @@ import { useToast } from '@/context/ToastContext';
 import { ApiError } from '@/lib/api';
 import { scheduleSettingsApi } from '@/lib/scheduleSettingsApi';
 import type { Weekday } from '@/lib/scheduleSettingsTypes';
-import { CopyScheduleModal, type CopyScheduleFormValues } from './schedule/CopyScheduleModal';
-import { PublishConfirmDialog } from './schedule/PublishConfirmDialog';
+import { cx } from '@/lib/format';
+import {
+  CopyScheduleModal,
+  type CopyScheduleFormValues,
+  type CopyStage,
+} from './schedule/CopyScheduleModal';
+import { EditScheduleDialog } from './schedule/EditScheduleDialog';
+import { PublishConfirmDialog, type PublishStage } from './schedule/PublishConfirmDialog';
 import { ScheduleConflictPanel } from './schedule/ScheduleConflictPanel';
 import {
   ScheduleLessonFormModal,
@@ -47,6 +61,7 @@ import {
   updateScheduleLesson,
   type ClassSchedule,
   type ConflictCheckReport,
+  type ConflictFinding,
   type ConstructorContextView,
   type ScheduleGridView,
   type ScheduleHistoryRow,
@@ -77,6 +92,74 @@ const SETTINGS_CARDS = [
   },
 ] as const;
 
+/** Figma 2015:5831 — select в панели фильтров: gray-50, рамка, radius 8, 13px. */
+const FILTER_CONTROL =
+  'w-auto rounded-lg border-line bg-gray-50 px-3 py-2 text-13 font-medium text-ink';
+
+/**
+ * Кнопки панели по Figma 2015:4931 (режим редактирования) и 2015:5852 (просмотр).
+ * Общая геометрия: radius 8, px 14 / py 8, 13px SemiBold, иконка 12px, gap 6.
+ */
+const PANEL_TONES = {
+  /** btn-check 2015:4958 и btn-edit 2015:5852 — оранжевая заливка. */
+  accent: 'bg-brand-500 text-white hover:bg-brand-600 disabled:bg-brand-300',
+  /** btn-save 2015:4954 — контур брендовым синим. */
+  brand: 'border border-navy-700 text-navy-700 hover:bg-navy-50',
+  /** btn-copy 2015:4956 и btn-publish 2015:4963 — серый контур. */
+  muted: 'border border-line bg-white text-muted hover:bg-gray-50',
+  /** Архива в макете нет — тихий вариант, чтобы не спорить с четвёркой из спеки. */
+  ghost: 'text-muted hover:bg-gray-50',
+} as const;
+
+function PanelButton({
+  tone = 'muted',
+  loading,
+  icon,
+  className,
+  children,
+  disabled,
+  ...rest
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  tone?: keyof typeof PANEL_TONES;
+  loading?: boolean;
+  icon?: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled || loading}
+      className={cx(
+        'inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-13 font-semibold transition',
+        'disabled:cursor-not-allowed disabled:opacity-60',
+        PANEL_TONES[tone],
+        className,
+      )}
+      {...rest}
+    >
+      {loading ? <Loader2 className="size-3 shrink-0 animate-spin" /> : icon}
+      {children}
+    </button>
+  );
+}
+
+/**
+ * Figma 2015:5364 — checking-central-card. В макете занимает место сетки,
+ * а не накрывает её оверлеем: radius 16, p 60, круг 80 под спиннером 32.
+ */
+function CheckingCard() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-6 rounded-2xl border border-line bg-white p-[60px]">
+      <span className="flex size-20 items-center justify-center rounded-full bg-gray-50">
+        <Loader2 className="size-8 animate-spin text-navy-700" />
+      </span>
+      <div className="flex flex-col items-center gap-2 text-center">
+        <p className="text-xl font-bold text-ink">Проверяем расписание...</p>
+        <p className="text-sm text-muted">Это может занять несколько секунд</p>
+      </div>
+    </div>
+  );
+}
+
 export function LessonSchedulePage() {
   const toast = useToast();
   const [years, setYears] = useState<AcademicYear[]>([]);
@@ -102,6 +185,17 @@ export function LessonSchedulePage() {
   const [lessonOpen, setLessonOpen] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
+  /**
+   * Экран открывается в режиме просмотра (Figma 2015:5786) — одна кнопка
+   * «Редактировать». Для опубликованного расписания она сначала показывает
+   * предупреждение (2015:17567), и только потом включается режим
+   * редактирования с четырьмя кнопками (2015:4888).
+   */
+  const [editing, setEditing] = useState(false);
+  const [editWarnOpen, setEditWarnOpen] = useState(false);
+  /** Шаги мастера копирования и состояния публикации — см. макеты в самих компонентах. */
+  const [copyStage, setCopyStage] = useState<CopyStage>('source');
+  const [publishStage, setPublishStage] = useState<PublishStage>('confirm');
   const [createClassId, setCreateClassId] = useState('');
   const [createPeriodId, setCreatePeriodId] = useState('');
   const [bellTemplateId, setBellTemplateId] = useState('');
@@ -169,6 +263,12 @@ export function LessonSchedulePage() {
   useEffect(() => {
     void reloadSchedules();
   }, [reloadSchedules]);
+
+  // Смена расписания возвращает экран в режим просмотра. Именно на selectedId,
+  // а не в loadDetail: тот перевызывается после каждого сохранения урока.
+  useEffect(() => {
+    setEditing(false);
+  }, [selectedId]);
 
   const loadDetail = useCallback(
     async (id: number) => {
@@ -282,6 +382,7 @@ export function LessonSchedulePage() {
   async function handlePublishClick() {
     const report = await runConflictCheck();
     if (!report) return;
+    setPublishStage('confirm');
     setPublishOpen(true);
   }
 
@@ -293,9 +394,12 @@ export function LessonSchedulePage() {
         expectedRevision: conflictReport.draftRevision,
         confirmedWarningCodes,
       });
-      toast.success('Расписание опубликовано');
-      setPublishOpen(false);
+      // Успех и отказ показываются в самой модалке (2015:17138 / 2015:17554),
+      // а не тостом — так в макетах.
+      setPublishStage('success');
       setConflictReport(null);
+      // Расписание стало опубликованным — режим правки больше не действует.
+      setEditing(false);
       await reloadSchedules();
       await loadDetail(selectedId);
     } catch (err) {
@@ -305,7 +409,7 @@ export function LessonSchedulePage() {
           setConflictReport(details as ConflictCheckReport);
         }
       }
-      toast.error(err instanceof Error ? err.message : 'Ошибка публикации');
+      setPublishStage('error');
     } finally {
       setPending(false);
     }
@@ -324,6 +428,22 @@ export function LessonSchedulePage() {
     } finally {
       setPending(false);
     }
+  }
+
+  /** Опубликованное расписание правится только через предупреждение (Figma 2015:17567). */
+  function handleEditClick() {
+    if (selected?.status === 'PUBLISHED') {
+      setEditWarnOpen(true);
+      return;
+    }
+    setEditing(true);
+  }
+
+  /** «Редактировать всё равно»: из публикации создаём черновик и открываем его на правку. */
+  async function handleConfirmEdit() {
+    await handleCreateDraft();
+    setEditWarnOpen(false);
+    setEditing(true);
   }
 
   async function handleArchive() {
@@ -354,7 +474,13 @@ export function LessonSchedulePage() {
       await reloadSchedules();
       await loadDetail(res.schedule.id);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Ошибка копирования');
+      // 409 от копирования означает «в цели уже есть уроки» — показываем
+      // состояние 2015:14646 с кнопкой «Заменить» вместо тоста.
+      if (err instanceof ApiError && err.status === 409) {
+        setCopyStage('conflict');
+      } else {
+        toast.error(err instanceof Error ? err.message : 'Ошибка копирования');
+      }
     } finally {
       setPending(false);
     }
@@ -365,6 +491,22 @@ export function LessonSchedulePage() {
     setEditingLesson(null);
     setLockedSlot(slot ?? null);
     setLessonOpen(true);
+  }
+
+  /** «Перейти к слоту →» из баннера проверки открывает соответствующий урок или пустой слот. */
+  function handleGoToSlot(finding: ConflictFinding) {
+    if (!grid || !finding.weekday || finding.lessonNumber == null) return;
+    const lesson = grid.lessons.find(
+      (l) => l.weekday === finding.weekday && l.lessonNumber === finding.lessonNumber,
+    );
+    if (lesson) {
+      openEditLesson(lesson);
+      return;
+    }
+    const period = grid.periods.find((p) => p.lessonNumber === finding.lessonNumber);
+    if (period) {
+      openCreateLesson({ weekday: finding.weekday as Weekday, lessonPeriodId: period.id });
+    }
   }
 
   function openEditLesson(lesson: ScheduleLesson) {
@@ -439,11 +581,28 @@ export function LessonSchedulePage() {
   }
 
   const isDraft = selected?.status === 'DRAFT';
-  const isPublished = selected?.status === 'PUBLISHED';
   const periodsForForm = grid?.periods ?? context?.bellTemplate?.periods ?? [];
   const canPublish =
     isDraft &&
     (!conflictReport || conflictReport.summary.criticalCount === 0);
+
+  const yearName = years.find((y) => y.id === String(selected?.academicYearId))?.name;
+  const periodName = periods.find((p) => p.id === String(selected?.academicPeriodId))?.name;
+  const className = classes.find((c) => c.id === String(selected?.classId))?.name;
+
+  const publishSummary = useMemo(() => {
+    if (!selected) return undefined;
+    return {
+      year: yearName ?? '—',
+      period: periodName ?? '—',
+      className: className ?? '—',
+      lessonCount: grid?.lessons.length ?? 0,
+      publishedAt: `сегодня в ${new Date().toLocaleTimeString('ru-RU', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })}`,
+    };
+  }, [selected, yearName, periodName, className, grid]);
 
   const matchedSchedules = useMemo(() => {
     if (!periodId || !classFilter) return schedules;
@@ -454,27 +613,23 @@ export function LessonSchedulePage() {
 
   return (
     <div className="relative space-y-5">
-      {/* Settings cards — Figma: settings-block-container */}
-      <section>
-        <h2 className="mb-2.5 text-sm font-semibold text-navy-900">Настройки расписания</h2>
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      {/* Figma 2015:5790 — settings-block-container: заголовок 14px Bold, карточки 42px */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-sm font-bold text-ink">Настройки расписания</h2>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {SETTINGS_CARDS.map((card) => {
             const Icon = card.icon;
             return (
               <Link
                 key={card.to}
                 to={card.to}
-                className="flex items-center gap-3 rounded-xl bg-white px-3.5 py-2.5 ring-1 ring-slate-200/80 transition hover:ring-brand-300"
+                className="flex items-center justify-between gap-2.5 rounded-lg border border-line bg-white p-3 transition hover:border-navy-700"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-navy-50 text-navy-700">
-                  <Icon className="h-4 w-4" />
+                <span className="flex min-w-0 items-center gap-2.5">
+                  <Icon className="size-4 shrink-0 text-navy-700" />
+                  <span className="truncate text-13 font-semibold text-ink">{card.label}</span>
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-navy-900">
-                    {card.label}
-                  </span>
-                </span>
-                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                <span className="shrink-0 rounded bg-success-bg px-2 py-0.5 text-11 font-semibold text-success-fg">
                   Настроено
                 </span>
               </Link>
@@ -483,14 +638,14 @@ export function LessonSchedulePage() {
         </div>
       </section>
 
-      {/* Top control panel */}
-      <section className="rounded-2xl bg-white p-3 ring-1 ring-slate-200/80 sm:p-4">
+      {/* Figma 2015:5829 — top-control-panel: radius 12, p 16, тень 0 4px 6px /.03 */}
+      <section className="rounded-xl bg-white p-4 shadow-panel">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2.5">
             <Select
               value={yearId}
               onChange={(e) => setYearId(e.target.value)}
-              className="h-9 min-w-[9rem] rounded-lg border-slate-200 bg-slate-50 text-sm"
+              className={FILTER_CONTROL}
             >
               {years.map((y) => (
                 <option key={y.id} value={y.id}>
@@ -501,7 +656,7 @@ export function LessonSchedulePage() {
             <Select
               value={periodId}
               onChange={(e) => setPeriodId(e.target.value)}
-              className="h-9 min-w-[8rem] rounded-lg border-slate-200 bg-slate-50 text-sm"
+              className={FILTER_CONTROL}
             >
               <option value="">Период</option>
               {periods.map((p) => (
@@ -513,7 +668,7 @@ export function LessonSchedulePage() {
             <Select
               value={classFilter}
               onChange={(e) => setClassFilter(e.target.value)}
-              className="h-9 min-w-[7rem] rounded-lg border-slate-200 bg-slate-50 text-sm"
+              className={FILTER_CONTROL}
             >
               <option value="">Класс</option>
               {classes.map((c) => (
@@ -522,16 +677,17 @@ export function LessonSchedulePage() {
                 </option>
               ))}
             </Select>
-            <div className="flex h-9 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-600">
+            <div className="rounded-lg border border-line bg-gray-50 px-3 py-2 text-13 font-medium text-ink">
               {selected?.bellTemplateName ?? 'Шаблон звонков'}
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          {/* Просмотр — одна кнопка (2015:5852). Редактирование — четыре (2015:4953). */}
+          <div className="flex flex-wrap items-center justify-end gap-2">
             {!selected && periodId && classFilter && (
-              <Button
-                size="sm"
-                icon={<Plus className="h-4 w-4" />}
+              <PanelButton
+                tone="accent"
+                icon={<Plus className="size-3 shrink-0" />}
                 onClick={() => {
                   setCreateClassId(classFilter);
                   setCreatePeriodId(periodId);
@@ -539,65 +695,54 @@ export function LessonSchedulePage() {
                 }}
               >
                 Создать
-              </Button>
+              </PanelButton>
             )}
-            {isDraft && (
-              <Button
-                variant="secondary"
-                size="sm"
-                icon={<Save className="h-4 w-4" />}
-                onClick={handleSaveDraftClick}
-                className="text-navy-700 ring-navy-200"
-              >
-                Сохранить черновик
-              </Button>
+
+            {selected && selected.status !== 'ARCHIVED' && !editing && (
+              <PanelButton tone="accent" loading={pending} onClick={handleEditClick}>
+                Редактировать
+              </PanelButton>
             )}
-            {selected && selected.status !== 'ARCHIVED' && (
-              <Button
-                variant="secondary"
-                size="sm"
-                icon={<Copy className="h-4 w-4" />}
-                onClick={() => setCopyOpen(true)}
-              >
-                Копировать
-              </Button>
-            )}
-            {isDraft && (
-              <Button
-                size="sm"
-                loading={checkPending}
-                icon={!checkPending ? <Check className="h-4 w-4" /> : undefined}
-                onClick={() => void handleCheck()}
-              >
-                Проверить
-              </Button>
-            )}
-            {isDraft && (
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={!canPublish || checkPending}
-                loading={checkPending && publishOpen}
-                onClick={() => void handlePublishClick()}
-                className={!canPublish ? 'opacity-50' : ''}
-              >
-                Опубликовать
-              </Button>
-            )}
-            {isPublished && (
-              <Button
-                variant="secondary"
-                size="sm"
-                loading={pending}
-                onClick={() => void handleCreateDraft()}
-              >
-                Новый черновик
-              </Button>
-            )}
-            {selected && selected.status !== 'ARCHIVED' && (
-              <Button variant="ghost" size="sm" onClick={() => void handleArchive()}>
-                Архив
-              </Button>
+
+            {selected && editing && (
+              <>
+                <PanelButton
+                  tone="brand"
+                  icon={<Save className="size-3 shrink-0" />}
+                  onClick={handleSaveDraftClick}
+                >
+                  Сохранить черновик
+                </PanelButton>
+                <PanelButton
+                  tone="muted"
+                  icon={<Copy className="size-3 shrink-0" />}
+                  onClick={() => {
+                    setCopyStage('source');
+                    setCopyOpen(true);
+                  }}
+                >
+                  Копировать
+                </PanelButton>
+                <PanelButton
+                  tone="accent"
+                  loading={checkPending}
+                  icon={<Check className="size-3 shrink-0" />}
+                  onClick={() => void handleCheck()}
+                >
+                  Проверить
+                </PanelButton>
+                <PanelButton
+                  tone="muted"
+                  disabled={!canPublish || checkPending}
+                  onClick={() => void handlePublishClick()}
+                >
+                  Опубликовать
+                </PanelButton>
+                {/* Архива в макете нет, но это единственный доступ к архивации. */}
+                <PanelButton tone="ghost" onClick={() => void handleArchive()}>
+                  Архив
+                </PanelButton>
+              </>
             )}
           </div>
         </div>
@@ -616,12 +761,16 @@ export function LessonSchedulePage() {
         <>
           <ScheduleConflictPanel
             report={conflictReport}
-            onClear={() => setConflictReport(null)}
+            periods={grid?.periods}
+            className={className}
+            onGoToSlot={handleGoToSlot}
           />
 
           <ScheduleLegendBar />
 
-          {detailLoading ? (
+          {checkPending ? (
+            <CheckingCard />
+          ) : detailLoading ? (
             <LoadingBlock />
           ) : !selected ? (
             <div className="card flex flex-col items-center justify-center px-6 py-16 text-center">
@@ -670,7 +819,7 @@ export function LessonSchedulePage() {
           ) : (
             <ScheduleWeeklyGrid
               grid={grid}
-              readOnly={!isDraft}
+              readOnly={!(isDraft && editing)}
               criticals={conflictReport?.criticals}
               warnings={conflictReport?.warnings}
               onAddSlot={(weekday, periodIdSlot) =>
@@ -695,17 +844,6 @@ export function LessonSchedulePage() {
             </details>
           )}
         </>
-      )}
-
-      {/* Checking overlay — Figma: checking-central-card */}
-      {checkPending && (
-        <div className="absolute inset-0 z-20 flex items-start justify-center bg-slate-100/70 pt-40 backdrop-blur-[1px]">
-          <div className="flex w-full max-w-md flex-col items-center rounded-2xl bg-white px-8 py-10 shadow-pop ring-1 ring-slate-200">
-            <Loader2 className="h-10 w-10 animate-spin text-brand-500" />
-            <p className="mt-4 text-lg font-semibold text-navy-900">Проверяем расписание…</p>
-            <p className="mt-1 text-sm text-slate-500">Это может занять несколько секунд</p>
-          </div>
-        </div>
       )}
 
       <Modal
@@ -781,6 +919,8 @@ export function LessonSchedulePage() {
       {selected && (
         <CopyScheduleModal
           open={copyOpen}
+          stage={copyStage}
+          onStageChange={setCopyStage}
           onClose={() => setCopyOpen(false)}
           onSubmit={handleCopy}
           pending={pending}
@@ -789,15 +929,31 @@ export function LessonSchedulePage() {
           templates={templates}
           sourceClassId={selected.classId}
           sourceGroupSets={context?.groupSets ?? []}
+          sourceYearName={yearName}
+          sourcePeriodName={periodName}
+          sourceClassName={className}
         />
       )}
 
+      <EditScheduleDialog
+        open={editWarnOpen}
+        className={classes.find((c) => c.id === String(selected?.classId))?.name}
+        pending={pending}
+        onClose={() => setEditWarnOpen(false)}
+        onConfirm={() => void handleConfirmEdit()}
+      />
+
       <PublishConfirmDialog
         open={publishOpen}
+        stage={publishStage}
         report={conflictReport}
+        summary={publishSummary}
         loading={pending}
         onClose={() => setPublishOpen(false)}
         onConfirm={(codes) => void handleConfirmPublish(codes)}
+        // «Повторить» возвращает к подтверждению, а не публикует сразу:
+        // при наличии предупреждений их нужно подтвердить заново чекбоксом.
+        onRetry={() => setPublishStage('confirm')}
       />
     </div>
   );
