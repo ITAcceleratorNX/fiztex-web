@@ -30,8 +30,3 @@ export function toastCreatedMessage(roleLabel: string, issuedCode?: string | nul
   }
   return `${roleLabel} создан`;
 }
-
-export const ENTRY_GRADES = Array.from({ length: 11 }, (_, i) => {
-  const n = i + 1;
-  return { value: String(n), label: `${n} класс` };
-});

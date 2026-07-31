@@ -44,6 +44,25 @@ export function validateParentPhone(raw: string): string | null {
   return normalizeParentPhone(raw) ? null : APPLICANT_INVALID_PHONE_MESSAGE;
 }
 
+/**
+ * Классы поступления — только параллели, без букв: поступающий ещё не привязан
+ * к конкретному классу школы. Формат значения (`«N класс»`) совпадает с тем, что
+ * уже лежит в `applicants.grade` и `entrance_tests.grade`, — по нему идёт точное
+ * сравнение при подборе поступающих в AssignModal, менять его нельзя.
+ */
+export const APPLICANT_GRADES = Array.from({ length: 11 }, (_, i) => `${i + 1} класс`);
+
+/**
+ * Список для селекта с сохранением унаследованного значения: в базе `grade` —
+ * свободная строка, и старые записи могут не совпадать со справочником.
+ * Такое значение добавляется в конец, иначе редактирование молча стёрло бы класс.
+ */
+export function applicantGradeOptions(current?: string | null): string[] {
+  const trimmed = current?.trim();
+  if (!trimmed || APPLICANT_GRADES.includes(trimmed)) return APPLICANT_GRADES;
+  return [...APPLICANT_GRADES, trimmed];
+}
+
 export type ApplicantField = 'parentPhone' | 'parentFullName' | 'comment';
 
 type ApiErrorLike = {

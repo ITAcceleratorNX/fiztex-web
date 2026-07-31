@@ -14,6 +14,12 @@ vi.mock('@/context/ToastContext', () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn() }),
 }));
 
+/** «Класс поступления» — кастомный listbox, а не <select>: открыть триггер и выбрать опцию. */
+async function pickGrade(user: ReturnType<typeof userEvent.setup>, label: string) {
+  await user.click(screen.getByRole('button', { name: 'Выберите класс' }));
+  await user.click(screen.getByRole('option', { name: label }));
+}
+
 describe('ApplicantFormModal phone validation', () => {
   afterEach(() => cleanup());
 
@@ -51,7 +57,7 @@ describe('ApplicantFormModal phone validation', () => {
     render(<ApplicantFormModal open onClose={() => {}} applicant={null} />);
 
     await user.type(screen.getByPlaceholderText('Иванов Иван'), 'Test Child');
-    await user.type(screen.getByPlaceholderText('5 класс'), '5 класс');
+    await pickGrade(user, '5 класс');
     await user.type(screen.getByPlaceholderText('+7 705 123 45 67'), 'bad-phone');
     await user.click(screen.getByRole('button', { name: 'Создать' }));
 
@@ -74,7 +80,7 @@ describe('ApplicantFormModal phone validation', () => {
     render(<ApplicantFormModal open onClose={() => {}} applicant={null} />);
 
     await user.type(screen.getByPlaceholderText('Иванов Иван'), 'Test Child');
-    await user.type(screen.getByPlaceholderText('5 класс'), '5 класс');
+    await pickGrade(user, '5 класс');
     await user.type(screen.getByPlaceholderText('+7 705 123 45 67'), '+77051234567');
     await user.click(screen.getByRole('button', { name: 'Создать' }));
 

@@ -34,6 +34,7 @@ export async function listClasses(params: ListClassesParams = {}): Promise<Schoo
   const page = await request<Page<SchoolClassDto>>(
     `/admin/classes${pageQuery({
       academicYearId: yearId === 'ALL' ? undefined : Number(yearId),
+      status: params.status,
       page: 0,
       size: 200,
     })}`,

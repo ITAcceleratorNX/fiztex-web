@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  APPLICANT_GRADES,
   APPLICANT_INVALID_PHONE_MESSAGE,
+  applicantGradeOptions,
   normalizeParentPhone,
   validateParentPhone,
 } from './applicantFormHelpers';
@@ -44,5 +46,25 @@ describe('applicantFormHelpers', () => {
     expect(validateParentPhone('   ')).toBeNull();
     expect(normalizeParentPhone('')).toBeNull();
     expect(normalizeParentPhone('   ')).toBeNull();
+  });
+});
+
+describe('applicantGradeOptions', () => {
+  it('lists parallels 1..11 in the stored «N класс» format', () => {
+    expect(APPLICANT_GRADES).toHaveLength(11);
+    expect(APPLICANT_GRADES[0]).toBe('1 класс');
+    expect(APPLICANT_GRADES[10]).toBe('11 класс');
+  });
+
+  it('returns the plain list when the current value is empty or already known', () => {
+    expect(applicantGradeOptions(null)).toEqual(APPLICANT_GRADES);
+    expect(applicantGradeOptions('')).toEqual(APPLICANT_GRADES);
+    expect(applicantGradeOptions('7 класс')).toEqual(APPLICANT_GRADES);
+  });
+
+  it('keeps a legacy value so editing cannot silently drop it', () => {
+    const options = applicantGradeOptions('7А профильный');
+    expect(options).toHaveLength(12);
+    expect(options.at(-1)).toBe('7А профильный');
   });
 });

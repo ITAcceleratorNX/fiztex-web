@@ -1,11 +1,12 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
-import { Field, TextInput, TextArea } from '@/components/ui/Field';
+import { Field, TextInput, TextArea, Select } from '@/components/ui/Field';
 import { useCreateApplicant, useUpdateApplicant } from '@/hooks/queries';
 import { useToast } from '@/context/ToastContext';
 import type { Applicant } from '@/lib/types';
 import {
+  applicantGradeOptions,
   mapApplicantApiError,
   normalizeParentPhone,
   validateParentPhone,
@@ -45,6 +46,7 @@ export function ApplicantFormModal({
   }, [open, applicant]);
 
   const pending = create.isPending || update.isPending;
+  const gradeOptions = useMemo(() => applicantGradeOptions(applicant?.grade), [applicant]);
 
   function handlePhoneBlur() {
     const message = validateParentPhone(parentPhone);
@@ -133,7 +135,14 @@ export function ApplicantFormModal({
             />
           </Field>
           <Field label="Класс поступления" required>
-            <TextInput value={grade} onChange={(e) => setGrade(e.target.value)} placeholder="5 класс" />
+            <Select value={grade} onChange={(e) => setGrade(e.target.value)} required>
+              <option value="">Выберите класс</option>
+              {gradeOptions.map((g) => (
+                <option key={g} value={g}>
+                  {g}
+                </option>
+              ))}
+            </Select>
           </Field>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

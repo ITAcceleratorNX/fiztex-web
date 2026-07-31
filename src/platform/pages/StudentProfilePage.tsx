@@ -76,7 +76,10 @@ export function StudentProfilePage() {
     setLoading(true);
     setError(null);
     try {
-      const [d, c] = await Promise.all([getStudentByAccount(accountId), listClasses()]);
+      const [d, c] = await Promise.all([
+        getStudentByAccount(accountId),
+        listClasses({ status: 'ACTIVE' }),
+      ]);
       setDetail(d);
       setClasses(c);
       setLastName(d.lastName);
@@ -257,7 +260,16 @@ export function StudentProfilePage() {
                         label="Класс поступления"
                         value={
                           detail.currentMembership ? (
-                            formatEnrollmentClass(detail.currentMembership.className)
+                            <span className="flex flex-wrap items-center gap-2">
+                              {formatEnrollmentClass(detail.currentMembership.className)}
+                              <button
+                                type="button"
+                                onClick={() => setAddToClassOpen(true)}
+                                className="font-medium text-brand-500 hover:text-brand-600"
+                              >
+                                Изменить
+                              </button>
+                            </span>
                           ) : (
                             <button
                               type="button"
@@ -423,6 +435,7 @@ export function StudentProfilePage() {
             onClose={() => setAddToClassOpen(false)}
             student={detail}
             classes={classes}
+            currentMembership={detail.currentMembership}
             onSaved={() => void reload()}
           />
           <LinkParentModal

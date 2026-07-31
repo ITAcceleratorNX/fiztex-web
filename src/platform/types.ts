@@ -105,6 +105,7 @@ export interface AccountStats {
 
 export interface ListClassesParams {
   academicYearId?: string | 'ALL';
+  status?: SchoolRecordStatus;
 }
 
 export interface CreateUserInput {
@@ -114,6 +115,8 @@ export interface CreateUserInput {
   phone?: string | null;
   status?: AccountStatus;
   relationLabel?: string | null;
+  /** Класс зачисления — только для роли STUDENT; membership создаётся тем же запросом. */
+  classId?: number | null;
 }
 
 export interface UpdateUserInput {

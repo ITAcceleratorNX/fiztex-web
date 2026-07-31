@@ -108,22 +108,32 @@ export async function getUser(id: string): Promise<PlatformUser | null> {
   return users.find((u) => u.id === id) ?? null;
 }
 
+/**
+ * Аккаунт, школьный профиль и — для ученика с `classId` — членство в классе создаются
+ * одним запросом в одной транзакции. `force` подтверждает зачисление в класс, где уже
+ * есть ученик с похожим ФИО (409 `STUDENT_DUPLICATE_SUSPECTED`).
+ */
 export async function createUser(
   input: CreateUserInput,
+  opts: { force?: boolean } = {},
 ): Promise<PlatformUser & { issuedCode?: string | null; schoolProfileId?: number | null }> {
   const fullName = input.fullName.trim();
   if (!fullName) throw new Error('Укажите ФИО');
   if (!input.role) throw new Error('Укажите роль');
 
-  const created = await request<CreateAccountResponseDto>('/admin/accounts', {
-    method: 'POST',
-    body: {
-      role: input.role,
-      fullName,
-      phone: input.phone?.trim() || null,
-      email: input.email?.trim() || null,
+  const created = await request<CreateAccountResponseDto>(
+    `/admin/accounts${opts.force ? '?force=true' : ''}`,
+    {
+      method: 'POST',
+      body: {
+        role: input.role,
+        fullName,
+        phone: input.phone?.trim() || null,
+        email: input.email?.trim() || null,
+        classId: input.classId ?? null,
+      },
     },
-  });
+  );
 
   return {
     id: String(created.id),
