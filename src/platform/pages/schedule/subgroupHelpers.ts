@@ -4,11 +4,9 @@
  */
 
 import type {
-  DuplicateStudent,
   StudentAlreadyInSetSubgroup,
   Subgroup,
   SubgroupInUse,
-  SubgroupStudent,
 } from '@/lib/schedule2bTypes';
 
 export type NameParts = {
@@ -17,8 +15,34 @@ export type NameParts = {
   middleName: string | null;
 };
 
-export function studentFullName(person: NameParts): string {
-  return [person.lastName, person.firstName, person.middleName].filter(Boolean).join(' ');
+/** «Иванов Алексей Петрович» → «Иванов А.» — подпись строки в макете 2015:12127. */
+export function studentShortName(person: NameParts): string {
+  const initial = person.firstName.trim().charAt(0);
+  return initial ? `${person.lastName} ${initial}.` : person.lastName;
+}
+
+/** «ИА» — инициалы для аватара (2015:12126). */
+export function studentInitials(person: NameParts): string {
+  const last = person.lastName.trim().charAt(0);
+  const first = person.firstName.trim().charAt(0);
+  return `${last}${first}`.toLocaleUpperCase('ru');
+}
+
+/**
+ * Пастельные подложки аватаров из макета: blue-50, emerald-50, purple-100,
+ * red-50, orange-50 (2015:12125 и далее). В макете они просто чередуются;
+ * здесь привязаны к id, чтобы ученик не менял цвет между экранами.
+ */
+export const AVATAR_TONES = [
+  'bg-blue-50',
+  'bg-emerald-50',
+  'bg-purple-100',
+  'bg-red-50',
+  'bg-orange-50',
+] as const;
+
+export function avatarTone(studentId: number): string {
+  return AVATAR_TONES[Math.abs(studentId) % AVATAR_TONES.length]!;
 }
 
 export function studentSortKey(person: NameParts): string {
@@ -53,10 +77,6 @@ export function defaultAutoSplitNames(groupCount = 2): string[] {
   return Array.from({ length: groupCount }, (_, i) => `Группа ${i + 1}`);
 }
 
-export function subgroupNameById(subgroups: Subgroup[], id: number): string {
-  return subgroups.find((s) => s.id === id)?.name ?? `Подгруппа #${id}`;
-}
-
 export function parseStudentAlreadyInSetDetails(
   details: unknown,
 ): StudentAlreadyInSetSubgroup[] {
@@ -89,20 +109,64 @@ export function parseSubgroupsInUseDetails(details: unknown): SubgroupInUse[] {
     .filter((x): x is SubgroupInUse => x != null);
 }
 
-export function formatDuplicateLocations(
-  duplicate: DuplicateStudent,
-  subgroups: Subgroup[],
-): string {
-  const names = duplicate.subgroupIds.map((id) => subgroupNameById(subgroups, id));
-  return names.join(', ');
-}
-
 export function activeSubgroups(subgroups: Subgroup[]): Subgroup[] {
   return subgroups
     .filter((s) => s.status === 'ACTIVE')
     .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
 }
 
-export function sortSubgroupStudents(subgroup: Subgroup): SubgroupStudent[] {
-  return sortStudentsByName(subgroup.students ?? []);
+/** Состав набора: id подгруппы → id учеников. */
+export type Membership = Record<number, number[]>;
+
+export function membershipFromSubgroups(subgroups: Subgroup[]): Membership {
+  const result: Membership = {};
+  for (const subgroup of subgroups) {
+    result[subgroup.id] = (subgroup.students ?? []).map((s) => s.studentId);
+  }
+  return result;
+}
+
+export type MembershipDiff = {
+  removals: { subgroupId: number; studentId: number }[];
+  additions: { subgroupId: number; studentIds: number[] }[];
+};
+
+/**
+ * Разница «что на сервере» → «что в черновике». Удаления идут первыми:
+ * иначе перенос ученика упрётся в STUDENT_ALREADY_IN_SET_SUBGROUP, потому что
+ * он ещё числится в прежней подгруппе набора.
+ */
+export function diffMembership(server: Membership, draft: Membership): MembershipDiff {
+  const removals: MembershipDiff['removals'] = [];
+  const additions: MembershipDiff['additions'] = [];
+
+  for (const key of Object.keys(draft)) {
+    const subgroupId = Number(key);
+    const before = new Set(server[subgroupId] ?? []);
+    const after = new Set(draft[subgroupId] ?? []);
+
+    for (const studentId of before) {
+      if (!after.has(studentId)) removals.push({ subgroupId, studentId });
+    }
+    const toAdd = [...after].filter((studentId) => !before.has(studentId));
+    if (toAdd.length > 0) additions.push({ subgroupId, studentIds: toAdd });
+  }
+
+  return { removals, additions };
+}
+
+export function membershipEquals(a: Membership, b: Membership): boolean {
+  const diff = diffMembership(a, b);
+  return diff.removals.length === 0 && diff.additions.length === 0;
+}
+
+/** Ученики, попавшие сразу в несколько подгрупп набора. */
+export function duplicateStudentIds(membership: Membership): number[] {
+  const seen = new Map<number, number>();
+  for (const ids of Object.values(membership)) {
+    for (const studentId of new Set(ids)) {
+      seen.set(studentId, (seen.get(studentId) ?? 0) + 1);
+    }
+  }
+  return [...seen.entries()].filter(([, count]) => count > 1).map(([studentId]) => studentId);
 }

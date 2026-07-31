@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CalendarDays, Copy, RotateCw, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
-import { Modal } from '@/components/ui/Modal';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/context/ToastContext';
@@ -22,7 +21,6 @@ import {
 } from '../components/ProfileChrome';
 import { CreateAssignmentModal } from '../modals/CreateAssignmentModal';
 import { useTeacherAvailability } from '../hooks/useTeacherAvailability';
-import { TeacherAvailabilityCard } from './schedule/TeacherAvailabilityCard';
 import {
   archiveTeacherAssignment,
   archiveUser,
@@ -58,7 +56,6 @@ export function TeacherProfilePage() {
   const [reissuing, setReissuing] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
-  const [availabilityOpen, setAvailabilityOpen] = useState(false);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -86,7 +83,7 @@ export function TeacherProfilePage() {
   const availabilityQuery = useTeacherAvailability(detail?.id ?? null);
   const availability = availabilityQuery.data;
   const workHoursRange = useMemo(() => {
-    const intervals = availability?.intervals ?? [];
+    const intervals = (availability?.intervals ?? []).filter((i) => i.type === 'AVAILABLE');
     if (intervals.length === 0) return null;
     const start = intervals.map((i) => i.startTime).sort()[0];
     const end = intervals.map((i) => i.endTime).sort().at(-1)!;
@@ -344,14 +341,13 @@ export function TeacherProfilePage() {
                       <p className="text-11 font-semibold uppercase text-[#9ca3af]">
                         Рабочие дни и часы
                       </p>
-                      <button
-                        type="button"
-                        onClick={() => setAvailabilityOpen(true)}
+                      <Link
+                        to={`/lesson-schedule/teachers?teacherId=${detail.id}`}
                         className="inline-flex items-center gap-1.5 rounded-md border border-[#d1d6de] bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
                       >
                         <CalendarDays className="size-3.5" />
                         Открыть занятость
-                      </button>
+                      </Link>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
                       <div className="flex flex-wrap items-center gap-1">
@@ -489,18 +485,6 @@ export function TeacherProfilePage() {
             teacher={detail}
             onSaved={() => void reload()}
           />
-          <Modal
-            open={availabilityOpen}
-            onClose={() => setAvailabilityOpen(false)}
-            title="Занятость учителя"
-            size="xl"
-          >
-            <TeacherAvailabilityCard
-              teacherId={detail.id}
-              teacher={detail}
-              onClose={() => setAvailabilityOpen(false)}
-            />
-          </Modal>
           <ConfirmDialog
             open={archiveOpen}
             onClose={() => setArchiveOpen(false)}

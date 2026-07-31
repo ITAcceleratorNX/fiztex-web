@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { Link, useSearchParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { Select } from '@/components/ui/Field';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useAcademicYears } from '@/platform/hooks/useScheduleSettings';
 import { BellTemplatesTab } from './BellTemplatesTab';
 import { WorkingDaysTab } from './WorkingDaysTab';
@@ -25,28 +24,29 @@ import {
   type SubgroupsTabState,
 } from './SubgroupsTab';
 
-type TabId = 'templates' | 'days' | 'calendar' | 'teachers' | 'subgroups';
+/**
+ * Разделы настроек расписания. Раньше были вкладками одной страницы
+ * «Настройки расписания» в сайдбаре; теперь это подстраницы «Расписания»,
+ * куда ведут карточки с самого экрана расписания.
+ *
+ * «Учебные дни» и «Школьный календарь» объединены в раздел `calendar`:
+ * в макете 2015:9720 рабочие дни и события живут на одном экране.
+ */
+export type ScheduleSection = 'templates' | 'calendar' | 'teachers' | 'subgroups';
 
-const TAB_PARAM = 'tab';
+export const SCHEDULE_SECTION_TITLES: Record<ScheduleSection, string> = {
+  templates: 'Шаблоны звонков',
+  calendar: 'Школьный календарь',
+  teachers: 'Занятость учителей',
+  subgroups: 'Подгруппы классов',
+};
+
 const YEAR_PARAM = 'year';
 const C_TYPE = 'cType';
 const C_STATUS = 'cStatus';
 const C_FROM = 'cFrom';
 const C_TO = 'cTo';
 const C_PAGE = 'cPage';
-
-function parseTab(raw: string | null): TabId {
-  if (
-    raw === 'days' ||
-    raw === 'calendar' ||
-    raw === 'templates' ||
-    raw === 'teachers' ||
-    raw === 'subgroups'
-  ) {
-    return raw;
-  }
-  return 'templates';
-}
 
 function parseCalendarFilters(params: URLSearchParams): CalendarFilterState {
   const type = params.get(C_TYPE) ?? '';
@@ -81,21 +81,19 @@ function writeCalendarFilters(next: URLSearchParams, filters: CalendarFilterStat
   else next.delete(C_PAGE);
 }
 
-function applyTab(next: URLSearchParams, nextTab: string, selectedYearId: number | null) {
-  next.set(TAB_PARAM, nextTab);
-  if (selectedYearId != null) next.set(YEAR_PARAM, String(selectedYearId));
+/** Разделы, которым страница рисует шапку «К расписанию» + селектор года. */
+function ownsHeader(section: ScheduleSection): boolean {
+  return section === 'templates' || section === 'calendar';
 }
 
-export function ScheduleSettingsPage() {
+export function ScheduleSettingsPage({ section }: { section: ScheduleSection }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab = parseTab(searchParams.get(TAB_PARAM));
   const yearParam = searchParams.get(YEAR_PARAM);
   const calendarFilters = useMemo(() => parseCalendarFilters(searchParams), [searchParams]);
   const teachersState = useMemo(() => parseTeachersTabState(searchParams), [searchParams]);
   const subgroupsState = useMemo(() => parseSubgroupsTabState(searchParams), [searchParams]);
 
   const [teachersDirty, setTeachersDirty] = useState(false);
-  const [pendingTab, setPendingTab] = useState<string | null>(null);
   const handleTeachersDirty = useCallback((dirty: boolean) => {
     setTeachersDirty(dirty);
   }, []);
@@ -113,19 +111,13 @@ export function ScheduleSettingsPage() {
     return years.find((y) => y.status === 'ACTIVE')?.id ?? years[0]?.id ?? null;
   }, [yearParam, years]);
 
-  const selectedYearName = useMemo(
-    () => years.find((y) => y.id === selectedYearId)?.name ?? '',
-    [years, selectedYearId],
-  );
-
   useEffect(() => {
     if (selectedYearId == null) return;
     if (yearParam === String(selectedYearId)) return;
     const next = new URLSearchParams(searchParams);
     next.set(YEAR_PARAM, String(selectedYearId));
-    if (!next.get(TAB_PARAM)) next.set(TAB_PARAM, tab);
     setSearchParams(next, { replace: true });
-  }, [selectedYearId, yearParam, searchParams, setSearchParams, tab]);
+  }, [selectedYearId, yearParam, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (!teachersDirty) return;
@@ -141,28 +133,6 @@ export function ScheduleSettingsPage() {
     const next = new URLSearchParams(searchParams);
     next.set(YEAR_PARAM, nextYearId);
     setSearchParams(next, { replace: true });
-  }
-
-  function commitTab(nextTab: string) {
-    const next = new URLSearchParams(searchParams);
-    applyTab(next, nextTab, selectedYearId);
-    setSearchParams(next, { replace: true });
-  }
-
-  function setTab(nextTab: string) {
-    if (nextTab === tab) return;
-    if (teachersDirty) {
-      setPendingTab(nextTab);
-      return;
-    }
-    commitTab(nextTab);
-  }
-
-  function confirmTabLeave() {
-    if (!pendingTab) return;
-    setTeachersDirty(false);
-    commitTab(pendingTab);
-    setPendingTab(null);
   }
 
   function setCalendarFilters(filters: CalendarFilterState) {
@@ -185,27 +155,67 @@ export function ScheduleSettingsPage() {
 
   return (
     <div>
-      <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Базовые настройки расписания: шаблоны звонков, учебные дни, календарь, доступность
-        учителей и подгруппы классов.
-      </p>
+      {/* В подгруппах и занятости учителей и возврат, и год живут внутри
+          страницы: хлебные крошки 2015:12031 / 2015:11349 и селекторы
+          2015:12038. У занятости к году добавлен шаблон звонков — он задаёт
+          строки сетки уроков. */}
+      {ownsHeader(section) && (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <Link
+            to="/lesson-schedule"
+            className="inline-flex items-center gap-1.5 text-13 font-semibold text-muted transition hover:text-navy-700"
+          >
+            <ArrowLeft className="size-4" />
+            К расписанию
+          </Link>
 
-      <div className="mb-5 sm:w-64">
-        <Select
-          value={selectedYearId != null ? String(selectedYearId) : ''}
-          onChange={(e) => setYear(e.target.value)}
-          disabled={yearsQuery.isLoading || years.length === 0}
-        >
-          {years.length === 0 && <option value="">Нет учебных годов</option>}
-          {years.map((year) => (
-            <option key={year.id} value={year.id}>
-              {year.name}
-            </option>
-          ))}
-        </Select>
-      </div>
+          <div className="w-full sm:w-56">
+            <Select
+              value={selectedYearId != null ? String(selectedYearId) : ''}
+              onChange={(e) => setYear(e.target.value)}
+              disabled={yearsQuery.isLoading || years.length === 0}
+              className="w-full rounded-lg border-line bg-gray-50 px-3 py-2 text-13 font-medium text-ink"
+            >
+              {years.length === 0 && <option value="">Нет учебных годов</option>}
+              {years.map((year) => (
+                <option key={year.id} value={year.id}>
+                  {year.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </div>
+      )}
 
-      {yearsQuery.isLoading && <LoadingBlock label="Загрузка учебных годов…" />}
+      {/* Подгруппы сами рисуют селекторы года и класса, поэтому рендерятся
+          и без выбранного года — у них для этого есть отдельный экран. */}
+      {section === 'subgroups' && (
+        <SubgroupsTab
+          years={years}
+          yearsLoading={yearsQuery.isLoading}
+          yearId={selectedYearId}
+          onYearChange={(next) => setYear(next != null ? String(next) : '')}
+          state={subgroupsState}
+          onStateChange={setSubgroupsState}
+        />
+      )}
+
+      {/* Занятость учителей рисует свои селекторы и пустые состояния сама. */}
+      {section === 'teachers' && (
+        <TeachersAvailabilityTab
+          years={years}
+          yearsLoading={yearsQuery.isLoading}
+          yearId={selectedYearId}
+          onYearChange={(next) => setYear(next != null ? String(next) : '')}
+          state={teachersState}
+          onStateChange={setTeachersState}
+          onDirtyChange={handleTeachersDirty}
+        />
+      )}
+
+      {ownsHeader(section) && yearsQuery.isLoading && (
+        <LoadingBlock label="Загрузка учебных годов…" />
+      )}
       {yearsQuery.isError && (
         <ErrorBlock
           message={
@@ -217,63 +227,32 @@ export function ScheduleSettingsPage() {
         />
       )}
 
-      {!yearsQuery.isLoading && !yearsQuery.isError && years.length === 0 && (
-        <EmptyBlock
-          title="Нет учебных годов"
-          description="Создайте учебный год в разделе «Учебный год», затем вернитесь сюда."
-        />
-      )}
+      {ownsHeader(section) &&
+        !yearsQuery.isLoading &&
+        !yearsQuery.isError &&
+        years.length === 0 && (
+          <EmptyBlock
+            title="Нет учебных годов"
+            description="Создайте учебный год в разделе «Учебный год», затем вернитесь сюда."
+          />
+        )}
 
       {selectedYearId != null && (
-        <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="templates">Шаблоны звонков</TabsTrigger>
-            <TabsTrigger value="days">Учебные дни</TabsTrigger>
-            <TabsTrigger value="calendar">Школьный календарь</TabsTrigger>
-            <TabsTrigger value="teachers">Учителя</TabsTrigger>
-            <TabsTrigger value="subgroups">Подгруппы</TabsTrigger>
-          </TabsList>
+        <>
+          {section === 'templates' && <BellTemplatesTab yearId={selectedYearId} />}
 
-          <TabsContent value="templates">
-            <BellTemplatesTab yearId={selectedYearId} yearName={selectedYearName} />
-          </TabsContent>
-          <TabsContent value="days">
-            <WorkingDaysTab yearId={selectedYearId} />
-          </TabsContent>
-          <TabsContent value="calendar">
-            <CalendarTab
-              yearId={selectedYearId}
-              filters={calendarFilters}
-              onFiltersChange={setCalendarFilters}
-            />
-          </TabsContent>
-          <TabsContent value="teachers">
-            <TeachersAvailabilityTab
-              state={teachersState}
-              onStateChange={setTeachersState}
-              onDirtyChange={handleTeachersDirty}
-            />
-          </TabsContent>
-          <TabsContent value="subgroups">
-            <SubgroupsTab
-              yearId={selectedYearId}
-              state={subgroupsState}
-              onStateChange={setSubgroupsState}
-            />
-          </TabsContent>
-        </Tabs>
+          {section === 'calendar' && (
+            <div className="flex flex-col gap-6">
+              <WorkingDaysTab yearId={selectedYearId} />
+              <CalendarTab
+                yearId={selectedYearId}
+                filters={calendarFilters}
+                onFiltersChange={setCalendarFilters}
+              />
+            </div>
+          )}
+        </>
       )}
-
-      <ConfirmDialog
-        open={pendingTab != null}
-        onClose={() => setPendingTab(null)}
-        onConfirm={confirmTabLeave}
-        title="Несохранённые изменения"
-        message="В карточке доступности учителя есть несохранённые изменения. Уйти со вкладки без сохранения?"
-        confirmLabel="Уйти"
-        cancelLabel="Остаться"
-        danger
-      />
     </div>
   );
 }

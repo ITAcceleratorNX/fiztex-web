@@ -176,7 +176,11 @@ export const ADMIN_PAGE_TITLES: Record<string, string> = {
   '/admin/classes': 'Классы',
   '/admin/academic-year': 'Учебный год',
   '/admin/periods': 'Учебные периоды',
-  '/admin/schedule-settings': 'Настройки расписания',
+  '/lesson-schedule/bell-templates': 'Шаблоны звонков',
+  '/lesson-schedule/calendar': 'Школьный календарь',
+  // Занятость учителей рисует собственную шапку (ScheduleBreadcrumbs),
+  // поэтому AppHeader для неё заголовок не дублирует.
+  '/lesson-schedule/subgroups': 'Подгруппы классов',
   '/admin/school-subjects': 'Школьные предметы',
   '/admin/access-codes': 'Доступы / коды',
   '/lesson-schedule': 'Расписание',

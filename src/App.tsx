@@ -68,7 +68,11 @@ export function App() {
         <Route path="/admin/classes" element={<ClassesPage />} />
         <Route path="/admin/academic-year" element={<AcademicYearPage />} />
         <Route path="/admin/periods" element={<PeriodsPage />} />
-        <Route path="/admin/schedule-settings" element={<ScheduleSettingsPage />} />
+        {/* Раздел переехал в подстраницы «Расписания» — оставлен редирект для старых ссылок. */}
+        <Route
+          path="/admin/schedule-settings"
+          element={<Navigate to="/lesson-schedule/bell-templates" replace />}
+        />
         <Route path="/admin/school-subjects" element={<SchoolSubjectsPage />} />
         <Route path="/admin/access-codes" element={<AccessCodesPage />} />
         <Route path="/admin/import" element={<ImportPage />} />
@@ -89,8 +93,24 @@ export function App() {
         <Route path="/parents/:accountId" element={<ParentProfilePage />} />
         <Route path="/teachers" element={<TeachersPage />} />
         <Route path="/teachers/:accountId" element={<TeacherProfilePage />} />
-        <Route path="/schedule" element={<Navigate to="/admin/schedule-settings" replace />} />
+        <Route path="/schedule" element={<Navigate to="/lesson-schedule" replace />} />
         <Route path="/lesson-schedule" element={<LessonSchedulePage />} />
+        <Route
+          path="/lesson-schedule/bell-templates"
+          element={<ScheduleSettingsPage section="templates" />}
+        />
+        <Route
+          path="/lesson-schedule/calendar"
+          element={<ScheduleSettingsPage section="calendar" />}
+        />
+        <Route
+          path="/lesson-schedule/teachers"
+          element={<ScheduleSettingsPage section="teachers" />}
+        />
+        <Route
+          path="/lesson-schedule/subgroups"
+          element={<ScheduleSettingsPage section="subgroups" />}
+        />
         <Route
           path="/grades"
           element={

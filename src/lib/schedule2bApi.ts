@@ -1,4 +1,5 @@
 import { ApiError, pageQuery, request } from '@/lib/api';
+import type { Page } from '@/lib/types';
 import type {
   AutoSplitRequest,
   GroupSet,
@@ -7,6 +8,8 @@ import type {
   Subgroup,
   SubgroupStudent,
   TeacherAvailability,
+  TeacherAvailabilitySummary,
+  TeacherAvailabilityState,
 } from '@/lib/schedule2bTypes';
 
 export function isVersionConflict(error: unknown): error is ApiError {
@@ -57,15 +60,47 @@ export function isStudentNotInClass(error: unknown): error is ApiError {
   );
 }
 
+export type TeacherAvailabilitySummaryFilters = {
+  academicYearId: number;
+  name?: string;
+  /** Omit for «Все» — the backend treats a missing param as no filter. */
+  availability?: TeacherAvailabilityState;
+  page?: number;
+  size?: number;
+};
+
 export const teacherAvailabilityApi = {
   get: (teacherId: number, signal?: AbortSignal) =>
     request<TeacherAvailability>(`/admin/teachers/${teacherId}/availability`, { signal }),
+
+  /**
+   * One page of teachers with subjects and availability state already resolved.
+   * Server-side filtering keeps totals honest — do not filter the page in the UI.
+   */
+  listSummaries: (filters: TeacherAvailabilitySummaryFilters, signal?: AbortSignal) =>
+    request<Page<TeacherAvailabilitySummary>>(
+      `/admin/teacher-availability-summaries${pageQuery({
+        academicYearId: filters.academicYearId,
+        name: filters.name || undefined,
+        availability: filters.availability,
+        page: filters.page ?? 0,
+        size: filters.size ?? 20,
+      })}`,
+      { signal },
+    ),
 
   put: (teacherId: number, body: PutAvailabilityRequest) =>
     request<TeacherAvailability>(`/admin/teachers/${teacherId}/availability`, {
       method: 'PUT',
       body,
     }),
+
+  /** Прямая ссылка: учитель может быть вне текущей страницы списка. */
+  getSummary: (teacherId: number, academicYearId: number, signal?: AbortSignal) =>
+    request<TeacherAvailabilitySummary>(
+      `/admin/teacher-availability-summaries/${teacherId}${pageQuery({ academicYearId })}`,
+      { signal },
+    ),
 };
 
 export type GroupSetListFilters = {

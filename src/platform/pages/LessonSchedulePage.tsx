@@ -71,22 +71,22 @@ import type { AcademicPeriod, AcademicYear, SchoolClass } from '../types';
 
 const SETTINGS_CARDS = [
   {
-    to: '/admin/schedule-settings?tab=templates',
+    to: '/lesson-schedule/bell-templates',
     label: 'Шаблоны звонков',
     icon: Bell,
   },
   {
-    to: '/admin/schedule-settings?tab=calendar',
+    to: '/lesson-schedule/calendar',
     label: 'Школьный календарь',
     icon: CalendarDays,
   },
   {
-    to: '/admin/schedule-settings?tab=teachers',
+    to: '/lesson-schedule/teachers',
     label: 'Занятость учителей',
     icon: UserCheck,
   },
   {
-    to: '/admin/schedule-settings?tab=subgroups',
+    to: '/lesson-schedule/subgroups',
     label: 'Подгруппы классов',
     icon: Users,
   },
@@ -810,7 +810,7 @@ export function LessonSchedulePage() {
                 построить расписание.
               </p>
               <Link
-                to="/admin/schedule-settings?tab=templates"
+                to="/lesson-schedule/bell-templates"
                 className="mt-5 inline-flex h-10 items-center rounded-xl bg-navy-700 px-4 text-sm font-semibold text-white hover:bg-navy-800"
               >
                 Перейти к шаблонам

@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/Button';
-import { Field, TextInput } from '@/components/ui/Field';
-import { Modal } from '@/components/ui/Modal';
-import { pluralRu } from '@/lib/format';
+import { ArrowUpDown, Loader2, X } from 'lucide-react';
+import { cx, pluralRu } from '@/lib/format';
+import { ModalActions, ModalCard, MODAL_PRIMARY, MODAL_SECONDARY } from './ModalCard';
 import { autoSplitSizes, defaultAutoSplitNames } from './subgroupHelpers';
 
+const FIELD_LABEL = 'text-xs font-semibold uppercase tracking-[0.5px] text-muted';
+const FIELD_CONTROL =
+  'w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-navy-700';
+
+/**
+ * «Разделить по алфавиту» — кнопка есть в карточке учеников (2015:12119),
+ * самой модалки в макетах нет. Собрана по спеке модалок расписания.
+ */
 export function AutoSplitDialog({
   open,
   studentCount,
@@ -30,56 +37,91 @@ export function AutoSplitDialog({
   }, [open]);
 
   function submit() {
-    const a = firstName.trim() || 'Группа 1';
-    const b = secondName.trim() || 'Группа 2';
-    onConfirm({ firstName: a, secondName: b });
+    onConfirm({
+      firstName: firstName.trim() || 'Группа 1',
+      secondName: secondName.trim() || 'Группа 2',
+    });
   }
 
   return (
-    <Modal
+    <ModalCard
       open={open}
       onClose={onClose}
-      title="Разделить по алфавиту"
-      size="sm"
-      footer={
-        <>
-          <Button variant="secondary" onClick={onClose} disabled={loading}>
-            Отмена
-          </Button>
-          <Button onClick={submit} loading={loading} disabled={studentCount === 0}>
-            Разделить
-          </Button>
-        </>
-      }
+      labelledBy="auto-split-title"
+      className="max-w-[440px] gap-5 p-6"
     >
-      {studentCount === 0 ? (
-        <p className="text-sm text-slate-600">
-          В классе нет активных учеников — делить некого. Добавьте учеников в состав класса и
-          повторите.
-        </p>
-      ) : (
-        <div className="space-y-4">
-          <p className="text-sm text-slate-600">
-            {studentCount}{' '}
-            {pluralRu(studentCount, ['ученик', 'ученика', 'учеников'])} будут разделены по
-            алфавиту (фамилия → имя) на две группы: {sizes[0]} / {sizes[1]}.
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <h2
+            id="auto-split-title"
+            className="inline-flex items-center gap-2 text-xl font-bold text-ink"
+          >
+            <ArrowUpDown className="size-4 text-navy-700" />
+            Разделить по алфавиту
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Закрыть"
+            className="text-gray-400 transition hover:text-ink"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+        {studentCount === 0 ? (
+          <p className="text-13 text-gray-400">
+            В классе нет активных учеников — делить некого.
           </p>
-          <Field label="Название первой группы">
-            <TextInput
+        ) : (
+          <p className="text-13 text-gray-400">
+            {studentCount} {pluralRu(studentCount, ['ученик', 'ученика', 'учеников'])} будут
+            разделены по фамилии на две группы: {sizes[0]} / {sizes[1]}.
+          </p>
+        )}
+      </div>
+
+      {studentCount > 0 && (
+        <div className="flex flex-col gap-4">
+          <label className="flex flex-col gap-1.5">
+            <span className={FIELD_LABEL}>Первая группа</span>
+            <input
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               disabled={loading}
+              className={FIELD_CONTROL}
             />
-          </Field>
-          <Field label="Название второй группы">
-            <TextInput
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className={FIELD_LABEL}>Вторая группа</span>
+            <input
               value={secondName}
               onChange={(e) => setSecondName(e.target.value)}
               disabled={loading}
+              className={FIELD_CONTROL}
             />
-          </Field>
+          </label>
         </div>
       )}
-    </Modal>
+
+      <ModalActions>
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={loading}
+          className={cx(MODAL_SECONDARY, 'text-muted')}
+        >
+          Отмена
+        </button>
+        <button
+          type="button"
+          onClick={submit}
+          disabled={loading || studentCount === 0}
+          className={cx(MODAL_PRIMARY, 'inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600')}
+        >
+          {loading && <Loader2 className="size-4 animate-spin" />}
+          Разделить
+        </button>
+      </ModalActions>
+    </ModalCard>
   );
 }

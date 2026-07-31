@@ -3,10 +3,14 @@ import {
   autoSplitSizes,
   compareStudentsByName,
   defaultAutoSplitNames,
+  diffMembership,
+  duplicateStudentIds,
+  membershipEquals,
   parseStudentAlreadyInSetDetails,
   parseSubgroupsInUseDetails,
   sortStudentsByName,
-  studentFullName,
+  studentInitials,
+  studentShortName,
 } from './subgroupHelpers';
 
 describe('autoSplitSizes (mirror SubgroupAutoSplitter)', () => {
@@ -40,16 +44,67 @@ describe('sortStudentsByName', () => {
       { lastName: 'Иванов', firstName: 'Б', middleName: null },
       { lastName: 'Иванов', firstName: 'А', middleName: null },
     ]);
-    expect(sorted.map((s) => studentFullName(s))).toEqual([
-      'Иванов А',
-      'Иванов Б',
-      'Яковлев А',
+    expect(sorted.map((s) => studentShortName(s))).toEqual([
+      'Иванов А.',
+      'Иванов Б.',
+      'Яковлев А.',
     ]);
   });
 
   it('compareStudentsByName is stable for identical names', () => {
     const a = { lastName: 'А', firstName: 'Б', middleName: null };
     expect(compareStudentsByName(a, a)).toBe(0);
+  });
+});
+
+describe('подписи учеников (2015:12126, 2015:12127)', () => {
+  const ivanov = { lastName: 'Иванов', firstName: 'Алексей', middleName: 'Петрович' };
+
+  it('короткое имя — фамилия и инициал', () => {
+    expect(studentShortName(ivanov)).toBe('Иванов А.');
+  });
+
+  it('без имени — только фамилия', () => {
+    expect(studentShortName({ lastName: 'Иванов', firstName: '', middleName: null })).toBe(
+      'Иванов',
+    );
+  });
+
+  it('инициалы для аватара', () => {
+    expect(studentInitials(ivanov)).toBe('ИА');
+  });
+});
+
+describe('diffMembership', () => {
+  it('перенос ученика: сначала удаление, потом добавление', () => {
+    const diff = diffMembership({ 1: [10, 11], 2: [12] }, { 1: [11], 2: [12, 10] });
+    expect(diff.removals).toEqual([{ subgroupId: 1, studentId: 10 }]);
+    expect(diff.additions).toEqual([{ subgroupId: 2, studentIds: [10] }]);
+  });
+
+  it('добавления одной подгруппы уходят одним запросом', () => {
+    const diff = diffMembership({ 1: [] }, { 1: [10, 11, 12] });
+    expect(diff.removals).toEqual([]);
+    expect(diff.additions).toEqual([{ subgroupId: 1, studentIds: [10, 11, 12] }]);
+  });
+
+  it('без изменений — пустой diff', () => {
+    expect(membershipEquals({ 1: [10], 2: [] }, { 1: [10], 2: [] })).toBe(true);
+    expect(membershipEquals({ 1: [10] }, { 1: [] })).toBe(false);
+  });
+
+  it('порядок внутри подгруппы не считается изменением', () => {
+    expect(membershipEquals({ 1: [10, 11] }, { 1: [11, 10] })).toBe(true);
+  });
+});
+
+describe('duplicateStudentIds', () => {
+  it('находит ученика в двух подгруппах', () => {
+    expect(duplicateStudentIds({ 1: [10, 11], 2: [11, 12] })).toEqual([11]);
+  });
+
+  it('повтор внутри одной подгруппы дублем не считается', () => {
+    expect(duplicateStudentIds({ 1: [10, 10] })).toEqual([]);
   });
 });
 

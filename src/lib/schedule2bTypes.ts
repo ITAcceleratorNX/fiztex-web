@@ -22,6 +22,25 @@ export type TeacherRef = {
   updatedAt: string;
 };
 
+/**
+ * Two-state projection of TeacherAvailabilityStatus used by list screens:
+ * NEEDS_REVIEW covers both «профиля нет» and INACTIVE.
+ */
+export type TeacherAvailabilityState = 'APPROVED' | 'NEEDS_REVIEW';
+
+/** Row of GET /admin/teacher-availability-summaries — see back docs §9. */
+export type TeacherAvailabilitySummary = {
+  teacherId: number;
+  accountId: number;
+  firstName: string;
+  lastName: string;
+  middleName: string | null;
+  phone: string;
+  /** ACTIVE subjects of the requested academic year, sorted by name. */
+  subjects: string[];
+  availability: TeacherAvailabilityState;
+};
+
 export type AvailabilityInterval = {
   id: number;
   dayOfWeek: Weekday;

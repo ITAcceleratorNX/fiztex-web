@@ -1,25 +1,57 @@
-import { useMemo, useState } from 'react';
-import { Archive, Plus, Users } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { Field, Select } from '@/components/ui/Field';
-import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { Loader2, UserPlus, Users } from 'lucide-react';
+import { Select } from '@/components/ui/Field';
+import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
 import { ApiError } from '@/lib/api';
-import { cx, pluralRu } from '@/lib/format';
-import { isSubgroupsInUse } from '@/lib/schedule2bApi';
-import type { GroupSet, SubgroupInUse } from '@/lib/schedule2bTypes';
+import { cx } from '@/lib/format';
+import {
+  isStudentAlreadyInSet,
+  isStudentNotInClass,
+  isSubgroupsInUse,
+  subgroupsApi,
+} from '@/lib/schedule2bApi';
+import type { AcademicYearRef } from '@/lib/scheduleSettingsTypes';
+import type { GroupSet, SubgroupInUse, SubgroupStudent } from '@/lib/schedule2bTypes';
 import { useSchoolClasses } from '@/platform/hooks/useScheduleSettings';
 import {
+  subgroupsKeys,
   useAcademicPeriods,
   useArchiveGroupSet,
+  useArchiveSubgroup,
+  useAutoSplit,
+  useCreateSubgroup,
+  useGroupSetAggregate,
   useGroupSets,
+  usePatchSubgroup,
   useSchoolSubjects,
 } from '@/platform/hooks/useSubgroups';
+import { AutoSplitDialog } from './AutoSplitDialog';
 import { CreateGroupSetModal } from './CreateGroupSetModal';
-import { GroupSetScreen } from './GroupSetScreen';
+import { DuplicatesAlert } from './DuplicatesAlert';
+import { AddSubgroupCard, ClassRosterCard, SubgroupCard } from './GroupSetPanels';
+import { ScheduleBreadcrumbs } from './ScheduleBreadcrumbs';
+import { ScheduleConfirmModal } from './ScheduleConfirmModal';
 import { SubgroupsInUseDialog } from './SubgroupsInUseDialog';
-import { parseSubgroupsInUseDetails } from './subgroupHelpers';
+import { useArchiveThenAutoSplit } from './useArchiveThenAutoSplit';
+import {
+  activeSubgroups,
+  diffMembership,
+  duplicateStudentIds,
+  membershipEquals,
+  membershipFromSubgroups,
+  parseStudentAlreadyInSetDetails,
+  parseSubgroupsInUseDetails,
+  sortStudentsByName,
+  studentShortName,
+  type Membership,
+} from './subgroupHelpers';
+
+/** Figma 2015:5831 — тот же select, что в расписании и шаблонах звонков. */
+const FILTER_CONTROL =
+  'w-auto min-w-44 rounded-lg border-line bg-gray-50 px-3 py-2 text-13 font-medium text-ink';
 
 const CLASS_ID_PARAM = 'classId';
 const SET_ID_PARAM = 'setId';
@@ -47,274 +79,642 @@ export function writeSubgroupsTabState(next: URLSearchParams, state: SubgroupsTa
   else next.delete(SET_ID_PARAM);
 }
 
+/** Отложенное действие, которое сотрёт несохранённый черновик состава. */
+type GuardedAction = { run: () => void };
+
 export function SubgroupsTab({
+  years,
+  yearsLoading,
   yearId,
+  onYearChange,
   state,
   onStateChange,
 }: {
-  yearId: number;
+  years: AcademicYearRef[];
+  yearsLoading?: boolean;
+  yearId: number | null;
+  onYearChange: (yearId: number | null) => void;
   state: SubgroupsTabState;
   onStateChange: (next: SubgroupsTabState) => void;
 }) {
   const toast = useToast();
+  const qc = useQueryClient();
+
   const classesQuery = useSchoolClasses(yearId);
-  const subjectsQuery = useSchoolSubjects();
-  const periodsQuery = useAcademicPeriods(yearId);
+  const classes = useMemo(() => classesQuery.data?.content ?? [], [classesQuery.data]);
+
   const setsQuery = useGroupSets(
     state.classId != null ? { classId: state.classId, status: 'ACTIVE' } : null,
   );
+  const sets = useMemo(() => setsQuery.data ?? [], [setsQuery.data]);
+
+  const aggregateQuery = useGroupSetAggregate(state.setId);
+  const aggregate = aggregateQuery.data;
+
+  const subjectsQuery = useSchoolSubjects();
+  const periodsQuery = useAcademicPeriods(yearId);
+
+  const createSubgroup = useCreateSubgroup(state.setId);
+  const patchSubgroup = usePatchSubgroup(state.setId);
+  const archiveSubgroup = useArchiveSubgroup(state.setId);
+  const autoSplit = useAutoSplit(state.setId);
   const archiveSet = useArchiveGroupSet();
 
-  const [createOpen, setCreateOpen] = useState(false);
-  const [inUseRows, setInUseRows] = useState<SubgroupInUse[]>([]);
-  const [pendingArchiveSetId, setPendingArchiveSetId] = useState<number | null>(null);
+  const splitFlow = useArchiveThenAutoSplit({ archiveSubgroup, autoSplit });
 
-  const classes = classesQuery.data?.content ?? [];
-  const sets = setsQuery.data ?? [];
-  const subjectsById = useMemo(() => {
-    const map = new Map<number, string>();
-    for (const s of subjectsQuery.data?.content ?? []) map.set(s.id, s.name);
+  const [search, setSearch] = useState('');
+  const [draft, setDraft] = useState<Membership | null>(null);
+  const [seedKey, setSeedKey] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [createSetOpen, setCreateSetOpen] = useState(false);
+  const [archiveSetOpen, setArchiveSetOpen] = useState(false);
+  const [archiveSubgroupId, setArchiveSubgroupId] = useState<number | null>(null);
+  const [guarded, setGuarded] = useState<GuardedAction | null>(null);
+  const [setInUseRows, setSetInUseRows] = useState<SubgroupInUse[]>([]);
+
+  const subgroups = useMemo(
+    () => (aggregate ? activeSubgroups(aggregate.subgroups) : []),
+    [aggregate],
+  );
+  const serverMembership = useMemo(() => membershipFromSubgroups(subgroups), [subgroups]);
+
+  /** Пересеиваем черновик, только когда состав на сервере действительно изменился. */
+  const serverKey = useMemo(
+    () =>
+      `${state.setId ?? 0}|` +
+      subgroups
+        .map((sg) => `${sg.id}:${[...(serverMembership[sg.id] ?? [])].sort((a, b) => a - b).join(',')}`)
+        .join('|'),
+    [state.setId, subgroups, serverMembership],
+  );
+
+  useEffect(() => {
+    if (!aggregate) {
+      setDraft(null);
+      setSeedKey('');
+      return;
+    }
+    if (seedKey === serverKey) return;
+    setDraft(serverMembership);
+    setSeedKey(serverKey);
+  }, [aggregate, serverKey, seedKey, serverMembership]);
+
+  /** Класс сменился — набор надо выбрать заново. */
+  useEffect(() => {
+    if (state.classId == null || setsQuery.isLoading || setsQuery.isError) return;
+    const ids = sets.map((s) => s.id);
+    const next = state.setId != null && ids.includes(state.setId) ? state.setId : ids[0] ?? null;
+    if (next === state.setId) return;
+    onStateChange({ classId: state.classId, setId: next });
+  }, [sets, state.classId, state.setId, setsQuery.isLoading, setsQuery.isError, onStateChange]);
+
+  const studentsById = useMemo(() => {
+    const map = new Map<number, SubgroupStudent>();
+    for (const student of aggregate?.unassignedStudents ?? []) map.set(student.studentId, student);
+    for (const sg of aggregate?.subgroups ?? []) {
+      for (const student of sg.students ?? []) map.set(student.studentId, student);
+    }
     return map;
-  }, [subjectsQuery.data]);
-  const periodsById = useMemo(() => {
-    const map = new Map<number, string>();
-    for (const p of periodsQuery.data ?? []) map.set(p.id, p.name);
-    return map;
-  }, [periodsQuery.data]);
+  }, [aggregate]);
 
-  const selectedClass = classes.find((c) => c.id === state.classId) ?? null;
+  const roster = useMemo(() => sortStudentsByName([...studentsById.values()]), [studentsById]);
 
-  function selectClass(classIdRaw: string) {
-    const classId = classIdRaw ? Number(classIdRaw) : null;
-    onStateChange({
-      classId: classId != null && Number.isFinite(classId) ? classId : null,
-      setId: null,
+  const membership = draft ?? serverMembership;
+  const assignedIds = useMemo(
+    () => new Set(Object.values(membership).flat()),
+    [membership],
+  );
+  const duplicates = useMemo(() => duplicateStudentIds(membership), [membership]);
+  const duplicateSet = useMemo(() => new Set(duplicates), [duplicates]);
+  const dirty = draft != null && !membershipEquals(serverMembership, draft);
+
+  const selectedSet = sets.find((s) => s.id === state.setId) ?? null;
+  const busy =
+    saving ||
+    createSubgroup.isPending ||
+    patchSubgroup.isPending ||
+    archiveSubgroup.isPending ||
+    autoSplit.isPending ||
+    archiveSet.isPending;
+
+  /** Любое действие, которое сотрёт черновик, сначала спрашивает. */
+  const guard = useCallback(
+    (run: () => void) => {
+      if (dirty) setGuarded({ run });
+      else run();
+    },
+    [dirty],
+  );
+
+  function editDraft(next: (current: Membership) => Membership) {
+    setDraft((prev) => next(prev ?? serverMembership));
+  }
+
+  function assign(studentId: number, targetSubgroupId: number) {
+    editDraft((current) => ({
+      ...current,
+      [targetSubgroupId]: [...(current[targetSubgroupId] ?? []), studentId],
+    }));
+  }
+
+  function moveStudent(studentId: number, fromSubgroupId: number, targetSubgroupId: number) {
+    editDraft((current) => ({
+      ...current,
+      [fromSubgroupId]: (current[fromSubgroupId] ?? []).filter((id) => id !== studentId),
+      [targetSubgroupId]: [...(current[targetSubgroupId] ?? []), studentId],
+    }));
+  }
+
+  function removeFromSubgroup(studentId: number, subgroupId: number) {
+    editDraft((current) => ({
+      ...current,
+      [subgroupId]: (current[subgroupId] ?? []).filter((id) => id !== studentId),
+    }));
+  }
+
+  function keepOnlyIn(studentId: number, keepSubgroupId: number) {
+    editDraft((current) => {
+      const next: Membership = {};
+      for (const [key, ids] of Object.entries(current)) {
+        const subgroupId = Number(key);
+        next[subgroupId] =
+          subgroupId === keepSubgroupId ? ids : ids.filter((id) => id !== studentId);
+      }
+      return next;
     });
   }
 
-  function openSet(setId: number) {
-    onStateChange({ ...state, setId });
+  async function refreshSet() {
+    if (state.setId == null) return;
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: subgroupsKeys.groupSetRoot(state.setId) }),
+      qc.invalidateQueries({ queryKey: [...subgroupsKeys.all, 'group-sets'] }),
+    ]);
   }
 
-  function closeSet() {
-    onStateChange({ ...state, setId: null });
-  }
+  /**
+   * В макете есть «Сохранить состав» (2015:12253), значит перемещения копятся
+   * локально. Удаления идут первыми: иначе перенос упрётся в
+   * STUDENT_ALREADY_IN_SET_SUBGROUP.
+   */
+  async function saveMembership() {
+    if (draft == null || state.setId == null) return;
+    const diff = diffMembership(serverMembership, draft);
+    if (diff.removals.length === 0 && diff.additions.length === 0) return;
 
-  async function onArchiveSet(set: GroupSet) {
+    setSaving(true);
     try {
-      await archiveSet.mutateAsync({ setId: set.id, confirmImpact: false });
-      toast.success(`Набор «${set.name}» заархивирован`);
-      if (state.setId === set.id) closeSet();
+      for (const removal of diff.removals) {
+        await subgroupsApi.removeStudent(removal.subgroupId, removal.studentId);
+      }
+      for (const addition of diff.additions) {
+        await subgroupsApi.addStudents(addition.subgroupId, addition.studentIds);
+      }
+      await refreshSet();
+      toast.success('Состав сохранён');
+    } catch (err) {
+      if (isStudentNotInClass(err)) {
+        toast.error('Кто-то из учеников уже не состоит в этом классе — состав перезагружен');
+      } else if (isStudentAlreadyInSet(err)) {
+        const conflict = parseStudentAlreadyInSetDetails((err as ApiError).details)[0];
+        const student = conflict ? studentsById.get(conflict.studentId) : undefined;
+        toast.error(
+          conflict
+            ? `${student ? studentShortName(student) : 'Ученик'} уже в «${conflict.subgroupName}» — состав перезагружен`
+            : 'Ученик уже в другой группе набора — состав перезагружен',
+        );
+      } else {
+        toast.error(err instanceof ApiError ? err.message : 'Не удалось сохранить состав');
+      }
+      await refreshSet();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function addSubgroup() {
+    try {
+      await createSubgroup.mutateAsync(`Группа ${subgroups.length + 1}`);
+      toast.success('Подгруппа создана');
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'Не удалось создать подгруппу');
+    }
+  }
+
+  async function renameSubgroup(subgroupId: number, name: string) {
+    try {
+      await patchSubgroup.mutateAsync({ subgroupId, name });
+      toast.success('Название сохранено');
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'Не удалось переименовать');
+    }
+  }
+
+  async function archiveGroupSet(confirmImpact: boolean) {
+    if (state.setId == null) return;
+    try {
+      await archiveSet.mutateAsync({ setId: state.setId, confirmImpact });
+      setSetInUseRows([]);
+      setArchiveSetOpen(false);
+      onStateChange({ classId: state.classId, setId: null });
+      toast.success('Набор заархивирован');
     } catch (err) {
       if (isSubgroupsInUse(err)) {
-        setInUseRows(parseSubgroupsInUseDetails(err.details));
-        setPendingArchiveSetId(set.id);
+        setArchiveSetOpen(false);
+        setSetInUseRows(parseSubgroupsInUseDetails(err.details));
         return;
       }
       toast.error(err instanceof ApiError ? err.message : 'Не удалось заархивировать набор');
     }
   }
 
-  async function confirmArchiveImpact() {
-    if (pendingArchiveSetId == null) return;
-    try {
-      await archiveSet.mutateAsync({ setId: pendingArchiveSetId, confirmImpact: true });
-      toast.success('Набор заархивирован');
-      if (state.setId === pendingArchiveSetId) closeSet();
-      setInUseRows([]);
-      setPendingArchiveSetId(null);
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Не удалось заархивировать набор');
-    }
-  }
+  const setMeta = useMemo(() => {
+    if (!selectedSet) return null;
+    const subject =
+      selectedSet.subjectId != null
+        ? subjectsQuery.data?.content.find((s) => s.id === selectedSet.subjectId)?.name
+        : null;
+    const period =
+      selectedSet.academicPeriodId != null
+        ? periodsQuery.data?.find((p) => p.id === selectedSet.academicPeriodId)?.name
+        : null;
+    return [subject ?? 'Без предмета', period ?? 'Весь год'].join(' · ');
+  }, [selectedSet, subjectsQuery.data, periodsQuery.data]);
 
-  if (state.setId != null && state.classId != null) {
-    return (
-      <GroupSetScreen
-        key={state.setId}
-        setId={state.setId}
-        onBack={closeSet}
-      />
-    );
-  }
+  const noClassSelected = yearId == null || state.classId == null;
+  const noSets =
+    !noClassSelected && !setsQuery.isLoading && !setsQuery.isError && sets.length === 0;
 
   return (
-    <div>
-      <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Наборы групп внутри класса: общее деление или по предмету. Составы наборов независимы —
-        один ученик может быть в разных группах разных наборов.
-      </p>
+    <div className="flex flex-col gap-8">
+      <ScheduleBreadcrumbs current="Подгруппы классов" />
 
-      <div className="mb-5 sm:max-w-sm">
-        <Field label="Класс">
-          <Select
-            value={state.classId != null ? String(state.classId) : ''}
-            onChange={(e) => selectClass(e.target.value)}
-            disabled={classesQuery.isLoading || classes.length === 0}
-          >
-            <option value="">Выберите класс</option>
-            {classes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
-        </Field>
+      {/* Фильтры — тот же стиль, что панель расписания (2015:5831). */}
+      <div className="flex flex-wrap items-center gap-2.5">
+        <Select
+          value={yearId != null ? String(yearId) : ''}
+          disabled={yearsLoading || years.length === 0}
+          onChange={(e) =>
+            guard(() => onYearChange(e.target.value ? Number(e.target.value) : null))
+          }
+          className={FILTER_CONTROL}
+        >
+          {years.length === 0 && <option value="">Учебный год</option>}
+          {years.map((y) => (
+            <option key={y.id} value={y.id}>
+              {y.name}
+            </option>
+          ))}
+        </Select>
+        <Select
+          value={state.classId != null ? String(state.classId) : ''}
+          disabled={yearId == null || classesQuery.isLoading || classes.length === 0}
+          onChange={(e) =>
+            guard(() =>
+              onStateChange({
+                classId: e.target.value ? Number(e.target.value) : null,
+                setId: null,
+              }),
+            )
+          }
+          className={FILTER_CONTROL}
+        >
+          <option value="">Класс</option>
+          {classes.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </Select>
       </div>
 
-      {classesQuery.isLoading && <LoadingBlock label="Загрузка классов…" />}
       {classesQuery.isError && (
         <ErrorBlock
-          message={
-            classesQuery.error instanceof Error
-              ? classesQuery.error.message
-              : 'Не удалось загрузить классы'
-          }
+          message="Не удалось загрузить классы"
           onRetry={() => void classesQuery.refetch()}
         />
       )}
 
-      {!classesQuery.isLoading && !classesQuery.isError && classes.length === 0 && (
-        <EmptyBlock
-          title="Нет классов"
-          description="Создайте классы в Platform Core для выбранного учебного года."
+      {/* 2015:12050 — год и класс ещё не выбраны */}
+      {noClassSelected && !classesQuery.isError && (
+        <EmptyHero
+          icon={<Users className="size-6 text-gray-400" />}
+          title="Выберите учебный год и класс, чтобы начать"
         />
       )}
 
-      {state.classId == null && classes.length > 0 && (
-        <EmptyBlock
-          icon={<Users className="h-7 w-7" />}
-          title="Выберите класс"
-          description="Затем откроется список наборов групп или предложение создать первый."
+      {!noClassSelected && setsQuery.isLoading && <LoadingBlock label="Загрузка наборов…" />}
+      {!noClassSelected && setsQuery.isError && (
+        <ErrorBlock
+          message="Не удалось загрузить наборы групп"
+          onRetry={() => void setsQuery.refetch()}
         />
       )}
 
-      {state.classId != null && (
-        <>
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-base font-semibold text-slate-900">
-              Наборы{selectedClass ? ` · ${selectedClass.name}` : ''}
-            </h2>
-            <Button
-              type="button"
-              size="sm"
-              icon={<Plus className="h-4 w-4" />}
-              onClick={() => setCreateOpen(true)}
-            >
-              Новый набор
-            </Button>
+      {/* 2015:12078 — у класса нет подгрупп */}
+      {noSets && (
+        <EmptyHero
+          icon={<UserPlus className="size-6 text-gray-400" />}
+          title="У этого класса пока нет подгрупп"
+          description="Разделите класс на несколько учебных групп для профильных занятий"
+          action={
+            <div className="flex flex-col items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setCreateSetOpen(true)}
+                className="rounded-lg bg-brand-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-600"
+              >
+                Создать группы
+              </button>
+              <Link
+                to="/lesson-schedule"
+                className="text-13 font-semibold text-navy-700 underline hover:text-navy-800"
+              >
+                Продолжить со всем классом
+              </Link>
+            </div>
+          }
+        />
+      )}
+
+      {!noClassSelected && sets.length > 0 && (
+        <div className="flex flex-wrap items-start gap-6">
+          <ClassRosterCard
+            students={roster}
+            assignedIds={assignedIds}
+            subgroups={subgroups}
+            search={search}
+            onSearchChange={setSearch}
+            onSplit={() => guard(() => splitFlow.setAutoSplitOpen(true))}
+            splitDisabled={state.setId == null || roster.length === 0}
+            onAssign={assign}
+            disabled={busy}
+          />
+
+          <div className="flex min-w-[320px] flex-1 flex-col gap-4">
+            {/* 2015:12165 — переключатель наборов и создание нового */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                {sets.map((groupSet) => (
+                  <SetChip
+                    key={groupSet.id}
+                    groupSet={groupSet}
+                    active={groupSet.id === state.setId}
+                    onClick={() =>
+                      guard(() => onStateChange({ classId: state.classId, setId: groupSet.id }))
+                    }
+                  />
+                ))}
+              </div>
+
+              <div className="flex items-center gap-4">
+                {selectedSet && (
+                  <button
+                    type="button"
+                    onClick={() => guard(() => setArchiveSetOpen(true))}
+                    disabled={busy}
+                    className="text-13 font-semibold text-muted transition hover:text-red-500 disabled:opacity-40"
+                  >
+                    Архивировать набор
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => guard(() => setCreateSetOpen(true))}
+                  className="text-sm font-semibold text-navy-700 underline transition hover:text-navy-800"
+                >
+                  + Новый набор групп
+                </button>
+              </div>
+            </div>
+
+            {setMeta && <p className="text-13 text-gray-400">{setMeta}</p>}
+
+            {aggregateQuery.isLoading && <LoadingBlock label="Загрузка состава…" />}
+            {aggregateQuery.isError && (
+              <ErrorBlock
+                message="Не удалось загрузить состав набора"
+                onRetry={() => void aggregateQuery.refetch()}
+              />
+            )}
+
+            <DuplicatesAlert
+              duplicateIds={duplicates}
+              studentsById={studentsById}
+              membership={membership}
+              subgroups={subgroups}
+              disabled={busy}
+              onKeepOnlyIn={keepOnlyIn}
+            />
+
+            {/* 2015:12167 — карточки групп */}
+            {aggregate && (
+              <div className="flex flex-wrap items-stretch gap-5">
+                {subgroups.map((subgroup) => (
+                  <SubgroupCard
+                    key={subgroup.id}
+                    subgroup={subgroup}
+                    students={sortStudentsByName(
+                      (membership[subgroup.id] ?? [])
+                        .map((id) => studentsById.get(id))
+                        .filter((s): s is SubgroupStudent => s != null),
+                    )}
+                    allSubgroups={subgroups}
+                    duplicateIds={duplicateSet}
+                    disabled={busy}
+                    onRename={(name) => void renameSubgroup(subgroup.id, name)}
+                    onArchive={() => guard(() => setArchiveSubgroupId(subgroup.id))}
+                    onStudentAction={(studentId, action) => {
+                      if (action.kind === 'move') {
+                        moveStudent(studentId, subgroup.id, action.targetSubgroupId);
+                      } else if (action.kind === 'remove') {
+                        removeFromSubgroup(studentId, subgroup.id);
+                      }
+                    }}
+                  />
+                ))}
+                <AddSubgroupCard onClick={() => guard(() => void addSubgroup())} disabled={busy} />
+              </div>
+            )}
+
+            {/* 2015:12250 — «Отмена» / «Сохранить состав» */}
+            {aggregate && (
+              <div className="flex flex-wrap items-center justify-end gap-3 pt-6">
+                {dirty && (
+                  <p className="mr-auto text-13 text-amber-700">Есть несохранённые изменения</p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setDraft(serverMembership)}
+                  disabled={!dirty || busy}
+                  className="rounded-lg border border-line px-[18px] py-2.5 text-sm font-semibold text-muted transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Отмена
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void saveMembership()}
+                  disabled={!dirty || busy}
+                  className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-[18px] py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-line disabled:text-gray-400"
+                >
+                  {saving && <Loader2 className="size-4 animate-spin" />}
+                  Сохранить состав
+                </button>
+              </div>
+            )}
           </div>
-
-          {setsQuery.isLoading && <LoadingBlock label="Загрузка наборов…" />}
-          {setsQuery.isError && (
-            <ErrorBlock
-              message={
-                setsQuery.error instanceof Error
-                  ? setsQuery.error.message
-                  : 'Не удалось загрузить наборы'
-              }
-              onRetry={() => void setsQuery.refetch()}
-            />
-          )}
-
-          {!setsQuery.isLoading && !setsQuery.isError && sets.length === 0 && (
-            <EmptyBlock
-              icon={<Users className="h-7 w-7" />}
-              title="Класс не делится на подгруппы"
-              description="Расписание создаётся для всего класса. Создайте набор, если нужно разделить учеников (например, на английский)."
-              action={
-                <Button type="button" onClick={() => setCreateOpen(true)}>
-                  Создать набор
-                </Button>
-              }
-            />
-          )}
-
-          {sets.length > 0 && (
-            <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              {sets.map((set) => {
-                const unassigned = set.unassignedStudentCount ?? 0;
-                return (
-                  <li key={set.id}>
-                    <div
-                      className={cx(
-                        'flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center',
-                        'hover:bg-slate-50/80',
-                      )}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => openSet(set.id)}
-                        className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50"
-                      >
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="truncate text-sm font-medium text-slate-800">{set.name}</p>
-                          {unassigned > 0 && (
-                            <Badge tone="amber">нераспределённых: {unassigned}</Badge>
-                          )}
-                        </div>
-                        <p className="mt-0.5 text-xs text-slate-500">
-                          {set.subjectId != null
-                            ? subjectsById.get(set.subjectId) ?? `Предмет #${set.subjectId}`
-                            : 'Без предмета'}
-                          {' · '}
-                          {set.academicPeriodId != null
-                            ? periodsById.get(set.academicPeriodId) ??
-                              `Период #${set.academicPeriodId}`
-                            : 'Весь год'}
-                          {' · '}
-                          {set.subgroupCount}{' '}
-                          {pluralRu(set.subgroupCount, ['подгруппа', 'подгруппы', 'подгрупп'])}
-                          {' · '}
-                          {set.assignedStudentCount}{' '}
-                          {pluralRu(set.assignedStudentCount, [
-                            'ученик',
-                            'ученика',
-                            'учеников',
-                          ])}
-                        </p>
-                      </button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        icon={<Archive className="h-4 w-4" />}
-                        disabled={archiveSet.isPending}
-                        aria-label={`Архивировать набор «${set.name}»`}
-                        onClick={() => void onArchiveSet(set)}
-                      >
-                        Архив
-                      </Button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </>
+        </div>
       )}
 
-      {state.classId != null && (
+      {state.classId != null && yearId != null && (
         <CreateGroupSetModal
-          open={createOpen}
-          onClose={() => setCreateOpen(false)}
+          open={createSetOpen}
+          onClose={() => setCreateSetOpen(false)}
           yearId={yearId}
           classId={state.classId}
           onCreated={(setId) => onStateChange({ classId: state.classId, setId })}
         />
       )}
 
+      <AutoSplitDialog
+        open={splitFlow.autoSplitOpen}
+        studentCount={roster.length}
+        loading={splitFlow.splitPending}
+        onClose={() => splitFlow.setAutoSplitOpen(false)}
+        onConfirm={(names) => void splitFlow.runAutoSplit(names)}
+      />
+
+      <ScheduleConfirmModal
+        open={splitFlow.notEmptyOpen}
+        onClose={splitFlow.cancelNotEmpty}
+        onConfirm={() => void splitFlow.archiveAllThenSplit(subgroups.map((s) => s.id))}
+        title="В наборе уже есть группы"
+        message="Автоделение работает только на пустом наборе. Заархивировать текущие подгруппы и открыть деление снова?"
+        confirmLabel="Заархивировать и продолжить"
+        danger
+        loading={splitFlow.archivePending}
+      />
+
+      <ScheduleConfirmModal
+        open={archiveSubgroupId != null}
+        onClose={() => setArchiveSubgroupId(null)}
+        onConfirm={() => {
+          const id = archiveSubgroupId;
+          setArchiveSubgroupId(null);
+          if (id != null) void splitFlow.archiveOne(id);
+        }}
+        title="Архивировать подгруппу?"
+        message="Ученики вернутся в список нераспределённых. Подгруппу можно будет создать заново."
+        confirmLabel="Архивировать"
+        danger
+        loading={splitFlow.archivePending}
+      />
+
+      <ScheduleConfirmModal
+        open={archiveSetOpen}
+        onClose={() => setArchiveSetOpen(false)}
+        onConfirm={() => void archiveGroupSet(false)}
+        title="Архивировать набор?"
+        message={
+          selectedSet
+            ? `Набор «${selectedSet.name}» и все его подгруппы уедут в архив.`
+            : 'Набор и все его подгруппы уедут в архив.'
+        }
+        confirmLabel="Архивировать"
+        danger
+        loading={archiveSet.isPending}
+      />
+
+      <ScheduleConfirmModal
+        open={guarded != null}
+        onClose={() => setGuarded(null)}
+        onConfirm={() => {
+          const action = guarded;
+          setGuarded(null);
+          setDraft(serverMembership);
+          action?.run();
+        }}
+        title="Состав не сохранён"
+        message="Перемещения учеников ещё не отправлены на сервер. Если продолжить, они будут потеряны."
+        confirmLabel="Продолжить"
+        danger
+      />
+
       <SubgroupsInUseDialog
-        open={inUseRows.length > 0}
-        rows={inUseRows}
+        open={splitFlow.inUseRows.length > 0}
+        rows={splitFlow.inUseRows}
+        loading={splitFlow.archivePending}
+        onCancel={splitFlow.cancelInUse}
+        onConfirmImpact={() => void splitFlow.confirmArchiveImpact()}
+      />
+
+      <SubgroupsInUseDialog
+        open={setInUseRows.length > 0}
+        rows={setInUseRows}
         loading={archiveSet.isPending}
         title="Набор используется в расписании"
-        onCancel={() => {
-          setInUseRows([]);
-          setPendingArchiveSetId(null);
-        }}
-        onConfirmImpact={() => void confirmArchiveImpact()}
+        onCancel={() => setSetInUseRows([])}
+        onConfirmImpact={() => void archiveGroupSet(true)}
       />
+    </div>
+  );
+}
+
+/** Наборы в макетах не показаны — чип по образцу бейджей карточек групп. */
+function SetChip({
+  groupSet,
+  active,
+  onClick,
+}: {
+  groupSet: GroupSet;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cx(
+        'rounded-lg border px-3 py-1.5 text-13 font-semibold transition',
+        active
+          ? 'border-navy-700 bg-navy-700 text-white'
+          : 'border-line bg-white text-muted hover:text-navy-700',
+      )}
+    >
+      {groupSet.name}
+    </button>
+  );
+}
+
+/** Пустое состояние: круг 64 с рамкой, заголовок и подпись по центру. */
+function EmptyHero({
+  icon,
+  title,
+  description,
+  action,
+}: {
+  icon: ReactNode;
+  title: string;
+  description?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-6 pt-20">
+      <span className="flex size-16 items-center justify-center rounded-full border border-line bg-white">
+        {icon}
+      </span>
+      <div className="flex flex-col items-center gap-1.5 text-center">
+        <p
+          className={cx(
+            description ? 'text-base font-semibold text-ink' : 'text-15 font-medium text-muted',
+          )}
+        >
+          {title}
+        </p>
+        {description && <p className="text-13 text-muted">{description}</p>}
+      </div>
+      {action}
     </div>
   );
 }

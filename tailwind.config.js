@@ -32,6 +32,8 @@ export default {
         // на них висит вся существующая вёрстка.
         ink: 'var(--color-text-primary)',
         muted: 'var(--color-text-muted)',
+        subtle: 'var(--color-text-subtle)',
+        link: 'var(--color-link)',
         line: 'var(--color-border-default)',
         surface: 'var(--color-surface)',
         disabled: 'var(--color-bg-disabled)',
@@ -41,6 +43,11 @@ export default {
         success: {
           bg: 'var(--color-success-bg)',
           fg: 'var(--color-success-fg)',
+          border: 'var(--color-success-border)',
+        },
+        attention: {
+          bg: 'var(--color-attention-bg)',
+          fg: 'var(--color-attention-fg)',
         },
         danger: {
           bg: 'var(--color-danger-bg)',
@@ -61,6 +68,45 @@ export default {
         10: 'var(--text-10)',
         11: 'var(--text-11)',
         13: 'var(--text-13)',
+        15: 'var(--text-15)',
+        28: 'var(--text-28)',
+      },
+      height: {
+        // Ряды таймлайна занятости: 70px просмотр (2015:11009), 60px правка
+        // (2015:11496). Обе высоты вне 4px-шкалы Tailwind — заведены явно,
+        // чтобы не разъезжались между режимами.
+        'slot-row': '70px',
+        'slot-row-edit': '60px',
+      },
+      width: {
+        // Колонка «ВРЕМЯ» в сетке занятости (2015:10997) — вне 4px-шкалы.
+        'slot-time-col': '100px',
+        // Селектор фильтра подстраниц расписания (2015:12037).
+        'filter-select': '200px',
+      },
+      minWidth: {
+        // Ниже этого сетка занятости уезжает в свой горизонтальный скролл,
+        // чтобы дни не схлопывались в нечитаемые колонки.
+        'slot-grid': '640px',
+      },
+      minHeight: {
+        // Две колонки экрана занятости равной высоты (2015:11068): в макете
+        // 935px при артборде 1080, здесь — нижняя граница, дальше по контенту.
+        'availability-columns': '36rem',
+      },
+      letterSpacing: {
+        // Подписи селекторов-фильтров (2015:12038).
+        filter: '0.5px',
+      },
+      maxWidth: {
+        // Ширина текста пустых состояний: 340px при 13px (2015:11338)
+        // и 400px при 14px (2015:11167). Обе вне шкалы Tailwind.
+        'state-text': '340px',
+        'state-text-wide': '400px',
+      },
+      borderWidth: {
+        // Рамка активного слота и кнопки «Отменить» (2015:12018, 2015:11553).
+        1.5: '1.5px',
       },
       boxShadow: {
         card: '0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.08)',

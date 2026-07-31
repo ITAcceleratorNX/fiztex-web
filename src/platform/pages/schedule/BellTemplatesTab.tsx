@@ -1,395 +1,434 @@
-import { useMemo, useState, type ReactNode } from 'react';
-import {
-  Bell,
-  Copy,
-  Eye,
-  EyeOff,
-  Link2,
-  Pencil,
-  Plus,
-} from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { Field, TextInput, Select } from '@/components/ui/Field';
-import { Modal } from '@/components/ui/Modal';
-import { SearchInput } from '@/components/ui/SearchInput';
-import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
+import { useEffect, useMemo, useState } from 'react';
+import { ChevronDown, Info, Loader2, Pencil, Search } from 'lucide-react';
+import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
-import { groupClassesByGrade } from '@/lib/platformCoreApi';
-import type { BellTemplate, BellTemplateStatus } from '@/lib/scheduleSettingsTypes';
+import { cx, formatDate } from '@/lib/format';
+import { isTemplateInUseError, scheduleSettingsApi } from '@/lib/scheduleSettingsApi';
+import type { BellTemplate, TemplateUsage } from '@/lib/scheduleSettingsTypes';
 import {
-  useActivateBellTemplate,
+  scheduleSettingsKeys,
+  useBellTemplate,
   useBellTemplates,
-  useCopyBellTemplate,
-  useHideBellTemplate,
-  useManyBellTemplates,
   useManyTemplateBindings,
-  useSchoolClasses,
+  useTemplateUsage,
 } from '@/platform/hooks/useScheduleSettings';
-import { formatPeriodRange, summarizeBindings } from './bindingSummary';
+import { useQueryClient } from '@tanstack/react-query';
 import { BellTemplateBindingsModal } from './BellTemplateBindingsModal';
-import { BellTemplateFormModal } from './BellTemplateFormModal';
+import { LessonPeriodsEditor } from './LessonPeriodsEditor';
+import { ScheduleBreadcrumbs } from './ScheduleBreadcrumbs';
+import { ScheduleConfirmModal } from './ScheduleConfirmModal';
+import { TemplateInUseWarning } from './TemplateInUseWarning';
+import { periodsToDraft, type PeriodDraft } from './periodDraft';
 
-type StatusFilter = 'ACTIVE' | 'HIDDEN' | 'ALL';
+/** Отложенное действие, которое ждёт подтверждения «шаблон используется». */
+type PendingImpact =
+  | { kind: 'add'; row: PeriodDraft }
+  | { kind: 'update'; row: PeriodDraft }
+  | { kind: 'delete'; row: PeriodDraft };
 
-export function BellTemplatesTab({
-  yearId,
-  yearName,
-}: {
-  yearId: number;
-  yearName: string;
-}) {
+export function BellTemplatesTab({ yearId }: { yearId: number }) {
   const toast = useToast();
+  const qc = useQueryClient();
+
   const templatesQuery = useBellTemplates(yearId);
-  const classesQuery = useSchoolClasses(yearId);
-  const templates = templatesQuery.data?.content ?? [];
-  const templateIds = useMemo(() => templates.map((t) => t.id), [templates]);
-  const bindingsQueries = useManyTemplateBindings(templateIds);
-  // list returns periods=[] — enrich from get-by-id (also warms form cache)
-  const detailQueries = useManyBellTemplates(templateIds);
-
-  const hideMutation = useHideBellTemplate(yearId);
-  const activateMutation = useActivateBellTemplate(yearId);
-  const copyMutation = useCopyBellTemplate(yearId);
-
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ACTIVE');
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<BellTemplate | null>(null);
-  const [bindingsTemplate, setBindingsTemplate] = useState<BellTemplate | null>(null);
-  const [copySource, setCopySource] = useState<BellTemplate | null>(null);
-  const [copyName, setCopyName] = useState('');
-  const [statusTarget, setStatusTarget] = useState<BellTemplate | null>(null);
-
-  const gradeGroups = useMemo(
-    () => groupClassesByGrade(classesQuery.data?.content ?? []),
-    [classesQuery.data],
+  const templates = useMemo(
+    () => templatesQuery.data?.content ?? [],
+    [templatesQuery.data],
   );
 
-  const bindingsById = useMemo(() => {
-    const map = new Map<number, (typeof bindingsQueries)[number]['data']>();
-    templateIds.forEach((id, index) => {
-      map.set(id, bindingsQueries[index]?.data);
-    });
-    return map;
-  }, [templateIds, bindingsQueries]);
+  const [search, setSearch] = useState('');
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [rows, setRows] = useState<PeriodDraft[]>([]);
+  const [seededFor, setSeededFor] = useState<number | null>(null);
+  const [bindingsOpen, setBindingsOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<PeriodDraft | null>(null);
+  const [pendingImpact, setPendingImpact] = useState<PendingImpact | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
 
-  const detailsById = useMemo(() => {
-    const map = new Map<number, BellTemplate | undefined>();
-    templateIds.forEach((id, index) => {
-      map.set(id, detailQueries[index]?.data);
-    });
-    return map;
-  }, [templateIds, detailQueries]);
+  const detailQuery = useBellTemplate(selectedId);
+  const detail = detailQuery.data ?? null;
+  const usageQuery = useTemplateUsage(selectedId);
+
+  const templateIds = useMemo(() => templates.map((t) => t.id), [templates]);
+  const bindingsQueries = useManyTemplateBindings(templateIds);
+  const bindingNames = useMemo(() => {
+    const index = templateIds.indexOf(selectedId ?? -1);
+    if (index < 0) return [] as string[];
+    return (bindingsQueries[index]?.data ?? []).map((b) => b.className);
+  }, [templateIds, selectedId, bindingsQueries]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return templates.filter((t) => {
-      if (statusFilter !== 'ALL' && t.status !== statusFilter) return false;
-      if (q && !t.name.toLowerCase().includes(q)) return false;
-      return true;
-    });
-  }, [templates, search, statusFilter]);
+    return q ? templates.filter((t) => t.name.toLowerCase().includes(q)) : templates;
+  }, [templates, search]);
 
-  function openCreate() {
-    setEditing(null);
-    setFormOpen(true);
+  // Первый шаблон выбирается автоматически.
+  useEffect(() => {
+    if (selectedId != null || templates.length === 0) return;
+    setSelectedId(templates[0]!.id);
+  }, [templates, selectedId]);
+
+  // Сетка уроков приходит только из get-by-id: в списке periods=[].
+  useEffect(() => {
+    if (!detail || detail.id !== selectedId) return;
+    if (seededFor === detail.id) return;
+    setRows(periodsToDraft(detail.periods));
+    setNameDraft(detail.name);
+    setSeededFor(detail.id);
+  }, [detail, selectedId, seededFor]);
+
+  function selectTemplate(id: number) {
+    setSelectedId(id);
+    setSeededFor(null);
+    setEditing(false);
+    setPickerOpen(false);
   }
 
-  function openEdit(template: BellTemplate) {
-    setEditing(template);
-    setFormOpen(true);
+  async function refreshTemplate(id: number) {
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: scheduleSettingsKeys.bellTemplate(id) }),
+      qc.invalidateQueries({ queryKey: scheduleSettingsKeys.bellTemplates(yearId) }),
+      qc.invalidateQueries({ queryKey: scheduleSettingsKeys.templateUsage(id) }),
+    ]);
+    setSeededFor(null);
   }
 
-  function openCopy(template: BellTemplate) {
-    setCopySource(template);
-    setCopyName(`${template.name} (копия)`);
-  }
-
-  async function submitCopy() {
-    if (!copySource) return;
+  async function runPersist(action: PendingImpact, confirmImpact: boolean) {
+    if (!selectedId) return;
+    setBusy(true);
     try {
-      const copied = await copyMutation.mutateAsync({
-        id: copySource.id,
-        body: { name: copyName.trim() || undefined },
+      if (action.kind === 'delete') {
+        if (action.row.id != null) {
+          await scheduleSettingsApi.deletePeriod(selectedId, action.row.id, confirmImpact);
+        }
+      } else if (action.row.id == null) {
+        await scheduleSettingsApi.addPeriod(selectedId, {
+          lessonNumber: action.row.lessonNumber,
+          startTime: action.row.startTime,
+          endTime: action.row.endTime,
+          sortOrder: action.row.lessonNumber,
+          confirmImpact,
+        });
+      } else {
+        await scheduleSettingsApi.updatePeriod(selectedId, action.row.id, {
+          lessonNumber: action.row.lessonNumber,
+          startTime: action.row.startTime,
+          endTime: action.row.endTime,
+          sortOrder: action.row.lessonNumber,
+          confirmImpact,
+        });
+      }
+      setPendingImpact(null);
+      await refreshTemplate(selectedId);
+    } catch (err) {
+      if (isTemplateInUseError(err)) {
+        setPendingImpact(action);
+        return;
+      }
+      toast.error(err instanceof Error ? err.message : 'Не удалось сохранить урок');
+      await refreshTemplate(selectedId);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function commitRow(row: PeriodDraft) {
+    void runPersist({ kind: row.id == null ? 'add' : 'update', row }, false);
+  }
+
+  async function saveName() {
+    if (!selectedId || !detail) return;
+    const trimmed = nameDraft.trim();
+    if (!trimmed || trimmed === detail.name) {
+      setNameDraft(detail.name);
+      return;
+    }
+    try {
+      await scheduleSettingsApi.updateBellTemplate(selectedId, { name: trimmed });
+      await refreshTemplate(selectedId);
+      toast.success('Название обновлено');
+    } catch (err) {
+      setNameDraft(detail.name);
+      toast.error(err instanceof Error ? err.message : 'Не удалось переименовать');
+    }
+  }
+
+  async function createTemplate() {
+    setBusy(true);
+    try {
+      const created = await scheduleSettingsApi.createBellTemplate({
+        academicYearId: yearId,
+        name: 'Новый шаблон',
       });
-      toast.success('Копия создана — открываем редактор');
-      setCopySource(null);
-      setEditing(copied);
-      setFormOpen(true);
+      await qc.invalidateQueries({ queryKey: scheduleSettingsKeys.bellTemplates(yearId) });
+      selectTemplate(created.id);
+      setEditing(true);
+      toast.success('Шаблон создан');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Не удалось создать шаблон');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function copyTemplate() {
+    if (!selectedId || !detail) return;
+    setBusy(true);
+    try {
+      const copied = await scheduleSettingsApi.copyBellTemplate(selectedId, {
+        name: `${detail.name} (копия)`,
+      });
+      await qc.invalidateQueries({ queryKey: scheduleSettingsKeys.bellTemplates(yearId) });
+      selectTemplate(copied.id);
+      setEditing(true);
+      toast.success('Создана копия шаблона');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Не удалось скопировать');
+    } finally {
+      setBusy(false);
     }
   }
 
-  async function confirmStatusChange() {
-    if (!statusTarget) return;
-    try {
-      if (statusTarget.status === 'ACTIVE') {
-        await hideMutation.mutateAsync(statusTarget.id);
-        toast.success('Шаблон скрыт');
-      } else {
-        await activateMutation.mutateAsync(statusTarget.id);
-        toast.success('Шаблон активирован');
-      }
-      setStatusTarget(null);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не удалось изменить статус');
-    }
-  }
-
-  const listEmpty = !templatesQuery.isLoading && !templatesQuery.isError && filtered.length === 0;
-  const noTemplatesAtAll = templates.length === 0;
+  const noTemplates =
+    !templatesQuery.isLoading && !templatesQuery.isError && templates.length === 0;
 
   return (
-    <div>
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Поиск по названию…"
-          className="sm:max-w-xs"
-        />
-        <div className="sm:w-44">
-          <Select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+    <div className="flex flex-col gap-8">
+      <ScheduleBreadcrumbs current="Шаблоны звонков" />
+
+      {/* 2015:8040 — dropdown-trigger-area */}
+      <div className="flex flex-wrap items-start gap-4">
+        <label className="relative flex min-w-[220px] flex-1 items-center gap-2 rounded-md border border-line bg-gray-50 px-2.5 py-1.5">
+          <Search className="size-3.5 shrink-0 text-gray-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Поиск шаблона"
+            className="w-full bg-transparent text-13 text-ink outline-none placeholder:text-gray-400"
+          />
+        </label>
+
+        <div className="relative w-[236px]">
+          <button
+            type="button"
+            onClick={() => setPickerOpen((v) => !v)}
+            disabled={templates.length === 0}
+            className="flex w-full items-center justify-between rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium text-ink disabled:opacity-50"
           >
-            <option value="ACTIVE">Активные</option>
-            <option value="HIDDEN">Скрытые</option>
-            <option value="ALL">Все</option>
-          </Select>
+            <span className="truncate">{detail?.name ?? 'Выберите шаблон'}</span>
+            <ChevronDown className={cx('size-4 shrink-0 transition', pickerOpen && 'rotate-180')} />
+          </button>
+
+          {pickerOpen && filtered.length > 0 && (
+            <div className="absolute z-20 mt-1 flex w-full flex-col gap-1 rounded-lg border border-line bg-white p-1 shadow-popover">
+              {filtered.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => selectTemplate(t.id)}
+                  className={cx(
+                    'rounded-lg p-2 text-left text-13 font-medium transition hover:bg-gray-50',
+                    t.id === selectedId ? 'text-navy-700' : 'text-ink',
+                  )}
+                >
+                  {t.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-        <Button icon={<Plus className="h-4 w-4" />} onClick={openCreate} className="sm:ml-auto">
-          Создать шаблон
-        </Button>
+
+        <button
+          type="button"
+          onClick={() => void createTemplate()}
+          disabled={busy}
+          className="py-2 text-sm font-semibold text-navy-700 transition hover:text-navy-800 disabled:opacity-50"
+        >
+          + Новый шаблон
+        </button>
       </div>
 
       {templatesQuery.isLoading && <LoadingBlock label="Загрузка шаблонов…" />}
       {templatesQuery.isError && (
         <ErrorBlock
-          message={
-            templatesQuery.error instanceof Error
-              ? templatesQuery.error.message
-              : 'Не удалось загрузить шаблоны'
-          }
+          message="Не удалось загрузить шаблоны"
           onRetry={() => void templatesQuery.refetch()}
         />
       )}
 
-      {listEmpty && noTemplatesAtAll && (
-        <div className="card">
-          <EmptyBlock
-            icon={<Bell className="h-7 w-7" />}
-            title="Шаблонов звонков пока нет"
-            description="Создайте первый шаблон с сеткой уроков для выбранного учебного года."
-            action={
-              <Button icon={<Plus className="h-4 w-4" />} onClick={openCreate}>
-                Создать шаблон
-              </Button>
-            }
-          />
+      {/* 2015:8052 — empty-state-card */}
+      {noTemplates && (
+        <div className="flex flex-col items-center justify-center gap-6 rounded-xl border border-line bg-white p-16">
+          <span className="flex size-16 items-center justify-center rounded-full bg-info-bg">
+            <Info className="size-6 text-navy-700" />
+          </span>
+          <div className="flex flex-col items-center gap-2 text-center">
+            <p className="text-lg font-semibold text-ink">Шаблонов пока нет</p>
+            <p className="text-sm text-muted">Создайте первый шаблон для настройки расписания</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void createTemplate()}
+            disabled={busy}
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60"
+          >
+            {busy && <Loader2 className="size-4 animate-spin" />}
+            Создать шаблон
+          </button>
         </div>
       )}
 
-      {listEmpty && !noTemplatesAtAll && (
-        <div className="card">
-          <EmptyBlock
-            title="Ничего не найдено"
-            description="Измените поиск или фильтр статуса."
-          />
-        </div>
-      )}
+      {selectedId != null && !noTemplates && (
+        <>
+          {/* 2015:8524 — template-header */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              {editing ? (
+                <input
+                  value={nameDraft}
+                  onChange={(e) => setNameDraft(e.target.value)}
+                  onBlur={() => void saveName()}
+                  className="rounded-lg border border-line px-2 py-1 text-xl font-semibold text-ink outline-none focus:border-navy-700"
+                />
+              ) : (
+                <h2 className="text-xl font-semibold text-ink">{detail?.name ?? '—'}</h2>
+              )}
+              {editing && <Pencil className="size-4 text-gray-400" />}
 
-      {!templatesQuery.isLoading && !templatesQuery.isError && filtered.length > 0 && (
-        <div className="card overflow-hidden p-0">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-100 bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-3 font-semibold">Название</th>
-                <th className="px-4 py-3 font-semibold">Статус</th>
-                <th className="px-4 py-3 font-semibold">Уроки</th>
-                <th className="px-4 py-3 font-semibold">Время</th>
-                <th className="px-4 py-3 font-semibold">Классы</th>
-                <th className="px-4 py-3 font-semibold text-right">Действия</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((template) => {
-                const bindings = bindingsById.get(template.id) ?? [];
-                const detail = detailsById.get(template.id);
-                const periods = detail?.periods;
-                return (
-                  <tr key={template.id} className="border-b border-slate-50 last:border-0">
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        className="font-medium text-slate-900 hover:text-brand-700"
-                        onClick={() => openEdit(template)}
-                      >
-                        {template.name}
-                      </button>
-                      {template.description && (
-                        <p className="mt-0.5 line-clamp-1 text-xs text-slate-400">
-                          {template.description}
-                        </p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={template.status} />
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {periods == null ? '…' : periods.length}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-slate-600">
-                      {periods == null ? '…' : formatPeriodRange(periods)}
-                    </td>
-                    <td className="max-w-[14rem] px-4 py-3 text-slate-600">
-                      <span className="line-clamp-2">
-                        {summarizeBindings(bindings, gradeGroups)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap justify-end gap-1">
-                        <IconAction label="Редактировать" onClick={() => openEdit(template)}>
-                          <Pencil className="h-4 w-4" />
-                        </IconAction>
-                        <IconAction label="Копировать" onClick={() => openCopy(template)}>
-                          <Copy className="h-4 w-4" />
-                        </IconAction>
-                        <IconAction
-                          label="Привязки"
-                          onClick={() => setBindingsTemplate(template)}
-                          disabled={template.status === 'HIDDEN'}
-                          title={
-                            template.status === 'HIDDEN'
-                              ? 'Активируйте шаблон для привязки классов'
-                              : undefined
-                          }
-                        >
-                          <Link2 className="h-4 w-4" />
-                        </IconAction>
-                        <IconAction
-                          label={template.status === 'ACTIVE' ? 'Скрыть' : 'Активировать'}
-                          onClick={() => setStatusTarget(template)}
-                        >
-                          {template.status === 'ACTIVE' ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </IconAction>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+              {bindingNames.length > 0 && (
+                <span className="rounded bg-gray-100 px-2 py-0.5 text-11 font-semibold text-gray-600">
+                  {bindingNames.slice(0, 3).join(', ')}
+                  {bindingNames.length > 3 ? ` +${bindingNames.length - 3}` : ''}
+                </span>
+              )}
 
-      <BellTemplateFormModal
-        open={formOpen}
-        onClose={() => {
-          setFormOpen(false);
-          setEditing(null);
-        }}
-        yearId={yearId}
-        yearName={yearName}
-        template={editing}
-        onSaved={() => void templatesQuery.refetch()}
-        onOpenCopy={(copied) => {
-          setEditing(copied);
-          setFormOpen(true);
-        }}
-      />
+              <StatusBadge template={detail} />
+
+              {detail && (
+                <span className="text-xs text-gray-400">
+                  Обновлено {formatDate(detail.updatedAt)}
+                </span>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <HeaderButton onClick={() => setBindingsOpen(true)}>Назначить классы</HeaderButton>
+              {!editing && (
+                <>
+                  <HeaderButton onClick={() => void copyTemplate()} disabled={busy}>
+                    Создать копию
+                  </HeaderButton>
+                  <HeaderButton onClick={() => setEditing(true)} icon>
+                    Редактировать
+                  </HeaderButton>
+                </>
+              )}
+              {editing && <HeaderButton onClick={() => setEditing(false)}>Готово</HeaderButton>}
+            </div>
+          </div>
+
+          {detailQuery.isLoading && <LoadingBlock label="Загрузка уроков…" />}
+
+          {detail && (
+            <LessonPeriodsEditor
+              rows={rows}
+              onChange={setRows}
+              onCommitRow={commitRow}
+              onRequestDelete={(row) => setDeleteTarget(row)}
+              disabled={!editing || busy}
+            />
+          )}
+        </>
+      )}
 
       <BellTemplateBindingsModal
-        open={bindingsTemplate != null}
-        onClose={() => setBindingsTemplate(null)}
+        open={bindingsOpen}
+        onClose={() => setBindingsOpen(false)}
         yearId={yearId}
-        template={bindingsTemplate}
+        template={detail}
         allTemplates={templates}
       />
 
-      <Modal
-        open={copySource != null}
-        onClose={() => setCopySource(null)}
-        title="Копировать шаблон"
-        size="sm"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setCopySource(null)}>
-              Отмена
-            </Button>
-            <Button loading={copyMutation.isPending} onClick={() => void submitCopy()}>
-              Создать копию
-            </Button>
-          </>
-        }
-      >
-        <Field label="Название копии" required>
-          <TextInput
-            value={copyName}
-            onChange={(e) => setCopyName(e.target.value)}
-            autoFocus
-          />
-        </Field>
-      </Modal>
+      <TemplateInUseWarning
+        open={pendingImpact != null}
+        usage={(usageQuery.data as TemplateUsage | undefined) ?? null}
+        loading={busy}
+        onCancel={() => {
+          setPendingImpact(null);
+          if (selectedId) void refreshTemplate(selectedId);
+        }}
+        onConfirmImpact={() => {
+          if (pendingImpact) void runPersist(pendingImpact, true);
+        }}
+        onCopy={() => {
+          setPendingImpact(null);
+          void copyTemplate();
+        }}
+      />
 
-      <ConfirmDialog
-        open={statusTarget != null}
-        onClose={() => setStatusTarget(null)}
-        title={statusTarget?.status === 'ACTIVE' ? 'Скрыть шаблон?' : 'Активировать шаблон?'}
+      <ScheduleConfirmModal
+        open={deleteTarget != null}
+        onClose={() => setDeleteTarget(null)}
+        title="Удалить урок?"
         message={
-          statusTarget?.status === 'ACTIVE'
-            ? 'Скрытый шаблон нельзя назначить новым классам. Существующие привязки сохраняются.'
-            : 'Шаблон снова станет доступен для привязки классов.'
+          deleteTarget
+            ? `Урок №${deleteTarget.lessonNumber} (${deleteTarget.startTime}–${deleteTarget.endTime}) будет удалён.`
+            : ''
         }
-        confirmLabel={statusTarget?.status === 'ACTIVE' ? 'Скрыть' : 'Активировать'}
-        loading={hideMutation.isPending || activateMutation.isPending}
-        onConfirm={() => void confirmStatusChange()}
+        confirmLabel="Удалить"
+        danger
+        loading={busy}
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          const row = deleteTarget;
+          setDeleteTarget(null);
+          if (row.id == null) {
+            setRows((prev) => prev.filter((r) => r.key !== row.key));
+            return;
+          }
+          void runPersist({ kind: 'delete', row }, false);
+        }}
       />
     </div>
   );
 }
 
-function StatusBadge({ status }: { status: BellTemplateStatus }) {
-  return status === 'ACTIVE' ? (
-    <Badge tone="green" dot>
+function StatusBadge({ template }: { template: BellTemplate | null }) {
+  if (!template) return null;
+  return template.status === 'ACTIVE' ? (
+    <span className="rounded bg-success-bg px-2 py-0.5 text-11 font-semibold text-success-fg">
       Активен
-    </Badge>
+    </span>
   ) : (
-    <Badge tone="gray" dot>
-      Скрыт
-    </Badge>
+    <span className="rounded bg-gray-100 px-2 py-0.5 text-11 font-semibold text-gray-600">
+      Черновик
+    </span>
   );
 }
 
-function IconAction({
-  label,
+/** 2015:8533 — btn-secondary в шапке шаблона. */
+function HeaderButton({
   onClick,
-  children,
   disabled,
-  title,
+  icon,
+  children,
 }: {
-  label: string;
   onClick: () => void;
-  children: ReactNode;
   disabled?: boolean;
-  title?: string;
+  icon?: boolean;
+  children: string;
 }) {
   return (
     <button
       type="button"
-      aria-label={label}
-      title={title ?? label}
-      disabled={disabled}
       onClick={onClick}
-      className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+      disabled={disabled}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-13 font-semibold text-muted transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
     >
+      {icon && <Pencil className="size-3.5" />}
       {children}
     </button>
   );

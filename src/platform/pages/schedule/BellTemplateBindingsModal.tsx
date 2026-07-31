@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { X } from 'lucide-react';
-import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/Button';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { Check, Loader2, Minus, X } from 'lucide-react';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
 import { ApiError } from '@/lib/api';
 import { isClassesAlreadyBoundError, boundConflictsFromError } from '@/lib/scheduleSettingsApi';
 import { groupClassesByGrade } from '@/lib/platformCoreApi';
+import { cx, pluralRu } from '@/lib/format';
 import type { BellTemplate, BoundClassConflict } from '@/lib/scheduleSettingsTypes';
 import {
   buildOccupiedClassMap,
@@ -17,8 +15,42 @@ import {
   useTemplateBindings,
   useUnassignBinding,
 } from '@/platform/hooks/useScheduleSettings';
-import { ClassGradePicker } from './ClassGradePicker';
+import { ModalActions, ModalCard, MODAL_SECONDARY } from './ModalCard';
+import { ScheduleConfirmModal } from './ScheduleConfirmModal';
 
+/** Чекбокс по 2015:9273 — 16px, radius 4, рамка 1.5px #9ca3af. */
+function PickerCheckbox({
+  checked,
+  indeterminate,
+  disabled,
+}: {
+  checked: boolean;
+  indeterminate?: boolean;
+  disabled?: boolean;
+}) {
+  const on = checked || indeterminate;
+  return (
+    <span
+      aria-hidden
+      className={cx(
+        'flex size-4 shrink-0 items-center justify-center rounded border-[1.5px] transition',
+        on ? 'border-navy-700 bg-navy-700 text-white' : 'border-gray-400 bg-white',
+        disabled && 'opacity-50',
+      )}
+    >
+      {indeterminate ? (
+        <Minus className="size-3" strokeWidth={3} />
+      ) : checked ? (
+        <Check className="size-3" strokeWidth={3} />
+      ) : null}
+    </span>
+  );
+}
+
+/**
+ * Назначение шаблона классам. Figma 2015:9262 «modal-centered-card» —
+ * карточка 440, p 24, gap 20; список параллелей с чекбоксами, max-h 320.
+ */
 export function BellTemplateBindingsModal({
   open,
   onClose,
@@ -47,7 +79,6 @@ export function BellTemplateBindingsModal({
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [initialized, setInitialized] = useState(false);
   const [replaceConflicts, setReplaceConflicts] = useState<BoundClassConflict[] | null>(null);
-  const [unassignClassId, setUnassignClassId] = useState<number | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,7 +106,6 @@ export function BellTemplateBindingsModal({
     if (!open) {
       setInitialized(false);
       setReplaceConflicts(null);
-      setUnassignClassId(null);
       setError(null);
       return;
     }
@@ -107,11 +137,6 @@ export function BellTemplateBindingsModal({
     });
   }
 
-  async function applyAssign(classIds: number[], replaceExisting: boolean) {
-    if (classIds.length === 0) return;
-    await assignMutation.mutateAsync({ classIds, replaceExisting });
-  }
-
   async function applyChanges(replaceExisting: boolean) {
     if (!template) return;
     setPending(true);
@@ -122,7 +147,7 @@ export function BellTemplateBindingsModal({
 
       if (toAdd.length > 0) {
         try {
-          await applyAssign(toAdd, replaceExisting);
+          await assignMutation.mutateAsync({ classIds: toAdd, replaceExisting });
         } catch (err) {
           if (isClassesAlreadyBoundError(err)) {
             setReplaceConflicts(boundConflictsFromError(err));
@@ -137,7 +162,7 @@ export function BellTemplateBindingsModal({
       }
 
       setReplaceConflicts(null);
-      toast.success('Привязки обновлены');
+      toast.success('Классы назначены');
       onClose();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Не удалось обновить привязки');
@@ -146,57 +171,42 @@ export function BellTemplateBindingsModal({
     }
   }
 
-  async function confirmUnassign() {
-    if (unassignClassId == null) return;
-    setPending(true);
-    try {
-      await unassignMutation.mutateAsync(unassignClassId);
-      setSelected((prev) => {
-        const next = new Set(prev);
-        next.delete(unassignClassId);
-        return next;
-      });
-      setUnassignClassId(null);
-      toast.success('Привязка снята');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не удалось снять привязку');
-    } finally {
-      setPending(false);
-    }
-  }
-
-  const bindingsLoading =
-    classesQuery.isLoading || ownBindingsQuery.isLoading || allBindingsQueries.some((q) => q.isLoading);
+  const loading =
+    classesQuery.isLoading ||
+    ownBindingsQuery.isLoading ||
+    allBindingsQueries.some((q) => q.isLoading);
 
   return (
     <>
-      <Modal
+      <ModalCard
         open={open}
         onClose={onClose}
-        title="Привязка классов"
-        subtitle={template?.name}
-        size="lg"
-        footer={
-          isHidden ? undefined : (
-            <>
-              <Button variant="secondary" onClick={onClose} disabled={pending}>
-                Отмена
-              </Button>
-              <Button loading={pending} onClick={() => void applyChanges(false)}>
-                Применить
-              </Button>
-            </>
-          )
-        }
+        labelledBy="bindings-title"
+        className="max-w-[440px] gap-5 p-6"
       >
-        {isHidden && (
-          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            Шаблон скрыт — сначала активируйте его, затем назначайте классы.
+        {/* 2015:9263 — modal-header */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <h2 id="bindings-title" className="text-xl font-bold text-ink">
+              Назначить шаблон
+            </h2>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Закрыть"
+              className="text-gray-400 transition hover:text-ink"
+            >
+              <X className="size-4" />
+            </button>
           </div>
-        )}
+          <p className="text-13 text-gray-400">
+            {isHidden ? 'Шаблон скрыт — сначала активируйте его' : 'Выберите хотя бы один класс'}
+          </p>
+        </div>
 
-        {bindingsLoading && <LoadingBlock label="Загрузка классов…" />}
-        {(classesQuery.isError || ownBindingsQuery.isError) && !bindingsLoading && (
+        {loading && <LoadingBlock label="Загрузка классов…" />}
+
+        {(classesQuery.isError || ownBindingsQuery.isError) && !loading && (
           <ErrorBlock
             message="Не удалось загрузить данные привязок"
             onRetry={() => {
@@ -206,52 +216,87 @@ export function BellTemplateBindingsModal({
           />
         )}
 
-        {!bindingsLoading && !classesQuery.isError && gradeGroups.length === 0 && (
-          <EmptyBlock
-            title="Нет активных классов"
-            description="Создайте классы в разделе «Классы»."
-          />
+        {!loading && !classesQuery.isError && gradeGroups.length === 0 && (
+          <EmptyBlock title="Нет активных классов" description="Создайте классы в разделе «Классы»." />
         )}
 
-        {!bindingsLoading && !isHidden && gradeGroups.length > 0 && (
-          <ClassGradePicker
-            gradeGroups={gradeGroups}
-            selectedClassIds={selected}
-            onToggleClass={toggleClass}
-            onToggleGrade={toggleGrade}
-            classMeta={(classId) => {
-              const occupiedBy = occupied.get(classId);
-              const isOwn = ownClassIds.has(classId);
+        {/* 2015:9270 — scrollable-class-list */}
+        {!loading && !isHidden && gradeGroups.length > 0 && (
+          <div className="flex max-h-[320px] flex-col gap-4 overflow-y-auto pr-1">
+            {gradeGroups.map((group) => {
+              const ids = group.classes.map((c) => c.id);
+              const selectedCount = ids.filter((id) => selected.has(id)).length;
+              const allOn = selectedCount === ids.length && ids.length > 0;
+              const someOn = selectedCount > 0 && !allOn;
+
               return (
-                <>
-                  {isOwn && <span className="text-xs text-emerald-600">этот шаблон</span>}
-                  {occupiedBy && (
-                    <span className="truncate text-xs text-amber-700">
-                      занят: {occupiedBy.templateName}
+                <div key={group.grade} className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => toggleGrade(ids)}
+                    className="flex items-center gap-3 py-1 text-left"
+                  >
+                    <PickerCheckbox checked={allOn} indeterminate={someOn} />
+                    <span className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-ink">{group.grade} класс</span>
+                      <span className="text-13 text-muted">
+                        {ids.length} {pluralRu(ids.length, ['класс', 'класса', 'классов'])}
+                      </span>
                     </span>
-                  )}
-                </>
+                  </button>
+
+                  <div className="flex flex-col gap-2 pl-7">
+                    {group.classes.map((schoolClass) => {
+                      const occupiedBy = occupied.get(schoolClass.id);
+                      return (
+                        <button
+                          key={schoolClass.id}
+                          type="button"
+                          onClick={() => toggleClass(schoolClass.id)}
+                          className="flex items-center gap-3 text-left"
+                        >
+                          <PickerCheckbox checked={selected.has(schoolClass.id)} />
+                          <span className="text-sm text-muted">{schoolClass.name}</span>
+                          {occupiedBy && (
+                            <span className="truncate text-11 text-amber-700">
+                              занят: {occupiedBy.templateName}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               );
-            }}
-            classTrailing={(classId) =>
-              ownClassIds.has(classId) ? (
-                <button
-                  type="button"
-                  className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"
-                  aria-label="Снять привязку"
-                  onClick={() => setUnassignClassId(classId)}
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              ) : null
-            }
-          />
+            })}
+          </div>
         )}
 
-        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-      </Modal>
+        {error && <p className="text-13 text-red-600">{error}</p>}
 
-      <ConfirmDialog
+        {/* 2015:9353 — modal-footer */}
+        <ModalActions>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={pending}
+            className={cx(MODAL_SECONDARY, 'text-muted')}
+          >
+            Отмена
+          </button>
+          <button
+            type="button"
+            onClick={() => void applyChanges(false)}
+            disabled={pending || isHidden || selected.size === 0}
+            className="inline-flex items-center gap-2 rounded-lg bg-navy-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-line disabled:text-gray-400"
+          >
+            {pending && <Loader2 className="size-4 animate-spin" />}
+            Назначить
+          </button>
+        </ModalActions>
+      </ModalCard>
+
+      <ScheduleConfirmModal
         open={replaceConflicts != null}
         onClose={() => setReplaceConflicts(null)}
         title="Переназначить классы?"
@@ -279,17 +324,6 @@ export function BellTemplateBindingsModal({
           </div>
         }
         onConfirm={() => void applyChanges(true)}
-      />
-
-      <ConfirmDialog
-        open={unassignClassId != null}
-        onClose={() => setUnassignClassId(null)}
-        title="Снять привязку?"
-        confirmLabel="Снять"
-        danger
-        loading={pending}
-        message="Класс больше не будет связан с этим шаблоном звонков."
-        onConfirm={() => void confirmUnassign()}
       />
     </>
   );
