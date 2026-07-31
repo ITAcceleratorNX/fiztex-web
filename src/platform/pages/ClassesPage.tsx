@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Field';
@@ -11,6 +12,7 @@ import { useToast } from '@/context/ToastContext';
 
 export function ClassesPage() {
   const toast = useToast();
+  const navigate = useNavigate();
   const [yearId, setYearId] = useState<string | 'ALL'>('ALL');
   const [years, setYears] = useState<AcademicYear[]>([]);
   const [classes, setClasses] = useState<SchoolClass[]>([]);
@@ -101,12 +103,26 @@ export function ClassesPage() {
             <tbody>
               {classes.map((item) => (
                 <tr key={item.id} className="border-b border-slate-50 last:border-0">
-                  <td className="px-4 py-3 font-medium text-slate-900">{item.name}</td>
+                  <td className="px-4 py-3 font-medium text-slate-900">
+                    <Link
+                      to={`/admin/classes/${item.id}`}
+                      className="text-navy-700 transition hover:text-navy-800 hover:underline"
+                    >
+                      {item.name}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3 text-slate-600">{item.academicYearName}</td>
                   <td className="px-4 py-3 text-slate-600">{item.studentCount}</td>
                   <td className="px-4 py-3 text-slate-600">{SCHOOL_STATUS_LABELS[item.status]}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/admin/classes/${item.id}`)}
+                      >
+                        Открыть
+                      </Button>
                       {item.status === 'ACTIVE' && (
                         <>
                           <Button

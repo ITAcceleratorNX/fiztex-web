@@ -631,7 +631,7 @@ export function DashboardPage() {
                           </td>
                           <td className="px-2 text-right">
                             <Link
-                              to="/admin/classes"
+                              to={`/admin/classes/${item.id}`}
                               className="text-13 font-semibold text-navy-700 transition hover:text-navy-800"
                             >
                               Просмотреть

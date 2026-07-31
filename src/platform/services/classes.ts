@@ -12,6 +12,7 @@ interface SchoolClassDto {
   status: SchoolRecordStatus;
   createdAt: string;
   updatedAt?: string;
+  studentCount?: number;
 }
 
 function mapClass(dto: SchoolClassDto, yearName = ''): SchoolClass {
@@ -20,7 +21,7 @@ function mapClass(dto: SchoolClassDto, yearName = ''): SchoolClass {
     name: dto.name,
     academicYearId: String(dto.academicYearId),
     academicYearName: yearName,
-    studentCount: 0,
+    studentCount: dto.studentCount ?? 0,
     status: dto.status,
     createdAt: dto.createdAt,
   };

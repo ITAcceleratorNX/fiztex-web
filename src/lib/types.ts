@@ -1,6 +1,7 @@
 // Types mirror the Spring backend DTOs (Scope 1 contract).
 
-export type SubjectStatus = 'ACTIVE' | 'HIDDEN';
+// Unified with school subjects: admissions no longer has a separate subject entity/status.
+export type SubjectStatus = 'ACTIVE' | 'ARCHIVED';
 export type TestStatus = 'DRAFT' | 'ACTIVE' | 'COMPLETED';
 export type VersionStrategy = 'KEEP_CURRENT' | 'NEW_VERSION';
 export type QuestionType = 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'OPEN_TEXT' | 'PHOTO';
@@ -20,20 +21,11 @@ export interface Admin {
   fullName: string;
 }
 
+/** A subject, sourced from the unified «Школьные предметы» (school_subjects). */
 export interface Subject {
   id: number;
   name: string;
-  description: string | null;
   status: SubjectStatus;
-  testCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface SubjectRequest {
-  name: string;
-  description?: string | null;
-  status?: SubjectStatus;
 }
 
 export interface TestVersionSummary {

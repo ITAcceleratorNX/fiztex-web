@@ -38,7 +38,7 @@ describe('TestFormModal', () => {
     toast.success.mockReset();
     toast.error.mockReset();
     vi.mocked(useSubjects).mockReturnValue({
-      data: [{ id: 1, name: 'Math', status: 'ACTIVE', testCount: 0, createdAt: '', description: null }],
+      data: [{ id: 1, name: 'Math', status: 'ACTIVE' }],
     } as ReturnType<typeof useSubjects>);
     vi.mocked(useCreateTest).mockReturnValue({
       isPending: false,

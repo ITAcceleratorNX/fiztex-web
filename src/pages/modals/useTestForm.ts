@@ -84,7 +84,7 @@ export function useTestForm({
     }
   }, [active, test]);
 
-  // Active subjects, plus the test's current subject if it is hidden (so it stays visible on edit).
+  // Active subjects, plus the test's current subject if it is archived (so it stays visible on edit).
   const subjectOptions = useMemo(() => {
     const all = subjects.data ?? [];
     return all.filter((s) => s.status === 'ACTIVE' || s.id === test?.subjectId);

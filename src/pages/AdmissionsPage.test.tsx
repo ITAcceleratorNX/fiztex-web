@@ -10,10 +10,6 @@ vi.mock('@/hooks/queries', () => ({
   useApplicants: () => ({ data: [] }),
 }));
 
-vi.mock('./tabs/SubjectsTab', () => ({
-  SubjectsTab: () => <div>subjects-tab</div>,
-}));
-
 vi.mock('./tabs/AdmissionTestsTab', () => ({
   AdmissionTestsTab: () => <div>tests-tab</div>,
 }));

@@ -11,7 +11,7 @@ import type {
   ResultListItem,
   ScoreAnswerRequest,
   Subject,
-  SubjectRequest,
+  SubjectStatus,
   Material,
   MaterialUpdateRequest,
   MaterialDownloadResponse,
@@ -192,12 +192,15 @@ export const api = {
     return { token: res.token, email: login, fullName: res.fullName };
   },
 
-  // Subjects
-  listSubjects: (signal?: AbortSignal) => request<Subject[]>('/admin/subjects', { signal }),
-  createSubject: (body: SubjectRequest) =>
-    request<Subject>('/admin/subjects', { method: 'POST', body }),
-  updateSubject: (id: number, body: SubjectRequest) =>
-    request<Subject>(`/admin/subjects/${id}`, { method: 'PUT', body }),
+  // Subjects — unified on «Школьные предметы» (school_subjects). Read-only here;
+  // creating/editing subjects lives in the platform «Школьные предметы» section.
+  listSubjects: async (signal?: AbortSignal): Promise<Subject[]> => {
+    const page = await request<Page<{ id: number; name: string; status: SubjectStatus }>>(
+      '/admin/school-subjects?page=0&size=200',
+      { signal },
+    );
+    return page.content.map((s) => ({ id: s.id, name: s.name, status: s.status }));
+  },
 
   // Tests
   listTests: (useAiGeneration?: boolean, signal?: AbortSignal) => {

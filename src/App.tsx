@@ -16,6 +16,7 @@ import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import {
   UsersPage,
   ClassesPage,
+  ClassDetailPage,
   AcademicYearPage,
   PeriodsPage,
   AccessCodesPage,
@@ -66,6 +67,7 @@ export function App() {
         <Route path="/admin" element={<Navigate to="/" replace />} />
         <Route path="/admin/users" element={<UsersPage />} />
         <Route path="/admin/classes" element={<ClassesPage />} />
+        <Route path="/admin/classes/:classId" element={<ClassDetailPage />} />
         <Route path="/admin/academic-year" element={<AcademicYearPage />} />
         <Route path="/admin/periods" element={<PeriodsPage />} />
         {/* Раздел переехал в подстраницы «Расписания» — оставлен редирект для старых ссылок. */}
@@ -79,7 +81,7 @@ export function App() {
 
         {/* Admissions & school modules */}
         {/* Subjects are now a tab inside Вступительные тесты; keep the path as a deep link. */}
-        <Route path="/subjects" element={<Navigate to="/admissions?tab=subjects" replace />} />
+        <Route path="/subjects" element={<Navigate to="/admin/school-subjects" replace />} />
         <Route path="/subjects/:subjectId/materials" element={<SubjectMaterialsPage />} />
         <Route path="/admissions" element={<AdmissionsPage />} />
         <Route path="/admissions/tests/new" element={<TestCreatePage />} />

@@ -4,7 +4,6 @@ import type {
   ApplicantRequest,
   GenerateTestRequest,
   MaterialUpdateRequest,
-  SubjectRequest,
   TestRequest,
 } from '@/lib/types';
 
@@ -32,28 +31,9 @@ export const keys = {
 
 const ADMISSIONS_POLL_MS = 30_000;
 
-// ---- Subjects ----
+// ---- Subjects (read-only; sourced from unified school subjects) ----
 export function useSubjects() {
   return useQuery({ queryKey: keys.subjects, queryFn: ({ signal }) => api.listSubjects(signal) });
-}
-
-export function useCreateSubject() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (body: SubjectRequest) => api.createSubject(body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.subjects }),
-  });
-}
-
-export function useUpdateSubject() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, body }: { id: number; body: SubjectRequest }) => api.updateSubject(id, body),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: keys.subjects });
-      qc.invalidateQueries({ queryKey: ['tests'] });
-    },
-  });
 }
 
 // ---- Tests ----

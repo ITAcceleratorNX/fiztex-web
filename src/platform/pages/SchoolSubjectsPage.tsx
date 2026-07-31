@@ -91,8 +91,8 @@ export function SchoolSubjectsPage() {
   return (
     <div>
       <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Школьные предметы (`school_subjects`) для назначений учителей и расписания. Не путать с
-        предметами вступительных на `/subjects`.
+        Единый список предметов школы: используется в расписании, назначениях учителей, а также во
+        вступительных тестах и учебных материалах.
       </p>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">

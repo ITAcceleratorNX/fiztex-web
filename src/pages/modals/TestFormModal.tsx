@@ -83,7 +83,7 @@ export function TestFormModal({
                 {f.subjectOptions.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
-                    {s.status === 'HIDDEN' ? ' (скрыт)' : ''}
+                    {s.status === 'ARCHIVED' ? ' (архив)' : ''}
                   </option>
                 ))}
               </Select>

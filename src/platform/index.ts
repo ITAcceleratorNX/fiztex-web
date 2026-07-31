@@ -1,5 +1,6 @@
 export { UsersPage } from './pages/UsersPage';
 export { ClassesPage } from './pages/ClassesPage';
+export { ClassDetailPage } from './pages/ClassDetailPage';
 export { AcademicYearPage } from './pages/AcademicYearPage';
 export { PeriodsPage } from './pages/PeriodsPage';
 export { AccessCodesPage } from './pages/AccessCodesPage';

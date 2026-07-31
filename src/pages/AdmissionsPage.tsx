@@ -4,20 +4,18 @@ import { useApplicants, useSubjects, useTests } from '@/hooks/queries';
 import { StatCard } from '@/components/ui/StatCard';
 import { NotificationsBell } from '@/components/admissions/NotificationsBell';
 import { cx } from '@/lib/format';
-import { SubjectsTab } from './tabs/SubjectsTab';
 import { AdmissionTestsTab } from './tabs/AdmissionTestsTab';
 import { ApplicantsTab } from './tabs/ApplicantsTab';
 
-type TabKey = 'subjects' | 'tests' | 'applicants';
+type TabKey = 'tests' | 'applicants';
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: 'subjects', label: 'Предметы' },
   { key: 'tests', label: 'Тесты' },
   { key: 'applicants', label: 'Поступающие' },
 ];
 
 function parseTab(value: string | null): TabKey {
-  if (value === 'subjects' || value === 'applicants') return value;
+  if (value === 'applicants') return value;
   return 'tests';
 }
 
@@ -78,7 +76,6 @@ export function AdmissionsPage() {
       </div>
 
       <div className="mt-6">
-        {tab === 'subjects' && <SubjectsTab />}
         {tab === 'tests' && <AdmissionTestsTab />}
         {tab === 'applicants' && <ApplicantsTab />}
       </div>
