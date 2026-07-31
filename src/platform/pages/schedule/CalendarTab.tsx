@@ -1,12 +1,9 @@
-import { useMemo, useState, type ReactNode } from 'react';
-import { CalendarRange, Eye, EyeOff, Pencil, Plus, Trash2 } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+import { useEffect, useMemo, useState } from 'react';
+import { CalendarRange, Plus, Search } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { Select } from '@/components/ui/Field';
-import { DateRangeInput } from '@/components/ui/DateRangeInput';
-import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
+import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
+import { cx } from '@/lib/format';
 import type {
   CalendarEvent,
   CalendarEventFilters,
@@ -19,46 +16,46 @@ import {
   useDeleteCalendarEvent,
   useHideCalendarEvent,
 } from '@/platform/hooks/useScheduleSettings';
-import {
-  CALENDAR_EVENT_EFFECT_LABELS,
-  CALENDAR_EVENT_STATUS_LABELS,
-  CALENDAR_EVENT_TYPE_DOT,
-  CALENDAR_EVENT_TYPE_LABELS,
-} from '@/platform/labels';
+import { CALENDAR_EVENT_TYPE_LABELS } from '@/platform/labels';
 import { CalendarEventFormModal } from './CalendarEventFormModal';
-import {
-  formatEventDateRange,
-  formatEventScope,
-  groupEventsByMonth,
-} from './calendarFormat';
-import { cx } from '@/lib/format';
+import { EVENT_TYPE_ORDER } from './calendarBadges';
+import { EventsMonthGrid } from './EventsMonthGrid';
+import { EventsTable } from './EventsTable';
+import { monthGridRange, monthOf, type YearMonth } from './calendarMonth';
 
-const EVENT_TYPES: CalendarEventType[] = [
-  'HOLIDAY',
-  'VACATION',
-  'NON_SCHOOL_DAY',
-  'EXAM_DAY',
-  'OTHER',
-];
+const PAGE_SIZE = 20;
+/** Месяц целиком грузится одной страницей — сетке пагинация не нужна. */
+const MONTH_SIZE = 200;
+const SEARCH_DEBOUNCE_MS = 300;
+
+export type CalendarView = 'list' | 'calendar';
 
 export type CalendarFilterState = {
   type: CalendarEventType | '';
   status: CalendarEventStatus | 'ALL';
-  dateFrom: string;
-  dateTo: string;
+  view: CalendarView;
+  /** YYYY-MM — месяц календарного представления. */
+  month: string;
   page: number;
 };
 
 export const DEFAULT_CALENDAR_FILTERS: CalendarFilterState = {
   type: '',
   status: 'ACTIVE',
-  dateFrom: '',
-  dateTo: '',
+  view: 'list',
+  month: '',
   page: 0,
 };
 
-const PAGE_SIZE = 20;
+function currentMonth(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
 
+/**
+ * Карточка «События» школьного календаря (Figma 2015:9752 — список,
+ * 2015:10119 — календарь, 2015:10033 — пусто).
+ */
 export function CalendarTab({
   yearId,
   filters,
@@ -69,17 +66,31 @@ export function CalendarTab({
   onFiltersChange: (next: CalendarFilterState) => void;
 }) {
   const toast = useToast();
-  const apiFilters: CalendarEventFilters = useMemo(
-    () => ({
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => setDebouncedSearch(searchInput.trim()), SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(handle);
+  }, [searchInput]);
+
+  const month: YearMonth = useMemo(
+    () => monthOf(`${filters.month || currentMonth()}-01`),
+    [filters.month],
+  );
+  const isCalendar = filters.view === 'calendar';
+
+  const apiFilters: CalendarEventFilters = useMemo(() => {
+    const base: CalendarEventFilters = {
       type: filters.type || undefined,
       status: filters.status === 'ALL' ? undefined : filters.status,
-      dateFrom: filters.dateFrom || undefined,
-      dateTo: filters.dateTo || undefined,
-      page: filters.page,
-      size: PAGE_SIZE,
-    }),
-    [filters],
-  );
+      title: debouncedSearch || undefined,
+    };
+    if (!isCalendar) return { ...base, page: filters.page, size: PAGE_SIZE };
+    // Сетка показывает и хвосты соседних месяцев — грузим по её границам.
+    const range = monthGridRange(month);
+    return { ...base, dateFrom: range.from, dateTo: range.to, page: 0, size: MONTH_SIZE };
+  }, [filters.type, filters.status, filters.page, debouncedSearch, isCalendar, month]);
 
   const query = useCalendarEvents(yearId, apiFilters);
   const hideMutation = useHideCalendarEvent(yearId);
@@ -93,39 +104,15 @@ export function CalendarTab({
 
   const events = query.data?.content ?? [];
   const totalPages = query.data?.totalPages ?? 0;
-  const totalElements = query.data?.totalElements ?? 0;
-  const monthGroups = useMemo(() => groupEventsByMonth(events), [events]);
+  const filtersApplied = Boolean(filters.type || debouncedSearch) || filters.status !== 'ACTIVE';
 
-  // Backend defaults omitted status → ACTIVE, so probe both to know if the year has any events.
-  const probeActive = useCalendarEvents(yearId, { status: 'ACTIVE', page: 0, size: 1 });
-  const probeHidden = useCalendarEvents(yearId, { status: 'HIDDEN', page: 0, size: 1 });
-  const probesReady = !probeActive.isLoading && !probeHidden.isLoading;
-  const catalogEmpty =
-    probesReady &&
-    (probeActive.data?.totalElements ?? 0) === 0 &&
-    (probeHidden.data?.totalElements ?? 0) === 0;
-
-  const dateRangeInvalid =
-    Boolean(filters.dateFrom) &&
-    Boolean(filters.dateTo) &&
-    filters.dateTo < filters.dateFrom;
-
-  function patchFilters(patch: Partial<CalendarFilterState>) {
-    const next: CalendarFilterState = {
-      ...filters,
-      ...patch,
-      page: patch.page ?? 0,
-    };
-    if (next.dateFrom && next.dateTo && next.dateTo < next.dateFrom) {
-      // Keep a valid LocalDate range without TZ math — clamp the other bound.
-      if (patch.dateFrom !== undefined) next.dateTo = next.dateFrom;
-      else if (patch.dateTo !== undefined) next.dateFrom = next.dateTo;
-    }
-    onFiltersChange(next);
+  function patch(next: Partial<CalendarFilterState>) {
+    onFiltersChange({ ...filters, ...next, page: next.page ?? 0 });
   }
 
-  function resetFilters() {
-    onFiltersChange({ ...DEFAULT_CALENDAR_FILTERS });
+  function openCreate() {
+    setEditing(null);
+    setFormOpen(true);
   }
 
   async function confirmStatus() {
@@ -156,213 +143,134 @@ export function CalendarTab({
   }
 
   return (
-    <div>
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
-        <div className="sm:w-48">
-          <label className="label-base">Тип</label>
-          <Select
-            value={filters.type}
-            onChange={(e) =>
-              patchFilters({ type: e.target.value as CalendarEventType | '' })
-            }
+    <section className="flex flex-col gap-5 rounded-2xl border border-line bg-white p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-base font-semibold text-ink">События</h2>
+        <div className="flex flex-wrap items-center gap-3">
+          <div
+            className="flex gap-0.5 rounded-lg bg-gray-100 p-0.5"
+            role="group"
+            aria-label="Представление событий"
           >
-            <option value="">Все типы</option>
-            {EVENT_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {CALENDAR_EVENT_TYPE_LABELS[t]}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div className="sm:w-40">
-          <label className="label-base">Статус</label>
-          <Select
-            value={filters.status}
-            onChange={(e) =>
-              patchFilters({ status: e.target.value as CalendarEventStatus | 'ALL' })
-            }
+            <ViewTab active={!isCalendar} onClick={() => patch({ view: 'list' })}>
+              Список
+            </ViewTab>
+            <ViewTab active={isCalendar} onClick={() => patch({ view: 'calendar' })}>
+              Календарь
+            </ViewTab>
+          </div>
+          <button
+            type="button"
+            onClick={openCreate}
+            className="rounded-lg bg-brand-500 px-4 py-2 text-13 font-semibold text-white transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           >
-            <option value="ACTIVE">Активные</option>
-            <option value="HIDDEN">Скрытые</option>
-            <option value="ALL">Все</option>
-          </Select>
+            + Добавить событие
+          </button>
         </div>
-        <DateRangeInput
-          from={filters.dateFrom}
-          to={filters.dateTo}
-          onFromChange={(dateFrom) => patchFilters({ dateFrom })}
-          onToChange={(dateTo) => patchFilters({ dateTo })}
-          error={dateRangeInvalid ? 'Дата «по» должна быть не раньше даты «с»' : undefined}
-        />
-        <Button variant="secondary" size="sm" onClick={resetFilters}>
-          Сброс
-        </Button>
-        <Button
-          icon={<Plus className="h-4 w-4" />}
-          className="lg:ml-auto"
-          onClick={() => {
-            setEditing(null);
-            setFormOpen(true);
-          }}
-        >
-          Добавить событие
-        </Button>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Фильтр по типу события">
+          <FilterPill active={filters.type === ''} onClick={() => patch({ type: '' })}>
+            Все
+          </FilterPill>
+          {EVENT_TYPE_ORDER.map((type) => (
+            <FilterPill
+              key={type}
+              active={filters.type === type}
+              onClick={() => patch({ type })}
+            >
+              {CALENDAR_EVENT_TYPE_LABELS[type]}
+            </FilterPill>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Скрытых событий в макете нет, но иначе они недостижимы из админки. */}
+          <label className="flex items-center gap-2 text-13 text-muted">
+            <input
+              type="checkbox"
+              checked={filters.status === 'ALL'}
+              onChange={(e) => patch({ status: e.target.checked ? 'ALL' : 'ACTIVE' })}
+              className="size-4 rounded border-subtle text-navy-700 focus-visible:ring-navy-700"
+            />
+            Показывать скрытые
+          </label>
+          <label className="flex w-filter-select items-center gap-2 rounded-lg border border-line px-3 py-2 transition focus-within:border-navy-700">
+            <Search className="size-3.5 shrink-0 text-subtle" aria-hidden />
+            <span className="sr-only">Поиск событий</span>
+            <input
+              type="search"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Поиск событий"
+              className="w-full min-w-0 bg-transparent text-13 text-ink outline-none placeholder:text-subtle"
+            />
+          </label>
+        </div>
       </div>
 
       {query.isLoading && <LoadingBlock label="Загрузка календаря…" />}
       {query.isError && (
         <ErrorBlock
           message={
-            query.error instanceof Error
-              ? query.error.message
-              : 'Не удалось загрузить события'
+            query.error instanceof Error ? query.error.message : 'Не удалось загрузить события'
           }
           onRetry={() => void query.refetch()}
         />
       )}
 
-      {!query.isLoading && !query.isError && events.length === 0 && !probesReady && (
-        <LoadingBlock label="Проверяем календарь…" />
-      )}
-
-      {!query.isLoading && !query.isError && events.length === 0 && probesReady && catalogEmpty && (
-        <div className="card">
-          <EmptyBlock
-            icon={<CalendarRange className="h-7 w-7" />}
-            title="Событий пока нет"
-            description="Добавьте праздник, каникулы или неучебный день."
-            action={
-              <Button
-                icon={<Plus className="h-4 w-4" />}
-                onClick={() => {
-                  setEditing(null);
+      {!query.isLoading && !query.isError && (
+        <>
+          {isCalendar ? (
+            <EventsMonthGrid
+              month={month}
+              events={events}
+              onMonthChange={(next) =>
+                patch({ month: `${next.year}-${String(next.month).padStart(2, '0')}` })
+              }
+              onEventClick={(event) => {
+                setEditing(event);
+                setFormOpen(true);
+              }}
+            />
+          ) : events.length === 0 ? (
+            <EmptyEvents filtersApplied={filtersApplied} onCreate={openCreate} onReset={() => patch({ ...DEFAULT_CALENDAR_FILTERS, view: filters.view })} />
+          ) : (
+            <>
+              <EventsTable
+                events={events}
+                onEdit={(event) => {
+                  setEditing(event);
                   setFormOpen(true);
                 }}
-              >
-                Добавить событие
-              </Button>
-            }
-          />
-        </div>
-      )}
-
-      {!query.isLoading &&
-        !query.isError &&
-        events.length === 0 &&
-        probesReady &&
-        !catalogEmpty && (
-        <div className="card">
-          <EmptyBlock
-            title="Ничего не найдено"
-            description="Измените фильтры или сбросьте их — в году есть другие события."
-            action={
-              <Button variant="secondary" onClick={resetFilters}>
-                Сбросить фильтры
-              </Button>
-            }
-          />
-        </div>
-      )}
-
-      {!query.isLoading && !query.isError && events.length > 0 && (
-        <div className="space-y-6">
-          {monthGroups.map((group) => (
-            <div key={group.key}>
-              <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-500">
-                {group.title}
-              </h3>
-              <div className="card overflow-hidden p-0">
-                <ul className="divide-y divide-slate-50">
-                  {group.events.map((event) => (
-                    <li
-                      key={event.id}
-                      className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center"
+                onToggleStatus={setStatusTarget}
+                onDelete={setDeleteTarget}
+              />
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between gap-3 text-13 text-muted">
+                  <span>
+                    Стр. {filters.page + 1} из {totalPages}
+                  </span>
+                  <div className="flex gap-2">
+                    <PageButton
+                      disabled={filters.page <= 0}
+                      onClick={() => onFiltersChange({ ...filters, page: filters.page - 1 })}
                     >
-                      <div className="flex min-w-0 flex-1 items-start gap-3">
-                        <span
-                          className={cx(
-                            'mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full',
-                            CALENDAR_EVENT_TYPE_DOT[event.type],
-                          )}
-                          aria-hidden
-                        />
-                        <div className="min-w-0">
-                          <p className="font-semibold text-slate-900">{event.title}</p>
-                          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                            <Badge tone="gray">{CALENDAR_EVENT_TYPE_LABELS[event.type]}</Badge>
-                            <span className="text-xs text-slate-500">
-                              {formatEventDateRange(event.dateFrom, event.dateTo)}
-                            </span>
-                            <span className="text-xs text-slate-400">·</span>
-                            <span className="text-xs text-slate-500">
-                              {formatEventScope(event)}
-                            </span>
-                            <Badge tone={event.effect === 'NO_LESSONS' ? 'red' : 'blue'}>
-                              {CALENDAR_EVENT_EFFECT_LABELS[event.effect]}
-                            </Badge>
-                            <Badge tone={event.status === 'ACTIVE' ? 'green' : 'gray'} dot>
-                              {CALENDAR_EVENT_STATUS_LABELS[event.status]}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex shrink-0 gap-1 self-end sm:self-center">
-                        <IconBtn
-                          label="Редактировать"
-                          onClick={() => {
-                            setEditing(event);
-                            setFormOpen(true);
-                          }}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </IconBtn>
-                        <IconBtn
-                          label={event.status === 'ACTIVE' ? 'Скрыть' : 'Активировать'}
-                          onClick={() => setStatusTarget(event)}
-                        >
-                          {event.status === 'ACTIVE' ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </IconBtn>
-                        <IconBtn label="Удалить" onClick={() => setDeleteTarget(event)}>
-                          <Trash2 className="h-4 w-4" />
-                        </IconBtn>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ))}
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between gap-3 text-sm text-slate-500">
-              <span>
-                Стр. {filters.page + 1} из {totalPages} · {totalElements} событий
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={filters.page <= 0}
-                  onClick={() => onFiltersChange({ ...filters, page: filters.page - 1 })}
-                >
-                  Назад
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={filters.page + 1 >= totalPages}
-                  onClick={() => onFiltersChange({ ...filters, page: filters.page + 1 })}
-                >
-                  Далее
-                </Button>
-              </div>
-            </div>
+                      Назад
+                    </PageButton>
+                    <PageButton
+                      disabled={filters.page + 1 >= totalPages}
+                      onClick={() => onFiltersChange({ ...filters, page: filters.page + 1 })}
+                    >
+                      Далее
+                    </PageButton>
+                  </div>
+                </div>
+              )}
+            </>
           )}
-        </div>
+        </>
       )}
 
       <CalendarEventFormModal
@@ -399,36 +307,136 @@ export function CalendarTab({
         loading={deleteMutation.isPending}
         message={
           <div className="space-y-2">
-            <p>
-              «{deleteTarget?.title}» будет удалено безвозвратно.
-            </p>
-            <p className="text-slate-500">
+            <p>«{deleteTarget?.title}» будет удалено безвозвратно.</p>
+            <p className="text-muted">
               Если нужно лишь убрать из актуального календаря — лучше выбрать «Скрыть».
             </p>
           </div>
         }
         onConfirm={() => void confirmDelete()}
       />
+    </section>
+  );
+}
+
+/** «Событий пока нет» (2015:10033) и результат фильтра без совпадений. */
+function EmptyEvents({
+  filtersApplied,
+  onCreate,
+  onReset,
+}: {
+  filtersApplied: boolean;
+  onCreate: () => void;
+  onReset: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+      <span className="flex size-12 items-center justify-center rounded-full bg-gray-100">
+        <CalendarRange className="size-6 text-subtle" aria-hidden />
+      </span>
+      <div className="flex flex-col gap-1">
+        <p className="text-base font-semibold text-ink">
+          {filtersApplied ? 'Ничего не найдено' : 'Событий пока нет'}
+        </p>
+        <p className="max-w-state-text-wide text-13 text-muted">
+          {filtersApplied
+            ? 'Измените фильтры или очистите поиск — в году есть другие события.'
+            : 'Добавьте первое событие, чтобы управлять расписанием'}
+        </p>
+      </div>
+      {filtersApplied ? (
+        <button
+          type="button"
+          onClick={onReset}
+          className="rounded-lg border border-line px-4 py-2.5 text-13 font-semibold text-muted transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700"
+        >
+          Сбросить фильтры
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={onCreate}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2.5 text-13 font-semibold text-white transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+        >
+          <Plus className="size-4" aria-hidden />
+          Добавить событие
+        </button>
+      )}
     </div>
   );
 }
 
-function IconBtn({
-  label,
+function ViewTab({
+  active,
   onClick,
   children,
 }: {
-  label: string;
+  active: boolean;
   onClick: () => void;
-  children: ReactNode;
+  children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
-      aria-label={label}
-      title={label}
+      aria-pressed={active}
       onClick={onClick}
-      className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+      className={cx(
+        'rounded-md px-3 py-1.5 text-13 transition',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700',
+        active ? 'bg-white font-semibold text-navy-700 shadow-slot' : 'text-muted hover:text-ink',
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function FilterPill({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={cx(
+        'rounded-full border px-3 py-1.5 text-13 font-medium transition',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700',
+        active
+          ? 'border-navy-700 bg-pill-active text-navy-700'
+          : 'border-line bg-white text-muted hover:bg-gray-50',
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function PageButton({
+  disabled,
+  onClick,
+  children,
+}: {
+  disabled: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={cx(
+        'rounded-lg border border-line px-3 py-1.5 text-13 font-medium text-muted transition',
+        'hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700',
+        'disabled:cursor-not-allowed disabled:opacity-40',
+      )}
     >
       {children}
     </button>

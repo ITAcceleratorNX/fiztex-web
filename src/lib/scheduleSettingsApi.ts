@@ -138,6 +138,7 @@ export const scheduleSettingsApi = {
         dateTo: filters.dateTo,
         classId: filters.classId,
         grade: filters.grade,
+        title: filters.title,
         page: filters.page ?? 0,
         size: filters.size ?? 50,
       })}`,

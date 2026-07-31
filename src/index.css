@@ -44,9 +44,26 @@
   /* Рамка «свободного» слота в режиме правки (2015:12018) — отдельный тон,
    * зеленее, чем success-fg. */
   --color-success-border: #10b981; /* = emerald-500 */
-  /* «Требует проверки»: бейдж строки списка и тег статуса (2015:10912). */
+  /* «Требует проверки»: бейдж строки списка и тег статуса (2015:10912).
+   * Он же «Экзаменационный день» в календаре (2015:9823). */
   --color-attention-bg: #ffedd5; /* = orange-100 */
   --color-attention-fg: #c2410c; /* = orange-700 */
+
+  /* Типы событий школьного календаря (2015:9793 и соседние) и статус занятий.
+   * «Экзамены» переиспользует attention-*, «Неучебный день» — neutral-*. */
+  --color-vacation-bg: #f3e8ff; /* = purple-100 */
+  --color-vacation-fg: #7e22ce; /* = purple-700 */
+  --color-holiday-bg: #fef3c7; /* = amber-100 */
+  --color-holiday-fg: #b45309; /* = amber-700 */
+  --color-neutral-bg: #f3f4f6; /* = gray-100 */
+  --color-neutral-fg: #4b5563; /* = gray-600 */
+  --color-no-lessons-bg: #fee2e2; /* = red-100 */
+  --color-no-lessons-fg: #b91c1c; /* = red-700, он же фон кнопки «Отключить» */
+  /* Бейдж «Информационное» — плотнее общего info-bg (2015:9813). */
+  --color-info-badge-bg: #dbeafe; /* = blue-100 */
+  --color-info-fg: #1d4ed8; /* = blue-700, подпись «Информационное» */
+  /* Активная пилюля фильтра календаря — на тон плотнее, чем info-bg (2015:9765). */
+  --color-pill-active-bg: #e9effd;
   /* Подложки баннеров проверки (2015:5448 / 2015:5454) — вне палитры Tailwind */
   --color-danger-bg: #fdecec;
   --color-warning-bg: #fdf7ec;

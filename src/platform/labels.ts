@@ -149,7 +149,7 @@ export const CALENDAR_EVENT_TYPE_LABELS: Record<CalendarEventType, string> = {
   HOLIDAY: 'Праздник',
   VACATION: 'Каникулы',
   NON_SCHOOL_DAY: 'Неучебный день',
-  EXAM_DAY: 'Экзамен / аттестация',
+  EXAM_DAY: 'Экзаменационный день',
   OTHER: 'Другое',
 };
 
@@ -177,9 +177,8 @@ export const ADMIN_PAGE_TITLES: Record<string, string> = {
   '/admin/academic-year': 'Учебный год',
   '/admin/periods': 'Учебные периоды',
   '/lesson-schedule/bell-templates': 'Шаблоны звонков',
-  '/lesson-schedule/calendar': 'Школьный календарь',
-  // Занятость учителей рисует собственную шапку (ScheduleBreadcrumbs),
-  // поэтому AppHeader для неё заголовок не дублирует.
+  // Школьный календарь и занятость учителей рисуют собственную шапку
+  // (ScheduleBreadcrumbs), поэтому AppHeader для них заголовок не дублирует.
   '/lesson-schedule/subgroups': 'Подгруппы классов',
   '/admin/school-subjects': 'Школьные предметы',
   '/admin/access-codes': 'Доступы / коды',

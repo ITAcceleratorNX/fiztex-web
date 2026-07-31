@@ -222,6 +222,8 @@ export interface CalendarEventFilters {
   dateTo?: string;
   classId?: number;
   grade?: string;
+  /** Case-insensitive substring over the event title; filtering happens in SQL. */
+  title?: string;
   page?: number;
   size?: number;
 }

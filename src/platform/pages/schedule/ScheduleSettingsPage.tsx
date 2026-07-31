@@ -5,7 +5,8 @@ import { Select } from '@/components/ui/Field';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useAcademicYears } from '@/platform/hooks/useScheduleSettings';
 import { BellTemplatesTab } from './BellTemplatesTab';
-import { WorkingDaysTab } from './WorkingDaysTab';
+import { ScheduleBreadcrumbs } from './ScheduleBreadcrumbs';
+import { WorkingDaysCard } from './WorkingDaysCard';
 import {
   CalendarTab,
   DEFAULT_CALENDAR_FILTERS,
@@ -44,8 +45,8 @@ export const SCHEDULE_SECTION_TITLES: Record<ScheduleSection, string> = {
 const YEAR_PARAM = 'year';
 const C_TYPE = 'cType';
 const C_STATUS = 'cStatus';
-const C_FROM = 'cFrom';
-const C_TO = 'cTo';
+const C_VIEW = 'cView';
+const C_MONTH = 'cMonth';
 const C_PAGE = 'cPage';
 
 function parseCalendarFilters(params: URLSearchParams): CalendarFilterState {
@@ -56,11 +57,12 @@ function parseCalendarFilters(params: URLSearchParams): CalendarFilterState {
       ? statusRaw
       : 'ACTIVE';
   const page = Number(params.get(C_PAGE) ?? '0');
+  const month = params.get(C_MONTH) ?? '';
   return {
     type: type as CalendarFilterState['type'],
     status,
-    dateFrom: params.get(C_FROM) ?? '',
-    dateTo: params.get(C_TO) ?? '',
+    view: params.get(C_VIEW) === 'calendar' ? 'calendar' : 'list',
+    month: /^\d{4}-\d{2}$/.test(month) ? month : '',
     page: Number.isFinite(page) && page >= 0 ? page : 0,
   };
 }
@@ -72,16 +74,17 @@ function writeCalendarFilters(next: URLSearchParams, filters: CalendarFilterStat
   if (filters.status === DEFAULT_CALENDAR_FILTERS.status) next.delete(C_STATUS);
   else next.set(C_STATUS, filters.status);
 
-  if (filters.dateFrom) next.set(C_FROM, filters.dateFrom);
-  else next.delete(C_FROM);
-  if (filters.dateTo) next.set(C_TO, filters.dateTo);
-  else next.delete(C_TO);
+  if (filters.view === 'calendar') next.set(C_VIEW, filters.view);
+  else next.delete(C_VIEW);
+
+  if (filters.month) next.set(C_MONTH, filters.month);
+  else next.delete(C_MONTH);
 
   if (filters.page > 0) next.set(C_PAGE, String(filters.page));
   else next.delete(C_PAGE);
 }
 
-/** Разделы, которым страница рисует шапку «К расписанию» + селектор года. */
+/** Подгруппы и занятость учителей рисуют возврат и селекторы года сами. */
 function ownsHeader(section: ScheduleSection): boolean {
   return section === 'templates' || section === 'calendar';
 }
@@ -243,7 +246,8 @@ export function ScheduleSettingsPage({ section }: { section: ScheduleSection }) 
 
           {section === 'calendar' && (
             <div className="flex flex-col gap-6">
-              <WorkingDaysTab yearId={selectedYearId} />
+              <ScheduleBreadcrumbs current="Школьный календарь" />
+              <WorkingDaysCard yearId={selectedYearId} />
               <CalendarTab
                 yearId={selectedYearId}
                 filters={calendarFilters}

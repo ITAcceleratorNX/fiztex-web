@@ -39,6 +39,28 @@ export default {
         disabled: 'var(--color-bg-disabled)',
         info: {
           bg: 'var(--color-info-bg)',
+          badge: 'var(--color-info-badge-bg)',
+          fg: 'var(--color-info-fg)',
+        },
+        // Типы событий школьного календаря и статус занятий.
+        vacation: {
+          bg: 'var(--color-vacation-bg)',
+          fg: 'var(--color-vacation-fg)',
+        },
+        holiday: {
+          bg: 'var(--color-holiday-bg)',
+          fg: 'var(--color-holiday-fg)',
+        },
+        neutral: {
+          bg: 'var(--color-neutral-bg)',
+          fg: 'var(--color-neutral-fg)',
+        },
+        'no-lessons': {
+          bg: 'var(--color-no-lessons-bg)',
+          fg: 'var(--color-no-lessons-fg)',
+        },
+        pill: {
+          active: 'var(--color-pill-active-bg)',
         },
         success: {
           bg: 'var(--color-success-bg)',
@@ -77,12 +99,20 @@ export default {
         // чтобы не разъезжались между режимами.
         'slot-row': '70px',
         'slot-row-edit': '60px',
+        // Ячейка месячной сетки школьного календаря (2015:10227).
+        'slot-row-lg': '72px',
       },
       width: {
         // Колонка «ВРЕМЯ» в сетке занятости (2015:10997) — вне 4px-шкалы.
         'slot-time-col': '100px',
         // Селектор фильтра подстраниц расписания (2015:12037).
         'filter-select': '200px',
+        // Фиксированные колонки таблицы событий календаря (2015:9782).
+        // Колонка «ДАТЫ» тянется, остальные держат ширину — как в макете.
+        'col-event-title': '200px',
+        'col-event-type': '180px',
+        'col-event-scope': '150px',
+        'col-event-actions': '60px',
       },
       minWidth: {
         // Ниже этого сетка занятости уезжает в свой горизонтальный скролл,
@@ -103,6 +133,12 @@ export default {
         // и 400px при 14px (2015:11167). Обе вне шкалы Tailwind.
         'state-text': '340px',
         'state-text-wide': '400px',
+        // Ширина модалки «Новое событие» (2015:10714).
+        'modal-form': '480px',
+      },
+      maxHeight: {
+        // Скролл-список классов в модалке события (2015:10760).
+        'class-list': '320px',
       },
       borderWidth: {
         // Рамка активного слота и кнопки «Отменить» (2015:12018, 2015:11553).
