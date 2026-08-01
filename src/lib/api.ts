@@ -272,6 +272,8 @@ export const api = {
   // Test generation
   generateTest: (testId: number, body: GenerateTestRequest) =>
     request<GenerationJobResponse>(`/tests/${testId}/generate`, { method: 'POST', body }),
+  importQuestions: (testId: number, formData: FormData, signal?: AbortSignal) =>
+    requestMultipart<GenerationJobResponse>(`/tests/${testId}/import-questions`, formData, signal),
   getGenerationJob: (id: number, signal?: AbortSignal) =>
     request<GenerationJobResponse>(`/generation-jobs/${id}`, { signal }),
   listGenerationJobs: (testId: number, signal?: AbortSignal) =>

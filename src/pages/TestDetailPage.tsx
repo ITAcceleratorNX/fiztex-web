@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ListChecks, Pencil, Trash2, UserPlus } from 'lucide-react';
+import { ArrowLeft, FileUp, ListChecks, Pencil, Trash2, UserPlus } from 'lucide-react';
 import { useDeleteTest, useTest, useChangeAssignmentVersion } from '@/hooks/queries';
 import { useToast } from '@/context/ToastContext';
 import { Button } from '@/components/ui/Button';
@@ -13,9 +13,10 @@ import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TestFormModal } from '@/pages/modals/TestFormModal';
 import { TestQuestionsModal } from '@/pages/modals/TestQuestionsModal';
+import { TestImportModal } from '@/pages/modals/TestImportModal';
 import { AssignModal } from '@/pages/modals/AssignModal';
 import { AssignSuccessModal } from '@/pages/modals/AssignSuccessModal';
-import { formatDate, formatDateTime } from '@/lib/format';
+import { formatDate, formatDateTime, pluralRu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 import type { Test, TestVersionSummary } from '@/lib/types';
 
@@ -94,6 +95,7 @@ export function TestDetailPage() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [questionsOpen, setQuestionsOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignSuccessCount, setAssignSuccessCount] = useState<number | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -152,6 +154,13 @@ export function TestDetailPage() {
               >
                 <Trash2 className="h-4 w-4" />
               </button>
+              <Button
+                variant="secondary"
+                icon={<FileUp className="h-4 w-4" />}
+                onClick={() => setImportOpen(true)}
+              >
+                Импорт из Word
+              </Button>
               <Button variant="secondary" icon={<Pencil className="h-4 w-4" />} onClick={() => setEditOpen(true)}>
                 Редактировать
               </Button>
@@ -165,7 +174,10 @@ export function TestDetailPage() {
             <div className="flex items-start justify-end lg:col-start-4">
               <TestStatusBadge status={test.status} />
             </div>
-            <InfoField label="Минимальный балл" value={`${test.minScore} баллов`} />
+            <InfoField
+              label="Минимальный балл"
+              value={`${test.minScore} ${pluralRu(test.minScore, ['балл', 'балла', 'баллов'])}`}
+            />
             <InfoField
               label="Проходной процент"
               value={test.minPercent != null ? `${test.minPercent}%` : '—'}
@@ -281,6 +293,12 @@ export function TestDetailPage() {
 
           <TestFormModal open={editOpen} onClose={() => setEditOpen(false)} test={test} aiTest={false} />
           <TestQuestionsModal open={questionsOpen} onClose={() => setQuestionsOpen(false)} testId={test.id} />
+          <TestImportModal
+            open={importOpen}
+            onClose={() => setImportOpen(false)}
+            test={test}
+            onComplete={() => setQuestionsOpen(true)}
+          />
           <AssignModal
             open={assignOpen}
             onClose={() => setAssignOpen(false)}

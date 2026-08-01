@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, Target, Repeat, Percent, History, Info, ListChecks, Sparkles, FolderOpen } from 'lucide-react';
+import { Clock, Target, Repeat, Percent, History, Info, ListChecks, Sparkles, FolderOpen, FileUp } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -14,6 +14,7 @@ import { DraftQuestionBadge } from '@/components/ui/DraftQuestionBadge';
 import { DraftReviewBanner } from '@/components/ui/DraftReviewBanner';
 import { TestQuestionsModal } from './TestQuestionsModal';
 import { TestGenerateModal } from './TestGenerateModal';
+import { TestImportModal } from './TestImportModal';
 
 function Metric({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
@@ -39,6 +40,7 @@ export function TestCardModal({
   const { data: test, isLoading, isError, error, refetch } = useTest(open ? testId : null);
   const [questionsOpen, setQuestionsOpen] = useState(false);
   const [generateOpen, setGenerateOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const draftCount = test?.draftQuestionCount ?? 0;
   const questionsLabel = test
@@ -72,6 +74,13 @@ export function TestCardModal({
                 onClick={() => setGenerateOpen(true)}
               >
                 Сгенерировать вопросы
+              </Button>
+              <Button
+                variant="secondary"
+                icon={<FileUp className="h-4 w-4" />}
+                onClick={() => setImportOpen(true)}
+              >
+                Импорт из Word
               </Button>
               <Button
                 variant="secondary"
@@ -189,6 +198,17 @@ export function TestCardModal({
         <TestGenerateModal
           open={generateOpen}
           onClose={() => setGenerateOpen(false)}
+          test={test}
+          onComplete={() => {
+            void refetch();
+            setQuestionsOpen(true);
+          }}
+        />
+      )}
+      {test && (
+        <TestImportModal
+          open={importOpen}
+          onClose={() => setImportOpen(false)}
           test={test}
           onComplete={() => {
             void refetch();

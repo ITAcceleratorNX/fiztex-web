@@ -205,6 +205,13 @@ export function useGenerateTest() {
   });
 }
 
+export function useImportQuestions() {
+  return useMutation({
+    mutationFn: ({ testId, formData }: { testId: number; formData: FormData }) =>
+      api.importQuestions(testId, formData),
+  });
+}
+
 export function useGenerationJob(jobId: number | null) {
   return useQuery({
     queryKey: jobId ? keys.generationJob(jobId) : ['generation-jobs', 'none'],

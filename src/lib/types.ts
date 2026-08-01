@@ -306,6 +306,9 @@ export interface MaterialDownloadResponse {
 
 export type GenerationJobStatus = 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED';
 
+/** GENERATE — сочинить вопросы по материалам; IMPORT — перенести готовые из файла. */
+export type GenerationJobKind = 'GENERATE' | 'IMPORT';
+
 export interface GenerateTestRequest {
   materialIds: number[];
   count: number;
@@ -317,6 +320,7 @@ export interface GenerateTestRequest {
 export interface GenerationJobResponse {
   id: number;
   testId: number;
+  kind: GenerationJobKind;
   status: GenerationJobStatus;
   errorMessage: string | null;
   createdAt: string;
@@ -324,6 +328,9 @@ export interface GenerationJobResponse {
   model: string | null;
   inputTokens: number | null;
   outputTokens: number | null;
+  /** Имя загруженного файла — только для IMPORT. */
+  sourceFileName: string | null;
+  addedQuestionCount: number | null;
 }
 
 // ---- Admissions admin (monitoring & notifications) ----
