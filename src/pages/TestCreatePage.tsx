@@ -6,6 +6,7 @@ import { Switch } from '@/components/ui/Switch';
 import { Button } from '@/components/ui/Button';
 import { cx } from '@/lib/format';
 import type { TestStatus } from '@/lib/types';
+import { applicantGradeOptions } from './modals/applicantFormHelpers';
 import { useTestForm } from './modals/useTestForm';
 import { VersionDecisionModal } from './modals/VersionDecisionModal';
 
@@ -157,11 +158,14 @@ export function TestCreatePage() {
             </FormField>
 
             <FormField label="Класс поступления">
-              <TextInput
-                value={f.form.grade}
-                onChange={(e) => f.set('grade', e.target.value)}
-                placeholder="Например: 5 класс"
-              />
+              <Select value={f.form.grade} onChange={(e) => f.set('grade', e.target.value)}>
+                <option value="">Выберите класс</option>
+                {applicantGradeOptions(f.form.grade).map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </Select>
             </FormField>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -178,6 +182,7 @@ export function TestCreatePage() {
                 <TextInput
                   type="number"
                   min={0}
+                  step={0.5}
                   value={f.form.minScore}
                   onChange={(e) => f.set('minScore', e.target.value)}
                 />

@@ -29,6 +29,7 @@ export function ScoreEditor({
             type="number"
             min={0}
             max={answer.maxScore}
+            step={0.5}
             value={draft.score}
             disabled={locked}
             onChange={(e) => onChange({ ...draft, score: e.target.value })}

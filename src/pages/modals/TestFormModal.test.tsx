@@ -164,7 +164,8 @@ describe('TestFormModal', () => {
     await user.type(screen.getByPlaceholderText(/Например: Математика/i), 'Новый тест');
     await user.click(screen.getByRole('button', { name: 'Выберите предмет…' }));
     await user.click(screen.getByRole('option', { name: /Math/ }));
-    await user.type(screen.getByPlaceholderText(/Например: 5 класс/i), '5 класс');
+    await user.click(screen.getByRole('button', { name: 'Выберите класс' }));
+    await user.click(screen.getByRole('option', { name: '5 класс' }));
     await user.click(screen.getByRole('button', { name: 'Создать тест' }));
 
     await waitFor(() => {

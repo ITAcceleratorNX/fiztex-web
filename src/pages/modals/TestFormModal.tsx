@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { Field, TextInput, TextArea, Select } from '@/components/ui/Field';
 import { Toggle } from '@/components/ui/Toggle';
 import type { Test, TestStatus } from '@/lib/types';
+import { applicantGradeOptions } from './applicantFormHelpers';
 import { VersionDecisionModal } from './VersionDecisionModal';
 import { useTestForm } from './useTestForm';
 
@@ -88,12 +89,15 @@ export function TestFormModal({
                 ))}
               </Select>
             </Field>
-            <Field label="Класс" required hint={aiTest ? 'Для кого предназначен тест' : 'Произвольное значение'}>
-              <TextInput
-                value={f.form.grade}
-                onChange={(e) => f.set('grade', e.target.value)}
-                placeholder={aiTest ? 'Например: 8 класс' : 'Например: 5 класс'}
-              />
+            <Field label="Класс" required hint={aiTest ? 'Для кого предназначен тест' : undefined}>
+              <Select value={f.form.grade} onChange={(e) => f.set('grade', e.target.value)}>
+                <option value="">Выберите класс</option>
+                {applicantGradeOptions(f.form.grade).map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </Select>
             </Field>
           </div>
 
@@ -110,6 +114,7 @@ export function TestFormModal({
               <TextInput
                 type="number"
                 min={0}
+                step={0.5}
                 value={f.form.minScore}
                 onChange={(e) => f.set('minScore', e.target.value)}
               />

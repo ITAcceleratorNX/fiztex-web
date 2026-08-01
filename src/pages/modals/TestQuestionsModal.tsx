@@ -130,7 +130,8 @@ function QuestionEditor({
         <Field label="Балл" required>
           <TextInput
             type="number"
-            min={1}
+            min={0.5}
+            step={0.5}
             value={question.maxScore}
             onChange={(e) => onChange({ ...question, maxScore: Number(e.target.value) || 1 })}
           />

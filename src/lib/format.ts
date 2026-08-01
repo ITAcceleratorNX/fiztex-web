@@ -84,6 +84,8 @@ export function initials(name: string): string {
 }
 
 export function pluralRu(n: number, forms: [string, string, string]): string {
+  // Дробные всегда берут родительный единственного: «1,5 балла», «0,5 балла».
+  if (!Number.isInteger(n)) return forms[1];
   const mod10 = n % 10;
   const mod100 = n % 100;
   if (mod10 === 1 && mod100 !== 11) return forms[0];

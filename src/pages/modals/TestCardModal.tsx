@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/Badge';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
 import { useTest } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
-import { formatDateTime, versionLabel } from '@/lib/format';
+import { formatDateTime, pluralRu, versionLabel } from '@/lib/format';
 import { QUESTION_TYPE_LABELS, difficultyLabel } from '@/lib/testQuestions';
 import { TestStatusBadge } from '@/components/ui/TestStatusBadge';
 import { DraftQuestionBadge } from '@/components/ui/DraftQuestionBadge';
@@ -157,7 +157,7 @@ export function TestCardModal({
                         {QUESTION_TYPE_LABELS[q.type]}
                         {difficultyLabel(q.difficulty) ? ` · ${difficultyLabel(q.difficulty)}` : ''}
                         {' · '}
-                        {q.maxScore} {q.maxScore === 1 ? 'балл' : 'балла'}
+                        {q.maxScore} {pluralRu(q.maxScore, ['балл', 'балла', 'баллов'])}
                       </p>
                     </li>
                   ))}
