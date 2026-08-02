@@ -659,8 +659,16 @@ export function LessonSchedulePage() {
       });
       let target = upcoming.content?.[0];
       if (!target) {
-        const past = await lessonsApi.list({ scheduleLessonId: lesson.id, size: 400 });
-        target = past.content?.[past.content.length - 1];
+        // Список всегда идёт по возрастанию даты (клиентский sort бэкенд игнорирует),
+        // поэтому последний прошедший урок — это последний элемент последней страницы.
+        // Берём его через totalPages, а не выкачиванием всего слота одной страницей.
+        const past = await lessonsApi.list({ scheduleLessonId: lesson.id, size: 1 });
+        const lastPage = (past.totalPages ?? 0) - 1;
+        target =
+          lastPage > 0
+            ? (await lessonsApi.list({ scheduleLessonId: lesson.id, size: 1, page: lastPage }))
+                .content?.[0]
+            : past.content?.[0];
       }
       if (!target?.id) {
         toast.error('Для этого слота ещё нет фактических уроков');

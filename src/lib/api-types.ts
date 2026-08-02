@@ -4439,6 +4439,8 @@ export interface components {
             endTime?: string;
             /** Format: int64 */
             lessonId?: number;
+            /** Format: int64 */
+            lessonInstanceId?: number;
             /** Format: int32 */
             lessonNumber?: number;
             room?: string;
@@ -4477,6 +4479,7 @@ export interface components {
             weekEnd?: string;
             /** Format: date */
             weekStart?: string;
+            workingDays?: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
         };
         RunLessonGenerationRequest: {
             /** Format: int64 */
