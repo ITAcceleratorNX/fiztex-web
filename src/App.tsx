@@ -6,6 +6,7 @@ import { EntranceFlow } from '@/pages/entrance/EntranceFlow';
 import { AdmissionsPage } from '@/pages/AdmissionsPage';
 import { TestDetailPage } from '@/pages/TestDetailPage';
 import { TestCreatePage } from '@/pages/TestCreatePage';
+import { TestQuestionsPage } from '@/pages/TestQuestionsPage';
 import { ResultsPage } from '@/pages/ResultsPage';
 import { ResultReviewPage } from '@/pages/ResultReviewPage';
 import { ReviewPage } from '@/pages/ReviewPage';
@@ -87,6 +88,8 @@ export function App() {
         <Route path="/admissions" element={<AdmissionsPage />} />
         <Route path="/admissions/tests/new" element={<TestCreatePage />} />
         <Route path="/admissions/tests/:testId" element={<TestDetailPage />} />
+        {/* Shared by admission and AI tests — both edit the same Test/Question model. */}
+        <Route path="/tests/:testId/questions" element={<TestQuestionsPage />} />
         <Route path="/results" element={<ResultsPage />} />
         <Route path="/results/attempts/:attemptId" element={<ResultReviewPage />} />
         <Route path="/review" element={<ReviewPage />} />

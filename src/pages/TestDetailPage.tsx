@@ -12,7 +12,6 @@ import { TestStatusBadge } from '@/components/ui/TestStatusBadge';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TestFormModal } from '@/pages/modals/TestFormModal';
-import { TestQuestionsModal } from '@/pages/modals/TestQuestionsModal';
 import { TestImportModal } from '@/pages/modals/TestImportModal';
 import { AssignModal } from '@/pages/modals/AssignModal';
 import { AssignSuccessModal } from '@/pages/modals/AssignSuccessModal';
@@ -94,7 +93,6 @@ export function TestDetailPage() {
   const del = useDeleteTest();
 
   const [editOpen, setEditOpen] = useState(false);
-  const [questionsOpen, setQuestionsOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignSuccessCount, setAssignSuccessCount] = useState<number | null>(null);
@@ -140,13 +138,13 @@ export function TestDetailPage() {
               {test.title}
             </h1>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setQuestionsOpen(true)}
+              <Link
+                to={`/tests/${test.id}/questions`}
                 title="Вопросы теста"
                 className="rounded-xl p-2.5 text-slate-400 transition hover:bg-white hover:text-slate-700"
               >
                 <ListChecks className="h-4 w-4" />
-              </button>
+              </Link>
               <button
                 onClick={() => setDeleteOpen(true)}
                 title="Удалить тест"
@@ -292,12 +290,11 @@ export function TestDetailPage() {
           </div>
 
           <TestFormModal open={editOpen} onClose={() => setEditOpen(false)} test={test} aiTest={false} />
-          <TestQuestionsModal open={questionsOpen} onClose={() => setQuestionsOpen(false)} testId={test.id} />
           <TestImportModal
             open={importOpen}
             onClose={() => setImportOpen(false)}
             test={test}
-            onComplete={() => setQuestionsOpen(true)}
+            onComplete={() => navigate(`/tests/${test.id}/questions`)}
           />
           <AssignModal
             open={assignOpen}

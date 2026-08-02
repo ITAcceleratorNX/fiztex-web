@@ -1,7 +1,8 @@
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { TestQuestionsModal } from './TestQuestionsModal';
+import { TestQuestionsPage } from './TestQuestionsPage';
 import { useTest, useUpdateTest } from '@/hooks/queries';
 import type { Test } from '@/lib/types';
 
@@ -90,7 +91,17 @@ function apiError422(details: unknown) {
   return err;
 }
 
-describe('TestQuestionsModal activation errors', () => {
+function renderAtRoute(testId: number) {
+  return render(
+    <MemoryRouter initialEntries={[`/tests/${testId}/questions`]}>
+      <Routes>
+        <Route path="/tests/:testId/questions" element={<TestQuestionsPage />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
+describe('TestQuestionsPage activation errors', () => {
   afterEach(() => cleanup());
 
   beforeEach(() => {
@@ -125,7 +136,7 @@ describe('TestQuestionsModal activation errors', () => {
       ),
     } as ReturnType<typeof useUpdateTest>);
 
-    render(<TestQuestionsModal open onClose={() => {}} testId={10} />);
+    renderAtRoute(10);
 
     await user.click(screen.getByRole('button', { name: 'Сохранить вопросы' }));
 
@@ -144,5 +155,24 @@ describe('TestQuestionsModal activation errors', () => {
     await waitFor(() => {
       expect(scrollIntoView).toHaveBeenCalled();
     });
+  });
+
+  it('renders the test title and subject as a page heading, not a modal', () => {
+    renderAtRoute(10);
+
+    expect(screen.getByRole('heading', { name: /Activation test/ })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('shows an error for a non-numeric test id instead of crashing', () => {
+    render(
+      <MemoryRouter initialEntries={['/tests/not-a-number/questions']}>
+        <Routes>
+          <Route path="/tests/:testId/questions" element={<TestQuestionsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('Некорректный идентификатор теста.')).toBeInTheDocument();
   });
 });
