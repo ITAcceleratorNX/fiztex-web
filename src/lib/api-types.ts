@@ -2324,6 +2324,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/homework": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["upsertHomework"];
+        post?: never;
+        delete: operations["deleteHomework"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/homework/completion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["completeHomework"];
+        delete: operations["uncompleteHomework"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/students": {
         parameters: {
             query?: never;
@@ -3560,7 +3592,7 @@ export interface components {
         };
         LessonHistoryView: {
             /** @enum {string} */
-            actionType?: "CREATED" | "SUPERSEDED" | "CANCELLED" | "RESTORED" | "ADMIN_UPDATED" | "SUBSTITUTE_ASSIGNED" | "SUBSTITUTE_REVOKED" | "COMMENT_CREATED" | "COMMENT_UPDATED" | "COMMENT_DELETED" | "TOPIC_UPDATED";
+            actionType?: "CREATED" | "SUPERSEDED" | "CANCELLED" | "RESTORED" | "ADMIN_UPDATED" | "SUBSTITUTE_ASSIGNED" | "SUBSTITUTE_REVOKED" | "COMMENT_CREATED" | "COMMENT_UPDATED" | "COMMENT_DELETED" | "TOPIC_UPDATED" | "HOMEWORK_CREATED" | "HOMEWORK_UPDATED" | "HOMEWORK_DELETED";
             /** Format: int64 */
             actorId?: number;
             actorName?: string;
@@ -3577,6 +3609,25 @@ export interface components {
             payload?: string;
             /** @enum {string} */
             reason?: "CALENDAR_NO_LESSONS" | "SCHEDULE_SLOT_REMOVED" | "MANUAL";
+        };
+        LessonHomeworkView: {
+            body?: string;
+            completed?: boolean;
+            /** Format: date-time */
+            completedAt?: string;
+            /** Format: int64 */
+            completedCount?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            createdById?: number;
+            createdByName?: string;
+            /** Format: date */
+            dueDate?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: date-time */
+            updatedAt?: string;
         };
         LessonHorizonView: {
             /** Format: int64 */
@@ -3626,7 +3677,7 @@ export interface components {
             cancellationComment?: string;
             /** @enum {string} */
             cancellationReason?: "CALENDAR_NO_LESSONS" | "SCHEDULE_SLOT_REMOVED" | "MANUAL";
-            capabilities?: ("VIEW_CARD" | "VIEW_STUDENTS" | "VIEW_ADMIN_HISTORY" | "VIEW_TEACHER_HISTORY" | "MANAGE_STRUCTURE" | "EDIT_TEACHING_PART" | "FILL_ATTENDANCE")[];
+            capabilities?: ("VIEW_CARD" | "VIEW_STUDENTS" | "VIEW_ADMIN_HISTORY" | "VIEW_TEACHER_HISTORY" | "MANAGE_STRUCTURE" | "EDIT_TEACHING_PART" | "SUBMIT_HOMEWORK" | "FILL_ATTENDANCE")[];
             changedFields?: ("TIME" | "ROOM" | "SUBJECT" | "TEACHER")[];
             /** Format: int64 */
             classId?: number;
@@ -3638,6 +3689,7 @@ export interface components {
             endTime?: string;
             /** Format: date-time */
             endsAt?: string;
+            homework?: components["schemas"]["LessonHomeworkView"];
             /** Format: int64 */
             id?: number;
             /** Format: int32 */
@@ -5141,6 +5193,11 @@ export interface components {
         };
         UpsertLessonCommentRequest: {
             body?: string;
+        };
+        UpsertLessonHomeworkRequest: {
+            body?: string;
+            /** Format: date */
+            dueDate?: string;
         };
         VerifyCodeRequest: {
             code?: string;
@@ -9601,6 +9658,96 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PageLessonHistoryView"];
+                };
+            };
+        };
+    };
+    upsertHomework: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertLessonHomeworkRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonHomeworkView"];
+                };
+            };
+        };
+    };
+    deleteHomework: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    completeHomework: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonHomeworkView"];
+                };
+            };
+        };
+    };
+    uncompleteHomework: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonHomeworkView"];
                 };
             };
         };
