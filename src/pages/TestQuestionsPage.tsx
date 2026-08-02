@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, Trash2, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
-import { Modal } from '@/components/ui/Modal';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput, TextArea, Select } from '@/components/ui/Field';
 import { Toggle } from '@/components/ui/Toggle';
@@ -10,6 +10,7 @@ import { DraftReviewBanner } from '@/components/ui/DraftReviewBanner';
 import { useTest, useUpdateTest } from '@/hooks/queries';
 import { useToast } from '@/context/ToastContext';
 import { ApiError } from '@/lib/api';
+import { pluralRu } from '@/lib/format';
 import type { QuestionType, VersionStrategy } from '@/lib/types';
 import {
   QUESTION_TYPE_LABELS,
@@ -25,12 +26,12 @@ import {
   validateQuestions,
   type QuestionDraft,
 } from '@/lib/testQuestions';
-import { VersionDecisionModal } from './VersionDecisionModal';
+import { VersionDecisionModal } from './modals/VersionDecisionModal';
 import {
   mapTestActivationError,
   violationsByQuestionIndex,
   type TestActivationViolation,
-} from './testActivationHelpers';
+} from './modals/testActivationHelpers';
 
 function QuestionEditor({
   question,
@@ -274,18 +275,16 @@ function QuestionEditor({
   );
 }
 
-export function TestQuestionsModal({
-  open,
-  onClose,
-  testId,
-}: {
-  open: boolean;
-  onClose: () => void;
-  testId: number | null;
-}) {
-  const { data: test, isLoading, isError, error, refetch } = useTest(open ? testId : null);
-  const update = useUpdateTest();
+export function TestQuestionsPage() {
+  const { testId: testIdParam } = useParams();
+  const testId = Number(testIdParam);
+  const navigate = useNavigate();
   const toast = useToast();
+
+  const { data: test, isLoading, isError, error, refetch } = useTest(
+    Number.isFinite(testId) ? testId : null,
+  );
+  const update = useUpdateTest();
 
   const [questions, setQuestions] = useState<QuestionDraft[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
@@ -302,14 +301,13 @@ export function TestQuestionsModal({
   const showDraftUi = isAi;
 
   useEffect(() => {
-    if (!open || !test) return;
-    setFormError(null);
-    setActivationViolations([]);
-    setDecisionOpen(false);
+    if (!test) return;
     const loaded = (test.questions ?? []).map(questionFromResponse);
     setQuestions(loaded);
     setHadDraftsOnOpen(loaded.some((q) => q.isDraft));
-  }, [open, test]);
+    // Только при первой загрузке теста — не перетирать правки админа при фоновом рефетче.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [test?.id]);
 
   useEffect(() => {
     if (activationViolations.length === 0) return;
@@ -328,6 +326,10 @@ export function TestQuestionsModal({
 
   const pending = update.isPending;
 
+  function goBack() {
+    navigate(-1);
+  }
+
   async function save(versionStrategy?: VersionStrategy) {
     if (!test) return;
     const validation = validateQuestions(questions, test.minScore);
@@ -340,16 +342,11 @@ export function TestQuestionsModal({
     setFormError(null);
     setActivationViolations([]);
 
-    const body = buildTestRequest(
-      test,
-      questions.map(questionToRequest),
-      versionStrategy,
-    );
+    const body = buildTestRequest(test, questions.map(questionToRequest), versionStrategy);
 
     try {
       await update.mutateAsync({ id: test.id, body });
-      const publishedDrafts = hadDraftsOnOpen;
-      if (publishedDrafts) {
+      if (hadDraftsOnOpen) {
         toast.success(
           versionStrategy === 'NEW_VERSION'
             ? 'Создана новая версия — черновики опубликованы'
@@ -359,7 +356,7 @@ export function TestQuestionsModal({
         toast.success(versionStrategy === 'NEW_VERSION' ? 'Создана новая версия с вопросами' : 'Вопросы сохранены');
       }
       setDecisionOpen(false);
-      onClose();
+      goBack();
     } catch (err) {
       if (err instanceof ApiError && err.isVersionDecision) {
         setDecisionOpen(true);
@@ -381,48 +378,42 @@ export function TestQuestionsModal({
     });
   }
 
+  if (testIdParam != null && (!Number.isFinite(testId) || testId <= 0)) {
+    return <ErrorBlock message="Некорректный идентификатор теста." />;
+  }
+
   return (
-    <>
-      <Modal
-        open={open}
-        onClose={onClose}
-        size="lg"
-        title={test ? `Вопросы: ${test.title}` : 'Вопросы теста'}
-        subtitle={
-          test
-            ? showDraftUi && draftCount > 0
-              ? `${test.subjectName} · ${test.grade} · ${draftCount} черновиков`
-              : `${test.subjectName} · ${test.grade}`
-            : undefined
-        }
-        footer={
-          test ? (
-            <>
-              {showDraftUi && draftCount > 0 && (
-                <span className="mr-auto text-xs text-amber-700">
-                  Сохранение опубликует {draftCount}{' '}
-                  {draftCount === 1 ? 'черновик' : draftCount < 5 ? 'черновика' : 'черновиков'}
-                </span>
-              )}
-              <Button variant="secondary" onClick={onClose} disabled={pending}>
-                Отмена
-              </Button>
-              <Button loading={pending} onClick={() => void save()}>
-                {showDraftUi && draftCount > 0 ? 'Сохранить и опубликовать' : 'Сохранить вопросы'}
-              </Button>
-            </>
-          ) : undefined
-        }
+    <div className="pb-24">
+      <button
+        onClick={goBack}
+        className="mb-3 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-brand-600"
       >
-        {isLoading ? (
+        <ArrowLeft className="h-4 w-4" />
+        Назад
+      </button>
+
+      {isLoading ? (
+        <div className="card">
           <LoadingBlock label="Загрузка вопросов…" />
-        ) : isError || !test ? (
+        </div>
+      ) : isError || !test ? (
+        <div className="card">
           <ErrorBlock
             message={error instanceof ApiError ? error.message : 'Не удалось загрузить тест'}
             onRetry={refetch}
           />
-        ) : (
-          <div className="space-y-4">
+        </div>
+      ) : (
+        <>
+          <h1 className="text-[34px] font-extrabold leading-tight tracking-tight text-slate-900">
+            Вопросы: {test.title}
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {test.subjectName} · {test.grade}
+            {showDraftUi && draftCount > 0 ? ` · ${draftCount} черновиков` : ''}
+          </p>
+
+          <div className="mt-6 space-y-4">
             {formError && (
               <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-100">
                 {formError}
@@ -491,8 +482,22 @@ export function TestQuestionsModal({
               </>
             )}
           </div>
-        )}
-      </Modal>
+
+          <div className="sticky bottom-0 -mx-8 -mb-8 mt-6 flex items-center justify-end gap-3 border-t border-slate-100 bg-white/95 px-8 py-4 backdrop-blur">
+            {showDraftUi && draftCount > 0 && (
+              <span className="mr-auto text-xs text-amber-700">
+                Сохранение опубликует {draftCount} {pluralRu(draftCount, ['черновик', 'черновика', 'черновиков'])}
+              </span>
+            )}
+            <Button variant="secondary" onClick={goBack} disabled={pending}>
+              Отмена
+            </Button>
+            <Button loading={pending} onClick={() => void save()}>
+              {showDraftUi && draftCount > 0 ? 'Сохранить и опубликовать' : 'Сохранить вопросы'}
+            </Button>
+          </div>
+        </>
+      )}
 
       <VersionDecisionModal
         open={decisionOpen}
@@ -500,6 +505,8 @@ export function TestQuestionsModal({
         loading={pending}
         onChoose={(strategy) => void save(strategy)}
       />
-    </>
+    </div>
   );
 }
+
+export { QuestionEditor };

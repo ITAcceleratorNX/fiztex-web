@@ -11,7 +11,6 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TestStatusBadge } from '@/components/ui/TestStatusBadge';
 import { TestFormModal } from '@/pages/modals/TestFormModal';
 import { TestCardModal } from '@/pages/modals/TestCardModal';
-import { TestQuestionsModal } from '@/pages/modals/TestQuestionsModal';
 import { formatDate, pluralRu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 import type { Test, TestStatus } from '@/lib/types';
@@ -26,7 +25,6 @@ export function AiTestsTab() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Test | null>(null);
   const [cardTestId, setCardTestId] = useState<number | null>(null);
-  const [questionsTestId, setQuestionsTestId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Test | null>(null);
 
   const filtered = useMemo(() => {
@@ -174,13 +172,13 @@ export function AiTestsTab() {
                           >
                             <Pencil className="h-4 w-4" />
                           </button>
-                          <button
-                            onClick={() => setQuestionsTestId(t.id)}
+                          <Link
+                            to={`/tests/${t.id}/questions`}
                             title="Вопросы и ревью"
                             className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                           >
                             <ListChecks className="h-4 w-4" />
-                          </button>
+                          </Link>
                           <button
                             onClick={() => setDeleteTarget(t)}
                             title="Удалить тест"
@@ -212,12 +210,6 @@ export function AiTestsTab() {
         onClose={() => setCardTestId(null)}
         testId={cardTestId}
       />
-      <TestQuestionsModal
-        open={questionsTestId != null}
-        onClose={() => setQuestionsTestId(null)}
-        testId={questionsTestId}
-      />
-
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onClose={() => setDeleteTarget(null)}
