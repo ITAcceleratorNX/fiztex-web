@@ -12,6 +12,7 @@ interface SchoolClassDto {
   status: SchoolRecordStatus;
   createdAt: string;
   updatedAt?: string;
+  /** Активные ученики класса; на ответах создания класса всегда 0. */
   studentCount?: number;
 }
 

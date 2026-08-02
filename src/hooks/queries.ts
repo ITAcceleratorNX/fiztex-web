@@ -1,5 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { ApiError, api } from '@/lib/api';
+import { lessonsApi } from '@/lib/lessonsApi';
 import type {
   ApplicantRequest,
   GenerateTestRequest,
@@ -27,6 +28,9 @@ export const keys = {
   admissionsNotifications: (unread?: boolean) => ['admissions', 'notifications', 'list', unread] as const,
   monitoringAttempts: (status?: string) => ['admissions', 'attempts', status ?? 'ALL'] as const,
   attemptLogs: (attemptId: number) => ['admissions', 'attempts', attemptId, 'logs'] as const,
+  lesson: (lessonId: number) => ['lessons', lessonId] as const,
+  lessonHistory: (lessonId: number) => ['lessons', lessonId, 'history'] as const,
+  lessonStudents: (lessonId: number) => ['lessons', lessonId, 'students'] as const,
 };
 
 const ADMISSIONS_POLL_MS = 30_000;
@@ -309,5 +313,42 @@ export function useAllowRetake() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admissions', 'attempts'] });
     },
+  });
+}
+
+// ---- Уроки (карточка урока) ----
+
+/** 404 здесь — это «нет доступа к уроку» (ТЗ §6.12), а не сбой: повторять нечего. */
+function isMissingLesson(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 404;
+}
+
+export function useLesson(lessonId: number | null) {
+  return useQuery({
+    queryKey: keys.lesson(lessonId ?? 0),
+    queryFn: ({ signal }) => lessonsApi.card(lessonId as number, signal),
+    enabled: lessonId != null,
+    retry: (failureCount, error) => !isMissingLesson(error) && failureCount < 2,
+  });
+}
+
+/**
+ * Журнал урока. Права на него бэкенд считает сам, поэтому запрос включается
+ * только там, где карточка уже вернула соответствующую capability — иначе экран
+ * ходил бы за гарантированным 403.
+ */
+export function useLessonHistory(lessonId: number | null, enabled: boolean) {
+  return useQuery({
+    queryKey: keys.lessonHistory(lessonId ?? 0),
+    queryFn: ({ signal }) => lessonsApi.history(lessonId as number, { size: 50 }, signal),
+    enabled: lessonId != null && enabled,
+  });
+}
+
+export function useLessonStudents(lessonId: number | null, enabled: boolean) {
+  return useQuery({
+    queryKey: keys.lessonStudents(lessonId ?? 0),
+    queryFn: ({ signal }) => lessonsApi.students(lessonId as number, signal),
+    enabled: lessonId != null && enabled,
   });
 }

@@ -30,6 +30,7 @@ import {
   TeacherProfilePage,
   SchoolSubjectsPage,
   LessonSchedulePage,
+  LessonCardPage,
 } from '@/platform';
 import type { ReactNode } from 'react';
 
@@ -97,6 +98,7 @@ export function App() {
         <Route path="/teachers/:accountId" element={<TeacherProfilePage />} />
         <Route path="/schedule" element={<Navigate to="/lesson-schedule" replace />} />
         <Route path="/lesson-schedule" element={<LessonSchedulePage />} />
+        <Route path="/lesson-schedule/lessons/:lessonId" element={<LessonCardPage />} />
         <Route
           path="/lesson-schedule/bell-templates"
           element={<ScheduleSettingsPage section="templates" />}

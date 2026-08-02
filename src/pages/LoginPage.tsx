@@ -14,6 +14,10 @@ import { Field, TextInput } from '@/components/ui/Field';
 import { Logo, PhysTechMark } from '@/components/layout/Logo';
 import { APP_NAME } from '@/lib/branding';
 
+/** Сид-суперадмин из `V*__seed`: единственная учётка, которая заведомо есть на чистой базе. */
+const DEV_LOGIN = 'super@fiztex.local';
+const DEV_PASSWORD = 'super123';
+
 const FEATURES: { icon: LucideIcon; label: string }[] = [
   { icon: Users, label: 'Ученики, родители и учителя' },
   { icon: Calendar, label: 'Расписание и дневник' },
@@ -25,8 +29,8 @@ export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState('admin@phystech.local');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState(DEV_LOGIN);
+  const [password, setPassword] = useState(DEV_PASSWORD);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -98,7 +102,7 @@ export function LoginPage() {
                 autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@phystech.local или +77001112233"
+                placeholder={`${DEV_LOGIN} или +77001112233`}
                 required
               />
             </Field>
@@ -125,7 +129,7 @@ export function LoginPage() {
           </div>
 
           <p className="mt-6 text-center text-xs text-slate-400">
-            Dev: super@phystech.local / super123 или admin@phystech.local / admin123
+            Dev: {DEV_LOGIN} / {DEV_PASSWORD}
           </p>
         </form>
       </div>

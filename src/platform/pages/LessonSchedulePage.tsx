@@ -7,7 +7,7 @@ import {
   type FormEvent,
   type ReactNode,
 } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Bell,
   CalendarDays,
@@ -15,7 +15,6 @@ import {
   Copy,
   Loader2,
   Plus,
-  Save,
   Users,
   UserCheck,
 } from 'lucide-react';
@@ -25,8 +24,10 @@ import { Modal } from '@/components/ui/Modal';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
 import { ApiError } from '@/lib/api';
+import { lessonsApi } from '@/lib/lessonsApi';
 import { scheduleSettingsApi } from '@/lib/scheduleSettingsApi';
-import type { Weekday } from '@/lib/scheduleSettingsTypes';
+import { subgroupsApi, teacherAvailabilityApi } from '@/lib/schedule2bApi';
+import type { Weekday, WorkingDaysSource } from '@/lib/scheduleSettingsTypes';
 import { cx } from '@/lib/format';
 import {
   CopyScheduleModal,
@@ -66,31 +67,78 @@ import {
   type ScheduleGridView,
   type ScheduleHistoryRow,
   type ScheduleLesson,
+  type ScheduleStatus,
 } from '../services';
 import type { AcademicPeriod, AcademicYear, SchoolClass } from '../types';
 
 const SETTINGS_CARDS = [
   {
+    key: 'templates',
     to: '/lesson-schedule/bell-templates',
     label: 'Шаблоны звонков',
     icon: Bell,
   },
   {
+    key: 'calendar',
     to: '/lesson-schedule/calendar',
     label: 'Школьный календарь',
     icon: CalendarDays,
   },
   {
+    key: 'teachers',
     to: '/lesson-schedule/teachers',
     label: 'Занятость учителей',
     icon: UserCheck,
   },
   {
+    key: 'subgroups',
     to: '/lesson-schedule/subgroups',
     label: 'Подгруппы классов',
     icon: Users,
   },
 ] as const;
+
+type SettingsCardKey = (typeof SETTINGS_CARDS)[number]['key'];
+
+/** Бейдж карточки настроек: раньше был константой «Настроено», теперь — реальное состояние. */
+type CardStatus = { label: string; tone: 'ok' | 'warn' | 'muted' };
+
+const CARD_STATUS_TONES: Record<CardStatus['tone'], string> = {
+  ok: 'bg-success-bg text-success-fg',
+  warn: 'bg-brand-50 text-brand-600',
+  muted: 'bg-gray-100 text-gray-500',
+};
+
+const SCHEDULE_STATUS_TONES: Record<ScheduleStatus, string> = {
+  DRAFT: 'bg-brand-50 text-brand-600',
+  PUBLISHED: 'bg-success-bg text-success-fg',
+  ARCHIVED: 'bg-gray-100 text-gray-500',
+};
+
+/**
+ * Вытесненная публикация остаётся PUBLISHED — актуальность несёт отдельный флаг
+ * `current`. Поэтому подпись считается по паре «статус + флаг», а не по статусу.
+ */
+function scheduleStatusLabel(schedule: ClassSchedule): string {
+  if (schedule.status === 'DRAFT') return 'Черновик';
+  if (schedule.status === 'ARCHIVED') return 'В архиве';
+  return schedule.current ? 'Опубликовано' : 'Прошлая публикация';
+}
+
+function ScheduleStatusBadge({ schedule }: { schedule: ClassSchedule }) {
+  return (
+    <span
+      className={cx(
+        'shrink-0 rounded px-2 py-1 text-11 font-semibold',
+        schedule.status === 'PUBLISHED' && !schedule.current
+          ? 'bg-gray-100 text-gray-500'
+          : SCHEDULE_STATUS_TONES[schedule.status],
+      )}
+    >
+      {scheduleStatusLabel(schedule)}
+    </span>
+  );
+}
 
 /** Figma 2015:5831 — select в панели фильтров: gray-50, рамка, radius 8, 13px. */
 const FILTER_CONTROL =
@@ -103,8 +151,6 @@ const FILTER_CONTROL =
 const PANEL_TONES = {
   /** btn-check 2015:4958 и btn-edit 2015:5852 — оранжевая заливка. */
   accent: 'bg-brand-500 text-white hover:bg-brand-600 disabled:bg-brand-300',
-  /** btn-save 2015:4954 — контур брендовым синим. */
-  brand: 'border border-navy-700 text-navy-700 hover:bg-navy-50',
   /** btn-copy 2015:4956 и btn-publish 2015:4963 — серый контур. */
   muted: 'border border-line bg-white text-muted hover:bg-gray-50',
   /** Архива в макете нет — тихий вариант, чтобы не спорить с четвёркой из спеки. */
@@ -162,6 +208,7 @@ function CheckingCard() {
 
 export function LessonSchedulePage() {
   const toast = useToast();
+  const navigate = useNavigate();
   const [years, setYears] = useState<AcademicYear[]>([]);
   const [yearId, setYearId] = useState('');
   const [periods, setPeriods] = useState<AcademicPeriod[]>([]);
@@ -177,6 +224,11 @@ export function LessonSchedulePage() {
   const [templates, setTemplates] = useState<Array<{ id: number; name: string }>>([]);
   const [conflictReport, setConflictReport] = useState<ConflictCheckReport | null>(null);
   const [saveHint, setSaveHint] = useState<string | null>(null);
+  const [workingDaysSource, setWorkingDaysSource] = useState<WorkingDaysSource | null>(null);
+  const [availability, setAvailability] = useState<{ total: number; needsReview: number } | null>(
+    null,
+  );
+  const [groupSetCount, setGroupSetCount] = useState<number | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -241,6 +293,60 @@ export function LessonSchedulePage() {
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Ошибка метаданных'));
   }, [yearId]);
+
+  /**
+   * Состояние карточек настроек. Отдельным запросом, а не по расписанию: бейджи
+   * относятся к году целиком и должны быть честными даже до выбора класса.
+   */
+  useEffect(() => {
+    if (!yearId) return;
+    const academicYearId = Number(yearId);
+    let cancelled = false;
+    void Promise.all([
+      scheduleSettingsApi.getWorkingDays(academicYearId),
+      teacherAvailabilityApi.listSummaries({ academicYearId, size: 1 }),
+      teacherAvailabilityApi.listSummaries({
+        academicYearId,
+        availability: 'NEEDS_REVIEW',
+        size: 1,
+      }),
+    ])
+      .then(([days, all, needsReview]) => {
+        if (cancelled) return;
+        setWorkingDaysSource(days.source);
+        setAvailability({
+          total: all.totalElements ?? 0,
+          needsReview: needsReview.totalElements ?? 0,
+        });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setWorkingDaysSource(null);
+        setAvailability(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [yearId]);
+
+  useEffect(() => {
+    if (!classFilter) {
+      setGroupSetCount(null);
+      return;
+    }
+    let cancelled = false;
+    void subgroupsApi
+      .listGroupSets({ classId: Number(classFilter), status: 'ACTIVE' })
+      .then((sets) => {
+        if (!cancelled) setGroupSetCount(sets.length);
+      })
+      .catch(() => {
+        if (!cancelled) setGroupSetCount(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [classFilter]);
 
   const reloadSchedules = useCallback(async () => {
     if (!yearId) return;
@@ -311,14 +417,21 @@ export function LessonSchedulePage() {
     }
     const classId = Number(classFilter);
     const period = Number(periodId);
-    const match = schedules
-      .filter((s) => s.classId === classId && s.academicPeriodId === period)
-      .sort((a, b) => {
-        const rank = (s: ClassSchedule) =>
-          s.status === 'DRAFT' ? 0 : s.status === 'PUBLISHED' ? 1 : 2;
-        return rank(a) - rank(b);
-      })[0];
-    if (match && match.id !== selectedId) {
+    const forCell = schedules.filter(
+      (s) => s.classId === classId && s.academicPeriodId === period,
+    );
+    // Уже открытую версию не перебиваем: иначе переключение «Черновик ↔ Опубликовано»
+    // мгновенно откатывалось бы обратно на черновик.
+    if (forCell.some((s) => s.id === selectedId)) return;
+    // Вытесненные публикации (PUBLISHED без current) сами по себе не открываются:
+    // показывать вместо действующего расписания старую версию нельзя.
+    const rank = (s: ClassSchedule) => {
+      if (s.status === 'DRAFT') return 0;
+      if (s.status === 'PUBLISHED') return s.current ? 1 : 2;
+      return 3;
+    };
+    const match = [...forCell].sort((a, b) => rank(a) - rank(b))[0];
+    if (match) {
       void loadDetail(match.id);
     }
   }, [schedules, periodId, classFilter, loading, selectedId, loadDetail]);
@@ -439,8 +552,21 @@ export function LessonSchedulePage() {
     setEditing(true);
   }
 
-  /** «Редактировать всё равно»: из публикации создаём черновик и открываем его на правку. */
+  /**
+   * «Редактировать всё равно»: правится всегда черновик, а не публикация.
+   *
+   * Черновик у класса и периода может быть только один, поэтому уже существующий
+   * открываем как есть — бэкенд на повторное создание отвечает конфликтом.
+   */
   async function handleConfirmEdit() {
+    const existingDraft = versions.find((v) => v.status === 'DRAFT');
+    if (existingDraft) {
+      setEditWarnOpen(false);
+      await loadDetail(existingDraft.id);
+      setEditing(true);
+      toast.success('Открыт черновик этого расписания');
+      return;
+    }
     await handleCreateDraft();
     setEditWarnOpen(false);
     setEditing(true);
@@ -516,6 +642,36 @@ export function LessonSchedulePage() {
     setLessonOpen(true);
   }
 
+  /**
+   * Из слота расписания — в карточку фактического урока.
+   *
+   * Слот повторяется каждую неделю, а карточка всегда про конкретную дату, поэтому
+   * открываем ближайший будущий урок этого слота. Если будущих не осталось (слот
+   * доработал своё), показываем последний прошедший — иначе клик просто не сработал бы.
+   */
+  async function openActualLesson(lesson: ScheduleLesson) {
+    const today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD в местной зоне
+    try {
+      const upcoming = await lessonsApi.list({
+        scheduleLessonId: lesson.id,
+        dateFrom: today,
+        size: 1,
+      });
+      let target = upcoming.content?.[0];
+      if (!target) {
+        const past = await lessonsApi.list({ scheduleLessonId: lesson.id, size: 400 });
+        target = past.content?.[past.content.length - 1];
+      }
+      if (!target?.id) {
+        toast.error('Для этого слота ещё нет фактических уроков');
+        return;
+      }
+      navigate(`/lesson-schedule/lessons/${target.id}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Не удалось открыть урок');
+    }
+  }
+
   async function handleLessonSubmit(values: LessonFormValues) {
     if (!selectedId) return;
     setPending(true);
@@ -567,19 +723,6 @@ export function LessonSchedulePage() {
     }
   }
 
-  function handleSaveDraftClick() {
-    if (!selectedId) return;
-    void loadDetail(selectedId).then(() => {
-      setSaveHint(
-        `Все изменения сохранены · ${new Date().toLocaleTimeString('ru-RU', {
-          hour: '2-digit',
-          minute: '2-digit',
-        })}`,
-      );
-      toast.success('Черновик актуален');
-    });
-  }
-
   const isDraft = selected?.status === 'DRAFT';
   const periodsForForm = grid?.periods ?? context?.bellTemplate?.periods ?? [];
   const canPublish =
@@ -611,6 +754,47 @@ export function LessonSchedulePage() {
     );
   }, [schedules, periodId, classFilter]);
 
+  /**
+   * Версии одной клетки «класс + период», между которыми есть смысл переключаться:
+   * черновик и действующая публикация. Вытесненные публикации и архив — это история,
+   * их в переключателе нет (иначе получаются несколько кнопок «Опубликовано»).
+   */
+  const versions = useMemo(
+    () =>
+      matchedSchedules
+        .filter((s) => s.status === 'DRAFT' || (s.status === 'PUBLISHED' && s.current))
+        .sort((a, b) => (a.status === 'DRAFT' ? 0 : 1) - (b.status === 'DRAFT' ? 0 : 1)),
+    [matchedSchedules],
+  );
+
+  const settingsStatus: Record<SettingsCardKey, CardStatus> = useMemo(
+    () => ({
+      templates:
+        templates.length > 0
+          ? { label: 'Настроено', tone: 'ok' }
+          : { label: 'Нет шаблонов', tone: 'warn' },
+      calendar:
+        workingDaysSource === 'DB'
+          ? { label: 'Настроено', tone: 'ok' }
+          : { label: 'По умолчанию', tone: 'muted' },
+      teachers:
+        availability == null
+          ? { label: 'Нет данных', tone: 'muted' }
+          : availability.total === 0
+            ? { label: 'Нет учителей', tone: 'warn' }
+            : availability.needsReview > 0
+              ? { label: `Требуют проверки: ${availability.needsReview}`, tone: 'warn' }
+              : { label: 'Настроено', tone: 'ok' },
+      subgroups:
+        groupSetCount == null
+          ? { label: 'Выберите класс', tone: 'muted' }
+          : groupSetCount > 0
+            ? { label: `Наборов: ${groupSetCount}`, tone: 'ok' }
+            : { label: 'Не заданы', tone: 'muted' },
+    }),
+    [templates, workingDaysSource, availability, groupSetCount],
+  );
+
   return (
     <div className="relative space-y-5">
       {/* Figma 2015:5790 — settings-block-container: заголовок 14px Bold, карточки 42px */}
@@ -619,6 +803,7 @@ export function LessonSchedulePage() {
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {SETTINGS_CARDS.map((card) => {
             const Icon = card.icon;
+            const status = settingsStatus[card.key];
             return (
               <Link
                 key={card.to}
@@ -629,8 +814,13 @@ export function LessonSchedulePage() {
                   <Icon className="size-4 shrink-0 text-navy-700" />
                   <span className="truncate text-13 font-semibold text-ink">{card.label}</span>
                 </span>
-                <span className="shrink-0 rounded bg-success-bg px-2 py-0.5 text-11 font-semibold text-success-fg">
-                  Настроено
+                <span
+                  className={cx(
+                    'shrink-0 rounded px-2 py-0.5 text-11 font-semibold',
+                    CARD_STATUS_TONES[status.tone],
+                  )}
+                >
+                  {status.label}
                 </span>
               </Link>
             );
@@ -680,6 +870,32 @@ export function LessonSchedulePage() {
             <div className="rounded-lg border border-line bg-gray-50 px-3 py-2 text-13 font-medium text-ink">
               {selected?.bellTemplateName ?? 'Шаблон звонков'}
             </div>
+
+            {/* Статус открытой версии: без него черновик и публикация выглядят одинаково. */}
+            {selected && <ScheduleStatusBadge schedule={selected} />}
+
+            {/* Черновик и публикация класса существуют одновременно — даём переключиться. */}
+            {versions.length > 1 && (
+              <div className="flex items-center gap-1 rounded-lg border border-line bg-gray-50 p-[3px]">
+                {versions.map((version) => (
+                  <button
+                    key={version.id}
+                    type="button"
+                    onClick={() => {
+                      if (version.id !== selectedId) void loadDetail(version.id);
+                    }}
+                    className={cx(
+                      'rounded-md px-2.5 py-1 text-11 font-semibold transition',
+                      version.id === selectedId
+                        ? 'bg-white text-navy-700 shadow-[0_1px_1px_rgba(0,0,0,0.04)]'
+                        : 'text-muted hover:text-navy-700',
+                    )}
+                  >
+                    {scheduleStatusLabel(version)}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Просмотр — одна кнопка (2015:5852). Редактирование — четыре (2015:4953). */}
@@ -706,13 +922,6 @@ export function LessonSchedulePage() {
 
             {selected && editing && (
               <>
-                <PanelButton
-                  tone="brand"
-                  icon={<Save className="size-3 shrink-0" />}
-                  onClick={handleSaveDraftClick}
-                >
-                  Сохранить черновик
-                </PanelButton>
                 <PanelButton
                   tone="muted"
                   icon={<Copy className="size-3 shrink-0" />}
@@ -826,6 +1035,7 @@ export function LessonSchedulePage() {
                 openCreateLesson({ weekday, lessonPeriodId: periodIdSlot })
               }
               onEditLesson={openEditLesson}
+              onOpenLesson={openActualLesson}
             />
           )}
 

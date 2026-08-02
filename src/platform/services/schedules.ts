@@ -13,6 +13,11 @@ export interface ClassSchedule {
   bellTemplateId: number;
   bellTemplateName: string;
   status: ScheduleStatus;
+  /**
+   * Действующая публикация. Статус PUBLISHED сохраняют и вытесненные версии —
+   * при публикации новой предыдущая теряет только этот флаг.
+   */
+  current: boolean;
   copiedFromScheduleId: number | null;
   version: number;
   createdAt: string;

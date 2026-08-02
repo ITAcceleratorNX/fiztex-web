@@ -6,8 +6,13 @@ import { useToast } from '@/context/ToastContext';
 import { createClass, updateClass } from '../services';
 import type { AcademicYear, SchoolClass } from '../types';
 
+/**
+ * Буква класса — любая буква Unicode (`\p{L}`), а не только латиница с русской
+ * кириллицей: школе нужны казахские Ә, Ғ, Қ, Ң, Ө, Ұ, Ү, Һ, І, которых нет в
+ * диапазоне А-Я. Бэкенд алфавит не ограничивает (`letter` — строка до 10 символов).
+ */
 function parseClassName(raw: string): { grade: string; letter: string } | null {
-  const m = raw.trim().match(/^(\d+)\s*[«"']?\s*([A-Za-zА-Яа-яЁё])\s*[»"']?$/);
+  const m = raw.trim().match(/^(\d+)\s*[«"']?\s*(\p{L})\s*[»"']?$/u);
   if (!m) return null;
   return { grade: m[1], letter: m[2].toUpperCase() };
 }
@@ -111,7 +116,7 @@ export function ClassFormModal({
       }
     >
       <form onSubmit={onSubmit} className="space-y-4">
-        <Field label="Название класса" required hint="Например: 5 «А»">
+        <Field label="Название класса" required hint="Например: 5 «А» или 7 «Ә»">
           <TextInput
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}

@@ -41,6 +41,7 @@ export function ScheduleWeeklyGrid({
   warnings = [],
   onAddSlot,
   onEditLesson,
+  onOpenLesson,
 }: {
   grid: ScheduleGridView;
   readOnly?: boolean;
@@ -48,6 +49,12 @@ export function ScheduleWeeklyGrid({
   warnings?: ConflictFinding[];
   onAddSlot: (weekday: Weekday, periodId: number, lessonNumber: number) => void;
   onEditLesson: (lesson: ScheduleLesson) => void;
+  /**
+   * Переход к фактическому уроку этого слота. В режиме просмотра сетка показывает
+   * опубликованный шаблон, и единственное осмысленное действие по клику — открыть
+   * урок на ближайшую дату; в режиме правки клик по-прежнему редактирует слот.
+   */
+  onOpenLesson?: (lesson: ScheduleLesson) => void;
 }) {
   const weekdays =
     grid.weekdays.length > 0
@@ -144,15 +151,20 @@ export function ScheduleWeeklyGrid({
                           !hasCritical && !hasWarning && !isSubgroup && 'border-line bg-white',
                         )}
                       >
-                        {cellLessons.map((lesson) => (
+                        {cellLessons.map((lesson) => {
+                          const opensLesson = readOnly && onOpenLesson != null;
+                          return (
                           <button
                             key={lesson.id}
                             type="button"
-                            disabled={readOnly}
-                            onClick={() => onEditLesson(lesson)}
+                            disabled={readOnly && !opensLesson}
+                            title={opensLesson ? 'Открыть урок на ближайшую дату' : undefined}
+                            onClick={() =>
+                              opensLesson ? onOpenLesson(lesson) : onEditLesson(lesson)
+                            }
                             className={cx(
                               'flex min-w-0 flex-1 flex-col gap-1 rounded-md px-1.5 py-1 text-left transition',
-                              readOnly ? 'cursor-default' : 'hover:bg-white/70',
+                              readOnly && !opensLesson ? 'cursor-default' : 'hover:bg-white/70',
                             )}
                           >
                             {/* Figma 2015:5890 — subject-row: предмет слева, бейдж справа */}
@@ -175,7 +187,8 @@ export function ScheduleWeeklyGrid({
                               </span>
                             ) : null}
                           </button>
-                        ))}
+                          );
+                        })}
 
                         {!readOnly && isSubgroup && (
                           <button

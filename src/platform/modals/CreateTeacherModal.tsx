@@ -1,12 +1,18 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
-import { Field, TextInput, TextArea } from '@/components/ui/Field';
-import { TagSearchField, type TagOption } from '../components/TagSearchField';
-import { createUser, listActiveSchoolSubjects } from '../services';
+import { Field, TextInput } from '@/components/ui/Field';
+import { createUser } from '../services';
 import { formatPhoneMask, isPhoneComplete } from './createUserHelpers';
 import { IssuedCodeResult } from './IssuedCodeResult';
 
+/**
+ * Аккаунт учителя. В форме только то, что уходит на бэкенд (`POST /admin/accounts`).
+ *
+ * Предметов здесь нет: связка учитель↔предмет↔класс — это назначение
+ * (`/admin/teacher-assignments`), которому нужны ещё класс и учебный год.
+ * Заводится в профиле учителя, кнопкой «+ Назначить класс».
+ */
 export function CreateTeacherModal({
   open,
   onClose,
@@ -19,11 +25,6 @@ export function CreateTeacherModal({
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [comment, setComment] = useState('');
-  const [subjects, setSubjects] = useState<TagOption[]>([]);
-  const [allSubjects, setAllSubjects] = useState<TagOption[]>([]);
-  const [query, setQuery] = useState('');
-  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [issuedCode, setIssuedCode] = useState<string | null>(null);
@@ -33,25 +34,9 @@ export function CreateTeacherModal({
     setFullName('');
     setPhone('');
     setEmail('');
-    setComment('');
-    setSubjects([]);
-    setQuery('');
     setError(null);
     setIssuedCode(null);
-    setLoadingSubjects(true);
-    void listActiveSchoolSubjects()
-      .then((list) =>
-        setAllSubjects(list.map((s) => ({ id: String(s.id), label: s.name }))),
-      )
-      .catch(() => setAllSubjects([]))
-      .finally(() => setLoadingSubjects(false));
   }, [open]);
-
-  const filteredOptions = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return allSubjects;
-    return allSubjects.filter((s) => s.label.toLowerCase().includes(q));
-  }, [allSubjects, query]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -99,7 +84,7 @@ export function CreateTeacherModal({
       subtitle={
         issuedCode
           ? 'Передайте код учителю для активации в мобильном приложении'
-          : 'Добавьте нового учителя и назначьте предметы'
+          : 'Предметы и классы назначаются в профиле учителя после создания'
       }
       footer={
         issuedCode ? undefined : (
@@ -118,11 +103,7 @@ export function CreateTeacherModal({
         <IssuedCodeResult
           roleLabel="учитель"
           code={issuedCode}
-          hint={
-            subjects.length > 0
-              ? 'Учитель вводит телефон, этот код и новый пароль (≥8 символов). Предметы можно назначить в профиле.'
-              : 'Учитель вводит телефон, этот код и новый пароль (≥8 символов) при первом входе.'
-          }
+          hint="Учитель вводит телефон, этот код и новый пароль (≥8 символов) при первом входе. Предметы и классы назначьте в профиле учителя."
           onDone={handleDone}
         />
       ) : (
@@ -155,27 +136,6 @@ export function CreateTeacherModal({
               />
             </Field>
           </div>
-
-          <Field label="Предмет">
-            <TagSearchField
-              value={subjects}
-              onChange={setSubjects}
-              options={filteredOptions}
-              query={query}
-              onQueryChange={setQuery}
-              loading={loadingSubjects}
-              placeholder="Добавить предмет..."
-            />
-          </Field>
-
-          <Field label="Комментарий">
-            <TextArea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Введите комментарий..."
-              rows={3}
-            />
-          </Field>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
         </form>

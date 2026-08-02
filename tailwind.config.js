@@ -77,6 +77,14 @@ export default {
         warning: {
           bg: 'var(--color-warning-bg)',
         },
+        // Карточка урока (2067:9326 и состояния).
+        lesson: {
+          hero: 'var(--color-lesson-hero-bg)',
+        },
+        cancelled: {
+          bg: 'var(--color-cancelled-bg)',
+          fg: 'var(--color-cancelled-fg)',
+        },
       },
       fontFamily: {
         // ВНИМАНИЕ: в макете шрифт Geist (Regular/Medium/SemiBold/Bold).
@@ -92,6 +100,7 @@ export default {
         13: 'var(--text-13)',
         15: 'var(--text-15)',
         28: 'var(--text-28)',
+        32: 'var(--text-32)',
       },
       height: {
         // Ряды таймлайна занятости: 70px просмотр (2015:11009), 60px правка
@@ -153,6 +162,9 @@ export default {
         dialog: 'var(--shadow-dialog)',
         toast: 'var(--shadow-toast)',
         'toast-error': 'var(--shadow-toast-error)',
+        soft: 'var(--shadow-soft)',
+        tile: 'var(--shadow-tile)',
+        raised: 'var(--shadow-raised)',
       },
       keyframes: {
         'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
