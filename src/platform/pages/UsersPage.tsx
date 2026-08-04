@@ -1,17 +1,6 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  Archive,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Lock,
-  Pencil,
-  Plus,
-  Search,
-  Users as UsersIcon,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pencil, Plus, Search } from 'lucide-react';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
 import { cx, formatDate, initials, pluralRu } from '@/lib/format';
@@ -29,7 +18,7 @@ import { CreateTeacherModal } from '../modals/CreateTeacherModal';
 import { UserDetailModal } from '../modals/UserDetailModal';
 import { UserFormModal } from '../modals/UserFormModal';
 import { archiveUser, blockUser, listUsersPage, unblockUser } from '../services';
-import type { AccountRole, AccountStatus, PlatformUser } from '../types';
+import type { AccountRole, AccountStats, AccountStatus, PlatformUser } from '../types';
 
 const PAGE_SIZE = 20;
 
@@ -41,11 +30,12 @@ const ROLE_FILTERS: { value: AccountRole | 'ALL'; label: string }[] = [
   { value: 'ADMIN', label: 'Админы' },
 ];
 
-const STATUS_TABS: { value: AccountStatus; label: string }[] = [
-  { value: 'ACTIVE', label: 'Активные' },
-  { value: 'NOT_ACTIVATED', label: 'Не активированы' },
-  { value: 'BLOCKED', label: 'Заблокированные' },
-  { value: 'ARCHIVED', label: 'Архив' },
+/** `countKey` — поле AccountStats, число показывается прямо в кнопке фильтра. */
+const STATUS_TABS: { value: AccountStatus; label: string; countKey: keyof AccountStats }[] = [
+  { value: 'ACTIVE', label: 'Активные', countKey: 'active' },
+  { value: 'NOT_ACTIVATED', label: 'Не активированы', countKey: 'notActivated' },
+  { value: 'BLOCKED', label: 'Заблокированные', countKey: 'blocked' },
+  { value: 'ARCHIVED', label: 'Архив', countKey: 'archived' },
 ];
 
 const ROLE_ROUTES: Partial<Record<AccountRole, string>> = {
@@ -92,47 +82,6 @@ const STATUS_DOT: Record<AccountStatus, string> = {
 function formatCount(value: number | undefined | null): string {
   if (value == null) return '—';
   return value.toLocaleString('ru-RU');
-}
-
-function StatTile({
-  label,
-  value,
-  icon,
-  iconClass,
-  active,
-  onClick,
-}: {
-  label: string;
-  value: number | string;
-  icon: ReactNode;
-  iconClass: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  const className = cx(
-    'flex h-[94px] w-full items-center justify-between rounded-xl border bg-white p-5 text-left shadow-[0px_2px_2px_rgba(0,0,0,0.02)] transition',
-    active ? 'border-navy-700 ring-1 ring-navy-700/20' : 'border-[#e8edf5]',
-    onClick && 'hover:border-slate-300',
-  );
-  const body = (
-    <>
-      <div className="flex flex-col gap-1">
-        <p className="text-[10px] font-bold uppercase tracking-[0.5px] text-[#9ca3af]">{label}</p>
-        <p className="text-2xl font-bold leading-none text-[#1a1f36]">{value}</p>
-      </div>
-      <span className={cx('flex size-10 shrink-0 items-center justify-center rounded-[20px]', iconClass)}>
-        {icon}
-      </span>
-    </>
-  );
-  if (onClick) {
-    return (
-      <button type="button" onClick={onClick} className={className}>
-        {body}
-      </button>
-    );
-  }
-  return <div className={className}>{body}</div>;
 }
 
 function RoleBadge({ role }: { role: AccountRole }) {
@@ -189,8 +138,12 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { data: stats } = useUserStats();
+  const { data: rawStats } = useUserStats();
   const invalidateStats = useInvalidateUserStats();
+
+  // `/admin/accounts/stats` считает все аккаунты и не принимает роль, поэтому при фильтре
+  // по роли его числа не совпали бы с таблицей. Лучше не показать счётчик, чем показать чужой.
+  const stats = role === 'ALL' ? rawStats : undefined;
 
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
   const [createRole, setCreateRole] = useState<AccountRole | null>(null);
@@ -302,50 +255,15 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-[28px] font-bold leading-none tracking-tight text-[#1a1f36]">
-        {forcedRole ? PAGE_TITLES[forcedRole] : 'Пользователи'}
-      </h1>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <StatTile
-          label="Всего пользователей"
-          value={formatCount(stats?.total)}
-          icon={<UsersIcon className="size-5 text-navy-700" />}
-          iconClass="bg-[rgba(39,65,133,0.08)]"
-        />
-        <StatTile
-          label="Активные"
-          value={formatCount(stats?.active)}
-          icon={<CheckCircle2 className="size-5 text-emerald-500" />}
-          iconClass="bg-[rgba(34,197,94,0.08)]"
-          active={status === 'ACTIVE'}
-          onClick={() => setStatus('ACTIVE')}
-        />
-        <StatTile
-          label="Не активированы"
-          value={formatCount(stats?.notActivated)}
-          icon={<Clock className="size-5 text-brand-500" />}
-          iconClass="bg-[rgba(251,146,60,0.08)]"
-          active={status === 'NOT_ACTIVATED'}
-          onClick={() => setStatus('NOT_ACTIVATED')}
-        />
-        <StatTile
-          label="Заблокированы"
-          value={formatCount(stats?.blocked)}
-          icon={<Lock className="size-5 text-red-500" />}
-          iconClass="bg-[rgba(239,68,68,0.08)]"
-          active={status === 'BLOCKED'}
-          onClick={() => setStatus('BLOCKED')}
-        />
-        <StatTile
-          label="Архив"
-          value={formatCount(stats?.archived)}
-          icon={<Archive className="size-5 text-slate-400" />}
-          iconClass="bg-[rgba(156,163,175,0.08)]"
-          active={status === 'ARCHIVED'}
-          onClick={() => setStatus('ARCHIVED')}
-        />
+      <div className="flex items-baseline gap-3">
+        <h1 className="text-[28px] font-bold leading-none tracking-tight text-[#1a1f36]">
+          {forcedRole ? PAGE_TITLES[forcedRole] : 'Пользователи'}
+        </h1>
+        {stats && (
+          <span className="text-[15px] font-medium tabular-nums text-[#9ca3af]">
+            {formatCount(stats.total)}
+          </span>
+        )}
       </div>
 
       {/* Toolbar */}
@@ -406,19 +324,31 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
         <div className="flex flex-wrap items-center gap-2">
           {STATUS_TABS.map((t) => {
             const selected = status === t.value;
+            const count = stats?.[t.countKey];
             return (
               <button
                 key={t.value}
                 type="button"
                 onClick={() => setStatus(t.value)}
                 className={cx(
-                  'rounded-md px-3 py-1.5 text-13 transition',
+                  'inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-13 transition',
                   selected
                     ? 'bg-navy-700 font-semibold text-white'
                     : 'border border-[#e5e7eb] bg-[#f3f4f6] font-medium text-[#6b7280] hover:border-slate-300 hover:text-slate-800',
                 )}
               >
                 {t.label}
+                {count != null && (
+                  <span
+                    className={cx(
+                      // tabular-nums — чтобы ширина кнопки не прыгала при смене счётчика.
+                      'tabular-nums',
+                      selected ? 'text-white/70' : 'text-[#9ca3af]',
+                    )}
+                  >
+                    {formatCount(count)}
+                  </span>
+                )}
               </button>
             );
           })}

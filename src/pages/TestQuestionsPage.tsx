@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -286,11 +286,17 @@ export function TestQuestionsPage() {
   );
   const update = useUpdateTest();
 
-  const [questions, setQuestions] = useState<QuestionDraft[]>([]);
+  const [questions, setQuestionsState] = useState<QuestionDraft[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
   const [activationViolations, setActivationViolations] = useState<TestActivationViolation[]>([]);
   const [decisionOpen, setDecisionOpen] = useState(false);
   const [hadDraftsOnOpen, setHadDraftsOnOpen] = useState(false);
+  const userEditedRef = useRef(false);
+
+  function setQuestions(updater: QuestionDraft[] | ((prev: QuestionDraft[]) => QuestionDraft[])) {
+    userEditedRef.current = true;
+    setQuestionsState(updater);
+  }
 
   const draftCount = useMemo(() => questions.filter((q) => q.isDraft).length, [questions]);
   const invalidByIndex = useMemo(
@@ -301,13 +307,19 @@ export function TestQuestionsPage() {
   const showDraftUi = isAi;
 
   useEffect(() => {
-    if (!test) return;
-    const loaded = (test.questions ?? []).map(questionFromResponse);
-    setQuestions(loaded);
-    setHadDraftsOnOpen(loaded.some((q) => q.isDraft));
-    // Только при первой загрузке теста — не перетирать правки админа при фоновом рефетче.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    userEditedRef.current = false;
   }, [test?.id]);
+
+  useEffect(() => {
+    if (!test) return;
+    // Пока админ не начал редактировать — синхронизируемся с сервером (в т.ч. после
+    // фонового рефетча по завершении AI-генерации). Как только он что-то поменял —
+    // больше не перетираем его правки последующими рефетчами.
+    if (userEditedRef.current) return;
+    const loaded = (test.questions ?? []).map(questionFromResponse);
+    setQuestionsState(loaded);
+    setHadDraftsOnOpen(loaded.some((q) => q.isDraft));
+  }, [test]);
 
   useEffect(() => {
     if (activationViolations.length === 0) return;
