@@ -19,6 +19,7 @@ import {
   Briefcase,
   type LucideIcon,
 } from 'lucide-react';
+import { ROUTES } from '@/lib/routes';
 
 export interface NavItem {
   to: string;
@@ -42,7 +43,8 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     id: 'home',
     label: '',
-    items: [{ to: '/', label: 'Главная', icon: Home, end: true }],
+    // `/` — публичный раздел анонсов, домашний экран администратора живёт на `/dashboard`.
+    items: [{ to: ROUTES.dashboard, label: 'Главная', icon: Home, end: true }],
   },
   {
     id: 'platform',

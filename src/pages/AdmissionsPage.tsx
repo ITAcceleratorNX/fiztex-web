@@ -6,16 +6,18 @@ import { NotificationsBell } from '@/components/admissions/NotificationsBell';
 import { cx } from '@/lib/format';
 import { AdmissionTestsTab } from './tabs/AdmissionTestsTab';
 import { ApplicantsTab } from './tabs/ApplicantsTab';
+import { AnnouncementsTab } from './tabs/AnnouncementsTab';
 
-type TabKey = 'tests' | 'applicants';
+type TabKey = 'tests' | 'applicants' | 'announcements';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'tests', label: 'Тесты' },
   { key: 'applicants', label: 'Поступающие' },
+  { key: 'announcements', label: 'Анонсы' },
 ];
 
 function parseTab(value: string | null): TabKey {
-  if (value === 'applicants') return value;
+  if (value === 'applicants' || value === 'announcements') return value;
   return 'tests';
 }
 
@@ -78,6 +80,7 @@ export function AdmissionsPage() {
       <div className="mt-6">
         {tab === 'tests' && <AdmissionTestsTab />}
         {tab === 'applicants' && <ApplicantsTab />}
+        {tab === 'announcements' && <AnnouncementsTab />}
       </div>
     </div>
   );

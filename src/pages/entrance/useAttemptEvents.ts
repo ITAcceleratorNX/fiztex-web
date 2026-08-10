@@ -25,10 +25,14 @@ export function useAttemptEvents(
   const getQuestionIdRef = useRef(getCurrentQuestionId);
   getQuestionIdRef.current = getCurrentQuestionId;
 
+  /** Счётчик переключений вкладки вне состояния — нумерация в журнале не должна зависеть от рендера. */
+  const tabSwitchesRef = useRef(initialTabSwitchCount);
+
   const dismissTabSwitchWarning = useCallback(() => setShowTabSwitchWarning(false), []);
   const resume = useCallback(() => setContentHidden(false), []);
 
   useEffect(() => {
+    tabSwitchesRef.current = initialTabSwitchCount;
     setTabSwitchCount(initialTabSwitchCount);
   }, [attemptId, initialTabSwitchCount]);
 
@@ -50,11 +54,14 @@ export function useAttemptEvents(
       away = true;
       window.clearTimeout(blurTimer);
       if (type === 'tab_switch') {
-        setTabSwitchCount((prev) => {
-          const next = prev + 1;
-          log('tab_switch', `switch #${next}`);
-          return next;
-        });
+        // Счётчик ведётся в ref, а запись в журнал идёт здесь, а не внутри
+        // setTabSwitchCount. Апдейтер состояния обязан быть чистым: React вправе
+        // вызвать его несколько раз, и отправка события изнутри давала два
+        // одинаковых TAB_SWITCH на одно реальное переключение — журнал школы
+        // показывал вдвое больше нарушений, чем было.
+        tabSwitchesRef.current += 1;
+        log('tab_switch', `switch #${tabSwitchesRef.current}`);
+        setTabSwitchCount(tabSwitchesRef.current);
       } else {
         log(type, details);
       }

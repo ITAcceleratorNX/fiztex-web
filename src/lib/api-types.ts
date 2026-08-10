@@ -17,7 +17,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_15"];
+        patch: operations["update_16"];
         trace?: never;
     };
     "/api/admin/academic-periods/{id}/archive": {
@@ -59,9 +59,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_15"];
+        get: operations["list_16"];
         put?: never;
-        post: operations["create_14"];
+        post: operations["create_15"];
         delete?: never;
         options?: never;
         head?: never;
@@ -81,7 +81,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_14"];
+        patch: operations["update_15"];
         trace?: never;
     };
     "/api/admin/academic-years/{id}/activate": {
@@ -139,9 +139,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_14"];
+        get: operations["list_15"];
         put?: never;
-        post: operations["create_13"];
+        post: operations["create_14"];
         delete?: never;
         options?: never;
         head?: never;
@@ -206,6 +206,70 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["unblock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/admissions/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_14"];
+        put?: never;
+        post: operations["create_13"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/admissions/announcements/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_3"];
+        put: operations["update_2"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/admissions/announcements/{id}/hide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["hide_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/admissions/announcements/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["publish_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -385,7 +449,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_13"];
+        patch: operations["update_14"];
         trace?: never;
     };
     "/api/admin/bell-templates/{id}/activate": {
@@ -545,7 +609,7 @@ export interface paths {
         delete: operations["delete_2"];
         options?: never;
         head?: never;
-        patch: operations["update_12"];
+        patch: operations["update_13"];
         trace?: never;
     };
     "/api/admin/calendar-events/{id}/activate": {
@@ -625,7 +689,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_11"];
+        patch: operations["update_12"];
         trace?: never;
     };
     "/api/admin/classes/{id}/archive": {
@@ -689,7 +753,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_10"];
+        patch: operations["update_11"];
         trace?: never;
     };
     "/api/admin/group-sets/{id}/archive": {
@@ -897,7 +961,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_9"];
+        patch: operations["update_10"];
         trace?: never;
     };
     "/api/admin/lessons/{lessonId}/cancel": {
@@ -993,7 +1057,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_8"];
+        patch: operations["update_9"];
         trace?: never;
     };
     "/api/admin/parents/{id}/archive": {
@@ -1060,6 +1124,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/questions/ai-variant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["aiVariant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/results": {
         parameters: {
             query?: never;
@@ -1083,7 +1163,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_5"];
+        get: operations["get_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1441,7 +1521,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_7"];
+        patch: operations["update_8"];
         trace?: never;
     };
     "/api/admin/school-subjects/{id}/archive": {
@@ -1505,7 +1585,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_6"];
+        patch: operations["update_7"];
         trace?: never;
     };
     "/api/admin/students/{id}/archive": {
@@ -1601,7 +1681,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_5"];
+        patch: operations["update_6"];
         trace?: never;
     };
     "/api/admin/subgroups/{id}/archive": {
@@ -1723,7 +1803,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_17"];
+        get: operations["list_19"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1739,7 +1819,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_4"];
+        get: operations["get_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1761,7 +1841,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_4"];
+        patch: operations["update_5"];
         trace?: never;
     };
     "/api/admin/teacher-working-time/{id}/archive": {
@@ -1825,7 +1905,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_3"];
+        patch: operations["update_4"];
         trace?: never;
     };
     "/api/admin/teachers/{id}/archive": {
@@ -1956,6 +2036,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/tests/{id}/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["questions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/tests/{testId}/assignments/{assignmentId}/version": {
         parameters: {
             query?: never;
@@ -1982,6 +2078,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["verify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admissions/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_18"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admissions/announcements/grades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["grades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admissions/announcements/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_5"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2267,7 +2411,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_16"];
+        get: operations["list_17"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2411,13 +2555,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_3"];
+        get: operations["get_4"];
         put?: never;
         post?: never;
         delete: operations["delete_1"];
         options?: never;
         head?: never;
-        patch: operations["update_2"];
+        patch: operations["update_3"];
         trace?: never;
     };
     "/api/materials/{id}/download": {
@@ -2668,6 +2812,63 @@ export interface components {
         };
         AddSubgroupStudentsRequest: {
             studentIds?: number[];
+        };
+        AiQuestionVariantResponse: {
+            /** Format: int32 */
+            inputTokens?: number;
+            model?: string;
+            /** Format: int32 */
+            outputTokens?: number;
+            question?: components["schemas"]["QuestionRequest"];
+            solution?: string;
+        };
+        AnnouncementListItem: {
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            eventAt?: string;
+            grade?: string;
+            /** Format: int64 */
+            id?: number;
+            /** @enum {string} */
+            status?: "DRAFT" | "PUBLISHED" | "HIDDEN";
+            title?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        AnnouncementRequest: {
+            bringWithYou?: string;
+            /** Format: date-time */
+            eventAt?: string;
+            formatInfo?: string;
+            grade?: string;
+            location?: string;
+            preparation?: string;
+            recommendations?: string;
+            summary?: string;
+            title?: string;
+        };
+        AnnouncementView: {
+            bringWithYou?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            eventAt?: string;
+            formatInfo?: string;
+            grade?: string;
+            /** Format: int64 */
+            id?: number;
+            location?: string;
+            preparation?: string;
+            /** Format: date-time */
+            publishedAt?: string;
+            recommendations?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "PUBLISHED" | "HIDDEN";
+            summary?: string;
+            title?: string;
+            /** Format: date-time */
+            updatedAt?: string;
         };
         AnswerOptionRequest: {
             isCorrect?: boolean;
@@ -3392,6 +3593,7 @@ export interface components {
             status?: "PENDING" | "RUNNING" | "DONE" | "FAILED";
             /** Format: int64 */
             testId?: number;
+            warningMessage?: string;
         };
         GroupSetRef: {
             /** Format: int64 */
@@ -3846,6 +4048,24 @@ export interface components {
         };
         PageAccountView: {
             content?: components["schemas"]["AccountView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        PageAnnouncementListItem: {
+            content?: components["schemas"]["AnnouncementListItem"][];
             empty?: boolean;
             first?: boolean;
             last?: boolean;
@@ -4337,6 +4557,31 @@ export interface components {
             /** Format: int64 */
             subjectId?: number;
         };
+        PublicAnnouncementItem: {
+            /** Format: date-time */
+            eventAt?: string;
+            grade?: string;
+            /** Format: int64 */
+            id?: number;
+            location?: string;
+            summary?: string;
+            title?: string;
+        };
+        PublicAnnouncementView: {
+            antiCheatNotice?: string;
+            bringWithYou?: string;
+            /** Format: date-time */
+            eventAt?: string;
+            formatInfo?: string;
+            grade?: string;
+            /** Format: int64 */
+            id?: number;
+            location?: string;
+            preparation?: string;
+            recommendations?: string;
+            summary?: string;
+            title?: string;
+        };
         PublishScheduleRequest: {
             confirmedWarningCodes: string[];
             /** Format: int64 */
@@ -4371,6 +4616,8 @@ export interface components {
             /** Format: int32 */
             orderIndex?: number;
             referenceAnswer?: string;
+            /** Format: int64 */
+            sourceQuestionId?: number;
             text?: string;
             topic?: string;
             /** @enum {string} */
@@ -4390,6 +4637,8 @@ export interface components {
             /** Format: int32 */
             orderIndex?: number;
             referenceAnswer?: string;
+            /** Format: int64 */
+            sourceQuestionId?: number;
             text?: string;
             topic?: string;
             /** @enum {string} */
@@ -5226,7 +5475,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    update_15: {
+    update_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -5292,7 +5541,7 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    list_16: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -5314,7 +5563,7 @@ export interface operations {
             };
         };
     };
-    create_14: {
+    create_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -5360,7 +5609,7 @@ export interface operations {
             };
         };
     };
-    update_14: {
+    update_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -5476,7 +5725,7 @@ export interface operations {
             };
         };
     };
-    list_14: {
+    list_15: {
         parameters: {
             query: {
                 role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT";
@@ -5501,7 +5750,7 @@ export interface operations {
             };
         };
     };
-    create_13: {
+    create_14: {
         parameters: {
             query?: {
                 force?: boolean;
@@ -5604,6 +5853,146 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    list_14: {
+        parameters: {
+            query: {
+                status?: "DRAFT" | "PUBLISHED" | "HIDDEN";
+                grade?: string;
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageAnnouncementListItem"];
+                };
+            };
+        };
+    };
+    create_13: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnnouncementRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnouncementView"];
+                };
+            };
+        };
+    };
+    get_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnouncementView"];
+                };
+            };
+        };
+    };
+    update_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnnouncementRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnouncementView"];
+                };
+            };
+        };
+    };
+    hide_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnouncementView"];
+                };
+            };
+        };
+    };
+    publish_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnouncementView"];
+                };
             };
         };
     };
@@ -5917,7 +6306,7 @@ export interface operations {
             };
         };
     };
-    update_13: {
+    update_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -6272,7 +6661,7 @@ export interface operations {
             };
         };
     };
-    update_12: {
+    update_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -6437,7 +6826,7 @@ export interface operations {
             };
         };
     };
-    update_11: {
+    update_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -6574,7 +6963,7 @@ export interface operations {
             };
         };
     };
-    update_10: {
+    update_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -6949,7 +7338,7 @@ export interface operations {
             };
         };
     };
-    update_9: {
+    update_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -7163,7 +7552,7 @@ export interface operations {
             };
         };
     };
-    update_8: {
+    update_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -7281,6 +7670,30 @@ export interface operations {
             };
         };
     };
+    aiVariant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuestionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiQuestionVariantResponse"];
+                };
+            };
+        };
+    };
     reviews: {
         parameters: {
             query: {
@@ -7305,7 +7718,7 @@ export interface operations {
             };
         };
     };
-    get_5: {
+    get_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -7970,7 +8383,7 @@ export interface operations {
             };
         };
     };
-    update_7: {
+    update_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -8110,7 +8523,7 @@ export interface operations {
             };
         };
     };
-    update_6: {
+    update_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -8297,7 +8710,7 @@ export interface operations {
             };
         };
     };
-    update_5: {
+    update_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -8534,7 +8947,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_19: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -8559,7 +8972,7 @@ export interface operations {
             };
         };
     };
-    get_4: {
+    get_6: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -8583,7 +8996,7 @@ export interface operations {
             };
         };
     };
-    update_4: {
+    update_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -8721,7 +9134,7 @@ export interface operations {
             };
         };
     };
-    update_3: {
+    update_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -8911,6 +9324,7 @@ export interface operations {
         parameters: {
             query?: {
                 useAiGeneration?: boolean;
+                grade?: string;
             };
             header?: never;
             path?: never;
@@ -9047,6 +9461,28 @@ export interface operations {
             };
         };
     };
+    questions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionResponse"][];
+                };
+            };
+        };
+    };
     changeAssignmentVersion: {
         parameters: {
             query?: never;
@@ -9094,6 +9530,70 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VerifyCodeResponse"];
+                };
+            };
+        };
+    };
+    list_18: {
+        parameters: {
+            query?: {
+                grade?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicAnnouncementItem"][];
+                };
+            };
+        };
+    };
+    grades: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+        };
+    };
+    get_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicAnnouncementView"];
                 };
             };
         };
@@ -9538,7 +10038,7 @@ export interface operations {
             };
         };
     };
-    list_16: {
+    list_17: {
         parameters: {
             query: {
                 dateFrom?: string;
@@ -9879,7 +10379,7 @@ export interface operations {
             };
         };
     };
-    get_3: {
+    get_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -9921,7 +10421,7 @@ export interface operations {
             };
         };
     };
-    update_2: {
+    update_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -10147,7 +10647,9 @@ export interface operations {
     };
     importQuestions: {
         parameters: {
-            query?: never;
+            query?: {
+                useAiReader?: boolean;
+            };
             header?: never;
             path: {
                 testId: number;

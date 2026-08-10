@@ -7,6 +7,12 @@ import { APP_NAME } from '@/lib/branding';
 type ShellVariant = 'default' | 'auth' | 'portal' | 'session' | 'plain';
 type NavKey = 'home' | 'tests' | 'profile' | 'exit';
 
+const MAIN_WIDTHS = {
+  md: 'max-w-md',
+  lg: 'max-w-3xl',
+  xl: 'max-w-5xl',
+} as const;
+
 /**
  * Shell for the applicant entrance flow.
  * Mobile keeps the Figma phone chrome (`max-w-[390px]` + bottom nav).
@@ -23,7 +29,8 @@ export function EntranceShell({
   title,
 }: {
   children: ReactNode;
-  size?: 'md' | 'lg';
+  /** `xl` — публичный раздел анонсов: список карточек шире, чем формы потока. */
+  size?: 'md' | 'lg' | 'xl';
   variant?: ShellVariant;
   applicantName?: string;
   onExit?: () => void;
@@ -119,7 +126,7 @@ export function EntranceShell({
       <main
         className={cx(
           'mx-auto w-full px-4 py-8 sm:py-10',
-          size === 'lg' ? 'max-w-3xl' : 'max-w-md',
+          MAIN_WIDTHS[size],
         )}
       >
         {children}

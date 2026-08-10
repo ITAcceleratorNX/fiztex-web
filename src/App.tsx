@@ -3,6 +3,9 @@ import { useAuth } from '@/context/AuthContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { LoginPage } from '@/pages/LoginPage';
 import { EntranceFlow } from '@/pages/entrance/EntranceFlow';
+import { PublicAnnouncementsPage } from '@/pages/public/PublicAnnouncementsPage';
+import { PublicAnnouncementPage } from '@/pages/public/PublicAnnouncementPage';
+import { ROUTES } from '@/lib/routes';
 import { AdmissionsPage } from '@/pages/AdmissionsPage';
 import { TestDetailPage } from '@/pages/TestDetailPage';
 import { TestCreatePage } from '@/pages/TestCreatePage';
@@ -39,7 +42,7 @@ function Protected({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    return <Navigate to={ROUTES.staffLogin} replace state={{ from: location.pathname }} />;
   }
   return <>{children}</>;
 }
@@ -49,11 +52,22 @@ export function App() {
 
   return (
     <Routes>
-      <Route path="/entrance" element={<EntranceFlow />} />
+      {/*
+        Публичная зона: открывается без входа. Главная отдана разделу вступительных
+        тестов — с неё поступающий читает анонс и уходит вводить персональный код.
+      */}
+      <Route path={ROUTES.publicAnnouncements} element={<PublicAnnouncementsPage />} />
+      <Route path="/announcements/:announcementId" element={<PublicAnnouncementPage />} />
+      <Route path={ROUTES.entrance} element={<EntranceFlow />} />
 
+      {/*
+        Вход администратора на отдельном пути: на главной его больше нет.
+        Редиректа со старого `/login` намеренно нет — его ловит `*` и уводит
+        на публичную главную.
+      */}
       <Route
-        path="/login"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
+        path={ROUTES.staffLogin}
+        element={isAuthenticated ? <Navigate to={ROUTES.dashboard} replace /> : <LoginPage />}
       />
 
       <Route
@@ -63,10 +77,10 @@ export function App() {
           </Protected>
         }
       >
-        <Route path="/" element={<DashboardPage />} />
+        <Route path={ROUTES.dashboard} element={<DashboardPage />} />
 
         {/* Platform Core Lite */}
-        <Route path="/admin" element={<Navigate to="/" replace />} />
+        <Route path="/admin" element={<Navigate to={ROUTES.dashboard} replace />} />
         <Route path="/admin/users" element={<UsersPage />} />
         <Route path="/admin/classes" element={<ClassesPage />} />
         <Route path="/admin/classes/:classId" element={<ClassDetailPage />} />
@@ -157,7 +171,8 @@ export function App() {
         />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Неизвестный путь ведёт на публичную главную, а не на форму входа. */}
+      <Route path="*" element={<Navigate to={ROUTES.publicAnnouncements} replace />} />
     </Routes>
   );
 }

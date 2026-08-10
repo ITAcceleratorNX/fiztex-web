@@ -13,10 +13,7 @@ import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
 import { Logo, PhysTechMark } from '@/components/layout/Logo';
 import { APP_NAME } from '@/lib/branding';
-
-/** Сид-суперадмин из `V*__seed`: единственная учётка, которая заведомо есть на чистой базе. */
-const DEV_LOGIN = 'super@fiztex.local';
-const DEV_PASSWORD = 'super123';
+import { safeRedirectTarget } from '@/lib/routes';
 
 const FEATURES: { icon: LucideIcon; label: string }[] = [
   { icon: Users, label: 'Ученики, родители и учителя' },
@@ -29,13 +26,12 @@ export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState(DEV_LOGIN);
-  const [password, setPassword] = useState(DEV_PASSWORD);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const from = (location.state as { from?: string } | null)?.from;
-  const redirectTo = from?.startsWith('/') ? from : '/';
+  const redirectTo = safeRedirectTarget((location.state as { from?: string } | null)?.from);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -102,7 +98,6 @@ export function LoginPage() {
                 autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={`${DEV_LOGIN} или +77001112233`}
                 required
               />
             </Field>
@@ -112,7 +107,6 @@ export function LoginPage() {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
                 required
               />
             </Field>
@@ -129,7 +123,7 @@ export function LoginPage() {
           </div>
 
           <p className="mt-6 text-center text-xs text-slate-400">
-            Dev: {DEV_LOGIN} / {DEV_PASSWORD}
+            Доступ выдаёт администратор школы.
           </p>
         </form>
       </div>

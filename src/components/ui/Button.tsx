@@ -26,6 +26,28 @@ const sizes: Record<Size, string> = {
   md: 'h-11 px-5 text-sm',
 };
 
+/**
+ * Классы кнопки без самого элемента.
+ *
+ * Нужны там, где по семантике должна быть ссылка, а не кнопка: переход на другой
+ * маршрут обязан оставаться `<a>` (средний клик, «открыть в новой вкладке»,
+ * скринридер). Экспортируем именно классы, чтобы у ссылки и кнопки не разъехался
+ * вид — вместо копирования той же строки утилит по месту.
+ */
+export function buttonClassName({
+  variant = 'primary',
+  size = 'md',
+  className,
+}: { variant?: Variant; size?: Size; className?: string } = {}): string {
+  return cx(
+    'inline-flex items-center justify-center rounded-xl font-semibold transition',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50 disabled:cursor-not-allowed',
+    variants[variant],
+    sizes[size],
+    className,
+  );
+}
+
 export function Button({
   variant = 'primary',
   size = 'md',
@@ -38,13 +60,7 @@ export function Button({
 }: ButtonProps) {
   return (
     <button
-      className={cx(
-        'inline-flex items-center justify-center rounded-xl font-semibold transition',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50 disabled:cursor-not-allowed',
-        variants[variant],
-        sizes[size],
-        className,
-      )}
+      className={buttonClassName({ variant, size, className })}
       disabled={disabled || loading}
       {...props}
     >

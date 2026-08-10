@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '@/lib/api';
 import { lessonsApi } from '@/lib/lessonsApi';
+import { announcementsApi, type AnnouncementFilters, type AnnouncementRequest } from '@/lib/announcementsApi';
 import type {
   ApplicantRequest,
   GenerateTestRequest,
@@ -31,6 +32,14 @@ export const keys = {
   lesson: (lessonId: number) => ['lessons', lessonId] as const,
   lessonHistory: (lessonId: number) => ['lessons', lessonId, 'history'] as const,
   lessonStudents: (lessonId: number) => ['lessons', lessonId, 'students'] as const,
+  // Анонсы: публичная витрина и админский список кэшируются раздельно — у них
+  // разная видимость, и сброс админского списка не должен трогать публичный.
+  announcements: (filters: AnnouncementFilters) =>
+    ['announcements', 'admin', filters.status ?? '', filters.grade ?? '', filters.page ?? 0] as const,
+  announcement: (id: number) => ['announcements', 'admin', id] as const,
+  publicAnnouncements: (grade: string) => ['announcements', 'public', 'list', grade] as const,
+  publicAnnouncementGrades: ['announcements', 'public', 'grades'] as const,
+  publicAnnouncement: (id: number) => ['announcements', 'public', id] as const,
 };
 
 const ADMISSIONS_POLL_MS = 30_000;
@@ -350,5 +359,109 @@ export function useLessonStudents(lessonId: number | null, enabled: boolean) {
     queryKey: keys.lessonStudents(lessonId ?? 0),
     queryFn: ({ signal }) => lessonsApi.students(lessonId as number, signal),
     enabled: lessonId != null && enabled,
+  });
+}
+
+// ---- Анонсы вступительных тестов ----
+
+/**
+ * Любая запись обесценивает и админский список, и публичную витрину: скрытый
+ * анонс должен пропасть из публичного списка сразу, а не после перезагрузки.
+ * Общий префикс `['announcements']` сбрасывает оба дерева одним вызовом.
+ */
+function invalidateAnnouncements(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: ['announcements'] });
+}
+
+export function useAnnouncements(filters: AnnouncementFilters) {
+  return useQuery({
+    queryKey: keys.announcements(filters),
+    queryFn: ({ signal }) => announcementsApi.list(filters, signal),
+    placeholderData: (previous) => previous,
+  });
+}
+
+export function useAnnouncement(id: number | null) {
+  return useQuery({
+    queryKey: keys.announcement(id ?? 0),
+    queryFn: ({ signal }) => announcementsApi.get(id as number, signal),
+    enabled: id != null,
+  });
+}
+
+/**
+ * «Сохранить черновик» и «Сохранить и опубликовать» — одна мутация.
+ *
+ * Бэкенд держит создание и публикацию раздельно (у перехода свои правила), но
+ * администратору это не интересно: он нажал одну кнопку. Последовательность
+ * живёт здесь, а не в компоненте формы, чтобы её не пришлось повторять в каждом
+ * месте, откуда анонс можно сохранить.
+ */
+export function useSaveAnnouncement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      body,
+      publish,
+    }: {
+      id?: number;
+      body: AnnouncementRequest;
+      publish?: boolean;
+    }) => {
+      const saved = id
+        ? await announcementsApi.update(id, body)
+        : await announcementsApi.create(body);
+      // Повторная публикация опубликованного вернула бы 409 — это не ошибка
+      // администратора, а просто «уже опубликован».
+      if (publish && saved.status !== 'PUBLISHED') {
+        return announcementsApi.publish(saved.id as number);
+      }
+      return saved;
+    },
+    onSuccess: () => invalidateAnnouncements(qc),
+  });
+}
+
+export function usePublishAnnouncement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => announcementsApi.publish(id),
+    onSuccess: () => invalidateAnnouncements(qc),
+  });
+}
+
+export function useHideAnnouncement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => announcementsApi.hide(id),
+    onSuccess: () => invalidateAnnouncements(qc),
+  });
+}
+
+// ---- Публичная витрина анонсов (без авторизации) ----
+
+export function usePublicAnnouncements(grade: string) {
+  return useQuery({
+    queryKey: keys.publicAnnouncements(grade),
+    queryFn: ({ signal }) => announcementsApi.listPublic(grade || undefined, signal),
+  });
+}
+
+export function usePublicAnnouncementGrades() {
+  return useQuery({
+    queryKey: keys.publicAnnouncementGrades,
+    queryFn: ({ signal }) => announcementsApi.publicGrades(signal),
+  });
+}
+
+/** 404 — «анонс скрыт или не существует» (§7), а не сбой сети: повторять нечего. */
+export function usePublicAnnouncement(id: number | null) {
+  return useQuery({
+    queryKey: keys.publicAnnouncement(id ?? 0),
+    queryFn: ({ signal }) => announcementsApi.getPublic(id as number, signal),
+    enabled: id != null,
+    retry: (failureCount, error) =>
+      !(error instanceof ApiError && error.status === 404) && failureCount < 2,
   });
 }

@@ -8,6 +8,8 @@ import {
   setActiveAttemptId,
 } from '@/lib/entranceApi';
 import { useToast } from '@/context/ToastContext';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { PUBLIC_TITLE } from '@/lib/branding';
 import { LoadingBlock } from '@/components/ui/StateBlock';
 import { EntranceShell } from './EntranceShell';
 import { CodeScreen } from './CodeScreen';
@@ -35,6 +37,8 @@ const FINISHED_STATUSES: AttemptStatus[] = [
  * the flow and re-loads state from the backend (AC #10, #11).
  */
 export function EntranceFlow() {
+  // Поток поступающего тоже публичный — заголовок вкладки админский быть не должен.
+  useDocumentTitle(PUBLIC_TITLE);
   const toast = useToast();
   const [screen, setScreen] = useState<Screen>('loading');
   const [applicant, setApplicant] = useState<ApplicantView | null>(null);
