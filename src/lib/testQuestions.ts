@@ -55,6 +55,12 @@ export interface QuestionDraft {
   referenceAnswer: string;
   gradingCriteria: string;
   options: AnswerOptionDraft[];
+  /** Вопрос-источник, если это копия из другого теста. Уходит на сервер при сохранении. */
+  sourceQuestionId: number | null;
+  /** Откуда скопировано — подпись в карточке до сохранения. На сервер не уходит. */
+  sourceTestTitle?: string;
+  /** Вариант, созданный AI и ещё не сохранённый. На сервер не уходит. */
+  isAiVariant?: boolean;
 }
 
 export function countDraftQuestions(questions: QuestionResponse[] | undefined): number {
@@ -87,6 +93,7 @@ export function emptyQuestion(type: QuestionType = 'SINGLE_CHOICE'): QuestionDra
     allowPhoto: type === 'PHOTO',
     referenceAnswer: '',
     gradingCriteria: '',
+    sourceQuestionId: null,
     options: isChoiceType(type)
       ? [
           { localId: newLocalId(), text: '', isCorrect: true },
@@ -110,10 +117,47 @@ export function questionFromResponse(q: QuestionResponse): QuestionDraft {
     allowPhoto: isLegacyPhoto ? true : q.allowPhoto,
     referenceAnswer: q.referenceAnswer ?? '',
     gradingCriteria: q.gradingCriteria ?? '',
+    sourceQuestionId: q.sourceQuestionId ?? null,
     options: (q.options ?? []).map((o) => ({
       localId: newLocalId(),
       text: o.text,
       isCorrect: o.isCorrect,
+    })),
+  };
+}
+
+/**
+ * Копия вопроса из другого теста. Копия независима: сервер получает её как обычный вопрос,
+ * а связь с оригиналом хранится только для защиты от повторного добавления.
+ */
+export function questionFromOtherTest(q: QuestionResponse, sourceTestTitle: string): QuestionDraft {
+  return {
+    ...questionFromResponse(q),
+    isDraft: false,
+    sourceQuestionId: q.id,
+    sourceTestTitle,
+  };
+}
+
+/** Вариант, созданный AI: приходит уже в виде запроса, остаётся разложить его в черновик. */
+export function questionFromVariant(variant: QuestionRequest): QuestionDraft {
+  return {
+    localId: newLocalId(),
+    isDraft: false,
+    isAiVariant: true,
+    topic: variant.topic ?? '',
+    difficulty: normalizeDifficulty(variant.difficulty),
+    type: variant.type,
+    text: variant.text,
+    maxScore: variant.maxScore,
+    allowPhoto: variant.allowPhoto ?? false,
+    referenceAnswer: variant.referenceAnswer ?? '',
+    gradingCriteria: variant.gradingCriteria ?? '',
+    sourceQuestionId: null,
+    options: (variant.options ?? []).map((o) => ({
+      localId: newLocalId(),
+      text: o.text,
+      isCorrect: Boolean(o.isCorrect),
     })),
   };
 }
@@ -129,6 +173,7 @@ export function questionToRequest(q: QuestionDraft, orderIndex: number): Questio
     referenceAnswer: q.referenceAnswer.trim() || null,
     gradingCriteria: q.gradingCriteria.trim() || null,
     orderIndex,
+    sourceQuestionId: q.sourceQuestionId,
     options: isChoiceType(q.type)
       ? q.options.map((o, i) => ({
           text: o.text.trim(),

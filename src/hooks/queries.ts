@@ -5,6 +5,7 @@ import type {
   ApplicantRequest,
   GenerateTestRequest,
   MaterialUpdateRequest,
+  QuestionRequest,
   TestRequest,
 } from '@/lib/types';
 
@@ -17,6 +18,8 @@ export const keys = {
         ? (['tests', 'admission'] as const)
         : (['tests', 'all'] as const),
   test: (id: number) => ['tests', id] as const,
+  testsByGrade: (grade: string) => ['tests', 'grade', grade] as const,
+  testQuestions: (id: number) => ['tests', id, 'questions'] as const,
   applicants: ['applicants'] as const,
   reviews: ['reviews'] as const,
   resultsPage: (status: string, search: string, page: number, size: number) =>
@@ -53,6 +56,23 @@ export function useTest(id: number | null) {
     queryKey: id ? keys.test(id) : ['tests', 'none'],
     queryFn: ({ signal }) => api.getTest(id as number, signal),
     enabled: id != null,
+  });
+}
+
+/** Тесты выбранного класса — шаг «выбор теста» в окне «Добавить из другого теста». */
+export function useTestsByGrade(grade: string | null) {
+  return useQuery({
+    queryKey: grade ? keys.testsByGrade(grade) : ['tests', 'grade', 'none'],
+    queryFn: ({ signal }) => api.listTests(undefined, signal, grade as string),
+    enabled: Boolean(grade),
+  });
+}
+
+export function useTestQuestions(testId: number | null) {
+  return useQuery({
+    queryKey: testId != null ? keys.testQuestions(testId) : ['tests', 'questions', 'none'],
+    queryFn: ({ signal }) => api.listTestQuestions(testId as number, signal),
+    enabled: testId != null,
   });
 }
 
@@ -211,8 +231,22 @@ export function useGenerateTest() {
 
 export function useImportQuestions() {
   return useMutation({
-    mutationFn: ({ testId, formData }: { testId: number; formData: FormData }) =>
-      api.importQuestions(testId, formData),
+    mutationFn: ({
+      testId,
+      formData,
+      useAiReader,
+    }: {
+      testId: number;
+      formData: FormData;
+      useAiReader: boolean;
+    }) => api.importQuestions(testId, formData, useAiReader),
+  });
+}
+
+/** Вариант вопроса с AI. Ничего не сохраняет — результат уходит в предпросмотр. */
+export function useAiQuestionVariant() {
+  return useMutation({
+    mutationFn: (question: QuestionRequest) => api.aiQuestionVariant(question),
   });
 }
 

@@ -15,8 +15,11 @@ import type {
   Material,
   MaterialUpdateRequest,
   MaterialDownloadResponse,
+  AiQuestionVariantResponse,
   GenerateTestRequest,
   GenerationJobResponse,
+  QuestionRequest,
+  QuestionResponse,
   SuspiciousLogItem,
   Test,
   TestAssignmentView,
@@ -203,12 +206,17 @@ export const api = {
   },
 
   // Tests
-  listTests: (useAiGeneration?: boolean, signal?: AbortSignal) => {
-    const query =
-      useAiGeneration === undefined ? '' : `?useAiGeneration=${useAiGeneration}`;
+  listTests: (useAiGeneration?: boolean, signal?: AbortSignal, grade?: string) => {
+    const params = new URLSearchParams();
+    if (useAiGeneration !== undefined) params.set('useAiGeneration', String(useAiGeneration));
+    if (grade) params.set('grade', grade);
+    const query = params.size > 0 ? `?${params}` : '';
     return request<Test[]>(`/admin/tests${query}`, { signal });
   },
   getTest: (id: number, signal?: AbortSignal) => request<Test>(`/admin/tests/${id}`, { signal }),
+  /** Вопросы текущей версии теста — для окна «Добавить из другого теста». */
+  listTestQuestions: (id: number, signal?: AbortSignal) =>
+    request<QuestionResponse[]>(`/admin/tests/${id}/questions`, { signal }),
   createTest: (body: TestRequest) => request<Test>('/admin/tests', { method: 'POST', body }),
   updateTest: (id: number, body: TestRequest) =>
     request<Test>(`/admin/tests/${id}`, { method: 'PUT', body }),
@@ -272,8 +280,24 @@ export const api = {
   // Test generation
   generateTest: (testId: number, body: GenerateTestRequest) =>
     request<GenerationJobResponse>(`/tests/${testId}/generate`, { method: 'POST', body }),
-  importQuestions: (testId: number, formData: FormData, signal?: AbortSignal) =>
-    requestMultipart<GenerationJobResponse>(`/tests/${testId}/import-questions`, formData, signal),
+  importQuestions: (
+    testId: number,
+    formData: FormData,
+    useAiReader: boolean,
+    signal?: AbortSignal,
+  ) =>
+    requestMultipart<GenerationJobResponse>(
+      `/tests/${testId}/import-questions?useAiReader=${useAiReader}`,
+      formData,
+      signal,
+    ),
+  /** Вариант вопроса с AI: ничего не сохраняет, ответ показывается в предпросмотре. */
+  aiQuestionVariant: (question: QuestionRequest, signal?: AbortSignal) =>
+    request<AiQuestionVariantResponse>('/admin/questions/ai-variant', {
+      method: 'POST',
+      body: question,
+      signal,
+    }),
   getGenerationJob: (id: number, signal?: AbortSignal) =>
     request<GenerationJobResponse>(`/generation-jobs/${id}`, { signal }),
   listGenerationJobs: (testId: number, signal?: AbortSignal) =>

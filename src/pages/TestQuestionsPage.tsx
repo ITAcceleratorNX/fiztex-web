@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, GripVertical, Sparkles, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput, TextArea, Select } from '@/components/ui/Field';
 import { Toggle } from '@/components/ui/Toggle';
@@ -21,11 +21,15 @@ import {
   emptyQuestion,
   isChoiceType,
   newLocalId,
+  questionFromOtherTest,
   questionFromResponse,
+  questionFromVariant,
   questionToRequest,
   validateQuestions,
   type QuestionDraft,
 } from '@/lib/testQuestions';
+import { AddFromTestModal } from './modals/AddFromTestModal';
+import { AiVariantModal } from './modals/AiVariantModal';
 import { VersionDecisionModal } from './modals/VersionDecisionModal';
 import {
   mapTestActivationError,
@@ -41,6 +45,7 @@ function QuestionEditor({
   onRemove,
   onMoveUp,
   onMoveDown,
+  onAiVariant,
   showDraftUi = true,
   invalidMessages = [],
 }: {
@@ -51,6 +56,7 @@ function QuestionEditor({
   onRemove: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  onAiVariant?: () => void;
   showDraftUi?: boolean;
   invalidMessages?: string[];
 }) {
@@ -82,6 +88,16 @@ function QuestionEditor({
           <GripVertical className="h-4 w-4 text-slate-300" />
           <span className="text-sm font-semibold text-slate-800">Вопрос {index + 1}</span>
           {showDraftUi && question.isDraft && <DraftQuestionBadge />}
+          {question.sourceTestTitle && (
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+              Из теста «{question.sourceTestTitle}»
+            </span>
+          )}
+          {question.isAiVariant && (
+            <span className="rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-700">
+              AI-вариант
+            </span>
+          )}
           {invalidMessages.length > 0 && (
             <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
               Невалиден
@@ -89,6 +105,17 @@ function QuestionEditor({
           )}
         </div>
         <div className="flex items-center gap-1">
+          {onAiVariant && (
+            <button
+              type="button"
+              onClick={onAiVariant}
+              disabled={!question.text.trim()}
+              className="rounded-lg p-1.5 text-slate-400 transition hover:bg-brand-50 hover:text-brand-600 disabled:opacity-30"
+              title="Создать вариант вопроса с AI"
+            >
+              <Sparkles className="h-4 w-4" />
+            </button>
+          )}
           <button
             type="button"
             onClick={onMoveUp}
@@ -290,6 +317,8 @@ export function TestQuestionsPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [activationViolations, setActivationViolations] = useState<TestActivationViolation[]>([]);
   const [decisionOpen, setDecisionOpen] = useState(false);
+  const [addFromTestOpen, setAddFromTestOpen] = useState(false);
+  const [variantSourceIndex, setVariantSourceIndex] = useState<number | null>(null);
   const [hadDraftsOnOpen, setHadDraftsOnOpen] = useState(false);
   const userEditedRef = useRef(false);
 
@@ -299,6 +328,19 @@ export function TestQuestionsPage() {
   }
 
   const draftCount = useMemo(() => questions.filter((q) => q.isDraft).length, [questions]);
+  /**
+   * Что уже скопировано в этот тест — вместе с несохранёнными копиями: иначе один и тот же
+   * вопрос добавлялся бы дважды, пока страница не перезагружена.
+   */
+  const addedSourceIds = useMemo(
+    () =>
+      new Set(
+        questions
+          .map((q) => q.sourceQuestionId)
+          .filter((id): id is number => id != null),
+      ),
+    [questions],
+  );
   const invalidByIndex = useMemo(
     () => violationsByQuestionIndex(activationViolations),
     [activationViolations],
@@ -459,9 +501,18 @@ export function TestQuestionsPage() {
                 title="В тесте пока нет вопросов"
                 description="Добавьте хотя бы один вопрос, чтобы активировать тест."
                 action={
-                  <Button icon={<Plus className="h-4 w-4" />} onClick={() => setQuestions([emptyQuestion()])}>
-                    Добавить первый вопрос
-                  </Button>
+                  <div className="flex flex-wrap justify-center gap-3">
+                    <Button icon={<Plus className="h-4 w-4" />} onClick={() => setQuestions([emptyQuestion()])}>
+                      Добавить первый вопрос
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      icon={<Copy className="h-4 w-4" />}
+                      onClick={() => setAddFromTestOpen(true)}
+                    >
+                      Добавить из другого теста
+                    </Button>
+                  </div>
                 }
               />
             ) : (
@@ -481,16 +532,26 @@ export function TestQuestionsPage() {
                       onRemove={() => setQuestions((prev) => prev.filter((_, i) => i !== index))}
                       onMoveUp={() => moveQuestion(index, -1)}
                       onMoveDown={() => moveQuestion(index, 1)}
+                      onAiVariant={() => setVariantSourceIndex(index)}
                     />
                   ))}
                 </div>
-                <Button
-                  variant="secondary"
-                  icon={<Plus className="h-4 w-4" />}
-                  onClick={() => setQuestions((prev) => [...prev, emptyQuestion()])}
-                >
-                  Добавить вопрос
-                </Button>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    variant="secondary"
+                    icon={<Plus className="h-4 w-4" />}
+                    onClick={() => setQuestions((prev) => [...prev, emptyQuestion()])}
+                  >
+                    Добавить вопрос
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    icon={<Copy className="h-4 w-4" />}
+                    onClick={() => setAddFromTestOpen(true)}
+                  >
+                    Добавить из другого теста
+                  </Button>
+                </div>
               </>
             )}
           </div>
@@ -509,6 +570,41 @@ export function TestQuestionsPage() {
             </Button>
           </div>
         </>
+      )}
+
+      {/* Монтируется только открытым: иначе список всех тестов грузился бы при каждом
+          заходе на страницу вопросов, даже если окно так и не открыли. */}
+      {test && addFromTestOpen && (
+        <AddFromTestModal
+          open
+          onClose={() => setAddFromTestOpen(false)}
+          currentTestId={test.id}
+          addedSourceIds={addedSourceIds}
+          onAdd={(question, sourceTest) => {
+            setQuestions((prev) => [...prev, questionFromOtherTest(question, sourceTest.title)]);
+            toast.success('Вопрос добавлен — не забудьте сохранить');
+          }}
+        />
+      )}
+
+      {variantSourceIndex != null && (
+      <AiVariantModal
+        key={variantSourceIndex}
+        open
+        onClose={() => setVariantSourceIndex(null)}
+        original={questions[variantSourceIndex] ?? null}
+        onAdd={(variant) => {
+          const insertAt = variantSourceIndex;
+          setVariantSourceIndex(null);
+          if (insertAt == null) return;
+          setQuestions((prev) => {
+            const next = [...prev];
+            next.splice(insertAt + 1, 0, questionFromVariant(variant));
+            return next;
+          });
+          toast.success('Вариант добавлен — не забудьте сохранить');
+        }}
+      />
       )}
 
       <VersionDecisionModal

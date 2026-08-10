@@ -1060,6 +1060,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/questions/ai-variant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["aiVariant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/results": {
         parameters: {
             query?: never;
@@ -1956,6 +1972,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/tests/{id}/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["questions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/tests/{testId}/assignments/{assignmentId}/version": {
         parameters: {
             query?: never;
@@ -2668,6 +2700,15 @@ export interface components {
         };
         AddSubgroupStudentsRequest: {
             studentIds?: number[];
+        };
+        AiQuestionVariantResponse: {
+            /** Format: int32 */
+            inputTokens?: number;
+            model?: string;
+            /** Format: int32 */
+            outputTokens?: number;
+            question?: components["schemas"]["QuestionRequest"];
+            solution?: string;
         };
         AnswerOptionRequest: {
             isCorrect?: boolean;
@@ -3392,6 +3433,7 @@ export interface components {
             status?: "PENDING" | "RUNNING" | "DONE" | "FAILED";
             /** Format: int64 */
             testId?: number;
+            warningMessage?: string;
         };
         GroupSetRef: {
             /** Format: int64 */
@@ -4371,6 +4413,8 @@ export interface components {
             /** Format: int32 */
             orderIndex?: number;
             referenceAnswer?: string;
+            /** Format: int64 */
+            sourceQuestionId?: number;
             text?: string;
             topic?: string;
             /** @enum {string} */
@@ -4390,6 +4434,8 @@ export interface components {
             /** Format: int32 */
             orderIndex?: number;
             referenceAnswer?: string;
+            /** Format: int64 */
+            sourceQuestionId?: number;
             text?: string;
             topic?: string;
             /** @enum {string} */
@@ -7281,6 +7327,30 @@ export interface operations {
             };
         };
     };
+    aiVariant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuestionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiQuestionVariantResponse"];
+                };
+            };
+        };
+    };
     reviews: {
         parameters: {
             query: {
@@ -8911,6 +8981,7 @@ export interface operations {
         parameters: {
             query?: {
                 useAiGeneration?: boolean;
+                grade?: string;
             };
             header?: never;
             path?: never;
@@ -9043,6 +9114,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AssignResult"];
+                };
+            };
+        };
+    };
+    questions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionResponse"][];
                 };
             };
         };
@@ -10147,7 +10240,9 @@ export interface operations {
     };
     importQuestions: {
         parameters: {
-            query?: never;
+            query?: {
+                useAiReader?: boolean;
+            };
             header?: never;
             path: {
                 testId: number;
