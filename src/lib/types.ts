@@ -68,6 +68,8 @@ export interface QuestionResponse {
   orderIndex: number;
   isDraft: boolean;
   options: AnswerOptionResponse[];
+  /** Вопрос-источник, если этот вопрос скопирован из другого теста. */
+  sourceQuestionId: number | null;
 }
 
 export interface AnswerOptionRequest {
@@ -87,6 +89,11 @@ export interface QuestionRequest {
   gradingCriteria?: string | null;
   orderIndex?: number;
   options?: AnswerOptionRequest[];
+  /**
+   * Вопрос-источник при добавлении из другого теста. Возвращается на сервер при сохранении —
+   * иначе связь потерялась бы, и защита от повторного добавления перестала бы работать.
+   */
+  sourceQuestionId?: number | null;
 }
 
 export interface Test {
@@ -331,6 +338,18 @@ export interface GenerationJobResponse {
   /** Имя загруженного файла — только для IMPORT. */
   sourceFileName: string | null;
   addedQuestionCount: number | null;
+  /** Импорт прошёл, но прочиталось не всё: лимит страниц или нечитаемая страница. */
+  warningMessage: string | null;
+}
+
+/** Вариант вопроса, созданный AI. В базу не сохраняется — сначала предпросмотр. */
+export interface AiQuestionVariantResponse {
+  question: QuestionRequest;
+  /** Краткий ход вычисления: по нему администратор проверяет пересчитанный ответ. */
+  solution: string | null;
+  model: string | null;
+  inputTokens: number | null;
+  outputTokens: number | null;
 }
 
 // ---- Admissions admin (monitoring & notifications) ----
