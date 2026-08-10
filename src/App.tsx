@@ -5,6 +5,7 @@ import { LoginPage } from '@/pages/LoginPage';
 import { EntranceFlow } from '@/pages/entrance/EntranceFlow';
 import { PublicAnnouncementsPage } from '@/pages/public/PublicAnnouncementsPage';
 import { PublicAnnouncementPage } from '@/pages/public/PublicAnnouncementPage';
+import { PrivacyPolicyPage } from '@/pages/public/PrivacyPolicyPage';
 import { ROUTES } from '@/lib/routes';
 import { AdmissionsPage } from '@/pages/AdmissionsPage';
 import { TestDetailPage } from '@/pages/TestDetailPage';
@@ -59,6 +60,8 @@ export function App() {
       <Route path={ROUTES.publicAnnouncements} element={<PublicAnnouncementsPage />} />
       <Route path="/announcements/:announcementId" element={<PublicAnnouncementPage />} />
       <Route path={ROUTES.entrance} element={<EntranceFlow />} />
+      {/* Политику читают до входа — маршрут публичный. */}
+      <Route path={ROUTES.privacy} element={<PrivacyPolicyPage />} />
 
       {/*
         Вход администратора на отдельном пути: на главной его больше нет.

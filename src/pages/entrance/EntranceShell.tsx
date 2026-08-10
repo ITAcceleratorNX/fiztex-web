@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { FileText, Home, LogOut, User } from 'lucide-react';
 import { Logo, PhysTechMark } from '@/components/layout/Logo';
+import { PrivacyLinks } from '@/components/layout/PrivacyLinks';
 import { cx } from '@/lib/format';
 import { APP_NAME } from '@/lib/branding';
 
@@ -56,6 +57,11 @@ export function EntranceShell({
           }}
         />
         <main className="relative z-10 w-full">{children}</main>
+        {/* Экран ввода кода — последняя точка перед началом теста, здесь ссылка уместна. */}
+        <PrivacyLinks
+          tone="dark"
+          className="absolute inset-x-0 bottom-4 z-10 text-center"
+        />
       </div>
     );
   }
@@ -110,8 +116,10 @@ export function EntranceShell({
     );
   }
 
+  // Публичный раздел: главная с анонсами и карточка анонса. Подвал прижат к низу
+  // окна на коротких страницах (flex + mt-auto), иначе он висел бы посреди экрана.
   return (
-    <div className="min-h-screen bg-grid">
+    <div className="flex min-h-screen flex-col bg-grid">
       <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-navy-700 text-white">
@@ -131,6 +139,12 @@ export function EntranceShell({
       >
         {children}
       </main>
+      <footer className="mt-auto border-t border-slate-200/80 bg-white/60">
+        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-4">
+          <p className="text-xs text-slate-400">© 2026 {APP_NAME}</p>
+          <PrivacyLinks />
+        </div>
+      </footer>
     </div>
   );
 }

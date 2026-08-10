@@ -18,6 +18,12 @@ export const ROUTES = {
   publicAnnouncement: (id: number | string) => `/announcements/${id}`,
   /** Ввод персонального кода и прохождение теста. */
   entrance: '/entrance',
+  /**
+   * Политика конфиденциальности. Язык — в query (`?lang=en`), чтобы у русской
+   * и английской версии были отдельные ссылки: их спрашивают магазины приложений.
+   */
+  privacy: '/privacy',
+  privacyIn: (locale: 'ru' | 'en') => (locale === 'ru' ? '/privacy' : `/privacy?lang=${locale}`),
 
   /** Вход администратора. */
   staffLogin: '/staff/login',

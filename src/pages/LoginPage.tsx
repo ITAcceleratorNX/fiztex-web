@@ -12,6 +12,7 @@ import { ApiError } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
 import { Logo, PhysTechMark } from '@/components/layout/Logo';
+import { PrivacyLinks } from '@/components/layout/PrivacyLinks';
 import { APP_NAME } from '@/lib/branding';
 import { safeRedirectTarget } from '@/lib/routes';
 
@@ -125,6 +126,8 @@ export function LoginPage() {
           <p className="mt-6 text-center text-xs text-slate-400">
             Доступ выдаёт администратор школы.
           </p>
+
+          <PrivacyLinks className="mt-3 text-center" />
         </form>
       </div>
     </div>
