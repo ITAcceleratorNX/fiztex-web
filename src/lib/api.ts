@@ -26,6 +26,9 @@ import type {
   TestRequest,
   UnreadCountResponse,
 } from './types';
+import type { Schema } from './apiSchemas';
+
+export type CopyTestRequest = Schema<'CopyTestRequest'>;
 
 const TOKEN_KEY = 'fiztex.token';
 
@@ -218,6 +221,9 @@ export const api = {
   listTestQuestions: (id: number, signal?: AbortSignal) =>
     request<QuestionResponse[]>(`/admin/tests/${id}/questions`, { signal }),
   createTest: (body: TestRequest) => request<Test>('/admin/tests', { method: 'POST', body }),
+  /** Копия теста во вступительные: оригинал остаётся, копия создаётся черновиком без назначений. */
+  copyTest: (id: number, body: CopyTestRequest) =>
+    request<Test>(`/admin/tests/${id}/copy`, { method: 'POST', body }),
   updateTest: (id: number, body: TestRequest) =>
     request<Test>(`/admin/tests/${id}`, { method: 'PUT', body }),
   deleteTest: (id: number) => request<void>(`/admin/tests/${id}`, { method: 'DELETE' }),

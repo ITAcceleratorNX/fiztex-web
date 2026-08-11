@@ -11,6 +11,7 @@ export function AnswerReviewCard({
   draft,
   locked,
   saving,
+  dirty = false,
   onChange,
   onSave,
 }: {
@@ -19,6 +20,8 @@ export function AnswerReviewCard({
   draft: ScoreDraft;
   locked: boolean;
   saving: boolean;
+  /** Балл изменён, но ещё не сохранён на сервере. */
+  dirty?: boolean;
   onChange: (d: ScoreDraft) => void;
   onSave: () => void;
 }) {
@@ -145,6 +148,7 @@ export function AnswerReviewCard({
         draft={draft}
         locked={locked}
         saving={saving}
+        dirty={dirty}
         onChange={onChange}
         onSave={onSave}
       />

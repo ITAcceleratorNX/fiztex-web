@@ -136,6 +136,8 @@ export interface ApplicantResult {
   testTitle: string;
   subject: string;
   totalScore: number;
+  /** Сумма баллов вопросов попытки — знаменатель «N баллов из M». */
+  maxScore: number;
   percent: number;
   minScore: number;
   passed: boolean;

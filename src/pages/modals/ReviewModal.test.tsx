@@ -215,5 +215,81 @@ describe('ReviewModal AI prefill', () => {
     expect(commentInput).toHaveValue(adminComment);
     expect(screen.getByText(/Выставлено:/)).toHaveTextContent(`Выставлено: ${finalScore}`);
   });
+
+  it('досылает несохранённые баллы перед подтверждением проверки', async () => {
+    const { api } = await import('@/lib/api');
+    api.getReview.mockResolvedValue(pendingDetail());
+    api.scoreAnswer.mockImplementation(async (_a: number, _q: number, body: any) => {
+      const detail = pendingDetail();
+      detail.answers[0].finalScore = body.finalScore;
+      detail.answers[0].adminComment = body.adminComment;
+      detail.totalScore = body.finalScore;
+      return detail;
+    });
+    api.confirmReview.mockImplementation(async () => {
+      const detail = pendingDetail();
+      detail.status = 'REVIEWED';
+      return detail;
+    });
+
+    const user = userEvent.setup();
+    render(<ReviewModal open attemptId={1} onClose={() => {}} />);
+
+    const scoreInput = await screen.findByRole('spinbutton');
+    await user.clear(scoreInput);
+    await user.type(scoreInput, '5');
+    expect(screen.getByText(/Не сохранено/)).toBeInTheDocument();
+
+    // Админ не нажимал «Сохранить» у вопроса — раньше правка тихо терялась.
+    await user.click(screen.getByRole('button', { name: 'Подтвердить проверку' }));
+
+    expect(api.scoreAnswer).toHaveBeenCalledWith(1, 10, { finalScore: 5, adminComment: 'AI comment' });
+    expect(api.confirmReview).toHaveBeenCalled();
+  });
 });
+
+/** Ответ на проверке: один открытый вопрос с черновым баллом AI. */
+function pendingDetail(): any {
+  return {
+    resultId: null,
+    attemptId: 1,
+    assignmentId: 1,
+    applicantName: 'Applicant',
+    testTitle: 'Test',
+    totalScore: 0,
+    percent: 0,
+    minScore: 1,
+    passed: false,
+    status: 'PENDING',
+    schoolComment: null,
+    internalComment: null,
+    attemptStatus: 'AWAITING_REVIEW',
+    answers: [
+      {
+        questionId: 10,
+        topic: null,
+        type: 'OPEN_TEXT',
+        questionText: 'Q',
+        applicantAnswer: 'short answer',
+        options: [],
+        referenceAnswer: 'Ref',
+        photos: [],
+        autoScore: null,
+        aiScore: 2,
+        aiComment: 'AI comment',
+        aiConfidence: 'LOW',
+        aiWarning: 'Черновая эвристика (не AI): проверьте вручную',
+        finalScore: null,
+        maxScore: 6,
+        adminComment: null,
+      },
+    ],
+    suspiciousLogs: [],
+    tabSwitchCount: 0,
+    violationCount: 0,
+    topicBreakdown: {},
+    weakTopics: [],
+    finishedAt: null,
+  };
+}
 

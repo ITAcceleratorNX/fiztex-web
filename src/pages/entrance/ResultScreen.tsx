@@ -1,7 +1,12 @@
 import { ArrowLeft, BookOpen, Check } from 'lucide-react';
 import { EntranceShell } from './EntranceShell';
-import { cx } from '@/lib/format';
+import { cx, pluralRu } from '@/lib/format';
 import type { ApplicantResult, ApplicantView } from '@/lib/entranceTypes';
+
+/** Балл без хвоста «.0»: вопросы бывают по 0.5 балла, но целые показывать дробью незачем. */
+function formatScore(value: number): string {
+  return Number.isInteger(value) ? String(value) : String(Math.round(value * 10) / 10);
+}
 
 /** Result report — mobile Figma + desktop two-column mockup. */
 export function ResultScreen({
@@ -15,7 +20,14 @@ export function ResultScreen({
   onBack: () => void;
   onExit: () => void;
 }) {
-  const displayScore = Math.round(result.percent > 0 ? result.percent : result.totalScore);
+  /*
+    Показываем сырой балл, а не процент. Раньше здесь стоял `percent > 0 ? percent : totalScore`
+    с подписью «из 100»: единицы плыли от результата к результату, а рядом в блоке
+    «минимальный проходной балл» всегда стоял сырой балл теста — сравнивать было нечего.
+  */
+  const displayScore = formatScore(result.totalScore);
+  const scoreOutOf = `${pluralRu(result.totalScore, ['балл', 'балла', 'баллов'])} из ${formatScore(result.maxScore)}`;
+  const percentLabel = result.maxScore > 0 ? `${Math.round(result.percent)}%` : null;
   const hasStrong = result.strongTopics.length > 0;
   const hasWeak = result.weakTopics.length > 0;
 
@@ -46,7 +58,10 @@ export function ResultScreen({
             <div className="flex items-end justify-between gap-4">
               <div>
                 <p className="text-5xl font-black leading-none text-navy-700">{displayScore}</p>
-                <p className="mt-1 text-[15px] font-semibold text-[#64748b]">балла из 100</p>
+                <p className="mt-1 text-[15px] font-semibold text-[#64748b]">{scoreOutOf}</p>
+                {percentLabel ? (
+                  <p className="mt-0.5 text-sm text-[#94a3b8]">{percentLabel}</p>
+                ) : null}
               </div>
               <span
                 className={cx(
@@ -64,7 +79,7 @@ export function ResultScreen({
           <div className="flex rounded-[20px] bg-[#eff6ff] p-5">
             <div className="flex flex-1 flex-col gap-1">
               <p className="text-xs font-semibold uppercase text-[#64748b]">Проходной балл</p>
-              <p className="text-[17px] font-bold text-[#1e293b]">{result.minScore}</p>
+              <p className="text-[17px] font-bold text-[#1e293b]">{formatScore(result.minScore)}</p>
             </div>
             <div className="mx-4 w-px self-stretch bg-[#e2e8f0]" />
             <div className="flex flex-1 flex-col items-end gap-1">
@@ -132,7 +147,10 @@ export function ResultScreen({
 
             <div className="mt-8">
               <p className="text-5xl font-black leading-none text-navy-700">{displayScore}</p>
-              <p className="mt-1 text-base font-semibold text-slate-500">балла из 100</p>
+              <p className="mt-1 text-base font-semibold text-slate-500">
+                {scoreOutOf}
+                {percentLabel ? <span className="ml-2 text-slate-400">· {percentLabel}</span> : null}
+              </p>
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-3">
@@ -140,7 +158,7 @@ export function ResultScreen({
                 <p className="text-11 font-semibold uppercase tracking-wide text-slate-400">
                   Минимальный проходной балл
                 </p>
-                <p className="mt-1 text-lg font-bold text-[#111827]">{result.minScore}</p>
+                <p className="mt-1 text-lg font-bold text-[#111827]">{formatScore(result.minScore)}</p>
               </div>
               <div
                 className={cx(

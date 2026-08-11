@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiError, api } from '@/lib/api';
+import { ApiError, api, type CopyTestRequest } from '@/lib/api';
 import { lessonsApi } from '@/lib/lessonsApi';
 import { announcementsApi, type AnnouncementFilters, type AnnouncementRequest } from '@/lib/announcementsApi';
 import type {
@@ -92,6 +92,17 @@ export function useCreateTest() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tests'] });
       qc.invalidateQueries({ queryKey: keys.subjects });
+    },
+  });
+}
+
+/** Копия AI-теста во вступительные. Списки обеих вкладок живут под ключом `tests` — сбрасываем оба. */
+export function useCopyTest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: number; body: CopyTestRequest }) => api.copyTest(id, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tests'] });
     },
   });
 }

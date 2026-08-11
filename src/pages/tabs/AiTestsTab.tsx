@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Plus, Pencil, Eye, Sparkles, ListChecks, Trash2, FolderOpen } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Plus, Pencil, Eye, Sparkles, ListChecks, Trash2, FolderOpen, Copy } from 'lucide-react';
 import { useTests, useDeleteTest } from '@/hooks/queries';
 import { useToast } from '@/context/ToastContext';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +11,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TestStatusBadge } from '@/components/ui/TestStatusBadge';
 import { TestFormModal } from '@/pages/modals/TestFormModal';
 import { TestCardModal } from '@/pages/modals/TestCardModal';
+import { CopyTestModal } from '@/pages/modals/CopyTestModal';
 import { formatDate, pluralRu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 import type { Test, TestStatus } from '@/lib/types';
@@ -19,6 +20,7 @@ export function AiTestsTab() {
   const { data, isLoading, isError, error, refetch, isSuccess } = useTests(true);
   const del = useDeleteTest();
   const toast = useToast();
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | TestStatus>('ALL');
@@ -26,6 +28,7 @@ export function AiTestsTab() {
   const [editing, setEditing] = useState<Test | null>(null);
   const [cardTestId, setCardTestId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Test | null>(null);
+  const [copyTarget, setCopyTarget] = useState<Test | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -180,6 +183,13 @@ export function AiTestsTab() {
                             <ListChecks className="h-4 w-4" />
                           </Link>
                           <button
+                            onClick={() => setCopyTarget(t)}
+                            title="Скопировать во вступительные тесты"
+                            className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
+                          <button
                             onClick={() => setDeleteTarget(t)}
                             title="Удалить тест"
                             className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
@@ -209,6 +219,16 @@ export function AiTestsTab() {
         open={cardTestId != null}
         onClose={() => setCardTestId(null)}
         testId={cardTestId}
+      />
+      <CopyTestModal
+        open={copyTarget != null}
+        onClose={() => setCopyTarget(null)}
+        test={copyTarget}
+        onCopied={(copy) => {
+          setCopyTarget(null);
+          // Сразу в карточку копии: следующий шаг администратора — назначить её поступающим.
+          navigate(`/admissions/tests/${copy.id}`);
+        }}
       />
       <ConfirmDialog
         open={Boolean(deleteTarget)}

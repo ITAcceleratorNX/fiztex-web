@@ -13,6 +13,14 @@ import { AnswerReviewCard } from '@/components/review/AnswerReviewCard';
 import { SuspiciousLog } from '@/components/review/SuspiciousLog';
 import type { ScoreDraft } from '@/components/review/constants';
 
+/** Черновик расходится с тем, что лежит на сервере, — значит балл ещё не сохранён. */
+function isDirty(answer: AnswerReviewItem, draft: ScoreDraft | undefined): boolean {
+  if (!draft) return false;
+  const savedScore = String(answer.finalScore ?? answer.autoScore ?? answer.aiScore ?? 0);
+  const savedComment = answer.adminComment ?? answer.aiComment ?? '';
+  return draft.score !== savedScore || draft.comment !== savedComment;
+}
+
 export function ReviewModal({
   open,
   attemptId,
@@ -104,6 +112,16 @@ export function ReviewModal({
   const locked = detail != null && detail.status !== 'PENDING';
   const maxTotal = (detail?.answers ?? []).reduce((s, a) => s + a.maxScore, 0);
 
+  /**
+   * Ответы, где админ поменял балл или комментарий, но не нажал «Сохранить».
+   *
+   * <p>Черновики живут в состоянии окна, а на сервер уходят только по кнопке у конкретного
+   * вопроса. Раньше «Подтвердить проверку» их не досылало: результат замораживался с черновыми
+   * баллами AI, а поступающий видел не то, что выставил админ, — и починить это было уже нельзя,
+   * подтверждённый результат бэкенд правки не принимает.
+   */
+  const unsavedAnswers = (detail?.answers ?? []).filter((a) => isDirty(a, drafts[a.questionId]));
+
   async function saveAnswer(a: AnswerReviewItem) {
     if (attemptId == null || activeAttemptRef.current !== attemptId) return;
     const draft = drafts[a.questionId];
@@ -133,6 +151,22 @@ export function ReviewModal({
     if (attemptId == null || activeAttemptRef.current !== attemptId) return;
     setConfirming(true);
     try {
+      // Сначала досылаем несохранённые баллы: после подтверждения результат заморожен.
+      for (const a of unsavedAnswers) {
+        const draft = drafts[a.questionId];
+        const score = Number(draft.score);
+        if (Number.isNaN(score) || score < 0 || score > a.maxScore) {
+          toast.error(`Вопрос ${(detail?.answers ?? []).indexOf(a) + 1}: балл должен быть от 0 до ${a.maxScore}`);
+          return;
+        }
+        const saved = await api.scoreAnswer(attemptId, a.questionId, {
+          finalScore: score,
+          adminComment: draft.comment || null,
+        });
+        if (activeAttemptRef.current !== attemptId) return;
+        setDetail(saved);
+      }
+
       const updated = await api.confirmReview(attemptId, {
         schoolComment: schoolComment || null,
         internalComment: internalComment || null,
@@ -172,9 +206,16 @@ export function ReviewModal({
         {variant === 'page' ? 'К списку результатов' : 'Закрыть'}
       </Button>
       {detail?.status === 'PENDING' && (
-        <Button loading={confirming} disabled={loading || !detail} onClick={confirm}>
-          Подтвердить проверку
-        </Button>
+        <>
+          {unsavedAnswers.length > 0 && (
+            <span className="text-xs text-amber-600">
+              Несохранённых баллов: {unsavedAnswers.length} — подтверждение сохранит их
+            </span>
+          )}
+          <Button loading={confirming} disabled={loading || !detail} onClick={confirm}>
+            Подтвердить проверку
+          </Button>
+        </>
       )}
       {detail?.status === 'REVIEWED' && (
         <Button loading={opening} disabled={loading || !detail} onClick={openForViewing}>
@@ -222,6 +263,7 @@ export function ReviewModal({
             draft={drafts[a.questionId] ?? { score: '0', comment: '' }}
             locked={locked}
             saving={savingQ === a.questionId}
+            dirty={unsavedAnswers.includes(a)}
             onChange={(d) => setDrafts((p) => ({ ...p, [a.questionId]: d }))}
             onSave={() => saveAnswer(a)}
           />

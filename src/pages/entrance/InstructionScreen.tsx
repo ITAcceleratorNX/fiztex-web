@@ -227,10 +227,15 @@ function AgreeCheckbox({
 }) {
   return (
     <label className="flex cursor-pointer items-center gap-3 py-1">
+      {/*
+        Фон — тернарником, а не `bg-white` + `agreed && 'bg-navy-700'`: оба класса задают
+        background-color, и побеждает тот, что позже в собранном CSS, а там `.bg-white` идёт
+        после `.bg-navy-700`. Квадратик оставался белым, и белая галочка на нём была не видна.
+      */}
       <span
         className={cx(
-          'flex size-6 shrink-0 items-center justify-center rounded-md border-2 border-navy-700 bg-white',
-          agreed && 'bg-navy-700',
+          'flex size-6 shrink-0 items-center justify-center rounded-md border-2 border-navy-700',
+          agreed ? 'bg-navy-700' : 'bg-white',
         )}
       >
         {agreed ? (

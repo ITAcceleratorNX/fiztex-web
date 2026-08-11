@@ -8,6 +8,7 @@ export function ScoreEditor({
   draft,
   locked,
   saving,
+  dirty = false,
   onChange,
   onSave,
 }: {
@@ -15,6 +16,8 @@ export function ScoreEditor({
   draft: ScoreDraft;
   locked: boolean;
   saving: boolean;
+  /** Балл изменён, но ещё не ушёл на сервер. */
+  dirty?: boolean;
   onChange: (d: ScoreDraft) => void;
   onSave: () => void;
 }) {
@@ -50,11 +53,14 @@ export function ScoreEditor({
           />
         </div>
         {!locked && (
-          <Button size="sm" variant="secondary" loading={saving} onClick={onSave}>
+          <Button size="sm" variant={dirty ? 'primary' : 'secondary'} loading={saving} onClick={onSave}>
             Сохранить
           </Button>
         )}
       </div>
+      {!locked && dirty && (
+        <p className="mt-2 text-xs text-amber-600">Не сохранено — уйдёт при подтверждении проверки</p>
+      )}
       {answer.finalScore != null && (
         <p className="mt-2 text-xs text-emerald-600">
           <Check className="mr-1 inline h-3.5 w-3.5" />
