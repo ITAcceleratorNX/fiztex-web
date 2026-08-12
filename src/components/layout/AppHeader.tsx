@@ -1,7 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import { ADMIN_PAGE_TITLES } from '@/platform/labels';
 
-/** Shown for Platform Core routes that don't render their own page title. */
 export function AppHeader() {
   const { pathname } = useLocation();
   const title = ADMIN_PAGE_TITLES[pathname];
