@@ -269,7 +269,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_1"];
+        post: operations["publish_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -413,6 +413,38 @@ export interface paths {
         };
         get: operations["get_2"];
         put: operations["update_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/attendance/journal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["journal_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/attendance/unfilled": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["unfilled"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -1140,6 +1172,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/questions/{questionId}/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["uploadQuestionImage"];
+        delete: operations["deleteQuestionImage"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/results": {
         parameters: {
             query?: never;
@@ -1227,7 +1275,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_2"];
+        get: operations["history_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1435,7 +1483,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_1"];
+        get: operations["history_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1485,7 +1533,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish"];
+        post: operations["publish_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2292,6 +2340,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attendance/states": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["states"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/teacher-journal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["journal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/admin/activate": {
         parameters: {
             query?: never;
@@ -2446,6 +2542,102 @@ export interface paths {
         get: operations["card"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sheet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/attendance/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["saveDraft"];
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/attendance/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/attendance/mark-all-present": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["markAllPresent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/attendance/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["myAttendance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/attendance/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["publish"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2829,6 +3021,66 @@ export interface components {
         AddSubgroupStudentsRequest: {
             studentIds?: number[];
         };
+        AdminJournalCellView: {
+            attendance?: components["schemas"]["AttendanceMarkingView"];
+            /** Format: int64 */
+            lessonId?: number;
+        };
+        AdminJournalLessonView: {
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** @example 14:30:00 */
+            startTime?: string;
+            /** @enum {string} */
+            state?: "NOT_FILLED" | "DRAFT" | "PUBLISHED" | "ANNULLED";
+            subgroupName?: string;
+            subjectName?: string;
+            teacherName?: string;
+        };
+        AdminJournalRowView: {
+            /** Format: int32 */
+            attendedCount?: number;
+            cells?: components["schemas"]["AdminJournalCellView"][];
+            /** Format: int32 */
+            excusedCount?: number;
+            fullName?: string;
+            /** Format: int32 */
+            lateCount?: number;
+            /** Format: int32 */
+            missedCount?: number;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
+        AdminJournalSummaryView: {
+            /** Format: int32 */
+            attendedCount?: number;
+            /** Format: int32 */
+            excusedCount?: number;
+            /** Format: int32 */
+            filledCount?: number;
+            /** Format: int32 */
+            lateCount?: number;
+            /** Format: int32 */
+            lessonCount?: number;
+            /** Format: int32 */
+            missedCount?: number;
+            reasonBreakdown?: {
+                [key: string]: number;
+            };
+            /** Format: int32 */
+            unfilledCount?: number;
+        };
+        AdminJournalView: {
+            /** Format: int64 */
+            classId?: number;
+            lessons?: components["schemas"]["AdminJournalLessonView"][];
+            /** @example 2025-03 */
+            month?: string;
+            rows?: components["schemas"]["AdminJournalRowView"][];
+            summary?: components["schemas"]["AdminJournalSummaryView"];
+        };
         AiQuestionVariantResponse: {
             /** Format: int32 */
             inputTokens?: number;
@@ -2917,6 +3169,7 @@ export interface components {
             autoScore?: number;
             /** Format: double */
             finalScore?: number;
+            imageUrl?: string;
             /** Format: double */
             maxScore?: number;
             options?: components["schemas"]["ReviewOption"][];
@@ -3069,6 +3322,7 @@ export interface components {
             difficulty?: string;
             /** Format: int64 */
             id?: number;
+            imageUrl?: string;
             /** Format: int32 */
             maxPhotos?: number;
             /** Format: double */
@@ -3079,6 +3333,106 @@ export interface components {
             text?: string;
             topic?: string;
             type?: string;
+        };
+        AttendanceEntryChange: {
+            comment?: string;
+            /** @enum {string} */
+            mark?: "LATE" | "EXCUSED";
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** @enum {string} */
+            status: "NOT_MARKED" | "PRESENT" | "ABSENT";
+            /** Format: int64 */
+            studentProfileId: number;
+        };
+        AttendanceEntryView: {
+            draft?: components["schemas"]["AttendanceMarkingView"];
+            fullName?: string;
+            published?: components["schemas"]["AttendanceMarkingView"];
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
+        AttendanceHistoryView: {
+            /** @enum {string} */
+            action?: "DRAFT_SAVED" | "BULK_PRESENT" | "PUBLISHED" | "REPUBLISHED" | "ANNULLED" | "RESTORED";
+            actorName?: string;
+            /** @enum {string} */
+            actorRole?: "SYSTEM" | "ADMIN" | "MAIN_TEACHER" | "SUBSTITUTE_TEACHER";
+            after?: components["schemas"]["AttendanceMarkingView"];
+            before?: components["schemas"]["AttendanceMarkingView"];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            sheetVersion?: number;
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
+        AttendanceMarkingView: {
+            comment?: string;
+            /** @enum {string} */
+            mark?: "LATE" | "EXCUSED";
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** @enum {string} */
+            status?: "NOT_MARKED" | "PRESENT" | "ABSENT";
+        };
+        AttendanceSheetView: {
+            canFill?: boolean;
+            canPublish?: boolean;
+            /** Format: date-time */
+            draftUpdatedAt?: string;
+            draftUpdatedByName?: string;
+            entries?: components["schemas"]["AttendanceEntryView"][];
+            hasUnpublishedChanges?: boolean;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int32 */
+            markedCount?: number;
+            /** Format: date-time */
+            publishedAt?: string;
+            publishedByName?: string;
+            reminder?: boolean;
+            /** @enum {string} */
+            state?: "NOT_FILLED" | "DRAFT" | "PUBLISHED" | "ANNULLED";
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int64 */
+            version?: number;
+        };
+        AttendanceStateView: {
+            /** Format: int64 */
+            lessonId?: number;
+            reminder?: boolean;
+            /** @enum {string} */
+            state?: "NOT_FILLED" | "DRAFT" | "PUBLISHED" | "ANNULLED";
+        };
+        AttendanceSummaryLessonView: {
+            attendance?: components["schemas"]["AttendanceMarkingView"];
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** @example 14:30:00 */
+            startTime?: string;
+            subjectName?: string;
+        };
+        AttendanceSummaryView: {
+            /** Format: int32 */
+            attendedCount?: number;
+            /** Format: int32 */
+            excusedCount?: number;
+            /** Format: int32 */
+            lateCount?: number;
+            lessons?: components["schemas"]["AttendanceSummaryLessonView"][];
+            /** Format: int32 */
+            missedCount?: number;
+            /** @example 2025-03 */
+            month?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
         };
         AutoSplitRequest: {
             firstName?: string;
@@ -3901,7 +4255,7 @@ export interface components {
             cancellationComment?: string;
             /** @enum {string} */
             cancellationReason?: "CALENDAR_NO_LESSONS" | "SCHEDULE_SLOT_REMOVED" | "MANUAL";
-            capabilities?: ("VIEW_CARD" | "VIEW_STUDENTS" | "VIEW_ADMIN_HISTORY" | "VIEW_TEACHER_HISTORY" | "MANAGE_STRUCTURE" | "EDIT_TEACHING_PART" | "SUBMIT_HOMEWORK" | "FILL_ATTENDANCE")[];
+            capabilities?: ("VIEW_CARD" | "VIEW_STUDENTS" | "VIEW_ADMIN_HISTORY" | "VIEW_TEACHER_HISTORY" | "MANAGE_STRUCTURE" | "EDIT_TEACHING_PART" | "SUBMIT_HOMEWORK" | "VIEW_ATTENDANCE" | "FILL_ATTENDANCE")[];
             changedFields?: ("TIME" | "ROOM" | "SUBJECT" | "TEACHER")[];
             /** Format: int64 */
             classId?: number;
@@ -3982,6 +4336,11 @@ export interface components {
             /** Format: int64 */
             studentProfileId?: number;
         };
+        MarkAllPresentRequest: {
+            confirmOverwrite?: boolean;
+            /** Format: int64 */
+            expectedVersion?: number;
+        };
         MaterialDownloadResponse: {
             url?: string;
         };
@@ -4036,6 +4395,22 @@ export interface components {
             /** Format: int64 */
             targetSubgroupId: number;
         };
+        MyAttendanceView: {
+            attendance?: components["schemas"]["AttendanceMarkingView"];
+            /** @example 14:30:00 */
+            endTime?: string;
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** @enum {string} */
+            lessonStatus?: "ACTIVE" | "CANCELLED" | "SUPERSEDED";
+            /** @example 14:30:00 */
+            startTime?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            subjectName?: string;
+        };
         NotificationItem: {
             applicantName?: string;
             /** Format: int64 */
@@ -4088,6 +4463,24 @@ export interface components {
         };
         PageAnnouncementListItem: {
             content?: components["schemas"]["AnnouncementListItem"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        PageAttendanceHistoryView: {
+            content?: components["schemas"]["AttendanceHistoryView"][];
             empty?: boolean;
             first?: boolean;
             last?: boolean;
@@ -4500,6 +4893,24 @@ export interface components {
             /** Format: int32 */
             totalPages?: number;
         };
+        PageUnfilledLessonView: {
+            content?: components["schemas"]["UnfilledLessonView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
         Pageable: {
             /** Format: int32 */
             page?: number;
@@ -4604,6 +5015,10 @@ export interface components {
             summary?: string;
             title?: string;
         };
+        PublishAttendanceRequest: {
+            /** Format: int64 */
+            expectedVersion?: number;
+        };
         PublishScheduleRequest: {
             confirmedWarningCodes: string[];
             /** Format: int64 */
@@ -4626,6 +5041,11 @@ export interface components {
             /** Format: int64 */
             version?: number;
             workingDays: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
+        };
+        QuestionImageResponse: {
+            imageUrl?: string;
+            /** Format: int64 */
+            questionId?: number;
         };
         QuestionRequest: {
             allowPhoto?: boolean;
@@ -4652,6 +5072,7 @@ export interface components {
             gradingCriteria?: string;
             /** Format: int64 */
             id?: number;
+            imageUrl?: string;
             isDraft?: boolean;
             /** Format: double */
             maxScore?: number;
@@ -4822,6 +5243,11 @@ export interface components {
             /** Format: int64 */
             remainingSeconds?: number;
             status?: string;
+        };
+        SaveAttendanceEntriesRequest: {
+            entries?: components["schemas"]["AttendanceEntryChange"][];
+            /** Format: int64 */
+            expectedVersion?: number;
         };
         SavedAnswer: {
             openTextAnswer?: string;
@@ -5120,6 +5546,48 @@ export interface components {
             version?: number;
             workingDays?: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
         };
+        TeacherJournalEntryView: {
+            attendance?: components["schemas"]["AttendanceMarkingView"];
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
+        TeacherJournalLessonView: {
+            className?: string;
+            entries?: components["schemas"]["TeacherJournalEntryView"][];
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int32 */
+            markedCount?: number;
+            /** @example 14:30:00 */
+            startTime?: string;
+            /** @enum {string} */
+            state?: "NOT_FILLED" | "DRAFT" | "PUBLISHED" | "ANNULLED";
+            subgroupName?: string;
+            subjectName?: string;
+            /** Format: int32 */
+            totalCount?: number;
+        };
+        TeacherJournalStudentView: {
+            /** Format: int32 */
+            attendedCount?: number;
+            /** Format: int32 */
+            excusedCount?: number;
+            fullName?: string;
+            /** Format: int32 */
+            lateCount?: number;
+            /** Format: int32 */
+            missedCount?: number;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
+        TeacherJournalView: {
+            lessons?: components["schemas"]["TeacherJournalLessonView"][];
+            /** @example 2025-03 */
+            month?: string;
+            students?: components["schemas"]["TeacherJournalStudentView"][];
+        };
         TeacherProfileDetailView: {
             /** Format: int64 */
             accountId?: number;
@@ -5307,6 +5775,20 @@ export interface components {
             max?: number;
             /** Format: double */
             percent?: number;
+        };
+        UnfilledLessonView: {
+            className?: string;
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** @example 14:30:00 */
+            startTime?: string;
+            /** @enum {string} */
+            state?: "NOT_FILLED" | "DRAFT" | "PUBLISHED" | "ANNULLED";
+            subgroupName?: string;
+            subjectName?: string;
+            teacherName?: string;
         };
         UnlinkStudentRequest: {
             /** Format: int64 */
@@ -5996,7 +6478,7 @@ export interface operations {
             };
         };
     };
-    publish_1: {
+    publish_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -6254,6 +6736,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApplicantResponse"];
+                };
+            };
+        };
+    };
+    journal_1: {
+        parameters: {
+            query?: {
+                month?: string;
+                classId?: number;
+                subgroupId?: number;
+                subjectId?: number;
+                teacherProfileId?: number;
+                studentProfileId?: number;
+                status?: "NOT_MARKED" | "PRESENT" | "ABSENT";
+                reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminJournalView"];
+                };
+            };
+        };
+    };
+    unfilled: {
+        parameters: {
+            query: {
+                month?: string;
+                classId?: number;
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageUnfilledLessonView"];
                 };
             };
         };
@@ -7716,6 +8251,55 @@ export interface operations {
             };
         };
     };
+    uploadQuestionImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                questionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionImageResponse"];
+                };
+            };
+        };
+    };
+    deleteQuestionImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                questionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     reviews: {
         parameters: {
             query: {
@@ -7837,7 +8421,7 @@ export interface operations {
             };
         };
     };
-    history_2: {
+    history_3: {
         parameters: {
             query: {
                 entityType: "BELL_TEMPLATE" | "WORKING_DAYS" | "CALENDAR_EVENT" | "TEACHER_AVAILABILITY" | "GROUP_SET" | "SUBGROUP" | "LESSON_GENERATION";
@@ -8189,7 +8773,7 @@ export interface operations {
             };
         };
     };
-    history_1: {
+    history_2: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -8309,7 +8893,7 @@ export interface operations {
             };
         };
     };
-    publish: {
+    publish_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -9902,6 +10486,75 @@ export interface operations {
             };
         };
     };
+    states: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceStateView"][];
+                };
+            };
+        };
+    };
+    summary: {
+        parameters: {
+            query?: {
+                month?: string;
+                childId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceSummaryView"];
+                };
+            };
+        };
+    };
+    journal: {
+        parameters: {
+            query?: {
+                month?: string;
+                classId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherJournalView"];
+                };
+            };
+        };
+    };
     activateAdmin: {
         parameters: {
             query?: never;
@@ -10135,6 +10788,154 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonView"];
+                };
+            };
+        };
+    };
+    sheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceSheetView"];
+                };
+            };
+        };
+    };
+    saveDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveAttendanceEntriesRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceSheetView"];
+                };
+            };
+        };
+    };
+    history_1: {
+        parameters: {
+            query: {
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageAttendanceHistoryView"];
+                };
+            };
+        };
+    };
+    markAllPresent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkAllPresentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceSheetView"];
+                };
+            };
+        };
+    };
+    myAttendance: {
+        parameters: {
+            query?: {
+                childId?: number;
+            };
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyAttendanceView"];
+                };
+            };
+        };
+    };
+    publish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishAttendanceRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceSheetView"];
                 };
             };
         };
