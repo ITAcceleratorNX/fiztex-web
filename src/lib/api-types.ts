@@ -5600,7 +5600,7 @@ export interface components {
         };
         QuestionFormulaIssue: {
             /** @enum {string} */
-            code?: "UNCERTAIN_FRAGMENT" | "UNBALANCED_MATH" | "UNBALANCED_BRACES" | "UNBALANCED_DELIMITERS" | "UNBALANCED_ENVIRONMENT" | "EMPTY_MATH" | "FORBIDDEN_COMMAND" | "UNKNOWN_COMMAND" | "UNKNOWN_ENVIRONMENT" | "FORMULA_TOO_LONG";
+            code?: "UNCERTAIN_FRAGMENT" | "UNBALANCED_MATH" | "UNBALANCED_BRACES" | "UNBALANCED_DELIMITERS" | "UNBALANCED_ENVIRONMENT" | "EMPTY_MATH" | "FORBIDDEN_COMMAND" | "UNKNOWN_COMMAND" | "UNKNOWN_ENVIRONMENT" | "FORMULA_TOO_LONG" | "EMPTY_FRACTION_PART" | "SLASH_FRACTION" | "MINUS_OUTSIDE_MATH";
             field?: string;
             fragment?: string;
             message?: string;
@@ -5753,6 +5753,7 @@ export interface components {
         };
         RoleScheduleLessonView: {
             audienceType?: string;
+            cancelled?: boolean;
             /** Format: int64 */
             classId?: number;
             className?: string;
@@ -5777,6 +5778,9 @@ export interface components {
             /** Format: int64 */
             subjectId?: number;
             subjectName?: string;
+            /** Format: int64 */
+            substituteTeacherId?: number;
+            substituteTeacherName?: string;
             teacherFullName?: string;
             /** Format: int64 */
             teacherId?: number;
