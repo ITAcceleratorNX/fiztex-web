@@ -13,6 +13,7 @@ import {
   keys,
 } from '@/hooks/queries';
 import { useQueryClient } from '@tanstack/react-query';
+import { pluralRu } from '@/lib/format';
 import { useToast } from '@/context/ToastContext';
 import { ApiError } from '@/lib/api';
 import type { GenerationJobStatus, QuestionDifficulty, Test } from '@/lib/types';
@@ -84,7 +85,11 @@ export function TestGenerateModal({
       void qc.invalidateQueries({ queryKey: keys.test(test.id) });
       void qc.invalidateQueries({ queryKey: ['tests'] });
       void qc.invalidateQueries({ queryKey: keys.generationJobs(test.id) });
-      toast.success('Вопросы сгенерированы');
+      // Предупреждение задачи (например, ответ модели оборвался по лимиту и вопросов пришло
+      // меньше запрошенного) администратор обязан увидеть — иначе недобор выглядит как норма.
+      const added = job.addedQuestionCount ?? 0;
+      const generated = `Сгенерировано ${added} ${pluralRu(added, ['вопрос', 'вопроса', 'вопросов'])}`;
+      toast.success(job.warningMessage ? `${generated}. ${job.warningMessage}` : generated);
       onComplete?.();
       onClose();
     }

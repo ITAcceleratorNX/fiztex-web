@@ -2,7 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, GripVertical, Sparkles, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Field, TextInput, TextArea, Select } from '@/components/ui/Field';
+import { Field, TextInput, Select } from '@/components/ui/Field';
+import { FormulaField } from '@/components/ui/FormulaField';
+import { FormulaProblems } from '@/components/ui/FormulaProblems';
+import { QuestionImageField } from '@/components/ui/QuestionImageField';
 import { Toggle } from '@/components/ui/Toggle';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
 import { DraftQuestionBadge } from '@/components/ui/DraftQuestionBadge';
@@ -41,6 +44,7 @@ function QuestionEditor({
   question,
   index,
   total,
+  testId,
   onChange,
   onRemove,
   onMoveUp,
@@ -52,6 +56,8 @@ function QuestionEditor({
   question: QuestionDraft;
   index: number;
   total: number;
+  /** Нужен рисунку вопроса: он грузится своим эндпоинтом и инвалидирует карточку теста. */
+  testId: number;
   onChange: (next: QuestionDraft) => void;
   onRemove: () => void;
   onMoveUp: () => void;
@@ -190,13 +196,16 @@ function QuestionEditor({
 
       <div className="mt-4">
         <Field label="Текст вопроса" required>
-          <TextArea
+          <FormulaField
             value={question.text}
-            onChange={(e) => onChange({ ...question, text: e.target.value })}
+            onChange={(text) => onChange({ ...question, text })}
             placeholder="Сформулируйте вопрос для поступающего"
+            ariaLabel="Текст вопроса"
           />
         </Field>
       </div>
+
+      <QuestionImageField testId={testId} questionId={question.id} imageUrl={question.imageUrl} />
 
       {isChoiceType(question.type) && (
         <div className="mt-4 space-y-2">
@@ -217,8 +226,10 @@ function QuestionEditor({
               Вариант
             </Button>
           </div>
+          {/* items-start + mt-3 у чекбокса: под полем варианта живёт предпросмотр формулы,
+              и по центру всего блока отметка «правильный» встала бы напротив пустоты. */}
           {question.options.map((opt, optIndex) => (
-            <div key={opt.localId} className="flex items-center gap-2">
+            <div key={opt.localId} className="flex items-start gap-2">
               <input
                 type={question.type === 'SINGLE_CHOICE' ? 'radio' : 'checkbox'}
                 checked={opt.isCorrect}
@@ -230,20 +241,23 @@ function QuestionEditor({
                   });
                   onChange({ ...question, options });
                 }}
-                className="h-4 w-4 shrink-0 accent-brand-500"
+                className="mt-3 h-4 w-4 shrink-0 accent-brand-500"
                 title="Правильный ответ"
               />
-              <TextInput
-                value={opt.text}
-                onChange={(e) => {
-                  const options = question.options.map((o, i) =>
-                    i === optIndex ? { ...o, text: e.target.value } : o,
-                  );
-                  onChange({ ...question, options });
-                }}
-                placeholder={`Вариант ${optIndex + 1}`}
-                className="flex-1"
-              />
+              <div className="flex-1">
+                <FormulaField
+                  multiline={false}
+                  value={opt.text}
+                  onChange={(text) => {
+                    const options = question.options.map((o, i) =>
+                      i === optIndex ? { ...o, text } : o,
+                    );
+                    onChange({ ...question, options });
+                  }}
+                  placeholder={`Вариант ${optIndex + 1}`}
+                  ariaLabel={`Вариант ${optIndex + 1}`}
+                />
+              </div>
               <button
                 type="button"
                 onClick={() =>
@@ -253,7 +267,7 @@ function QuestionEditor({
                   })
                 }
                 disabled={question.options.length <= 2}
-                className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-500 disabled:opacity-30"
+                className="mt-1 rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-500 disabled:opacity-30"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -265,17 +279,19 @@ function QuestionEditor({
       {question.type === 'OPEN_TEXT' && (
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Эталонный ответ">
-            <TextArea
+            <FormulaField
               value={question.referenceAnswer}
-              onChange={(e) => onChange({ ...question, referenceAnswer: e.target.value })}
+              onChange={(referenceAnswer) => onChange({ ...question, referenceAnswer })}
               placeholder="Для проверки администратором или AI"
+              ariaLabel="Эталонный ответ"
             />
           </Field>
           <Field label="Критерии оценки">
-            <TextArea
+            <FormulaField
               value={question.gradingCriteria}
-              onChange={(e) => onChange({ ...question, gradingCriteria: e.target.value })}
+              onChange={(gradingCriteria) => onChange({ ...question, gradingCriteria })}
               placeholder="По каким правилам выставлять балл"
+              ariaLabel="Критерии оценки"
             />
           </Field>
         </div>
@@ -290,6 +306,8 @@ function QuestionEditor({
           />
         </div>
       )}
+
+      <FormulaProblems question={question} />
 
       {invalidMessages.length > 0 && (
         <ul className="mt-4 list-inside list-disc space-y-1 text-xs text-red-600">
@@ -524,6 +542,7 @@ export function TestQuestionsPage() {
                       question={q}
                       index={index}
                       total={questions.length}
+                      testId={test.id}
                       showDraftUi={showDraftUi}
                       invalidMessages={(invalidByIndex.get(index) ?? []).map((v) => v.message)}
                       onChange={(next) =>

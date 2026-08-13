@@ -132,7 +132,7 @@ export function TestImportModal({
             {job ? STATUS_LABELS[job.status] : 'Загружаем файл…'}
           </p>
           <p className="text-xs text-slate-400">
-            Обычно 1–3 минуты, для сканов и фотографий — до 5. Не закрывайте окно.
+            Обычно 1–3 минуты. Не закрывайте окно.
           </p>
         </div>
       ) : (

@@ -28,6 +28,9 @@ import type {
 } from './types';
 import type { Schema } from './apiSchemas';
 
+/** Ответ загрузки рисунка вопроса — presigned-ссылка на только что сохранённый файл. */
+type QuestionImageResponse = Schema<'QuestionImageResponse'>;
+
 export type CopyTestRequest = Schema<'CopyTestRequest'>;
 
 const TOKEN_KEY = 'fiztex.token';
@@ -282,6 +285,15 @@ export const api = {
     request<MaterialDownloadResponse>(`/materials/${id}/download`, { signal }),
   retryMaterialExtract: (id: number) =>
     request<void>(`/materials/${id}/extract`, { method: 'POST' }),
+
+  /**
+   * Рисунок к вопросу: схема, график, чертёж. Отдельный эндпоинт, а не поле в теле теста —
+   * массовое сохранение вопросов картинку не трогает, поэтому её нельзя потерять правкой текста.
+   */
+  uploadQuestionImage: (questionId: number, formData: FormData, signal?: AbortSignal) =>
+    requestMultipart<QuestionImageResponse>(`/admin/questions/${questionId}/image`, formData, signal),
+  deleteQuestionImage: (questionId: number) =>
+    request<void>(`/admin/questions/${questionId}/image`, { method: 'DELETE' }),
 
   // Test generation
   generateTest: (testId: number, body: GenerateTestRequest) =>

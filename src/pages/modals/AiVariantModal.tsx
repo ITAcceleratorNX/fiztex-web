@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, RefreshCw, Sparkles } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
+import { MathText } from '@/components/ui/MathText';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/StateBlock';
 import { useAiQuestionVariant } from '@/hooks/queries';
@@ -130,7 +131,9 @@ export function AiVariantModal({
           {solution && (
             <div className="rounded-xl bg-slate-50 px-4 py-3 text-xs text-slate-600">
               <p className="font-medium text-slate-700">Как получен ответ</p>
-              <p className="mt-1 whitespace-pre-wrap">{solution}</p>
+              <p className="mt-1">
+                <MathText text={solution} />
+              </p>
             </div>
           )}
 
@@ -166,7 +169,9 @@ function QuestionColumn({
       }
     >
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
-      <p className="mt-2 whitespace-pre-wrap text-sm text-slate-800">{text}</p>
+      <p className="mt-2 text-sm text-slate-800">
+        <MathText text={text} />
+      </p>
       {options.length > 0 && (
         <ul className="mt-2 space-y-0.5">
           {options.map((o, index) => (
@@ -175,7 +180,7 @@ function QuestionColumn({
               className={o.isCorrect ? 'text-xs font-medium text-emerald-700' : 'text-xs text-slate-500'}
             >
               {o.isCorrect ? '✓ ' : '• '}
-              {o.text}
+              <MathText text={o.text} />
             </li>
           ))}
         </ul>
@@ -183,7 +188,7 @@ function QuestionColumn({
       {referenceAnswer && (
         <p className="mt-2 text-xs text-slate-600">
           <span className="font-medium">Эталонный ответ: </span>
-          {referenceAnswer}
+          <MathText text={referenceAnswer} />
         </p>
       )}
     </div>

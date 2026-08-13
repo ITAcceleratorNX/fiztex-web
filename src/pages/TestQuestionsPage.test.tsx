@@ -9,6 +9,9 @@ import type { Test } from '@/lib/types';
 vi.mock('@/hooks/queries', () => ({
   useTest: vi.fn(),
   useUpdateTest: vi.fn(),
+  // Карточка вопроса умеет прикреплять рисунок; сами мутации в этих тестах не вызываются.
+  useUploadQuestionImage: () => ({ isPending: false, mutateAsync: vi.fn() }),
+  useDeleteQuestionImage: () => ({ isPending: false, mutateAsync: vi.fn() }),
 }));
 
 vi.mock('@/context/ToastContext', () => ({
@@ -56,6 +59,7 @@ const baseTest: Test = {
       orderIndex: 0,
       isDraft: false,
       sourceQuestionId: null,
+      imageUrl: null,
       options: [
         { id: 1, text: '3', isCorrect: false, orderIndex: 0 },
         { id: 2, text: '4', isCorrect: true, orderIndex: 1 },
@@ -74,6 +78,7 @@ const baseTest: Test = {
       orderIndex: 1,
       isDraft: false,
       sourceQuestionId: null,
+      imageUrl: null,
       options: [],
     },
   ],

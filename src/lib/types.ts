@@ -1,3 +1,5 @@
+import type { Schema } from './apiSchemas';
+
 // Types mirror the Spring backend DTOs (Scope 1 contract).
 
 // Unified with school subjects: admissions no longer has a separate subject entity/status.
@@ -70,7 +72,17 @@ export interface QuestionResponse {
   options: AnswerOptionResponse[];
   /** Вопрос-источник, если этот вопрос скопирован из другого теста. */
   sourceQuestionId: number | null;
+  /**
+   * Замечания к формулам вопроса: считает бэк из текста при каждом чтении. `ERROR` закрывает
+   * активацию теста — учитель обязан исправить фрагмент до публикации.
+   */
+  formulaIssues?: QuestionFormulaIssue[];
+  /** Presigned-ссылка на прикреплённый рисунок вопроса, или `null`, если его нет. */
+  imageUrl: string | null;
 }
+
+/** Замечание к формуле — форма из контракта (`Schema<'QuestionFormulaIssue'>`). */
+export type QuestionFormulaIssue = Schema<'QuestionFormulaIssue'>;
 
 export interface AnswerOptionRequest {
   text: string;
@@ -206,6 +218,8 @@ export interface AnswerReviewItem {
   topic: string | null;
   type: QuestionType;
   questionText: string;
+  /** Рисунок к вопросу, если он был прикреплён. */
+  imageUrl: string | null;
   applicantAnswer: string | null;
   options: ReviewOption[];
   referenceAnswer: string | null;

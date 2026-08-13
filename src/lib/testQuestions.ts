@@ -45,6 +45,14 @@ export function isChoiceType(type: QuestionType): boolean {
 
 export interface QuestionDraft {
   localId: string;
+  /**
+   * Идентификатор вопроса на сервере, или `null` у ещё не сохранённого. Нужен ровно для
+   * рисунка: он загружается своим эндпоинтом и до первого сохранения вопроса прикрепить его
+   * некуда.
+   */
+  id: number | null;
+  /** Presigned-ссылка на прикреплённый рисунок, если он есть. */
+  imageUrl: string | null;
   isDraft: boolean;
   topic: string;
   difficulty: QuestionDifficulty | '';
@@ -84,6 +92,8 @@ export function newLocalId(): string {
 export function emptyQuestion(type: QuestionType = 'SINGLE_CHOICE'): QuestionDraft {
   return {
     localId: newLocalId(),
+    id: null,
+    imageUrl: null,
     isDraft: false,
     topic: '',
     difficulty: '',
@@ -108,6 +118,8 @@ export function questionFromResponse(q: QuestionResponse): QuestionDraft {
   const isLegacyPhoto = q.type === 'PHOTO';
   return {
     localId: newLocalId(),
+    id: q.id,
+    imageUrl: q.imageUrl ?? null,
     isDraft: q.isDraft,
     topic: q.topic ?? '',
     difficulty: normalizeDifficulty(q.difficulty),
@@ -133,6 +145,9 @@ export function questionFromResponse(q: QuestionResponse): QuestionDraft {
 export function questionFromOtherTest(q: QuestionResponse, sourceTestTitle: string): QuestionDraft {
   return {
     ...questionFromResponse(q),
+    // Копия — новый вопрос: своего id у неё пока нет, а рисунок оригинала останется у оригинала.
+    id: null,
+    imageUrl: null,
     isDraft: false,
     sourceQuestionId: q.id,
     sourceTestTitle,
@@ -143,6 +158,8 @@ export function questionFromOtherTest(q: QuestionResponse, sourceTestTitle: stri
 export function questionFromVariant(variant: QuestionRequest): QuestionDraft {
   return {
     localId: newLocalId(),
+    id: null,
+    imageUrl: null,
     isDraft: false,
     isAiVariant: true,
     topic: variant.topic ?? '',

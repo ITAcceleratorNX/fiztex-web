@@ -11,6 +11,7 @@ import { formatDateTime, pluralRu, versionLabel } from '@/lib/format';
 import { QUESTION_TYPE_LABELS, difficultyLabel } from '@/lib/testQuestions';
 import { TestStatusBadge } from '@/components/ui/TestStatusBadge';
 import { DraftQuestionBadge } from '@/components/ui/DraftQuestionBadge';
+import { MathText } from '@/components/ui/MathText';
 import { DraftReviewBanner } from '@/components/ui/DraftReviewBanner';
 import { TestGenerateModal } from './TestGenerateModal';
 import { TestImportModal } from './TestImportModal';
@@ -157,7 +158,7 @@ export function TestCardModal({
                     >
                       <div className="flex flex-wrap items-start gap-2">
                         <p className="min-w-0 flex-1 text-sm font-medium text-slate-800">
-                          {index + 1}. {q.text}
+                          {index + 1}. <MathText text={q.text} />
                         </p>
                         {q.isDraft && <DraftQuestionBadge />}
                       </div>

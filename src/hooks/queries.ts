@@ -208,6 +208,27 @@ export function useMaterials(subjectId: number) {
   });
 }
 
+/**
+ * Рисунок вопроса. Инвалидируется карточка теста: `imageUrl` живёт в вопросе, и без этого
+ * редактор показывал бы старую картинку до перезагрузки страницы.
+ */
+export function useUploadQuestionImage(testId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ questionId, formData }: { questionId: number; formData: FormData }) =>
+      api.uploadQuestionImage(questionId, formData),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.test(testId) }),
+  });
+}
+
+export function useDeleteQuestionImage(testId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (questionId: number) => api.deleteQuestionImage(questionId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.test(testId) }),
+  });
+}
+
 export function useUploadMaterial(subjectId: number) {
   const qc = useQueryClient();
   return useMutation({

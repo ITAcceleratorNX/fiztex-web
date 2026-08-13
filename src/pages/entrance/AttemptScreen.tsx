@@ -6,6 +6,8 @@ import { useToast } from '@/context/ToastContext';
 import { cx, pluralRu } from '@/lib/format';
 import { EntranceShell } from './EntranceShell';
 import { TextArea } from '@/components/ui/Field';
+import { MathText } from '@/components/ui/MathText';
+import { QuestionFigure } from '@/components/ui/QuestionFigure';
 import { useAttemptEvents } from './useAttemptEvents';
 import { PhotoAnswerBlock } from './PhotoAnswerBlock';
 import { SaveStatusChip, type SaveStatus } from './SaveStatusChip';
@@ -340,7 +342,7 @@ export function AttemptScreen({
                 checked={checked}
                 onChange={() => pickSingle(question, opt.id)}
               />
-              {opt.text}
+              <MathText text={opt.text} />
             </label>
           );
         })}
@@ -382,7 +384,7 @@ export function AttemptScreen({
                 checked={checked}
                 onChange={() => toggleMulti(question, opt.id)}
               />
-              {opt.text}
+              <MathText text={opt.text} />
             </label>
           );
         })}
@@ -517,8 +519,9 @@ export function AttemptScreen({
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-5 py-5">
           <div className="rounded-[28px] bg-white p-7 shadow-[0_4px_16px_rgba(0,0,0,0.03)]">
             <h2 className="text-center text-xl font-semibold leading-7 text-[#1e293b]">
-              {question.text}
+              <MathText text={question.text} />
             </h2>
+            <QuestionFigure imageUrl={question.imageUrl} />
           </div>
           {renderAnswerOptions()}
         </div>
@@ -581,7 +584,10 @@ export function AttemptScreen({
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Вопрос {index + 1}
           </p>
-          <h2 className="mt-2 text-xl font-bold leading-7 text-[#1e293b]">{question.text}</h2>
+          <h2 className="mt-2 text-xl font-bold leading-7 text-[#1e293b]">
+            <MathText text={question.text} />
+          </h2>
+          <QuestionFigure imageUrl={question.imageUrl} />
           <div className="mt-6">{renderAnswerOptions()}</div>
 
           <div className="mt-8 flex items-center justify-between gap-4 border-t border-slate-100 pt-6">

@@ -56,6 +56,7 @@ function question(id: number, text: string): QuestionResponse {
     orderIndex: 0,
     isDraft: false,
     sourceQuestionId: null,
+    imageUrl: null,
     options: [
       { id: 1, text: '1/4', isCorrect: true, orderIndex: 0 },
       { id: 2, text: '4', isCorrect: false, orderIndex: 1 },

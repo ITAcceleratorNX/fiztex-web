@@ -54,6 +54,8 @@ export interface AttemptQuestion {
   options: AttemptOption[];
   allowPhoto: boolean;
   maxPhotos: number;
+  /** Рисунок к вопросу: схема, график, чертёж. `null` — рисунка нет. */
+  imageUrl: string | null;
 }
 
 export interface AnswerPhotoRef {

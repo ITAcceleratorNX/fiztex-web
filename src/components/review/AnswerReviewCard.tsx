@@ -3,6 +3,8 @@ import { cx } from '@/lib/format';
 import type { AnswerReviewItem } from '@/lib/types';
 import { TYPE_LABEL, type ScoreDraft } from './constants';
 import { PhotoViewer } from './PhotoViewer';
+import { MathText } from '@/components/ui/MathText';
+import { QuestionFigure } from '@/components/ui/QuestionFigure';
 import { ScoreEditor } from './ScoreEditor';
 
 export function AnswerReviewCard({
@@ -40,7 +42,10 @@ export function AnswerReviewCard({
           </span>
         )}
       </div>
-      <p className="mt-1.5 text-sm font-semibold text-slate-800">{answer.questionText}</p>
+      <p className="mt-1.5 text-sm font-semibold text-slate-800">
+        <MathText text={answer.questionText} />
+      </p>
+      <QuestionFigure imageUrl={answer.imageUrl} maxHeightClass="max-h-56" />
 
       {isChoice ? (
         <ul className="mt-3 space-y-1.5">
@@ -65,7 +70,9 @@ export function AnswerReviewCard({
                 ) : (
                   <span className="h-4 w-4 shrink-0" />
                 )}
-                <span className="flex-1">{o.text}</span>
+                <span className="flex-1">
+                  <MathText text={o.text} />
+                </span>
                 {o.selected && (
                   <span className="text-xs font-medium opacity-70">выбрал ученик</span>
                 )}
@@ -103,7 +110,9 @@ export function AnswerReviewCard({
               <p className="mb-0.5 text-xs font-semibold uppercase tracking-wide text-emerald-600">
                 Эталон
               </p>
-              <p className="whitespace-pre-wrap">{answer.referenceAnswer}</p>
+              <p>
+                <MathText text={answer.referenceAnswer} />
+              </p>
             </div>
           )}
         </div>

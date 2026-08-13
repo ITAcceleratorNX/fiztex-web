@@ -4,6 +4,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { DraftQuestionBadge } from '@/components/ui/DraftQuestionBadge';
+import { MathText } from '@/components/ui/MathText';
 import { TestStatusBadge } from '@/components/ui/TestStatusBadge';
 import { useTests, useTestsByGrade, useTestQuestions } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
@@ -180,7 +181,9 @@ export function AddFromTestModal({
                         <span className="text-xs text-slate-400">{q.maxScore} б.</span>
                         {q.isDraft && <DraftQuestionBadge />}
                       </div>
-                      <p className="mt-1 whitespace-pre-wrap text-sm text-slate-800">{q.text}</p>
+                      <p className="mt-1 text-sm text-slate-800">
+                        <MathText text={q.text} />
+                      </p>
                       {q.options.length > 0 && (
                         <ul className="mt-2 space-y-0.5">
                           {q.options.map((o) => (
@@ -193,7 +196,7 @@ export function AddFromTestModal({
                               }
                             >
                               {o.isCorrect ? '✓ ' : '• '}
-                              {o.text}
+                              <MathText text={o.text} />
                             </li>
                           ))}
                         </ul>
