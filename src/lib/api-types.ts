@@ -2340,6 +2340,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attendance/my-marks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["myMarks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/attendance/states": {
         parameters: {
             query?: never;
@@ -3766,6 +3782,8 @@ export interface components {
             publishedAt?: string;
             publishedByName?: string;
             reminder?: boolean;
+            /** Format: date-time */
+            restoredAt?: string;
             /** @enum {string} */
             state?: "NOT_FILLED" | "DRAFT" | "PUBLISHED" | "ANNULLED";
             /** Format: int32 */
@@ -4792,6 +4810,8 @@ export interface components {
             lessonNumber?: number;
             manuallyModified?: boolean;
             room?: string;
+            /** Format: int64 */
+            scheduleLessonId?: number;
             /** @example 14:30:00 */
             startTime?: string;
             /** Format: date-time */
@@ -11085,6 +11105,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SubmitResponse"];
+                };
+            };
+        };
+    };
+    myMarks: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+                childId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyAttendanceView"][];
                 };
             };
         };

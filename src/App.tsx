@@ -36,6 +36,7 @@ import {
   SchoolSubjectsPage,
   LessonSchedulePage,
   LessonCardPage,
+  LessonAttendancePage,
 } from '@/platform';
 import type { ReactNode } from 'react';
 
@@ -119,6 +120,12 @@ export function App() {
         <Route path="/schedule" element={<Navigate to="/lesson-schedule" replace />} />
         <Route path="/lesson-schedule" element={<LessonSchedulePage />} />
         <Route path="/lesson-schedule/lessons/:lessonId" element={<LessonCardPage />} />
+        {/* Лист посещаемости вложен в урок, потому что без урока не существует:
+            он заводится не для расписания, а для конкретного LessonInstance. */}
+        <Route
+          path="/lesson-schedule/lessons/:lessonId/attendance"
+          element={<LessonAttendancePage />}
+        />
         <Route
           path="/lesson-schedule/bell-templates"
           element={<ScheduleSettingsPage section="templates" />}

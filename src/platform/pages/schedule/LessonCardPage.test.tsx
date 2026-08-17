@@ -6,10 +6,12 @@ import { LessonCardPage } from './LessonCardPage';
 
 const useLesson = vi.fn();
 const useLessonHistory = vi.fn();
+const useAttendanceSheet = vi.fn();
 
 vi.mock('@/hooks/queries', () => ({
   useLesson: (...args: unknown[]) => useLesson(...args),
   useLessonHistory: (...args: unknown[]) => useLessonHistory(...args),
+  useAttendanceSheet: (...args: unknown[]) => useAttendanceSheet(...args),
 }));
 
 /** Урок в том виде, в каком его отдаёт GET /api/lessons/{id} админу. */
@@ -50,6 +52,8 @@ describe('LessonCardPage', () => {
     useLesson.mockReset();
     useLessonHistory.mockReset();
     useLessonHistory.mockReturnValue({ data: undefined, isPending: false, isError: false });
+    useAttendanceSheet.mockReset();
+    useAttendanceSheet.mockReturnValue({ data: undefined, isPending: false, isError: false });
   });
 
   it('показывает скелетон, пока урок грузится', () => {

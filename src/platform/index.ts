@@ -15,3 +15,4 @@ export { TeacherProfilePage } from './pages/TeacherProfilePage';
 export { SchoolSubjectsPage } from './pages/SchoolSubjectsPage';
 export { LessonSchedulePage } from './pages/LessonSchedulePage';
 export { LessonCardPage } from './pages/schedule/LessonCardPage';
+export { LessonAttendancePage } from './pages/schedule/LessonAttendancePage';

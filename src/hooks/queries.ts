@@ -1,6 +1,11 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, type CopyTestRequest } from '@/lib/api';
 import { lessonsApi } from '@/lib/lessonsApi';
+import {
+  attendanceApi,
+  type AttendanceEntryChange,
+  type AttendanceSheet,
+} from '@/lib/attendanceApi';
 import { announcementsApi, type AnnouncementFilters, type AnnouncementRequest } from '@/lib/announcementsApi';
 import type {
   ApplicantRequest,
@@ -35,6 +40,12 @@ export const keys = {
   lesson: (lessonId: number) => ['lessons', lessonId] as const,
   lessonHistory: (lessonId: number) => ['lessons', lessonId, 'history'] as const,
   lessonStudents: (lessonId: number) => ['lessons', lessonId, 'students'] as const,
+  attendanceSheet: (lessonId: number) => ['lessons', lessonId, 'attendance'] as const,
+  attendanceHistory: (lessonId: number) => ['lessons', lessonId, 'attendance', 'history'] as const,
+  // Ключ по слоту, а не по уроку: у всех дат одного занятия список общий, и при
+  // переходе между датами он не перезапрашивается.
+  lessonOccurrences: (scheduleLessonId: number) =>
+    ['schedule-slots', scheduleLessonId, 'lessons'] as const,
   // Анонсы: публичная витрина и админский список кэшируются раздельно — у них
   // разная видимость, и сброс админского списка не должен трогать публичный.
   announcements: (filters: AnnouncementFilters) =>
@@ -426,6 +437,101 @@ export function useLessonStudents(lessonId: number | null, enabled: boolean) {
     queryFn: ({ signal }) => lessonsApi.students(lessonId as number, signal),
     enabled: lessonId != null && enabled,
   });
+}
+
+/**
+ * Все даты одного занятия — уроки, порождённые тем же слотом расписания.
+ *
+ * Без диапазона дат: горизонт генерации и учебный год ограничивают выборку сами, а
+ * любое окно вроде «±два месяца» пришлось бы придумывать — и оно всё равно обрезало
+ * бы кому-нибудь нужную дату. Отбор идёт по физическому слоту (класс, подгруппа,
+ * день недели, время), поэтому переживает переиздание расписания с новыми id строк.
+ */
+export function useLessonOccurrences(scheduleLessonId: number | null | undefined) {
+  return useQuery({
+    queryKey: keys.lessonOccurrences(scheduleLessonId ?? 0),
+    queryFn: ({ signal }) =>
+      lessonsApi.list({ scheduleLessonId: scheduleLessonId as number, size: 200 }, signal),
+    enabled: scheduleLessonId != null,
+  });
+}
+
+// ---- Посещаемость урока ----
+
+/**
+ * Лист посещаемости. Включается только там, где карточка урока уже вернула
+ * `VIEW_ATTENDANCE`: без неё бэкенд ответит 403, и ходить за гарантированной
+ * ошибкой ради выключенной плитки незачем.
+ *
+ * Не переспрашивается при возврате фокуса: лист правят несколько человек, но
+ * подменять его под руками у того, кто сейчас расставляет отметки, — худшее из
+ * возможных решений. Расхождение ловит `expectedVersion`, и о нём говорят прямо.
+ */
+export function useAttendanceSheet(lessonId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: keys.attendanceSheet(lessonId ?? 0),
+    queryFn: ({ signal }) => attendanceApi.sheet(lessonId as number, signal),
+    enabled: lessonId != null && enabled,
+    refetchOnWindowFocus: false,
+    retry: (failureCount, error) =>
+      !(error instanceof ApiError && (error.status === 403 || error.status === 404)) &&
+      failureCount < 2,
+  });
+}
+
+export function useAttendanceHistory(lessonId: number | null, enabled: boolean) {
+  return useQuery({
+    queryKey: keys.attendanceHistory(lessonId ?? 0),
+    queryFn: ({ signal }) => attendanceApi.history(lessonId as number, { size: 50 }, signal),
+    enabled: lessonId != null && enabled,
+  });
+}
+
+/**
+ * Команды листа. Ответ каждой — лист целиком с новой версией, счётчиками и флагами,
+ * поэтому он кладётся в кэш напрямую: перезапрашивать состояние, которое только что
+ * прислали, значит на секунду показать старую версию и дать отправить её обратно.
+ *
+ * История растёт от любой из трёх команд, но приходит отдельным запросом — её
+ * сбрасываем.
+ */
+function useAttendanceCommand<TVars>(
+  lessonId: number,
+  mutationFn: (vars: TVars) => Promise<AttendanceSheet>,
+) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: (sheet) => {
+      // Плитка на карточке урока читает тот же ключ, поэтому обновляется вместе с
+      // экраном. Сбрасывать `keys.lesson` нельзя: он префикс ключа листа, и
+      // инвалидация тут же перезапросила бы то, что мы только что положили.
+      qc.setQueryData(keys.attendanceSheet(lessonId), sheet);
+      qc.invalidateQueries({ queryKey: keys.attendanceHistory(lessonId) });
+    },
+  });
+}
+
+export function useSaveAttendanceDraft(lessonId: number) {
+  return useAttendanceCommand(
+    lessonId,
+    (vars: { entries: AttendanceEntryChange[]; expectedVersion: number | null }) =>
+      attendanceApi.saveDraft(lessonId, vars),
+  );
+}
+
+export function useMarkAllPresent(lessonId: number) {
+  return useAttendanceCommand(
+    lessonId,
+    (vars: { expectedVersion: number | null; confirmOverwrite: boolean }) =>
+      attendanceApi.markAllPresent(lessonId, vars),
+  );
+}
+
+export function usePublishAttendance(lessonId: number) {
+  return useAttendanceCommand(lessonId, (vars: { expectedVersion: number | null }) =>
+    attendanceApi.publish(lessonId, vars),
+  );
 }
 
 // ---- Анонсы вступительных тестов ----

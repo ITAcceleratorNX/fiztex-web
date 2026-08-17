@@ -21,8 +21,9 @@ import { CollapsibleCard } from '@/components/ui/CollapsibleCard';
 import { LessonStatusChip } from '@/components/ui/LessonStatusChip';
 import { ModuleTile, type ModuleTileTone } from '@/components/ui/ModuleTile';
 import { NoticeBar } from '@/components/ui/NoticeBar';
-import { useLesson, useLessonHistory } from '@/hooks/queries';
+import { useAttendanceSheet, useLesson, useLessonHistory } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
+import type { AttendanceSheet } from '@/lib/attendanceApi';
 import { cx, formatDateTime, formatWeekdayDayMonth } from '@/lib/format';
 import type { Lesson, LessonCapability } from '@/lib/lessonsApi';
 import { describeHistoryActor, describeHistoryEntry, hhmm } from './lessonHistory';
@@ -119,7 +120,7 @@ export function LessonCardPage() {
         )}
       </section>
 
-      <LessonModules />
+      <LessonModules lesson={lesson} />
 
       <CollapsibleCard
         icon={<Clock className="size-[18px] text-slate-900" />}
@@ -248,21 +249,58 @@ function TeachingField({
 }
 
 /**
- * Посещаемость, ДЗ, материалы и оценки — отдельные учебные модули, их на бэкенде
- * ещё нет (LESSON-002 §5.1, §8: capability заведена, модуль вне скоупа). Плитки
- * стоят на своих местах из макета, но не притворяются рабочими переходами.
+ * ДЗ, материалы и оценки — отдельные учебные модули, их на бэкенде ещё нет
+ * (LESSON-002 §5.1, §8: capability заведена, модуль вне скоупа). Плитки стоят на
+ * своих местах из макета, но не притворяются рабочими переходами.
  */
-const MODULES: Array<{ title: string; icon: React.ReactNode; tone: ModuleTileTone }> = [
-  { title: 'Посещаемость', icon: <UserCheck className="size-[18px]" />, tone: 'teal' },
+const PENDING_MODULES: Array<{ title: string; icon: React.ReactNode; tone: ModuleTileTone }> = [
   { title: 'Домашнее задание', icon: <BookOpen className="size-[18px]" />, tone: 'orange' },
   { title: 'Материалы', icon: <Paperclip className="size-[18px]" />, tone: 'violet' },
   { title: 'Оценки', icon: <Award className="size-[18px]" />, tone: 'blue' },
 ];
 
-function LessonModules() {
+/**
+ * Состояние листа строкой на плитке. Счётчик показывается только у черновика: у
+ * опубликованного он совпал бы с составом класса и ничего не добавил, а у пустого
+ * листа «0 из 25» звучит как ошибка, а не как «ещё не начинали».
+ */
+function attendanceTileValue(
+  sheet: AttendanceSheet | undefined,
+  cancelled: boolean,
+): string {
+  if (cancelled || sheet?.state === 'ANNULLED') return 'Недоступна — урок отменён';
+  if (!sheet) return 'Нет доступа';
+  if (sheet.state === 'PUBLISHED') {
+    return sheet.hasUnpublishedChanges ? 'Есть неопубликованные правки' : 'Опубликована';
+  }
+  if (sheet.state === 'DRAFT') return `Черновик · ${sheet.markedCount ?? 0} из ${sheet.totalCount ?? 0}`;
+  return 'Не заполнена';
+}
+
+function LessonModules({ lesson }: { lesson: Lesson }) {
+  const navigate = useNavigate();
+  const canViewAttendance = hasAny(lesson, ['VIEW_ATTENDANCE']);
+  // Лист запрашивается только при праве на него: без VIEW_ATTENDANCE бэкенд ответит
+  // 403, и ходить за гарантированной ошибкой ради выключенной плитки незачем.
+  const sheetQuery = useAttendanceSheet(lesson.id ?? null, canViewAttendance);
+
   return (
     <div className="flex flex-wrap items-stretch gap-4">
-      {MODULES.map((module) => (
+      <ModuleTile
+        icon={<UserCheck className="size-[18px]" />}
+        tone="teal"
+        title="Посещаемость"
+        value={
+          !canViewAttendance
+            ? 'Нет доступа'
+            : sheetQuery.isPending
+              ? 'Загружаем…'
+              : attendanceTileValue(sheetQuery.data, lesson.status === 'CANCELLED')
+        }
+        disabled={!canViewAttendance}
+        onClick={() => navigate(`/lesson-schedule/lessons/${lesson.id}/attendance`)}
+      />
+      {PENDING_MODULES.map((module) => (
         <ModuleTile
           key={module.title}
           icon={module.icon}
