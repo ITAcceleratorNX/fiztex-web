@@ -13,6 +13,7 @@ import {
   Heart,
   Calendar,
   BookOpen,
+  BookOpenCheck,
   QrCode,
   Sparkles,
   Star,
@@ -73,6 +74,7 @@ export const NAV_SECTIONS: NavSection[] = [
     label: 'Учебный процесс',
     items: [
       { to: '/lesson-schedule', label: 'Расписание', icon: Calendar },
+      { to: '/homework', label: 'Домашние задания', icon: BookOpenCheck },
       { to: '/grades', label: 'Дневник и оценки', icon: BookOpen, noApi: true },
       { to: '/attendance', label: 'Посещаемость (QR)', icon: QrCode, noApi: true },
       { to: '/ai-tests', label: 'AI-тесты', icon: Sparkles },

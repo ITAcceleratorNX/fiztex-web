@@ -16,6 +16,7 @@ import { ResultReviewPage } from '@/pages/ResultReviewPage';
 import { ReviewPage } from '@/pages/ReviewPage';
 import { SubjectMaterialsPage } from '@/pages/SubjectMaterialsPage';
 import { AiTestsPage } from '@/pages/AiTestsPage';
+import { HomeworkListPage } from '@/pages/homework/HomeworkListPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import {
@@ -141,6 +142,26 @@ export function App() {
         <Route
           path="/lesson-schedule/subgroups"
           element={<ScheduleSettingsPage section="subgroups" />}
+        />
+        <Route path="/homework" element={<HomeworkListPage />} />
+        {/* Карточка и форма задания — этапы HOMEWORK-001/002/004; список уже ведёт на них. */}
+        <Route
+          path="/homework/new"
+          element={
+            <PlaceholderPage
+              title="Новое домашнее задание"
+              reason="Форма создания задания реализуется отдельным этапом. API уже готов: POST /api/homework."
+            />
+          }
+        />
+        <Route
+          path="/homework/:homeworkId"
+          element={
+            <PlaceholderPage
+              title="Домашнее задание"
+              reason="Карточка задания и проверка работ реализуются отдельным этапом. API уже готов: GET /api/homework/{id}."
+            />
+          }
         />
         <Route
           path="/grades"
