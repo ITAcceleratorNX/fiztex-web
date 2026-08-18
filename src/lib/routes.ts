@@ -29,10 +29,65 @@ export const ROUTES = {
   staffLogin: '/staff/login',
   /** Домашний экран администратора (раньше был на `/`). */
   dashboard: '/dashboard',
+  /** Домашние задания учителя (HOMEWORK-005.1). */
+  homework: '/homework',
 } as const;
 
 /** Куда возвращать после входа, если пользователь не шёл на конкретную страницу. */
 export const DEFAULT_AUTHENTICATED_ROUTE = ROUTES.dashboard;
+
+/**
+ * Стартовый экран по роли.
+ *
+ * Дашборд — админский: он сразу читает `/api/admin/academic-years`, а учительскому токену
+ * это 401. Общий `request()` не отличает «нет прав» от «протух токен» (бэкенд в обоих
+ * случаях отдаёт голый 401 без тела) и на всякий случай завершает сессию — учитель входил
+ * и его тут же выбрасывало обратно на форму. Поэтому учителя встречает его собственный
+ * раздел, а не общая главная.
+ *
+ * Меню учителя ограничено теми же правилами (`navSectionsForRole`), а прямой заход на
+ * чужой адрес разворачивает `isRouteAllowedForRole`.
+ */
+export function landingRouteForRole(role: string | undefined): string {
+  return role === 'TEACHER' ? ROUTES.homework : DEFAULT_AUTHENTICATED_ROUTE;
+}
+
+/**
+ * Куда вести после входа с учётом того, откуда пользователя развернули.
+ *
+ * `Protected` запоминает страницу, на которую человек шёл, — но учителя разворачивает
+ * с админских страниц сам бэкенд (401 → сессия сброшена), и в `from` оседает ровно тот
+ * адрес, который его только что выбросил. Наивное «вернуть на from» превращает это в
+ * петлю: вход → админская страница → 401 → форма входа с тем же `from` → вход → …
+ * Выйти из неё нельзя, пока не почистишь состояние истории вручную.
+ *
+ * Поэтому `from` для учителя принимается, только если ведёт в доступный ему раздел.
+ * Это не ролевая модель, а предохранитель: список разделов учителя пока состоит из ДЗ.
+ */
+export function loginRedirectTarget(from: unknown, role: string | undefined): string {
+  const landing = landingRouteForRole(role);
+  if (typeof from !== 'string' || !from) return landing;
+
+  const target = safeRedirectTarget(from);
+  if (role === 'TEACHER' && !target.startsWith(ROUTES.homework)) return landing;
+  return target;
+}
+
+/**
+ * Доступен ли маршрут этой роли.
+ *
+ * Учителю в этой панели принадлежит только раздел ДЗ: остальные экраны читают
+ * `/api/admin/*`, а это 401, который общий `request()` трактует как конец сессии.
+ * Поэтому прямой заход на чужой адрес разворачиваем сами — молча и без запроса,
+ * иначе пользователь вместо «сюда нельзя» получает выход из системы.
+ *
+ * Это не замена серверной проверке прав: настоящая граница на бэкенде (ТЗ §3),
+ * здесь — только маршрутизация.
+ */
+export function isRouteAllowedForRole(path: string, role: string | undefined): boolean {
+  if (role !== 'TEACHER') return true;
+  return path.startsWith(ROUTES.homework);
+}
 
 /**
  * Безопасный разбор `state.from` при редиректе на вход: принимаем только

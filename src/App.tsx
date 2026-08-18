@@ -6,7 +6,7 @@ import { EntranceFlow } from '@/pages/entrance/EntranceFlow';
 import { PublicAnnouncementsPage } from '@/pages/public/PublicAnnouncementsPage';
 import { PublicAnnouncementPage } from '@/pages/public/PublicAnnouncementPage';
 import { PrivacyPolicyPage } from '@/pages/public/PrivacyPolicyPage';
-import { ROUTES } from '@/lib/routes';
+import { ROUTES, isRouteAllowedForRole, landingRouteForRole } from '@/lib/routes';
 import { AdmissionsPage } from '@/pages/AdmissionsPage';
 import { TestDetailPage } from '@/pages/TestDetailPage';
 import { TestCreatePage } from '@/pages/TestCreatePage';
@@ -42,16 +42,21 @@ import {
 import type { ReactNode } from 'react';
 
 function Protected({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, admin } = useAuth();
   const location = useLocation();
   if (!isAuthenticated) {
     return <Navigate to={ROUTES.staffLogin} replace state={{ from: location.pathname }} />;
+  }
+  // Чужой раздел разворачиваем сами: под учителем админский экран ответил бы 401,
+  // а тот трактуется как истёкшая сессия — вместо «сюда нельзя» был бы выход из системы.
+  if (!isRouteAllowedForRole(location.pathname, admin?.role)) {
+    return <Navigate to={landingRouteForRole(admin?.role)} replace />;
   }
   return <>{children}</>;
 }
 
 export function App() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, admin } = useAuth();
 
   return (
     <Routes>
@@ -70,9 +75,22 @@ export function App() {
         Редиректа со старого `/login` намеренно нет — его ловит `*` и уводит
         на публичную главную.
       */}
+      {/*
+        Уже вошедшему форма входа не нужна — но уводить его надо по роли. Этот редирект
+        срабатывает сразу после успешного входа (состояние меняется, маршрут
+        перерисовывается) и перебивает любой `navigate` из самой формы, поэтому правило
+        обязано жить и здесь тоже, иначе учитель всё равно попадёт на админский дашборд
+        и будет разлогинен первым же 401.
+      */}
       <Route
         path={ROUTES.staffLogin}
-        element={isAuthenticated ? <Navigate to={ROUTES.dashboard} replace /> : <LoginPage />}
+        element={
+          isAuthenticated ? (
+            <Navigate to={landingRouteForRole(admin?.role)} replace />
+          ) : (
+            <LoginPage />
+          )
+        }
       />
 
       <Route

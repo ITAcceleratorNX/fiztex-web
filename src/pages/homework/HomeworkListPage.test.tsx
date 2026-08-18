@@ -10,26 +10,20 @@ const list = vi.fn();
 
 vi.mock('@/lib/homeworkApi', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/homeworkApi')>();
-  return { ...actual, homeworkApi: { list: (...args: unknown[]) => list(...args), card: vi.fn() } };
+  return { ...actual, homeworkApi: { list: (...args: unknown[]) => list(...args) } };
 });
-
-vi.mock('@/lib/platformCoreApi', () => ({
-  platformCoreApi: {
-    listAcademicYears: () => Promise.resolve({ content: [{ id: 1, status: 'ACTIVE' }] }),
-    listClasses: () => Promise.resolve({ content: [{ id: 7, name: '7А' }, { id: 9, name: '9Б' }] }),
-    listSubjects: () => Promise.resolve({ content: [{ id: 3, name: 'Математика' }] }),
-  },
-}));
 
 function row(over: Record<string, unknown> = {}) {
   return {
     id: 1,
     title: 'Параграф 12, упражнения 1–5',
     status: 'PUBLISHED',
-    dueType: 'DATE',
+    dueType: 'EXACT',
     dueAt: '2026-10-18T15:00:00Z',
     overdue: false,
+    classId: 7,
     className: '7А',
+    subjectId: 3,
     subjectName: 'Математика',
     progress: { submitted: 12, total: 24, pendingReview: 3 },
     ...over,
@@ -125,18 +119,50 @@ describe('HomeworkListPage', () => {
   });
 
   it('пустая выдача под фильтрами предлагает сброс, а пустая вкладка — нет (§8)', async () => {
-    list.mockResolvedValue(page([]));
+    // Варианты фильтра берутся из самих заданий, поэтому список сперва должен приехать
+    // непустым — иначе выбирать в «Классе» было бы нечего.
+    list.mockImplementation((params: Record<string, unknown>) =>
+      Promise.resolve(page(params.classId ? [] : [row()])),
+    );
     renderPage();
-
-    expect(await screen.findByText('Нет актуальных заданий')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Сбросить фильтры' })).not.toBeInTheDocument();
+    await screen.findByText('Параграф 12, упражнения 1–5');
 
     await userEvent.click(screen.getByRole('button', { name: /Класс/ }));
     await userEvent.click(screen.getByRole('option', { name: '7А' }));
 
     expect(await screen.findByText('Ничего не найдено')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Сбросить фильтры' }));
+    expect(await screen.findByText('Параграф 12, упражнения 1–5')).toBeInTheDocument();
+  });
+
+  it('пустая вкладка «Актуальные» не предлагает сброс — сбрасывать нечего (§8)', async () => {
+    list.mockResolvedValue(page([]));
+    renderPage();
+
     expect(await screen.findByText('Нет актуальных заданий')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Сбросить фильтры' })).not.toBeInTheDocument();
+  });
+
+  it('варианты фильтра не схлопываются после выбора класса', async () => {
+    list.mockImplementation((params: Record<string, unknown>) =>
+      Promise.resolve(
+        page(
+          params.classId === 7
+            ? [row()]
+            : [row(), row({ id: 2, classId: 9, className: '9Б', title: 'Лабораторная работа №3' })],
+        ),
+      ),
+    );
+    renderPage();
+    await screen.findByText('Параграф 12, упражнения 1–5');
+
+    await userEvent.click(screen.getByRole('button', { name: /Класс/ }));
+    await userEvent.click(screen.getByRole('option', { name: '7А' }));
+
+    // Выдача сузилась до одного класса, но переключиться на другой всё ещё можно:
+    // иначе фильтр запирал бы сам себя.
+    await userEvent.click(screen.getByRole('button', { name: /7А/ }));
+    expect(screen.getByRole('option', { name: '9Б' })).toBeInTheDocument();
   });
 
   it('пустая «История» — своё состояние без предложения создать задание', async () => {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Info } from 'lucide-react';
@@ -7,8 +7,7 @@ import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
-import { SCOPE_STATUSES, homeworkApi, type HomeworkScope } from '@/lib/homeworkApi';
-import { platformCoreApi } from '@/lib/platformCoreApi';
+import { SCOPE_STATUSES, homeworkApi, type Homework, type HomeworkScope } from '@/lib/homeworkApi';
 import {
   EMPTY_FILTERS,
   HomeworkFilters,
@@ -41,34 +40,6 @@ export function HomeworkListPage() {
 
   const [scope, setScope] = useState<HomeworkScope>('ACTUAL');
   const [filters, setFilters] = useState<HomeworkFilterValues>(EMPTY_FILTERS);
-
-  const yearQuery = useQuery({
-    queryKey: ['homework', 'filters', 'years'],
-    queryFn: ({ signal }) => platformCoreApi.listAcademicYears(signal),
-    staleTime: 5 * 60_000,
-  });
-  const activeYearId = yearQuery.data?.content?.find((year) => year.status === 'ACTIVE')?.id;
-
-  const classesQuery = useQuery({
-    queryKey: ['homework', 'filters', 'classes', activeYearId],
-    queryFn: ({ signal }) => platformCoreApi.listClasses(activeYearId as number, signal),
-    enabled: activeYearId != null,
-    staleTime: 5 * 60_000,
-  });
-  const subjectsQuery = useQuery({
-    queryKey: ['homework', 'filters', 'subjects'],
-    queryFn: ({ signal }) => platformCoreApi.listSubjects(signal),
-    staleTime: 5 * 60_000,
-  });
-
-  const classOptions = useMemo<FilterOption[]>(
-    () => (classesQuery.data?.content ?? []).map((item) => ({ id: item.id, name: item.name })),
-    [classesQuery.data],
-  );
-  const subjectOptions = useMemo<FilterOption[]>(
-    () => (subjectsQuery.data?.content ?? []).map((item) => ({ id: item.id, name: item.name })),
-    [subjectsQuery.data],
-  );
 
   const listQuery = useQuery({
     queryKey: ['homework', 'list', scope, filters],
@@ -104,6 +75,7 @@ export function HomeworkListPage() {
 
   const rows = listQuery.data?.content ?? [];
   const filtersActive = hasActiveFilters(filters);
+  const { classes: classOptions, subjects: subjectOptions } = useFilterOptions(rows);
 
   return (
     <div className="flex flex-col gap-5">
@@ -236,6 +208,36 @@ function HomeworkBody({
   }
 
   return <HomeworkTable rows={rows} />;
+}
+
+/**
+ * Варианты фильтров берутся из самих заданий, а не из справочников `/api/admin/*`.
+ *
+ * Причина не в экономии запроса: админские справочники учителю отдают 401, а общий
+ * `request()` трактует любой 401 как истёкшую сессию — раздел выкидывал учителя на форму
+ * входа ровно в момент открытия. Заодно это правильнее по смыслу: учителю нужны его
+ * классы и предметы (ТЗ §3), а не список всей школы.
+ *
+ * Набор накапливается между запросами и не сбрасывается выбранным фильтром. Иначе выбор
+ * «7А» сузил бы выдачу до одного класса, список вариантов схлопнулся бы до него же, и
+ * переключиться на другой класс стало бы нечем — фильтр запирал бы сам себя.
+ */
+function useFilterOptions(rows: Homework[]): { classes: FilterOption[]; subjects: FilterOption[] } {
+  const seen = useRef({ classes: new Map<number, string>(), subjects: new Map<number, string>() });
+
+  for (const row of rows) {
+    if (row.classId != null && row.className) seen.current.classes.set(row.classId, row.className);
+    if (row.subjectId != null && row.subjectName) {
+      seen.current.subjects.set(row.subjectId, row.subjectName);
+    }
+  }
+
+  const sort = (map: Map<number, string>): FilterOption[] =>
+    [...map.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'ru', { numeric: true }));
+
+  return { classes: sort(seen.current.classes), subjects: sort(seen.current.subjects) };
 }
 
 /**

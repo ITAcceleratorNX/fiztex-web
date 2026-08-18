@@ -15,7 +15,7 @@ const PROFILE_KEY = 'fiztex.profile';
 interface AuthContextValue {
   admin: Admin | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<Admin>;
   logout: () => void;
 }
 
@@ -68,10 +68,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  // Возвращает аккаунт, а не void: вызывающему нужна роль, чтобы выбрать стартовый экран,
+  // а состояние контекста на этот момент ещё не обновилось.
   const login = useCallback(async (email: string, password: string) => {
     const result = await api.login(email, password);
     persist(result);
     setAdmin(result);
+    return result;
   }, []);
 
   const logout = useCallback(() => {

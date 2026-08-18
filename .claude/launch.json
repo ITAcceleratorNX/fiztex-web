@@ -4,9 +4,23 @@
     {
       "name": "fiztex-web-dev",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--host",
+        "127.0.0.1"
+      ],
       "port": 5173,
       "autoPort": true
+    },
+    {
+      "name": "fiztex-full-stack",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "run",
+        "dev:local"
+      ],
+      "port": 5173
     }
   ]
 }

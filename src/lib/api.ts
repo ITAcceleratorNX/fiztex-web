@@ -198,7 +198,7 @@ export const api = {
       method: 'POST',
       body: { login, password },
     });
-    return { token: res.token, email: login, fullName: res.fullName };
+    return { token: res.token, email: login, fullName: res.fullName, role: res.role };
   },
 
   // Subjects — unified on «Школьные предметы» (school_subjects). Read-only here;

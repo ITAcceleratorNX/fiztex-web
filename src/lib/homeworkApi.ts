@@ -79,10 +79,6 @@ export const homeworkApi = {
       { signal },
     );
   },
-
-  card(homeworkId: number, signal?: AbortSignal): Promise<Homework> {
-    return request<Homework>(`/homework/${homeworkId}`, { signal });
-  },
 };
 
 /** Статусы, которые фильтр предлагает на каждой вкладке (§4.1). */

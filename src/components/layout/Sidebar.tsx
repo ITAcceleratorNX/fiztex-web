@@ -3,10 +3,12 @@ import { ChevronDown, LogOut } from 'lucide-react';
 import { Logo, PhysTechMark } from './Logo';
 import { useAuth } from '@/context/AuthContext';
 import { cx, initials } from '@/lib/format';
-import { NAV_SECTIONS, type NavItem } from './navConfig';
+import { navSectionsForRole, type NavItem } from './navConfig';
 
 export function Sidebar() {
   const { admin, logout } = useAuth();
+  // Меню зависит от роли: разделы админки под учителем отвечают 401 и рвут сессию.
+  const sections = navSectionsForRole(admin?.role);
 
   return (
     <aside className="relative flex w-[220px] shrink-0 flex-col overflow-hidden bg-navy-700">
@@ -21,7 +23,7 @@ export function Sidebar() {
       </div>
 
       <nav className="no-scrollbar relative z-10 flex-1 space-y-5 overflow-y-auto pb-4 pt-3">
-        {NAV_SECTIONS.map((section) => (
+        {sections.map((section) => (
           <div key={section.id}>
             {section.label ? (
               <p className="mb-1.5 px-7 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/30">

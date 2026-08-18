@@ -39,7 +39,7 @@ export interface NavSection {
   items: NavItem[];
 }
 
-/** Single sidebar for Platform Core + admissions admin. */
+/** Sidebar for Platform Core + admissions admin. Для учителя см. {@link navSectionsForRole}. */
 export const NAV_SECTIONS: NavSection[] = [
   {
     id: 'home',
@@ -74,7 +74,6 @@ export const NAV_SECTIONS: NavSection[] = [
     label: 'Учебный процесс',
     items: [
       { to: '/lesson-schedule', label: 'Расписание', icon: Calendar },
-      { to: '/homework', label: 'Домашние задания', icon: BookOpenCheck },
       { to: '/grades', label: 'Дневник и оценки', icon: BookOpen, noApi: true },
       { to: '/attendance', label: 'Посещаемость (QR)', icon: QrCode, noApi: true },
       { to: '/ai-tests', label: 'AI-тесты', icon: Sparkles },
@@ -91,3 +90,24 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
 ];
+
+/**
+ * Меню учителя (ТЗ HOMEWORK-005.1 §3).
+ *
+ * Один пункт — не упрощение, а отражение того, что здесь реально работает под учителем.
+ * Остальные разделы панели читают `/api/admin/*`, а учительскому токену это 401, который
+ * общий `request()` считает концом сессии: пункт меню, выбрасывающий на форму входа, хуже
+ * отсутствующего. Расписание и посещаемость появятся здесь, когда у них будут ролевые
+ * экраны, а не админские.
+ */
+export const TEACHER_NAV_SECTIONS: NavSection[] = [
+  {
+    id: 'teaching',
+    label: '',
+    items: [{ to: ROUTES.homework, label: 'Домашние задания', icon: BookOpenCheck }],
+  },
+];
+
+export function navSectionsForRole(role: string | undefined): NavSection[] {
+  return role === 'TEACHER' ? TEACHER_NAV_SECTIONS : NAV_SECTIONS;
+}

@@ -14,7 +14,7 @@ import { Field, TextInput } from '@/components/ui/Field';
 import { Logo, PhysTechMark } from '@/components/layout/Logo';
 import { PrivacyLinks } from '@/components/layout/PrivacyLinks';
 import { APP_NAME } from '@/lib/branding';
-import { safeRedirectTarget } from '@/lib/routes';
+import { loginRedirectTarget } from '@/lib/routes';
 
 const FEATURES: { icon: LucideIcon; label: string }[] = [
   { icon: Users, label: 'Ученики, родители и учителя' },
@@ -32,15 +32,15 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const redirectTo = safeRedirectTarget((location.state as { from?: string } | null)?.from);
+  const from = (location.state as { from?: string } | null)?.from;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      await login(email, password);
-      navigate(redirectTo, { replace: true });
+      const account = await login(email, password);
+      navigate(loginRedirectTarget(from, account?.role), { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Не удалось войти');
     } finally {
