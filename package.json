@@ -7,8 +7,7 @@
   "description": "Phystech / Fiztex — desktop admin (Scope 1: Вступительные тесты)",
   "scripts": {
     "dev": "vite",
-    "dev:local": "./scripts/dev-local.sh",
-    "dev:local:stop": "./scripts/dev-local.sh --stop",
+    "dev:local": "VITE_API_TARGET=http://localhost:8080 vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "tsc -p tsconfig.app.json --noEmit",
