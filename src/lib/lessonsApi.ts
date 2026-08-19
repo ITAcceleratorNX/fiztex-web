@@ -8,6 +8,8 @@ export type LessonCapability = NonNullable<Lesson['capabilities']>[number];
 export type LessonChangedField = NonNullable<Lesson['changedFields']>[number];
 
 type LessonPage = Schema<'PageLessonView'>;
+export type RoleSchedule = Schema<'RoleScheduleView'>;
+export type RoleScheduleLesson = NonNullable<RoleSchedule['lessons']>[number];
 type LessonHistoryPage = Schema<'PageLessonHistoryView'>;
 
 export interface LessonListParams {
@@ -29,6 +31,17 @@ export const lessonsApi = {
 
   card(lessonId: number, signal?: AbortSignal): Promise<Lesson> {
     return request<Lesson>(`/lessons/${lessonId}`, { signal });
+  },
+
+  /**
+   * Своя неделя — единственный источник «какие классы и предметы у меня есть», доступный
+   * учителю. Справочники `/api/admin/*` ему отвечают 401, а общий `request()` считает это
+   * концом сессии, поэтому спрашивать их с учительского экрана нельзя (см. `routes.ts`).
+   *
+   * `date` — любой день внутри нужной недели; без него берётся текущая.
+   */
+  myWeek(date?: string, signal?: AbortSignal): Promise<RoleSchedule> {
+    return request<RoleSchedule>(`/schedule/me/week${pageQuery({ date })}`, { signal });
   },
 
   history(

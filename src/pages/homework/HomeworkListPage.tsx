@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Info } from 'lucide-react';
+import { Info, Users } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
@@ -88,13 +88,16 @@ export function HomeworkListPage() {
           onChange={changeScope}
           ariaLabel="Вкладки заданий"
         />
-        <HomeworkFilters
-          scope={scope}
-          values={filters}
-          classes={classOptions}
-          subjects={subjectOptions}
-          onChange={setFilters}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <HomeworkFilters
+            scope={scope}
+            values={filters}
+            classes={classOptions}
+            subjects={subjectOptions}
+            onChange={setFilters}
+          />
+          <GroupsButton classId={filters.classId} subjectId={filters.subjectId} />
+        </div>
       </div>
 
       <HomeworkBody
@@ -115,6 +118,43 @@ export function HomeworkListPage() {
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Вход в деление класса на временные группы (HOMEWORK-002 §5).
+ *
+ * Стоит рядом с фильтрами не ради симметрии: группы заводятся под пару «класс + предмет»,
+ * и ровно эта пара уже выбрана здесь же фильтрами — другого места, где она задана до
+ * открытия задания, на экране нет.
+ *
+ * Пока пара не выбрана, кнопка неактивна и говорит почему: увести человека на экран,
+ * который встретит его сообщением «не указан класс», — хуже, чем не пустить сразу.
+ */
+function GroupsButton({ classId, subjectId }: { classId?: number; subjectId?: number }) {
+  const ready = classId != null && subjectId != null;
+
+  if (!ready) {
+    return (
+      <span
+        title="Выберите класс и предмет — группы заводятся для этой пары"
+        className={buttonClassName({ variant: 'secondary', size: 'sm', className: 'cursor-not-allowed opacity-50' })}
+        aria-disabled
+      >
+        <Users className="size-4" aria-hidden />
+        Группы
+      </span>
+    );
+  }
+
+  return (
+    <Link
+      to={`/homework/groups?classId=${classId}&subjectId=${subjectId}`}
+      className={buttonClassName({ variant: 'secondary', size: 'sm' })}
+    >
+      <Users className="size-4" aria-hidden />
+      Группы
+    </Link>
   );
 }
 

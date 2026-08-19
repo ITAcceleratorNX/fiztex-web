@@ -249,12 +249,13 @@ function TeachingField({
 }
 
 /**
- * ДЗ, материалы и оценки — отдельные учебные модули, их на бэкенде ещё нет
+ * Материалы и оценки — отдельные учебные модули, их на бэкенде ещё нет
  * (LESSON-002 §5.1, §8: capability заведена, модуль вне скоупа). Плитки стоят на
  * своих местах из макета, но не притворяются рабочими переходами.
+ *
+ * ДЗ из этого списка ушло: модуль реализован (FE-Teacher-002), и плитка ведёт в него.
  */
 const PENDING_MODULES: Array<{ title: string; icon: React.ReactNode; tone: ModuleTileTone }> = [
-  { title: 'Домашнее задание', icon: <BookOpen className="size-[18px]" />, tone: 'orange' },
   { title: 'Материалы', icon: <Paperclip className="size-[18px]" />, tone: 'violet' },
   { title: 'Оценки', icon: <Award className="size-[18px]" />, tone: 'blue' },
 ];
@@ -299,6 +300,13 @@ function LessonModules({ lesson }: { lesson: Lesson }) {
         }
         disabled={!canViewAttendance}
         onClick={() => navigate(`/lesson-schedule/lessons/${lesson.id}/attendance`)}
+      />
+      <ModuleTile
+        icon={<BookOpen className="size-[18px]" />}
+        tone="orange"
+        title="Домашнее задание"
+        value="Открыть задания урока"
+        onClick={() => navigate(`/lesson-schedule/lessons/${lesson.id}/homework`)}
       />
       {PENDING_MODULES.map((module) => (
         <ModuleTile

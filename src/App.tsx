@@ -17,6 +17,11 @@ import { ReviewPage } from '@/pages/ReviewPage';
 import { SubjectMaterialsPage } from '@/pages/SubjectMaterialsPage';
 import { AiTestsPage } from '@/pages/AiTestsPage';
 import { HomeworkListPage } from '@/pages/homework/HomeworkListPage';
+import { HomeworkCardPage } from '@/pages/homework/HomeworkCardPage';
+import { HomeworkFormPage } from '@/pages/homework/HomeworkFormPage';
+import { SubmissionReviewPage } from '@/pages/homework/SubmissionReviewPage';
+import { LessonHomeworkPage } from '@/pages/homework/LessonHomeworkPage';
+import { HomeworkGroupsPage } from '@/pages/homework/HomeworkGroupsPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import {
@@ -145,6 +150,11 @@ export function App() {
           path="/lesson-schedule/lessons/:lessonId/attendance"
           element={<LessonAttendancePage />}
         />
+        {/* ДЗ урока — вход в создание из урока (FE-Teacher-002 §2.1). */}
+        <Route
+          path="/lesson-schedule/lessons/:lessonId/homework"
+          element={<LessonHomeworkPage />}
+        />
         <Route
           path="/lesson-schedule/bell-templates"
           element={<ScheduleSettingsPage section="templates" />}
@@ -162,24 +172,15 @@ export function App() {
           element={<ScheduleSettingsPage section="subgroups" />}
         />
         <Route path="/homework" element={<HomeworkListPage />} />
-        {/* Карточка и форма задания — этапы HOMEWORK-001/002/004; список уже ведёт на них. */}
+        {/* Форма одна на создание из урока (?lessonId=) и вне урока (FE-Teacher-002 §2.3). */}
+        <Route path="/homework/new" element={<HomeworkFormPage mode="create" />} />
+        {/* Временные группы — деление класса, HOMEWORK-002 §5. */}
+        <Route path="/homework/groups" element={<HomeworkGroupsPage />} />
+        <Route path="/homework/:homeworkId" element={<HomeworkCardPage />} />
+        <Route path="/homework/:homeworkId/edit" element={<HomeworkFormPage mode="edit" />} />
         <Route
-          path="/homework/new"
-          element={
-            <PlaceholderPage
-              title="Новое домашнее задание"
-              reason="Форма создания задания реализуется отдельным этапом. API уже готов: POST /api/homework."
-            />
-          }
-        />
-        <Route
-          path="/homework/:homeworkId"
-          element={
-            <PlaceholderPage
-              title="Домашнее задание"
-              reason="Карточка задания и проверка работ реализуются отдельным этапом. API уже готов: GET /api/homework/{id}."
-            />
-          }
+          path="/homework/:homeworkId/students/:studentProfileId"
+          element={<SubmissionReviewPage />}
         />
         <Route
           path="/grades"

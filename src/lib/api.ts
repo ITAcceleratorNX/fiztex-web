@@ -164,6 +164,30 @@ export async function requestMultipart<T>(path: string, formData: FormData, sign
   return data as T;
 }
 
+/**
+ * Бинарный ответ под авторизацией — вложения работ и фотографии проверки.
+ *
+ * Эти эндпоинты отдают поток байтов, а не ссылку, поэтому `<img src>` на них не
+ * навести: в теге нет заголовка Authorization. Забираем сами и отдаём blob, а вызывающий
+ * оборачивает его в object URL и обязан освободить через `URL.revokeObjectURL`.
+ */
+export async function requestBlob(path: string, signal?: AbortSignal): Promise<Blob> {
+  const headers: Record<string, string> = {};
+  if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+
+  let response: Response;
+  try {
+    response = await fetch(`/api${path}`, { headers, signal });
+  } catch {
+    throw new ApiError(0, 'Не удалось соединиться с сервером. Проверьте, запущен ли backend.');
+  }
+
+  if (response.status === 401) handleUnauthorized();
+  if (!response.ok) throw toApiError(response.status, await response.text().then(safeParse));
+
+  return response.blob();
+}
+
 function safeParse(text: string): unknown {
   try {
     return JSON.parse(text);

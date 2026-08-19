@@ -19,6 +19,13 @@ describe('маршрутизация по роли', () => {
     expect(isRouteAllowedForRole('/homework/12', 'TEACHER')).toBe(true);
     expect(isRouteAllowedForRole('/dashboard', 'TEACHER')).toBe(false);
     expect(isRouteAllowedForRole('/admin/classes', 'TEACHER')).toBe(false);
+    // Конкретный урок — ролевой экран: карточка, посещаемость и ДЗ урока учителю нужны,
+    // а вот конструктор расписания и его настройки остаются админскими.
+    expect(isRouteAllowedForRole('/lesson-schedule/lessons/12', 'TEACHER')).toBe(true);
+    expect(isRouteAllowedForRole('/lesson-schedule/lessons/12/homework', 'TEACHER')).toBe(true);
+    expect(isRouteAllowedForRole('/lesson-schedule/lessons/12/attendance', 'TEACHER')).toBe(true);
+    expect(isRouteAllowedForRole('/lesson-schedule', 'TEACHER')).toBe(false);
+    expect(isRouteAllowedForRole('/lesson-schedule/bell-templates', 'TEACHER')).toBe(false);
     // Админа не ограничиваем: у него работают все разделы.
     expect(isRouteAllowedForRole('/dashboard', 'ADMIN')).toBe(true);
   });
@@ -32,6 +39,9 @@ describe('маршрутизация по роли', () => {
     expect(loginRedirectTarget('/admin/classes', 'TEACHER')).toBe('/homework');
     // Свой раздел — уважаем: человек шёл именно туда.
     expect(loginRedirectTarget('/homework', 'TEACHER')).toBe('/homework');
+    // Урок учителю доступен, значит и возврат на него после входа обязан работать.
+    expect(loginRedirectTarget('/lesson-schedule/lessons/12', 'TEACHER'))
+      .toBe('/lesson-schedule/lessons/12');
     // Админа `from` по-прежнему возвращает куда шёл.
     expect(loginRedirectTarget('/admin/classes', 'ADMIN')).toBe('/admin/classes');
     expect(loginRedirectTarget(undefined, 'ADMIN')).toBe('/dashboard');

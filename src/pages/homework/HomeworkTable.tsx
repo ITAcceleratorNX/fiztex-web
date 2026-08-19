@@ -14,7 +14,7 @@ const COLUMNS = [
   { key: 'progress', label: 'Прогресс', className: 'w-24' },
 ] as const;
 
-const HEAD_CELL = 'px-4 py-3 text-left text-10 font-medium uppercase tracking-wide text-subtle';
+const HEAD_CELL = 'px-5 py-3 text-left text-10 font-medium uppercase tracking-wide text-subtle';
 
 /**
  * Таблица заданий, сгруппированная по классу (Figma 856:20520).
@@ -46,7 +46,7 @@ export function HomeworkTable({ rows }: { rows: Homework[] }) {
                 <th
                   scope="colgroup"
                   colSpan={COLUMNS.length}
-                  className="px-4 py-2 text-left text-13 font-semibold text-ink"
+                  className="px-5 py-2 text-left text-13 font-semibold text-ink"
                 >
                   {group.className}
                 </th>
@@ -81,10 +81,10 @@ function HomeworkRow({ row, onOpen }: { row: Homework; onOpen: () => void }) {
       aria-label={`Открыть задание «${row.title ?? ''}»`}
       className="cursor-pointer border-b border-line last:border-b-0 transition hover:bg-neutral-bg/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400/50"
     >
-      <td className="px-4 py-3 text-sm font-medium text-ink">{row.title}</td>
-      <td className="px-4 py-3 text-13 text-muted">{row.subjectName}</td>
-      <td className="px-4 py-3 text-13 text-muted">{classLabel(row)}</td>
-      <td className="px-4 py-3">
+      <td className="px-5 py-3 text-sm font-medium text-ink">{row.title}</td>
+      <td className="px-5 py-3 text-13 text-muted">{row.subjectName}</td>
+      <td className="px-5 py-3 text-13 text-muted">{classLabel(row)}</td>
+      <td className="px-5 py-3">
         {row.lesson ? (
           <span className="inline-flex items-center rounded bg-neutral-bg px-2 py-0.5 text-11 text-neutral-fg">
             {lessonLabel(row)}
@@ -93,11 +93,11 @@ function HomeworkRow({ row, onOpen }: { row: Homework; onOpen: () => void }) {
           <span className="text-13 text-subtle">—</span>
         )}
       </td>
-      <td className="px-4 py-3 text-13 text-muted">{dueLabel(row)}</td>
-      <td className="px-4 py-3">
+      <td className="px-5 py-3 text-13 text-muted">{dueLabel(row)}</td>
+      <td className="px-5 py-3">
         <HomeworkStatusChip status={row.status} overdue={row.overdue} />
       </td>
-      <td className="px-4 py-3 text-13 text-muted">{progressLabel(row)}</td>
+      <td className="px-5 py-3 text-13 text-muted">{progressLabel(row)}</td>
     </tr>
   );
 }
@@ -186,7 +186,7 @@ export function HomeworkTableSkeleton({ rows = 8 }: { rows?: number }) {
           {Array.from({ length: rows }, (_, index) => (
             <tr key={index} className="border-b border-line last:border-b-0">
               {COLUMNS.map((column) => (
-                <td key={column.key} className="px-4 py-3">
+                <td key={column.key} className="px-5 py-3">
                   <span
                     className="block h-3.5 animate-pulse rounded bg-neutral-bg"
                     style={{ width: column.key === 'title' ? `${40 + ((index * 7) % 30)}%` : '70%' }}

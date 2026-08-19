@@ -61,33 +61,42 @@ export function landingRouteForRole(role: string | undefined): string {
  * петлю: вход → админская страница → 401 → форма входа с тем же `from` → вход → …
  * Выйти из неё нельзя, пока не почистишь состояние истории вручную.
  *
- * Поэтому `from` для учителя принимается, только если ведёт в доступный ему раздел.
- * Это не ролевая модель, а предохранитель: список разделов учителя пока состоит из ДЗ.
+ * Поэтому `from` принимается, только если ведёт в доступный роли раздел — список тот же,
+ * что у `isRouteAllowedForRole`, чтобы вход и навигация не расходились в правилах.
  */
 export function loginRedirectTarget(from: unknown, role: string | undefined): string {
   const landing = landingRouteForRole(role);
   if (typeof from !== 'string' || !from) return landing;
 
   const target = safeRedirectTarget(from);
-  if (role === 'TEACHER' && !target.startsWith(ROUTES.homework)) return landing;
-  return target;
+  return isRouteAllowedForRole(target, role) ? target : landing;
 }
 
 /**
  * Доступен ли маршрут этой роли.
  *
- * Учителю в этой панели принадлежит только раздел ДЗ: остальные экраны читают
- * `/api/admin/*`, а это 401, который общий `request()` трактует как конец сессии.
- * Поэтому прямой заход на чужой адрес разворачиваем сами — молча и без запроса,
- * иначе пользователь вместо «сюда нельзя» получает выход из системы.
+ * Чужие разделы панели читают `/api/admin/*`, а это 401, который общий `request()`
+ * трактует как конец сессии. Поэтому прямой заход туда разворачиваем сами — молча и
+ * без запроса, иначе пользователь вместо «сюда нельзя» получает выход из системы.
  *
  * Это не замена серверной проверке прав: настоящая граница на бэкенде (ТЗ §3),
  * здесь — только маршрутизация.
  */
 export function isRouteAllowedForRole(path: string, role: string | undefined): boolean {
   if (role !== 'TEACHER') return true;
-  return path.startsWith(ROUTES.homework);
+  return TEACHER_ROUTE_PREFIXES.some((prefix) => path.startsWith(prefix));
 }
+
+/**
+ * Разделы, доступные учителю.
+ *
+ * Урок сюда входит не целиком: `/lesson-schedule` — админский конструктор расписания и
+ * его настройки, они читают `/api/admin/*`. А вот конкретный урок (`/lesson-schedule/
+ * lessons/:id`, его посещаемость и его ДЗ) — ролевой экран: бэкенд отдаёт карточку по
+ * `/api/lessons/*` всем ролям и сам решает, что в ней доступно. Без этой ветки учитель
+ * не мог открыть ни собственный урок, ни создать из него задание (FE-Teacher-002 §2.1).
+ */
+const TEACHER_ROUTE_PREFIXES = [ROUTES.homework, '/lesson-schedule/lessons/'];
 
 /**
  * Безопасный разбор `state.from` при редиректе на вход: принимаем только
