@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, type CopyTestRequest } from '@/lib/api';
 import { lessonsApi } from '@/lib/lessonsApi';
+import { homeworkApi, type Homework } from '@/lib/homeworkApi';
 import {
   attendanceApi,
   type AttendanceEntryChange,
@@ -41,6 +42,10 @@ export const keys = {
   lessonHistory: (lessonId: number) => ['lessons', lessonId, 'history'] as const,
   lessonStudents: (lessonId: number) => ['lessons', lessonId, 'students'] as const,
   attendanceSheet: (lessonId: number) => ['lessons', lessonId, 'attendance'] as const,
+  // Ключ живёт в пространстве 'homework': любое действие с заданием сбрасывает
+  // весь раздел одним `invalidateQueries(['homework'])`, и список урока обязан
+  // обновляться вместе с ним, а не жить своей жизнью под ключом урока.
+  lessonHomework: (lessonId: number) => ['homework', 'lesson', lessonId, 'all'] as const,
   attendanceHistory: (lessonId: number) => ['lessons', lessonId, 'attendance', 'history'] as const,
   // Ключ по слоту, а не по уроку: у всех дат одного занятия список общий, и при
   // переходе между датами он не перезапрашивается.
@@ -427,6 +432,31 @@ export function useLessonHistory(lessonId: number | null, enabled: boolean) {
   return useQuery({
     queryKey: keys.lessonHistory(lessonId ?? 0),
     queryFn: ({ signal }) => lessonsApi.history(lessonId as number, { size: 50 }, signal),
+    enabled: lessonId != null && enabled,
+  });
+}
+
+/**
+ * Домашние задания урока — обе вкладки сразу.
+ *
+ * Вкладок у карточки урока нет и быть не должно: завершённое и отменённое задание для
+ * урока такая же часть картины «что было задано», как актуальное. Вкладки принадлежат
+ * ленте учителя (HOMEWORK-005.1 §4.1), а здесь список короткий и целиком про один урок.
+ *
+ * Включается там, где карточка урока уже вернула `VIEW_STUDENTS`: этим правом бэкенд
+ * отличает того, кто видит урок «изнутри» (администратор и оба учителя), от участника —
+ * у ученика и родителя своя лента заданий, и здесь их ждал бы гарантированный 403.
+ */
+export function useLessonHomework(lessonId: number | null, enabled: boolean) {
+  return useQuery({
+    queryKey: keys.lessonHomework(lessonId ?? 0),
+    queryFn: async ({ signal }): Promise<Homework[]> => {
+      const [actual, history] = await Promise.all([
+        homeworkApi.list({ scope: 'ACTUAL', lessonId: lessonId as number, size: 100 }, signal),
+        homeworkApi.list({ scope: 'HISTORY', lessonId: lessonId as number, size: 100 }, signal),
+      ]);
+      return [...(actual.content ?? []), ...(history.content ?? [])];
+    },
     enabled: lessonId != null && enabled,
   });
 }

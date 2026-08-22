@@ -15,20 +15,30 @@ import {
   UserCheck,
   Users,
 } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button, buttonClassName } from '@/components/ui/Button';
 import { ChangedChip } from '@/components/ui/ChangedChip';
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard';
 import { LessonStatusChip } from '@/components/ui/LessonStatusChip';
 import { ModuleTile, type ModuleTileTone } from '@/components/ui/ModuleTile';
 import { NoticeBar } from '@/components/ui/NoticeBar';
-import { useAttendanceSheet, useLesson, useLessonHistory } from '@/hooks/queries';
+import { useAttendanceSheet, useLesson, useLessonHistory, useLessonHomework } from '@/hooks/queries';
+import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api';
+import { ROUTES } from '@/lib/routes';
 import type { AttendanceSheet } from '@/lib/attendanceApi';
-import { cx, formatDateTime, formatWeekdayDayMonth } from '@/lib/format';
+import { cx, formatDateTime, formatWeekdayDayMonth, pluralRu } from '@/lib/format';
+import type { Homework } from '@/lib/homeworkApi';
 import type { Lesson, LessonCapability } from '@/lib/lessonsApi';
+import { LessonHomeworkRows } from '@/pages/homework/LessonHomeworkRows';
 import { describeHistoryActor, describeHistoryEntry, hhmm } from './lessonHistory';
 
-const SCHEDULE_PATH = '/lesson-schedule';
+/**
+ * Куда возвращает «К расписанию». У учителя это его собственный экран: админский
+ * конструктор читает `/api/admin/*` и под учителем рвёт сессию (см. `routes.ts`).
+ */
+function schedulePathFor(role: string | undefined): string {
+  return role === 'TEACHER' ? ROUTES.mySchedule : '/lesson-schedule';
+}
 
 /**
  * Карточка конкретного урока в расписании (Figma 2067:9326 и состояния 9487…10178).
@@ -44,6 +54,8 @@ export function LessonCardPage() {
   const { lessonId } = useParams<{ lessonId: string }>();
   const id = Number(lessonId);
   const lessonQuery = useLesson(Number.isFinite(id) && id > 0 ? id : null);
+  const { admin } = useAuth();
+  const schedulePath = schedulePathFor(admin?.role);
 
   const lesson = lessonQuery.data;
   const canSeeHistory = hasAny(lesson, ['VIEW_ADMIN_HISTORY', 'VIEW_TEACHER_HISTORY']);
@@ -68,7 +80,7 @@ export function LessonCardPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
         <Link
-          to={SCHEDULE_PATH}
+          to={schedulePath}
           className="inline-flex items-center gap-1 text-sm font-semibold text-navy-700 hover:text-navy-800"
         >
           <ArrowLeft className="size-4" />
@@ -119,6 +131,12 @@ export function LessonCardPage() {
           </>
         )}
       </section>
+
+      <LessonHomeworkCard
+        lesson={lesson}
+        canManage={canEditTeaching}
+        canCreate={canEditTeaching && !periodClosed}
+      />
 
       <LessonModules lesson={lesson} />
 
@@ -278,12 +296,108 @@ function attendanceTileValue(
   return 'Не заполнена';
 }
 
+/**
+ * Домашние задания урока прямо на карточке (HOMEWORK-005.1 §4 с фильтром по уроку).
+ *
+ * По уроку в расписании кликают, чтобы узнать «что задано», — и до сих пор ответом была
+ * плитка с постоянной подписью, то есть ещё один переход вслепую. Список здесь короткий и
+ * весь про один урок, поэтому живёт на карточке, а не за нажатием.
+ *
+ * Экран заданий урока никуда не делся: он остаётся местом, где задание создают, и ссылка
+ * ведёт туда же, куда вела плитка.
+ *
+ * Права не вычисляются: `VIEW_STUDENTS` — то самое право, которым бэкенд отличает
+ * администратора и учителей урока от ученика с родителем (см. `useLessonHomework`).
+ */
+function LessonHomeworkCard({
+  lesson,
+  canManage,
+  canCreate,
+}: {
+  lesson: Lesson;
+  canManage: boolean;
+  canCreate: boolean;
+}) {
+  const canRead = hasAny(lesson, ['VIEW_STUDENTS']);
+  const query = useLessonHomework(lesson.id ?? null, canRead);
+  const rows = query.data ?? [];
+  const lessonPath = `/lesson-schedule/lessons/${lesson.id}`;
+
+  return (
+    <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-8 shadow-soft">
+      <div className="flex items-center justify-between gap-4">
+        <p className="flex items-center gap-2 text-11 font-bold uppercase text-slate-400">
+          <BookOpen className="size-4 text-slate-400" />
+          Домашнее задание
+          {rows.length > 0 && <span className="text-slate-500">· {rows.length}</span>}
+        </p>
+        {canRead && (
+          <Link
+            to={`${lessonPath}/homework`}
+            className="text-13 font-semibold text-navy-700 hover:text-navy-800"
+          >
+            {canCreate ? 'Все задания и создание' : 'Все задания'}
+          </Link>
+        )}
+      </div>
+
+      {!canRead ? (
+        <p className="text-sm text-slate-400">Задания урока видны его учителю и администратору</p>
+      ) : query.isPending ? (
+        <p className="text-sm text-slate-400">Загружаем задания…</p>
+      ) : query.isError ? (
+        <p className="flex items-center gap-3 text-sm text-slate-500">
+          Не удалось загрузить задания урока
+          <button
+            type="button"
+            onClick={() => void query.refetch()}
+            className="font-semibold text-navy-700 underline hover:text-navy-800"
+          >
+            Повторить
+          </button>
+        </p>
+      ) : rows.length === 0 ? (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-slate-400">К этому уроку заданий нет</p>
+          {canCreate && (
+            <Link
+              to={`/homework/new?lessonId=${lesson.id}`}
+              className={buttonClassName({ variant: 'secondary', size: 'sm' })}
+            >
+              Создать задание
+            </Link>
+          )}
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-line">
+          <LessonHomeworkRows rows={rows} lessonId={lesson.id} canOpen={canManage} />
+        </div>
+      )}
+    </section>
+  );
+}
+
+/**
+ * Подпись плитки ДЗ: сколько заданий и сколько из них ещё не опубликовано. Черновик
+ * назван отдельно потому, что для учеников его пока не существует — «3 задания» на уроке,
+ * где опубликовано одно, ввело бы в заблуждение самого учителя.
+ */
+function homeworkTileValue(rows: Homework[]): string {
+  if (rows.length === 0) return 'Заданий нет';
+  const drafts = rows.filter((row) => row.status === 'DRAFT').length;
+  const total = `${rows.length} ${pluralRu(rows.length, ['задание', 'задания', 'заданий'])}`;
+  return drafts > 0 ? `${total} · ${drafts} в черновике` : total;
+}
+
 function LessonModules({ lesson }: { lesson: Lesson }) {
   const navigate = useNavigate();
   const canViewAttendance = hasAny(lesson, ['VIEW_ATTENDANCE']);
+  const canReadHomework = hasAny(lesson, ['VIEW_STUDENTS']);
   // Лист запрашивается только при праве на него: без VIEW_ATTENDANCE бэкенд ответит
   // 403, и ходить за гарантированной ошибкой ради выключенной плитки незачем.
   const sheetQuery = useAttendanceSheet(lesson.id ?? null, canViewAttendance);
+  // Тот же запрос, что у секции выше: react-query отдаёт обеим один кэш, а не два ответа.
+  const homeworkQuery = useLessonHomework(lesson.id ?? null, canReadHomework);
 
   return (
     <div className="flex flex-wrap items-stretch gap-4">
@@ -305,7 +419,13 @@ function LessonModules({ lesson }: { lesson: Lesson }) {
         icon={<BookOpen className="size-[18px]" />}
         tone="orange"
         title="Домашнее задание"
-        value="Открыть задания урока"
+        value={
+          !canReadHomework
+            ? 'Открыть задания урока'
+            : homeworkQuery.isPending
+              ? 'Загружаем…'
+              : homeworkTileValue(homeworkQuery.data ?? [])
+        }
         onClick={() => navigate(`/lesson-schedule/lessons/${lesson.id}/homework`)}
       />
       {PENDING_MODULES.map((module) => (
@@ -372,6 +492,7 @@ function CenteredState({
 
 function NoAccessState() {
   const navigate = useNavigate();
+  const { admin } = useAuth();
   return (
     <CenteredState
       tone="neutral"
@@ -379,7 +500,7 @@ function NoAccessState() {
       title="У вас нет доступа к этому уроку"
       description="Этот урок относится к другому классу или закреплен за другим преподавателем."
       action={
-        <Button variant="secondary" onClick={() => navigate(SCHEDULE_PATH)}>
+        <Button variant="secondary" onClick={() => navigate(schedulePathFor(admin?.role))}>
           Вернуться к расписанию
         </Button>
       }

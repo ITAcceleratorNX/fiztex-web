@@ -7,11 +7,19 @@ import { LessonCardPage } from './LessonCardPage';
 const useLesson = vi.fn();
 const useLessonHistory = vi.fn();
 const useAttendanceSheet = vi.fn();
+const useLessonHomework = vi.fn();
+
+// Роль нужна карточке только ради ссылки «К расписанию»: у учителя она ведёт на его
+// собственный экран, у админа — в конструктор.
+vi.mock('@/context/AuthContext', () => ({
+  useAuth: () => ({ admin: { role: 'ADMIN' } }),
+}));
 
 vi.mock('@/hooks/queries', () => ({
   useLesson: (...args: unknown[]) => useLesson(...args),
   useLessonHistory: (...args: unknown[]) => useLessonHistory(...args),
   useAttendanceSheet: (...args: unknown[]) => useAttendanceSheet(...args),
+  useLessonHomework: (...args: unknown[]) => useLessonHomework(...args),
 }));
 
 /** Урок в том виде, в каком его отдаёт GET /api/lessons/{id} админу. */
@@ -54,6 +62,8 @@ describe('LessonCardPage', () => {
     useLessonHistory.mockReturnValue({ data: undefined, isPending: false, isError: false });
     useAttendanceSheet.mockReset();
     useAttendanceSheet.mockReturnValue({ data: undefined, isPending: false, isError: false });
+    useLessonHomework.mockReset();
+    useLessonHomework.mockReturnValue({ data: [], isPending: false, isError: false });
   });
 
   it('показывает скелетон, пока урок грузится', () => {
@@ -138,5 +148,78 @@ describe('LessonCardPage', () => {
     renderCard();
     expect(screen.getByText('Урок отменен')).toBeInTheDocument();
     expect(screen.getByText('Учитель на курсах')).toBeInTheDocument();
+  });
+  it('задания урока видны прямо на карточке, а плитка называет их число', () => {
+    useLesson.mockReturnValue({
+      data: lesson({ capabilities: ['VIEW_CARD', 'VIEW_STUDENTS', 'MANAGE_STRUCTURE'] }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    useLessonHomework.mockReturnValue({
+      data: [
+        {
+          id: 12,
+          title: 'Параграф 12, упражнения 1–5',
+          status: 'PUBLISHED',
+          dueType: 'NEXT_LESSON',
+          dueAt: null,
+          lesson: { id: 6 },
+          progress: { submitted: 3, total: 25 },
+        },
+        // Задание без привязки: к уроку его относит срок (LessonHomeworkScope).
+        {
+          id: 13,
+          title: 'Задано из раздела',
+          status: 'PUBLISHED',
+          dueType: 'EXACT',
+          dueAt: '2026-08-03T09:00:00Z',
+          progress: { submitted: 0, total: 25 },
+        },
+        { id: 14, title: 'Черновик', status: 'DRAFT', dueType: 'NONE', dueAt: null, lesson: { id: 6 } },
+      ],
+      isPending: false,
+      isError: false,
+    });
+    renderCard();
+
+    expect(screen.getByText('Параграф 12, упражнения 1–5')).toBeInTheDocument();
+    // Срок «до следующего урока» до публикации даты не имеет — но и «без срока» это не он.
+    expect(screen.getByText('До следующего урока')).toBeInTheDocument();
+    expect(screen.getByText('3 / 25')).toBeInTheDocument();
+    expect(screen.getByText('3 задания · 1 в черновике')).toBeInTheDocument();
+
+    // Привязанное к уроку показано без оговорок, пришедшее по сроку — с пояснением.
+    expect(screen.getByText(/срок на этом уроке/)).toBeInTheDocument();
+
+    // Карточку задания бэкенд отдаёт только учителю урока: у админа строка не ведёт никуда.
+    expect(screen.getByRole('button', { name: /Параграф 12/ })).toBeDisabled();
+  });
+
+  it('урок без заданий говорит об этом, а не молчит', () => {
+    useLesson.mockReturnValue({
+      data: lesson({ capabilities: ['VIEW_CARD', 'VIEW_STUDENTS'] }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    renderCard();
+    expect(screen.getByText('К этому уроку заданий нет')).toBeInTheDocument();
+    expect(screen.getByText('Заданий нет')).toBeInTheDocument();
+  });
+
+  it('без права видеть состав урока за заданиями не ходим', () => {
+    useLesson.mockReturnValue({
+      data: lesson({ capabilities: ['VIEW_CARD'] }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    renderCard();
+
+    expect(useLessonHomework).toHaveBeenCalledWith(6, false);
+    expect(
+      screen.getByText('Задания урока видны его учителю и администратору'),
+    ).toBeInTheDocument();
   });
 });

@@ -1,4 +1,5 @@
 import type { Homework, RosterEntry, SubmissionStatus } from '@/lib/homeworkApi';
+import { formatDateTime } from '@/lib/format';
 
 /**
  * Что учитель может сделать с заданием в его текущем состоянии (ТЗ FE-Teacher-002 §5, §6).
@@ -41,6 +42,27 @@ export function homeworkActions(homework: Homework | undefined): HomeworkActions
       return { canEdit: false, canPublish: false, canComplete: false, canReopen: false,
                canCancel: false, canDelete: false, canReview: false };
   }
+}
+
+/**
+ * Подпись срока сдачи — одна на все экраны задания (список, карточка, задания урока).
+ *
+ * «Без срока» и «До следующего урока» — полноправные варианты, а не отсутствие даты
+ * (ТЗ HOMEWORK-001 §9). У «до следующего урока» момент подставляет бэкенд при публикации,
+ * поэтому у черновика даты ещё нет, и показывать вместо неё «без срока» нельзя: срок
+ * выбран, просто он пока не выражен числом.
+ *
+ * @param short компактная форма для узкой колонки таблицы — день и месяц без времени
+ */
+export function dueLabel(homework: Homework | undefined, options: { short?: boolean } = {}): string {
+  if (!homework || homework.dueType === 'NONE') return 'Без срока';
+  if (!homework.dueAt) {
+    return homework.dueType === 'NEXT_LESSON' ? 'До следующего урока' : 'Без срока';
+  }
+  const date = options.short
+    ? new Date(homework.dueAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+    : formatDateTime(homework.dueAt);
+  return homework.dueType === 'NEXT_LESSON' && !options.short ? `${date} (следующий урок)` : date;
 }
 
 /** Фильтры списка работ — те же, что в HOMEWORK-004 §4 и в макете 863:1004. */

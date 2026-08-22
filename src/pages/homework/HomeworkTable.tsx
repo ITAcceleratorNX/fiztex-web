@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { HomeworkStatusChip } from '@/components/ui/HomeworkStatusChip';
 import { cx } from '@/lib/format';
 import type { Homework } from '@/lib/homeworkApi';
+import { dueLabel } from './homeworkModel';
 
 const COLUMNS = [
   { key: 'title', label: 'Название', className: 'w-auto' },
@@ -93,7 +94,7 @@ function HomeworkRow({ row, onOpen }: { row: Homework; onOpen: () => void }) {
           <span className="text-13 text-subtle">—</span>
         )}
       </td>
-      <td className="px-5 py-3 text-13 text-muted">{dueLabel(row)}</td>
+      <td className="px-5 py-3 text-13 text-muted">{dueLabel(row, { short: true })}</td>
       <td className="px-5 py-3">
         <HomeworkStatusChip status={row.status} overdue={row.overdue} />
       </td>
@@ -150,12 +151,6 @@ function formatDayMonth(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
   return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}`;
-}
-
-/** «Без срока» — полноправный вариант, а не отсутствие данных (ТЗ §4.2). */
-function dueLabel(row: Homework): string {
-  if (row.dueType === 'NONE' || !row.dueAt) return 'Без срока';
-  return new Date(row.dueAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
 }
 
 /**

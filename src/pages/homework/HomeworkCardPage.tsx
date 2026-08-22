@@ -13,6 +13,7 @@ import { cx, formatDateTime } from '@/lib/format';
 import { homeworkApi, type Homework, type RosterEntry } from '@/lib/homeworkApi';
 import {
   ROSTER_FILTERS,
+  dueLabel,
   SUBMISSION_STATUS_LABELS,
   SUBMISSION_STATUS_TONES,
   filterRoster,
@@ -360,11 +361,6 @@ function Meta({ label, value }: { label: string; value?: string }) {
       <dd className="font-medium text-ink">{value}</dd>
     </div>
   );
-}
-
-function dueLabel(homework: Homework): string {
-  if (homework.dueType === 'NONE' || !homework.dueAt) return 'Без срока';
-  return formatDateTime(homework.dueAt);
 }
 
 function RosterTable({

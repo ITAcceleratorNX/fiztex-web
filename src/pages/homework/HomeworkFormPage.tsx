@@ -8,16 +8,27 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock
 import { NoticeBar } from '@/components/ui/NoticeBar';
 import { useToast } from '@/context/ToastContext';
 import { useLesson } from '@/hooks/queries';
-import { lessonsApi } from '@/lib/lessonsApi';
+import { lessonsApi, type Lesson } from '@/lib/lessonsApi';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
-import { cx } from '@/lib/format';
+import { cx, formatWeekdayDayMonth } from '@/lib/format';
 import {
   homeworkApi,
   type CreateHomeworkInput,
   type DueType,
   type RecipientType,
 } from '@/lib/homeworkApi';
+
+/**
+ * Варианты срока сдачи (ТЗ HOMEWORK-001 §9). «До следующего урока» стоит между точной
+ * датой и «без срока» намеренно: это тот же срок, только выраженный расписанием, а не
+ * числом, — момент по нему считает бэкенд при публикации.
+ */
+const DUE_TYPES: ReadonlyArray<readonly [DueType, string]> = [
+  ['EXACT', 'Дата и время'],
+  ['NEXT_LESSON', 'До следующего урока'],
+  ['NONE', 'Без срока'],
+];
 
 /**
  * Создание и редактирование домашнего задания (ТЗ FE-Teacher-002 §2–4, §6.1).
@@ -59,10 +70,19 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const [dueType, setDueType] = useState<DueType>('EXACT');
   const [dueAt, setDueAt] = useState('');
   const [recipientType, setRecipientType] = useState<RecipientType>('CLASS');
+  /** Урок, выбранный в форме (§2.2 + привязка). Отдельно от `lessonId` из адреса: тот задан
+   *  входом с карточки урока и не меняется, этот — решение учителя прямо здесь. */
+  const [pickedLessonId, setPickedLessonId] = useState<number>();
   const [tempGroupId, setTempGroupId] = useState<number>();
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  /**
+   * Задание, которое уже создано в этой сессии формы. Нужно ровно для одного случая:
+   * создание прошло, а публикация — нет (например, у срока «до следующего урока» урока
+   * впереди не оказалось). Черновик при этом существует, и повтор «в лоб» завёл бы второй.
+   */
+  const createdId = useRef<number | null>(null);
 
   // Правка начинается с текущих значений, а не с пустой формы.
   useEffect(() => {
@@ -74,11 +94,6 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
     setRecipientType((existing.recipients?.type as RecipientType) ?? 'CLASS');
     setTempGroupId(existing.recipients?.tempGroupId ?? undefined);
   }, [existing]);
-
-  // Задание из урока по умолчанию адресовано подгруппе урока, если она есть.
-  useEffect(() => {
-    if (mode === 'create' && lessonQuery.data?.subgroupId) setRecipientType('SUBGROUP');
-  }, [mode, lessonQuery.data]);
 
   const standalone = mode === 'create' && lessonId == null;
   const recipientsLocked = Boolean(existing?.recipients?.locked);
@@ -122,6 +137,72 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
   });
 
   /**
+   * Уроки, к которым можно привязать задание.
+   *
+   * Привязка — не украшение: она отличает «задано на этом уроке» от «задано классу вообще»,
+   * и от неё зависит, увидит ли задание тот, кто открыл урок в расписании. Раньше её давал
+   * только вход с карточки урока, и задание из раздела оставалось ни к чему не привязанным.
+   *
+   * Берутся уроки самого учителя (`/api/lessons` ролевой), поэтому чужой урок в списке не
+   * появится, а бэкенд всё равно проверит право вести этот урок. Предмет отбирается на
+   * клиенте: у списка уроков фильтра по предмету нет, а класс сужает выдачу до десятков строк.
+   *
+   * Окно — две недели назад и месяц вперёд: задание выдают на уроке или сразу после него,
+   * а «привязать к уроку прошлого месяца» — не рабочий случай, зато длинный список.
+   */
+  const lessonsQuery = useQuery({
+    queryKey: ['homework', 'form', 'lessons', classId, subjectId],
+    queryFn: async ({ signal }) => {
+      const page = await lessonsApi.list(
+        {
+          classId: classId as number,
+          dateFrom: shiftedDate(-14),
+          dateTo: shiftedDate(30),
+          status: 'ACTIVE',
+          size: 100,
+        },
+        signal,
+      );
+      return (page.content ?? []).filter((lesson) => lesson.subjectId === subjectId);
+    },
+    enabled: standalone && classId != null && subjectId != null,
+    staleTime: 5 * 60_000,
+  });
+  const lessons = lessonsQuery.data ?? [];
+
+  /**
+   * Предвыбор — ближайший по времени урок, а не первый в списке: задание заводят на уроке
+   * или сразу после него, поэтому «ближайший» бывает и сегодняшним прошедшим, и завтрашним.
+   * Выбор остаётся видимым и меняемым — включая «без привязки».
+   */
+  useEffect(() => {
+    if (!standalone || lessons.length === 0) return;
+    setPickedLessonId((current) => {
+      if (current != null && lessons.some((lesson) => lesson.id === current)) return current;
+      const now = Date.now();
+      const nearest = [...lessons].sort(
+        (a, b) => Math.abs(startMs(a) - now) - Math.abs(startMs(b) - now),
+      )[0];
+      return nearest?.id;
+    });
+  }, [standalone, lessons]);
+
+  // Смена класса или предмета обнуляет привязку: урок принадлежал прошлой паре.
+  useEffect(() => {
+    setPickedLessonId(undefined);
+  }, [classId, subjectId]);
+
+  /** Урок задания: из адреса (вход с карточки урока) либо выбранный в форме. */
+  const contextLesson = lessonQuery.data ?? lessons.find((lesson) => lesson.id === pickedLessonId);
+  const attachedLessonId = lessonId ?? pickedLessonId;
+
+  // Задание из урока по умолчанию адресовано подгруппе урока, если она есть — и неважно,
+  // пришёл урок из адреса или выбран в форме: получатели у них одни и те же.
+  useEffect(() => {
+    if (mode === 'create' && contextLesson?.subgroupId) setRecipientType('SUBGROUP');
+  }, [mode, contextLesson]);
+
+  /**
    * Временные группы уже существующего класса (§3.1). Здесь только выбор из готовых —
    * собирать и менять состав групп полагается отдельному экрану, и новой логики
    * назначения получателей этот список не создаёт.
@@ -139,7 +220,9 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const hasAnswers = Boolean(existing?.hasAnswers);
 
   const valid = title.trim().length > 0 && description.trim().length > 0
-    && (dueType === 'NONE' || dueAt.length > 0)
+    // Дату вводят только у точного срока: «без срока» её не имеет, а «до следующего
+    // урока» получает момент от бэкенда при публикации.
+    && (dueType !== 'EXACT' || dueAt.length > 0)
     && (!standalone || (subjectId != null && classId != null))
     && (recipientType !== 'TEMP_GROUP' || tempGroupId != null);
 
@@ -156,7 +239,7 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
           title: title.trim(),
           description: description.trim(),
           dueType,
-          dueAt: dueType === 'NONE' ? undefined : new Date(dueAt).toISOString(),
+          dueAt: dueType === 'EXACT' ? new Date(dueAt).toISOString() : undefined,
         });
         const recipientsChanged =
           existing?.recipients?.type !== recipientType
@@ -172,17 +255,20 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
       }
 
       const input: CreateHomeworkInput = {
-        lessonId,
-        classId: standalone ? classId : undefined,
-        subjectId: standalone ? subjectId : undefined,
+        // Привязка к уроку — единственный источник контекста: класс, предмет, подгруппу и
+        // период бэкенд берёт из урока (§3.1), и слать их рядом значило бы спорить с ним.
+        lessonId: attachedLessonId,
+        classId: attachedLessonId == null ? classId : undefined,
+        subjectId: attachedLessonId == null ? subjectId : undefined,
         title: title.trim(),
         description: description.trim(),
         recipientType,
         tempGroupId: recipientType === 'TEMP_GROUP' ? tempGroupId : undefined,
         dueType,
-        dueAt: dueType === 'NONE' ? undefined : new Date(dueAt).toISOString(),
+        dueAt: dueType === 'EXACT' ? new Date(dueAt).toISOString() : undefined,
       };
       const created = await homeworkApi.create(input);
+      createdId.current = created.id ?? null;
       await uploadFiles(created.id as number);
       if (publish) return homeworkApi.publish(created.id as number);
       return created;
@@ -306,6 +392,32 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
           </div>
         )}
 
+        {standalone && (
+          <Field label="Урок">
+            <Select
+              value={pickedLessonId != null ? String(pickedLessonId) : ''}
+              onChange={(event) => setPickedLessonId(Number(event.target.value) || undefined)}
+              disabled={classId == null || subjectId == null || lessonsQuery.isPending}
+            >
+              <option value="">Без привязки к уроку</option>
+              {lessons.map((lesson) => (
+                <option key={lesson.id} value={lesson.id}>
+                  {lessonOptionLabel(lesson)}
+                </option>
+              ))}
+            </Select>
+            <p className="mt-1 text-11 text-subtle">
+              {classId == null || subjectId == null
+                ? 'Выберите класс и предмет — уроки подставятся из вашего расписания.'
+                : lessonsQuery.isPending
+                  ? 'Загружаем уроки…'
+                  : lessons.length === 0
+                    ? 'Уроков этого предмета в ближайшие недели нет — задание останется без привязки.'
+                    : 'Привязанное задание видно на карточке урока. Без привязки оно попадёт на урок только по сроку сдачи.'}
+            </p>
+          </Field>
+        )}
+
         <Field label="Название ДЗ" required>
           <TextInput
             value={title}
@@ -367,7 +479,7 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
         <div>
           <p className="label-base">Срок сдачи</p>
           <div className="mt-1.5 inline-flex gap-1 rounded-xl bg-neutral-bg p-1">
-            {([['EXACT', 'Дата и время'], ['NONE', 'Без срока']] as const).map(([value, label]) => (
+            {DUE_TYPES.map(([value, label]) => (
               <button
                 key={value}
                 type="button"
@@ -391,6 +503,13 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
               className="input-base mt-2 h-10 w-64 text-13"
             />
           )}
+          {dueType === 'NEXT_LESSON' && (
+            <p className="mt-2 max-w-prose text-11 text-subtle">
+              Дату подставит сервер при публикации — по ближайшему уроку этого предмета
+              в классе. Точную дату видно на карточке задания после публикации; если урока
+              впереди не окажется, сервер попросит выбрать дату или вариант без срока.
+            </p>
+          )}
         </div>
 
         <Field label="Получатели">
@@ -400,7 +519,7 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
             disabled={recipientsLocked}
           >
             <option value="CLASS">Весь класс</option>
-            {(lessonQuery.data?.subgroupId || existing?.recipients?.subgroupId) && (
+            {(contextLesson?.subgroupId || existing?.recipients?.subgroupId) && (
               <option value="SUBGROUP">Подгруппа урока</option>
             )}
             {groups.length > 0 && <option value="TEMP_GROUP">Временная группа</option>}
@@ -452,13 +571,17 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
 
       {error && (
         <NoticeBar tone="solid">
-          {error}
+          {createdId.current != null ? `Черновик сохранён, но опубликовать не удалось. ${error}` : error}
           <button
             type="button"
-            onClick={() => save.mutate(false)}
+            onClick={() =>
+              createdId.current != null
+                ? navigate(`/homework/${createdId.current}`)
+                : save.mutate(false)
+            }
             className="ml-2 font-semibold underline"
           >
-            Повторить
+            {createdId.current != null ? 'Открыть черновик' : 'Повторить'}
           </button>
         </NoticeBar>
       )}
@@ -494,6 +617,27 @@ function Ctx({ label, value }: { label: string; value?: string }) {
       <span className="font-medium text-ink">{value}</span>
     </span>
   );
+}
+
+/** Дата в местной зоне со сдвигом в днях — граница окна выбора уроков. */
+function shiftedDate(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toLocaleDateString('sv-SE');
+}
+
+/** Начало урока моментом: у списка есть `startsAt`, у старых ответов — только дата и время. */
+function startMs(lesson: Lesson): number {
+  const value = lesson.startsAt ?? `${lesson.date}T${lesson.startTime ?? '00:00:00'}`;
+  const parsed = new Date(value).getTime();
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+/** «21 авг, пт · 08:00 · Подгруппа A» — по чему учитель узнаёт свой урок в списке. */
+function lessonOptionLabel(lesson: Lesson): string {
+  const day = lesson.date ? formatWeekdayDayMonth(lesson.date) : '';
+  const time = lesson.startTime ? lesson.startTime.slice(0, 5) : '';
+  return [day, time, lesson.subgroupName].filter(Boolean).join(' · ');
 }
 
 /** `datetime-local` работает с местным временем без зоны, а срок хранится моментом. */

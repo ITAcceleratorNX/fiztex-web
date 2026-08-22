@@ -53,12 +53,21 @@ describe('маршрутизация по роли', () => {
     expect(loginRedirectTarget('//evil.example', 'TEACHER')).toBe('/homework');
   });
 
-  it('в меню учителя только ДЗ, у админа его нет', () => {
+  it('в меню учителя только его разделы, у админа их нет', () => {
+    // Своё расписание и ДЗ — единственные экраны, которые работают под учителем:
+    // остальные читают `/api/admin/*` и рвут ему сессию.
     const teacher = navSectionsForRole('TEACHER').flatMap((s) => s.items.map((i) => i.to));
-    expect(teacher).toEqual(['/homework']);
+    expect(teacher).toEqual(['/my-schedule', '/homework']);
 
     const admin = navSectionsForRole('ADMIN').flatMap((s) => s.items.map((i) => i.to));
     expect(admin).not.toContain('/homework');
+    expect(admin).not.toContain('/my-schedule');
     expect(admin).toContain('/dashboard');
+  });
+
+  it('учителю открыто своё расписание, но не админский конструктор', () => {
+    expect(isRouteAllowedForRole('/my-schedule', 'TEACHER')).toBe(true);
+    expect(isRouteAllowedForRole('/lesson-schedule', 'TEACHER')).toBe(false);
+    expect(isRouteAllowedForRole('/lesson-schedule/lessons/7', 'TEACHER')).toBe(true);
   });
 });

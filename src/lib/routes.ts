@@ -31,6 +31,8 @@ export const ROUTES = {
   dashboard: '/dashboard',
   /** Домашние задания учителя (HOMEWORK-005.1). */
   homework: '/homework',
+  /** Своё расписание учителя — ролевой экран поверх `/api/schedule/me/week`. */
+  mySchedule: '/my-schedule',
 } as const;
 
 /** Куда возвращать после входа, если пользователь не шёл на конкретную страницу. */
@@ -95,8 +97,15 @@ export function isRouteAllowedForRole(path: string, role: string | undefined): b
  * lessons/:id`, его посещаемость и его ДЗ) — ролевой экран: бэкенд отдаёт карточку по
  * `/api/lessons/*` всем ролям и сам решает, что в ней доступно. Без этой ветки учитель
  * не мог открыть ни собственный урок, ни создать из него задание (FE-Teacher-002 §2.1).
+ *
+ * Своё расписание (`/my-schedule`) — тоже ролевой экран: он читает `/api/schedule/me/week`
+ * и служит учителю входом в эти самые уроки. Админский конструктор ему по-прежнему закрыт.
  */
-const TEACHER_ROUTE_PREFIXES = [ROUTES.homework, '/lesson-schedule/lessons/'];
+const TEACHER_ROUTE_PREFIXES = [
+  ROUTES.homework,
+  ROUTES.mySchedule,
+  '/lesson-schedule/lessons/',
+];
 
 /**
  * Безопасный разбор `state.from` при редиректе на вход: принимаем только
