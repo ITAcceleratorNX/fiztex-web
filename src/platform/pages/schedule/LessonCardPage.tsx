@@ -21,13 +21,20 @@ import { CollapsibleCard } from '@/components/ui/CollapsibleCard';
 import { LessonStatusChip } from '@/components/ui/LessonStatusChip';
 import { ModuleTile, type ModuleTileTone } from '@/components/ui/ModuleTile';
 import { NoticeBar } from '@/components/ui/NoticeBar';
-import { useAttendanceSheet, useLesson, useLessonHistory, useLessonHomework } from '@/hooks/queries';
+import {
+  useAttendanceSheet,
+  useLesson,
+  useLessonGradeSheet,
+  useLessonHistory,
+  useLessonHomework,
+} from '@/hooks/queries';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api';
 import { ROUTES } from '@/lib/routes';
 import type { AttendanceSheet } from '@/lib/attendanceApi';
 import { cx, formatDateTime, formatWeekdayDayMonth, pluralRu } from '@/lib/format';
 import type { Homework } from '@/lib/homeworkApi';
+import type { LessonGradeSheet } from '@/lib/gradesApi';
 import type { Lesson, LessonCapability } from '@/lib/lessonsApi';
 import { LessonHomeworkRows } from '@/pages/homework/LessonHomeworkRows';
 import { describeHistoryActor, describeHistoryEntry, hhmm } from './lessonHistory';
@@ -267,16 +274,31 @@ function TeachingField({
 }
 
 /**
- * Материалы и оценки — отдельные учебные модули, их на бэкенде ещё нет
- * (LESSON-002 §5.1, §8: capability заведена, модуль вне скоупа). Плитки стоят на
- * своих местах из макета, но не притворяются рабочими переходами.
+ * Материалы — единственный оставшийся незаделанный модуль урока: плитка стоит на
+ * своём месте из макета, но не притворяется рабочим переходом.
  *
- * ДЗ из этого списка ушло: модуль реализован (FE-Teacher-002), и плитка ведёт в него.
+ * ДЗ и оценки из этого списка ушли: модули реализованы (FE-Teacher-002,
+ * GRADES-FE-001), и плитки ведут в них.
  */
 const PENDING_MODULES: Array<{ title: string; icon: React.ReactNode; tone: ModuleTileTone }> = [
   { title: 'Материалы', icon: <Paperclip className="size-[18px]" />, tone: 'violet' },
-  { title: 'Оценки', icon: <Award className="size-[18px]" />, tone: 'blue' },
 ];
+
+/**
+ * Подпись плитки оценок: скольким ученикам уже что-то поставили.
+ *
+ * Считается по строкам листа, а не по числу оценок: за урок ученику ставят до трёх,
+ * и «7 оценок» на классе из 25 человек не отвечает на вопрос «кого я ещё не оценил».
+ */
+function gradesTileValue(sheet: LessonGradeSheet | undefined, cancelled: boolean): string {
+  if (cancelled) return 'Недоступны — урок отменён';
+  if (!sheet) return 'Нет доступа';
+  const rows = sheet.students ?? [];
+  if (rows.length === 0) return 'В уроке нет учеников';
+  const graded = rows.filter((row) => (row.grades ?? []).length > 0).length;
+  if (graded === 0) return 'Ещё не выставлены';
+  return `Оценено ${graded} из ${rows.length}`;
+}
 
 /**
  * Состояние листа строкой на плитке. Счётчик показывается только у черновика: у
@@ -393,11 +415,13 @@ function LessonModules({ lesson }: { lesson: Lesson }) {
   const navigate = useNavigate();
   const canViewAttendance = hasAny(lesson, ['VIEW_ATTENDANCE']);
   const canReadHomework = hasAny(lesson, ['VIEW_STUDENTS']);
+  const canViewGrades = hasAny(lesson, ['VIEW_GRADES']);
   // Лист запрашивается только при праве на него: без VIEW_ATTENDANCE бэкенд ответит
   // 403, и ходить за гарантированной ошибкой ради выключенной плитки незачем.
   const sheetQuery = useAttendanceSheet(lesson.id ?? null, canViewAttendance);
   // Тот же запрос, что у секции выше: react-query отдаёт обеим один кэш, а не два ответа.
   const homeworkQuery = useLessonHomework(lesson.id ?? null, canReadHomework);
+  const gradesQuery = useLessonGradeSheet(lesson.id ?? null, canViewGrades);
 
   return (
     <div className="flex flex-wrap items-stretch gap-4">
@@ -438,6 +462,20 @@ function LessonModules({ lesson }: { lesson: Lesson }) {
           disabled
         />
       ))}
+      <ModuleTile
+        icon={<Award className="size-[18px]" />}
+        tone="blue"
+        title="Оценки"
+        value={
+          !canViewGrades
+            ? 'Нет доступа'
+            : gradesQuery.isPending
+              ? 'Загружаем…'
+              : gradesTileValue(gradesQuery.data, lesson.status === 'CANCELLED')
+        }
+        disabled={!canViewGrades}
+        onClick={() => navigate(`/lesson-schedule/lessons/${lesson.id}/grades`)}
+      />
     </div>
   );
 }

@@ -8,6 +8,7 @@ const useLesson = vi.fn();
 const useLessonHistory = vi.fn();
 const useAttendanceSheet = vi.fn();
 const useLessonHomework = vi.fn();
+const useLessonGradeSheet = vi.fn();
 
 // Роль нужна карточке только ради ссылки «К расписанию»: у учителя она ведёт на его
 // собственный экран, у админа — в конструктор.
@@ -20,6 +21,7 @@ vi.mock('@/hooks/queries', () => ({
   useLessonHistory: (...args: unknown[]) => useLessonHistory(...args),
   useAttendanceSheet: (...args: unknown[]) => useAttendanceSheet(...args),
   useLessonHomework: (...args: unknown[]) => useLessonHomework(...args),
+  useLessonGradeSheet: (...args: unknown[]) => useLessonGradeSheet(...args),
 }));
 
 /** Урок в том виде, в каком его отдаёт GET /api/lessons/{id} админу. */
@@ -64,6 +66,8 @@ describe('LessonCardPage', () => {
     useAttendanceSheet.mockReturnValue({ data: undefined, isPending: false, isError: false });
     useLessonHomework.mockReset();
     useLessonHomework.mockReturnValue({ data: [], isPending: false, isError: false });
+    useLessonGradeSheet.mockReset();
+    useLessonGradeSheet.mockReturnValue({ data: undefined, isPending: false, isError: false });
   });
 
   it('показывает скелетон, пока урок грузится', () => {

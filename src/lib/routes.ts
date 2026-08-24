@@ -33,6 +33,8 @@ export const ROUTES = {
   homework: '/homework',
   /** Своё расписание учителя — ролевой экран поверх `/api/schedule/me/week`. */
   mySchedule: '/my-schedule',
+  /** Журнал класса и итоги четверти (GRADES-FE-001). */
+  journal: '/grades',
 } as const;
 
 /** Куда возвращать после входа, если пользователь не шёл на конкретную страницу. */
@@ -104,6 +106,7 @@ export function isRouteAllowedForRole(path: string, role: string | undefined): b
 const TEACHER_ROUTE_PREFIXES = [
   ROUTES.homework,
   ROUTES.mySchedule,
+  ROUTES.journal,
   '/lesson-schedule/lessons/',
 ];
 

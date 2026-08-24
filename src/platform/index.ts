@@ -16,3 +16,4 @@ export { SchoolSubjectsPage } from './pages/SchoolSubjectsPage';
 export { LessonSchedulePage } from './pages/LessonSchedulePage';
 export { LessonCardPage } from './pages/schedule/LessonCardPage';
 export { LessonAttendancePage } from './pages/schedule/LessonAttendancePage';
+export { LessonGradesPage } from './pages/schedule/LessonGradesPage';

@@ -7,6 +7,12 @@ import {
   type AttendanceEntryChange,
   type AttendanceSheet,
 } from '@/lib/attendanceApi';
+import { gradesApi, type GradeType } from '@/lib/gradesApi';
+import {
+  finalGradesApi,
+  gradebookApi,
+  type JournalQuery,
+} from '@/lib/gradebookApi';
 import { announcementsApi, type AnnouncementFilters, type AnnouncementRequest } from '@/lib/announcementsApi';
 import type {
   ApplicantRequest,
@@ -47,6 +53,34 @@ export const keys = {
   // обновляться вместе с ним, а не жить своей жизнью под ключом урока.
   lessonHomework: (lessonId: number) => ['homework', 'lesson', lessonId, 'all'] as const,
   attendanceHistory: (lessonId: number) => ['lessons', lessonId, 'attendance', 'history'] as const,
+  // Оценки урока: лист лежит под уроком, справочник шкалы — сам по себе, он общий
+  // для всех экранов и не зависит ни от урока, ни от роли.
+  lessonGradeSheet: (lessonId: number) => ['lessons', lessonId, 'grades', 'sheet'] as const,
+  gradeScale: ['grades', 'scale'] as const,
+  // Журнал и итоги живут под общим префиксом 'gradebook': любая правка оценки
+  // сбрасывает всё дерево одним вызовом — та же оценка стоит и в журнале, и в
+  // среднем, из которого считается рекомендация итоговой.
+  gradebookContext: ['gradebook', 'context'] as const,
+  journal: (query: JournalQuery) =>
+    [
+      'gradebook',
+      'journal',
+      query.classId,
+      query.subjectId,
+      query.academicPeriodId,
+      query.subgroupId ?? null,
+      query.dateFrom ?? null,
+      query.dateTo ?? null,
+    ] as const,
+  classFinals: (query: Omit<JournalQuery, 'dateFrom' | 'dateTo'>) =>
+    [
+      'gradebook',
+      'final-grades',
+      query.classId,
+      query.subjectId,
+      query.academicPeriodId,
+      query.subgroupId ?? null,
+    ] as const,
   // Ключ по слоту, а не по уроку: у всех дат одного занятия список общий, и при
   // переходе между датами он не перезапрашивается.
   lessonOccurrences: (scheduleLessonId: number) =>
@@ -561,6 +595,177 @@ export function useMarkAllPresent(lessonId: number) {
 export function usePublishAttendance(lessonId: number) {
   return useAttendanceCommand(lessonId, (vars: { expectedVersion: number | null }) =>
     attendanceApi.publish(lessonId, vars),
+  );
+}
+
+// ---- Оценки урока (GRADES-001, GRADES-002) ----
+
+/**
+ * Шкала оценок — справочник, а не состояние: за сессию она не меняется, и
+ * перезапрашивать её на каждом уроке незачем.
+ */
+export function useGradeScale() {
+  return useQuery({
+    queryKey: keys.gradeScale,
+    queryFn: ({ signal }) => gradesApi.scale(signal),
+    staleTime: Infinity,
+  });
+}
+
+/**
+ * Лист оценок урока. Как и лист посещаемости, запрашивается только при праве на него
+ * (`VIEW_GRADES`): без него бэкенд ответит 403, и ходить за гарантированной ошибкой
+ * ради выключенной плитки незачем.
+ */
+export function useLessonGradeSheet(lessonId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: keys.lessonGradeSheet(lessonId ?? 0),
+    queryFn: ({ signal }) => gradesApi.lessonSheet(lessonId as number, signal),
+    enabled: lessonId != null && enabled,
+    refetchOnWindowFocus: false,
+    retry: (failureCount, error) =>
+      !(error instanceof ApiError && (error.status === 403 || error.status === 404)) &&
+      failureCount < 2,
+  });
+}
+
+/**
+ * Команды оценок. Ответ команды — сама оценка, а не лист, поэтому лист
+ * перезапрашивается: в нём считаются права на каждую строку и лимит на ученика, и
+ * собирать это состояние на клиенте значило бы повторять серверные правила.
+ *
+ * Журнал сбрасывается тем же действием: та же оценка стоит и в нём.
+ */
+function useGradeCommand<TVars>(lessonId: number, mutationFn: (vars: TVars) => Promise<unknown>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.lessonGradeSheet(lessonId) });
+      qc.invalidateQueries({ queryKey: ['gradebook'] });
+    },
+  });
+}
+
+export function useCreateGrade(lessonId: number) {
+  return useGradeCommand(
+    lessonId,
+    (vars: { studentProfileId: number; scaleCode: string; gradeType?: GradeType | null }) =>
+      gradesApi.create({
+        studentProfileId: vars.studentProfileId,
+        sourceType: 'LESSON',
+        sourceId: lessonId,
+        scaleCode: vars.scaleCode,
+        gradeType: vars.gradeType ?? null,
+      }),
+  );
+}
+
+export function useUpdateGrade(lessonId: number) {
+  return useGradeCommand(
+    lessonId,
+    (vars: { gradeId: number; scaleCode: string; gradeType?: GradeType | null }) =>
+      gradesApi.update(vars.gradeId, { scaleCode: vars.scaleCode, gradeType: vars.gradeType ?? null }),
+  );
+}
+
+export function useDeleteGrade(lessonId: number) {
+  return useGradeCommand(lessonId, (vars: { gradeId: number }) => gradesApi.remove(vars.gradeId));
+}
+
+// ---- Журнал и итоги четверти (GRADEBOOK-001, GRADEBOOK-002) ----
+
+/**
+ * Шапка журнала: год, периоды и доступные пары «класс + предмет».
+ *
+ * Меняется не чаще, чем расписание назначений, поэтому живёт долго: перезапрашивать
+ * список классов при каждом переключении четверти незачем.
+ */
+export function useGradebookContext(enabled = true) {
+  return useQuery({
+    queryKey: keys.gradebookContext,
+    queryFn: ({ signal }) => gradebookApi.context(signal),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    retry: (failureCount, error) =>
+      !(error instanceof ApiError && (error.status === 403 || error.status === 404)) &&
+      failureCount < 2,
+  });
+}
+
+export function useJournal(query: JournalQuery | null) {
+  return useQuery({
+    queryKey: keys.journal(query ?? ({ classId: 0, subjectId: 0, academicPeriodId: 0 } as JournalQuery)),
+    queryFn: ({ signal }) => gradebookApi.journal(query as JournalQuery, signal),
+    enabled: query != null,
+    placeholderData: (previous) => previous,
+    retry: (failureCount, error) =>
+      !(error instanceof ApiError && (error.status === 403 || error.status === 404)) &&
+      failureCount < 2,
+  });
+}
+
+/**
+ * Итоги класса за период. Нужны и журналу (колонка «Итог. четв.»), и вкладке итогов —
+ * ключ у них общий, поэтому вторая вкладка открывается уже с данными.
+ */
+export function useClassFinals(
+  query: Omit<JournalQuery, 'dateFrom' | 'dateTo'> | null,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: keys.classFinals(
+      query ?? ({ classId: 0, subjectId: 0, academicPeriodId: 0 } as JournalQuery),
+    ),
+    queryFn: ({ signal }) => finalGradesApi.ofClass(query as JournalQuery, signal),
+    enabled: query != null && enabled,
+    placeholderData: (previous) => previous,
+    retry: (failureCount, error) =>
+      !(error instanceof ApiError && (error.status === 403 || error.status === 404)) &&
+      failureCount < 2,
+  });
+}
+
+/**
+ * Команды итоговых оценок. Сбрасывают всё дерево журнала: выставленный итог виден и в
+ * колонке «Итог. четв.», а публикация меняет статус сразу у всего набора.
+ */
+function useFinalGradeCommand<TVars>(mutationFn: (vars: TVars) => Promise<unknown>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['gradebook'] }),
+  });
+}
+
+export function useSetFinalGrade() {
+  return useFinalGradeCommand(
+    (vars: {
+      finalGradeId: number | null;
+      studentProfileId: number;
+      subjectId: number;
+      academicPeriodId: number;
+      value: number;
+    }) =>
+      vars.finalGradeId != null
+        ? finalGradesApi.changeValue(vars.finalGradeId, vars.value)
+        : finalGradesApi.create({
+            studentProfileId: vars.studentProfileId,
+            subjectId: vars.subjectId,
+            academicPeriodId: vars.academicPeriodId,
+            value: vars.value,
+          }),
+  );
+}
+
+export function usePublishClassFinals() {
+  return useFinalGradeCommand(
+    (vars: {
+      classId: number;
+      subjectId: number;
+      academicPeriodId: number;
+      subgroupId?: number | null;
+    }) => finalGradesApi.publishClass(vars),
   );
 }
 
