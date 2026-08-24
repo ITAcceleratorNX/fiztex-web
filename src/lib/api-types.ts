@@ -17,7 +17,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_17"];
+        patch: operations["update_19"];
         trace?: never;
     };
     "/api/admin/academic-periods/{id}/archive": {
@@ -61,7 +61,7 @@ export interface paths {
         };
         get: operations["list_17"];
         put?: never;
-        post: operations["create_16"];
+        post: operations["create_18"];
         delete?: never;
         options?: never;
         head?: never;
@@ -81,7 +81,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_16"];
+        patch: operations["update_18"];
         trace?: never;
     };
     "/api/admin/academic-years/{id}/activate": {
@@ -141,7 +141,7 @@ export interface paths {
         };
         get: operations["list_16"];
         put?: never;
-        post: operations["create_15"];
+        post: operations["create_17"];
         delete?: never;
         options?: never;
         head?: never;
@@ -221,7 +221,7 @@ export interface paths {
         };
         get: operations["list_15"];
         put?: never;
-        post: operations["create_14"];
+        post: operations["create_16"];
         delete?: never;
         options?: never;
         head?: never;
@@ -236,7 +236,7 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_4"];
-        put: operations["update_3"];
+        put: operations["update_4"];
         post?: never;
         delete?: never;
         options?: never;
@@ -269,7 +269,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_3"];
+        post: operations["publish_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -397,7 +397,7 @@ export interface paths {
         };
         get: operations["list_14"];
         put?: never;
-        post: operations["create_13"];
+        post: operations["create_15"];
         delete?: never;
         options?: never;
         head?: never;
@@ -412,7 +412,7 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_3"];
-        put: operations["update_2"];
+        put: operations["update_3"];
         post?: never;
         delete?: never;
         options?: never;
@@ -427,7 +427,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["journal_1"];
+        get: operations["journal_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -461,7 +461,7 @@ export interface paths {
         };
         get: operations["list_13"];
         put?: never;
-        post: operations["create_12"];
+        post: operations["create_14"];
         delete?: never;
         options?: never;
         head?: never;
@@ -481,7 +481,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_15"];
+        patch: operations["update_17"];
         trace?: never;
     };
     "/api/admin/bell-templates/{id}/activate": {
@@ -621,7 +621,7 @@ export interface paths {
         };
         get: operations["list_12"];
         put?: never;
-        post: operations["create_11"];
+        post: operations["create_13"];
         delete?: never;
         options?: never;
         head?: never;
@@ -638,10 +638,10 @@ export interface paths {
         get: operations["getById_7"];
         put?: never;
         post?: never;
-        delete: operations["delete_3"];
+        delete: operations["delete_4"];
         options?: never;
         head?: never;
-        patch: operations["update_14"];
+        patch: operations["update_16"];
         trace?: never;
     };
     "/api/admin/calendar-events/{id}/activate": {
@@ -685,7 +685,7 @@ export interface paths {
         };
         get: operations["list_11"];
         put?: never;
-        post: operations["create_10"];
+        post: operations["create_12"];
         delete?: never;
         options?: never;
         head?: never;
@@ -721,7 +721,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_13"];
+        patch: operations["update_15"];
         trace?: never;
     };
     "/api/admin/classes/{id}/archive": {
@@ -765,7 +765,7 @@ export interface paths {
         };
         get: operations["list_10"];
         put?: never;
-        post: operations["create_9"];
+        post: operations["create_11"];
         delete?: never;
         options?: never;
         head?: never;
@@ -785,7 +785,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_12"];
+        patch: operations["update_14"];
         trace?: never;
     };
     "/api/admin/group-sets/{id}/archive": {
@@ -993,7 +993,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_11"];
+        patch: operations["update_13"];
         trace?: never;
     };
     "/api/admin/lessons/{lessonId}/cancel": {
@@ -1053,7 +1053,7 @@ export interface paths {
         };
         get: operations["list_9"];
         put?: never;
-        post: operations["create_8"];
+        post: operations["create_10"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1089,7 +1089,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_10"];
+        patch: operations["update_12"];
         trace?: never;
     };
     "/api/admin/parents/{id}/archive": {
@@ -1275,7 +1275,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_4"];
+        get: operations["history_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1309,7 +1309,7 @@ export interface paths {
         };
         get: operations["list_8"];
         put?: never;
-        post: operations["create_7"];
+        post: operations["create_9"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1483,7 +1483,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_3"];
+        get: operations["history_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1533,7 +1533,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_2"];
+        post: operations["publish_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1549,7 +1549,7 @@ export interface paths {
         };
         get: operations["list_7"];
         put?: never;
-        post: operations["create_6"];
+        post: operations["create_8"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1569,7 +1569,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_9"];
+        patch: operations["update_11"];
         trace?: never;
     };
     "/api/admin/school-subjects/{id}/archive": {
@@ -1597,7 +1597,7 @@ export interface paths {
         };
         get: operations["list_6"];
         put?: never;
-        post: operations["create_5"];
+        post: operations["create_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1633,7 +1633,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_8"];
+        patch: operations["update_10"];
         trace?: never;
     };
     "/api/admin/students/{id}/archive": {
@@ -1709,7 +1709,7 @@ export interface paths {
         };
         get: operations["list_5"];
         put?: never;
-        post: operations["create_4"];
+        post: operations["create_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1729,7 +1729,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_7"];
+        patch: operations["update_9"];
         trace?: never;
     };
     "/api/admin/subgroups/{id}/archive": {
@@ -1805,7 +1805,7 @@ export interface paths {
         };
         get: operations["list_4"];
         put?: never;
-        post: operations["create_3"];
+        post: operations["create_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1889,7 +1889,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_6"];
+        patch: operations["update_8"];
         trace?: never;
     };
     "/api/admin/teacher-working-time/{id}/archive": {
@@ -1917,7 +1917,7 @@ export interface paths {
         };
         get: operations["list_3"];
         put?: never;
-        post: operations["create_2"];
+        post: operations["create_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1953,7 +1953,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_5"];
+        patch: operations["update_7"];
         trace?: never;
     };
     "/api/admin/teachers/{id}/archive": {
@@ -2045,7 +2045,7 @@ export interface paths {
         };
         get: operations["list_2"];
         put?: never;
-        post: operations["create_1"];
+        post: operations["create_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2060,7 +2060,7 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_1"];
-        put: operations["update_1"];
+        put: operations["update_2"];
         post?: never;
         delete: operations["delete_1"];
         options?: never;
@@ -2171,7 +2171,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["grades"];
+        get: operations["grades_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2333,7 +2333,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["submit"];
+        post: operations["submit_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2395,7 +2395,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["journal"];
+        get: operations["journal_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2516,6 +2516,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/final-grades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["create_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/final-grades/class": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["forClass"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/final-grades/class/publication": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["publishClass"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/final-grades/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["my_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/final-grades/students/{studentProfileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["forStudent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/final-grades/{finalGradeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["changeValue"];
+        trace?: never;
+    };
+    "/api/final-grades/{finalGradeId}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history_5"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/final-grades/{finalGradeId}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["publish_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/generation-jobs/{id}": {
         parameters: {
             query?: never;
@@ -2524,6 +2652,182 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getJob"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gradebook/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["context"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gradebook/journal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["journal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gradebook/my/diary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["diary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gradebook/students/{studentProfileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history_4"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["create_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["myGrades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/my/average": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["myAverage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/my/subjects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["mySubjects"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/scale": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["scale"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/{gradeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_3"];
+        options?: never;
+        head?: never;
+        patch: operations["update_6"];
+        trace?: never;
+    };
+    "/api/grades/{gradeId}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2708,6 +3012,214 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/homework/children/{childId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["childList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["my_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/children/{childId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["childHomework"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/children/{childId}/review-photos/{photoId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["childReviewPhoto"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/grades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["grades_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/my-submission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["my"];
+        put?: never;
+        post: operations["submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/my-submission/attachments/{attachmentId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["attachment_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/my-submission/review-photos/{photoId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reviewPhoto_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["roster"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/submissions/{studentProfileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["studentWork"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/submissions/{studentProfileId}/attachments/{attachmentId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["attachment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/submissions/{studentProfileId}/review-photos/{photoId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reviewPhoto"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/submissions/{studentProfileId}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["review"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/homework/{id}": {
         parameters: {
             query?: never;
@@ -2716,7 +3228,7 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get"];
-        put: operations["update"];
+        put: operations["update_1"];
         post?: never;
         delete: operations["delete"];
         options?: never;
@@ -2939,7 +3451,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["sheet"];
+        get: operations["sheet_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3044,6 +3556,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/grades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["grades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/grades/sheet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sheet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/history": {
         parameters: {
             query?: never;
@@ -3108,6 +3652,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/substitution/grade-permission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["permission"];
+        put: operations["update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/topic": {
         parameters: {
             query?: never;
@@ -3153,7 +3713,7 @@ export interface paths {
         delete: operations["delete_2"];
         options?: never;
         head?: never;
-        patch: operations["update_4"];
+        patch: operations["update_5"];
         trace?: never;
     };
     "/api/materials/{id}/download": {
@@ -3182,6 +3742,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["reExtract"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["profile"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3721,6 +4297,18 @@ export interface components {
             topic?: string;
             type?: string;
         };
+        AttemptView: {
+            /** Format: int32 */
+            attemptNumber?: number;
+            body?: string;
+            files?: components["schemas"]["SubmissionAttachmentView"][];
+            /** Format: int64 */
+            id?: number;
+            photos?: components["schemas"]["SubmissionAttachmentView"][];
+            reviews?: components["schemas"]["ReviewView"][];
+            /** Format: date-time */
+            submittedAt?: string;
+        };
         AttendanceEntryChange: {
             comment?: string;
             /** @enum {string} */
@@ -3893,6 +4481,83 @@ export interface components {
         ChangeAssignmentVersionRequest: {
             /** Format: int32 */
             versionNumber: number;
+        };
+        ChangeFinalGradeValueRequest: {
+            /** Format: int32 */
+            value: number;
+        };
+        ChildHomeworkView: {
+            /** Format: date-time */
+            cancelledAt?: string;
+            className?: string;
+            /** Format: date-time */
+            completedAt?: string;
+            description?: string;
+            /** Format: date-time */
+            dueAt?: string;
+            /** @enum {string} */
+            dueType?: "EXACT" | "NEXT_LESSON" | "NONE";
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            lessonId?: number;
+            materials?: components["schemas"]["HomeworkMaterialView"][];
+            overdue?: boolean;
+            /** Format: date-time */
+            publishedAt?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "PUBLISHED" | "COMPLETED" | "CANCELLED";
+            subgroupName?: string;
+            subjectName?: string;
+            teacherName?: string;
+            title?: string;
+            updatedAfterPublish?: boolean;
+            work?: components["schemas"]["ChildWorkView"];
+        };
+        ChildReviewView: {
+            comment?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** @enum {string} */
+            decision?: "DONE" | "RETURNED";
+            /** Format: int64 */
+            id?: number;
+            photos?: components["schemas"]["SubmissionAttachmentView"][];
+        };
+        ChildWorkView: {
+            /** Format: int32 */
+            attemptCount?: number;
+            lastReview?: components["schemas"]["ChildReviewView"];
+            /** Format: date-time */
+            lastSubmittedAt?: string;
+            resubmitted?: boolean;
+            /** @enum {string} */
+            status?: "NOT_SUBMITTED" | "SUBMITTED" | "RETURNED" | "DONE";
+        };
+        ClassFinalGradeRowView: {
+            average?: number;
+            currentMember?: boolean;
+            finalGrade?: components["schemas"]["FinalGradeView"];
+            /** Format: int32 */
+            recommendedValue?: number;
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            yearLocked?: boolean;
+        };
+        ClassFinalGradesView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            academicYearId?: number;
+            canManage?: boolean;
+            /** Format: int64 */
+            classId?: number;
+            rows?: components["schemas"]["ClassFinalGradeRowView"][];
+            /** Format: int64 */
+            subgroupId?: number;
+            /** Format: int64 */
+            subjectId?: number;
         };
         ClassGroupSetAggregateView: {
             duplicates?: components["schemas"]["DuplicateStudentView"][];
@@ -4198,6 +4863,31 @@ export interface components {
             groupSetId: number;
             name?: string;
         };
+        CreateFinalGradeRequest: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            academicYearId?: number;
+            /** @enum {string} */
+            scope: "PERIOD" | "YEAR";
+            /** Format: int64 */
+            studentProfileId: number;
+            /** Format: int64 */
+            subjectId: number;
+            /** Format: int32 */
+            value: number;
+        };
+        CreateGradeRequest: {
+            /** @enum {string} */
+            gradeType?: "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "OTHER";
+            scaleCode?: string;
+            /** Format: int64 */
+            sourceId: number;
+            /** @enum {string} */
+            sourceType: "LESSON" | "HOMEWORK";
+            /** Format: int64 */
+            studentProfileId: number;
+        };
         CreateGroupRequest: {
             /** Format: int64 */
             classId: number;
@@ -4357,6 +5047,28 @@ export interface components {
             /** Format: int64 */
             totalApplicants?: number;
         };
+        DiaryEntryView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: date */
+            date?: string;
+            grade?: components["schemas"]["GradeView"];
+            /** Format: int64 */
+            homeworkId?: number;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+        };
+        DiaryView: {
+            /** Format: date */
+            dateFrom?: string;
+            /** Format: date */
+            dateTo?: string;
+            entries?: components["schemas"]["DiaryEntryView"][];
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
         DuplicateStudentView: {
             firstName?: string;
             lastName?: string;
@@ -4364,6 +5076,56 @@ export interface components {
             /** Format: int64 */
             studentId?: number;
             subgroupIds?: number[];
+        };
+        FinalGradeHistoryView: {
+            /** @enum {string} */
+            action?: "CREATE" | "UPDATE" | "PUBLISH";
+            /** Format: int64 */
+            actorId?: number;
+            after?: components["schemas"]["JsonNode"];
+            before?: components["schemas"]["JsonNode"];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+        };
+        FinalGradeLockView: {
+            futurePeriods?: components["schemas"]["PeriodRefView"][];
+            locked?: boolean;
+            /** Format: date-time */
+            lockedAt?: string;
+            locksPeriodsOnPublish?: boolean;
+            periodsWithoutFinal?: components["schemas"]["PeriodRefView"][];
+        };
+        FinalGradeView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: date-time */
+            publishedAt?: string;
+            /** @enum {string} */
+            scope?: "PERIOD" | "YEAR";
+            /** @enum {string} */
+            status?: "DRAFT" | "PUBLISHED";
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subgroupId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            /** Format: int64 */
+            teacherProfileId?: number;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int32 */
+            value?: number;
+            /** Format: int64 */
+            version?: number;
         };
         GenerateTestRequest: {
             /** Format: int32 */
@@ -4397,6 +5159,159 @@ export interface components {
             /** Format: int64 */
             testId?: number;
             warningMessage?: string;
+        };
+        GradeAverageView: {
+            average?: number;
+            /** Format: int64 */
+            count?: number;
+        };
+        GradeHistoryView: {
+            /** @enum {string} */
+            action?: "CREATE" | "UPDATE" | "DELETE";
+            /** Format: int64 */
+            actorId?: number;
+            after?: components["schemas"]["JsonNode"];
+            before?: components["schemas"]["JsonNode"];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+        };
+        GradeScaleValueView: {
+            code?: string;
+            numericValue?: number;
+            /** Format: int32 */
+            sortOrder?: number;
+        };
+        GradeView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            deleted?: boolean;
+            /** @enum {string} */
+            gradeType?: "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "OTHER";
+            /** Format: int64 */
+            id?: number;
+            numericValue?: number;
+            /** Format: date-time */
+            publishedAt?: string;
+            scaleCode?: string;
+            /** Format: int64 */
+            sourceId?: number;
+            /** @enum {string} */
+            sourceType?: "LESSON" | "HOMEWORK";
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            /** Format: date-time */
+            updatedAt?: string;
+            weight?: number;
+        };
+        GradebookAverageView: {
+            /** Format: int64 */
+            count?: number;
+            value?: number;
+            /** Format: int64 */
+            visibleCount?: number;
+        };
+        GradebookCellView: {
+            columnKey?: string;
+            grades?: components["schemas"]["GradeView"][];
+        };
+        GradebookColumnView: {
+            active?: boolean;
+            /** Format: date */
+            date?: string;
+            /** Format: date-time */
+            dueAt?: string;
+            key?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int32 */
+            lessonNumber?: number;
+            /** @enum {string} */
+            recipientType?: "CLASS" | "SUBGROUP" | "TEMP_GROUP" | "STUDENTS";
+            /** Format: int64 */
+            sourceId?: number;
+            /** @example 14:30:00 */
+            startTime?: string;
+            /** Format: int64 */
+            subgroupId?: number;
+            title?: string;
+            /** @enum {string} */
+            type?: "LESSON" | "HOMEWORK";
+        };
+        GradebookContextView: {
+            academicYear?: components["schemas"]["GradebookYearView"];
+            periods?: components["schemas"]["GradebookPeriodRefView"][];
+            scopes?: components["schemas"]["GradebookScopeView"][];
+        };
+        GradebookPeriodRefView: {
+            current?: boolean;
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+        };
+        GradebookPeriodView: {
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+            /** Format: date */
+            windowFrom?: string;
+            /** Format: date */
+            windowTo?: string;
+        };
+        GradebookRowView: {
+            average?: components["schemas"]["GradebookAverageView"];
+            cells?: components["schemas"]["GradebookCellView"][];
+            currentMember?: boolean;
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
+        GradebookScopeView: {
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+        };
+        GradebookSubgroupView: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
+        GradebookView: {
+            availableSubgroups?: components["schemas"]["GradebookSubgroupView"][];
+            /** Format: int64 */
+            classId?: number;
+            columns?: components["schemas"]["GradebookColumnView"][];
+            period?: components["schemas"]["GradebookPeriodView"];
+            rows?: components["schemas"]["GradebookRowView"][];
+            /** Format: int64 */
+            subgroupId?: number;
+        };
+        GradebookYearView: {
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
         };
         GroupSetRef: {
             /** Format: int64 */
@@ -4438,7 +5353,7 @@ export interface components {
         };
         HomeworkHistoryEntryView: {
             /** @enum {string} */
-            action?: "CREATED" | "UPDATED" | "MATERIALS_CHANGED" | "PUBLISHED" | "COMPLETED" | "REOPENED" | "CANCELLED" | "DELETED" | "COPIED" | "RECIPIENTS_CHANGED" | "RECIPIENTS_DISTRIBUTED" | "RECIPIENTS_SNAPSHOT" | "RECIPIENTS_LOCKED" | "RECIPIENT_DEACTIVATED" | "GROUP_CREATED" | "GROUP_RENAMED" | "GROUP_ARCHIVED" | "GROUP_DELETED" | "GROUP_STUDENTS_CHANGED" | "GROUP_SET_CREATED" | "GROUP_SET_RENAMED" | "GROUP_SET_ARCHIVED";
+            action?: "CREATED" | "UPDATED" | "MATERIALS_CHANGED" | "PUBLISHED" | "COMPLETED" | "REOPENED" | "CANCELLED" | "DELETED" | "COPIED" | "RECIPIENTS_CHANGED" | "RECIPIENTS_DISTRIBUTED" | "RECIPIENTS_SNAPSHOT" | "RECIPIENTS_LOCKED" | "RECIPIENT_DEACTIVATED" | "SUBMITTED" | "RESUBMITTED" | "SUBMISSION_FAILED" | "REVIEW_DONE" | "REVIEW_RETURNED" | "GROUP_CREATED" | "GROUP_RENAMED" | "GROUP_ARCHIVED" | "GROUP_DELETED" | "GROUP_STUDENTS_CHANGED" | "GROUP_SET_CREATED" | "GROUP_SET_RENAMED" | "GROUP_SET_ARCHIVED";
             /** Format: int64 */
             actorAccountId?: number;
             /** Format: date-time */
@@ -4446,6 +5361,14 @@ export interface components {
             /** Format: int64 */
             id?: number;
             payload?: string;
+        };
+        HomeworkLessonRefView: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int32 */
+            lessonNumber?: number;
         };
         HomeworkMaterialView: {
             contentType?: string;
@@ -4457,6 +5380,14 @@ export interface components {
             /** Format: int64 */
             sizeBytes?: number;
             url?: string;
+        };
+        HomeworkProgressView: {
+            /** Format: int32 */
+            pendingReview?: number;
+            /** Format: int32 */
+            submitted?: number;
+            /** Format: int32 */
+            total?: number;
         };
         HomeworkRecipientsView: {
             /** Format: int32 */
@@ -4484,6 +5415,7 @@ export interface components {
             cancelledAt?: string;
             /** Format: int64 */
             classId?: number;
+            className?: string;
             /** Format: date-time */
             completedAt?: string;
             /** Format: int64 */
@@ -4498,17 +5430,21 @@ export interface components {
             hasAnswers?: boolean;
             /** Format: int64 */
             id?: number;
+            lesson?: components["schemas"]["HomeworkLessonRefView"];
             /** Format: int64 */
             lessonId?: number;
             materials?: components["schemas"]["HomeworkMaterialView"][];
             overdue?: boolean;
+            progress?: components["schemas"]["HomeworkProgressView"];
             /** Format: date-time */
             publishedAt?: string;
             recipients?: components["schemas"]["HomeworkRecipientsView"];
             /** @enum {string} */
             status?: "DRAFT" | "PUBLISHED" | "COMPLETED" | "CANCELLED";
+            subgroupName?: string;
             /** Format: int64 */
             subjectId?: number;
+            subjectName?: string;
             /** Format: int64 */
             teacherProfileId?: number;
             title?: string;
@@ -4626,6 +5562,25 @@ export interface components {
             issuedCode?: string;
         };
         JsonNode: Record<string, never>;
+        LearnerHomeworkRowView: {
+            className?: string;
+            /** Format: date-time */
+            dueAt?: string;
+            /** @enum {string} */
+            dueType?: "EXACT" | "NEXT_LESSON" | "NONE";
+            /** Format: int64 */
+            id?: number;
+            /** Format: date-time */
+            lastSubmittedAt?: string;
+            overdue?: boolean;
+            /** @enum {string} */
+            status?: "DRAFT" | "PUBLISHED" | "COMPLETED" | "CANCELLED";
+            subgroupName?: string;
+            subjectName?: string;
+            /** @enum {string} */
+            submissionStatus?: "NOT_SUBMITTED" | "SUBMITTED" | "RETURNED" | "DONE";
+            title?: string;
+        };
         LessonCommentView: {
             body?: string;
             /** Format: date-time */
@@ -4704,9 +5659,45 @@ export interface components {
             /** Format: date */
             windowTo?: string;
         };
+        LessonGradeEntryView: {
+            /** @enum {string} */
+            authorCapacity?: "MAIN_TEACHER" | "SUBSTITUTE_TEACHER";
+            authorName?: string;
+            canEdit?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** @enum {string} */
+            gradeType?: "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "OTHER";
+            /** Format: int64 */
+            id?: number;
+            numericValue?: number;
+            scaleCode?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        LessonGradeSheetRowView: {
+            fullName?: string;
+            grades?: components["schemas"]["LessonGradeEntryView"][];
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
+        LessonGradeSheetView: {
+            canManageGrades?: boolean;
+            /** @enum {string} */
+            capacity?: "MAIN_TEACHER" | "SUBSTITUTE_TEACHER";
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int32 */
+            maxGradesPerStudent?: number;
+            students?: components["schemas"]["LessonGradeSheetRowView"][];
+            /** @enum {string} */
+            writeState?: "ALLOWED" | "NOT_TEACHING" | "LESSON_CANCELLED" | "LESSON_SUPERSEDED" | "SUBSTITUTION_ENDED" | "SUBSTITUTE_NOT_PERMITTED" | "SUBSTITUTE_WINDOW_NOT_OPEN" | "SUBSTITUTE_WINDOW_CLOSED";
+        };
         LessonHistoryView: {
             /** @enum {string} */
-            actionType?: "CREATED" | "SUPERSEDED" | "CANCELLED" | "RESTORED" | "ADMIN_UPDATED" | "SUBSTITUTE_ASSIGNED" | "SUBSTITUTE_REVOKED" | "COMMENT_CREATED" | "COMMENT_UPDATED" | "COMMENT_DELETED" | "TOPIC_UPDATED" | "HOMEWORK_CREATED" | "HOMEWORK_UPDATED" | "HOMEWORK_DELETED";
+            actionType?: "CREATED" | "SUPERSEDED" | "CANCELLED" | "RESTORED" | "ADMIN_UPDATED" | "SUBSTITUTE_ASSIGNED" | "SUBSTITUTE_REVOKED" | "GRADE_PERMISSION_GRANTED" | "GRADE_PERMISSION_REVOKED" | "COMMENT_CREATED" | "COMMENT_UPDATED" | "COMMENT_DELETED" | "TOPIC_UPDATED" | "HOMEWORK_CREATED" | "HOMEWORK_UPDATED" | "HOMEWORK_DELETED";
             /** Format: int64 */
             actorId?: number;
             actorName?: string;
@@ -4791,7 +5782,7 @@ export interface components {
             cancellationComment?: string;
             /** @enum {string} */
             cancellationReason?: "CALENDAR_NO_LESSONS" | "SCHEDULE_SLOT_REMOVED" | "MANUAL";
-            capabilities?: ("VIEW_CARD" | "VIEW_STUDENTS" | "VIEW_ADMIN_HISTORY" | "VIEW_TEACHER_HISTORY" | "MANAGE_STRUCTURE" | "EDIT_TEACHING_PART" | "SUBMIT_HOMEWORK" | "VIEW_ATTENDANCE" | "FILL_ATTENDANCE")[];
+            capabilities?: ("VIEW_CARD" | "VIEW_STUDENTS" | "VIEW_ADMIN_HISTORY" | "VIEW_TEACHER_HISTORY" | "MANAGE_STRUCTURE" | "EDIT_TEACHING_PART" | "SUBMIT_HOMEWORK" | "VIEW_ATTENDANCE" | "VIEW_GRADES" | "FILL_ATTENDANCE")[];
             changedFields?: ("TIME" | "ROOM" | "SUBJECT" | "TEACHER")[];
             /** Format: int64 */
             classId?: number;
@@ -4950,6 +5941,66 @@ export interface components {
             /** Format: int64 */
             studentProfileId?: number;
             subjectName?: string;
+        };
+        MyFinalGradesView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            periods?: components["schemas"]["PeriodRefView"][];
+            /** Format: int64 */
+            studentProfileId?: number;
+            subjects?: components["schemas"]["MySubjectFinalsView"][];
+        };
+        MyPeriodRefView: {
+            current?: boolean;
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+        };
+        MyProfileView: {
+            /** Format: int64 */
+            accountId?: number;
+            children?: components["schemas"]["ParentChildView"][];
+            email?: string;
+            firstName?: string;
+            fullName?: string;
+            lastName?: string;
+            middleName?: string;
+            phone?: string;
+            /** @enum {string} */
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT";
+            student?: components["schemas"]["StudentPart"];
+            teacher?: components["schemas"]["TeacherPart"];
+        };
+        MySubjectFinalsView: {
+            periodValues?: {
+                [key: string]: number;
+            };
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            /** Format: int32 */
+            yearValue?: number;
+        };
+        MySubjectGradesRowView: {
+            average?: components["schemas"]["GradeAverageView"];
+            grades?: components["schemas"]["GradeView"][];
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+        };
+        MySubjectGradesView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            className?: string;
+            period?: components["schemas"]["MyPeriodRefView"];
+            periods?: components["schemas"]["MyPeriodRefView"][];
+            /** Format: int64 */
+            studentProfileId?: number;
+            subjects?: components["schemas"]["MySubjectGradesRowView"][];
         };
         NotificationItem: {
             applicantName?: string;
@@ -5129,6 +6180,24 @@ export interface components {
         };
         PageImportRunView: {
             content?: components["schemas"]["ImportRunView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        PageLearnerHomeworkRowView: {
+            content?: components["schemas"]["LearnerHomeworkRowView"][];
             empty?: boolean;
             first?: boolean;
             last?: boolean;
@@ -5566,6 +6635,29 @@ export interface components {
             /** Format: int64 */
             subjectId?: number;
         };
+        PeriodFinalView: {
+            average?: number;
+            /** Format: date */
+            endDate?: string;
+            finalGrade?: components["schemas"]["FinalGradeView"];
+            name?: string;
+            /** Format: int64 */
+            periodId?: number;
+            /** Format: int32 */
+            recommendedValue?: number;
+            /** Format: date */
+            startDate?: string;
+            studied?: boolean;
+        };
+        PeriodRefView: {
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+        };
         PublicAnnouncementItem: {
             /** Format: date-time */
             eventAt?: string;
@@ -5594,6 +6686,16 @@ export interface components {
         PublishAttendanceRequest: {
             /** Format: int64 */
             expectedVersion?: number;
+        };
+        PublishClassFinalsRequest: {
+            /** Format: int64 */
+            academicPeriodId: number;
+            /** Format: int64 */
+            classId: number;
+            /** Format: int64 */
+            subgroupId?: number;
+            /** Format: int64 */
+            subjectId: number;
         };
         PublishScheduleRequest: {
             confirmedWarningCodes: string[];
@@ -5757,6 +6859,18 @@ export interface components {
             id?: number;
             url?: string;
         };
+        ReviewView: {
+            comment?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** @enum {string} */
+            decision?: "DONE" | "RETURNED";
+            /** Format: int64 */
+            id?: number;
+            photos?: components["schemas"]["SubmissionAttachmentView"][];
+            /** Format: int64 */
+            teacherProfileId?: number;
+        };
         RoleScheduleEventView: {
             /** Format: date */
             dateFrom?: string;
@@ -5827,6 +6941,34 @@ export interface components {
             /** Format: date */
             weekStart?: string;
             workingDays?: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
+        };
+        RosterEntryView: {
+            active?: boolean;
+            /** Format: int64 */
+            currentAttemptId?: number;
+            fullName?: string;
+            /** Format: date-time */
+            lastSubmittedAt?: string;
+            resubmitted?: boolean;
+            /** @enum {string} */
+            status?: "NOT_SUBMITTED" | "SUBMITTED" | "RETURNED" | "DONE";
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            submissionId?: number;
+        };
+        RosterView: {
+            /** Format: int32 */
+            done?: number;
+            /** Format: int32 */
+            notSubmitted?: number;
+            /** Format: int32 */
+            returned?: number;
+            students?: components["schemas"]["RosterEntryView"][];
+            /** Format: int32 */
+            submitted?: number;
+            /** Format: int32 */
+            total?: number;
         };
         RunLessonGenerationRequest: {
             /** Format: int64 */
@@ -6039,9 +7181,71 @@ export interface components {
             code?: string;
             pin?: string;
         };
+        StudentFinalGradesView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            lock?: components["schemas"]["FinalGradeLockView"];
+            periods?: components["schemas"]["PeriodFinalView"][];
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            year?: components["schemas"]["YearFinalView"];
+        };
+        StudentGradeEventView: {
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            columnKey?: string;
+            /** Format: date */
+            date?: string;
+            grade?: components["schemas"]["GradeView"];
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int64 */
+            sourceId?: number;
+            /** Format: int64 */
+            subgroupId?: number;
+            title?: string;
+            /** @enum {string} */
+            type?: "LESSON" | "HOMEWORK";
+        };
+        StudentHomeworkView: {
+            className?: string;
+            description?: string;
+            /** Format: date-time */
+            dueAt?: string;
+            /** @enum {string} */
+            dueType?: "EXACT" | "NEXT_LESSON" | "NONE";
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            lessonId?: number;
+            materials?: components["schemas"]["HomeworkMaterialView"][];
+            /** Format: date-time */
+            publishedAt?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "PUBLISHED" | "COMPLETED" | "CANCELLED";
+            subgroupName?: string;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            submission?: components["schemas"]["SubmissionView"];
+            teacherName?: string;
+            title?: string;
+            updatedAfterPublish?: boolean;
+        };
         StudentLoginRequest: {
             code?: string;
             pin?: string;
+        };
+        StudentPart: {
+            academicYearName?: string;
+            className?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
         };
         StudentProfileDetailView: {
             /** Format: int64 */
@@ -6087,8 +7291,62 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        StudentSubjectHistoryView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            average?: components["schemas"]["GradeAverageView"];
+            events?: components["schemas"]["StudentGradeEventView"][];
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+        };
+        SubmissionAttachmentView: {
+            contentType?: string;
+            fileName?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            sizeBytes?: number;
+        };
+        SubmissionView: {
+            /** Format: int32 */
+            attemptCount?: number;
+            blockedReason?: string;
+            canSubmit?: boolean;
+            currentAttempt?: components["schemas"]["AttemptView"];
+            history?: components["schemas"]["AttemptView"][];
+            /** Format: int64 */
+            homeworkId?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: date-time */
+            lastSubmittedAt?: string;
+            resubmitted?: boolean;
+            /** @enum {string} */
+            status?: "NOT_SUBMITTED" | "SUBMITTED" | "RETURNED" | "DONE";
+            studentFullName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
         SubmitResponse: {
             status?: string;
+        };
+        SubstituteGradePermissionView: {
+            canManageGrades?: boolean;
+            /** Format: date-time */
+            grantedAt?: string;
+            /** Format: int64 */
+            grantedByAccountId?: number;
+            /** Format: date-time */
+            revokedAt?: string;
+            /** Format: int64 */
+            revokedByAccountId?: number;
+            /** Format: int64 */
+            substituteTeacherProfileId?: number;
+            /** Format: int64 */
+            substitutionId?: number;
         };
         Summary: {
             /** Format: int32 */
@@ -6203,6 +7461,11 @@ export interface components {
             month?: string;
             students?: components["schemas"]["TeacherJournalStudentView"][];
         };
+        TeacherPart: {
+            assignments?: components["schemas"]["TeachingAssignment"][];
+            /** Format: int64 */
+            teacherProfileId?: number;
+        };
         TeacherProfileDetailView: {
             /** Format: int64 */
             accountId?: number;
@@ -6279,6 +7542,14 @@ export interface components {
             type?: "AVAILABLE" | "UNAVAILABLE";
             /** Format: date-time */
             updatedAt?: string;
+        };
+        TeachingAssignment: {
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
         };
         TemplateUsageView: {
             /** Format: int64 */
@@ -6439,6 +7710,14 @@ export interface components {
         UpdateClassSubgroupRequest: {
             name?: string;
         };
+        UpdateGradePermissionRequest: {
+            canManageGrades: boolean;
+        };
+        UpdateGradeRequest: {
+            /** @enum {string} */
+            gradeType?: "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "OTHER";
+            scaleCode?: string;
+        };
         UpdateHomeworkRequest: {
             description?: string;
             /** Format: date-time */
@@ -6593,6 +7872,14 @@ export interface components {
             /** Format: int64 */
             version?: number;
         };
+        YearFinalView: {
+            finalGrade?: components["schemas"]["FinalGradeView"];
+            publishedAverage?: number;
+            /** Format: int32 */
+            publishedPeriodCount?: number;
+            /** Format: int32 */
+            recommendedValue?: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -6602,7 +7889,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    update_17: {
+    update_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -6690,7 +7977,7 @@ export interface operations {
             };
         };
     };
-    create_16: {
+    create_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -6736,7 +8023,7 @@ export interface operations {
             };
         };
     };
-    update_16: {
+    update_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -6877,7 +8164,7 @@ export interface operations {
             };
         };
     };
-    create_15: {
+    create_17: {
         parameters: {
             query?: {
                 force?: boolean;
@@ -7007,7 +8294,7 @@ export interface operations {
             };
         };
     };
-    create_14: {
+    create_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -7053,7 +8340,7 @@ export interface operations {
             };
         };
     };
-    update_3: {
+    update_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -7101,7 +8388,7 @@ export interface operations {
             };
         };
     };
-    publish_3: {
+    publish_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -7291,7 +8578,7 @@ export interface operations {
             };
         };
     };
-    create_13: {
+    create_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -7337,7 +8624,7 @@ export interface operations {
             };
         };
     };
-    update_2: {
+    update_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -7363,7 +8650,7 @@ export interface operations {
             };
         };
     };
-    journal_1: {
+    journal_2: {
         parameters: {
             query?: {
                 month?: string;
@@ -7440,7 +8727,7 @@ export interface operations {
             };
         };
     };
-    create_12: {
+    create_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -7486,7 +8773,7 @@ export interface operations {
             };
         };
     };
-    update_15: {
+    update_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -7775,7 +9062,7 @@ export interface operations {
             };
         };
     };
-    create_11: {
+    create_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -7821,7 +9108,7 @@ export interface operations {
             };
         };
     };
-    delete_3: {
+    delete_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -7841,7 +9128,7 @@ export interface operations {
             };
         };
     };
-    update_14: {
+    update_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -7936,7 +9223,7 @@ export interface operations {
             };
         };
     };
-    create_10: {
+    create_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -8006,7 +9293,7 @@ export interface operations {
             };
         };
     };
-    update_13: {
+    update_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -8097,7 +9384,7 @@ export interface operations {
             };
         };
     };
-    create_9: {
+    create_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -8143,7 +9430,7 @@ export interface operations {
             };
         };
     };
-    update_12: {
+    update_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -8518,7 +9805,7 @@ export interface operations {
             };
         };
     };
-    update_11: {
+    update_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -8664,7 +9951,7 @@ export interface operations {
             };
         };
     };
-    create_8: {
+    create_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -8732,7 +10019,7 @@ export interface operations {
             };
         };
     };
-    update_10: {
+    update_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -9044,7 +10331,7 @@ export interface operations {
             };
         };
     };
-    history_4: {
+    history_7: {
         parameters: {
             query: {
                 entityType: "BELL_TEMPLATE" | "WORKING_DAYS" | "CALENDAR_EVENT" | "TEACHER_AVAILABILITY" | "GROUP_SET" | "SUBGROUP" | "LESSON_GENERATION";
@@ -9140,7 +10427,7 @@ export interface operations {
             };
         };
     };
-    create_7: {
+    create_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -9396,7 +10683,7 @@ export interface operations {
             };
         };
     };
-    history_3: {
+    history_6: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -9516,7 +10803,7 @@ export interface operations {
             };
         };
     };
-    publish_2: {
+    publish_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -9566,7 +10853,7 @@ export interface operations {
             };
         };
     };
-    create_6: {
+    create_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -9612,7 +10899,7 @@ export interface operations {
             };
         };
     };
-    update_9: {
+    update_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -9684,7 +10971,7 @@ export interface operations {
             };
         };
     };
-    create_5: {
+    create_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -9752,7 +11039,7 @@ export interface operations {
             };
         };
     };
-    update_8: {
+    update_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -9893,7 +11180,7 @@ export interface operations {
             };
         };
     };
-    create_4: {
+    create_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -9939,7 +11226,7 @@ export interface operations {
             };
         };
     };
-    update_7: {
+    update_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -10110,7 +11397,7 @@ export interface operations {
             };
         };
     };
-    create_3: {
+    create_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -10225,7 +11512,7 @@ export interface operations {
             };
         };
     };
-    update_6: {
+    update_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -10295,7 +11582,7 @@ export interface operations {
             };
         };
     };
-    create_2: {
+    create_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -10363,7 +11650,7 @@ export interface operations {
             };
         };
     };
-    update_5: {
+    update_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -10572,7 +11859,7 @@ export interface operations {
             };
         };
     };
-    create_1: {
+    create_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -10618,7 +11905,7 @@ export interface operations {
             };
         };
     };
-    update_1: {
+    update_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -10811,7 +12098,7 @@ export interface operations {
             };
         };
     };
-    grades: {
+    grades_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -11085,7 +12372,7 @@ export interface operations {
             };
         };
     };
-    submit: {
+    submit_1: {
         parameters: {
             query?: never;
             header: {
@@ -11179,7 +12466,7 @@ export interface operations {
             };
         };
     };
-    journal: {
+    journal_1: {
         parameters: {
             query?: {
                 month?: string;
@@ -11364,6 +12651,197 @@ export interface operations {
             };
         };
     };
+    create_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFinalGradeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinalGradeView"];
+                };
+            };
+        };
+    };
+    forClass: {
+        parameters: {
+            query: {
+                classId: number;
+                subjectId: number;
+                academicPeriodId: number;
+                subgroupId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassFinalGradesView"];
+                };
+            };
+        };
+    };
+    publishClass: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishClassFinalsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassFinalGradesView"];
+                };
+            };
+        };
+    };
+    my_2: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                childStudentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyFinalGradesView"];
+                };
+            };
+        };
+    };
+    forStudent: {
+        parameters: {
+            query: {
+                subjectId: number;
+                academicYearId: number;
+            };
+            header?: never;
+            path: {
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentFinalGradesView"];
+                };
+            };
+        };
+    };
+    changeValue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                finalGradeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeFinalGradeValueRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinalGradeView"];
+                };
+            };
+        };
+    };
+    history_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                finalGradeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinalGradeHistoryView"][];
+                };
+            };
+        };
+    };
+    publish_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                finalGradeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinalGradeView"];
+                };
+            };
+        };
+    };
     getJob: {
         parameters: {
             query?: never;
@@ -11386,13 +12864,300 @@ export interface operations {
             };
         };
     };
+    context: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradebookContextView"];
+                };
+            };
+        };
+    };
+    journal: {
+        parameters: {
+            query: {
+                classId: number;
+                subjectId: number;
+                academicPeriodId: number;
+                subgroupId?: number;
+                dateFrom?: string;
+                dateTo?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradebookView"];
+                };
+            };
+        };
+    };
+    diary: {
+        parameters: {
+            query?: {
+                dateFrom?: string;
+                dateTo?: string;
+                childStudentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiaryView"];
+                };
+            };
+        };
+    };
+    history_4: {
+        parameters: {
+            query: {
+                subjectId: number;
+                academicPeriodId: number;
+            };
+            header?: never;
+            path: {
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentSubjectHistoryView"];
+                };
+            };
+        };
+    };
+    create_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGradeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeView"];
+                };
+            };
+        };
+    };
+    myGrades: {
+        parameters: {
+            query: {
+                academicPeriodId: number;
+                subjectId?: number;
+                childStudentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeView"][];
+                };
+            };
+        };
+    };
+    myAverage: {
+        parameters: {
+            query: {
+                academicPeriodId: number;
+                subjectId: number;
+                childStudentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeAverageView"];
+                };
+            };
+        };
+    };
+    mySubjects: {
+        parameters: {
+            query?: {
+                academicPeriodId?: number;
+                childStudentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MySubjectGradesView"];
+                };
+            };
+        };
+    };
+    scale: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeScaleValueView"][];
+                };
+            };
+        };
+    };
+    delete_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gradeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeView"];
+                };
+            };
+        };
+    };
+    update_6: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gradeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGradeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeView"];
+                };
+            };
+        };
+    };
+    history_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gradeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeHistoryView"][];
+                };
+            };
+        };
+    };
     list_1: {
         parameters: {
             query: {
+                scope?: "ACTUAL" | "HISTORY";
+                statuses?: ("DRAFT" | "PUBLISHED" | "COMPLETED" | "CANCELLED")[];
+                status?: "DRAFT" | "PUBLISHED" | "COMPLETED" | "CANCELLED";
                 classId?: number;
+                subgroupId?: number;
                 subjectId?: number;
                 lessonId?: number;
-                status?: "DRAFT" | "PUBLISHED" | "COMPLETED" | "CANCELLED";
+                dueFrom?: string;
+                dueTo?: string;
+                pendingReviewOnly?: boolean;
                 pageable: components["schemas"]["Pageable"];
             };
             header?: never;
@@ -11748,6 +13513,352 @@ export interface operations {
             };
         };
     };
+    childList: {
+        parameters: {
+            query: {
+                scope?: "ACTUAL" | "HISTORY";
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path: {
+                childId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageLearnerHomeworkRowView"];
+                };
+            };
+        };
+    };
+    my_1: {
+        parameters: {
+            query: {
+                scope?: "ACTUAL" | "HISTORY";
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageLearnerHomeworkRowView"];
+                };
+            };
+        };
+    };
+    childHomework: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                childId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChildHomeworkView"];
+                };
+            };
+        };
+    };
+    childReviewPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                childId: number;
+                photoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    grades_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeView"][];
+                };
+            };
+        };
+    };
+    my: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentHomeworkView"];
+                };
+            };
+        };
+    };
+    submit: {
+        parameters: {
+            query?: {
+                body?: string;
+                clientToken?: string;
+            };
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    files?: string[];
+                    photos?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionView"];
+                };
+            };
+        };
+    };
+    attachment_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                attachmentId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    reviewPhoto_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                photoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    roster: {
+        parameters: {
+            query?: {
+                status?: "NOT_SUBMITTED" | "SUBMITTED" | "RETURNED" | "DONE";
+            };
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RosterView"];
+                };
+            };
+        };
+    };
+    studentWork: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionView"];
+                };
+            };
+        };
+    };
+    attachment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                studentProfileId: number;
+                attachmentId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    reviewPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                studentProfileId: number;
+                photoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    review: {
+        parameters: {
+            query: {
+                decision: "DONE" | "RETURNED";
+                expectedAttemptId: number;
+                comment?: string;
+                gradeAction?: "KEEP" | "REMOVE";
+            };
+            header?: never;
+            path: {
+                homeworkId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    photos?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionView"];
+                };
+            };
+        };
+    };
     get: {
         parameters: {
             query?: never;
@@ -11770,7 +13881,7 @@ export interface operations {
             };
         };
     };
-    update: {
+    update_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -12150,7 +14261,7 @@ export interface operations {
             };
         };
     };
-    sheet: {
+    sheet_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -12344,6 +14455,50 @@ export interface operations {
             };
         };
     };
+    grades: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeView"][];
+                };
+            };
+        };
+    };
+    sheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonGradeSheetView"];
+                };
+            };
+        };
+    };
     history: {
         parameters: {
             query: {
@@ -12479,6 +14634,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonParticipantView"][];
+                };
+            };
+        };
+    };
+    permission: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubstituteGradePermissionView"];
+                };
+            };
+        };
+    };
+    update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGradePermissionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubstituteGradePermissionView"];
                 };
             };
         };
@@ -12628,7 +14831,7 @@ export interface operations {
             };
         };
     };
-    update_4: {
+    update_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -12693,6 +14896,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    profile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyProfileView"];
+                };
             };
         };
     };

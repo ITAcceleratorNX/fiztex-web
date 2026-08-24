@@ -74,7 +74,7 @@ export const NAV_SECTIONS: NavSection[] = [
     label: 'Учебный процесс',
     items: [
       { to: '/lesson-schedule', label: 'Расписание', icon: Calendar },
-      { to: '/grades', label: 'Дневник и оценки', icon: BookOpen, noApi: true },
+      { to: ROUTES.journal, label: 'Журнал оценок', icon: BookOpen },
       { to: '/attendance', label: 'Посещаемость (QR)', icon: QrCode, noApi: true },
       { to: '/ai-tests', label: 'AI-тесты', icon: Sparkles },
       { to: '/clubs', label: 'Кружки и события', icon: Star, noApi: true },
@@ -107,6 +107,7 @@ export const TEACHER_NAV_SECTIONS: NavSection[] = [
     label: '',
     items: [
       { to: ROUTES.mySchedule, label: 'Расписание', icon: Calendar },
+      { to: ROUTES.journal, label: 'Журнал оценок', icon: BookOpen },
       { to: ROUTES.homework, label: 'Домашние задания', icon: BookOpenCheck },
     ],
   },
