@@ -9,6 +9,7 @@ const useLessonHistory = vi.fn();
 const useAttendanceSheet = vi.fn();
 const useLessonHomework = vi.fn();
 const useLessonGradeSheet = vi.fn();
+const useGradePermission = vi.fn();
 
 // Роль нужна карточке только ради ссылки «К расписанию»: у учителя она ведёт на его
 // собственный экран, у админа — в конструктор.
@@ -16,12 +17,37 @@ vi.mock('@/context/AuthContext', () => ({
   useAuth: () => ({ admin: { role: 'ADMIN' } }),
 }));
 
+vi.mock('@/context/ToastContext', () => ({
+  useToast: () => ({ push: vi.fn(), success: vi.fn(), error: vi.fn(), info: vi.fn() }),
+}));
+
+// Список учителей нужен только модалке замены — она открывается по кнопке, и пустой
+// страницы здесь достаточно.
+vi.mock('@/platform/hooks/useTeacherAvailability', () => ({
+  useTeachersList: () => ({ data: { content: [] }, isPending: false, isError: false }),
+}));
+
+/** Команды урока в карточке не вызываются — она их только показывает. */
+const idleMutation = () => ({
+  mutate: vi.fn(),
+  mutateAsync: vi.fn().mockResolvedValue(undefined),
+  isPending: false,
+});
+
 vi.mock('@/hooks/queries', () => ({
   useLesson: (...args: unknown[]) => useLesson(...args),
   useLessonHistory: (...args: unknown[]) => useLessonHistory(...args),
   useAttendanceSheet: (...args: unknown[]) => useAttendanceSheet(...args),
   useLessonHomework: (...args: unknown[]) => useLessonHomework(...args),
   useLessonGradeSheet: (...args: unknown[]) => useLessonGradeSheet(...args),
+  useGradePermission: (...args: unknown[]) => useGradePermission(...args),
+  useCancelLesson: () => idleMutation(),
+  useRestoreLesson: () => idleMutation(),
+  useAssignSubstitute: () => idleMutation(),
+  useRemoveSubstitute: () => idleMutation(),
+  useSetGradePermission: () => idleMutation(),
+  useSaveLessonTopic: () => idleMutation(),
+  useSaveLessonComment: () => idleMutation(),
 }));
 
 /** Урок в том виде, в каком его отдаёт GET /api/lessons/{id} админу. */
@@ -68,6 +94,8 @@ describe('LessonCardPage', () => {
     useLessonHomework.mockReturnValue({ data: [], isPending: false, isError: false });
     useLessonGradeSheet.mockReset();
     useLessonGradeSheet.mockReturnValue({ data: undefined, isPending: false, isError: false });
+    useGradePermission.mockReset();
+    useGradePermission.mockReturnValue({ data: undefined, isPending: false, isError: false });
   });
 
   it('показывает скелетон, пока урок грузится', () => {
@@ -225,5 +253,93 @@ describe('LessonCardPage', () => {
     expect(
       screen.getByText('Задания урока видны его учителю и администратору'),
     ).toBeInTheDocument();
+  });
+
+  it('замену и отмену предлагает только администратор', () => {
+    useLesson.mockReturnValue({
+      data: lesson(),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    renderCard();
+
+    expect(screen.getByRole('button', { name: /Назначить замену/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Отменить урок/ })).toBeInTheDocument();
+  });
+
+  it('учителю урока административных действий не предлагают', () => {
+    useLesson.mockReturnValue({
+      // MANAGE_STRUCTURE есть только у админа: у учителя урока — учебные права.
+      data: lesson({ capabilities: ['VIEW_CARD', 'EDIT_TEACHING_PART', 'FILL_ATTENDANCE'] }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    renderCard();
+
+    expect(screen.queryByRole('button', { name: /Назначить замену/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Отменить урок/ })).not.toBeInTheDocument();
+  });
+
+  it('отменённый урок предлагает восстановление только после ручной отмены', () => {
+    useLesson.mockReturnValue({
+      data: lesson({ status: 'CANCELLED', cancellationReason: 'CALENDAR_NO_LESSONS' }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    renderCard();
+
+    // Календарную отмену снимает сама система, поэтому кнопка есть, но выключена.
+    expect(screen.getByRole('button', { name: /Восстановить урок/ })).toBeDisabled();
+    expect(
+      screen.getByText('Урок отменён системой: каникулы или изменение расписания'),
+    ).toBeInTheDocument();
+  });
+
+  it('при действующей замене показывает разрешение на оценки', () => {
+    useLesson.mockReturnValue({
+      data: lesson({
+        substituteTeacher: { id: 9, fullName: 'Калиев Асылбек Асқарұлы' },
+        viewerRole: 'ADMIN',
+      }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    useGradePermission.mockReturnValue({
+      data: { canManageGrades: false },
+      isPending: false,
+      isError: false,
+    });
+    renderCard();
+
+    expect(screen.getByText('Калиев Асылбек Асқарұлы ведёт этот урок')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Само назначение замены такого права не даёт/),
+    ).toBeInTheDocument();
+    expect(useGradePermission).toHaveBeenCalledWith(6, true);
+  });
+
+  it('замещающий своё разрешение видит, но не меняет', () => {
+    useLesson.mockReturnValue({
+      data: lesson({
+        substituteTeacher: { id: 9, fullName: 'Калиев Асылбек Асқарұлы' },
+        viewerRole: 'SUBSTITUTE_TEACHER',
+      }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    useGradePermission.mockReturnValue({
+      data: { canManageGrades: true },
+      isPending: false,
+      isError: false,
+    });
+    renderCard();
+
+    expect(screen.getByText('Оценки разрешены')).toBeInTheDocument();
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
   });
 });

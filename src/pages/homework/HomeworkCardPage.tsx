@@ -407,7 +407,9 @@ function RosterTable({
         <tbody>
           {students.map((student) => {
             const status = student.status ?? 'NOT_SUBMITTED';
-            const clickable = canOpen && status !== 'NOT_SUBMITTED';
+            // Открывается любой получатель, а не только сдавший: на карточке работы
+            // теперь стоит и оценка, а её ставят в том числе за несданное.
+            const clickable = canOpen;
             return (
               <tr
                 key={student.studentProfileId}

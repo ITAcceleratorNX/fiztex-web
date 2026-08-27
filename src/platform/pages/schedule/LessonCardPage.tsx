@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -16,6 +17,7 @@ import {
   Users,
 } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
+import { TextArea, TextInput } from '@/components/ui/Field';
 import { ChangedChip } from '@/components/ui/ChangedChip';
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard';
 import { LessonStatusChip } from '@/components/ui/LessonStatusChip';
@@ -27,7 +29,10 @@ import {
   useLessonGradeSheet,
   useLessonHistory,
   useLessonHomework,
+  useSaveLessonComment,
+  useSaveLessonTopic,
 } from '@/hooks/queries';
+import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api';
 import { ROUTES } from '@/lib/routes';
@@ -37,6 +42,7 @@ import type { Homework } from '@/lib/homeworkApi';
 import type { LessonGradeSheet } from '@/lib/gradesApi';
 import type { Lesson, LessonCapability } from '@/lib/lessonsApi';
 import { LessonHomeworkRows } from '@/pages/homework/LessonHomeworkRows';
+import { LessonManagementCard, SubstituteGradeAccessCard } from './LessonManagementCard';
 import { describeHistoryActor, describeHistoryEntry, hhmm } from './lessonHistory';
 
 /**
@@ -62,6 +68,9 @@ export function LessonCardPage() {
   const id = Number(lessonId);
   const lessonQuery = useLesson(Number.isFinite(id) && id > 0 ? id : null);
   const { admin } = useAuth();
+  const toast = useToast();
+  const saveTopic = useSaveLessonTopic(id);
+  const saveComment = useSaveLessonComment(id);
   const schedulePath = schedulePathFor(admin?.role);
 
   const lesson = lessonQuery.data;
@@ -80,6 +89,9 @@ export function LessonCardPage() {
 
   const changed = new Set(lesson.changedFields ?? []);
   const canEditTeaching = hasAny(lesson, ['EDIT_TEACHING_PART']);
+  // Замена и отмена — административные действия над уроком, а не учебные.
+  // Признак тот же, которым бэкенд отделяет админа: роль на фронте не вычисляем.
+  const canManageLesson = hasAny(lesson, ['MANAGE_STRUCTURE']);
   const periodClosed = lesson.academicPeriodStatus != null && lesson.academicPeriodStatus !== 'ACTIVE';
   const historyRows = historyQuery.data?.content ?? [];
 
@@ -112,6 +124,15 @@ export function LessonCardPage() {
           editable={canEditTeaching && !periodClosed}
           empty={!lesson.topic}
           emptyLabel="Тема не указана"
+          value={lesson.topic ?? ''}
+          maxLength={300}
+          saving={saveTopic.isPending}
+          onSave={(next) =>
+            saveTopic.mutateAsync(next).catch((error) => {
+              toast.error(error instanceof ApiError ? error.message : 'Не удалось сохранить тему');
+              throw error;
+            })
+          }
         >
           <p className="text-base font-semibold text-slate-900">{lesson.topic}</p>
         </TeachingField>
@@ -123,6 +144,18 @@ export function LessonCardPage() {
           editable={canEditTeaching && !periodClosed}
           empty={!lesson.comment?.body}
           emptyLabel="Комментария пока нет"
+          value={lesson.comment?.body ?? ''}
+          multiline
+          maxLength={2000}
+          saving={saveComment.isPending}
+          onSave={(next) =>
+            saveComment.mutateAsync(next).catch((error) => {
+              toast.error(
+                error instanceof ApiError ? error.message : 'Не удалось сохранить комментарий',
+              );
+              throw error;
+            })
+          }
         >
           <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600">
             {lesson.comment?.body}
@@ -146,6 +179,21 @@ export function LessonCardPage() {
       />
 
       <LessonModules lesson={lesson} />
+
+      {/*
+        Разовые изменения урока стоят после модулей и перед историей — по порядку
+        работы: сначала смотрят, что с уроком, потом меняют, а журнал внизу тут же
+        показывает результат.
+      */}
+      {lesson.substituteTeacher && <SubstituteGradeAccessCard lesson={lesson} />}
+
+      {canManageLesson && !periodClosed && <LessonManagementCard lesson={lesson} />}
+
+      {canManageLesson && periodClosed && (
+        <NoticeBar icon={<Lock className="size-4 text-slate-500" />}>
+          Замену и отмену в закрытом периоде не изменить
+        </NoticeBar>
+      )}
 
       <CollapsibleCard
         icon={<Clock className="size-[18px] text-slate-900" />}
@@ -241,29 +289,110 @@ function LessonHero({ lesson, changed }: { lesson: Lesson; changed: Set<string> 
   );
 }
 
+/**
+ * Тема и комментарий — единственное, что учитель правит прямо на карточке.
+ *
+ * Правка идёт на месте, без модалки: поля короткие, и модальное окно ради одной
+ * строки заставляло бы терять из виду сам урок. Пустое значение сохраняется как
+ * удаление — у обоих полей есть состояние «не указано», и подменять его пустой
+ * строкой значит потерять разницу.
+ */
 function TeachingField({
   label,
   editable,
   empty,
   emptyLabel,
+  value,
+  multiline,
+  maxLength,
+  saving,
+  onSave,
   children,
 }: {
   label: string;
   editable: boolean;
   empty: boolean;
   emptyLabel: string;
+  value: string;
+  multiline?: boolean;
+  maxLength: number;
+  saving: boolean;
+  onSave: (next: string) => Promise<unknown>;
   children: React.ReactNode;
 }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+
+  const open = () => {
+    setDraft(value);
+    setEditing(true);
+  };
+
+  if (editing) {
+    return (
+      <div className="flex flex-col gap-2">
+        <p className="text-11 font-bold uppercase text-slate-400">{label}</p>
+        {multiline ? (
+          <TextArea
+            autoFocus
+            value={draft}
+            maxLength={maxLength}
+            onChange={(event) => setDraft(event.target.value)}
+          />
+        ) : (
+          <TextInput
+            autoFocus
+            value={draft}
+            maxLength={maxLength}
+            onChange={(event) => setDraft(event.target.value)}
+          />
+        )}
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            loading={saving}
+            onClick={() => {
+              void onSave(draft).then(() => setEditing(false));
+            }}
+          >
+            Сохранить
+          </Button>
+          <Button size="sm" variant="secondary" disabled={saving} onClick={() => setEditing(false)}>
+            Отмена
+          </Button>
+          <span className="ml-auto text-xs text-slate-400">
+            {draft.length} / {maxLength}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <p className="text-11 font-bold uppercase text-slate-400">{label}</p>
-        {empty ? <p className="text-sm text-slate-400">{emptyLabel}</p> : children}
+        {empty ? (
+          editable ? (
+            <button
+              type="button"
+              onClick={open}
+              className="self-start text-sm text-slate-400 underline decoration-dotted transition hover:text-brand-500"
+            >
+              {emptyLabel} — добавить
+            </button>
+          ) : (
+            <p className="text-sm text-slate-400">{emptyLabel}</p>
+          )
+        ) : (
+          children
+        )}
       </div>
-      {editable && (
+      {editable && !empty && (
         <button
           type="button"
-          title="Редактирование доступно учителю урока"
+          onClick={open}
+          title={`Изменить: ${label.toLowerCase()}`}
           className="shrink-0 text-slate-400 transition hover:text-brand-500"
         >
           <PencilLine className="size-4" />

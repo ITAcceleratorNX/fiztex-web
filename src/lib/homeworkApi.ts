@@ -1,5 +1,6 @@
 import { pageQuery, request, requestBlob, requestMultipart } from '@/lib/api';
 import type { Schema } from '@/lib/apiSchemas';
+import type { Grade } from '@/lib/gradesApi';
 
 /**
  * Поля списка, которых пока нет в сгенерированных типах.
@@ -228,12 +229,19 @@ export const homeworkApi = {
       signal,
     ),
 
+  /** Оценки за задание: не больше одной актуальной на ученика (GRADES-001 §5). */
+  grades: (homeworkId: number, signal?: AbortSignal) =>
+    request<Grade[]>(`/homework/${homeworkId}/grades`, { signal }),
+
   /** Решение учителя по конкретной версии работы (§9). Multipart — вместе с фотографиями. */
   review: (homeworkId: number, studentProfileId: number, input: ReviewInput) => {
     const form = new FormData();
     form.append('decision', input.decision);
     form.append('expectedAttemptId', String(input.expectedAttemptId));
     if (input.comment) form.append('comment', input.comment);
+    // Возврат работы, за которую уже стоит оценка, без решения о ней отклоняется
+    // целиком (GRADE_ACTION_REQUIRED): запись проверки не создаётся, статус не меняется.
+    if (input.gradeAction) form.append('gradeAction', input.gradeAction);
     for (const photo of input.photos ?? []) form.append('photos', photo);
     return requestMultipart<Submission>(
       `/homework/${homeworkId}/submissions/${studentProfileId}/reviews`,
@@ -395,5 +403,7 @@ export interface ReviewInput {
   expectedAttemptId: number;
   comment?: string;
   photos?: File[];
+  /** Что сделать с актуальной оценкой при возврате: оставить или снять. */
+  gradeAction?: 'KEEP' | 'REMOVE';
 }
 

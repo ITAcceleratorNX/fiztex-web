@@ -13,6 +13,8 @@ import { homeworkApi, type Attempt, type ReviewDecision } from '@/lib/homeworkAp
 import { AttachmentChip, AttachmentThumb } from './AttachmentLink';
 import { SUBMISSION_STATUS_LABELS, SUBMISSION_STATUS_TONES } from './homeworkModel';
 
+import { useHomeworkGrades } from '@/hooks/queries';
+import { SubmissionGradeBlock } from './SubmissionGradeBlock';
 /** §9.3: комментарий и фотографии ограничены бэкендом, дублировать числа больше негде. */
 const COMMENT_LIMIT = 2000;
 const PHOTO_LIMIT = 5;
@@ -78,6 +80,13 @@ export function SubmissionReviewPage() {
     [id, studentId],
   );
 
+  // Оценка нужна решению о возврате, поэтому читается здесь же, а не только в блоке:
+  // react-query отдаёт обоим один кэш, второго запроса не будет.
+  const gradesQuery = useHomeworkGrades(Number.isFinite(id) ? id : null);
+  const hasGrade = (gradesQuery.data ?? []).some(
+    (row) => row.studentProfileId === studentId && !row.deleted,
+  );
+
   const review = useMutation({
     mutationFn: (decision: ReviewDecision) => {
       const attemptId = submission?.currentAttempt?.id;
@@ -87,6 +96,10 @@ export function SubmissionReviewPage() {
         expectedAttemptId: attemptId,
         comment: comment.trim() || undefined,
         photos,
+        // Возврат работы с живой оценкой без решения о ней отклоняется целиком
+        // (GRADE_ACTION_REQUIRED). По умолчанию оценку оставляем: снять её —
+        // отдельное осознанное действие в блоке оценки выше.
+        gradeAction: decision === 'RETURNED' && hasGrade ? 'KEEP' : undefined,
       });
     },
     onSuccess: (_data, decision) => {
@@ -209,6 +222,14 @@ export function SubmissionReviewPage() {
         </section>
       )}
 
+      {/*
+        Оценка живёт вне «Обратной связи»: та секция существует, только пока работа
+        ждёт решения, а оценку чаще ставят уже после того, как работу приняли.
+        Отправка для оценки тоже не обязательна — достаточно быть получателем задания,
+        и «двойка за несданное» это нормальный случай, а не край.
+      */}
+      <SubmissionGradeBlock homeworkId={id} studentProfileId={studentId} />
+
       {canDecide && (
         <section className="card flex flex-col gap-4 p-5">
           <h2 className="text-base font-semibold text-ink">Обратная связь</h2>
@@ -285,7 +306,11 @@ export function SubmissionReviewPage() {
         loading={busy}
         title="Вернуть работу на доработку?"
         confirmLabel="Вернуть"
-        message="Ученик сможет исправить работу и прислать новую версию. Текущая версия останется в истории."
+        message={
+          hasGrade
+            ? "Ученик сможет исправить работу и прислать новую версию. Выставленная оценка останется — снять её можно отдельно."
+            : "Ученик сможет исправить работу и прислать новую версию. Текущая версия останется в истории."
+        }
       />
       <ConfirmDialog
         open={confirm === 'DONE'}

@@ -1,6 +1,12 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, type CopyTestRequest } from '@/lib/api';
-import { lessonsApi } from '@/lib/lessonsApi';
+import {
+  lessonAdminApi,
+  lessonTeachingApi,
+  lessonsApi,
+  substitutionApi,
+  type Lesson,
+} from '@/lib/lessonsApi';
 import { homeworkApi, type Homework } from '@/lib/homeworkApi';
 import {
   attendanceApi,
@@ -46,6 +52,8 @@ export const keys = {
   attemptLogs: (attemptId: number) => ['admissions', 'attempts', attemptId, 'logs'] as const,
   lesson: (lessonId: number) => ['lessons', lessonId] as const,
   lessonHistory: (lessonId: number) => ['lessons', lessonId, 'history'] as const,
+  lessonGradePermission: (lessonId: number) =>
+    ['lessons', lessonId, 'substitution', 'grade-permission'] as const,
   lessonStudents: (lessonId: number) => ['lessons', lessonId, 'students'] as const,
   attendanceSheet: (lessonId: number) => ['lessons', lessonId, 'attendance'] as const,
   // Ключ живёт в пространстве 'homework': любое действие с заданием сбрасывает
@@ -56,6 +64,7 @@ export const keys = {
   // Оценки урока: лист лежит под уроком, справочник шкалы — сам по себе, он общий
   // для всех экранов и не зависит ни от урока, ни от роли.
   lessonGradeSheet: (lessonId: number) => ['lessons', lessonId, 'grades', 'sheet'] as const,
+  homeworkGrades: (homeworkId: number) => ['homework', homeworkId, 'grades'] as const,
   gradeScale: ['grades', 'scale'] as const,
   // Журнал и итоги живут под общим префиксом 'gradebook': любая правка оценки
   // сбрасывает всё дерево одним вызовом — та же оценка стоит и в журнале, и в
@@ -504,6 +513,114 @@ export function useLessonStudents(lessonId: number | null, enabled: boolean) {
 }
 
 /**
+ * Разовые изменения урока: замена и отмена.
+ *
+ * Ответ каждой команды — карточка целиком, поэтому она кладётся в кэш напрямую.
+ * Инвалидировать `keys.lesson` при этом нельзя: он префикс ключей посещаемости,
+ * истории и разрешения, и общий сброс тут же перезапросил бы то, что мы положили.
+ * Поэтому зависимые ключи перечислены поимённо — каждый со своей причиной.
+ */
+function useLessonCommand<TVars>(
+  lessonId: number,
+  mutationFn: (vars: TVars) => Promise<Lesson>,
+) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: (lesson) => {
+      qc.setQueryData(keys.lesson(lessonId), lesson);
+      // Отмена гасит витрину посещаемости, восстановление возвращает её черновиком.
+      qc.invalidateQueries({ queryKey: keys.attendanceSheet(lessonId) });
+      // Смена ведущего меняет `writeState` листа оценок — кнопки должны погаснуть.
+      qc.invalidateQueries({ queryKey: keys.lessonGradeSheet(lessonId) });
+      // Новое назначение всегда начинается без права на оценки (GRADES-002 §12).
+      qc.invalidateQueries({ queryKey: keys.lessonGradePermission(lessonId) });
+      qc.invalidateQueries({ queryKey: keys.lessonHistory(lessonId) });
+    },
+  });
+}
+
+export function useCancelLesson(lessonId: number) {
+  return useLessonCommand(lessonId, (vars: { comment?: string }) =>
+    lessonAdminApi.cancel(lessonId, vars),
+  );
+}
+
+export function useRestoreLesson(lessonId: number) {
+  return useLessonCommand(lessonId, () => lessonAdminApi.restore(lessonId));
+}
+
+export function useAssignSubstitute(lessonId: number) {
+  return useLessonCommand(lessonId, (vars: { teacherProfileId: number; reason?: string }) =>
+    lessonAdminApi.assignSubstitute(lessonId, vars),
+  );
+}
+
+export function useRemoveSubstitute(lessonId: number) {
+  return useLessonCommand(lessonId, () => lessonAdminApi.removeSubstitute(lessonId));
+}
+
+/**
+ * Разрешение замещающему работать с оценками. Спрашивается только при действующей
+ * замене: без неё бэкенд отвечает 409 `GRADE_PERMISSION_NO_SUBSTITUTION`, и ходить
+ * за гарантированной ошибкой ради выключенного переключателя незачем.
+ */
+/**
+ * Тема и комментарий урока. Ответ темы — карточка целиком, ответ комментария — только
+ * он сам, поэтому карточку после него перезапрашиваем: в ней лежит `comment` с автором
+ * и временем правки, собирать который на клиенте значило бы разойтись с сервером.
+ */
+export function useSaveLessonTopic(lessonId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (topic: string) =>
+      topic.trim()
+        ? lessonTeachingApi.setTopic(lessonId, topic.trim())
+        : lessonTeachingApi.clearTopic(lessonId),
+    onSuccess: (lesson) => {
+      qc.setQueryData(keys.lesson(lessonId), lesson);
+      qc.invalidateQueries({ queryKey: keys.lessonHistory(lessonId) });
+    },
+  });
+}
+
+export function useSaveLessonComment(lessonId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: string) => {
+      if (body.trim()) await lessonTeachingApi.setComment(lessonId, body.trim());
+      else await lessonTeachingApi.clearComment(lessonId);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.lesson(lessonId) });
+      qc.invalidateQueries({ queryKey: keys.lessonHistory(lessonId) });
+    },
+  });
+}
+
+export function useGradePermission(lessonId: number | null, enabled: boolean) {
+  return useQuery({
+    queryKey: keys.lessonGradePermission(lessonId ?? 0),
+    queryFn: ({ signal }) => substitutionApi.gradePermission(lessonId as number, signal),
+    enabled: lessonId != null && enabled,
+  });
+}
+
+export function useSetGradePermission(lessonId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (canManageGrades: boolean) =>
+      substitutionApi.setGradePermission(lessonId, canManageGrades),
+    onSuccess: (permission) => {
+      qc.setQueryData(keys.lessonGradePermission(lessonId), permission);
+      // Право писать оценки у замещающего меняется — лист урока об этом знает.
+      qc.invalidateQueries({ queryKey: keys.lessonGradeSheet(lessonId) });
+      qc.invalidateQueries({ queryKey: keys.lessonHistory(lessonId) });
+    },
+  });
+}
+
+/**
  * Все даты одного занятия — уроки, порождённые тем же слотом расписания.
  *
  * Без диапазона дат: горизонт генерации и учебный год ограничивают выборку сами, а
@@ -659,6 +776,65 @@ export function useCreateGrade(lessonId: number) {
         gradeType: vars.gradeType ?? null,
       }),
   );
+}
+
+/**
+ * Оценка за домашнее задание. Ключ отдельный от урока: у задания своя область
+ * («ровно одна актуальная оценка на ученика»), и сбрасывать вместе с ним лист урока
+ * незачем — там оценок за этот источник нет.
+ */
+export function useHomeworkGrades(homeworkId: number | null) {
+  return useQuery({
+    queryKey: keys.homeworkGrades(homeworkId ?? 0),
+    queryFn: ({ signal }) => homeworkApi.grades(homeworkId as number, signal),
+    enabled: homeworkId != null,
+  });
+}
+
+function useHomeworkGradeCommand<TVars>(
+  homeworkId: number,
+  mutationFn: (vars: TVars) => Promise<unknown>,
+) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.homeworkGrades(homeworkId) });
+      // Та же оценка стоит в журнале и входит в средний балл ученика.
+      qc.invalidateQueries({ queryKey: ['gradebook'] });
+    },
+  });
+}
+
+export function useSetHomeworkGrade(homeworkId: number) {
+  return useHomeworkGradeCommand(
+    homeworkId,
+    (vars: {
+      studentProfileId: number;
+      scaleCode: string;
+      gradeType?: GradeType | null;
+      gradeId?: number | null;
+    }) =>
+      // Вторая оценка за задание отклоняется (GRADE_HOMEWORK_ALREADY_GRADED):
+      // исправляют существующую, а не создают ещё одну.
+      vars.gradeId
+        ? gradesApi.update(vars.gradeId, {
+            scaleCode: vars.scaleCode,
+            gradeType: vars.gradeType ?? null,
+          })
+        : gradesApi.create({
+            studentProfileId: vars.studentProfileId,
+            sourceType: 'HOMEWORK',
+            sourceId: homeworkId,
+            scaleCode: vars.scaleCode,
+            gradeType: vars.gradeType ?? null,
+          }),
+  );
+}
+
+export function useRemoveHomeworkGrade(homeworkId: number) {
+  return useHomeworkGradeCommand(homeworkId, (vars: { gradeId: number }) =>
+    gradesApi.remove(vars.gradeId));
 }
 
 export function useUpdateGrade(lessonId: number) {

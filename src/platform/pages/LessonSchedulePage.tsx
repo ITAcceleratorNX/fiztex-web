@@ -42,6 +42,7 @@ import {
   type LessonFormValues,
 } from './schedule/ScheduleLessonFormModal';
 import { ScheduleLegendBar, ScheduleWeeklyGrid } from './schedule/ScheduleWeeklyGrid';
+import { LessonHorizonCard } from './schedule/LessonHorizonCard';
 import {
   archiveSchedule,
   checkSchedule,
@@ -808,7 +809,7 @@ export function LessonSchedulePage() {
       {/* Figma 2015:5790 — settings-block-container: заголовок 14px Bold, карточки 42px */}
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-bold text-ink">Настройки расписания</h2>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {SETTINGS_CARDS.map((card) => {
             const Icon = card.icon;
             const status = settingsStatus[card.key];
@@ -833,6 +834,9 @@ export function LessonSchedulePage() {
               </Link>
             );
           })}
+          {/* Пятая карточка — не ссылка: горизонт правится тут же, отдельного экрана
+              у одной настройки быть не должно. */}
+          <LessonHorizonCard academicYearId={yearId ? Number(yearId) : null} />
         </div>
       </section>
 
