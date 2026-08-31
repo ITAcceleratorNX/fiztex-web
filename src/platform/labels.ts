@@ -25,6 +25,7 @@ export const ROLE_LABELS: Record<AccountRole, string> = {
   TEACHER: 'Учитель',
   STUDENT: 'Ученик',
   PARENT: 'Родитель',
+  SECURITY: 'Охрана',
 };
 
 export const ACCOUNT_STATUS_LABELS: Record<AccountStatus, string> = {
@@ -41,6 +42,7 @@ export const ROLE_BADGE_TONE: Record<AccountRole, BadgeTone> = {
   TEACHER: 'purple',
   ADMIN: 'gray',
   SUPER_ADMIN: 'gray',
+  SECURITY: 'green',
 };
 
 /** Avatar circle color per role — Figma «Пользователи» table. */
@@ -50,6 +52,7 @@ export const ROLE_AVATAR_COLOR: Record<AccountRole, { bg: string; fg: string }> 
   TEACHER: { bg: '#4f46e5', fg: '#ffffff' },
   ADMIN: { bg: '#374151', fg: '#ffffff' },
   SUPER_ADMIN: { bg: '#374151', fg: '#ffffff' },
+  SECURITY: { bg: '#059669', fg: '#ffffff' },
 };
 
 export const SCHOOL_STATUS_LABELS: Record<SchoolRecordStatus, string> = {

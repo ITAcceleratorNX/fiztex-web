@@ -13,6 +13,7 @@ import {
 } from '../labels';
 import { CreateAdminModal } from '../modals/CreateAdminModal';
 import { CreateParentModal } from '../modals/CreateParentModal';
+import { CreateSecurityModal } from '../modals/CreateSecurityModal';
 import { CreateStudentModal } from '../modals/CreateStudentModal';
 import { CreateTeacherModal } from '../modals/CreateTeacherModal';
 import { UserDetailModal } from '../modals/UserDetailModal';
@@ -28,6 +29,7 @@ const ROLE_FILTERS: { value: AccountRole | 'ALL'; label: string }[] = [
   { value: 'PARENT', label: 'Родители' },
   { value: 'TEACHER', label: 'Учителя' },
   { value: 'ADMIN', label: 'Админы' },
+  { value: 'SECURITY', label: 'Охрана' },
 ];
 
 /** `countKey` — поле AccountStats, число показывается прямо в кнопке фильтра. */
@@ -63,6 +65,7 @@ const ROLE_BADGE: Record<AccountRole, string> = {
   TEACHER: 'bg-[#f5f3ff] text-[#4f46e5]',
   ADMIN: 'bg-[#f1f5f9] text-[#374151]',
   SUPER_ADMIN: 'bg-[#f1f5f9] text-[#374151]',
+  SECURITY: 'bg-[#ecfdf5] text-[#059669]',
 };
 
 const STATUS_BADGE: Record<AccountStatus, string> = {
@@ -477,6 +480,11 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
       />
       <CreateAdminModal
         open={createRole === 'ADMIN'}
+        onClose={() => setCreateRole(null)}
+        onSaved={handleCreated}
+      />
+      <CreateSecurityModal
+        open={createRole === 'SECURITY'}
         onClose={() => setCreateRole(null)}
         onSaved={handleCreated}
       />

@@ -5,6 +5,7 @@ import {
   GraduationCap,
   Monitor,
   Shield,
+  ShieldCheck,
   Users,
 } from 'lucide-react';
 import { cx } from '@/lib/format';
@@ -46,6 +47,15 @@ const ROLE_ITEMS: {
     icon: Shield,
     iconClass: 'text-slate-600',
     hoverClass: 'hover:bg-slate-100 hover:text-slate-800',
+  },
+  // Охрана заводится здесь, а работает в мобильном приложении: сервисные заявки
+  // (SERVICE-FE-002). Клининг и техслужба встанут сюда же под SERVICE-FE-003.
+  {
+    action: 'SECURITY',
+    label: 'Охрана',
+    icon: ShieldCheck,
+    iconClass: 'text-emerald-600',
+    hoverClass: 'hover:bg-emerald-50 hover:text-emerald-700',
   },
 ];
 

@@ -1,7 +1,21 @@
 // Platform Core Lite types — aligned with backend enums (PHYCORE-001 / PHYCORE-002)
 // so the mock layer can be swapped for real API responses later.
 
-export type AccountRole = 'SUPER_ADMIN' | 'ADMIN' | 'TEACHER' | 'STUDENT' | 'PARENT';
+/**
+ * `SECURITY` — охрана: заводится здесь, а работает в мобильном приложении
+ * (сервисные заявки, SERVICE-FE-002). Школьного профиля у роли нет — ни класса,
+ * ни предмета, — поэтому в таблице она живёт одной строкой аккаунта.
+ *
+ * `CLEANING` и `TECHNICIAN` появятся здесь же, когда до них дойдёт SERVICE-FE-003:
+ * на бэкенде все три служебные роли заводятся и активируются одинаково.
+ */
+export type AccountRole =
+  | 'SUPER_ADMIN'
+  | 'ADMIN'
+  | 'TEACHER'
+  | 'STUDENT'
+  | 'PARENT'
+  | 'SECURITY';
 
 export type AccountStatus = 'NOT_ACTIVATED' | 'ACTIVE' | 'BLOCKED' | 'ARCHIVED';
 
