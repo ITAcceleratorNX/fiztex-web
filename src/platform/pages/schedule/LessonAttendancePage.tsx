@@ -1,13 +1,26 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { AlertTriangle, ArrowLeft, Clock, EyeOff, Info, LockKeyhole, Users } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Clock,
+  EyeOff,
+  Info,
+  LockKeyhole,
+  QrCode,
+  Users,
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Modal } from '@/components/ui/Modal';
 import { NoticeBar } from '@/components/ui/NoticeBar';
+import { AttendanceQrOverlay } from './AttendanceQrOverlay';
 import {
+  useAttendanceQr,
   useAttendanceHistory,
+  useOpenAttendanceQr,
+  useCloseAttendanceQr,
   useAttendanceSheet,
   useLesson,
   useMarkAllPresent,
@@ -15,6 +28,7 @@ import {
   useSaveAttendanceDraft,
 } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
+import { scansByStudent } from '@/lib/attendanceQrApi';
 import {
   ATTENDANCE_ERRORS,
   affectedCountFrom,
@@ -92,6 +106,13 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
   );
   const historyQuery = useAttendanceHistory(validId, canSeeHistory);
 
+  // Право показать код — то же, что право заполнять лист, поэтому лишний запрос не
+  // уходит там, где кнопки всё равно не будет.
+  const canFillSheet = Boolean(sheet?.canFill);
+  const qrQuery = useAttendanceQr(validId, canFillSheet);
+  const openQr = useOpenAttendanceQr(id);
+  const closeQr = useCloseAttendanceQr(id);
+
   const saveDraft = useSaveAttendanceDraft(id);
   const publish = usePublishAttendance(id);
   const markAll = useMarkAllPresent(id);
@@ -105,6 +126,8 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
   const [bulkConfirm, setBulkConfirm] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [commentFor, setCommentFor] = useState<number | null>(null);
+  // Оверлей и есть сессия: он открыт, пока код действует.
+  const [qrOpen, setQrOpen] = useState(false);
 
   const rows: AttendanceRow[] = useMemo(() => {
     const entries = sheet?.entries ?? [];
@@ -157,6 +180,40 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
   // сказать: она пройдёт сама. Остальные («нет прав», «урок отменён») уже названы
   // бейджем и телом страницы.
   const notStartedYet = !canFill && !cancelled && lesson.temporalStatus === 'UPCOMING';
+
+  const qr = qrQuery.data;
+  const qrScans = scansByStudent(qr);
+  const qrBusy = openQr.isPending || closeQr.isPending;
+
+  /**
+   * Кнопка «Показать QR». Причина недоступности пишется словами: неактивная кнопка без
+   * объяснения — тупик, а «урок ещё не начался» пройдёт само.
+   *
+   * Ошибка запроса состояния кнопку просто убирает (ТЗ FE-001 §6): QR — надстройка над
+   * листом, и недоступный код не должен ломать журнал.
+   */
+  const qrButton =
+    !canFill || cancelled || !qr ? null : qr.canOpen ? (
+      <Button
+        variant="secondary"
+        size="sm"
+        icon={<QrCode className="size-4" />}
+        onClick={() => {
+          setQrOpen(true);
+          openQr.mutate();
+        }}
+        loading={qrBusy}
+      >
+        Показать QR
+      </Button>
+    ) : (
+      <span className="text-13 font-medium text-muted">
+        {qr.status === 'EXPIRED' || lesson.temporalStatus === 'FINISHED'
+          ? 'Урок закончился — код недоступен'
+          : 'Код можно показать с начала урока'}
+      </span>
+    );
+
   const meta = [
     [lesson.className, lesson.subgroupName].filter(Boolean).join(' · '),
     lesson.room ? `Каб. ${lesson.room}` : null,
@@ -347,17 +404,25 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
       <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-raised">
         <div className="flex min-h-[28px] items-center justify-between gap-4">
           <h2 className="text-base font-bold text-slate-900">Список учеников</h2>
-          {editing && canFill && totalCount > 0 ? (
-            <Button variant="secondary" size="sm" onClick={() => void onMarkAll(false)} disabled={busy}>
-              Все присутствуют
-            </Button>
-          ) : (
-            totalCount > 0 && (
-              <span className="text-13 font-semibold text-slate-500">
-                Отмечено {markedCount} из {totalCount}
-              </span>
-            )
-          )}
+          <div className="flex items-center gap-3">
+            {qrButton}
+            {editing && canFill && totalCount > 0 ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => void onMarkAll(false)}
+                disabled={busy}
+              >
+                Все присутствуют
+              </Button>
+            ) : (
+              totalCount > 0 && (
+                <span className="text-13 font-semibold text-slate-500">
+                  Отмечено {markedCount} из {totalCount}
+                </span>
+              )
+            )}
+          </div>
         </div>
 
         {notStartedYet && (
@@ -381,6 +446,7 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
             rows={rows}
             editable={editing && canFill}
             highlighted={unmarked}
+            qrScans={qrScans}
             onStatusChange={(studentId, status) =>
               editRow(studentId, (marking) => withStatus(marking, status))
             }
@@ -465,6 +531,26 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
           </ul>
         )}
       </CollapsibleCard>
+
+      {qrOpen && (
+        <AttendanceQrOverlay
+          payload={qr?.status === 'ACTIVE' ? (qr.payload ?? null) : null}
+          lessonTitle={[lesson.subjectName, lesson.className, `${hhmm(lesson.startTime)}–${hhmm(lesson.endTime)}`]
+            .filter(Boolean)
+            .join(' · ')}
+          lessonEndsAt={qr?.lessonEndsAt ?? null}
+          busy={qrBusy}
+          onReissue={() => openQr.mutate()}
+          onClose={() => {
+            setQrOpen(false);
+            // Закрытие не удержит оверлей: код всё равно погаснет в конце урока, а
+            // держать учителя в полноэкранном режиме из-за сетевой ошибки нельзя.
+            closeQr.mutate(undefined, {
+              onError: () => setActionError('Код не удалось закрыть — он перестанет действовать в конце урока'),
+            });
+          }}
+        />
+      )}
 
       <CommentModal
         row={commentRow}

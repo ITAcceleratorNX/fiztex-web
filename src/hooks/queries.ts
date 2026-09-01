@@ -13,6 +13,7 @@ import {
   type AttendanceEntryChange,
   type AttendanceSheet,
 } from '@/lib/attendanceApi';
+import { attendanceQrApi, type AttendanceQrSession } from '@/lib/attendanceQrApi';
 import { gradesApi, type GradeType } from '@/lib/gradesApi';
 import {
   finalGradesApi,
@@ -69,6 +70,7 @@ export const keys = {
   // обновляться вместе с ним, а не жить своей жизнью под ключом урока.
   lessonHomework: (lessonId: number) => ['homework', 'lesson', lessonId, 'all'] as const,
   attendanceHistory: (lessonId: number) => ['lessons', lessonId, 'attendance', 'history'] as const,
+  attendanceQr: (lessonId: number) => ['lessons', lessonId, 'attendance', 'qr'] as const,
   // Оценки урока: лист лежит под уроком, справочник шкалы — сам по себе, он общий
   // для всех экранов и не зависит ни от урока, ни от роли.
   lessonGradeSheet: (lessonId: number) => ['lessons', lessonId, 'grades', 'sheet'] as const,
@@ -673,6 +675,56 @@ export function useAttendanceSheet(lessonId: number | null, enabled = true) {
       !(error instanceof ApiError && (error.status === 403 || error.status === 404)) &&
       failureCount < 2,
   });
+}
+
+/**
+ * Состояние QR-кода урока: можно ли открыть, показан ли сейчас и кто уже отсканировал.
+ *
+ * <b>Ошибка этого запроса не должна ломать посещаемость</b> (ТЗ FE-001 §6): QR —
+ * надстройка над листом, и недоступный код означает лишь отсутствие кнопки, а не
+ * сломанный журнал. Поэтому вызывающий читает `data`, а не `error`.
+ *
+ * Как и лист, не переспрашивается при возврате фокуса: подменять показанный классу код
+ * из-за переключения вкладки нельзя.
+ */
+export function useAttendanceQr(lessonId: number | null, enabled: boolean) {
+  return useQuery({
+    queryKey: keys.attendanceQr(lessonId ?? 0),
+    queryFn: ({ signal }) => attendanceQrApi.state(lessonId as number, signal),
+    enabled: lessonId != null && enabled,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+}
+
+/**
+ * Открыть, перевыпустить и закрыть код. Ответ команды — то же представление, что отдаёт
+ * `GET`, поэтому он кладётся в кэш напрямую: второй запрос показал бы на секунду
+ * прежнее состояние.
+ *
+ * Лист при этом <b>не</b> сбрасывается. Открытие кода отметок не меняет, а сканы ученик
+ * приносит сам — и версию листа они намеренно не двигают
+ * (`fiztex-back/docs/attendance-qr-contract.md` §6).
+ */
+function useAttendanceQrCommand(
+  lessonId: number,
+  mutationFn: (id: number) => Promise<AttendanceQrSession>,
+) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => mutationFn(lessonId),
+    onSuccess: (session) => {
+      qc.setQueryData(keys.attendanceQr(lessonId), session);
+    },
+  });
+}
+
+export function useOpenAttendanceQr(lessonId: number) {
+  return useAttendanceQrCommand(lessonId, attendanceQrApi.open);
+}
+
+export function useCloseAttendanceQr(lessonId: number) {
+  return useAttendanceQrCommand(lessonId, attendanceQrApi.close);
 }
 
 export function useAttendanceHistory(lessonId: number | null, enabled: boolean) {

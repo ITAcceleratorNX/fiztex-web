@@ -1,7 +1,9 @@
 import { MessageSquare } from 'lucide-react';
+import { QrSourceChip } from '@/components/ui/QrSourceChip';
 import { Select } from '@/components/ui/Select';
 import { cx } from '@/lib/format';
 import type { AttendanceMarking, AttendanceReason, AttendanceStatus } from '@/lib/attendanceApi';
+import type { AttendanceQrScan } from '@/lib/attendanceQrApi';
 import {
   REASON_OPTIONS,
   STATUS_OPTIONS,
@@ -150,6 +152,7 @@ export function AttendanceTable({
   rows,
   editable,
   highlighted,
+  qrScans,
   onStatusChange,
   onMarkToggle,
   onReasonChange,
@@ -158,6 +161,8 @@ export function AttendanceTable({
   rows: AttendanceRow[];
   editable: boolean;
   highlighted: ReadonlySet<number>;
+  /** Кто отметился сканированием — пустая карта, если код на уроке не открывали. */
+  qrScans: ReadonlyMap<number, AttendanceQrScan>;
   onStatusChange: (studentProfileId: number, status: AttendanceStatus) => void;
   onMarkToggle: (studentProfileId: number) => void;
   onReasonChange: (studentProfileId: number, reason: AttendanceReason | null) => void;
@@ -194,6 +199,7 @@ export function AttendanceTable({
       <tbody>
         {rows.map((row) => {
           const comment = (row.marking.comment ?? '').trim();
+          const qrScan = qrScans.get(row.studentProfileId);
           return (
             <tr
               key={row.studentProfileId}
@@ -202,8 +208,13 @@ export function AttendanceTable({
                 highlighted.has(row.studentProfileId) && 'bg-danger-bg',
               )}
             >
-              <td className="h-11 truncate pr-4 text-sm font-medium text-slate-900">
-                {row.fullName}
+              <td className="h-11 pr-4 text-sm font-medium text-slate-900">
+                <span className="flex items-center gap-2">
+                  <span className="truncate">{row.fullName}</span>
+                  {qrScan && (
+                    <QrSourceChip outcome={qrScan.outcome ?? 'MARKED_PRESENT'} scannedAt={qrScan.scannedAt} />
+                  )}
+                </span>
               </td>
               <td className="pr-4">
                 <StatusCell

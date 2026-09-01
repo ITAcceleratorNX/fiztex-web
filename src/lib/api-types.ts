@@ -1261,7 +1261,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["open"];
+        post: operations["open_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2382,6 +2382,22 @@ export interface paths {
         get: operations["myMarks"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/qr/scan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["scan"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3588,6 +3604,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/attendance/qr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["state"];
+        put?: never;
+        post: operations["open"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/attendance/qr/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["close"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/comment": {
         parameters: {
             query?: never;
@@ -4601,10 +4649,10 @@ export interface components {
         };
         AttendanceHistoryView: {
             /** @enum {string} */
-            action?: "DRAFT_SAVED" | "BULK_PRESENT" | "PUBLISHED" | "REPUBLISHED" | "ANNULLED" | "RESTORED";
+            action?: "DRAFT_SAVED" | "BULK_PRESENT" | "PUBLISHED" | "REPUBLISHED" | "ANNULLED" | "RESTORED" | "QR_OPENED" | "QR_CLOSED" | "QR_SCANNED";
             actorName?: string;
             /** @enum {string} */
-            actorRole?: "SYSTEM" | "ADMIN" | "MAIN_TEACHER" | "SUBSTITUTE_TEACHER";
+            actorRole?: "SYSTEM" | "ADMIN" | "MAIN_TEACHER" | "SUBSTITUTE_TEACHER" | "STUDENT";
             after?: components["schemas"]["AttendanceMarkingView"];
             before?: components["schemas"]["AttendanceMarkingView"];
             /** Format: date-time */
@@ -4625,6 +4673,57 @@ export interface components {
             reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
             /** @enum {string} */
             status?: "NOT_MARKED" | "PRESENT" | "ABSENT";
+        };
+        AttendanceQrScanRequest: {
+            payload?: string;
+        };
+        AttendanceQrScanResultView: {
+            /** @example 14:30:00 */
+            endTime?: string;
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** @enum {string} */
+            outcome?: "MARKED_PRESENT" | "TEACHER_MARK_KEPT" | "ALREADY_MARKED";
+            /** @example 14:30:00 */
+            startTime?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            subjectName?: string;
+        };
+        AttendanceQrScanView: {
+            fullName?: string;
+            /** @enum {string} */
+            outcome?: "MARKED_PRESENT" | "TEACHER_MARK_KEPT" | "ALREADY_MARKED";
+            /** Format: date-time */
+            scannedAt?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
+        AttendanceQrSessionView: {
+            canOpen?: boolean;
+            /** Format: date-time */
+            closedAt?: string;
+            /** Format: date-time */
+            lessonEndsAt?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: date-time */
+            openedAt?: string;
+            openedByName?: string;
+            payload?: string;
+            /** Format: int32 */
+            scannedCount?: number;
+            scans?: components["schemas"]["AttendanceQrScanView"][];
+            /** Format: int64 */
+            sessionId?: number;
+            /** @enum {string} */
+            status?: "NONE" | "ACTIVE" | "CLOSED" | "EXPIRED";
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            versionNo?: number;
         };
         AttendanceSheetView: {
             canFill?: boolean;
@@ -10716,7 +10815,7 @@ export interface operations {
             };
         };
     };
-    open: {
+    open_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -12884,6 +12983,30 @@ export interface operations {
             };
         };
     };
+    scan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceQrScanRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceQrScanResultView"];
+                };
+            };
+        };
+    };
     states: {
         parameters: {
             query: {
@@ -14895,6 +15018,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AttendanceSheetView"];
+                };
+            };
+        };
+    };
+    state: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceQrSessionView"];
+                };
+            };
+        };
+    };
+    open: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceQrSessionView"];
+                };
+            };
+        };
+    };
+    close: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceQrSessionView"];
                 };
             };
         };

@@ -8,6 +8,9 @@ const useLesson = vi.fn();
 const useAttendanceSheet = vi.fn();
 const useAttendanceHistory = vi.fn();
 const useLessonOccurrences = vi.fn();
+const useAttendanceQr = vi.fn();
+const openQr = vi.fn();
+const closeQr = vi.fn();
 const saveDraft = vi.fn();
 const publish = vi.fn();
 const markAll = vi.fn();
@@ -20,6 +23,9 @@ vi.mock('@/hooks/queries', () => ({
   useSaveAttendanceDraft: () => ({ mutateAsync: saveDraft, isPending: false }),
   usePublishAttendance: () => ({ mutateAsync: publish, isPending: false }),
   useMarkAllPresent: () => ({ mutateAsync: markAll, isPending: false }),
+  useAttendanceQr: (...args: unknown[]) => useAttendanceQr(...args),
+  useOpenAttendanceQr: () => ({ mutate: openQr, isPending: false }),
+  useCloseAttendanceQr: () => ({ mutate: closeQr, isPending: false }),
 }));
 
 function lesson(overrides: Record<string, unknown> = {}) {
@@ -92,6 +98,69 @@ describe('LessonAttendancePage', () => {
     });
     useAttendanceHistory.mockReturnValue({ data: undefined, isPending: false, isError: false });
     useLessonOccurrences.mockReturnValue({ data: undefined, isPending: false, isError: false });
+    useAttendanceQr.mockReturnValue({
+      data: { status: 'NONE', canOpen: true, scans: [], lessonEndsAt: null },
+      isError: false,
+    });
+  });
+
+  describe('QR-код', () => {
+    it('показывает кнопку, когда бэкенд разрешил открыть код', async () => {
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(screen.getByRole('button', { name: 'Показать QR' }));
+
+      // Оверлей и есть сессия: экран открыт — код открыт.
+      expect(openQr).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole('dialog', { name: /QR-код посещаемости/ })).toBeInTheDocument();
+    });
+
+    it('вместо неактивной кнопки называет причину словами', () => {
+      useAttendanceQr.mockReturnValue({
+        data: { status: 'NONE', canOpen: false, scans: [], lessonEndsAt: null },
+        isError: false,
+      });
+      renderPage();
+
+      // Неактивная кнопка без объяснения — тупик, а «урок ещё не начался» пройдёт само.
+      expect(screen.queryByRole('button', { name: 'Показать QR' })).not.toBeInTheDocument();
+      expect(screen.getByText('Код можно показать с начала урока')).toBeInTheDocument();
+    });
+
+    it('недоступный QR не ломает журнал', () => {
+      useAttendanceQr.mockReturnValue({ data: undefined, isError: true });
+      renderPage();
+
+      expect(screen.queryByRole('button', { name: 'Показать QR' })).not.toBeInTheDocument();
+      // Лист на месте — QR надстройка над ним, а не его часть (ТЗ FE-001 §6).
+      expect(screen.getByText('Александров Д.С.')).toBeInTheDocument();
+    });
+
+    it('помечает отметку, полученную сканированием, и попытку поверх ручного статуса', () => {
+      useAttendanceQr.mockReturnValue({
+        data: {
+          status: 'ACTIVE',
+          canOpen: true,
+          lessonEndsAt: null,
+          scans: [
+            { studentProfileId: 1, outcome: 'MARKED_PRESENT', scannedAt: '2026-08-03T07:07:00Z' },
+            { studentProfileId: 2, outcome: 'TEACHER_MARK_KEPT', scannedAt: '2026-08-03T07:09:00Z' },
+          ],
+        },
+        isError: false,
+      });
+      renderPage();
+
+      const chips = screen.getAllByText('QR');
+      expect(chips).toHaveLength(2);
+      // Второй случай — единственное место, где учитель узнаёт, что отметил
+      // «отсутствовал» того, кто был в классе.
+      expect(chips[1].closest('span')).toHaveAttribute(
+        'title',
+        expect.stringContaining('статус поставлен вручную'),
+      );
+    });
   });
 
   it('открывается на просмотр: отметки видно, но менять их нечем', () => {
