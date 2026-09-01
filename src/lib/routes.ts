@@ -35,6 +35,9 @@ export const ROUTES = {
   mySchedule: '/my-schedule',
   /** Журнал класса и итоги четверти (GRADES-FE-001). */
   journal: '/grades',
+  /** Сервисные заявки автора — Admin и Teacher (SERVICE-FE-001). */
+  serviceRequests: '/service',
+  serviceRequest: (id: number | string) => `/service/${id}`,
 } as const;
 
 /** Куда возвращать после входа, если пользователь не шёл на конкретную страницу. */

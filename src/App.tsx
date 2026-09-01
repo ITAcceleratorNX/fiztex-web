@@ -18,6 +18,8 @@ import { SubjectMaterialsPage } from '@/pages/SubjectMaterialsPage';
 import { AiTestsPage } from '@/pages/AiTestsPage';
 import { HomeworkListPage } from '@/pages/homework/HomeworkListPage';
 import { JournalPage } from '@/pages/journal/JournalPage';
+import { ServiceRequestsPage } from '@/pages/service/ServiceRequestsPage';
+import { ServiceRequestCardPage } from '@/pages/service/ServiceRequestCardPage';
 import { HomeworkCardPage } from '@/pages/homework/HomeworkCardPage';
 import { HomeworkFormPage } from '@/pages/homework/HomeworkFormPage';
 import { SubmissionReviewPage } from '@/pages/homework/SubmissionReviewPage';
@@ -213,15 +215,10 @@ export function App() {
             />
           }
         />
-        <Route
-          path="/service"
-          element={
-            <PlaceholderPage
-              title="Сервисные заявки"
-              reason="Backend API для сервисных заявок ещё не реализован. Эндпойнтов нет."
-            />
-          }
-        />
+        {/* Сервисные заявки автора — Admin и Teacher (SERVICE-FE-001 §2).
+            Общей очереди и исполнительских действий здесь нет: это SERVICE-FE-003. */}
+        <Route path={ROUTES.serviceRequests} element={<ServiceRequestsPage />} />
+        <Route path="/service/:requestId" element={<ServiceRequestCardPage />} />
       </Route>
 
       {/* Неизвестный путь ведёт на публичную главную, а не на форму входа. */}

@@ -54,10 +54,12 @@ describe('маршрутизация по роли', () => {
   });
 
   it('в меню учителя только его разделы, у админа их нет', () => {
-    // Своё расписание, журнал и ДЗ — экраны, которые работают под учителем:
-    // остальные читают `/api/admin/*` и рвут ему сессию.
+    // Своё расписание, журнал, ДЗ и сервисные заявки — экраны, которые работают под
+    // учителем: остальные читают `/api/admin/*` и рвут ему сессию. Заявки попадают сюда
+    // не как учебный раздел, а потому что автор у них тот же (SERVICE-FE-001 §1), и
+    // читают они `/api/service-requests/my`.
     const teacher = navSectionsForRole('TEACHER').flatMap((s) => s.items.map((i) => i.to));
-    expect(teacher).toEqual(['/my-schedule', '/grades', '/homework']);
+    expect(teacher).toEqual(['/my-schedule', '/grades', '/homework', '/service']);
 
     const admin = navSectionsForRole('ADMIN').flatMap((s) => s.items.map((i) => i.to));
     expect(admin).not.toContain('/homework');

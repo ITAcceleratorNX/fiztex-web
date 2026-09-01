@@ -20,6 +20,14 @@ import {
   type JournalQuery,
 } from '@/lib/gradebookApi';
 import { announcementsApi, type AnnouncementFilters, type AnnouncementRequest } from '@/lib/announcementsApi';
+import {
+  SECTION_STATUSES,
+  meApi,
+  serviceRequestsApi,
+  type CreateServiceRequestInput,
+  type ServiceSection,
+} from '@/lib/serviceRequestsApi';
+import { byRecency } from '@/lib/serviceRequestsModel';
 import type {
   ApplicantRequest,
   GenerateTestRequest,
@@ -65,6 +73,13 @@ export const keys = {
   // для всех экранов и не зависит ни от урока, ни от роли.
   lessonGradeSheet: (lessonId: number) => ['lessons', lessonId, 'grades', 'sheet'] as const,
   homeworkGrades: (homeworkId: number) => ['homework', homeworkId, 'grades'] as const,
+  // Одно пространство на весь раздел: создание, отмена и возврат меняют оба списка
+  // сразу — заявка уходит из «Моих» в «Историю», — и сбрасывать их порознь значило бы
+  // однажды забыть половину.
+  myProfile: ['me', 'profile'] as const,
+  serviceRequests: (section: ServiceSection) => ['service-requests', 'list', section] as const,
+  serviceRequest: (id: number) => ['service-requests', id] as const,
+  serviceRequestHistory: (id: number) => ['service-requests', id, 'history'] as const,
   gradeScale: ['grades', 'scale'] as const,
   // Журнал и итоги живут под общим префиксом 'gradebook': любая правка оценки
   // сбрасывает всё дерево одним вызовом — та же оценка стоит и в журнале, и в
@@ -1047,4 +1062,99 @@ export function usePublicAnnouncement(id: number | null) {
     retry: (failureCount, error) =>
       !(error instanceof ApiError && error.status === 404) && failureCount < 2,
   });
+}
+
+// ─── Сервисные заявки: сценарий автора (ТЗ SERVICE-FE-001) ────────────────────
+
+/**
+ * Свой `accountId`. Живёт долго: за сессию он не меняется, а спрашивают его все три
+ * экрана раздела.
+ */
+export function useMyAccountId(): number | undefined {
+  const { data } = useQuery({
+    queryKey: keys.myProfile,
+    queryFn: ({ signal }) => meApi.profile(signal),
+    staleTime: Infinity,
+  });
+  return data?.accountId;
+}
+
+const SERVICE_PAGE_SIZE = 50;
+
+/**
+ * Раздел списка заявок (§3).
+ *
+ * Двумя запросами по статусу, а не одним общим с разбором на клиенте: страница это срез,
+ * и смешанная выдача из последних заявок могла бы целиком состоять из выполненных —
+ * «Мои заявки» показали бы «пусто» при живых новых на следующей странице.
+ */
+export function useServiceRequests(section: ServiceSection) {
+  return useQuery({
+    queryKey: keys.serviceRequests(section),
+    queryFn: async ({ signal }) => {
+      const pages = await Promise.all(
+        SECTION_STATUSES[section].map((status) =>
+          serviceRequestsApi.my({ status, size: SERVICE_PAGE_SIZE }, signal),
+        ),
+      );
+      return pages.flatMap((page) => page.content ?? []).sort(byRecency);
+    },
+    placeholderData: (previous) => previous,
+  });
+}
+
+export function useServiceRequest(id: number | null) {
+  return useQuery({
+    queryKey: keys.serviceRequest(id ?? 0),
+    queryFn: ({ signal }) => serviceRequestsApi.one(id as number, signal),
+    enabled: id != null,
+  });
+}
+
+/**
+ * Лента событий заявки (§9).
+ *
+ * Своим запросом, а не полем карточки: у неё свой отказ, и недоступная хронология не
+ * должна прятать статус, местоположение и описание.
+ */
+export function useServiceRequestHistory(id: number | null) {
+  return useQuery({
+    queryKey: keys.serviceRequestHistory(id ?? 0),
+    queryFn: ({ signal }) => serviceRequestsApi.history(id as number, signal),
+    enabled: id != null,
+  });
+}
+
+/** Общий сброс раздела: после любого действия оба списка и карточка перечитываются. */
+function useServiceRequestCommand<TVars, TData>(mutationFn: (vars: TVars) => Promise<TData>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['service-requests'] });
+    },
+  });
+}
+
+export function useCreateServiceRequest() {
+  return useServiceRequestCommand((input: CreateServiceRequestInput) =>
+    serviceRequestsApi.create(input),
+  );
+}
+
+/** §7: отмена новой заявки. Она не исчезает, а переезжает в «Историю» как «Отменена». */
+export function useCancelServiceRequest() {
+  return useServiceRequestCommand((id: number) => serviceRequestsApi.cancel(id));
+}
+
+/**
+ * §8: возврат выполненной заявки в работу.
+ *
+ * Экран показывает то состояние, которое вернул бэкенд: он же решает, достанется ли
+ * заявка прежнему исполнителю (`IN_PROGRESS`) или уйдёт в очередь службы (`NEW`).
+ */
+export function useReopenServiceRequest() {
+  return useServiceRequestCommand(({ id, comment }: { id: number; comment: string }) =>
+    serviceRequestsApi.reopen(id, comment),
+  );
 }

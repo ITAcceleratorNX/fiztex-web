@@ -1005,7 +1005,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel_1"];
+        post: operations["cancel_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1211,7 +1211,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_8"];
+        get: operations["get_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1275,7 +1275,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_7"];
+        get: operations["history_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1483,7 +1483,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_6"];
+        get: operations["history_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1582,6 +1582,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["archive_5"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/service-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["allRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/service-requests/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["audit"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1867,7 +1899,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_7"];
+        get: operations["get_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2187,7 +2219,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_6"];
+        get: operations["get_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2468,6 +2500,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/staff/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["activateServiceStaff"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/student/activate": {
         parameters: {
             query?: never;
@@ -2571,7 +2619,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["my_2"];
+        get: operations["my_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2619,7 +2667,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_5"];
+        get: operations["history_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2715,7 +2763,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_4"];
+        get: operations["history_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2827,7 +2875,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_3"];
+        get: operations["history_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3035,7 +3083,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["my_1"];
+        get: operations["my_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3245,7 +3293,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel"];
+        post: operations["cancel_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3262,7 +3310,7 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["complete"];
-        delete: operations["reopen"];
+        delete: operations["reopen_1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3291,7 +3339,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_2"];
+        get: operations["history_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3483,7 +3531,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_1"];
+        get: operations["history_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3595,7 +3643,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history"];
+        get: operations["history_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3844,6 +3892,230 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/service-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createWithPhotos"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/service-requests/assigned/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["assignedToMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/service-requests/claimed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createAndClaimWithPhotos"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/service-requests/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["my_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/service-requests/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["queue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/service-requests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_6"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/service-requests/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/service-requests/{id}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["claim"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/service-requests/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["completeWithPhotos"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/service-requests/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/service-requests/{id}/photos/{photoId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["photo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/service-requests/{id}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reopen"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/service-requests/{id}/return-to-queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["returnToQueue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/service-requests/{id}/transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["transfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tests/{testId}/generate": {
         parameters: {
             query?: never;
@@ -3939,7 +4211,7 @@ export interface components {
         AccountLoginResponse: {
             fullName?: string;
             /** @enum {string} */
-            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT";
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
             token?: string;
         };
         AccountRef: {
@@ -3969,7 +4241,7 @@ export interface components {
             phone?: string;
             relation?: string;
             /** @enum {string} */
-            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT";
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
             /** @enum {string} */
             status?: "NOT_ACTIVATED" | "ACTIVE" | "BLOCKED" | "ARCHIVED";
         };
@@ -4825,14 +5097,14 @@ export interface components {
             fullName?: string;
             phone?: string;
             /** @enum {string} */
-            role: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT";
+            role: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
         };
         CreateAccountResponse: {
             /** Format: int64 */
             id?: number;
             issuedCode?: string;
             /** @enum {string} */
-            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT";
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
             /** Format: int64 */
             schoolProfileId?: number;
             /** @enum {string} */
@@ -4995,6 +5267,15 @@ export interface components {
         };
         CreateSchoolSubjectRequest: {
             name?: string;
+        };
+        CreateServiceRequestRequest: {
+            buildingText?: string;
+            description?: string;
+            emergency?: boolean;
+            floorText?: string;
+            locationText?: string;
+            /** @enum {string} */
+            serviceType?: "CLEANING" | "TECHNICIAN";
         };
         CreateStudentRequest: {
             /** Format: int64 */
@@ -5572,6 +5853,8 @@ export interface components {
             id?: number;
             /** Format: date-time */
             lastSubmittedAt?: string;
+            /** Format: int64 */
+            lessonId?: number;
             overdue?: boolean;
             /** @enum {string} */
             status?: "DRAFT" | "PUBLISHED" | "COMPLETED" | "CANCELLED";
@@ -5971,7 +6254,7 @@ export interface components {
             middleName?: string;
             phone?: string;
             /** @enum {string} */
-            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT";
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
             student?: components["schemas"]["StudentPart"];
             teacher?: components["schemas"]["TeacherPart"];
         };
@@ -6414,6 +6697,42 @@ export interface components {
         };
         PageSchoolSubjectView: {
             content?: components["schemas"]["SchoolSubjectView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        PageServiceRequestAuditEntryView: {
+            content?: components["schemas"]["ServiceRequestAuditEntryView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        PageServiceRequestView: {
+            content?: components["schemas"]["ServiceRequestView"][];
             empty?: boolean;
             first?: boolean;
             last?: boolean;
@@ -7134,6 +7453,89 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        ServiceRequestAuditEntryView: {
+            event?: components["schemas"]["ServiceRequestHistoryEntryView"];
+            /** Format: int64 */
+            requestId?: number;
+            requestNumber?: string;
+            /** @enum {string} */
+            requestStatus?: "NEW" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+            /** @enum {string} */
+            serviceType?: "CLEANING" | "TECHNICIAN";
+        };
+        ServiceRequestCommentRequest: {
+            comment?: string;
+        };
+        ServiceRequestHistoryEntryView: {
+            /** @enum {string} */
+            action?: "CREATED" | "CLAIMED" | "RETURNED_TO_QUEUE" | "TRANSFERRED" | "COMPLETED" | "RETURNED_BY_AUTHOR" | "CANCELLED" | "ASSIGNEE_RELEASED";
+            /** Format: int64 */
+            actorId?: number;
+            actorName?: string;
+            /** Format: int64 */
+            assigneeAfterId?: number;
+            assigneeAfterName?: string;
+            /** Format: int64 */
+            assigneeBeforeId?: number;
+            assigneeBeforeName?: string;
+            comment?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+            photos?: components["schemas"]["ServiceRequestPhotoView"][];
+            /** @enum {string} */
+            serviceTypeAfter?: "CLEANING" | "TECHNICIAN";
+            /** @enum {string} */
+            serviceTypeBefore?: "CLEANING" | "TECHNICIAN";
+            /** @enum {string} */
+            statusAfter?: "NEW" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+            /** @enum {string} */
+            statusBefore?: "NEW" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+        };
+        ServiceRequestPhotoView: {
+            contentType?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            fileName?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            sizeBytes?: number;
+        };
+        ServiceRequestView: {
+            /** Format: int64 */
+            assignedToId?: number;
+            assignedToName?: string;
+            /** Format: int64 */
+            authorId?: number;
+            authorName?: string;
+            buildingText?: string;
+            /** Format: date-time */
+            cancelledAt?: string;
+            /** Format: int64 */
+            cancelledById?: number;
+            /** Format: date-time */
+            claimedAt?: string;
+            /** Format: date-time */
+            completedAt?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            description?: string;
+            emergency?: boolean;
+            floorText?: string;
+            /** Format: int64 */
+            id?: number;
+            locationText?: string;
+            photos?: components["schemas"]["ServiceRequestPhotoView"][];
+            requestNumber?: string;
+            /** @enum {string} */
+            serviceType?: "CLEANING" | "TECHNICIAN";
+            /** @enum {string} */
+            status?: "NEW" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+            /** Format: date-time */
+            updatedAt?: string;
+        };
         SetGroupStudentsRequest: {
             studentIds: number[];
         };
@@ -7662,6 +8064,11 @@ export interface components {
             /** Format: double */
             percent?: number;
         };
+        TransferServiceRequestRequest: {
+            comment?: string;
+            /** @enum {string} */
+            targetServiceType?: "CLEANING" | "TECHNICIAN";
+        };
         UnfilledLessonView: {
             className?: string;
             /** Format: date */
@@ -8142,7 +8549,7 @@ export interface operations {
     list_16: {
         parameters: {
             query: {
-                role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT";
+                role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
                 status?: "NOT_ACTIVATED" | "ACTIVE" | "BLOCKED" | "ARCHIVED";
                 query?: string;
                 pageable: components["schemas"]["Pageable"];
@@ -9831,7 +10238,7 @@ export interface operations {
             };
         };
     };
-    cancel_1: {
+    cancel_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -10234,7 +10641,7 @@ export interface operations {
             };
         };
     };
-    get_8: {
+    get_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -10331,7 +10738,7 @@ export interface operations {
             };
         };
     };
-    history_7: {
+    history_8: {
         parameters: {
             query: {
                 entityType: "BELL_TEMPLATE" | "WORKING_DAYS" | "CALENDAR_EVENT" | "TEACHER_AVAILABILITY" | "GROUP_SET" | "SUBGROUP" | "LESSON_GENERATION";
@@ -10683,7 +11090,7 @@ export interface operations {
             };
         };
     };
-    history_6: {
+    history_7: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -10942,6 +11349,63 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    allRequests: {
+        parameters: {
+            query: {
+                status?: "NEW" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+                serviceType?: "CLEANING" | "TECHNICIAN";
+                emergency?: boolean;
+                authorId?: number;
+                assigneeId?: number;
+                createdFrom?: string;
+                createdTo?: string;
+                q?: string;
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageServiceRequestView"];
+                };
+            };
+        };
+    };
+    audit: {
+        parameters: {
+            query: {
+                requestId?: number;
+                actorId?: number;
+                action?: "CREATED" | "CLAIMED" | "RETURNED_TO_QUEUE" | "TRANSFERRED" | "COMPLETED" | "RETURNED_BY_AUTHOR" | "CANCELLED" | "ASSIGNEE_RELEASED";
+                from?: string;
+                to?: string;
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageServiceRequestAuditEntryView"];
+                };
             };
         };
     };
@@ -11488,7 +11952,7 @@ export interface operations {
             };
         };
     };
-    get_7: {
+    get_8: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -12118,7 +12582,7 @@ export interface operations {
             };
         };
     };
-    get_6: {
+    get_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -12579,6 +13043,30 @@ export interface operations {
             };
         };
     };
+    activateServiceStaff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivateByCodeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountLoginResponse"];
+                };
+            };
+        };
+    };
     activateStudent: {
         parameters: {
             query?: never;
@@ -12724,7 +13212,7 @@ export interface operations {
             };
         };
     };
-    my_2: {
+    my_3: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -12798,7 +13286,7 @@ export interface operations {
             };
         };
     };
-    history_5: {
+    history_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -12935,7 +13423,7 @@ export interface operations {
             };
         };
     };
-    history_4: {
+    history_5: {
         parameters: {
             query: {
                 subjectId: number;
@@ -13123,7 +13611,7 @@ export interface operations {
             };
         };
     };
-    history_3: {
+    history_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -13517,6 +14005,7 @@ export interface operations {
         parameters: {
             query: {
                 scope?: "ACTUAL" | "HISTORY";
+                lessonId?: number;
                 pageable: components["schemas"]["Pageable"];
             };
             header?: never;
@@ -13538,10 +14027,11 @@ export interface operations {
             };
         };
     };
-    my_1: {
+    my_2: {
         parameters: {
             query: {
                 scope?: "ACTUAL" | "HISTORY";
+                lessonId?: number;
                 pageable: components["schemas"]["Pageable"];
             };
             header?: never;
@@ -13927,7 +14417,7 @@ export interface operations {
             };
         };
     };
-    cancel: {
+    cancel_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -13971,7 +14461,7 @@ export interface operations {
             };
         };
     };
-    reopen: {
+    reopen_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -14015,7 +14505,7 @@ export interface operations {
             };
         };
     };
-    history_2: {
+    history_3: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -14309,7 +14799,7 @@ export interface operations {
             };
         };
     };
-    history_1: {
+    history_2: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -14499,7 +14989,7 @@ export interface operations {
             };
         };
     };
-    history: {
+    history_1: {
         parameters: {
             query: {
                 childId?: number;
@@ -15023,6 +15513,361 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RoleScheduleView"];
+                };
+            };
+        };
+    };
+    createWithPhotos: {
+        parameters: {
+            query?: {
+                serviceType?: "CLEANING" | "TECHNICIAN";
+                emergency?: boolean;
+                buildingText?: string;
+                floorText?: string;
+                locationText?: string;
+                description?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateServiceRequestRequest"];
+                "multipart/form-data": {
+                    photos?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceRequestView"];
+                };
+            };
+        };
+    };
+    assignedToMe: {
+        parameters: {
+            query: {
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageServiceRequestView"];
+                };
+            };
+        };
+    };
+    createAndClaimWithPhotos: {
+        parameters: {
+            query?: {
+                serviceType?: "CLEANING" | "TECHNICIAN";
+                emergency?: boolean;
+                buildingText?: string;
+                floorText?: string;
+                locationText?: string;
+                description?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateServiceRequestRequest"];
+                "multipart/form-data": {
+                    photos?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceRequestView"];
+                };
+            };
+        };
+    };
+    my_1: {
+        parameters: {
+            query: {
+                status?: "NEW" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageServiceRequestView"];
+                };
+            };
+        };
+    };
+    queue: {
+        parameters: {
+            query: {
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageServiceRequestView"];
+                };
+            };
+        };
+    };
+    get_6: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceRequestView"];
+                };
+            };
+        };
+    };
+    cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceRequestView"];
+                };
+            };
+        };
+    };
+    claim: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceRequestView"];
+                };
+            };
+        };
+    };
+    completeWithPhotos: {
+        parameters: {
+            query?: {
+                comment?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ServiceRequestCommentRequest"];
+                "multipart/form-data": {
+                    photos?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceRequestView"];
+                };
+            };
+        };
+    };
+    history: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceRequestHistoryEntryView"][];
+                };
+            };
+        };
+    };
+    photo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                photoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    reopen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ServiceRequestCommentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceRequestView"];
+                };
+            };
+        };
+    };
+    returnToQueue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ServiceRequestCommentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceRequestView"];
+                };
+            };
+        };
+    };
+    transfer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TransferServiceRequestRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceRequestView"];
                 };
             };
         };
