@@ -1,4 +1,5 @@
 import type { BadgeTone } from '@/components/ui/Badge';
+import { EMPLOYEE_ROLE_LABELS } from '@/lib/employeesModel';
 import type {
   AcademicPeriodStatus,
   AcademicPeriodType,
@@ -25,7 +26,11 @@ export const ROLE_LABELS: Record<AccountRole, string> = {
   TEACHER: 'Учитель',
   STUDENT: 'Ученик',
   PARENT: 'Родитель',
-  SECURITY: 'Охрана',
+  // Служебные роли подписаны один раз — в `employeesModel`: тем же словом их называют
+  // фильтр «Служба» в заявках и карточка сотрудника, и разъехаться подписям нельзя.
+  CLEANING: EMPLOYEE_ROLE_LABELS.CLEANING,
+  TECHNICIAN: EMPLOYEE_ROLE_LABELS.TECHNICIAN,
+  SECURITY: EMPLOYEE_ROLE_LABELS.SECURITY,
 };
 
 export const ACCOUNT_STATUS_LABELS: Record<AccountStatus, string> = {
@@ -42,6 +47,8 @@ export const ROLE_BADGE_TONE: Record<AccountRole, BadgeTone> = {
   TEACHER: 'purple',
   ADMIN: 'gray',
   SUPER_ADMIN: 'gray',
+  CLEANING: 'blue',
+  TECHNICIAN: 'amber',
   SECURITY: 'green',
 };
 
@@ -52,6 +59,8 @@ export const ROLE_AVATAR_COLOR: Record<AccountRole, { bg: string; fg: string }> 
   TEACHER: { bg: '#4f46e5', fg: '#ffffff' },
   ADMIN: { bg: '#374151', fg: '#ffffff' },
   SUPER_ADMIN: { bg: '#374151', fg: '#ffffff' },
+  CLEANING: { bg: '#0284c7', fg: '#ffffff' },
+  TECHNICIAN: { bg: '#b45309', fg: '#ffffff' },
   SECURITY: { bg: '#059669', fg: '#ffffff' },
 };
 
@@ -185,5 +194,7 @@ export const ADMIN_PAGE_TITLES: Record<string, string> = {
   '/lesson-schedule/subgroups': 'Подгруппы классов',
   '/admin/school-subjects': 'Школьные предметы',
   '/admin/access-codes': 'Доступы / коды',
+  // `/admin/employees` здесь намеренно нет: раздел сотрудников рисует собственный
+  // заголовок, как и `/admin/users`, и запись в этой карте продублировала бы его.
   '/lesson-schedule': 'Расписание',
 };

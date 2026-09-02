@@ -2,12 +2,11 @@
 // so the mock layer can be swapped for real API responses later.
 
 /**
- * `SECURITY` — охрана: заводится здесь, а работает в мобильном приложении
- * (сервисные заявки, SERVICE-FE-002). Школьного профиля у роли нет — ни класса,
- * ни предмета, — поэтому в таблице она живёт одной строкой аккаунта.
- *
- * `CLEANING` и `TECHNICIAN` появятся здесь же, когда до них дойдёт SERVICE-FE-003:
- * на бэкенде все три служебные роли заводятся и активируются одинаково.
+ * `CLEANING`, `TECHNICIAN`, `SECURITY` — внутренние сотрудники: заводятся здесь, а
+ * работают в мобильном приложении (сервисные заявки, SERVICE-FE-002/003). Школьного
+ * профиля у этих ролей нет — ни класса, ни предмета, — поэтому в таблице каждая живёт
+ * одной строкой аккаунта. Разделом управляет Super Admin (SERVICE-FE-004 §3), правила
+ * ролей и статусов — в `@/lib/employeesModel`.
  */
 export type AccountRole =
   | 'SUPER_ADMIN'
@@ -15,6 +14,8 @@ export type AccountRole =
   | 'TEACHER'
   | 'STUDENT'
   | 'PARENT'
+  | 'CLEANING'
+  | 'TECHNICIAN'
   | 'SECURITY';
 
 export type AccountStatus = 'NOT_ACTIVATED' | 'ACTIVE' | 'BLOCKED' | 'ARCHIVED';

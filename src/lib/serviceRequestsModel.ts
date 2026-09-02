@@ -5,6 +5,7 @@ import {
   SERVICE_REQUEST_ERRORS,
   type ServiceRequest,
   type ServiceRequestAction,
+  type ServiceRequestHistoryEntry,
   type ServiceRequestStatus,
   type ServiceType,
 } from '@/lib/serviceRequestsApi';
@@ -144,6 +145,73 @@ const ACTION_LABELS: Record<ServiceRequestAction, string> = {
 
 export function historyEventLabel(action: ServiceRequestAction | undefined): string {
   return action ? ACTION_LABELS[action] : 'Событие по заявке';
+}
+
+/**
+ * Все действия ленты — для фильтра глобального журнала (SERVICE-FE-004 §9).
+ *
+ * Порядок берётся из `ACTION_LABELS`, а не задаётся вторым списком: иначе новое действие
+ * бэкенда попадало бы в подписи и не попадало в фильтр.
+ */
+export const HISTORY_ACTIONS = Object.keys(ACTION_LABELS) as ServiceRequestAction[];
+
+/**
+ * «Что именно поменялось» одной строкой на изменение (SERVICE-FE-004 §9).
+ *
+ * Показываем только пары, у которых «до» и «после» действительно разошлись: у создания
+ * предыдущего состояния не было вовсе, и «— → Новая» сообщало бы о переходе, которого не
+ * происходило. Служба меняется только передачей, исполнитель — взятием, возвратом и
+ * снятием; печатать все три пары у каждого события значило бы утопить журнал в прочерках.
+ */
+export function stateChanges(
+  event: ServiceRequestHistoryEntry,
+): Array<{ label: string; from: string; to: string }> {
+  const changes: Array<{ label: string; from: string; to: string }> = [];
+
+  if (event.statusBefore && event.statusAfter && event.statusBefore !== event.statusAfter) {
+    changes.push({
+      label: 'Статус',
+      from: statusChip(event.statusBefore)?.label ?? '—',
+      to: statusChip(event.statusAfter)?.label ?? '—',
+    });
+  }
+  if (
+    event.serviceTypeBefore &&
+    event.serviceTypeAfter &&
+    event.serviceTypeBefore !== event.serviceTypeAfter
+  ) {
+    changes.push({
+      label: 'Служба',
+      from: serviceTypeLabel(event.serviceTypeBefore),
+      to: serviceTypeLabel(event.serviceTypeAfter),
+    });
+  }
+  if (event.assigneeBeforeId !== event.assigneeAfterId) {
+    changes.push({
+      label: 'Исполнитель',
+      // Свободная заявка — это отсутствие исполнителя, а не безымянный исполнитель:
+      // «Не назначен» честнее прочерка, потому что так оно и есть в очереди.
+      from: event.assigneeBeforeName ?? 'Не назначен',
+      to: event.assigneeAfterName ?? 'Не назначен',
+    });
+  }
+
+  return changes;
+}
+
+/**
+ * Чужая ли это заявка для смотрящего (§8).
+ *
+ * Super Admin открывает любую заявку, но распоряжаться может только своей — и признак
+ * считается по данным заявки, а не по роли: у собственной заявки Super Admin права
+ * обычного автора (§2), и «чужой» она от его роли не становится.
+ */
+export function isForeignRequest(
+  request: ServiceRequest | undefined,
+  accountId: number | undefined,
+): boolean {
+  if (!request || accountId == null) return false;
+  return request.authorId !== accountId && request.assignedToId !== accountId;
 }
 
 /**

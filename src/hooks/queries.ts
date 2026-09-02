@@ -28,6 +28,14 @@ import {
   type CreateServiceRequestInput,
   type ServiceSection,
 } from '@/lib/serviceRequestsApi';
+import {
+  ADMIN_PAGE_SIZE,
+  AUDIT_PAGE_SIZE,
+  EMPTY_REQUESTS_FILTER,
+  serviceRequestsAdminApi,
+  type AllRequestsFilter,
+  type AuditFilter,
+} from '@/lib/serviceRequestsAdminApi';
 import { byRecency } from '@/lib/serviceRequestsModel';
 import type {
   ApplicantRequest,
@@ -82,6 +90,15 @@ export const keys = {
   serviceRequests: (section: ServiceSection) => ['service-requests', 'list', section] as const,
   serviceRequest: (id: number) => ['service-requests', id] as const,
   serviceRequestHistory: (id: number) => ['service-requests', id, 'history'] as const,
+  // Разделы Super Admin живут в том же пространстве 'service-requests': отмена своей
+  // заявки меняет и «Все заявки», и журнал, и сбрасывать их порознь значило бы однажды
+  // забыть половину.
+  allServiceRequests: (filter: AllRequestsFilter, page: number) =>
+    ['service-requests', 'admin', 'all', filter, page] as const,
+  serviceAudit: (filter: AuditFilter, page: number) =>
+    ['service-requests', 'admin', 'audit', filter, page] as const,
+  assignedServiceRequests: (accountId: number) =>
+    ['service-requests', 'admin', 'assigned', accountId] as const,
   gradeScale: ['grades', 'scale'] as const,
   // Журнал и итоги живут под общим префиксом 'gradebook': любая правка оценки
   // сбрасывает всё дерево одним вызовом — та же оценка стоит и в журнале, и в
@@ -1209,4 +1226,54 @@ export function useReopenServiceRequest() {
   return useServiceRequestCommand(({ id, comment }: { id: number; comment: string }) =>
     serviceRequestsApi.reopen(id, comment),
   );
+}
+
+// ─── Сервисные заявки: разделы Super Admin (ТЗ SERVICE-FE-004) ────────────────
+
+/**
+ * §5–§7: все заявки школы с фильтрами и поиском.
+ *
+ * Страница и порядок целиком серверные: «последняя активность сверху» — это сортировка
+ * запроса (SERVICE-BE-007 §2), и пересортировать пришедшие двадцать строк значило бы
+ * навести порядок внутри чужого среза.
+ *
+ * `placeholderData` держит прежнюю страницу, пока грузится следующая: иначе таблица
+ * схлопывалась бы в скелет на каждое нажатие в поиске.
+ */
+export function useAllServiceRequests(filter: AllRequestsFilter, page: number) {
+  return useQuery({
+    queryKey: keys.allServiceRequests(filter, page),
+    queryFn: ({ signal }) => serviceRequestsAdminApi.all(filter, page, ADMIN_PAGE_SIZE, signal),
+    placeholderData: (previous) => previous,
+  });
+}
+
+/** §9: глобальный журнал событий. Read-only, поэтому мутаций рядом нет вовсе. */
+export function useServiceAudit(filter: AuditFilter, page: number) {
+  return useQuery({
+    queryKey: keys.serviceAudit(filter, page),
+    queryFn: ({ signal }) => serviceRequestsAdminApi.audit(filter, page, AUDIT_PAGE_SIZE, signal),
+    placeholderData: (previous) => previous,
+  });
+}
+
+/**
+ * Заявки, которые сейчас числятся за сотрудником (§4).
+ *
+ * Только `IN_PROGRESS`: именно их блокировка и несовместимая смена роли возвращают в
+ * очередь, а новые, выполненные и отменённые не трогают. Показывать рядом с кнопкой
+ * заявки, на которые она не влияет, значило бы обещать не то.
+ */
+export function useAssignedServiceRequests(accountId: number | null) {
+  return useQuery({
+    queryKey: keys.assignedServiceRequests(accountId ?? 0),
+    queryFn: ({ signal }) =>
+      serviceRequestsAdminApi.all(
+        { ...EMPTY_REQUESTS_FILTER, assigneeId: accountId, status: 'IN_PROGRESS' },
+        0,
+        20,
+        signal,
+      ),
+    enabled: accountId != null,
+  });
 }

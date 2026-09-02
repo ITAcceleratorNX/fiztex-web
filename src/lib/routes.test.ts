@@ -31,6 +31,22 @@ describe('маршрутизация по роли', () => {
   });
 
   /**
+   * Раздел сотрудников ТЗ SERVICE-FE-004 §3 адресует одному Super Admin. Бэкенд его,
+   * наоборот, открывает и обычному администратору, поэтому граница здесь продуктовая:
+   * без неё пункт меню обещал бы Admin раздел, который ему не предназначен.
+   */
+  it('сотрудники — только Super Admin', () => {
+    expect(isRouteAllowedForRole('/admin/employees', 'SUPER_ADMIN')).toBe(true);
+    expect(isRouteAllowedForRole('/admin/employees', 'ADMIN')).toBe(false);
+    expect(isRouteAllowedForRole('/admin/employees', 'TEACHER')).toBe(false);
+    // Роль неизвестна (профиль из старой сессии) — тоже нет: показать раздел «на всякий
+    // случай» хуже, чем попросить войти заново.
+    expect(isRouteAllowedForRole('/admin/employees', undefined)).toBe(false);
+    // Соседние админские разделы правилом не задеты.
+    expect(isRouteAllowedForRole('/admin/users', 'ADMIN')).toBe(true);
+  });
+
+  /**
    * Регрессия на петлю входа: страница, выбросившая учителя по 401, оседала в
    * `state.from`, и следующий вход возвращал ровно туда же — выйти было нельзя.
    */
@@ -65,6 +81,20 @@ describe('маршрутизация по роли', () => {
     expect(admin).not.toContain('/homework');
     expect(admin).not.toContain('/my-schedule');
     expect(admin).toContain('/dashboard');
+  });
+
+  it('«Сотрудники» появляются в «Пользователях» только у Super Admin', () => {
+    const childrenFor = (role: string) =>
+      navSectionsForRole(role)
+        .flatMap((section) => section.items)
+        .flatMap((item) => item.children ?? [])
+        .map((child) => child.to);
+
+    expect(childrenFor('SUPER_ADMIN')).toContain('/admin/employees');
+    expect(childrenFor('ADMIN')).not.toContain('/admin/employees');
+    // Общий список не мутируем: он один на всё приложение, и подмешанный пункт остался
+    // бы в нём после первого же захода Super Admin.
+    expect(childrenFor('ADMIN')).toEqual(['/students', '/parents', '/teachers']);
   });
 
   it('учителю открыто своё расписание, но не админский конструктор', () => {

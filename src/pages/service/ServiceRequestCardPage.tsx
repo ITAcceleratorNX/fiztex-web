@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Brush, ChevronRight, Trash2, Undo2, Wrench } from 'lucide-react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Brush, ChevronRight, Eye, Trash2, Undo2, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
@@ -13,7 +13,6 @@ import {
   useServiceRequestHistory,
 } from '@/hooks/queries';
 import { cx, formatDateTime } from '@/lib/format';
-import { ROUTES } from '@/lib/routes';
 import type {
   ServiceRequest,
   ServiceRequestHistoryEntry,
@@ -24,11 +23,13 @@ import {
   canCancel,
   canReturnCompleted,
   historyEventLabel,
+  isForeignRequest,
   locationLine,
   returnWindowLeft,
   serviceTypeLabel,
   viewerContext,
 } from '@/lib/serviceRequestsModel';
+import { serviceListPath, serviceOriginFrom } from '@/lib/serviceSections';
 import { ReopenServiceRequestModal } from './ReopenServiceRequestModal';
 import { ServicePhotoThumb, ServicePhotoViewer } from './ServicePhoto';
 import { EmergencyChip, ServiceStatusChip, ViewerContextChip } from './ServiceStatusChip';
@@ -50,6 +51,12 @@ import { EmergencyChip, ServiceStatusChip, ViewerContextChip } from './ServiceSt
  * вложений через ленту и самих свободных комментариев — лента только хронология;
  * исполнительских действий («Передать другой службе», «Вернуть в очередь», «Выполнить»),
  * нарисованных на макете заявки в работе, — их у Admin и Teacher нет.
+ *
+ * Та же страница служит Super Admin (SERVICE-FE-004 §8): он открывает любую заявку
+ * школы, и чужая оказывается read-only без единой дополнительной проверки — «Удалить» и
+ * «Вернуть в работу» и так спрашивают, автор ли смотрящий. Ручной смены статуса, службы
+ * и исполнителя чужой заявки здесь нет ровно потому же, почему нет исполнительских
+ * действий: таких эндпоинтов не существует (SERVICE-FE-004 §10).
  */
 export function ServiceRequestCardPage() {
   const { requestId } = useParams<{ requestId: string }>();
@@ -57,6 +64,10 @@ export function ServiceRequestCardPage() {
   const valid = Number.isFinite(id);
   const navigate = useNavigate();
   const toast = useToast();
+  const [params] = useSearchParams();
+  // Откуда пришли: у Super Admin карточка открывается ещё из «Всех заявок» и журнала,
+  // и возвращать его оттуда в «Мои заявки» значило бы терять место в списке.
+  const backTo = serviceListPath(serviceOriginFrom(params.get('from')));
 
   const accountId = useMyAccountId();
   const cardQuery = useServiceRequest(valid ? id : null);
@@ -83,6 +94,7 @@ export function ServiceRequestCardPage() {
   const deletable = canCancel(request, accountId);
   const returnable = canReturnCompleted(request, accountId);
   const windowLeft = returnable ? returnWindowLeft(request) : null;
+  const foreign = isForeignRequest(request, accountId);
 
   // §6: «Фото» — снимки создания, а не все снимки заявки. Фотографии результата приложил
   // исполнитель, и их место в ленте под событием «Заявка выполнена», иначе они выглядели
@@ -99,7 +111,7 @@ export function ServiceRequestCardPage() {
       // §7: заявка исчезает из активных и появляется в «Истории». Возврат в список, а не
       // показ той же карточки с новым статусом: человек нажал «удалить», и остаться на
       // ней значило бы ответить не на то, что он просил.
-      navigate(ROUTES.serviceRequests);
+      navigate(backTo);
     } catch (error) {
       toast.error(actionErrorText(error));
     }
@@ -108,7 +120,7 @@ export function ServiceRequestCardPage() {
   return (
     <div className="space-y-5">
       <nav aria-label="Хлебные крошки" className="flex items-center gap-1.5 text-13 text-subtle">
-        <Link to={ROUTES.serviceRequests} className="transition hover:text-ink">
+        <Link to={backTo} className="transition hover:text-ink">
           Сервисные заявки
         </Link>
         <ChevronRight className="size-3.5" aria-hidden />
@@ -125,6 +137,15 @@ export function ServiceRequestCardPage() {
           <ViewerContextChip label={viewerContext(request, accountId)} />
         </div>
       </header>
+
+      {/* §8: чужая заявка доступна только для чтения. Говорим об этом прямо — иначе
+          отсутствие действий читается как «ещё не загрузилось». */}
+      {foreign && (
+        <p className="flex items-center gap-2 rounded-xl bg-info-bg px-4 py-3 text-13 text-link">
+          <Eye className="size-4 shrink-0" aria-hidden />
+          Чужая заявка — только просмотр. Менять статус, службу и исполнителя нельзя.
+        </p>
+      )}
 
       <section className="card space-y-5 p-6">
         <div>

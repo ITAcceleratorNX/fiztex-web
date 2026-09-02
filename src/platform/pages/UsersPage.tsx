@@ -13,7 +13,7 @@ import {
 } from '../labels';
 import { CreateAdminModal } from '../modals/CreateAdminModal';
 import { CreateParentModal } from '../modals/CreateParentModal';
-import { CreateSecurityModal } from '../modals/CreateSecurityModal';
+import { CreateEmployeeModal } from '../modals/CreateEmployeeModal';
 import { CreateStudentModal } from '../modals/CreateStudentModal';
 import { CreateTeacherModal } from '../modals/CreateTeacherModal';
 import { UserDetailModal } from '../modals/UserDetailModal';
@@ -65,6 +65,8 @@ const ROLE_BADGE: Record<AccountRole, string> = {
   TEACHER: 'bg-[#f5f3ff] text-[#4f46e5]',
   ADMIN: 'bg-[#f1f5f9] text-[#374151]',
   SUPER_ADMIN: 'bg-[#f1f5f9] text-[#374151]',
+  CLEANING: 'bg-[#f0f9ff] text-[#0284c7]',
+  TECHNICIAN: 'bg-[#fffbeb] text-[#b45309]',
   SECURITY: 'bg-[#ecfdf5] text-[#059669]',
 };
 
@@ -483,8 +485,11 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
         onClose={() => setCreateRole(null)}
         onSaved={handleCreated}
       />
-      <CreateSecurityModal
+      {/* Охрана заводится и отсюда, и из раздела «Сотрудники» — одной и той же модалкой
+          с заданной ролью (SERVICE-FE-004 §3). */}
+      <CreateEmployeeModal
         open={createRole === 'SECURITY'}
+        role="SECURITY"
         onClose={() => setCreateRole(null)}
         onSaved={handleCreated}
       />

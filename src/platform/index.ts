@@ -1,4 +1,5 @@
 export { UsersPage } from './pages/UsersPage';
+export { EmployeesPage } from './pages/EmployeesPage';
 export { ClassesPage } from './pages/ClassesPage';
 export { ClassDetailPage } from './pages/ClassDetailPage';
 export { AcademicYearPage } from './pages/AcademicYearPage';

@@ -183,3 +183,104 @@ export async function unblockUser(id: string): Promise<PlatformUser> {
 export async function archiveUser(id: string): Promise<void> {
   await request<void>(`/admin/accounts/${id}/archive`, { method: 'POST' });
 }
+
+// ─── Внутренние сотрудники (ТЗ SERVICE-FE-004 §3, §4) ─────────────────────────
+
+/**
+ * Аккаунты нескольких ролей одним списком.
+ *
+ * `/admin/accounts` принимает одну роль за раз, поэтому набор ролей разворачивается в
+ * параллельные запросы. Для служебных ролей это дёшево — их в школе десятки, а не
+ * тысячи, — и честнее, чем выбрать всех подряд и отсеять лишних на клиенте: во втором
+ * случае страница из двадцати строк могла бы целиком состоять из учеников.
+ *
+ * Отсюда и `size` по умолчанию: раздел сотрудников не листается, он ищется и
+ * фильтруется, а склеенную из нескольких выдач страницу пришлось бы резать заново.
+ */
+export async function listAccountsByRoles(
+  roles: readonly AccountRole[],
+  params: { query?: string; status?: AccountStatus; size?: number } = {},
+): Promise<PlatformUser[]> {
+  const size = params.size ?? 200;
+  const pages = await Promise.all(
+    roles.map((role) =>
+      request<Page<AccountDto>>(
+        `/admin/accounts${pageQuery({
+          role,
+          status: params.status,
+          query: params.query?.trim() || undefined,
+          page: 0,
+          size,
+        })}`,
+      ),
+    ),
+  );
+  return pages.flatMap((page) => page.content.map(mapUser));
+}
+
+/**
+ * Аккаунт с этим телефоном, если он есть (§4).
+ *
+ * Нужен до создания, а не после отказа: бэкенд отвечает на занятый телефон голым 409
+ * без кода (`FiztexConflictException("Phone is already in use")`), и разбирать текст
+ * сообщения значило бы привязать сценарий возврата к формулировке. Поиск же отвечает
+ * тем, что нужно на самом деле, — самим аккаунтом: его ролью и статусом.
+ *
+ * Поиск по `query` — это `LIKE '%…%'` по ФИО, телефону и почте, поэтому совпадение
+ * проверяется ещё раз точным сравнением: подстрока телефона может принадлежать другому
+ * номеру.
+ */
+export async function findAccountByPhone(normalizedPhone: string): Promise<PlatformUser | null> {
+  if (!normalizedPhone) return null;
+  const page = await request<Page<AccountDto>>(
+    `/admin/accounts${pageQuery({ query: normalizedPhone, page: 0, size: 20 })}`,
+  );
+  return page.content.map(mapUser).find((user) => user.phone === normalizedPhone) ?? null;
+}
+
+/**
+ * Блокировка и разблокировка сотрудника (§3).
+ *
+ * Те же `block` и `unblock`, что у общей таблицы аккаунтов, — и называются они в панели
+ * тем же словом: в `block` живёт возврат заявок в очередь (SERVICE-BE-007 §9). Тонкая
+ * обёртка вместо `blockUser` — потому что та ради возврата обновлённой строки
+ * перечитывает двести аккаунтов, а раздел сотрудников и так перезапрашивает свой список
+ * после действия.
+ */
+export async function setAccountActive(accountId: string, active: boolean): Promise<void> {
+  await request<void>(`/admin/accounts/${accountId}/${active ? 'unblock' : 'block'}`, {
+    method: 'POST',
+  });
+}
+
+/**
+ * Смена роли сотрудника (SERVICE-BE-008 §1).
+ *
+ * Возвращает карточку аккаунта из ответа, а не собирает её из того, что послали:
+ * SERVICE-FE-004 §4 требует показывать новое состояние по ответу бэкенда — он же решает,
+ * что стало с заявками сотрудника.
+ */
+export async function changeEmployeeRole(
+  accountId: string,
+  role: AccountRole,
+): Promise<PlatformUser> {
+  const updated = await request<AccountDto>(`/admin/accounts/${accountId}/role`, {
+    method: 'PATCH',
+    body: { role },
+  });
+  return mapUser(updated);
+}
+
+/**
+ * Новый код доступа сотрудника (SERVICE-BE-008 §2).
+ *
+ * Код показывается один раз и нигде не хранится: бэкенд отдаёт открытым текстом только
+ * здесь, дальше в базе лежит его хеш.
+ */
+export async function resetEmployeeAccess(accountId: string): Promise<string> {
+  const issued = await request<{ issuedCode: string }>(
+    `/admin/accounts/${accountId}/reset-access`,
+    { method: 'POST' },
+  );
+  return issued.issuedCode;
+}

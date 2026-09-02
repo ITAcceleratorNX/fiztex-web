@@ -38,7 +38,20 @@ export const ROUTES = {
   /** Сервисные заявки автора — Admin и Teacher (SERVICE-FE-001). */
   serviceRequests: '/service',
   serviceRequest: (id: number | string) => `/service/${id}`,
+  /** Внутренние сотрудники — раздел Super Admin (SERVICE-FE-004 §3). */
+  employees: '/admin/employees',
 } as const;
+
+/**
+ * Разделы, которые ТЗ отдаёт одному Super Admin.
+ *
+ * Это маршрутизация, а не защита: настоящая граница на бэкенде — глобальные списки
+ * заявок закрыты правом `SERVICE_REQUEST_GLOBAL_VIEW`, которое есть только у него
+ * (SERVICE-BE-007 §1). Раздел сотрудников бэкенд, наоборот, открывает и обычному
+ * администратору — здесь он спрятан потому, что §3 адресует его Super Admin, и это
+ * решение продуктовое.
+ */
+const SUPER_ADMIN_ROUTE_PREFIXES = [ROUTES.employees];
 
 /** Куда возвращать после входа, если пользователь не шёл на конкретную страницу. */
 export const DEFAULT_AUTHENTICATED_ROUTE = ROUTES.dashboard;
@@ -90,6 +103,9 @@ export function loginRedirectTarget(from: unknown, role: string | undefined): st
  * здесь — только маршрутизация.
  */
 export function isRouteAllowedForRole(path: string, role: string | undefined): boolean {
+  if (SUPER_ADMIN_ROUTE_PREFIXES.some((prefix) => path.startsWith(prefix))) {
+    return role === 'SUPER_ADMIN';
+  }
   if (role !== 'TEACHER') return true;
   return TEACHER_ROUTE_PREFIXES.some((prefix) => path.startsWith(prefix));
 }

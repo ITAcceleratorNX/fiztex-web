@@ -30,6 +30,7 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import {
   UsersPage,
+  EmployeesPage,
   ClassesPage,
   ClassDetailPage,
   AcademicYearPage,
@@ -115,6 +116,9 @@ export function App() {
         {/* Platform Core Lite */}
         <Route path="/admin" element={<Navigate to={ROUTES.dashboard} replace />} />
         <Route path="/admin/users" element={<UsersPage />} />
+        {/* Внутренние сотрудники — раздел Super Admin (SERVICE-FE-004 §3).
+            Роль проверяет `Protected` через `isRouteAllowedForRole`. */}
+        <Route path={ROUTES.employees} element={<EmployeesPage />} />
         <Route path="/admin/classes" element={<ClassesPage />} />
         <Route path="/admin/classes/:classId" element={<ClassDetailPage />} />
         <Route path="/admin/academic-year" element={<AcademicYearPage />} />

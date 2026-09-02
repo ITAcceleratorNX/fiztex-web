@@ -8,6 +8,11 @@ export {
   blockUser,
   unblockUser,
   archiveUser,
+  listAccountsByRoles,
+  findAccountByPhone,
+  setAccountActive,
+  changeEmployeeRole,
+  resetEmployeeAccess,
 } from './users';
 export type { UsersPageResult } from './users';
 export { listClasses, getClass, createClass, updateClass, archiveClass } from './classes';

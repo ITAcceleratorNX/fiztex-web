@@ -24,6 +24,17 @@ export function isPhoneComplete(masked: string): boolean {
   return phoneDigits(masked).length === 11;
 }
 
+/**
+ * Телефон в том виде, в каком его хранит бэкенд (`PhoneNormalizer`): «+» и цифры.
+ *
+ * Нужен не форме, а поиску: аккаунт ищется точным совпадением с сохранённым номером
+ * (SERVICE-FE-004 §4), а маска «+7 (701) 987-65-43» в базе не встречается никогда.
+ */
+export function normalizedPhone(masked: string): string {
+  const digits = phoneDigits(masked);
+  return digits ? `+${digits}` : '';
+}
+
 export function toastCreatedMessage(roleLabel: string, issuedCode?: string | null): string {
   if (issuedCode) {
     return `${roleLabel} создан. Код активации: ${issuedCode}`;

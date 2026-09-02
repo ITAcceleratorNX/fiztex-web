@@ -18,6 +18,7 @@ import {
   Sparkles,
   Star,
   Briefcase,
+  Wrench,
   type LucideIcon,
 } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
@@ -116,6 +117,29 @@ export const TEACHER_NAV_SECTIONS: NavSection[] = [
   },
 ];
 
+/**
+ * Пункт «Сотрудники» внутри «Пользователей» — только Super Admin (SERVICE-FE-004 §3).
+ *
+ * Ветка собирается здесь, а не объявляется в `NAV_SECTIONS`, потому что зависит от роли:
+ * держать её в общем списке и прятать при отрисовке значило бы разложить одно правило по
+ * двум местам — меню и `isRouteAllowedForRole`.
+ */
+const EMPLOYEES_NAV_ITEM: NavItem = { to: ROUTES.employees, label: 'Сотрудники', icon: Wrench };
+
 export function navSectionsForRole(role: string | undefined): NavSection[] {
-  return role === 'TEACHER' ? TEACHER_NAV_SECTIONS : NAV_SECTIONS;
+  if (role === 'TEACHER') return TEACHER_NAV_SECTIONS;
+  if (role !== 'SUPER_ADMIN') return NAV_SECTIONS;
+
+  return NAV_SECTIONS.map((section) =>
+    section.id === 'platform'
+      ? {
+          ...section,
+          items: section.items.map((item) =>
+            item.to === '/admin/users'
+              ? { ...item, children: [...(item.children ?? []), EMPLOYEES_NAV_ITEM] }
+              : item,
+          ),
+        }
+      : section,
+  );
 }
