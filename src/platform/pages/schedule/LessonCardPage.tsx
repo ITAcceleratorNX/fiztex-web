@@ -21,7 +21,7 @@ import { TextArea, TextInput } from '@/components/ui/Field';
 import { ChangedChip } from '@/components/ui/ChangedChip';
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard';
 import { LessonStatusChip } from '@/components/ui/LessonStatusChip';
-import { ModuleTile, type ModuleTileTone } from '@/components/ui/ModuleTile';
+import { ModuleTile } from '@/components/ui/ModuleTile';
 import { NoticeBar } from '@/components/ui/NoticeBar';
 import {
   useAttendanceSheet,
@@ -403,15 +403,15 @@ function TeachingField({
 }
 
 /**
- * Материалы — единственный оставшийся незаделанный модуль урока: плитка стоит на
- * своём месте из макета, но не притворяется рабочим переходом.
- *
- * ДЗ и оценки из этого списка ушли: модули реализованы (FE-Teacher-002,
- * GRADES-FE-001), и плитки ведут в них.
+ * Подпись плитки материалов. Счётчик приходит с карточкой урока
+ * (`LessonView.materialCount`) и уже посчитан по правам смотрящего: ученик и родитель
+ * видят только то, что учитель открыл классу. Отдельного запроса за списком плитке
+ * не нужно — у большинства уроков материалов нет вовсе.
  */
-const PENDING_MODULES: Array<{ title: string; icon: React.ReactNode; tone: ModuleTileTone }> = [
-  { title: 'Материалы', icon: <Paperclip className="size-[18px]" />, tone: 'violet' },
-];
+function materialsTileValue(count: number | undefined): string {
+  if (!count) return 'Ничего не приложено';
+  return `${count} ${pluralRu(count, ['материал', 'материала', 'материалов'])}`;
+}
 
 /**
  * Подпись плитки оценок: скольким ученикам уже что-то поставили.
@@ -581,16 +581,13 @@ function LessonModules({ lesson }: { lesson: Lesson }) {
         }
         onClick={() => navigate(`/lesson-schedule/lessons/${lesson.id}/homework`)}
       />
-      {PENDING_MODULES.map((module) => (
-        <ModuleTile
-          key={module.title}
-          icon={module.icon}
-          tone={module.tone}
-          title={module.title}
-          value="Модуль в разработке"
-          disabled
-        />
-      ))}
+      <ModuleTile
+        icon={<Paperclip className="size-[18px]" />}
+        tone="violet"
+        title="Материалы"
+        value={materialsTileValue(lesson.materialCount)}
+        onClick={() => navigate(`/lesson-schedule/lessons/${lesson.id}/materials`)}
+      />
       <ModuleTile
         icon={<Award className="size-[18px]" />}
         tone="blue"

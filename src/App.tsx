@@ -49,6 +49,7 @@ import {
   LessonCardPage,
   LessonAttendancePage,
   LessonGradesPage,
+  LessonMaterialsPage,
 } from '@/platform';
 import type { ReactNode } from 'react';
 
@@ -167,6 +168,10 @@ export function App() {
           element={<LessonGradesPage />}
         />
         {/* ДЗ урока — вход в создание из урока (FE-Teacher-002 §2.1). */}
+        <Route
+          path="/lesson-schedule/lessons/:lessonId/materials"
+          element={<LessonMaterialsPage />}
+        />
         <Route
           path="/lesson-schedule/lessons/:lessonId/homework"
           element={<LessonHomeworkPage />}

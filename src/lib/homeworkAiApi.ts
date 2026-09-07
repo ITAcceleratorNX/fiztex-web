@@ -1,4 +1,4 @@
-import { request, requestMultipart } from '@/lib/api';
+import { request, requestBlob, requestMultipart } from '@/lib/api';
 import type { Schema } from '@/lib/apiSchemas';
 
 /**
@@ -56,9 +56,13 @@ export const lessonMaterialsApi = {
   remove: (lessonId: number, materialId: number) =>
     request<void>(`/lessons/${lessonId}/materials/${materialId}`, { method: 'DELETE' }),
 
-  /** Адрес файла для скачивания; права проверяет бэкенд, знание адреса доступа не даёт. */
-  contentUrl: (lessonId: number, materialId: number) =>
-    `/api/lessons/${lessonId}/materials/${materialId}/content`,
+  /**
+   * Содержимое файла. Отдаётся под авторизацией, поэтому обычной ссылкой его не открыть —
+   * в теге нет заголовка. Забираем запросом и показываем как object URL, ровно как
+   * вложения работ ({@code AttachmentChip}).
+   */
+  content: (lessonId: number, materialId: number, signal?: AbortSignal) =>
+    requestBlob(`/lessons/${lessonId}/materials/${materialId}/content`, signal),
 };
 
 export const homeworkAiApi = {
