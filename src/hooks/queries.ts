@@ -9,6 +9,15 @@ import {
 } from '@/lib/lessonsApi';
 import { homeworkApi, type Homework } from '@/lib/homeworkApi';
 import {
+  homeworkAiApi,
+  homeworkAnswersApi,
+  homeworkQuestionsApi,
+  lessonMaterialsApi,
+  type SaveQuestionsRequest,
+  type SetAnswerScoresRequest,
+  type StartGenerationRequest,
+} from '@/lib/homeworkAiApi';
+import {
   attendanceApi,
   type AttendanceEntryChange,
   type AttendanceSheet,
@@ -83,6 +92,15 @@ export const keys = {
   // для всех экранов и не зависит ни от урока, ни от роли.
   lessonGradeSheet: (lessonId: number) => ['lessons', lessonId, 'grades', 'sheet'] as const,
   homeworkGrades: (homeworkId: number) => ['homework', homeworkId, 'grades'] as const,
+  homeworkQuestions: (homeworkId: number) => ['homework', homeworkId, 'questions'] as const,
+  homeworkMyQuestions: (homeworkId: number) => ['homework', homeworkId, 'my-questions'] as const,
+  homeworkAnswers: (homeworkId: number, studentProfileId: number) =>
+    ['homework', homeworkId, 'answers', studentProfileId] as const,
+  homeworkAiJob: (jobId: number) => ['homework', 'ai-generations', jobId] as const,
+  homeworkAiJobs: (homeworkId: number) => ['homework', homeworkId, 'ai-generations'] as const,
+  homeworkAiQuota: ['homework', 'ai-quota'] as const,
+  lessonMaterials: (lessonId: number, childId?: number) =>
+    ['lessons', lessonId, 'materials', childId ?? 'self'] as const,
   // Одно пространство на весь раздел: создание, отмена и возврат меняют оба списка
   // сразу — заявка уходит из «Моих» в «Историю», — и сбрасывать их порознь значило бы
   // однажды забыть половину.
@@ -1275,5 +1293,210 @@ export function useAssignedServiceRequests(accountId: number | null) {
         signal,
       ),
     enabled: accountId != null,
+  });
+}
+
+// ---- Материалы урока и AI-задание (HOMEWORK-BE-006) ----
+
+export function useLessonMaterials(lessonId: number | null, childId?: number) {
+  return useQuery({
+    queryKey: keys.lessonMaterials(lessonId ?? 0, childId),
+    queryFn: ({ signal }) => lessonMaterialsApi.list(lessonId as number, childId, signal),
+    enabled: lessonId != null,
+  });
+}
+
+/**
+ * Общий хвост правок материала: список и счётчик в карточке урока обязаны сходиться.
+ * Забыть про второй ключ — значит показать «Материалы · 3» над списком из двух.
+ */
+function useLessonMaterialCommand<TVars>(
+  lessonId: number,
+  mutationFn: (vars: TVars) => Promise<unknown>,
+) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['lessons', lessonId, 'materials'] });
+      void qc.invalidateQueries({ queryKey: keys.lesson(lessonId) });
+    },
+  });
+}
+
+export function useAddLessonMaterialFile(lessonId: number) {
+  return useLessonMaterialCommand(lessonId, (file: File) =>
+    lessonMaterialsApi.addFile(lessonId, file),
+  );
+}
+
+export function useAddLessonMaterialLink(lessonId: number) {
+  return useLessonMaterialCommand(lessonId, (url: string) =>
+    lessonMaterialsApi.addLink(lessonId, url),
+  );
+}
+
+export function useSetLessonMaterialVisibility(lessonId: number) {
+  return useLessonMaterialCommand(
+    lessonId,
+    (vars: { materialId: number; visibleToStudents: boolean }) =>
+      lessonMaterialsApi.setVisibility(lessonId, vars.materialId, vars.visibleToStudents),
+  );
+}
+
+export function useDeleteLessonMaterial(lessonId: number) {
+  return useLessonMaterialCommand(lessonId, (materialId: number) =>
+    lessonMaterialsApi.remove(lessonId, materialId),
+  );
+}
+
+export function useHomeworkAiQuota(enabled = true) {
+  return useQuery({
+    queryKey: keys.homeworkAiQuota,
+    queryFn: ({ signal }) => homeworkAiApi.quota(signal),
+    enabled,
+    // Квота меняется только нашими же генерациями, и каждая из них её инвалидирует.
+    staleTime: 60_000,
+  });
+}
+
+/**
+ * Опрос задачи генерации.
+ *
+ * <p>Интервал 1.5 с и остановка на терминальном статусе — как у {@link useGenerationJob}
+ * вступительных тестов. Опрос, а не push: в React Native нет нативного EventSource, и
+ * держать два разных механизма доставки одного и того же результата незачем.
+ */
+export function useHomeworkAiJob(jobId: number | null) {
+  return useQuery({
+    queryKey: keys.homeworkAiJob(jobId ?? 0),
+    queryFn: ({ signal }) => homeworkAiApi.job(jobId as number, signal),
+    enabled: jobId != null,
+    refetchInterval: (query) => {
+      const job = query.state.data;
+      if (!job) return 1500;
+      return job.status === 'PENDING' || job.status === 'RUNNING' ? 1500 : false;
+    },
+  });
+}
+
+export function useHomeworkAiJobs(homeworkId: number | null) {
+  return useQuery({
+    queryKey: keys.homeworkAiJobs(homeworkId ?? 0),
+    queryFn: ({ signal }) => homeworkAiApi.jobs(homeworkId as number, signal),
+    enabled: homeworkId != null,
+  });
+}
+
+export function useStartHomeworkAiGeneration(homeworkId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { key: string; input: StartGenerationRequest }) =>
+      homeworkAiApi.startGeneration(homeworkId, vars.key, vars.input),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.homeworkAiJobs(homeworkId) });
+      void qc.invalidateQueries({ queryKey: keys.homeworkAiQuota });
+    },
+  });
+}
+
+/** Применение и возврат меняют содержимое задания — сбрасываем и его, и вопросы. */
+function useHomeworkAiResultCommand(mutationFn: (jobId: number) => Promise<unknown>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => {
+      // Раздел целиком: карточка задания лежит под ['homework', 'card', id], список —
+      // под своим ключом, а применение результата меняет и описание, и вопросы.
+      // Так и задумано в этом файле — «любое действие с заданием сбрасывает раздел».
+      void qc.invalidateQueries({ queryKey: ['homework'] });
+    },
+  });
+}
+
+export function useApplyHomeworkAiResult(homeworkId: number) {
+  return useHomeworkAiResultCommand((jobId: number) => homeworkAiApi.apply(homeworkId, jobId));
+}
+
+export function useRevertHomeworkAiResult(homeworkId: number) {
+  return useHomeworkAiResultCommand((jobId: number) => homeworkAiApi.revert(homeworkId, jobId));
+}
+
+export function useSuggestGrades(homeworkId: number, studentProfileId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (key: string) =>
+      homeworkAiApi.suggestGrades(homeworkId, studentProfileId, key),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.homeworkAiQuota });
+    },
+  });
+}
+
+// ---- Вопросы задания ----
+
+export function useHomeworkQuestions(homeworkId: number | null) {
+  return useQuery({
+    queryKey: keys.homeworkQuestions(homeworkId ?? 0),
+    queryFn: ({ signal }) => homeworkQuestionsApi.list(homeworkId as number, signal),
+    enabled: homeworkId != null,
+  });
+}
+
+export function useSaveHomeworkQuestions(homeworkId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: SaveQuestionsRequest) => homeworkQuestionsApi.save(homeworkId, input),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.homeworkQuestions(homeworkId) });
+      // questionCount в карточке задания меняется вместе с составом вопросов, а её
+      // ключ живёт в самой странице — сбрасываем раздел, как принято в этом файле.
+      void qc.invalidateQueries({ queryKey: ['homework'] });
+    },
+  });
+}
+
+export function useRegenerateQuestion(homeworkId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { questionId: number; key: string; teacherPrompt?: string }) =>
+      homeworkQuestionsApi.regenerate(
+        homeworkId, vars.questionId, vars.key, vars.teacherPrompt,
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.homeworkAiQuota });
+    },
+  });
+}
+
+// ---- Ответы на тест ----
+
+export function useMyHomeworkQuestions(homeworkId: number | null) {
+  return useQuery({
+    queryKey: keys.homeworkMyQuestions(homeworkId ?? 0),
+    queryFn: ({ signal }) => homeworkAnswersApi.myQuestions(homeworkId as number, signal),
+    enabled: homeworkId != null,
+  });
+}
+
+export function useStudentAnswers(homeworkId: number | null, studentProfileId: number | null) {
+  return useQuery({
+    queryKey: keys.homeworkAnswers(homeworkId ?? 0, studentProfileId ?? 0),
+    queryFn: ({ signal }) =>
+      homeworkAnswersApi.ofStudent(homeworkId as number, studentProfileId as number, signal),
+    enabled: homeworkId != null && studentProfileId != null,
+  });
+}
+
+export function useSetAnswerScores(homeworkId: number, studentProfileId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: SetAnswerScoresRequest) =>
+      homeworkAnswersApi.setScores(homeworkId, studentProfileId, input),
+    onSuccess: () => {
+      void qc.invalidateQueries({
+        queryKey: keys.homeworkAnswers(homeworkId, studentProfileId),
+      });
+    },
   });
 }

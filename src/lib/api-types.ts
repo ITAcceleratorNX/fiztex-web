@@ -59,7 +59,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_17"];
+        get: operations["list_19"];
         put?: never;
         post: operations["create_18"];
         delete?: never;
@@ -139,7 +139,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_16"];
+        get: operations["list_18"];
         put?: never;
         post: operations["create_17"];
         delete?: never;
@@ -251,7 +251,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_15"];
+        get: operations["list_17"];
         put?: never;
         post: operations["create_16"];
         delete?: never;
@@ -427,7 +427,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_14"];
+        get: operations["list_16"];
         put?: never;
         post: operations["create_15"];
         delete?: never;
@@ -491,7 +491,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_13"];
+        get: operations["list_15"];
         put?: never;
         post: operations["create_14"];
         delete?: never;
@@ -651,7 +651,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_12"];
+        get: operations["list_14"];
         put?: never;
         post: operations["create_13"];
         delete?: never;
@@ -670,7 +670,7 @@ export interface paths {
         get: operations["getById_7"];
         put?: never;
         post?: never;
-        delete: operations["delete_4"];
+        delete: operations["delete_5"];
         options?: never;
         head?: never;
         patch: operations["update_16"];
@@ -715,7 +715,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_11"];
+        get: operations["list_13"];
         put?: never;
         post: operations["create_12"];
         delete?: never;
@@ -795,7 +795,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_10"];
+        get: operations["list_12"];
         put?: never;
         post: operations["create_11"];
         delete?: never;
@@ -1083,7 +1083,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_9"];
+        get: operations["list_11"];
         put?: never;
         post: operations["create_10"];
         delete?: never;
@@ -1243,7 +1243,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_9"];
+        get: operations["get_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1339,7 +1339,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_8"];
+        get: operations["list_10"];
         put?: never;
         post: operations["create_9"];
         delete?: never;
@@ -1579,7 +1579,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_7"];
+        get: operations["list_9"];
         put?: never;
         post: operations["create_8"];
         delete?: never;
@@ -1659,7 +1659,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_6"];
+        get: operations["list_8"];
         put?: never;
         post: operations["create_7"];
         delete?: never;
@@ -1771,7 +1771,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_5"];
+        get: operations["list_7"];
         put?: never;
         post: operations["create_6"];
         delete?: never;
@@ -1867,7 +1867,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_4"];
+        get: operations["list_6"];
         put?: never;
         post: operations["create_5"];
         delete?: never;
@@ -1915,7 +1915,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_20"];
+        get: operations["list_23"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1931,7 +1931,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_8"];
+        get: operations["get_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1979,7 +1979,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_3"];
+        get: operations["list_5"];
         put?: never;
         post: operations["create_4"];
         delete?: never;
@@ -2107,7 +2107,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_2"];
+        get: operations["list_4"];
         put?: never;
         post: operations["create_3"];
         delete?: never;
@@ -2219,7 +2219,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_19"];
+        get: operations["list_22"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2251,7 +2251,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_7"];
+        get: operations["get_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2301,7 +2301,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["start"];
+        post: operations["start_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2910,7 +2910,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["delete_3"];
+        delete: operations["delete_4"];
         options?: never;
         head?: never;
         patch: operations["update_6"];
@@ -2939,7 +2939,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_1"];
+        get: operations["list_2"];
         put?: never;
         post: operations["create"];
         delete?: never;
@@ -3108,6 +3108,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/homework/ai-generations/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_7"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/ai-quota": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["quota"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/homework/children/{childId}": {
         parameters: {
             query?: never;
@@ -3134,6 +3166,54 @@ export interface paths {
         get: operations["my_2"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/ai-generations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_3"];
+        put?: never;
+        post: operations["start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/ai-generations/{jobId}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["apply"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/ai-generations/{jobId}/revert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["revert"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3204,6 +3284,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/homework/{homeworkId}/my-submission/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["submitAnswers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/homework/{homeworkId}/my-submission/attachments/{attachmentId}/content": {
         parameters: {
             query?: never;
@@ -3212,6 +3308,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["attachment_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/my-submission/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["myQuestions"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3230,6 +3342,38 @@ export interface paths {
         get: operations["reviewPhoto_1"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list"];
+        put: operations["replace"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/questions/{questionId}/regenerate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["regenerate"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3261,6 +3405,54 @@ export interface paths {
         };
         get: operations["studentWork"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/submissions/{studentProfileId}/ai-grade-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["suggestGrades"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/submissions/{studentProfileId}/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["answersOf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/submissions/{studentProfileId}/answers/scores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["setScores"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3421,7 +3613,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["addFile"];
+        post: operations["addFile_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3437,7 +3629,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["addLink"];
+        post: operations["addLink_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3467,7 +3659,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["download_1"];
+        get: operations["download_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3515,7 +3707,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_18"];
+        get: operations["list_20"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3764,6 +3956,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/materials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_21"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/materials/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["addFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/materials/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["addLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/materials/{materialId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_3"];
+        options?: never;
+        head?: never;
+        patch: operations["setVisibility"];
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/materials/{materialId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["download_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/students": {
         parameters: {
             query?: never;
@@ -3819,7 +4091,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list"];
+        get: operations["list_1"];
         put?: never;
         post: operations["upload"];
         delete?: never;
@@ -4330,6 +4602,9 @@ export interface components {
             password?: string;
             phone?: string;
         };
+        AddLessonMaterialLinkRequest: {
+            url?: string;
+        };
         AddLinkRequest: {
             url?: string;
         };
@@ -4453,12 +4728,6 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
-        AnswerOptionRequest: {
-            isCorrect?: boolean;
-            /** Format: int32 */
-            orderIndex?: number;
-            text?: string;
-        };
         AnswerOptionResponse: {
             /** Format: int64 */
             id?: number;
@@ -4471,6 +4740,12 @@ export interface components {
             /** Format: int64 */
             id?: number;
             url?: string;
+        };
+        AnswerRequest: {
+            openText?: string;
+            /** Format: int64 */
+            questionId: number;
+            selectedOptionIds?: number[];
         };
         AnswerReviewItem: {
             adminComment?: string;
@@ -4496,6 +4771,12 @@ export interface components {
             topic?: string;
             /** @enum {string} */
             type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT" | "PHOTO";
+        };
+        AnswerScoreRequest: {
+            /** Format: int64 */
+            answerId: number;
+            comment?: string;
+            finalScore: number;
         };
         ApplicantRequest: {
             childFullName?: string;
@@ -4912,6 +5193,8 @@ export interface components {
             overdue?: boolean;
             /** Format: date-time */
             publishedAt?: string;
+            /** Format: int32 */
+            questionCount?: number;
             /** @enum {string} */
             status?: "DRAFT" | "PUBLISHED" | "COMPLETED" | "CANCELLED";
             subgroupName?: string;
@@ -5738,6 +6021,45 @@ export interface components {
             /** Format: int64 */
             subjectId?: number;
         };
+        HomeworkAiJobView: {
+            applied?: boolean;
+            awaitingDecision?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            errorMessage?: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            /** Format: int64 */
+            homeworkId?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int32 */
+            inputTokens?: number;
+            /** @enum {string} */
+            kind?: "MATERIAL" | "TEST" | "GRADE_SUGGESTION" | "QUESTION";
+            language?: string;
+            model?: string;
+            /** Format: int32 */
+            outputTokens?: number;
+            /** @enum {string} */
+            phase?: "READING_MATERIALS" | "CALLING_MODEL" | "APPLYING";
+            /** Format: int32 */
+            progressDone?: number;
+            /** Format: int32 */
+            progressTotal?: number;
+            /** @enum {string} */
+            status?: "PENDING" | "RUNNING" | "DONE" | "FAILED";
+            warningMessage?: string;
+        };
+        HomeworkAiQuotaView: {
+            /** Format: int32 */
+            dailyQuota?: number;
+            enabled?: boolean;
+            /** Format: int64 */
+            remaining?: number;
+            /** Format: int64 */
+            used?: number;
+        };
         HomeworkGroupSetView: {
             /** Format: int64 */
             classId?: number;
@@ -5797,6 +6119,14 @@ export interface components {
             sizeBytes?: number;
             url?: string;
         };
+        HomeworkOptionView: {
+            correct?: boolean;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int32 */
+            orderIndex?: number;
+            text?: string;
+        };
         HomeworkProgressView: {
             /** Format: int32 */
             pendingReview?: number;
@@ -5804,6 +6134,20 @@ export interface components {
             submitted?: number;
             /** Format: int32 */
             total?: number;
+        };
+        HomeworkQuestionView: {
+            aiGenerated?: boolean;
+            gradingCriteria?: string;
+            /** Format: int64 */
+            id?: number;
+            maxScore?: number;
+            options?: components["schemas"]["HomeworkOptionView"][];
+            /** Format: int32 */
+            orderIndex?: number;
+            referenceAnswer?: string;
+            text?: string;
+            /** @enum {string} */
+            type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT";
         };
         HomeworkRecipientsView: {
             /** Format: int32 */
@@ -5838,6 +6182,8 @@ export interface components {
             copiedFromId?: number;
             /** Format: date-time */
             createdAt?: string;
+            /** @enum {string} */
+            creationMode?: "MANUAL" | "AI_MATERIAL" | "AI_TEST";
             description?: string;
             /** Format: date-time */
             dueAt?: string;
@@ -5854,6 +6200,8 @@ export interface components {
             progress?: components["schemas"]["HomeworkProgressView"];
             /** Format: date-time */
             publishedAt?: string;
+            /** Format: int32 */
+            questionCount?: number;
             recipients?: components["schemas"]["HomeworkRecipientsView"];
             /** @enum {string} */
             status?: "DRAFT" | "PUBLISHED" | "COMPLETED" | "CANCELLED";
@@ -6115,7 +6463,7 @@ export interface components {
         };
         LessonHistoryView: {
             /** @enum {string} */
-            actionType?: "CREATED" | "SUPERSEDED" | "CANCELLED" | "RESTORED" | "ADMIN_UPDATED" | "SUBSTITUTE_ASSIGNED" | "SUBSTITUTE_REVOKED" | "GRADE_PERMISSION_GRANTED" | "GRADE_PERMISSION_REVOKED" | "COMMENT_CREATED" | "COMMENT_UPDATED" | "COMMENT_DELETED" | "TOPIC_UPDATED" | "HOMEWORK_CREATED" | "HOMEWORK_UPDATED" | "HOMEWORK_DELETED";
+            actionType?: "CREATED" | "SUPERSEDED" | "CANCELLED" | "RESTORED" | "ADMIN_UPDATED" | "SUBSTITUTE_ASSIGNED" | "SUBSTITUTE_REVOKED" | "GRADE_PERMISSION_GRANTED" | "GRADE_PERMISSION_REVOKED" | "COMMENT_CREATED" | "COMMENT_UPDATED" | "COMMENT_DELETED" | "TOPIC_UPDATED" | "HOMEWORK_CREATED" | "HOMEWORK_UPDATED" | "HOMEWORK_DELETED" | "MATERIAL_ADDED" | "MATERIAL_UPDATED" | "MATERIAL_REMOVED";
             /** Format: int64 */
             actorId?: number;
             actorName?: string;
@@ -6168,6 +6516,18 @@ export interface components {
             /** Format: int64 */
             version?: number;
         };
+        LessonMaterialView: {
+            contentType?: string;
+            fileName?: string;
+            /** Format: int64 */
+            id?: number;
+            /** @enum {string} */
+            kind?: "FILE" | "PHOTO" | "LINK";
+            /** Format: int64 */
+            sizeBytes?: number;
+            url?: string;
+            visibleToStudents?: boolean;
+        };
         LessonParticipantView: {
             fullName?: string;
             /** Format: int64 */
@@ -6218,6 +6578,8 @@ export interface components {
             /** Format: int32 */
             lessonNumber?: number;
             manuallyModified?: boolean;
+            /** Format: int32 */
+            materialCount?: number;
             room?: string;
             /** Format: int64 */
             scheduleLessonId?: number;
@@ -6344,6 +6706,12 @@ export interface components {
             /** Format: int64 */
             targetGroupId: number;
         };
+        MyAnswerView: {
+            openText?: string;
+            /** Format: int64 */
+            questionId?: number;
+            selectedOptionIds?: number[];
+        };
         MyAttendanceView: {
             attendance?: components["schemas"]["AttendanceMarkingView"];
             /** @example 14:30:00 */
@@ -6420,6 +6788,15 @@ export interface components {
             studentProfileId?: number;
             subjects?: components["schemas"]["MySubjectGradesRowView"][];
         };
+        MySubmittedTestView: {
+            answers?: components["schemas"]["MyAnswerView"][];
+            /** Format: int64 */
+            attemptId?: number;
+            /** Format: int32 */
+            attemptNumber?: number;
+            /** Format: date-time */
+            submittedAt?: string;
+        };
         NotificationItem: {
             applicantName?: string;
             /** Format: int64 */
@@ -6433,6 +6810,10 @@ export interface components {
             testTitle?: string;
             /** @enum {string} */
             type?: "APP_BACKGROUND" | "TAB_SWITCH" | "WINDOW_BLUR" | "PAGE_CLOSE" | "RE_ENTRY" | "SCREENSHOT_ATTEMPT" | "STARTED" | "FOCUS_LOST" | "FOCUS_RETURNED" | "PAGE_CLOSED" | "RESUMED" | "TIME_EXPIRED" | "SUBMITTED" | "CONNECTION_ISSUE";
+        };
+        OptionRequest: {
+            correct?: boolean;
+            text?: string;
         };
         PageAcademicYearView: {
             content?: components["schemas"]["AcademicYearView"][];
@@ -7191,22 +7572,13 @@ export interface components {
             questionId?: number;
         };
         QuestionRequest: {
-            allowPhoto?: boolean;
-            /** @enum {string} */
-            difficulty?: "EASY" | "MEDIUM" | "HARD";
             gradingCriteria?: string;
-            /** Format: double */
             maxScore: number;
-            options?: components["schemas"]["AnswerOptionRequest"][];
-            /** Format: int32 */
-            orderIndex?: number;
+            options?: components["schemas"]["OptionRequest"][];
             referenceAnswer?: string;
-            /** Format: int64 */
-            sourceQuestionId?: number;
             text?: string;
-            topic?: string;
             /** @enum {string} */
-            type: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT" | "PHOTO";
+            type: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT";
         };
         QuestionResponse: {
             allowPhoto?: boolean;
@@ -7238,6 +7610,9 @@ export interface components {
             source: "CLASS" | "SUBGROUP" | "TEMP_GROUP";
             /** Format: int64 */
             sourceId?: number;
+        };
+        RegenerateQuestionRequest: {
+            teacherPrompt?: string;
         };
         RenameRequest: {
             name: string;
@@ -7447,6 +7822,9 @@ export interface components {
             entries?: components["schemas"]["AttendanceEntryChange"][];
             /** Format: int64 */
             expectedVersion?: number;
+        };
+        SaveHomeworkQuestionsRequest: {
+            questions?: components["schemas"]["QuestionRequest"][];
         };
         SavedAnswer: {
             openTextAnswer?: string;
@@ -7671,6 +8049,9 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        SetAnswerScoresRequest: {
+            items: components["schemas"]["AnswerScoreRequest"][];
+        };
         SetGroupStudentsRequest: {
             studentIds: number[];
         };
@@ -7713,6 +8094,17 @@ export interface components {
         StartAttemptRequest: {
             /** Format: int64 */
             assignmentId: number;
+        };
+        StartHomeworkAiGenerationRequest: {
+            /** @enum {string} */
+            kind: "MATERIAL" | "TEST" | "GRADE_SUGGESTION" | "QUESTION";
+            language?: string;
+            materialIds?: number[];
+            /** Format: int32 */
+            openQuestionCount?: number;
+            /** Format: int32 */
+            questionCount?: number;
+            teacherPrompt?: string;
         };
         StudentActivateRequest: {
             code?: string;
@@ -7763,6 +8155,8 @@ export interface components {
             materials?: components["schemas"]["HomeworkMaterialView"][];
             /** Format: date-time */
             publishedAt?: string;
+            /** Format: int32 */
+            questionCount?: number;
             /** @enum {string} */
             status?: "DRAFT" | "PUBLISHED" | "COMPLETED" | "CANCELLED";
             subgroupName?: string;
@@ -7777,6 +8171,13 @@ export interface components {
         StudentLoginRequest: {
             code?: string;
             pin?: string;
+        };
+        StudentOptionView: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int32 */
+            orderIndex?: number;
+            text?: string;
         };
         StudentPart: {
             academicYearName?: string;
@@ -7828,6 +8229,17 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        StudentQuestionView: {
+            /** Format: int64 */
+            id?: number;
+            maxScore?: number;
+            options?: components["schemas"]["StudentOptionView"][];
+            /** Format: int32 */
+            orderIndex?: number;
+            text?: string;
+            /** @enum {string} */
+            type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT";
+        };
         StudentSubjectHistoryView: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -7867,6 +8279,10 @@ export interface components {
             /** Format: int64 */
             studentProfileId?: number;
         };
+        SubmitAnswersRequest: {
+            answers: components["schemas"]["AnswerRequest"][];
+            clientToken?: string;
+        };
         SubmitResponse: {
             status?: string;
         };
@@ -7901,6 +8317,26 @@ export interface components {
             questionOrder?: number;
             /** @enum {string} */
             type?: "APP_BACKGROUND" | "TAB_SWITCH" | "WINDOW_BLUR" | "PAGE_CLOSE" | "RE_ENTRY" | "SCREENSHOT_ATTEMPT" | "STARTED" | "FOCUS_LOST" | "FOCUS_RETURNED" | "PAGE_CLOSED" | "RESUMED" | "TIME_EXPIRED" | "SUBMITTED" | "CONNECTION_ISSUE";
+        };
+        TeacherAnswerView: {
+            aiRationale?: string;
+            aiSuggestedScore?: number;
+            autoScore?: number;
+            correctOptionIds?: number[];
+            finalScore?: number;
+            gradingCriteria?: string;
+            /** Format: int64 */
+            id?: number;
+            maxScore?: number;
+            openText?: string;
+            /** Format: int64 */
+            questionId?: number;
+            questionText?: string;
+            referenceAnswer?: string;
+            selectedOptionIds?: number[];
+            teacherComment?: string;
+            /** @enum {string} */
+            type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT";
         };
         TeacherAssignmentView: {
             /** Format: int64 */
@@ -8276,6 +8712,9 @@ export interface components {
             /** Format: int64 */
             version?: number;
         };
+        UpdateLessonMaterialRequest: {
+            visibleToStudents: boolean;
+        };
         UpdateLessonPeriodRequest: {
             confirmImpact?: boolean;
             /** @example 14:30:00 */
@@ -8497,7 +8936,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_19: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -8681,7 +9120,7 @@ export interface operations {
             };
         };
     };
-    list_16: {
+    list_18: {
         parameters: {
             query: {
                 role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
@@ -8860,7 +9299,7 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    list_17: {
         parameters: {
             query: {
                 status?: "DRAFT" | "PUBLISHED" | "HIDDEN";
@@ -9148,7 +9587,7 @@ export interface operations {
             };
         };
     };
-    list_14: {
+    list_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -9293,7 +9732,7 @@ export interface operations {
             };
         };
     };
-    list_13: {
+    list_15: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -9622,7 +10061,7 @@ export interface operations {
             };
         };
     };
-    list_12: {
+    list_14: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -9698,7 +10137,7 @@ export interface operations {
             };
         };
     };
-    delete_4: {
+    delete_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -9788,7 +10227,7 @@ export interface operations {
             };
         };
     };
-    list_11: {
+    list_13: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -9949,7 +10388,7 @@ export interface operations {
             };
         };
     };
-    list_10: {
+    list_12: {
         parameters: {
             query: {
                 classId: number;
@@ -10517,7 +10956,7 @@ export interface operations {
             };
         };
     };
-    list_9: {
+    list_11: {
         parameters: {
             query: {
                 phone?: string;
@@ -10824,7 +11263,7 @@ export interface operations {
             };
         };
     };
-    get_9: {
+    get_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -10991,7 +11430,7 @@ export interface operations {
             };
         };
     };
-    list_8: {
+    list_10: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -11419,7 +11858,7 @@ export interface operations {
             };
         };
     };
-    list_7: {
+    list_9: {
         parameters: {
             query: {
                 name?: string;
@@ -11592,7 +12031,7 @@ export interface operations {
             };
         };
     };
-    list_6: {
+    list_8: {
         parameters: {
             query: {
                 classId?: number;
@@ -11803,7 +12242,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_7: {
         parameters: {
             query?: {
                 classId?: number;
@@ -12017,7 +12456,7 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_6: {
         parameters: {
             query: {
                 teacherProfileId?: number;
@@ -12110,7 +12549,7 @@ export interface operations {
             };
         };
     };
-    list_20: {
+    list_23: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -12135,7 +12574,7 @@ export interface operations {
             };
         };
     };
-    get_8: {
+    get_9: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -12205,7 +12644,7 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_5: {
         parameters: {
             query: {
                 phone?: string;
@@ -12483,7 +12922,7 @@ export interface operations {
             };
         };
     };
-    list_2: {
+    list_4: {
         parameters: {
             query?: {
                 useAiGeneration?: boolean;
@@ -12723,7 +13162,7 @@ export interface operations {
             };
         };
     };
-    list_19: {
+    list_22: {
         parameters: {
             query?: {
                 grade?: string;
@@ -12765,7 +13204,7 @@ export interface operations {
             };
         };
     };
-    get_7: {
+    get_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -12833,7 +13272,7 @@ export interface operations {
             };
         };
     };
-    start: {
+    start_1: {
         parameters: {
             query?: never;
             header: {
@@ -13770,7 +14209,7 @@ export interface operations {
             };
         };
     };
-    delete_3: {
+    delete_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -13840,7 +14279,7 @@ export interface operations {
             };
         };
     };
-    list_1: {
+    list_2: {
         parameters: {
             query: {
                 scope?: "ACTUAL" | "HISTORY";
@@ -14208,6 +14647,48 @@ export interface operations {
             };
         };
     };
+    get_7: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkAiJobView"];
+                };
+            };
+        };
+    };
+    quota: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkAiQuotaView"];
+                };
+            };
+        };
+    };
     childList: {
         parameters: {
             query: {
@@ -14254,6 +14735,102 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PageLearnerHomeworkRowView"];
+                };
+            };
+        };
+    };
+    list_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkAiJobView"][];
+                };
+            };
+        };
+    };
+    start: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartHomeworkAiGenerationRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkAiJobView"];
+                };
+            };
+        };
+    };
+    apply: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkAiJobView"];
+                };
+            };
+        };
+    };
+    revert: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkAiJobView"];
                 };
             };
         };
@@ -14381,6 +14958,32 @@ export interface operations {
             };
         };
     };
+    submitAnswers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitAnswersRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MySubmittedTestView"];
+                };
+            };
+        };
+    };
     attachment_1: {
         parameters: {
             query?: never;
@@ -14404,6 +15007,28 @@ export interface operations {
             };
         };
     };
+    myQuestions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentQuestionView"][];
+                };
+            };
+        };
+    };
     reviewPhoto_1: {
         parameters: {
             query?: never;
@@ -14423,6 +15048,83 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+        };
+    };
+    list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkQuestionView"][];
+                };
+            };
+        };
+    };
+    replace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveHomeworkQuestionsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkQuestionView"][];
+                };
+            };
+        };
+    };
+    regenerate: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                homeworkId: number;
+                questionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RegenerateQuestionRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkAiJobView"];
                 };
             };
         };
@@ -14470,6 +15172,81 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SubmissionView"];
+                };
+            };
+        };
+    };
+    suggestGrades: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                homeworkId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkAiJobView"];
+                };
+            };
+        };
+    };
+    answersOf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherAnswerView"][];
+                };
+            };
+        };
+    };
+    setScores: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetAnswerScoresRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherAnswerView"][];
                 };
             };
         };
@@ -14758,7 +15535,7 @@ export interface operations {
             };
         };
     };
-    addFile: {
+    addFile_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -14787,7 +15564,7 @@ export interface operations {
             };
         };
     };
-    addLink: {
+    addLink_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -14834,7 +15611,7 @@ export interface operations {
             };
         };
     };
-    download_1: {
+    download_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -14905,7 +15682,7 @@ export interface operations {
             };
         };
     };
-    list_18: {
+    list_20: {
         parameters: {
             query: {
                 dateFrom?: string;
@@ -15377,6 +16154,158 @@ export interface operations {
             };
         };
     };
+    list_21: {
+        parameters: {
+            query?: {
+                childId?: number;
+            };
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonMaterialView"][];
+                };
+            };
+        };
+    };
+    addFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonMaterialView"];
+                };
+            };
+        };
+    };
+    addLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddLessonMaterialLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonMaterialView"];
+                };
+            };
+        };
+    };
+    delete_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+                materialId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    setVisibility: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+                materialId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLessonMaterialRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonMaterialView"];
+                };
+            };
+        };
+    };
+    download_1: {
+        parameters: {
+            query?: {
+                childId?: number;
+            };
+            header?: never;
+            path: {
+                lessonId: number;
+                materialId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
     students: {
         parameters: {
             query?: {
@@ -15497,7 +16426,7 @@ export interface operations {
             };
         };
     };
-    list: {
+    list_1: {
         parameters: {
             query: {
                 subjectId: number;

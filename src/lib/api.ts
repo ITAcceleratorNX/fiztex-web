@@ -96,11 +96,17 @@ export interface RequestOptions {
   method?: string;
   body?: unknown;
   signal?: AbortSignal;
+  /**
+   * Дополнительные заголовки запроса. Нужны там, где протокол требует их явно, —
+   * `Idempotency-Key` у запуска AI-генерации: повторное нажатие кнопки на плохой сети
+   * не должно стать вторым платным вызовом модели.
+   */
+  headers?: Record<string, string>;
 }
 
 /** Shared JSON request helper — used by admissions `api` and schedule-settings client. */
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = { ...options.headers };
   if (options.body !== undefined) headers['Content-Type'] = 'application/json';
   if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
 
