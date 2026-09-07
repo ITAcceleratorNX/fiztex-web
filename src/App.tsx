@@ -21,6 +21,7 @@ import { JournalPage } from '@/pages/journal/JournalPage';
 import { ServiceRequestsPage } from '@/pages/service/ServiceRequestsPage';
 import { ServiceRequestCardPage } from '@/pages/service/ServiceRequestCardPage';
 import { HomeworkCardPage } from '@/pages/homework/HomeworkCardPage';
+import { HomeworkQuestionsPage } from '@/pages/homework/HomeworkQuestionsPage';
 import { HomeworkFormPage } from '@/pages/homework/HomeworkFormPage';
 import { SubmissionReviewPage } from '@/pages/homework/SubmissionReviewPage';
 import { LessonHomeworkPage } from '@/pages/homework/LessonHomeworkPage';
@@ -199,6 +200,7 @@ export function App() {
         <Route path="/homework/groups" element={<HomeworkGroupsPage />} />
         <Route path="/homework/:homeworkId" element={<HomeworkCardPage />} />
         <Route path="/homework/:homeworkId/edit" element={<HomeworkFormPage mode="edit" />} />
+        <Route path="/homework/:homeworkId/questions" element={<HomeworkQuestionsPage />} />
         <Route
           path="/homework/:homeworkId/students/:studentProfileId"
           element={<SubmissionReviewPage />}

@@ -148,6 +148,7 @@ export function HomeworkCardPage() {
         onEdit={() => navigate(`/homework/${id}/edit`)}
         onAsk={setConfirm}
         onGenerate={setGenerateKind}
+        onOpenQuestions={() => navigate(`/homework/${id}/questions`)}
       />
 
       {homework.status === 'DRAFT' ? (
@@ -254,6 +255,7 @@ function HomeworkHeader({
   onEdit,
   onAsk,
   onGenerate,
+  onOpenQuestions,
 }: {
   homework: Homework;
   materials: Array<{ id?: number; fileName?: string; url?: string }>;
@@ -262,6 +264,7 @@ function HomeworkHeader({
   onEdit: () => void;
   onAsk: (action: 'complete' | 'reopen' | 'cancel' | 'delete') => void;
   onGenerate: (kind: GenerateKind) => void;
+  onOpenQuestions: () => void;
 }) {
   const actions = homeworkActions(homework);
 
@@ -288,6 +291,20 @@ function HomeworkHeader({
           )}
           {/* Генерация — только пока задание черновик: после публикации ученики уже
               видят текст, и подменять его машинным вариантом нельзя. */}
+          {/* Вопросы показываем и когда их нет: тест собирают руками, не только моделью.
+              У завершённого и отменённого — только чтение, страница это объяснит сама. */}
+          {actions.canEdit || (homework.questionCount ?? 0) > 0 ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onOpenQuestions}
+              disabled={busy}
+            >
+              {(homework.questionCount ?? 0) > 0
+                ? `Вопросы · ${homework.questionCount}`
+                : 'Вопросы'}
+            </Button>
+          ) : null}
           {actions.canEdit && homework.status === 'DRAFT' && (
             <>
               <Button
