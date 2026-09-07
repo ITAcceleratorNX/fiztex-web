@@ -39,6 +39,15 @@ export function useUnassignedStudents(setId: number | null) {
   });
 }
 
+/** Подгруппы класса для фильтра: без класса их не существует. */
+export function useClassSubgroups(classId: number | null) {
+  return useQuery({
+    queryKey: ['class-subgroups', classId ?? 0] as const,
+    queryFn: ({ signal }) => subgroupsApi.listSubgroups(classId!, signal),
+    enabled: classId != null && classId > 0,
+  });
+}
+
 export function useSchoolSubjects() {
   return useQuery({
     queryKey: subgroupsKeys.subjects,

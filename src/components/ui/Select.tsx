@@ -37,6 +37,9 @@ export function Select({
   disabled,
   name,
   id,
+  // Кнопка вместо <select>, поэтому имя поля не приходит от <label for>: без этого
+  // фильтр без видимой подписи остаётся безымянным для скринридера.
+  'aria-label': ariaLabel,
 }: SelectHTMLAttributes<HTMLSelectElement>) {
   const autoId = useId();
   const listboxId = id ?? autoId;
@@ -98,6 +101,7 @@ export function Select({
         type="button"
         id={listboxId}
         disabled={disabled}
+        aria-label={ariaLabel}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={`${listboxId}-listbox`}

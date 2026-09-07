@@ -37,6 +37,8 @@ export const ROUTES = {
   myAvailability: '/my-availability',
   /** Журнал класса и итоги четверти (GRADES-FE-001). */
   journal: '/grades',
+  /** Посещаемость по школе — журнал месяца и незакрытые уроки (ATTENDANCE-001 §23). */
+  attendance: '/attendance',
   /** Сервисные заявки автора — Admin и Teacher (SERVICE-FE-001). */
   serviceRequests: '/service',
   serviceRequest: (id: number | string) => `/service/${id}`,

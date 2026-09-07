@@ -4,6 +4,7 @@ import type {
   AttendanceMarking,
   AttendanceReason,
   AttendanceSheet,
+  AttendanceSheetState,
   AttendanceStatus,
 } from '@/lib/attendanceApi';
 
@@ -146,12 +147,35 @@ export function sheetBadge(
   sheet: AttendanceSheet | undefined,
   options: { cancelled?: boolean } = {},
 ): string {
-  if (options.cancelled || sheet?.state === 'ANNULLED') return 'Недоступна';
-  if (sheet?.state === 'PUBLISHED') {
-    return sheet.hasUnpublishedChanges ? 'Есть правки' : 'Опубликовано';
-  }
-  if (sheet?.state === 'DRAFT') return 'Черновик';
+  if (options.cancelled) return sheetStateLabel('ANNULLED');
+  // «Есть правки» из одного состояния не выводится: нужен ещё и признак
+  // неопубликованных изменений, которого у голого state нет.
+  if (sheet?.state === 'PUBLISHED' && sheet.hasUnpublishedChanges) return 'Есть правки';
+  return sheetStateLabel(sheet?.state);
+}
+
+/**
+ * Состояние листа словом. Отдельно от {@link sheetBadge}, потому что списки школы
+ * (журнал администрации, незаполненные уроки) знают только `state` — но называть
+ * одно и то же состояние по-разному на двух экранах нельзя.
+ */
+export function sheetStateLabel(state: AttendanceSheetState | null | undefined): string {
+  if (state === 'ANNULLED') return 'Недоступна';
+  if (state === 'PUBLISHED') return 'Опубликовано';
+  if (state === 'DRAFT') return 'Черновик';
   return 'Не заполнено';
+}
+
+/**
+ * То же состояние в колонку журнала, где на слово 64 пикселя. Рядом с полным
+ * вариантом, а не в вёрстке таблицы: сокращение — это тоже название состояния, и
+ * заводить его отдельно от остальных значит однажды сократить не то.
+ */
+export function sheetStateShort(state: AttendanceSheetState | null | undefined): string {
+  if (state === 'ANNULLED') return 'Отмена';
+  if (state === 'PUBLISHED') return 'Опубл.';
+  if (state === 'DRAFT') return 'Черн.';
+  return 'Пусто';
 }
 
 const HISTORY_ACTIONS: Record<string, string> = {

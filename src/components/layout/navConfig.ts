@@ -77,7 +77,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { to: '/lesson-schedule', label: 'Расписание', icon: Calendar },
       { to: ROUTES.journal, label: 'Журнал оценок', icon: BookOpen },
-      { to: '/attendance', label: 'Посещаемость (QR)', icon: QrCode, noApi: true },
+      { to: ROUTES.attendance, label: 'Посещаемость', icon: QrCode },
       { to: '/ai-tests', label: 'AI-тесты', icon: Sparkles },
       { to: '/clubs', label: 'Кружки и события', icon: Star, noApi: true },
       { to: ROUTES.serviceRequests, label: 'Сервисные заявки', icon: Briefcase },
