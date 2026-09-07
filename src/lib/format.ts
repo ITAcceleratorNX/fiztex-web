@@ -83,6 +83,25 @@ export function initials(name: string): string {
   return (parts[0][0]! + parts[1][0]!).toUpperCase();
 }
 
+/**
+ * «Иванова А.М.» — фамилия и инициалы.
+ *
+ * Живёт здесь, а не рядом со списком учителей, потому что так же подписывают учеников:
+ * в селект-фильтр полное имя не влезает, а две реализации одного сокращения дали бы
+ * «Иванова А.М.» на одном экране и «Иванова А. М.» на соседнем.
+ */
+export function personShortName(person: {
+  lastName: string;
+  firstName: string;
+  middleName?: string | null;
+}): string {
+  const initialsOf = [person.firstName, person.middleName]
+    .filter((part): part is string => Boolean(part))
+    .map((part) => `${part[0]!.toUpperCase()}.`)
+    .join('');
+  return initialsOf ? `${person.lastName} ${initialsOf}` : person.lastName;
+}
+
 export function pluralRu(n: number, forms: [string, string, string]): string {
   // Дробные всегда берут родительный единственного: «1,5 балла», «0,5 балла».
   if (!Number.isInteger(n)) return forms[1];

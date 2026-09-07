@@ -25,6 +25,8 @@ import { HomeworkQuestionsPage } from '@/pages/homework/HomeworkQuestionsPage';
 import { HomeworkFormPage } from '@/pages/homework/HomeworkFormPage';
 import { SubmissionReviewPage } from '@/pages/homework/SubmissionReviewPage';
 import { LessonHomeworkPage } from '@/pages/homework/LessonHomeworkPage';
+import { AttendanceAdminPage } from '@/platform/pages/attendance/AttendanceAdminPage';
+import { MyAvailabilityPage } from '@/pages/schedule/MyAvailabilityPage';
 import { MySchedulePage } from '@/pages/schedule/MySchedulePage';
 import { HomeworkGroupsPage } from '@/pages/homework/HomeworkGroupsPage';
 import { DashboardPage } from '@/pages/DashboardPage';
@@ -155,6 +157,7 @@ export function App() {
         <Route path="/schedule" element={<Navigate to="/lesson-schedule" replace />} />
         {/* Своё расписание учителя: ролевой экран, из него открывается урок. */}
         <Route path={ROUTES.mySchedule} element={<MySchedulePage />} />
+        <Route path={ROUTES.myAvailability} element={<MyAvailabilityPage />} />
         <Route path="/lesson-schedule" element={<LessonSchedulePage />} />
         <Route path="/lesson-schedule/lessons/:lessonId" element={<LessonCardPage />} />
         {/* Лист посещаемости вложен в урок, потому что без урока не существует:
@@ -207,15 +210,9 @@ export function App() {
         />
         {/* Журнал класса и итоги четверти (GRADES-FE-001 §5.4, §9). */}
         <Route path={ROUTES.journal} element={<JournalPage />} />
-        <Route
-          path="/attendance"
-          element={
-            <PlaceholderPage
-              title="Посещаемость (QR)"
-              reason="Backend API для посещаемости ещё не реализован. Эндпойнтов нет."
-            />
-          }
-        />
+        {/* Журнал школы и незакрытые уроки (ATTENDANCE-001 §23). Отметку ставят на уроке —
+            этот раздел только читает и ведёт туда. */}
+        <Route path={ROUTES.attendance} element={<AttendanceAdminPage />} />
         <Route path="/ai-tests" element={<AiTestsPage />} />
         <Route
           path="/clubs"

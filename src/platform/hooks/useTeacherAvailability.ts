@@ -1,16 +1,28 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { teacherAvailabilityApi } from '@/lib/schedule2bApi';
+import { myAvailabilityApi, teacherAvailabilityApi } from '@/lib/schedule2bApi';
 import { platformCoreApi } from '@/lib/platformCoreApi';
-import type { PutAvailabilityRequest, TeacherAvailabilityState } from '@/lib/schedule2bTypes';
+import type {
+  MyTeacherAvailability,
+  PutAvailabilityRequest,
+  SubmitAvailabilityProposalRequest,
+  TeacherAvailabilityState,
+} from '@/lib/schedule2bTypes';
 
 export const teacherAvailabilityKeys = {
   all: ['teacher-availability'] as const,
   detail: (teacherId: number) => [...teacherAvailabilityKeys.all, teacherId] as const,
   teachers: (name: string, page: number) => ['teachers', name, page] as const,
-  summaries: (yearId: number, name: string, availability: TeacherAvailabilityState | null, page: number) =>
-    [...teacherAvailabilityKeys.all, 'summaries', yearId, name, availability, page] as const,
+  summaries: (
+    yearId: number,
+    name: string,
+    availability: TeacherAvailabilityState | null,
+    pendingOnly: boolean,
+    page: number,
+  ) =>
+    [...teacherAvailabilityKeys.all, 'summaries', yearId, name, availability, pendingOnly, page] as const,
   summary: (teacherId: number, yearId: number) =>
     [...teacherAvailabilityKeys.all, 'summary', teacherId, yearId] as const,
+  mine: () => [...teacherAvailabilityKeys.all, 'mine'] as const,
 };
 
 export function useTeacherAvailability(teacherId: number | null) {
@@ -37,16 +49,18 @@ export function useTeacherAvailabilitySummaries(
   yearId: number | null,
   name: string,
   availability: TeacherAvailabilityState | null,
+  pendingOnly: boolean,
   page: number,
 ) {
   return useQuery({
-    queryKey: teacherAvailabilityKeys.summaries(yearId ?? 0, name, availability, page),
+    queryKey: teacherAvailabilityKeys.summaries(yearId ?? 0, name, availability, pendingOnly, page),
     queryFn: ({ signal }) =>
       teacherAvailabilityApi.listSummaries(
         {
           academicYearId: yearId!,
           name: name || undefined,
           availability: availability ?? undefined,
+          pendingProposal: pendingOnly ? true : undefined,
           page,
           size: 20,
         },
@@ -85,4 +99,63 @@ export function useSaveTeacherAvailability(teacherId: number | null) {
       });
     },
   });
+}
+
+/**
+ * Своё рабочее время учителя. Ключ без id: эндпоинт и так отвечает про того,
+ * чей токен, — второго учителя в этом кэше быть не может.
+ */
+export function useMyAvailability() {
+  return useQuery({
+    queryKey: teacherAvailabilityKeys.mine(),
+    queryFn: ({ signal }) => myAvailabilityApi.get(signal),
+  });
+}
+
+export function useSubmitAvailabilityProposal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: SubmitAvailabilityProposalRequest) => myAvailabilityApi.submit(body),
+    onSuccess: (data) => queryClient.setQueryData(teacherAvailabilityKeys.mine(), data),
+  });
+}
+
+export function useWithdrawAvailabilityProposal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => myAvailabilityApi.withdraw(),
+    onSuccess: (data: MyTeacherAvailability) =>
+      queryClient.setQueryData(teacherAvailabilityKeys.mine(), data),
+  });
+}
+
+/**
+ * Решение админа по заявке. Списки перечитываются целиком: утверждение меняет и
+ * занятость учителя, и его строку в сводке — досчитывать это на клиенте значило бы
+ * держать вторую версию тех же правил.
+ */
+export function useDecideAvailabilityProposal(teacherId: number | null) {
+  const queryClient = useQueryClient();
+
+  function invalidate() {
+    void queryClient.invalidateQueries({ queryKey: teacherAvailabilityKeys.all });
+  }
+
+  const approve = useMutation({
+    mutationFn: () => {
+      if (teacherId == null) throw new Error('teacherId is required');
+      return teacherAvailabilityApi.approveProposal(teacherId);
+    },
+    onSuccess: invalidate,
+  });
+
+  const reject = useMutation({
+    mutationFn: (comment: string | null) => {
+      if (teacherId == null) throw new Error('teacherId is required');
+      return teacherAvailabilityApi.rejectProposal(teacherId, comment);
+    },
+    onSuccess: invalidate,
+  });
+
+  return { approve, reject };
 }
