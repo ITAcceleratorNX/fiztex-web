@@ -39,6 +39,35 @@ export const platformCoreApi = {
       { signal },
     ),
 
+  /**
+   * Учителя школы одним списком — для селекта-фильтра.
+   *
+   * Размер страницы взят с запасом на школу: постраничный выбор в фильтре означал бы,
+   * что нужного человека не видно, пока не угадаешь страницу. Поиск по имени тут не
+   * нужен — список короткий и целиком помещается в выпадающий.
+   */
+  listAllTeachers: (signal?: AbortSignal) =>
+    request<Page<TeacherRef>>(
+      `/admin/teachers${pageQuery({ page: 0, size: 300 })}`,
+      { signal },
+    ),
+
+  /**
+   * Ученики класса. Год обязателен вместе с классом: состав класса — это членство в
+   * конкретном учебном году, и без него сервер вернул бы учеников всех лет сразу.
+   */
+  listClassStudents: (academicYearId: number, classId: number, signal?: AbortSignal) =>
+    request<Page<StudentRef>>(
+      `/admin/students${pageQuery({
+        academicYearId,
+        classId,
+        status: 'ACTIVE',
+        page: 0,
+        size: 300,
+      })}`,
+      { signal },
+    ),
+
   listSubjects: (signal?: AbortSignal) =>
     request<Page<SubjectRef>>(
       `/admin/school-subjects${pageQuery({
@@ -53,6 +82,15 @@ export const platformCoreApi = {
     request<AcademicPeriodRef[]>(`/admin/academic-years/${academicYearId}/periods`, {
       signal,
     }),
+};
+
+export type StudentRef = {
+  id: number;
+  accountId: number;
+  firstName: string;
+  lastName: string;
+  middleName: string | null;
+  status: string;
 };
 
 export type AcademicPeriodRef = {

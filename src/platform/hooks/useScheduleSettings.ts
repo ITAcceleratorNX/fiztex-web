@@ -55,6 +55,24 @@ export function useSchoolClasses(yearId: number | null) {
   });
 }
 
+/** Учителя школы для фильтров-селектов. Список короткий и меняется редко. */
+export function useAllTeachers() {
+  return useQuery({
+    queryKey: ['teachers', 'all'] as const,
+    queryFn: ({ signal }) => platformCoreApi.listAllTeachers(signal),
+    staleTime: 5 * 60_000,
+  });
+}
+
+/** Ученики выбранного класса — состав считается по членству в учебном году. */
+export function useClassStudents(yearId: number | null, classId: number | null) {
+  return useQuery({
+    queryKey: ['class-students', yearId ?? 0, classId ?? 0] as const,
+    queryFn: ({ signal }) => platformCoreApi.listClassStudents(yearId!, classId!, signal),
+    enabled: yearId != null && classId != null && classId > 0,
+  });
+}
+
 export function useBellTemplates(yearId: number | null) {
   return useQuery({
     queryKey: scheduleSettingsKeys.bellTemplates(yearId ?? 0),

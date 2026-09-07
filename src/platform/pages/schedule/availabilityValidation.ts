@@ -98,6 +98,23 @@ export function availabilityToDraft(view: {
   };
 }
 
+/**
+ * Заявка в тот же черновик, что и утверждённая занятость: экран правит её теми же
+ * контролами. Версии у заявки нет — она ничего не перезаписывает.
+ */
+export function proposalToDraft(proposal: {
+  workingDays: Weekday[];
+  preferredShift: PreferredShift | null;
+  intervals: Array<{
+    dayOfWeek: Weekday;
+    startTime: string;
+    endTime: string;
+    type: TeacherTimeType;
+  }>;
+}): AvailabilityDraft {
+  return availabilityToDraft({ ...proposal, version: null });
+}
+
 export function compareIntervals(a: IntervalDraft, b: IntervalDraft): number {
   const dayA = WEEKDAYS_ORDER.indexOf(a.dayOfWeek);
   const dayB = WEEKDAYS_ORDER.indexOf(b.dayOfWeek);
@@ -293,6 +310,12 @@ export function draftToPutBody(draft: AvailabilityDraft) {
     })),
     version: draft.version,
   };
+}
+
+/** Тело заявки учителя: то же, что PUT, но без версии и с комментарием админу. */
+export function draftToProposalBody(draft: AvailabilityDraft, comment: string) {
+  const { version: _version, ...body } = draftToPutBody(draft);
+  return { ...body, comment: comment.trim() || null };
 }
 
 export function rowErrorMessage(error: IntervalRowError | undefined): string | null {

@@ -39,7 +39,10 @@ export function parseTeachersTabState(params: URLSearchParams): TeachersTabState
   return {
     teacherId: parseId(params.get(TEACHER_ID_PARAM)),
     page: Number.isFinite(page) && page >= 0 ? page : 0,
-    availability: status === 'APPROVED' || status === 'NEEDS_REVIEW' ? status : null,
+    availability:
+      status === 'APPROVED' || status === 'NEEDS_REVIEW' || status === 'PENDING_PROPOSAL'
+        ? status
+        : null,
     templateId: parseId(params.get(TEACHER_TEMPLATE_PARAM)),
   };
 }
@@ -127,10 +130,13 @@ export function TeachersAvailabilityTab({
     [templateQuery.data],
   );
 
+  // «Ждут решения» — отдельный параметр бэкенда, а не третье состояние занятости.
+  const availabilityFilter = state.availability === 'PENDING_PROPOSAL' ? null : state.availability;
   const summariesQuery = useTeacherAvailabilitySummaries(
     yearId,
     debouncedSearch,
-    state.availability,
+    availabilityFilter,
+    state.availability === 'PENDING_PROPOSAL',
     state.page,
   );
   const teachers = summariesQuery.data?.content ?? [];

@@ -22,6 +22,34 @@ export type TeacherRef = {
   updatedAt: string;
 };
 
+export type TeacherAvailabilityProposalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'WITHDRAWN';
+
+/**
+ * Заявка учителя на своё рабочее время (SCHEDULE-2B §10 read-contract).
+ *
+ * Состав полей тот же, что у утверждённой занятости, — экран рисует её теми же
+ * контролами. Отличия два: у интервалов нет `id` (строк рабочего времени за ними
+ * ещё нет) и нет `version` — заявка ничего не перезаписывает.
+ */
+export type TeacherAvailabilityProposal = {
+  id: number;
+  teacherId: number;
+  status: TeacherAvailabilityProposalStatus;
+  workingDays: Weekday[];
+  preferredShift: PreferredShift | null;
+  intervals: Array<{
+    dayOfWeek: Weekday;
+    startTime: string;
+    endTime: string;
+    type: TeacherTimeType;
+  }>;
+  teacherComment: string | null;
+  decisionComment: string | null;
+  submittedAt: string;
+  decidedBy: number | null;
+  decidedAt: string | null;
+};
+
 /**
  * Two-state projection of TeacherAvailabilityStatus used by list screens:
  * NEEDS_REVIEW covers both «профиля нет» and INACTIVE.
@@ -39,6 +67,8 @@ export type TeacherAvailabilitySummary = {
   /** ACTIVE subjects of the requested academic year, sorted by name. */
   subjects: string[];
   availability: TeacherAvailabilityState;
+  /** Учитель просит изменить свои часы и ждёт решения. */
+  pendingProposal: boolean;
 };
 
 export type AvailabilityInterval = {
@@ -59,6 +89,17 @@ export type TeacherAvailability = {
   approvedAt: string | null;
   version: number | null;
   intervals: AvailabilityInterval[];
+  /** Заявка учителя на рассмотрении — тем же ответом, что и занятость. */
+  pendingProposal: TeacherAvailabilityProposal | null;
+};
+
+/** Экран «Моё рабочее время» целиком — `GET /teacher/availability`. */
+export type MyTeacherAvailability = {
+  availability: TeacherAvailability;
+  /** Последнее решение админа: утвердил или отклонил с причиной. */
+  lastDecision: TeacherAvailabilityProposal | null;
+  /** Считает бэкенд: у архивного профиля отправлять нечего. */
+  canSubmit: boolean;
 };
 
 export type PutAvailabilityIntervalRequest = {
@@ -73,6 +114,14 @@ export type PutAvailabilityRequest = {
   preferredShift?: PreferredShift | null;
   intervals: PutAvailabilityIntervalRequest[];
   version?: number | null;
+};
+
+/** Тело заявки учителя: то же, что PUT, но без версии и с комментарием админу. */
+export type SubmitAvailabilityProposalRequest = {
+  workingDays: Weekday[];
+  preferredShift?: PreferredShift | null;
+  intervals: PutAvailabilityIntervalRequest[];
+  comment?: string | null;
 };
 
 export type SubjectRef = {

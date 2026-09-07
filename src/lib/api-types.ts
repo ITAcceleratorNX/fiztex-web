@@ -1243,7 +1243,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_9"];
+        get: operations["get_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1931,7 +1931,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_8"];
+        get: operations["get_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2046,6 +2046,38 @@ export interface paths {
         get: operations["get_2"];
         put: operations["put"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/teachers/{id}/availability/proposal/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approveProposal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/teachers/{id}/availability/proposal/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["rejectProposal"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2251,7 +2283,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_7"];
+        get: operations["get_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2397,7 +2429,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["submit_1"];
+        post: operations["submit_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3197,7 +3229,7 @@ export interface paths {
         };
         get: operations["my"];
         put?: never;
-        post: operations["submit"];
+        post: operations["submit_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4059,7 +4091,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_6"];
+        get: operations["get_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4191,6 +4223,38 @@ export interface paths {
         put?: never;
         post: operations["transfer"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_6"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/availability/proposal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["submit"];
+        post?: never;
+        delete: operations["withdraw"];
         options?: never;
         head?: never;
         patch?: never;
@@ -6420,6 +6484,11 @@ export interface components {
             studentProfileId?: number;
             subjects?: components["schemas"]["MySubjectGradesRowView"][];
         };
+        MyTeacherAvailabilityView: {
+            availability?: components["schemas"]["TeacherAvailabilityView"];
+            canSubmit?: boolean;
+            lastDecision?: components["schemas"]["TeacherAvailabilityProposalView"];
+        };
         NotificationItem: {
             applicantName?: string;
             /** Format: int64 */
@@ -7112,6 +7181,16 @@ export interface components {
             /** Format: date */
             startDate?: string;
         };
+        ProposalIntervalView: {
+            /** @enum {string} */
+            dayOfWeek?: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
+            /** @example 14:30:00 */
+            endTime?: string;
+            /** @example 14:30:00 */
+            startTime?: string;
+            /** @enum {string} */
+            type?: "AVAILABLE" | "UNAVAILABLE";
+        };
         PublicAnnouncementItem: {
             /** Format: date-time */
             eventAt?: string;
@@ -7238,6 +7317,9 @@ export interface components {
             source: "CLASS" | "SUBGROUP" | "TEMP_GROUP";
             /** Format: int64 */
             sourceId?: number;
+        };
+        RejectAvailabilityProposalRequest: {
+            comment?: string;
         };
         RenameRequest: {
             name: string;
@@ -7685,7 +7767,7 @@ export interface components {
         };
         SettingsHistoryView: {
             /** @enum {string} */
-            actionType?: "TEMPLATE_CREATED" | "TEMPLATE_UPDATED" | "TEMPLATE_HIDDEN" | "TEMPLATE_ACTIVATED" | "TEMPLATE_COPIED" | "PERIOD_ADDED" | "PERIOD_UPDATED" | "PERIOD_DELETED" | "BINDINGS_ASSIGNED" | "BINDING_REMOVED" | "WORKING_DAYS_UPDATED" | "CALENDAR_EVENT_CREATED" | "CALENDAR_EVENT_UPDATED" | "CALENDAR_EVENT_HIDDEN" | "CALENDAR_EVENT_ACTIVATED" | "CALENDAR_EVENT_DELETED" | "TEACHER_AVAILABILITY_SAVED" | "GROUP_SET_CREATED" | "GROUP_SET_UPDATED" | "GROUP_SET_ARCHIVED" | "SUBGROUP_CREATED" | "SUBGROUP_RENAMED" | "SUBGROUP_ARCHIVED" | "SUBGROUP_MEMBERS_CHANGED" | "SUBGROUP_AUTO_SPLIT" | "LESSON_HORIZON_UPDATED";
+            actionType?: "TEMPLATE_CREATED" | "TEMPLATE_UPDATED" | "TEMPLATE_HIDDEN" | "TEMPLATE_ACTIVATED" | "TEMPLATE_COPIED" | "PERIOD_ADDED" | "PERIOD_UPDATED" | "PERIOD_DELETED" | "BINDINGS_ASSIGNED" | "BINDING_REMOVED" | "WORKING_DAYS_UPDATED" | "CALENDAR_EVENT_CREATED" | "CALENDAR_EVENT_UPDATED" | "CALENDAR_EVENT_HIDDEN" | "CALENDAR_EVENT_ACTIVATED" | "CALENDAR_EVENT_DELETED" | "TEACHER_AVAILABILITY_SAVED" | "AVAILABILITY_PROPOSAL_SUBMITTED" | "AVAILABILITY_PROPOSAL_WITHDRAWN" | "AVAILABILITY_PROPOSAL_APPROVED" | "AVAILABILITY_PROPOSAL_REJECTED" | "GROUP_SET_CREATED" | "GROUP_SET_UPDATED" | "GROUP_SET_ARCHIVED" | "SUBGROUP_CREATED" | "SUBGROUP_RENAMED" | "SUBGROUP_ARCHIVED" | "SUBGROUP_MEMBERS_CHANGED" | "SUBGROUP_AUTO_SPLIT" | "LESSON_HORIZON_UPDATED";
             actorFullName?: string;
             /** Format: int64 */
             actorId?: number;
@@ -7867,6 +7949,13 @@ export interface components {
             /** Format: int64 */
             studentProfileId?: number;
         };
+        SubmitAvailabilityProposalRequest: {
+            comment?: string;
+            intervals: components["schemas"]["PutAvailabilityIntervalRequest"][];
+            /** @enum {string} */
+            preferredShift?: "FIRST" | "SECOND";
+            workingDays: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
+        };
         SubmitResponse: {
             status?: string;
         };
@@ -7926,6 +8015,26 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        TeacherAvailabilityProposalView: {
+            /** Format: date-time */
+            decidedAt?: string;
+            /** Format: int64 */
+            decidedBy?: number;
+            decisionComment?: string;
+            /** Format: int64 */
+            id?: number;
+            intervals?: components["schemas"]["ProposalIntervalView"][];
+            /** @enum {string} */
+            preferredShift?: "FIRST" | "SECOND";
+            /** @enum {string} */
+            status?: "PENDING" | "APPROVED" | "REJECTED" | "WITHDRAWN";
+            /** Format: date-time */
+            submittedAt?: string;
+            teacherComment?: string;
+            /** Format: int64 */
+            teacherId?: number;
+            workingDays?: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
+        };
         TeacherAvailabilitySummaryView: {
             /** Format: int64 */
             accountId?: number;
@@ -7934,6 +8043,7 @@ export interface components {
             firstName?: string;
             lastName?: string;
             middleName?: string;
+            pendingProposal?: boolean;
             phone?: string;
             subjects?: string[];
             /** Format: int64 */
@@ -7946,6 +8056,7 @@ export interface components {
             approvedBy?: number;
             exists?: boolean;
             intervals?: components["schemas"]["AvailabilityIntervalView"][];
+            pendingProposal?: components["schemas"]["TeacherAvailabilityProposalView"];
             /** @enum {string} */
             preferredShift?: "FIRST" | "SECOND";
             /** @enum {string} */
@@ -10824,7 +10935,7 @@ export interface operations {
             };
         };
     };
-    get_9: {
+    get_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -12116,6 +12227,7 @@ export interface operations {
                 academicYearId: number;
                 name?: string;
                 availability?: "APPROVED" | "NEEDS_REVIEW";
+                pendingProposal?: boolean;
                 pageable: components["schemas"]["Pageable"];
             };
             header?: never;
@@ -12135,7 +12247,7 @@ export interface operations {
             };
         };
     };
-    get_8: {
+    get_9: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -12377,6 +12489,54 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["PutTeacherAvailabilityRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherAvailabilityView"];
+                };
+            };
+        };
+    };
+    approveProposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherAvailabilityView"];
+                };
+            };
+        };
+    };
+    rejectProposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RejectAvailabilityProposalRequest"];
             };
         };
         responses: {
@@ -12765,7 +12925,7 @@ export interface operations {
             };
         };
     };
-    get_7: {
+    get_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -13019,7 +13179,7 @@ export interface operations {
             };
         };
     };
-    submit_1: {
+    submit_2: {
         parameters: {
             query?: never;
             header: {
@@ -14349,7 +14509,7 @@ export interface operations {
             };
         };
     };
-    submit: {
+    submit_1: {
         parameters: {
             query?: {
                 body?: string;
@@ -15925,7 +16085,7 @@ export interface operations {
             };
         };
     };
-    get_6: {
+    get_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -16141,6 +16301,70 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ServiceRequestView"];
+                };
+            };
+        };
+    };
+    get_6: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyTeacherAvailabilityView"];
+                };
+            };
+        };
+    };
+    submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitAvailabilityProposalRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyTeacherAvailabilityView"];
+                };
+            };
+        };
+    };
+    withdraw: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyTeacherAvailabilityView"];
                 };
             };
         };

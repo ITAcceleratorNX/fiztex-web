@@ -4,6 +4,7 @@ import {
   School,
   CalendarRange,
   CalendarDays,
+  Clock,
   BookText,
   KeyRound,
   Upload,
@@ -76,7 +77,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { to: '/lesson-schedule', label: 'Расписание', icon: Calendar },
       { to: ROUTES.journal, label: 'Журнал оценок', icon: BookOpen },
-      { to: '/attendance', label: 'Посещаемость (QR)', icon: QrCode, noApi: true },
+      { to: ROUTES.attendance, label: 'Посещаемость', icon: QrCode },
       { to: '/ai-tests', label: 'AI-тесты', icon: Sparkles },
       { to: '/clubs', label: 'Кружки и события', icon: Star, noApi: true },
       { to: ROUTES.serviceRequests, label: 'Сервисные заявки', icon: Briefcase },
@@ -108,6 +109,7 @@ export const TEACHER_NAV_SECTIONS: NavSection[] = [
     label: '',
     items: [
       { to: ROUTES.mySchedule, label: 'Расписание', icon: Calendar },
+      { to: ROUTES.myAvailability, label: 'Моё рабочее время', icon: Clock },
       { to: ROUTES.journal, label: 'Журнал оценок', icon: BookOpen },
       { to: ROUTES.homework, label: 'Домашние задания', icon: BookOpenCheck },
       // Заявки — не учебный раздел, но автор у них тот же (SERVICE-FE-001 §1), и читает
