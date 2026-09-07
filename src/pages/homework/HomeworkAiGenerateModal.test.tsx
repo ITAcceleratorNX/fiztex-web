@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { HomeworkAiGenerateModal } from './HomeworkAiGenerateModal';
 
@@ -33,6 +34,7 @@ function renderModal(props: Partial<Parameters<typeof HomeworkAiGenerateModal>[0
       lessonId={1}
       kind="MATERIAL"
       onWriteManually={vi.fn()}
+      onAwaitingDecision={vi.fn()}
       {...props}
     />,
   );
@@ -49,6 +51,22 @@ describe('HomeworkAiGenerateModal', () => {
       isPending: false,
     });
     useHomeworkAiJob.mockReturnValue({ data: undefined });
+  });
+
+  /**
+   * Задача создана, но опрос ещё ничего о ней не вернул. Найдено в браузере: в эту
+   * паузу окно показывало пустоту и одну кнопку «Закрыть» — учитель видел не
+   * ожидание, а поломку.
+   */
+  it('между запуском и первым ответом опроса показывает ожидание, а не пустоту', async () => {
+    const user = userEvent.setup();
+    useHomeworkAiJob.mockReturnValue({ data: undefined });
+    renderModal();
+
+    await user.click(screen.getByRole('button', { name: /Сгенерировать/ }));
+
+    expect(await screen.findByText('Начинаю…')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Закрыть' })).not.toBeInTheDocument();
   });
 
   /** Внезапный отказ по лимиту хуже заметного счётчика — остаток виден всегда. */
@@ -95,7 +113,12 @@ describe('HomeworkAiGenerateModal', () => {
   /**
    * Главная ветка задачи AIHW-R: работа учителя не заменяется молча, выбор делает он.
    */
-  it('когда результат ждёт решения, предлагает заменить или оставить', () => {
+  /**
+   * Раньше выбор предлагался прямо здесь — и вслепую: содержимое результата это окно
+   * показать не может. Теперь оно уступает место экрану сравнения.
+   */
+  it('результат, ждущий решения, передаёт ход экрану сравнения', async () => {
+    const onAwaitingDecision = vi.fn();
     useHomeworkAiJob.mockReturnValue({
       data: {
         id: 7,
@@ -106,10 +129,9 @@ describe('HomeworkAiGenerateModal', () => {
         awaitingDecision: true,
       },
     });
-    renderModal();
+    renderModal({ onAwaitingDecision });
 
-    expect(screen.getByText(/новый вариант не применён автоматически/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Заменить мой текст' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Оставить как есть' })).toBeInTheDocument();
+    await vi.waitFor(() => expect(onAwaitingDecision).toHaveBeenCalledOnce());
+    expect(screen.queryByRole('button', { name: 'Заменить мой текст' })).not.toBeInTheDocument();
   });
 });

@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HomeworkStatusChip } from '@/components/ui/HomeworkStatusChip';
+import { AiGeneratedBadge } from '@/components/ui/AiGeneratedBadge';
 import { cx } from '@/lib/format';
 import type { Homework } from '@/lib/homeworkApi';
 import { dueLabel } from './homeworkModel';
@@ -82,7 +83,14 @@ function HomeworkRow({ row, onOpen }: { row: Homework; onOpen: () => void }) {
       aria-label={`Открыть задание «${row.title ?? ''}»`}
       className="cursor-pointer border-b border-line last:border-b-0 transition hover:bg-neutral-bg/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400/50"
     >
-      <td className="px-5 py-3 text-sm font-medium text-ink">{row.title}</td>
+      <td className="px-5 py-3 text-sm font-medium text-ink">
+        <span className="flex items-center gap-2">
+          <span className="min-w-0">{row.title}</span>
+          {row.creationMode != null && row.creationMode !== 'MANUAL' && (
+            <AiGeneratedBadge compact />
+          )}
+        </span>
+      </td>
       <td className="px-5 py-3 text-13 text-muted">{row.subjectName}</td>
       <td className="px-5 py-3 text-13 text-muted">{classLabel(row)}</td>
       <td className="px-5 py-3">

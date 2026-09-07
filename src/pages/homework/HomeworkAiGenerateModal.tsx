@@ -7,7 +7,6 @@ import { AiJobProgress } from '@/components/ui/AiJobProgress';
 import { NoticeBar } from '@/components/ui/NoticeBar';
 import { EmptyBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import {
-  useApplyHomeworkAiResult,
   useHomeworkAiJob,
   useHomeworkAiQuota,
   useLessonMaterials,
@@ -39,6 +38,7 @@ export function HomeworkAiGenerateModal({
   lessonId,
   kind,
   onWriteManually,
+  onAwaitingDecision,
 }: {
   open: boolean;
   onClose: () => void;
@@ -47,12 +47,16 @@ export function HomeworkAiGenerateModal({
   kind: GenerateKind;
   /** «Написать самому» — всегда доступный выход, если модель не справилась. */
   onWriteManually: () => void;
+  /**
+   * Результат готов, но не применён: учитель правил задание. Окно уступает место
+   * экрану сравнения — решение принимают, увидев оба варианта, а не вслепую.
+   */
+  onAwaitingDecision: () => void;
 }) {
   const toast = useToast();
   const quotaQuery = useHomeworkAiQuota(open);
   const materialsQuery = useLessonMaterials(open ? lessonId : null);
   const start = useStartHomeworkAiGeneration(homeworkId);
-  const apply = useApplyHomeworkAiResult(homeworkId);
 
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [teacherPrompt, setTeacherPrompt] = useState('');
@@ -66,7 +70,12 @@ export function HomeworkAiGenerateModal({
   const { data: job } = useHomeworkAiJob(open ? jobId : null);
   const materials = useMemo(() => materialsQuery.data ?? [], [materialsQuery.data]);
   const quota = quotaQuery.data;
-  const running = job?.status === 'PENDING' || job?.status === 'RUNNING';
+  // Между «задача создана» и первым ответом опроса данных о ней ещё нет. Без этой
+  // подстановки окно в эту паузу пустеет до одной кнопки «Закрыть» — учитель видит
+  // не ожидание, а поломку. Состояние честное: задача действительно уже стоит в
+  // очереди, просто мы ещё не спросили о ней.
+  const shown = job ?? (jobId != null ? { id: jobId, homeworkId, kind, status: 'PENDING' as const } : undefined);
+  const running = shown?.status === 'PENDING' || shown?.status === 'RUNNING';
   const exhausted = (quota?.remaining ?? 1) <= 0;
 
   // Материалы урока предлагаются все: учитель приложил их именно затем, чтобы по ним
@@ -95,8 +104,12 @@ export function HomeworkAiGenerateModal({
     if (job.applied) {
       toast.success(job.warningMessage ? `Готово. ${job.warningMessage}` : 'Готово');
       onClose();
+      return;
     }
-  }, [job, toast, onClose]);
+    // Результат ждёт решения. Принимать его здесь нельзя: выбор между своим текстом и
+    // машинным делается по прочитанному, а это окно показать оба варианта не может.
+    if (job.awaitingDecision) onAwaitingDecision();
+  }, [job, toast, onClose, onAwaitingDecision]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -117,17 +130,6 @@ export function HomeworkAiGenerateModal({
     }
   }
 
-  async function onApply() {
-    if (jobId == null) return;
-    try {
-      await apply.mutateAsync(jobId);
-      toast.success('Новый вариант в задании');
-      onClose();
-    } catch (caught) {
-      toast.error(caught instanceof ApiError ? caught.message : 'Не удалось применить результат');
-    }
-  }
-
   const title = kind === 'TEST' ? 'Сгенерировать тест' : 'Сгенерировать конспект';
 
   return (
@@ -138,16 +140,10 @@ export function HomeworkAiGenerateModal({
       subtitle="По материалам урока. Результат — черновик: перечитайте его перед публикацией."
       size="lg"
     >
-      {job?.awaitingDecision ? (
-        <AwaitingDecision
-          busy={apply.isPending}
-          onApply={() => void onApply()}
-          onKeep={onClose}
-        />
-      ) : jobId != null ? (
+      {jobId != null ? (
         <div className="flex flex-col gap-4">
           <AiJobProgress
-            job={job}
+            job={shown}
             fallbackAction={
               <Button
                 variant="secondary"
@@ -268,33 +264,6 @@ export function HomeworkAiGenerateModal({
  * Результат готов, но задание правил человек. Заменять его работу молча нельзя, поэтому
  * выбор явный — и «оставить как есть» не теряет результат: применить его можно позже.
  */
-function AwaitingDecision({
-  busy,
-  onApply,
-  onKeep,
-}: {
-  busy: boolean;
-  onApply: () => void;
-  onKeep: () => void;
-}) {
-  return (
-    <div className="flex flex-col gap-4">
-      <NoticeBar tone="soft">
-        Вы правили задание после прошлой генерации, поэтому новый вариант не применён
-        автоматически. Посмотрите его и решите сами — ваш текст пока на месте.
-      </NoticeBar>
-      <div className="flex flex-wrap justify-end gap-2">
-        <Button variant="secondary" onClick={onKeep} disabled={busy}>
-          Оставить как есть
-        </Button>
-        <Button onClick={onApply} loading={busy}>
-          Заменить мой текст
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 function MaterialPicker({
   loading,
   materials,

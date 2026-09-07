@@ -1,14 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Paperclip, Sparkles } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { HomeworkStatusChip } from '@/components/ui/HomeworkStatusChip';
+import { AiGeneratedBadge } from '@/components/ui/AiGeneratedBadge';
+import { MathText } from '@/components/ui/MathText';
+import { NoticeBar } from '@/components/ui/NoticeBar';
 import {
   HomeworkAiGenerateModal,
   type GenerateKind,
 } from './HomeworkAiGenerateModal';
+import { AiJobProgress } from '@/components/ui/AiJobProgress';
+import {
+  useApplyHomeworkAiResult,
+  useDiscardHomeworkAiResult,
+  useHomeworkAiJobs,
+} from '@/hooks/queries';
+import type { HomeworkAiJob } from '@/lib/homeworkAiApi';
+import { HomeworkAiCompareModal } from './HomeworkAiCompareModal';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -46,6 +57,8 @@ export function HomeworkCardPage() {
   const [filter, setFilter] = useState<RosterFilter>('ALL');
   const [confirm, setConfirm] = useState<null | 'complete' | 'reopen' | 'cancel' | 'delete'>(null);
   const [generateKind, setGenerateKind] = useState<GenerateKind | null>(null);
+  const [confirmRegenerate, setConfirmRegenerate] = useState<GenerateKind | null>(null);
+  const [compareOpen, setCompareOpen] = useState(false);
 
   const cardQuery = useQuery({
     queryKey: ['homework', 'card', id],
@@ -69,6 +82,33 @@ export function HomeworkCardPage() {
     queryFn: ({ signal }) => homeworkApi.listMaterials(id, signal),
     enabled: Boolean(homework),
   });
+
+  /**
+   * Генерации задания — второй источник правды о карточке: окно закрывают и уходят,
+   * а задача продолжает идти. Отсюда же берётся результат, который ждёт решения
+   * учителя: без карточки он был бы недостижим — окно при следующем открытии
+   * показывает форму, а не прошлый ответ, и учитель платил бы за генерацию заново.
+   */
+  const aiJobsQuery = useHomeworkAiJobs(homework ? id : null);
+  const aiJobs = aiJobsQuery.data ?? [];
+  const runningAiJob = aiJobs.find(
+    (job) => job.status === 'PENDING' || job.status === 'RUNNING',
+  );
+  const awaitingAiJob = aiJobs.find((job) => job.awaitingDecision);
+  const applyAi = useApplyHomeworkAiResult(id);
+  const discardAi = useDiscardHomeworkAiResult(id);
+
+  // Задача закончилась — в задании уже новый текст, и карточка обязана его показать.
+  const wasRunning = useRef(false);
+  useEffect(() => {
+    if (runningAiJob) {
+      wasRunning.current = true;
+      return;
+    }
+    if (!wasRunning.current) return;
+    wasRunning.current = false;
+    void queryClient.invalidateQueries({ queryKey: ['homework'] });
+  }, [runningAiJob, queryClient]);
 
   /**
    * Любое действие обновляет карточку и ростер (§10): статус меняет и то, что можно делать,
@@ -134,6 +174,23 @@ export function HomeworkCardPage() {
     );
   }
 
+  /**
+   * Повторная генерация поверх готового текста — не то же самое, что первая: она
+   * стоит платного вызова и заканчивается не готовым заданием, а выбором. Учитель
+   * должен узнать об этом до нажатия, а не после.
+   */
+  function askGenerate(kind: GenerateKind) {
+    const hasContent =
+      kind === 'TEST'
+        ? (homework?.questionCount ?? 0) > 0
+        : Boolean(homework?.description?.trim());
+    if (hasContent) {
+      setConfirmRegenerate(kind);
+      return;
+    }
+    setGenerateKind(kind);
+  }
+
   const students = rosterQuery.data?.students ?? [];
   const visible = filterRoster(students, filter);
   const busy = mutate.isPending;
@@ -147,8 +204,15 @@ export function HomeworkCardPage() {
         onPublish={() => mutate.mutate('publish')}
         onEdit={() => navigate(`/homework/${id}/edit`)}
         onAsk={setConfirm}
-        onGenerate={setGenerateKind}
+        aiGenerated={homework.creationMode != null && homework.creationMode !== 'MANUAL'}
+        onGenerate={askGenerate}
         onOpenQuestions={() => navigate(`/homework/${id}/questions`)}
+      />
+
+      <HomeworkAiStatus
+        running={runningAiJob}
+        awaiting={awaitingAiJob}
+        onReview={() => setCompareOpen(true)}
       />
 
       {homework.status === 'DRAFT' ? (
@@ -203,6 +267,56 @@ export function HomeworkCardPage() {
         lessonId={homework.lesson?.id ?? null}
         kind={generateKind ?? 'MATERIAL'}
         onWriteManually={() => navigate(`/homework/${id}/edit`)}
+        onAwaitingDecision={() => {
+          setGenerateKind(null);
+          setCompareOpen(true);
+        }}
+      />
+
+      <HomeworkAiCompareModal
+        open={compareOpen && awaitingAiJob != null}
+        onClose={() => setCompareOpen(false)}
+        homeworkId={id}
+        job={awaitingAiJob}
+        currentText={homework.description}
+        currentQuestionCount={homework.questionCount ?? 0}
+        busy={applyAi.isPending || discardAi.isPending}
+        onApply={() => {
+          if (awaitingAiJob?.id == null) return;
+          applyAi.mutate(awaitingAiJob.id, {
+            onSuccess: () => {
+              setCompareOpen(false);
+              toast.success('Новый вариант в задании');
+            },
+            onError: () => toast.error('Не удалось применить результат'),
+          });
+        }}
+        onDiscard={() => {
+          if (awaitingAiJob?.id == null) return;
+          discardAi.mutate(awaitingAiJob.id, {
+            onSuccess: () => {
+              setCompareOpen(false);
+              toast.success('Оставили ваш текст');
+            },
+            onError: () => toast.error('Не удалось отклонить вариант'),
+          });
+        }}
+      />
+
+      <ConfirmDialog
+        open={confirmRegenerate != null}
+        onClose={() => setConfirmRegenerate(null)}
+        onConfirm={() => {
+          setGenerateKind(confirmRegenerate);
+          setConfirmRegenerate(null);
+        }}
+        title={confirmRegenerate === 'TEST' ? 'Сгенерировать тест заново?' : 'Сгенерировать конспект заново?'}
+        confirmLabel="Сгенерировать"
+        message={
+          confirmRegenerate === 'TEST'
+            ? 'В задании уже есть вопросы. Ваши правки не пропадут: новый набор не заменит их сам — вы сравните варианты и решите, какой оставить.'
+            : 'В задании уже есть текст. Ваши правки не пропадут: новый вариант не заменит их сам — вы сравните варианты и решите, какой оставить.'
+        }
       />
 
       <ConfirmDialog
@@ -247,10 +361,57 @@ export function HomeworkCardPage() {
   );
 }
 
+/**
+ * Что сейчас происходит с генерацией — одной полосой над карточкой.
+ *
+ * <p>Два состояния, и оба нужны именно здесь, а не в окне генерации: окно закрывают
+ * («результат сохранится и дождётся вас» — это обещание кто-то должен выполнить), а
+ * задача продолжает идти. Ожидающий решения результат без этой полосы попросту
+ * недостижим: окно при следующем открытии предложит платную генерацию заново.
+ */
+function HomeworkAiStatus({
+  running,
+  awaiting,
+  onReview,
+}: {
+  running: HomeworkAiJob | undefined;
+  awaiting: HomeworkAiJob | undefined;
+  onReview: () => void;
+}) {
+  if (running) {
+    return (
+      <div className="card p-5">
+        <AiJobProgress job={running} />
+      </div>
+    );
+  }
+  if (!awaiting) return null;
+
+  // Одно действие, а не выбор прямо здесь: выбирают, прочитав оба варианта, и полоса
+  // ведёт туда, где их видно. Два равнозначных решения в узкой строке ещё и лишают
+  // главное действие всякого выделения — на цветной подложке кнопки сравниваются.
+  return (
+    <NoticeBar tone="soft">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-ink">Модель подготовила новый вариант</p>
+          <p className="text-13 text-muted">
+            Он не заменил ваш текст сам — вы правили задание после прошлой генерации.
+          </p>
+        </div>
+        <Button size="sm" onClick={onReview}>
+          Сравнить варианты
+        </Button>
+      </div>
+    </NoticeBar>
+  );
+}
+
 function HomeworkHeader({
   homework,
   materials,
   busy,
+  aiGenerated,
   onPublish,
   onEdit,
   onAsk,
@@ -260,6 +421,8 @@ function HomeworkHeader({
   homework: Homework;
   materials: Array<{ id?: number; fileName?: string; url?: string }>;
   busy: boolean;
+  /** Содержимое задания собрала модель — учитель отвечает за него перед классом. */
+  aiGenerated: boolean;
   onPublish: () => void;
   onEdit: () => void;
   onAsk: (action: 'complete' | 'reopen' | 'cancel' | 'delete') => void;
@@ -281,6 +444,7 @@ function HomeworkHeader({
           </Link>
           <h1 className="truncate text-2xl font-bold text-ink">{homework.title}</h1>
           <HomeworkStatusChip status={homework.status} overdue={homework.overdue} />
+          {aiGenerated && <AiGeneratedBadge />}
         </div>
 
         <div className="flex shrink-0 flex-wrap gap-2">
@@ -389,8 +553,11 @@ function HomeworkHeader({
         />
       </dl>
 
+      {/* Описание — поле с формулами: модель пишет в него $…$ по прямой инструкции
+          промпта (HomeworkAiPrompts), да и учитель может набрать формулу руками.
+          Сырым текстом ученик увидел бы \frac вместо дроби. */}
       {homework.description ? (
-        <p className="whitespace-pre-wrap text-sm text-muted">{homework.description}</p>
+        <MathText text={homework.description} className="block text-sm text-muted" />
       ) : null}
 
       {materials.length > 0 && (

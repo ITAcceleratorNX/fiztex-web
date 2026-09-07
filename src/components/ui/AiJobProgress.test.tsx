@@ -29,6 +29,20 @@ describe('AiJobProgress', () => {
     expect(screen.getByText('Составляю')).toBeInTheDocument();
   });
 
+  it('для подсказки оценок называет проверку ответов, а не составление задания', () => {
+    render(
+      <AiJobProgress
+        job={job({
+          kind: 'GRADE_SUGGESTION',
+          phase: 'CALLING_MODEL',
+          progressDone: 2,
+          progressTotal: 3,
+        })}
+      />,
+    );
+    expect(screen.getByText('Проверяю открытые ответы · 2 из 3')).toBeInTheDocument();
+  });
+
   /** Пока фазы нет — задача взята в работу, но ещё не дошла до первого шага. */
   it('без фазы говорит, что начинает', () => {
     render(<AiJobProgress job={job({ status: 'PENDING' })} />);

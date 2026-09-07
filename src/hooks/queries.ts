@@ -1377,6 +1377,11 @@ export function useHomeworkAiJob(jobId: number | null) {
       if (!job) return 1500;
       return job.status === 'PENDING' || job.status === 'RUNNING' ? 1500 : false;
     },
+    // Генерация идёт секунды и стоит денег, и ждать её учитель уходит в соседнюю
+    // вкладку. По умолчанию опрос в скрытой вкладке встаёт, и вернувшийся видит
+    // замерший индикатор — ровно то «приложение зависло», против которого этот
+    // индикатор и сделан. Лишний запрос раз в 1.5 с живёт только пока задача идёт.
+    refetchIntervalInBackground: true,
   });
 }
 
@@ -1385,6 +1390,16 @@ export function useHomeworkAiJobs(homeworkId: number | null) {
     queryKey: keys.homeworkAiJobs(homeworkId ?? 0),
     queryFn: ({ signal }) => homeworkAiApi.jobs(homeworkId as number, signal),
     enabled: homeworkId != null,
+    // Окно генерации закрывают и уходят: карточка — второе место, где учитель
+    // узнаёт, что задача ещё идёт и что результат уже ждёт решения. Пока
+    // незаконченных задач нет, опроса тоже нет.
+    refetchInterval: (query) =>
+      (query.state.data ?? []).some(
+        (job) => job.status === 'PENDING' || job.status === 'RUNNING',
+      )
+        ? 2000
+        : false,
+    refetchIntervalInBackground: true,
   });
 }
 
@@ -1416,6 +1431,23 @@ function useHomeworkAiResultCommand(mutationFn: (jobId: number) => Promise<unkno
 
 export function useApplyHomeworkAiResult(homeworkId: number) {
   return useHomeworkAiResultCommand((jobId: number) => homeworkAiApi.apply(homeworkId, jobId));
+}
+
+/**
+ * Что предлагает модель. Спрашивается только когда предпросмотр открыт: содержимое
+ * результата больше самой задачи, и тянуть его вместе со списком незачем.
+ */
+export function useHomeworkAiResult(homeworkId: number, jobId: number | null) {
+  return useQuery({
+    queryKey: [...keys.homeworkAiJobs(homeworkId), 'result', jobId ?? 0],
+    queryFn: ({ signal }) => homeworkAiApi.result(homeworkId, jobId as number, signal),
+    enabled: jobId != null,
+  });
+}
+
+/** «Оставить как есть»: вариант модели отклонён, задание не тронуто. */
+export function useDiscardHomeworkAiResult(homeworkId: number) {
+  return useHomeworkAiResultCommand((jobId: number) => homeworkAiApi.discard(homeworkId, jobId));
 }
 
 export function useRevertHomeworkAiResult(homeworkId: number) {

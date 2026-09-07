@@ -174,7 +174,7 @@ export function LessonMaterialsPage() {
       )}
 
       {canManage && (
-        <div className="card flex flex-col gap-4">
+        <div className="card flex flex-col gap-4 p-5">
           <div className="flex flex-wrap items-center gap-3">
             <input
               ref={fileInput}

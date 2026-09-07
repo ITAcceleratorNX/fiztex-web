@@ -12,6 +12,7 @@ import type { Schema } from '@/lib/apiSchemas';
 export type LessonMaterial = Schema<'LessonMaterialView'>;
 export type HomeworkAiJob = Schema<'HomeworkAiJobView'>;
 export type HomeworkAiQuota = Schema<'HomeworkAiQuotaView'>;
+export type HomeworkAiResult = Schema<'HomeworkAiResultView'>;
 export type HomeworkQuestion = Schema<'HomeworkQuestionView'>;
 export type StudentQuestion = Schema<'StudentQuestionView'>;
 export type TeacherAnswer = Schema<'TeacherAnswerView'>;
@@ -84,6 +85,18 @@ export const homeworkAiApi = {
   /** Применить результат к заданию — когда он не применился сам из-за правок учителя. */
   apply: (homeworkId: number, jobId: number) =>
     request<HomeworkAiJob>(`/homework/${homeworkId}/ai-generations/${jobId}/apply`, {
+      method: 'POST',
+    }),
+
+  /** Что предлагает модель — чтобы решение принималось по прочитанному. */
+  result: (homeworkId: number, jobId: number, signal?: AbortSignal) =>
+    request<HomeworkAiResult>(`/homework/${homeworkId}/ai-generations/${jobId}/result`, {
+      signal,
+    }),
+
+  /** Отказаться от предложенного варианта: учитель оставляет свой текст. */
+  discard: (homeworkId: number, jobId: number) =>
+    request<HomeworkAiJob>(`/homework/${homeworkId}/ai-generations/${jobId}/discard`, {
       method: 'POST',
     }),
 

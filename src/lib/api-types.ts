@@ -1243,7 +1243,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_10"];
+        get: operations["get_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1931,7 +1931,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_9"];
+        get: operations["get_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2283,7 +2283,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_8"];
+        get: operations["get_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2315,7 +2315,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["result"];
+        get: operations["result_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3147,7 +3147,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_7"];
+        get: operations["get_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3230,6 +3230,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["apply"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/ai-generations/{jobId}/discard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["discard"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/ai-generations/{jobId}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["result"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4363,7 +4395,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_11"];
+        get: operations["get_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6124,6 +6156,15 @@ export interface components {
             /** Format: int64 */
             used?: number;
         };
+        HomeworkAiResultView: {
+            applied?: boolean;
+            /** Format: int64 */
+            jobId?: number;
+            /** @enum {string} */
+            kind?: "MATERIAL" | "TEST" | "GRADE_SUGGESTION" | "QUESTION";
+            questions?: components["schemas"]["Question"][];
+            text?: string;
+        };
         HomeworkGroupSetView: {
             /** Format: int64 */
             classId?: number;
@@ -7633,6 +7674,13 @@ export interface components {
             /** Format: int64 */
             version?: number;
             workingDays: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
+        };
+        Question: {
+            maxScore?: number;
+            options?: string[];
+            text?: string;
+            /** @enum {string} */
+            type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT";
         };
         QuestionFormulaIssue: {
             /** @enum {string} */
@@ -11374,7 +11422,7 @@ export interface operations {
             };
         };
     };
-    get_10: {
+    get_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -12686,7 +12734,7 @@ export interface operations {
             };
         };
     };
-    get_9: {
+    get_10: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -13364,7 +13412,7 @@ export interface operations {
             };
         };
     };
-    get_8: {
+    get_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -13408,7 +13456,7 @@ export interface operations {
             };
         };
     };
-    result: {
+    result_1: {
         parameters: {
             query?: never;
             header: {
@@ -14807,7 +14855,7 @@ export interface operations {
             };
         };
     };
-    get_7: {
+    get_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -14968,6 +15016,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HomeworkAiJobView"];
+                };
+            };
+        };
+    };
+    discard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkAiJobView"];
+                };
+            };
+        };
+    };
+    result: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkAiResultView"];
                 };
             };
         };
@@ -16908,7 +17002,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                "application/json": components["schemas"]["ServiceRequestView"];
+                    "application/json": components["schemas"]["ServiceRequestView"];
                 };
             };
         };
@@ -17014,7 +17108,7 @@ export interface operations {
             };
         };
     };
-    get_11: {
+    get_7: {
         parameters: {
             query?: never;
             header?: never;

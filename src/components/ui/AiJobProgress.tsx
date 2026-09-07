@@ -80,7 +80,11 @@ export function AiJobProgress({
  * шум, и бэкенд в таком случае его не присылает.
  */
 function phaseLabel(job: HomeworkAiJob): string {
-  const base = PHASE_LABELS[job.phase ?? ''] ?? 'Начинаю…';
+  // «Составляю» подходит конспекту и тесту, но звучит странно рядом с ответами ученика.
+  // Вид задачи приходит с тем же job, поэтому не нужен второй проп и два почти одинаковых
+  // компонента прогресса.
+  const labels = job.kind === 'GRADE_SUGGESTION' ? GRADE_SUGGESTION_PHASE_LABELS : PHASE_LABELS;
+  const base = labels[job.phase ?? ''] ?? 'Начинаю…';
   const done = job.progressDone;
   const total = job.progressTotal;
   if (done == null || total == null || total <= 1) return base;
@@ -91,4 +95,10 @@ const PHASE_LABELS: Record<string, string> = {
   READING_MATERIALS: 'Читаю материалы урока',
   CALLING_MODEL: 'Составляю',
   APPLYING: 'Почти готово',
+};
+
+const GRADE_SUGGESTION_PHASE_LABELS: Record<string, string> = {
+  READING_MATERIALS: 'Готовлю ответы к проверке',
+  CALLING_MODEL: 'Проверяю открытые ответы',
+  APPLYING: 'Сохраняю подсказки',
 };

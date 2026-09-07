@@ -13,8 +13,9 @@ import { homeworkApi, type Attempt, type ReviewDecision } from '@/lib/homeworkAp
 import { AttachmentChip, AttachmentThumb } from './AttachmentLink';
 import { SUBMISSION_STATUS_LABELS, SUBMISSION_STATUS_TONES } from './homeworkModel';
 
-import { useHomeworkGrades } from '@/hooks/queries';
+import { useHomeworkGrades, useHomeworkQuestions, useStudentAnswers } from '@/hooks/queries';
 import { SubmissionGradeBlock } from './SubmissionGradeBlock';
+import { HomeworkTestAnswerReview } from './HomeworkTestAnswerReview';
 /** §9.3: комментарий и фотографии ограничены бэкендом, дублировать числа больше негде. */
 const COMMENT_LIMIT = 2000;
 const PHOTO_LIMIT = 5;
@@ -27,8 +28,8 @@ const PHOTO_LIMIT = 5;
  * поле существует, — поэтому 409 показывается отдельным понятным текстом, а экран
  * перезагружает работу, чтобы учитель решал уже по актуальной версии.
  *
- * Поля оценки здесь нет намеренно: в макете оно есть, но по ТЗ §11 связка Homework с
- * журналом делается отдельной задачей, и подключать поле раньше API нельзя.
+ * Для теста эта страница показывает разбор по вопросам, но не смешивает его с оценкой
+ * в журнале: балл за ответ остаётся решением учителя, а Grade ставится отдельным блоком.
  */
 export function SubmissionReviewPage() {
   const { homeworkId, studentProfileId } = useParams<{ homeworkId: string; studentProfileId: string }>();
@@ -49,6 +50,18 @@ export function SubmissionReviewPage() {
     enabled: Number.isFinite(id) && Number.isFinite(studentId),
   });
   const submission = submissionQuery.data;
+  const hasCurrentAttempt = submission?.currentAttempt?.id != null;
+
+  // Тестовые ответы запрашиваются только после появления текущей отправки: у не сдавшего
+  // ученика этот адрес корректно вернул бы пустой список, но лишний запрос ничего не даёт.
+  const testAnswersQuery = useStudentAnswers(
+    hasCurrentAttempt && Number.isFinite(id) && Number.isFinite(studentId) ? id : null,
+    hasCurrentAttempt && Number.isFinite(id) && Number.isFinite(studentId) ? studentId : null,
+  );
+  const hasTestAnswers = (testAnswersQuery.data?.length ?? 0) > 0;
+  // TeacherAnswerView хранит id вариантов, а их текст — учительский список вопросов.
+  const testQuestionsQuery = useHomeworkQuestions(hasTestAnswers ? id : null);
+  const refreshTestAnswers = useCallback(() => testAnswersQuery.refetch(), [testAnswersQuery.refetch]);
 
   useDocumentTitle(submission?.studentFullName ?? 'Работа ученика');
 
@@ -195,6 +208,29 @@ export function SubmissionReviewPage() {
       </div>
 
       {current ? (
+        testAnswersQuery.isPending ? (
+          <section className="card">
+            <LoadingBlock label="Загрузка ответов ученика…" />
+          </section>
+        ) : testAnswersQuery.isError ? (
+          <section className="card">
+            <ErrorBlock
+              message="Не удалось загрузить ответы ученика"
+              onRetry={() => void testAnswersQuery.refetch()}
+            />
+          </section>
+        ) : hasTestAnswers ? (
+          <HomeworkTestAnswerReview
+            homeworkId={id}
+            studentProfileId={studentId}
+            answers={testAnswersQuery.data ?? []}
+            questions={testQuestionsQuery.data}
+            questionsLoading={testQuestionsQuery.isPending}
+            questionsError={testQuestionsQuery.isError}
+            onRetryQuestions={() => void testQuestionsQuery.refetch()}
+            onRefreshAnswers={refreshTestAnswers}
+          />
+        ) : (
         <AttemptCard
           attempt={current}
           totalVersions={submission.attemptCount ?? 1}
@@ -202,6 +238,7 @@ export function SubmissionReviewPage() {
           loadReviewPhoto={loadReviewPhoto}
           current
         />
+        )
       ) : (
         <div className="card">
           <EmptyBlock title="Ученик ещё не отправил работу" />
