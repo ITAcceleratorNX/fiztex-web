@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Paperclip } from 'lucide-react';
+import { ArrowLeft, Paperclip, Sparkles } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { HomeworkStatusChip } from '@/components/ui/HomeworkStatusChip';
+import {
+  HomeworkAiGenerateModal,
+  type GenerateKind,
+} from './HomeworkAiGenerateModal';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -41,6 +45,7 @@ export function HomeworkCardPage() {
 
   const [filter, setFilter] = useState<RosterFilter>('ALL');
   const [confirm, setConfirm] = useState<null | 'complete' | 'reopen' | 'cancel' | 'delete'>(null);
+  const [generateKind, setGenerateKind] = useState<GenerateKind | null>(null);
 
   const cardQuery = useQuery({
     queryKey: ['homework', 'card', id],
@@ -142,6 +147,7 @@ export function HomeworkCardPage() {
         onPublish={() => mutate.mutate('publish')}
         onEdit={() => navigate(`/homework/${id}/edit`)}
         onAsk={setConfirm}
+        onGenerate={setGenerateKind}
       />
 
       {homework.status === 'DRAFT' ? (
@@ -188,6 +194,15 @@ export function HomeworkCardPage() {
           />
         </>
       )}
+
+      <HomeworkAiGenerateModal
+        open={generateKind != null}
+        onClose={() => setGenerateKind(null)}
+        homeworkId={id}
+        lessonId={homework.lesson?.id ?? null}
+        kind={generateKind ?? 'MATERIAL'}
+        onWriteManually={() => navigate(`/homework/${id}/edit`)}
+      />
 
       <ConfirmDialog
         open={confirm === 'complete'}
@@ -238,6 +253,7 @@ function HomeworkHeader({
   onPublish,
   onEdit,
   onAsk,
+  onGenerate,
 }: {
   homework: Homework;
   materials: Array<{ id?: number; fileName?: string; url?: string }>;
@@ -245,6 +261,7 @@ function HomeworkHeader({
   onPublish: () => void;
   onEdit: () => void;
   onAsk: (action: 'complete' | 'reopen' | 'cancel' | 'delete') => void;
+  onGenerate: (kind: GenerateKind) => void;
 }) {
   const actions = homeworkActions(homework);
 
@@ -268,6 +285,30 @@ function HomeworkHeader({
             <Button variant="secondary" size="sm" onClick={onEdit} disabled={busy}>
               Редактировать
             </Button>
+          )}
+          {/* Генерация — только пока задание черновик: после публикации ученики уже
+              видят текст, и подменять его машинным вариантом нельзя. */}
+          {actions.canEdit && homework.status === 'DRAFT' && (
+            <>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => onGenerate('MATERIAL')}
+                disabled={busy}
+              >
+                <Sparkles className="size-3.5" aria-hidden />
+                Конспект
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => onGenerate('TEST')}
+                disabled={busy}
+              >
+                <Sparkles className="size-3.5" aria-hidden />
+                Тест
+              </Button>
+            </>
           )}
           {actions.canPublish && (
             <Button size="sm" onClick={onPublish} loading={busy}>

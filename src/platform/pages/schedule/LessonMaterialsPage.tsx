@@ -278,7 +278,7 @@ function MaterialRow({
             type="button"
             onClick={onDelete}
             aria-label="Удалить материал"
-            className="text-subtle transition hover:text-danger-fg"
+            className="text-subtle transition hover:text-red-600"
           >
             <Trash2 className="size-4" />
           </button>
