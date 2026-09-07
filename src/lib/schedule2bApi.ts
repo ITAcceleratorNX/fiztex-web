@@ -4,7 +4,9 @@ import type {
   AutoSplitRequest,
   GroupSet,
   GroupSetAggregate,
+  MyTeacherAvailability,
   PutAvailabilityRequest,
+  SubmitAvailabilityProposalRequest,
   Subgroup,
   SubgroupStudent,
   TeacherAvailability,
@@ -65,6 +67,8 @@ export type TeacherAvailabilitySummaryFilters = {
   name?: string;
   /** Omit for «Все» — the backend treats a missing param as no filter. */
   availability?: TeacherAvailabilityState;
+  /** Только учителя с заявкой на рассмотрении; omit — без фильтра. */
+  pendingProposal?: boolean;
   page?: number;
   size?: number;
 };
@@ -83,6 +87,7 @@ export const teacherAvailabilityApi = {
         academicYearId: filters.academicYearId,
         name: filters.name || undefined,
         availability: filters.availability,
+        pendingProposal: filters.pendingProposal ?? undefined,
         page: filters.page ?? 0,
         size: filters.size ?? 20,
       })}`,
@@ -101,6 +106,39 @@ export const teacherAvailabilityApi = {
       `/admin/teacher-availability-summaries/${teacherId}${pageQuery({ academicYearId })}`,
       { signal },
     ),
+
+  /**
+   * Решение по заявке учителя. Оба ответа — уже пересчитанная занятость, поэтому
+   * экран не досчитывает, что стало с часами после утверждения.
+   */
+  approveProposal: (teacherId: number) =>
+    request<TeacherAvailability>(
+      `/admin/teachers/${teacherId}/availability/proposal/approve`,
+      { method: 'POST' },
+    ),
+
+  rejectProposal: (teacherId: number, comment: string | null) =>
+    request<TeacherAvailability>(
+      `/admin/teachers/${teacherId}/availability/proposal/reject`,
+      { method: 'POST', body: { comment } },
+    ),
+};
+
+/**
+ * Своё рабочее время учителя.
+ *
+ * Вне `/admin/*` намеренно: тот префикс закрыт ролями ADMIN/SUPER_ADMIN, и
+ * учительский токен получал бы 401, который общий `request()` считает концом
+ * сессии. Учителя в пути нет — бэкенд берёт его из токена.
+ */
+export const myAvailabilityApi = {
+  get: (signal?: AbortSignal) => request<MyTeacherAvailability>('/teacher/availability', { signal }),
+
+  submit: (body: SubmitAvailabilityProposalRequest) =>
+    request<MyTeacherAvailability>('/teacher/availability/proposal', { method: 'PUT', body }),
+
+  withdraw: () =>
+    request<MyTeacherAvailability>('/teacher/availability/proposal', { method: 'DELETE' }),
 };
 
 export type GroupSetListFilters = {
@@ -156,6 +194,19 @@ export const subgroupsApi = {
 
   unassignedStudents: (id: number, signal?: AbortSignal) =>
     request<SubgroupStudent[]>(`/admin/group-sets/${id}/unassigned-students`, { signal }),
+
+  /**
+   * Подгруппы класса плоским списком — для фильтров.
+   *
+   * Через `/admin/subgroups`, а не обходом наборов: набор нужен тому, кто их правит,
+   * а фильтру нужен сам список, и собирать его из N запросов по наборам значит
+   * получить N+1 там, где бэкенд отвечает одним.
+   */
+  listSubgroups: (classId: number, signal?: AbortSignal) =>
+    request<Subgroup[]>(
+      `/admin/subgroups${pageQuery({ classId, status: 'ACTIVE' })}`,
+      { signal },
+    ),
 
   createSubgroup: (body: { groupSetId: number; name: string }) =>
     request<Subgroup>('/admin/subgroups', { method: 'POST', body }),

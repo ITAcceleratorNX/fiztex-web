@@ -24,6 +24,7 @@ import { HomeworkCardPage } from '@/pages/homework/HomeworkCardPage';
 import { HomeworkFormPage } from '@/pages/homework/HomeworkFormPage';
 import { SubmissionReviewPage } from '@/pages/homework/SubmissionReviewPage';
 import { LessonHomeworkPage } from '@/pages/homework/LessonHomeworkPage';
+import { MyAvailabilityPage } from '@/pages/schedule/MyAvailabilityPage';
 import { MySchedulePage } from '@/pages/schedule/MySchedulePage';
 import { HomeworkGroupsPage } from '@/pages/homework/HomeworkGroupsPage';
 import { DashboardPage } from '@/pages/DashboardPage';
@@ -153,6 +154,7 @@ export function App() {
         <Route path="/schedule" element={<Navigate to="/lesson-schedule" replace />} />
         {/* Своё расписание учителя: ролевой экран, из него открывается урок. */}
         <Route path={ROUTES.mySchedule} element={<MySchedulePage />} />
+        <Route path={ROUTES.myAvailability} element={<MyAvailabilityPage />} />
         <Route path="/lesson-schedule" element={<LessonSchedulePage />} />
         <Route path="/lesson-schedule/lessons/:lessonId" element={<LessonCardPage />} />
         {/* Лист посещаемости вложен в урок, потому что без урока не существует:

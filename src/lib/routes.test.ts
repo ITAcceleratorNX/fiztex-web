@@ -75,7 +75,13 @@ describe('маршрутизация по роли', () => {
     // не как учебный раздел, а потому что автор у них тот же (SERVICE-FE-001 §1), и
     // читают они `/api/service-requests/my`.
     const teacher = navSectionsForRole('TEACHER').flatMap((s) => s.items.map((i) => i.to));
-    expect(teacher).toEqual(['/my-schedule', '/grades', '/homework', '/service']);
+    expect(teacher).toEqual([
+      '/my-schedule',
+      '/my-availability',
+      '/grades',
+      '/homework',
+      '/service',
+    ]);
 
     const admin = navSectionsForRole('ADMIN').flatMap((s) => s.items.map((i) => i.to));
     expect(admin).not.toContain('/homework');
@@ -101,5 +107,19 @@ describe('маршрутизация по роли', () => {
     expect(isRouteAllowedForRole('/my-schedule', 'TEACHER')).toBe(true);
     expect(isRouteAllowedForRole('/lesson-schedule', 'TEACHER')).toBe(false);
     expect(isRouteAllowedForRole('/lesson-schedule/lessons/7', 'TEACHER')).toBe(true);
+  });
+
+  /**
+   * Пункт меню, ведущий на разворот, хуже отсутствующего: заявки стояли в меню
+   * учителя, но `Protected` возвращал его с `/service` на `/homework`. Своё рабочее
+   * время — из той же породы ролевых экранов и попадает сюда сразу.
+   */
+  it('ролевые экраны учителя открываются, а не разворачиваются на главную', () => {
+    expect(isRouteAllowedForRole('/my-availability', 'TEACHER')).toBe(true);
+    expect(isRouteAllowedForRole('/service', 'TEACHER')).toBe(true);
+    expect(isRouteAllowedForRole('/service/12', 'TEACHER')).toBe(true);
+    expect(loginRedirectTarget('/my-availability', 'TEACHER')).toBe('/my-availability');
+    // Занятость учителей в конструкторе — по-прежнему админский экран.
+    expect(isRouteAllowedForRole('/lesson-schedule/teachers', 'TEACHER')).toBe(false);
   });
 });

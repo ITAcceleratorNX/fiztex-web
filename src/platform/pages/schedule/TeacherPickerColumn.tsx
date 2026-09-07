@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Info, Search } from 'lucide-react';
-import { cx } from '@/lib/format';
+import { cx, personShortName } from '@/lib/format';
 import type { TeacherAvailabilitySummary, TeacherAvailabilityState } from '@/lib/schedule2bTypes';
 import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 
@@ -12,17 +12,13 @@ export function teacherFullName(teacher: {
   return [teacher.lastName, teacher.firstName, teacher.middleName].filter(Boolean).join(' ');
 }
 
-/** «Иванова А.М.» — строка списка (2015:10889). */
+/** «Иванова А.М.» — строка списка (2015:10889). Формат общий на всю панель. */
 export function teacherShortName(teacher: {
   lastName: string;
   firstName: string;
   middleName: string | null;
 }): string {
-  const initials = [teacher.firstName, teacher.middleName]
-    .filter((part): part is string => Boolean(part))
-    .map((part) => `${part[0]!.toUpperCase()}.`)
-    .join('');
-  return initials ? `${teacher.lastName} ${initials}` : teacher.lastName;
+  return personShortName(teacher);
 }
 
 function avatarInitials(teacher: TeacherAvailabilitySummary): string {
@@ -40,12 +36,19 @@ const AVATAR_TONES = [
   'bg-brand-50',
 ] as const;
 
-export type AvailabilityFilter = TeacherAvailabilityState | null;
+/**
+ * Четвёртое значение — не состояние занятости, а заявка учителя поверх неё.
+ * В один ряд с остальными оно попало потому, что вопрос у админа один: «кого
+ * смотреть дальше», — и держать для этого два независимых переключателя значит
+ * заставлять его перебирать их сочетания.
+ */
+export type AvailabilityFilter = TeacherAvailabilityState | 'PENDING_PROPOSAL' | null;
 
 const FILTERS: Array<{ value: AvailabilityFilter; label: string }> = [
   { value: null, label: 'Все' },
   { value: 'APPROVED', label: 'Утверждено' },
   { value: 'NEEDS_REVIEW', label: 'Требует проверки' },
+  { value: 'PENDING_PROPOSAL', label: 'Ждут решения' },
 ];
 
 /**
@@ -242,13 +245,23 @@ function TeacherRow({
           </span>
         </span>
       </span>
-      <span
-        className={cx(
-          'shrink-0 rounded px-2 py-0.5 text-10 font-semibold',
-          approved ? 'bg-success-bg text-success-fg' : 'bg-attention-bg text-attention-fg',
+      <span className="flex shrink-0 items-center gap-1">
+        {teacher.pendingProposal && (
+          <span
+            className="rounded bg-attention-bg px-2 py-0.5 text-10 font-semibold text-attention-fg"
+            title="Учитель просит изменить рабочее время"
+          >
+            Заявка
+          </span>
         )}
-      >
-        {approved ? 'Утв.' : 'Проверить'}
+        <span
+          className={cx(
+            'rounded px-2 py-0.5 text-10 font-semibold',
+            approved ? 'bg-success-bg text-success-fg' : 'bg-attention-bg text-attention-fg',
+          )}
+        >
+          {approved ? 'Утв.' : 'Проверить'}
+        </span>
       </span>
     </button>
   );

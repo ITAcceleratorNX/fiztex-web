@@ -33,6 +33,8 @@ export const ROUTES = {
   homework: '/homework',
   /** Своё расписание учителя — ролевой экран поверх `/api/schedule/me/week`. */
   mySchedule: '/my-schedule',
+  /** Своё рабочее время учителя: заявка админу поверх `/api/teacher/availability`. */
+  myAvailability: '/my-availability',
   /** Журнал класса и итоги четверти (GRADES-FE-001). */
   journal: '/grades',
   /** Сервисные заявки автора — Admin и Teacher (SERVICE-FE-001). */
@@ -121,11 +123,16 @@ export function isRouteAllowedForRole(path: string, role: string | undefined): b
  *
  * Своё расписание (`/my-schedule`) — тоже ролевой экран: он читает `/api/schedule/me/week`
  * и служит учителю входом в эти самые уроки. Админский конструктор ему по-прежнему закрыт.
+ *
+ * Своё рабочее время (`/my-availability`) и сервисные заявки (`/service`) — из той же
+ * породы: оба читают ролевые эндпоинты вне `/api/admin/*`, и оба уже стоят в меню учителя.
  */
 const TEACHER_ROUTE_PREFIXES = [
   ROUTES.homework,
   ROUTES.mySchedule,
+  ROUTES.myAvailability,
   ROUTES.journal,
+  ROUTES.serviceRequests,
   '/lesson-schedule/lessons/',
 ];
 
