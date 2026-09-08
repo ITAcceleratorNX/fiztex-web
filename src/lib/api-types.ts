@@ -2900,6 +2900,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/grades/my/homework/{homeworkId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["myHomeworkGrades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/grades/my/subjects": {
         parameters: {
             query?: never;
@@ -6444,6 +6460,8 @@ export interface components {
             /** Format: int64 */
             lessonId?: number;
             overdue?: boolean;
+            /** Format: int32 */
+            questionCount?: number;
             /** @enum {string} */
             status?: "DRAFT" | "PUBLISHED" | "COMPLETED" | "CANCELLED";
             subgroupName?: string;
@@ -14370,6 +14388,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GradeAverageView"];
+                };
+            };
+        };
+    };
+    myHomeworkGrades: {
+        parameters: {
+            query?: {
+                childStudentProfileId?: number;
+            };
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeView"][];
                 };
             };
         };
