@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { HomeworkTestAnswerReview } from './HomeworkTestAnswerReview';
 
 const useLastGradeSuggestion = vi.fn();
+const useAiRecommendation = vi.fn();
 const useHomeworkAiQuota = vi.fn();
 const useSetAnswerScores = vi.fn();
 const useSuggestGrades = vi.fn();
@@ -19,6 +20,7 @@ vi.mock('@/context/ToastContext', () => ({
 
 vi.mock('@/hooks/queries', () => ({
   useLastGradeSuggestion: (...args: unknown[]) => useLastGradeSuggestion(...args),
+  useAiRecommendation: (...args: unknown[]) => useAiRecommendation(...args),
   useHomeworkAiQuota: (...args: unknown[]) => useHomeworkAiQuota(...args),
   useSetAnswerScores: (...args: unknown[]) => useSetAnswerScores(...args),
   useSuggestGrades: (...args: unknown[]) => useSuggestGrades(...args),
@@ -88,6 +90,7 @@ describe('HomeworkTestAnswerReview', () => {
     vi.clearAllMocks();
     // Состояние задачи приходит с сервера: своего хранилища у экрана нет.
     useLastGradeSuggestion.mockReturnValue({ data: undefined, refetch: vi.fn() });
+    useAiRecommendation.mockReturnValue({ data: undefined, refetch: vi.fn() });
     useHomeworkAiQuota.mockReturnValue({ data: { enabled: true, remaining: 20 } });
     useSuggestGrades.mockReturnValue({ mutateAsync: vi.fn(), isPending: false });
     useSetAnswerScores.mockReturnValue({
@@ -160,6 +163,57 @@ describe('HomeworkTestAnswerReview', () => {
 
     expect(await screen.findByLabelText('Фотографии решения')).toBeInTheDocument();
     expect(screen.getByText('Решение на фотографии')).toBeInTheDocument();
+  });
+
+  /**
+   * Оценку выбрала школьная шкала, а не модель, и на карточке это должно быть сказано:
+   * «рекомендует ИИ» иначе читается как «так решил компьютер».
+   */
+  it('показывает рекомендацию за работу вместе с оговоркой, что это не оценка', () => {
+    useAiRecommendation.mockReturnValue({
+      refetch: vi.fn(),
+      data: {
+        scaleCode: '4',
+        summary: 'Работа выполнена в основном верно.',
+        issues: ['не указаны единицы измерения'],
+        score: 2.5,
+        maxScore: 3,
+        percent: 83,
+        closedScore: 1,
+        closedMax: 1,
+      },
+    });
+    renderReview();
+
+    const card = screen.getByLabelText('Рекомендация за работу');
+    expect(card).toHaveTextContent('4');
+    expect(card).toHaveTextContent('2,5 из 3 баллов');
+    expect(card).toHaveTextContent('83%');
+    expect(card).toHaveTextContent('не указаны единицы измерения');
+    expect(card).toHaveTextContent(/в журнал ничего не попадёт/i);
+    expect(card).toHaveTextContent(/ИИ их не пересматривал/i);
+  });
+
+  /** Порогов нет — рекомендация остаётся баллами, а оценку выбирает учитель. */
+  it('без порогов шкалы показывает баллы, но не называет оценку', () => {
+    useAiRecommendation.mockReturnValue({
+      refetch: vi.fn(),
+      data: {
+        scaleCode: null,
+        summary: 'Решение верное.',
+        issues: [],
+        score: 3,
+        maxScore: 3,
+        percent: 100,
+        closedScore: 0,
+        closedMax: 0,
+      },
+    });
+    renderReview();
+
+    const card = screen.getByLabelText('Рекомендация за работу');
+    expect(card).toHaveTextContent(/школа не задала пороги/i);
+    expect(card).not.toHaveTextContent(/закрытые вопросы/i);
   });
 
   it('при выключенном ИИ объясняет это и не блокирует ручную проверку', () => {

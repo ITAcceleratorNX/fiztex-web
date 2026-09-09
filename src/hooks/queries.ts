@@ -101,6 +101,8 @@ export const keys = {
   homeworkAiQuota: ['homework', 'ai-quota'] as const,
   homeworkAiGradeSuggestion: (homeworkId: number, studentProfileId: number) =>
     ['homework', homeworkId, 'submissions', studentProfileId, 'ai-grade-suggestions'] as const,
+  homeworkAiRecommendation: (homeworkId: number, studentProfileId: number) =>
+    ['homework', homeworkId, 'submissions', studentProfileId, 'ai-recommendation'] as const,
   lessonMaterials: (lessonId: number, childId?: number) =>
     ['lessons', lessonId, 'materials', childId ?? 'self'] as const,
   // Одно пространство на весь раздел: создание, отмена и возврат меняют оба списка
@@ -1508,6 +1510,22 @@ export function useLastGradeSuggestion(homeworkId: number | null, studentProfile
       if (!job) return false;
       return job.status === 'PENDING' || job.status === 'RUNNING' ? 1500 : false;
     },
+  });
+}
+
+/**
+ * Рекомендованная оценка за работу целиком.
+ *
+ * Не опрашивается: она появляется в конце проверки, и экран перечитывает её тогда же,
+ * когда обновляет ответы, — по завершении задачи. Лишний интервал здесь означал бы запрос
+ * раз в полторы секунды всё время, что учитель читает работу.
+ */
+export function useAiRecommendation(homeworkId: number | null, studentProfileId: number | null) {
+  return useQuery({
+    queryKey: keys.homeworkAiRecommendation(homeworkId ?? 0, studentProfileId ?? 0),
+    queryFn: ({ signal }) =>
+      homeworkAiApi.recommendation(homeworkId as number, studentProfileId as number, signal),
+    enabled: homeworkId != null && studentProfileId != null,
   });
 }
 

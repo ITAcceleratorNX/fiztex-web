@@ -9,13 +9,14 @@ import { NoticeBar } from '@/components/ui/NoticeBar';
 import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
 import {
+  useAiRecommendation,
   useHomeworkAiQuota,
   useLastGradeSuggestion,
   useSetAnswerScores,
   useSuggestGrades,
 } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
-import type { HomeworkQuestion, TeacherAnswer } from '@/lib/homeworkAiApi';
+import type { AiRecommendation, HomeworkQuestion, TeacherAnswer } from '@/lib/homeworkAiApi';
 import { homeworkAnswersApi } from '@/lib/homeworkAiApi';
 import { AttachmentThumb } from './AttachmentLink';
 import { cx, pluralRu } from '@/lib/format';
@@ -77,6 +78,7 @@ export function HomeworkTestAnswerReview({
    */
   const suggestionQuery = useLastGradeSuggestion(homeworkId, studentProfileId);
   const suggestionJob = suggestionQuery.data ?? undefined;
+  const recommendationQuery = useAiRecommendation(homeworkId, studentProfileId);
 
   /**
    * Задача, за концом которой мы следим. Нужна, чтобы отличить «закончилась при нас» от
@@ -113,6 +115,9 @@ export function HomeworkTestAnswerReview({
 
     if (suggestionStatus === 'DONE') {
       void onRefreshAnswers();
+      // Рекомендация появляется последним шагом проверки: перечитываем её тогда же, когда
+      // обновляем баллы, — опрашивать её всё время, что учитель читает работу, незачем.
+      void recommendationQuery.refetch();
       toast.success(
         suggestionJob?.warningMessage
           ? `Подсказки ИИ готовы. ${suggestionJob.warningMessage}`
@@ -121,6 +126,9 @@ export function HomeworkTestAnswerReview({
       return;
     }
     toast.error('Не удалось подготовить подсказки ИИ. Баллы можно поставить вручную.');
+    // recommendationQuery намеренно не в зависимостях: у объекта запроса новая ссылка на
+    // каждый рендер, и эффект перезапускался бы бесконечно.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onRefreshAnswers, suggestionJob?.warningMessage, suggestionJobId, suggestionStatus, toast]);
 
   const questionsById = useMemo(
@@ -252,6 +260,8 @@ export function HomeworkTestAnswerReview({
 
       {aiUnavailableText && <NoticeBar tone="soft">{aiUnavailableText}</NoticeBar>}
 
+      {recommendationQuery.data && <RecommendationCard recommendation={recommendationQuery.data} />}
+
       {suggestionJob && (
         <AiJobProgress
           job={suggestionJob}
@@ -354,6 +364,73 @@ function TestAnswerCard({
       />
     </article>
   );
+}
+
+/**
+ * Рекомендация за работу целиком (ТЗ §6).
+ *
+ * <p>Оценку здесь выбрала не модель: баллы сложила система, процент перевела в оценку
+ * школьная шкала. Модель написала обоснование и перечень ошибок — и об этом на карточке
+ * сказано прямо, иначе «рекомендует ИИ» читается как «так решил компьютер».
+ */
+function RecommendationCard({ recommendation }: { recommendation: AiRecommendation }) {
+  const issues = recommendation.issues ?? [];
+  const closedMax = Number(recommendation.closedMax ?? 0);
+
+  return (
+    <section
+      className="rounded-xl border border-line bg-neutral-bg p-4"
+      aria-label="Рекомендация за работу"
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-11 font-semibold uppercase tracking-wide text-subtle">
+          Рекомендация за работу
+        </p>
+        <p className="text-11 text-muted">
+          {formatScore(recommendation.score)} из {formatScore(recommendation.maxScore)} баллов
+          {recommendation.percent != null && ` · ${recommendation.percent}%`}
+        </p>
+      </div>
+
+      <div className="mt-2 flex flex-wrap items-center gap-3">
+        {recommendation.scaleCode ? (
+          <span className="rounded-lg bg-white px-3 py-1.5 text-lg font-semibold text-ink ring-1 ring-line">
+            {recommendation.scaleCode}
+          </span>
+        ) : (
+          <span className="text-13 text-muted">
+            Оценка не выведена: школа не задала пороги. Решите по баллам.
+          </span>
+        )}
+        <p className="text-11 text-muted">
+          Не оценка: в журнал ничего не попадёт, пока вы не выставите её сами.
+        </p>
+      </div>
+
+      <MathText text={recommendation.summary} className="mt-3 block text-13 text-ink" />
+
+      {issues.length > 0 && (
+        <ul className="mt-3 list-inside list-disc space-y-1 text-13 text-ink">
+          {issues.map((issue) => (
+            <li key={issue}>{issue}</li>
+          ))}
+        </ul>
+      )}
+
+      {closedMax > 0 && (
+        <p className="mt-3 text-11 text-muted">
+          Из них {formatScore(recommendation.closedScore)} из {formatScore(recommendation.closedMax)}{' '}
+          за закрытые вопросы — их проверила система, ИИ их не пересматривал.
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** Балл без хвоста нулей: «2», а не «2.00» — это читает человек. */
+function formatScore(value: number | undefined): string {
+  if (value == null) return '0';
+  return String(Number(value)).replace('.', ',');
 }
 
 function ChoiceAnswer({ answer, question }: { answer: TeacherAnswer; question?: HomeworkQuestion }) {

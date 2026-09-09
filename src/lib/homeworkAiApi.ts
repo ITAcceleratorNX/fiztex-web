@@ -17,6 +17,7 @@ export type HomeworkQuestion = Schema<'HomeworkQuestionView'>;
 export type StudentQuestion = Schema<'StudentQuestionView'>;
 export type TeacherAnswer = Schema<'TeacherAnswerView'>;
 export type AnswerPhoto = Schema<'AnswerPhotoView'>;
+export type AiRecommendation = Schema<'HomeworkAiRecommendationView'>;
 export type SaveQuestionsRequest = Schema<'SaveHomeworkQuestionsRequest'>;
 export type StartGenerationRequest = Schema<'StartHomeworkAiGenerationRequest'>;
 export type SetAnswerScoresRequest = Schema<'SetAnswerScoresRequest'>;
@@ -111,6 +112,18 @@ export const homeworkAiApi = {
     request<HomeworkAiJob>(
       `/homework/${homeworkId}/submissions/${studentProfileId}/ai-grade-suggestions`,
       { method: 'POST', headers: idempotent(key) },
+    ),
+
+  /**
+   * Рекомендованная оценка за работу целиком — или пусто, если проверку ещё не запускали.
+   *
+   * Отдельный запрос, а не поле задачи: рекомендация живёт по попытке и переживает саму
+   * задачу, а карточку с ней экран показывает и после перезагрузки страницы.
+   */
+  recommendation: (homeworkId: number, studentProfileId: number, signal?: AbortSignal) =>
+    request<AiRecommendation | null>(
+      `/homework/${homeworkId}/submissions/${studentProfileId}/ai-recommendation`,
+      { signal },
     ),
 
   /**

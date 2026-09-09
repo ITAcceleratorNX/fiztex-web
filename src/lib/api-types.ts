@@ -3556,6 +3556,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/homework/{homeworkId}/submissions/{studentProfileId}/ai-recommendation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["recommendation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/homework/{homeworkId}/submissions/{studentProfileId}/answer-photos/{photoId}/content": {
         parameters: {
             query?: never;
@@ -6062,6 +6078,7 @@ export interface components {
         };
         GradeScaleValueView: {
             code?: string;
+            minPercent?: number;
             numericValue?: number;
             /** Format: int32 */
             sortOrder?: number;
@@ -6243,6 +6260,18 @@ export interface components {
             enabled?: boolean;
             /** Format: int64 */
             remaining?: number;
+        };
+        HomeworkAiRecommendationView: {
+            closedMax?: number;
+            closedScore?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            issues?: string[];
+            maxScore?: number;
+            percent?: number;
+            scaleCode?: string;
+            score?: number;
+            summary?: string;
         };
         HomeworkAiResultView: {
             applied?: boolean;
@@ -15696,6 +15725,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HomeworkAiJobView"];
+                };
+            };
+        };
+    };
+    recommendation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkAiRecommendationView"];
                 };
             };
         };
