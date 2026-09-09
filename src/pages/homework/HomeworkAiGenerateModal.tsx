@@ -130,7 +130,7 @@ export function HomeworkAiGenerateModal({
     }
   }
 
-  const title = kind === 'TEST' ? 'Сгенерировать тест' : 'Сгенерировать конспект';
+  const title = kind === 'TEST' ? 'Сгенерировать вопросы' : 'Сгенерировать текст задания';
 
   return (
     <Modal

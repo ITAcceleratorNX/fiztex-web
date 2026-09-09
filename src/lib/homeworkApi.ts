@@ -264,6 +264,17 @@ export type RecipientType = 'CLASS' | 'SUBGROUP' | 'TEMP_GROUP' | 'STUDENTS';
 export type DueType = 'EXACT' | 'NEXT_LESSON' | 'NONE';
 
 /**
+ * Чем ученик отвечает. Решение учителя, а не вывод из числа вопросов: раньше добавленный
+ * к текстовой работе вопрос молча отбирал у ученика форму отправки.
+ */
+export type AnswerFormat = 'WRITTEN' | 'TEST';
+
+export const ANSWER_FORMATS: ReadonlyArray<{ value: AnswerFormat; label: string }> = [
+  { value: 'WRITTEN', label: 'Текстом и файлами' },
+  { value: 'TEST', label: 'Вопросами теста' },
+];
+
+/**
  * DTO работ учеников. Объявлены здесь по той же причине, что и поля списка выше:
  * `api-types.ts` снят с ветки бэкенда без этой части контракта. Уйдут отсюда вместе
  * с блоком `HomeworkListFields` после первого `pnpm gen:api` по слитому бэкенду.
@@ -377,6 +388,7 @@ export interface CreateHomeworkInput {
   studentIds?: number[];
   dueType: DueType;
   dueAt?: string;
+  answerFormat?: AnswerFormat;
 }
 
 export interface UpdateHomeworkInput {
@@ -384,6 +396,8 @@ export interface UpdateHomeworkInput {
   description?: string;
   dueType: DueType;
   dueAt?: string;
+  /** Пусто — не менять: старые клиенты тип не присылают, а сбрасывать тест нельзя. */
+  answerFormat?: AnswerFormat;
 }
 
 export interface SetRecipientsInput {

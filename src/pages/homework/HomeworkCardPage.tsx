@@ -310,7 +310,11 @@ export function HomeworkCardPage() {
           setGenerateKind(confirmRegenerate);
           setConfirmRegenerate(null);
         }}
-        title={confirmRegenerate === 'TEST' ? 'Сгенерировать тест заново?' : 'Сгенерировать конспект заново?'}
+        title={
+          confirmRegenerate === 'TEST'
+            ? 'Сгенерировать вопросы заново?'
+            : 'Сгенерировать текст задания заново?'
+        }
         confirmLabel="Сгенерировать"
         message={
           confirmRegenerate === 'TEST'
@@ -430,6 +434,7 @@ function HomeworkHeader({
   onOpenQuestions: () => void;
 }) {
   const actions = homeworkActions(homework);
+  const isTest = homework.answerFormat === 'TEST';
 
   return (
     <div className="card flex flex-col gap-3 p-5">
@@ -455,9 +460,10 @@ function HomeworkHeader({
           )}
           {/* Генерация — только пока задание черновик: после публикации ученики уже
               видят текст, и подменять его машинным вариантом нельзя. */}
-          {/* Вопросы показываем и когда их нет: тест собирают руками, не только моделью.
-              У завершённого и отменённого — только чтение, страница это объяснит сама. */}
-          {actions.canEdit || (homework.questionCount ?? 0) > 0 ? (
+          {/* Вопросы — только у теста, и показываем их даже когда их ноль: тест собирают
+              руками, не только моделью. У работы текстом вопросов не бывает вовсе, и
+              кнопка, ведущая в редактор, который откажет, — обещание, которого нет. */}
+          {isTest && (actions.canEdit || (homework.questionCount ?? 0) > 0) ? (
             <Button
               variant="secondary"
               size="sm"
@@ -469,6 +475,9 @@ function HomeworkHeader({
                 : 'Вопросы'}
             </Button>
           ) : null}
+          {/* Генерация — только пока задание черновик, и каждая кнопка наполняет своё:
+              одна текст задания, другая вопросы. «Конспект» она называлась ошибочно —
+              модель составляет условие для ученика, а не пересказ урока. */}
           {actions.canEdit && homework.status === 'DRAFT' && (
             <>
               <Button
@@ -478,17 +487,19 @@ function HomeworkHeader({
                 disabled={busy}
               >
                 <Sparkles className="size-3.5" aria-hidden />
-                Конспект
+                Текст задания
               </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => onGenerate('TEST')}
-                disabled={busy}
-              >
-                <Sparkles className="size-3.5" aria-hidden />
-                Тест
-              </Button>
+              {isTest && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => onGenerate('TEST')}
+                  disabled={busy}
+                >
+                  <Sparkles className="size-3.5" aria-hidden />
+                  Вопросы теста
+                </Button>
+              )}
             </>
           )}
           {actions.canPublish && (

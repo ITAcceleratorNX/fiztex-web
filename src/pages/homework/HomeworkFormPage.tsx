@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Paperclip, X } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { Field, Select, TextArea, TextInput } from '@/components/ui/Field';
+import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { NoticeBar } from '@/components/ui/NoticeBar';
 import { useToast } from '@/context/ToastContext';
@@ -14,6 +15,8 @@ import { ApiError } from '@/lib/api';
 import { cx, formatWeekdayDayMonth } from '@/lib/format';
 import {
   homeworkApi,
+  ANSWER_FORMATS,
+  type AnswerFormat,
   type CreateHomeworkInput,
   type DueType,
   type RecipientType,
@@ -68,6 +71,11 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueType, setDueType] = useState<DueType>('EXACT');
+  /**
+   * Чем ученик отвечает. Выбирается здесь, а не «получается» из того, что учитель потом
+   * добавил вопрос: раньше один добавленный вопрос молча отбирал у ученика форму отправки.
+   */
+  const [answerFormat, setAnswerFormat] = useState<AnswerFormat>('WRITTEN');
   const [dueAt, setDueAt] = useState('');
   const [recipientType, setRecipientType] = useState<RecipientType>('CLASS');
   /** Урок, выбранный в форме (§2.2 + привязка). Отдельно от `lessonId` из адреса: тот задан
@@ -90,6 +98,7 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
     setTitle(existing.title ?? '');
     setDescription(existing.description ?? '');
     setDueType((existing.dueType as DueType) ?? 'EXACT');
+    setAnswerFormat((existing.answerFormat as AnswerFormat) ?? 'WRITTEN');
     setDueAt(existing.dueAt ? toLocalInput(existing.dueAt) : '');
     setRecipientType((existing.recipients?.type as RecipientType) ?? 'CLASS');
     setTempGroupId(existing.recipients?.tempGroupId ?? undefined);
@@ -240,6 +249,7 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
           description: description.trim(),
           dueType,
           dueAt: dueType === 'EXACT' ? new Date(dueAt).toISOString() : undefined,
+          answerFormat,
         });
         const recipientsChanged =
           existing?.recipients?.type !== recipientType
@@ -266,6 +276,7 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
         tempGroupId: recipientType === 'TEMP_GROUP' ? tempGroupId : undefined,
         dueType,
         dueAt: dueType === 'EXACT' ? new Date(dueAt).toISOString() : undefined,
+        answerFormat,
       };
       const created = await homeworkApi.create(input);
       createdId.current = created.id ?? null;
@@ -425,6 +436,30 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
             placeholder="Например: Параграф 12, упражнения 1–5"
             maxLength={300}
           />
+        </Field>
+
+        {/*
+          Тип выбирается до вопросов, а не после: описание есть у обоих — это текст задания,
+          — а различается то, чем отвечает ученик. Переключение теста с вопросами обратно
+          бэкенд не даст, и об этом сказано здесь же, чтобы отказ не был сюрпризом.
+        */}
+        <Field label="Как ученик отвечает" required>
+          <SegmentedTabs
+            value={answerFormat}
+            options={ANSWER_FORMATS}
+            onChange={setAnswerFormat}
+            ariaLabel="Как ученик отвечает"
+          />
+          <p className="mt-1.5 text-11 text-muted">
+            {answerFormat === 'TEST'
+              ? 'Ученик отвечает на вопросы в приложении. Вопросы добавляются на карточке задания.'
+              : 'Ученик присылает текст, фотографии решения и файлы.'}
+          </p>
+          {mode === 'edit' && (existing?.questionCount ?? 0) > 0 && answerFormat === 'TEST' && (
+            <p className="mt-1.5 text-11 text-muted">
+              Чтобы перевести задание в работу текстом, сначала удалите вопросы.
+            </p>
+          )}
         </Field>
 
         <Field label="Описание и инструкция ученику" required>

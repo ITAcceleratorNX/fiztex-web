@@ -35,7 +35,7 @@ export function HomeworkAiCompareModal({
   onClose: () => void;
   homeworkId: number;
   job: HomeworkAiJob | undefined;
-  /** Что сейчас в задании: описание для конспекта. */
+  /** Что сейчас в задании: его описание. */
   currentText: string | null | undefined;
   /** Что сейчас в задании: число вопросов для теста. */
   currentQuestionCount: number;
@@ -51,7 +51,7 @@ export function HomeworkAiCompareModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isTest ? 'Новый набор вопросов' : 'Новый вариант конспекта'}
+      title={isTest ? 'Новый набор вопросов' : 'Новый вариант текста задания'}
       subtitle="Слева то, что в задании сейчас. Справа — то, что предлагает модель."
       size="lg"
     >

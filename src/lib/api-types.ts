@@ -5391,6 +5391,8 @@ export interface components {
             value: number;
         };
         ChildHomeworkView: {
+            /** @enum {string} */
+            answerFormat?: "WRITTEN" | "TEST";
             /** Format: date-time */
             cancelledAt?: string;
             className?: string;
@@ -5821,6 +5823,8 @@ export interface components {
             subjectId: number;
         };
         CreateHomeworkRequest: {
+            /** @enum {string} */
+            answerFormat?: "WRITTEN" | "TEST";
             /** Format: int64 */
             classId?: number;
             description?: string;
@@ -6414,6 +6418,8 @@ export interface components {
             studentProfileId?: number;
         };
         HomeworkView: {
+            /** @enum {string} */
+            answerFormat?: "WRITTEN" | "TEST";
             /** Format: date-time */
             cancelledAt?: string;
             /** Format: int64 */
@@ -6570,6 +6576,8 @@ export interface components {
         };
         JsonNode: Record<string, never>;
         LearnerHomeworkRowView: {
+            /** @enum {string} */
+            answerFormat?: "WRITTEN" | "TEST";
             className?: string;
             /** Format: date-time */
             dueAt?: string;
@@ -8418,6 +8426,8 @@ export interface components {
             type?: "LESSON" | "HOMEWORK";
         };
         StudentHomeworkView: {
+            /** @enum {string} */
+            answerFormat?: "WRITTEN" | "TEST";
             className?: string;
             description?: string;
             /** Format: date-time */
@@ -9006,6 +9016,8 @@ export interface components {
             scaleCode?: string;
         };
         UpdateHomeworkRequest: {
+            /** @enum {string} */
+            answerFormat?: "WRITTEN" | "TEST";
             description?: string;
             /** Format: date-time */
             dueAt?: string;
