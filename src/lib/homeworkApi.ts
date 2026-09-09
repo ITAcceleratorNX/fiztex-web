@@ -389,6 +389,8 @@ export interface CreateHomeworkInput {
   dueType: DueType;
   dueAt?: string;
   answerFormat?: AnswerFormat;
+  /** Включить античит; пусто — выключен. */
+  antiCheatEnabled?: boolean;
 }
 
 export interface UpdateHomeworkInput {
@@ -398,6 +400,8 @@ export interface UpdateHomeworkInput {
   dueAt?: string;
   /** Пусто — не менять: старые клиенты тип не присылают, а сбрасывать тест нельзя. */
   answerFormat?: AnswerFormat;
+  /** Пусто — не менять, по той же причине: снимать наблюдение молча нельзя. */
+  antiCheatEnabled?: boolean;
 }
 
 export interface SetRecipientsInput {

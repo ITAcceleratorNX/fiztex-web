@@ -8,6 +8,7 @@ import {
   type Lesson,
 } from '@/lib/lessonsApi';
 import { homeworkApi, type Homework } from '@/lib/homeworkApi';
+import { homeworkAntiCheatApi } from '@/lib/homeworkAntiCheatApi';
 import {
   homeworkAiApi,
   homeworkAnswersApi,
@@ -96,6 +97,8 @@ export const keys = {
   homeworkMyQuestions: (homeworkId: number) => ['homework', homeworkId, 'my-questions'] as const,
   homeworkAnswers: (homeworkId: number, studentProfileId: number) =>
     ['homework', homeworkId, 'answers', studentProfileId] as const,
+  homeworkAntiCheat: (homeworkId: number, studentProfileId: number) =>
+    ['homework', homeworkId, 'anti-cheat', studentProfileId] as const,
   homeworkAiJob: (jobId: number) => ['homework', 'ai-generations', jobId] as const,
   homeworkAiJobs: (homeworkId: number) => ['homework', homeworkId, 'ai-generations'] as const,
   homeworkAiQuota: ['homework', 'ai-quota'] as const,
@@ -1582,6 +1585,21 @@ export function useStudentAnswers(homeworkId: number | null, studentProfileId: n
     queryKey: keys.homeworkAnswers(homeworkId ?? 0, studentProfileId ?? 0),
     queryFn: ({ signal }) =>
       homeworkAnswersApi.ofStudent(homeworkId as number, studentProfileId as number, signal),
+    enabled: homeworkId != null && studentProfileId != null,
+  });
+}
+
+/**
+ * Журнал античита по работе ученика (ANTICHEAT-001 §6).
+ *
+ * Отдельный запрос, а не поле работы: журнал нужен на одном экране из всех, а тянуть его
+ * в каждую карточку и каждый список значило бы платить за него везде.
+ */
+export function useAntiCheatLog(homeworkId: number | null, studentProfileId: number | null) {
+  return useQuery({
+    queryKey: keys.homeworkAntiCheat(homeworkId ?? 0, studentProfileId ?? 0),
+    queryFn: ({ signal }) =>
+      homeworkAntiCheatApi.log(homeworkId as number, studentProfileId as number, signal),
     enabled: homeworkId != null && studentProfileId != null,
   });
 }

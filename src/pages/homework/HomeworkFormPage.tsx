@@ -5,6 +5,7 @@ import { ArrowLeft, Paperclip, X } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { Field, Select, TextArea, TextInput } from '@/components/ui/Field';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
+import { Toggle } from '@/components/ui/Toggle';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { NoticeBar } from '@/components/ui/NoticeBar';
 import { useToast } from '@/context/ToastContext';
@@ -76,6 +77,8 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
    * добавил вопрос: раньше один добавленный вопрос молча отбирал у ученика форму отправки.
    */
   const [answerFormat, setAnswerFormat] = useState<AnswerFormat>('WRITTEN');
+  /** Античит: наблюдение включает учитель, задание за заданием (ANTICHEAT-001 §2). */
+  const [antiCheatEnabled, setAntiCheatEnabled] = useState(false);
   const [dueAt, setDueAt] = useState('');
   const [recipientType, setRecipientType] = useState<RecipientType>('CLASS');
   /** Урок, выбранный в форме (§2.2 + привязка). Отдельно от `lessonId` из адреса: тот задан
@@ -99,6 +102,7 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
     setDescription(existing.description ?? '');
     setDueType((existing.dueType as DueType) ?? 'EXACT');
     setAnswerFormat((existing.answerFormat as AnswerFormat) ?? 'WRITTEN');
+    setAntiCheatEnabled(existing.antiCheatEnabled ?? false);
     setDueAt(existing.dueAt ? toLocalInput(existing.dueAt) : '');
     setRecipientType((existing.recipients?.type as RecipientType) ?? 'CLASS');
     setTempGroupId(existing.recipients?.tempGroupId ?? undefined);
@@ -257,6 +261,7 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
           dueType,
           dueAt: dueType === 'EXACT' ? new Date(dueAt).toISOString() : undefined,
           answerFormat,
+          antiCheatEnabled,
         });
         const recipientsChanged =
           existing?.recipients?.type !== recipientType
@@ -284,6 +289,7 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
         dueType,
         dueAt: dueType === 'EXACT' ? new Date(dueAt).toISOString() : undefined,
         answerFormat,
+        antiCheatEnabled,
       };
       const created = await homeworkApi.create(input);
       createdId.current = created.id ?? null;
@@ -475,6 +481,29 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
               Чтобы перевести задание в работу текстом, сначала удалите вопросы.
             </p>
           )}
+        </Field>
+
+        {/*
+          Античит стоит сразу под типом работы, потому что от типа зависит, что он вообще
+          делает: у теста это наблюдение за выходами из окна, у работы текстом — только
+          защита содержимого от скриншотов. Подпись меняется вместе с типом, чтобы учитель
+          не включал то, чего не будет.
+        */}
+        <Field label="Античит">
+          <Toggle
+            checked={antiCheatEnabled}
+            onChange={setAntiCheatEnabled}
+            label="Следить за прохождением"
+            description={
+              answerFormat === 'TEST'
+                ? 'Приложение отметит переключения окна и попытки скриншота во время теста.'
+                : 'Приложение отметит попытки сделать скриншот текста задания.'
+            }
+          />
+          <p className="mt-1.5 text-11 text-muted">
+            События видны при проверке работы. Тест не прерывается, оценка не меняется —
+            решение остаётся за вами.
+          </p>
         </Field>
 
         <Field label="Описание и инструкция ученику" required>

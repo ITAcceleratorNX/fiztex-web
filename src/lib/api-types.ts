@@ -2413,7 +2413,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["logEvent"];
+        post: operations["logEvent_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3412,6 +3412,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/homework/{homeworkId}/my-submission/anti-cheat-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["logEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/homework/{homeworkId}/my-submission/attachments/{attachmentId}/content": {
         parameters: {
             query?: never;
@@ -3613,6 +3629,22 @@ export interface paths {
         };
         get?: never;
         put: operations["setScores"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/submissions/{studentProfileId}/anti-cheat-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["log"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -4994,6 +5026,34 @@ export interface components {
             comment?: string;
             finalScore: number;
         };
+        AntiCheatAttemptView: {
+            /** Format: int64 */
+            attemptId?: number;
+            /** Format: int32 */
+            attemptNumber?: number;
+            events?: components["schemas"]["AntiCheatEventView"][];
+            /** Format: int32 */
+            violationCount?: number;
+        };
+        AntiCheatEventView: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: date-time */
+            occurredAt?: string;
+            /** Format: int64 */
+            questionId?: number;
+            /** Format: int32 */
+            questionNumber?: number;
+            /** @enum {string} */
+            type?: "TAB_SWITCH" | "WINDOW_BLUR" | "APP_BACKGROUND" | "PAGE_CLOSE" | "RE_ENTRY" | "SCREENSHOT_ATTEMPT";
+            violation?: boolean;
+        };
+        AntiCheatLogView: {
+            attempts?: components["schemas"]["AntiCheatAttemptView"][];
+            enabled?: boolean;
+            /** Format: int32 */
+            violationCount?: number;
+        };
         ApplicantRequest: {
             childFullName?: string;
             comment?: string;
@@ -5825,6 +5885,7 @@ export interface components {
         CreateHomeworkRequest: {
             /** @enum {string} */
             answerFormat?: "WRITTEN" | "TEST";
+            antiCheatEnabled?: boolean;
             /** Format: int64 */
             classId?: number;
             description?: string;
@@ -6420,6 +6481,7 @@ export interface components {
         HomeworkView: {
             /** @enum {string} */
             answerFormat?: "WRITTEN" | "TEST";
+            antiCheatEnabled?: boolean;
             /** Format: date-time */
             cancelledAt?: string;
             /** Format: int64 */
@@ -6899,6 +6961,12 @@ export interface components {
             relationType?: "MOTHER" | "FATHER" | "GUARDIAN" | "OTHER";
             /** Format: int64 */
             studentProfileId?: number;
+        };
+        LogEventRequest: {
+            /** Format: int64 */
+            questionId?: number;
+            /** @enum {string} */
+            type: "TAB_SWITCH" | "WINDOW_BLUR" | "APP_BACKGROUND" | "PAGE_CLOSE" | "RE_ENTRY" | "SCREENSHOT_ATTEMPT";
         };
         MarkAllPresentRequest: {
             confirmOverwrite?: boolean;
@@ -8428,6 +8496,7 @@ export interface components {
         StudentHomeworkView: {
             /** @enum {string} */
             answerFormat?: "WRITTEN" | "TEST";
+            antiCheatEnabled?: boolean;
             className?: string;
             description?: string;
             /** Format: date-time */
@@ -9018,6 +9087,7 @@ export interface components {
         UpdateHomeworkRequest: {
             /** @enum {string} */
             answerFormat?: "WRITTEN" | "TEST";
+            antiCheatEnabled?: boolean;
             description?: string;
             /** Format: date-time */
             dueAt?: string;
@@ -13802,7 +13872,7 @@ export interface operations {
             };
         };
     };
-    logEvent: {
+    logEvent_1: {
         parameters: {
             query?: never;
             header: {
@@ -15468,6 +15538,30 @@ export interface operations {
             };
         };
     };
+    logEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LogEventRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     attachment_1: {
         parameters: {
             query?: never;
@@ -15854,6 +15948,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeacherAnswerView"][];
+                };
+            };
+        };
+    };
+    log: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AntiCheatLogView"];
                 };
             };
         };

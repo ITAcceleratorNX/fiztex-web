@@ -17,6 +17,7 @@ import { useHomeworkGrades, useHomeworkQuestions, useStudentAnswers } from '@/ho
 import { SubmissionGradeBlock } from './SubmissionGradeBlock';
 import { HomeworkTestAnswerReview } from './HomeworkTestAnswerReview';
 import { SubmissionAiReview } from './SubmissionAiReview';
+import { SubmissionAntiCheat } from './SubmissionAntiCheat';
 /** §9.3: комментарий и фотографии ограничены бэкендом, дублировать числа больше негде. */
 const COMMENT_LIMIT = 2000;
 const PHOTO_LIMIT = 5;
@@ -252,6 +253,13 @@ export function SubmissionReviewPage() {
           <EmptyBlock title="Ученик ещё не отправил работу" />
         </div>
       )}
+
+      {/*
+        Журнал античита — рядом с ответом и до истории версий (§6): решение по оценке
+        учитель принимает, видя работу и события вместе, а не переходя за ними на
+        отдельный экран. Выключённый и пустой журнал блок не рисует вовсе.
+      */}
+      <SubmissionAntiCheat homeworkId={id} studentProfileId={studentId} />
 
       {history.length > 0 && (
         <section className="flex flex-col gap-2">
