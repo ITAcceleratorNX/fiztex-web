@@ -41,6 +41,7 @@ import {
   AccessCodesPage,
   ImportPage,
   ScheduleSettingsPage,
+  ScheduleImportPage,
   StudentsPage,
   ParentsPage,
   TeachersPage,
@@ -196,6 +197,9 @@ export function App() {
           path="/lesson-schedule/subgroups"
           element={<ScheduleSettingsPage section="subgroups" />}
         />
+        {/* Импорт из Excel — отдельная страница, а не модалка: разбор большого файла
+            заканчивается таблицей проблем, которую читают и правят, а не закрывают. */}
+        <Route path="/lesson-schedule/import" element={<ScheduleImportPage />} />
         <Route path="/homework" element={<HomeworkListPage />} />
         {/* Форма одна на создание из урока (?lessonId=) и вне урока (FE-Teacher-002 §2.3). */}
         <Route path="/homework/new" element={<HomeworkFormPage mode="create" />} />

@@ -20,11 +20,19 @@ import { ScheduleConfirmModal } from './ScheduleConfirmModal';
 import { TemplateInUseWarning } from './TemplateInUseWarning';
 import { periodsToDraft, type PeriodDraft } from './periodDraft';
 
-/** Отложенное действие, которое ждёт подтверждения «шаблон используется». */
+/**
+ * Отложенное действие, которое ждёт подтверждения «шаблон используется».
+ *
+ * Переименование здесь же, хотя времени уроков оно не трогает: бэкенд просит
+ * `confirmImpact` на любое изменение шаблона (ТЗ §9 — «шаблон или его периоды»), и
+ * без этой ветки переименование используемого шаблона было тупиком — сервер требовал
+ * подтверждения, а нажать его в интерфейсе было негде.
+ */
 type PendingImpact =
   | { kind: 'add'; row: PeriodDraft }
   | { kind: 'update'; row: PeriodDraft }
-  | { kind: 'delete'; row: PeriodDraft };
+  | { kind: 'delete'; row: PeriodDraft }
+  | { kind: 'rename'; name: string };
 
 export function BellTemplatesTab({ yearId }: { yearId: number }) {
   const toast = useToast();
@@ -100,7 +108,12 @@ export function BellTemplatesTab({ yearId }: { yearId: number }) {
     if (!selectedId) return;
     setBusy(true);
     try {
-      if (action.kind === 'delete') {
+      if (action.kind === 'rename') {
+        await scheduleSettingsApi.updateBellTemplate(selectedId, {
+          name: action.name,
+          confirmImpact,
+        });
+      } else if (action.kind === 'delete') {
         if (action.row.id != null) {
           await scheduleSettingsApi.deletePeriod(selectedId, action.row.id, confirmImpact);
         }
@@ -123,12 +136,20 @@ export function BellTemplatesTab({ yearId }: { yearId: number }) {
       }
       setPendingImpact(null);
       await refreshTemplate(selectedId);
+      if (action.kind === 'rename') toast.success('Название обновлено');
     } catch (err) {
       if (isTemplateInUseError(err)) {
         setPendingImpact(action);
         return;
       }
-      toast.error(err instanceof Error ? err.message : 'Не удалось сохранить урок');
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : action.kind === 'rename'
+            ? 'Не удалось переименовать'
+            : 'Не удалось сохранить урок',
+      );
+      if (action.kind === 'rename' && detail) setNameDraft(detail.name);
       await refreshTemplate(selectedId);
     } finally {
       setBusy(false);
@@ -146,14 +167,7 @@ export function BellTemplatesTab({ yearId }: { yearId: number }) {
       setNameDraft(detail.name);
       return;
     }
-    try {
-      await scheduleSettingsApi.updateBellTemplate(selectedId, { name: trimmed });
-      await refreshTemplate(selectedId);
-      toast.success('Название обновлено');
-    } catch (err) {
-      setNameDraft(detail.name);
-      toast.error(err instanceof Error ? err.message : 'Не удалось переименовать');
-    }
+    await runPersist({ kind: 'rename', name: trimmed }, false);
   }
 
   async function createTemplate() {
