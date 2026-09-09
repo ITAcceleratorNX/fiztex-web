@@ -13,6 +13,7 @@ import {
   CalendarDays,
   Check,
   Copy,
+  FileSpreadsheet,
   Loader2,
   Plus,
   Users,
@@ -96,6 +97,12 @@ const SETTINGS_CARDS = [
     to: '/lesson-schedule/subgroups',
     label: 'Подгруппы классов',
     icon: Users,
+  },
+  {
+    key: 'import',
+    to: '/lesson-schedule/import',
+    label: 'Загрузка из Excel',
+    icon: FileSpreadsheet,
   },
 ] as const;
 
@@ -800,6 +807,8 @@ export function LessonSchedulePage() {
           : groupSetCount > 0
             ? { label: `Наборов: ${groupSetCount}`, tone: 'ok' }
             : { label: 'Не заданы', tone: 'muted' },
+      // У импорта нет состояния «настроено»: это действие, а не настройка.
+      import: { label: 'Файл .xlsx', tone: 'muted' },
     }),
     [templates, workingDaysSource, availability, groupSetCount],
   );
@@ -809,7 +818,7 @@ export function LessonSchedulePage() {
       {/* Figma 2015:5790 — settings-block-container: заголовок 14px Bold, карточки 42px */}
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-bold text-ink">Настройки расписания</h2>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {SETTINGS_CARDS.map((card) => {
             const Icon = card.icon;
             const status = settingsStatus[card.key];
