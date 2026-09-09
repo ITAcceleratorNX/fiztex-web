@@ -31,6 +31,7 @@ import {
   useLessonHomework,
   useSaveLessonComment,
   useSaveLessonTopic,
+  useSetHomeworkNotAssigned,
 } from '@/hooks/queries';
 import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
@@ -41,6 +42,11 @@ import { cx, formatDateTime, formatWeekdayDayMonth, pluralRu } from '@/lib/forma
 import type { Homework } from '@/lib/homeworkApi';
 import type { LessonGradeSheet } from '@/lib/gradesApi';
 import type { Lesson, LessonCapability } from '@/lib/lessonsApi';
+import {
+  homeworkNeedsTeacherAction,
+  homeworkStateLabel,
+  homeworkStateTone,
+} from '@/lib/lessonHomeworkState';
 import { LessonHomeworkRows } from '@/pages/homework/LessonHomeworkRows';
 import { LessonManagementCard, SubstituteGradeAccessCard } from './LessonManagementCard';
 import { describeHistoryActor, describeHistoryEntry, hhmm } from './lessonHistory';
@@ -454,6 +460,10 @@ function attendanceTileValue(
  * плитка с постоянной подписью, то есть ещё один переход вслепую. Список здесь короткий и
  * весь про один урок, поэтому живёт на карточке, а не за нажатием.
  *
+ * Над списком стоит состояние блока целиком (`homeworkState`): по ТЗ «статусы ДЗ» урок
+ * обязан различать «учитель ничего не сделал» и «учитель решил не задавать», а список
+ * заданий на этот вопрос не отвечает — он в обоих случаях пуст.
+ *
  * Экран заданий урока никуда не делся: он остаётся местом, где задание создают, и ссылка
  * ведёт туда же, куда вела плитка.
  *
@@ -473,6 +483,7 @@ function LessonHomeworkCard({
   const query = useLessonHomework(lesson.id ?? null, canRead);
   const rows = query.data ?? [];
   const lessonPath = `/lesson-schedule/lessons/${lesson.id}`;
+  const state = lesson.homeworkState;
 
   return (
     <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-8 shadow-soft">
@@ -492,6 +503,8 @@ function LessonHomeworkCard({
         )}
       </div>
 
+      <LessonHomeworkStateRow lesson={lesson} canDecide={canCreate} />
+
       {!canRead ? (
         <p className="text-sm text-slate-400">Задания урока видны его учителю и администратору</p>
       ) : query.isPending ? (
@@ -509,7 +522,11 @@ function LessonHomeworkCard({
         </p>
       ) : rows.length === 0 ? (
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-slate-400">К этому уроку заданий нет</p>
+          {/* Пустой список при отметке «ДЗ не задано» — не «заданий нет», а решение
+              учителя, и повторять его здесь второй раз незачем: оно уже стоит строкой выше. */}
+          <p className="text-sm text-slate-400">
+            {state === 'NOT_ASSIGNED' ? 'Заданий по этому уроку не будет' : 'К этому уроку заданий нет'}
+          </p>
           {canCreate && (
             <Link
               to={`/homework/new?lessonId=${lesson.id}`}
@@ -529,15 +546,75 @@ function LessonHomeworkCard({
 }
 
 /**
- * Подпись плитки ДЗ: сколько заданий и сколько из них ещё не опубликовано. Черновик
- * назван отдельно потому, что для учеников его пока не существует — «3 задания» на уроке,
- * где опубликовано одно, ввело бы в заблуждение самого учителя.
+ * Состояние блока ДЗ и единственное действие, которого у урока раньше не было, —
+ * «ДЗ не задано».
+ *
+ * Кнопка стоит рядом с состоянием, а не среди действий карточки: она отвечает на тот же
+ * вопрос, что и надпись слева, и разносить их значило бы заставить учителя искать, чем
+ * закрыть напоминание.
+ *
+ * Показывается только там, где есть что решать. При выданном ДЗ бэкенд отвечает 409
+ * (два финальных состояния одновременно ТЗ запрещает), и предлагать заведомо
+ * невозможное нажатие нельзя.
  */
-function homeworkTileValue(rows: Homework[]): string {
-  if (rows.length === 0) return 'Заданий нет';
+function LessonHomeworkStateRow({ lesson, canDecide }: { lesson: Lesson; canDecide: boolean }) {
+  const toast = useToast();
+  const mutation = useSetHomeworkNotAssigned(lesson.id ?? 0);
+  const state = lesson.homeworkState;
+  if (!state) return null;
+
+  const decide = (notAssigned: boolean) =>
+    mutation.mutate(notAssigned, {
+      onError: (error) =>
+        toast.error(
+          error instanceof ApiError ? error.message : 'Не удалось изменить состояние ДЗ',
+        ),
+    });
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <span className="flex items-center gap-2">
+        <span
+          className={cx(
+            'inline-flex items-center rounded px-2 py-0.5 text-11 font-medium',
+            homeworkStateTone(state),
+          )}
+        >
+          {homeworkStateLabel(state)}
+        </span>
+        {homeworkNeedsTeacherAction(state) && canDecide && (
+          <span className="text-13 text-slate-400">Действие по ДЗ не завершено</span>
+        )}
+      </span>
+
+      {canDecide && state !== 'ASSIGNED' && (
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={mutation.isPending}
+          onClick={() => decide(state !== 'NOT_ASSIGNED')}
+        >
+          {state === 'NOT_ASSIGNED' ? 'Отменить отметку' : 'ДЗ не задано'}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Подпись плитки ДЗ. Первым словом — состояние урока, а не число заданий: плитку читают,
+ * чтобы понять, закрыт ли вопрос с домашним заданием, и «3 задания» на уроке, где всё
+ * лежит в черновиках, отвечало на другой вопрос.
+ *
+ * Черновики названы отдельно потому, что для учеников их пока не существует.
+ */
+function homeworkTileValue(lesson: Lesson, rows: Homework[]): string {
+  const label = homeworkStateLabel(lesson.homeworkState);
+  if (rows.length === 0) return label || 'Заданий нет';
   const drafts = rows.filter((row) => row.status === 'DRAFT').length;
   const total = `${rows.length} ${pluralRu(rows.length, ['задание', 'задания', 'заданий'])}`;
-  return drafts > 0 ? `${total} · ${drafts} в черновике` : total;
+  const counts = drafts > 0 ? `${total} · ${drafts} в черновике` : total;
+  return label ? `${label} · ${counts}` : counts;
 }
 
 function LessonModules({ lesson }: { lesson: Lesson }) {
@@ -577,7 +654,7 @@ function LessonModules({ lesson }: { lesson: Lesson }) {
             ? 'Открыть задания урока'
             : homeworkQuery.isPending
               ? 'Загружаем…'
-              : homeworkTileValue(homeworkQuery.data ?? [])
+              : homeworkTileValue(lesson, homeworkQuery.data ?? [])
         }
         onClick={() => navigate(`/lesson-schedule/lessons/${lesson.id}/homework`)}
       />

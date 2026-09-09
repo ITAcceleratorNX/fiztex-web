@@ -4036,6 +4036,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/homework/not-assigned": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["markHomeworkNotAssigned"];
+        delete: operations["clearHomeworkNotAssigned"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/materials": {
         parameters: {
             query?: never;
@@ -6586,7 +6602,7 @@ export interface components {
         };
         LessonHistoryView: {
             /** @enum {string} */
-            actionType?: "CREATED" | "SUPERSEDED" | "CANCELLED" | "RESTORED" | "ADMIN_UPDATED" | "SUBSTITUTE_ASSIGNED" | "SUBSTITUTE_REVOKED" | "GRADE_PERMISSION_GRANTED" | "GRADE_PERMISSION_REVOKED" | "COMMENT_CREATED" | "COMMENT_UPDATED" | "COMMENT_DELETED" | "TOPIC_UPDATED" | "HOMEWORK_CREATED" | "HOMEWORK_UPDATED" | "HOMEWORK_DELETED" | "MATERIAL_ADDED" | "MATERIAL_UPDATED" | "MATERIAL_REMOVED";
+            actionType?: "CREATED" | "SUPERSEDED" | "CANCELLED" | "RESTORED" | "ADMIN_UPDATED" | "SUBSTITUTE_ASSIGNED" | "SUBSTITUTE_REVOKED" | "GRADE_PERMISSION_GRANTED" | "GRADE_PERMISSION_REVOKED" | "COMMENT_CREATED" | "COMMENT_UPDATED" | "COMMENT_DELETED" | "TOPIC_UPDATED" | "HOMEWORK_CREATED" | "HOMEWORK_UPDATED" | "HOMEWORK_DELETED" | "HOMEWORK_ASSIGNMENT_DRAFTED" | "HOMEWORK_ASSIGNMENT_PUBLISHED" | "HOMEWORK_ASSIGNMENT_UPDATED" | "HOMEWORK_MARKED_NOT_ASSIGNED" | "HOMEWORK_NOT_ASSIGNED_CLEARED" | "MATERIAL_ADDED" | "MATERIAL_UPDATED" | "MATERIAL_REMOVED";
             /** Format: int64 */
             actorId?: number;
             actorName?: string;
@@ -6696,6 +6712,8 @@ export interface components {
             /** Format: date-time */
             endsAt?: string;
             homework?: components["schemas"]["LessonHomeworkView"];
+            /** @enum {string} */
+            homeworkState?: "NOT_SPECIFIED" | "DRAFT" | "ASSIGNED" | "NOT_ASSIGNED";
             /** Format: int64 */
             id?: number;
             /** Format: int32 */
@@ -16446,6 +16464,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonHomeworkView"];
+                };
+            };
+        };
+    };
+    markHomeworkNotAssigned: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonView"];
+                };
+            };
+        };
+    };
+    clearHomeworkNotAssigned: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonView"];
                 };
             };
         };
