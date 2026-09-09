@@ -16,6 +16,7 @@ import { SUBMISSION_STATUS_LABELS, SUBMISSION_STATUS_TONES } from './homeworkMod
 import { useHomeworkGrades, useHomeworkQuestions, useStudentAnswers } from '@/hooks/queries';
 import { SubmissionGradeBlock } from './SubmissionGradeBlock';
 import { HomeworkTestAnswerReview } from './HomeworkTestAnswerReview';
+import { SubmissionAiReview } from './SubmissionAiReview';
 /** §9.3: комментарий и фотографии ограничены бэкендом, дублировать числа больше негде. */
 const COMMENT_LIMIT = 2000;
 const PHOTO_LIMIT = 5;
@@ -231,13 +232,20 @@ export function SubmissionReviewPage() {
             onRefreshAnswers={refreshTestAnswers}
           />
         ) : (
-        <AttemptCard
-          attempt={current}
-          totalVersions={submission.attemptCount ?? 1}
-          loadAttachment={loadAttachment}
-          loadReviewPhoto={loadReviewPhoto}
-          current
-        />
+          <>
+            {/*
+              У обычного задания нет ни вопросов, ни баллов — разбирать по строкам нечего,
+              и вся проверка ИИ умещается в один блок над самой работой (ТЗ §11).
+            */}
+            <SubmissionAiReview homeworkId={id} studentProfileId={studentId} />
+            <AttemptCard
+              attempt={current}
+              totalVersions={submission.attemptCount ?? 1}
+              loadAttachment={loadAttachment}
+              loadReviewPhoto={loadReviewPhoto}
+              current
+            />
+          </>
         )
       ) : (
         <div className="card">

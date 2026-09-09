@@ -220,7 +220,7 @@ describe('HomeworkTestAnswerReview', () => {
     useHomeworkAiQuota.mockReturnValue({ data: { enabled: false, remaining: 0 } });
     renderReview();
 
-    expect(screen.getByText(/Подсказки ИИ сейчас недоступны/)).toBeInTheDocument();
+    expect(screen.getByText(/Проверка ИИ сейчас недоступна/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Получить подсказки ИИ' })).toBeDisabled();
     expect(screen.getAllByRole('spinbutton', { name: /Балл учителя/ })[1]).toBeEnabled();
   });

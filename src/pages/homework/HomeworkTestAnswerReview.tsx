@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, Sparkles, X } from 'lucide-react';
 import { AnswerScoreField } from '@/components/ui/AnswerScoreField';
 import { Badge } from '@/components/ui/Badge';
@@ -8,17 +8,13 @@ import { MathText } from '@/components/ui/MathText';
 import { NoticeBar } from '@/components/ui/NoticeBar';
 import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
-import {
-  useAiRecommendation,
-  useHomeworkAiQuota,
-  useLastGradeSuggestion,
-  useSetAnswerScores,
-  useSuggestGrades,
-} from '@/hooks/queries';
+import { useSetAnswerScores } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
-import type { AiRecommendation, HomeworkQuestion, TeacherAnswer } from '@/lib/homeworkAiApi';
+import type { HomeworkQuestion, TeacherAnswer } from '@/lib/homeworkAiApi';
 import { homeworkAnswersApi } from '@/lib/homeworkAiApi';
 import { AttachmentThumb } from './AttachmentLink';
+import { RecommendationCard } from './RecommendationCard';
+import { useAiGradeSuggestion } from './useAiGradeSuggestion';
 import { cx, pluralRu } from '@/lib/format';
 import {
   isScoreDraftDirty,
@@ -62,74 +58,19 @@ export function HomeworkTestAnswerReview({
   onRefreshAnswers: () => Promise<unknown> | void;
 }) {
   const toast = useToast();
-  const suggestGrades = useSuggestGrades(homeworkId, studentProfileId);
   const setScores = useSetAnswerScores(homeworkId, studentProfileId);
   const openAnswers = useMemo(() => answers.filter((answer) => answer.type === 'OPEN_TEXT'), [answers]);
-  const quotaQuery = useHomeworkAiQuota(openAnswers.length > 0);
 
   const [drafts, setDrafts] = useState<AnswerScoreDrafts>({});
   const [savingAnswerId, setSavingAnswerId] = useState<number | null>(null);
 
-  /**
-   * Состояние задачи спрашивается у сервера, а не хранится в браузере: учитель, открывший
-   * проверку на другом устройстве или в другом окне, обязан увидеть ту же задачу. Раньше
-   * идентификатор лежал в localStorage, и на втором устройстве экран выглядел так, будто
-   * подсказки не запускали, — второе нажатие стоило вторых денег.
-   */
-  const suggestionQuery = useLastGradeSuggestion(homeworkId, studentProfileId);
-  const suggestionJob = suggestionQuery.data ?? undefined;
-  const recommendationQuery = useAiRecommendation(homeworkId, studentProfileId);
-
-  /**
-   * Задача, за концом которой мы следим. Нужна, чтобы отличить «закончилась при нас» от
-   * «была закончена ещё до открытия экрана»: во втором случае тост «подсказки готовы» —
-   * это сообщение о том, что учитель и так видит в баллах.
-   */
-  const watchedJobId = useRef<number | null>(null);
+  // Запуск, ожидание и тосты — общие с экраном обычного задания: расхождение в них
+  // учитель читает как «работает через раз».
+  const ai = useAiGradeSuggestion(homeworkId, studentProfileId, onRefreshAnswers);
 
   useEffect(() => {
     setDrafts((previous) => mergeScoreDrafts(answers, previous));
   }, [answers]);
-
-  // Один и тот же компонент может остаться смонтированным при переходе к соседнему ученику.
-  useEffect(() => {
-    watchedJobId.current = null;
-  }, [homeworkId, studentProfileId]);
-
-  const suggestionStatus = suggestionJob?.status;
-  const suggestionJobId = suggestionJob?.id;
-  const isSuggestionRunning = suggestionStatus === 'PENDING' || suggestionStatus === 'RUNNING';
-
-  // Задача, начатая до открытия экрана, тоже наша: за её концом следим так же.
-  useEffect(() => {
-    if (isSuggestionRunning && suggestionJobId != null) {
-      watchedJobId.current = suggestionJobId;
-    }
-  }, [isSuggestionRunning, suggestionJobId]);
-
-  useEffect(() => {
-    if (suggestionJobId == null || watchedJobId.current !== suggestionJobId) return;
-    if (suggestionStatus !== 'DONE' && suggestionStatus !== 'FAILED') return;
-
-    watchedJobId.current = null;
-
-    if (suggestionStatus === 'DONE') {
-      void onRefreshAnswers();
-      // Рекомендация появляется последним шагом проверки: перечитываем её тогда же, когда
-      // обновляем баллы, — опрашивать её всё время, что учитель читает работу, незачем.
-      void recommendationQuery.refetch();
-      toast.success(
-        suggestionJob?.warningMessage
-          ? `Подсказки ИИ готовы. ${suggestionJob.warningMessage}`
-          : 'Подсказки ИИ готовы — проверьте их перед сохранением баллов',
-      );
-      return;
-    }
-    toast.error('Не удалось подготовить подсказки ИИ. Баллы можно поставить вручную.');
-    // recommendationQuery намеренно не в зависимостях: у объекта запроса новая ссылка на
-    // каждый рендер, и эффект перезапускался бы бесконечно.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onRefreshAnswers, suggestionJob?.warningMessage, suggestionJobId, suggestionStatus, toast]);
 
   const questionsById = useMemo(
     () =>
@@ -140,31 +81,12 @@ export function HomeworkTestAnswerReview({
       ),
     [questions],
   );
-  const aiUnavailableText = aiAvailabilityText(quotaQuery.data);
-
   // Стабильная ссылка: AttachmentThumb перезагружает картинку при смене загрузчика, и
   // новая функция на каждый рендер означала бы бесконечную перезагрузку фотографий.
   const loadPhoto = useCallback(
     (photoId: number) => homeworkAnswersApi.photoBlob(homeworkId, studentProfileId, photoId),
     [homeworkId, studentProfileId],
   );
-
-  async function startSuggestion() {
-    try {
-      const job = await suggestGrades.mutateAsync(crypto.randomUUID());
-      if (job.id == null) throw new Error('AI job id is missing');
-      // Сервер мог вернуть уже идущую или уже законченную задачу по этой попытке —
-      // повторный запрос по неизменённой работе намеренно бесплатный.
-      watchedJobId.current = job.id;
-      await suggestionQuery.refetch();
-    } catch (caught) {
-      toast.error(
-        caught instanceof ApiError
-          ? caught.message
-          : 'Не удалось запустить подсказки ИИ. Баллы можно поставить вручную.',
-      );
-    }
-  }
 
   async function saveScore(answer: TeacherAnswer) {
     if (answer.id == null) return;
@@ -242,14 +164,12 @@ export function HomeworkTestAnswerReview({
           <Button
             type="button"
             size="sm"
-            disabled={
-              suggestGrades.isPending || isSuggestionRunning || aiUnavailableText != null
-            }
-            loading={suggestGrades.isPending}
-            onClick={() => void startSuggestion()}
+            disabled={ai.starting || ai.isRunning || ai.unavailableText != null}
+            loading={ai.starting}
+            onClick={() => void ai.start()}
           >
             <Sparkles className="size-4" aria-hidden />
-            {isSuggestionRunning ? 'Проверяю ответы…' : 'Получить подсказки ИИ'}
+            {ai.isRunning ? 'Проверяю ответы…' : 'Получить подсказки ИИ'}
           </Button>
         </div>
       ) : (
@@ -258,13 +178,13 @@ export function HomeworkTestAnswerReview({
         </NoticeBar>
       )}
 
-      {aiUnavailableText && <NoticeBar tone="soft">{aiUnavailableText}</NoticeBar>}
+      {ai.unavailableText && <NoticeBar tone="soft">{ai.unavailableText}</NoticeBar>}
 
-      {recommendationQuery.data && <RecommendationCard recommendation={recommendationQuery.data} />}
+      {ai.recommendation && <RecommendationCard recommendation={ai.recommendation} />}
 
-      {suggestionJob && (
+      {ai.job && (
         <AiJobProgress
-          job={suggestionJob}
+          job={ai.job}
           fallbackAction={<p className="text-11 text-muted">Баллы можно поставить вручную ниже.</p>}
         />
       )}
@@ -364,73 +284,6 @@ function TestAnswerCard({
       />
     </article>
   );
-}
-
-/**
- * Рекомендация за работу целиком (ТЗ §6).
- *
- * <p>Оценку здесь выбрала не модель: баллы сложила система, процент перевела в оценку
- * школьная шкала. Модель написала обоснование и перечень ошибок — и об этом на карточке
- * сказано прямо, иначе «рекомендует ИИ» читается как «так решил компьютер».
- */
-function RecommendationCard({ recommendation }: { recommendation: AiRecommendation }) {
-  const issues = recommendation.issues ?? [];
-  const closedMax = Number(recommendation.closedMax ?? 0);
-
-  return (
-    <section
-      className="rounded-xl border border-line bg-neutral-bg p-4"
-      aria-label="Рекомендация за работу"
-    >
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-11 font-semibold uppercase tracking-wide text-subtle">
-          Рекомендация за работу
-        </p>
-        <p className="text-11 text-muted">
-          {formatScore(recommendation.score)} из {formatScore(recommendation.maxScore)} баллов
-          {recommendation.percent != null && ` · ${recommendation.percent}%`}
-        </p>
-      </div>
-
-      <div className="mt-2 flex flex-wrap items-center gap-3">
-        {recommendation.scaleCode ? (
-          <span className="rounded-lg bg-white px-3 py-1.5 text-lg font-semibold text-ink ring-1 ring-line">
-            {recommendation.scaleCode}
-          </span>
-        ) : (
-          <span className="text-13 text-muted">
-            Оценка не выведена: школа не задала пороги. Решите по баллам.
-          </span>
-        )}
-        <p className="text-11 text-muted">
-          Не оценка: в журнал ничего не попадёт, пока вы не выставите её сами.
-        </p>
-      </div>
-
-      <MathText text={recommendation.summary} className="mt-3 block text-13 text-ink" />
-
-      {issues.length > 0 && (
-        <ul className="mt-3 list-inside list-disc space-y-1 text-13 text-ink">
-          {issues.map((issue) => (
-            <li key={issue}>{issue}</li>
-          ))}
-        </ul>
-      )}
-
-      {closedMax > 0 && (
-        <p className="mt-3 text-11 text-muted">
-          Из них {formatScore(recommendation.closedScore)} из {formatScore(recommendation.closedMax)}{' '}
-          за закрытые вопросы — их проверила система, ИИ их не пересматривал.
-        </p>
-      )}
-    </section>
-  );
-}
-
-/** Балл без хвоста нулей: «2», а не «2.00» — это читает человек. */
-function formatScore(value: number | undefined): string {
-  if (value == null) return '0';
-  return String(Number(value)).replace('.', ',');
 }
 
 function ChoiceAnswer({ answer, question }: { answer: TeacherAnswer; question?: HomeworkQuestion }) {
@@ -555,9 +408,4 @@ function OpenTextAnswer({
   );
 }
 
-function aiAvailabilityText(quota: { enabled?: boolean; remaining?: number } | undefined): string | null {
-  if (!quota) return null;
-  if (quota.enabled === false) return 'Подсказки ИИ сейчас недоступны. Баллы можно поставить вручную.';
-  if ((quota.remaining ?? 1) <= 0) return 'Лимит подсказок ИИ на сегодня исчерпан. Баллы можно поставить вручную.';
-  return null;
-}
+

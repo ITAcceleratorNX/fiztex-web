@@ -6262,6 +6262,8 @@ export interface components {
             remaining?: number;
         };
         HomeworkAiRecommendationView: {
+            /** @enum {string} */
+            basis?: "POINTS" | "COMPLETENESS";
             closedMax?: number;
             closedScore?: number;
             /** Format: date-time */
