@@ -8,7 +8,7 @@ import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { NoticeBar } from '@/components/ui/NoticeBar';
 import { useToast } from '@/context/ToastContext';
-import { useLesson } from '@/hooks/queries';
+import { keys, useLesson } from '@/hooks/queries';
 import { lessonsApi, type Lesson } from '@/lib/lessonsApi';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
@@ -292,6 +292,13 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
     },
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ['homework'] });
+      // Карточка урока под ключ `homework` не попадает, а состояние её блока ДЗ
+      // изменилось: черновик или публикация закрывают «пока не указано», публикация
+      // вдобавок снимает отметку «ДЗ не задано». Возврат в урок идёт сразу отсюда,
+      // и без сброса он показал бы прежнее состояние.
+      if (attachedLessonId != null) {
+        void queryClient.invalidateQueries({ queryKey: keys.lesson(attachedLessonId) });
+      }
       toast.success(
         mode === 'edit'
           ? 'Изменения сохранены'

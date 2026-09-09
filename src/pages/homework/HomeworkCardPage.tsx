@@ -14,6 +14,7 @@ import {
 } from './HomeworkAiGenerateModal';
 import { AiJobProgress } from '@/components/ui/AiJobProgress';
 import {
+  keys,
   useApplyHomeworkAiResult,
   useDiscardHomeworkAiResult,
   useHomeworkAiJobs,
@@ -115,6 +116,14 @@ export function HomeworkCardPage() {
    * и то, что видно про учеников. Обновляем инвалидацией, а не подстановкой ответа, — так
    * экран не разойдётся с сервером, если тот поменял больше, чем мы ожидали.
    */
+  /** Урок, к которому привязано задание; у самостоятельного его нет и сбрасывать нечего. */
+  const invalidateLessonCard = () => {
+    const lessonId = homework?.lessonId ?? homework?.lesson?.id;
+    if (lessonId != null) {
+      void queryClient.invalidateQueries({ queryKey: keys.lesson(lessonId) });
+    }
+  };
+
   const mutate = useMutation({
     mutationFn: async (action: 'complete' | 'reopen' | 'cancel' | 'delete' | 'publish') => {
       switch (action) {
@@ -128,11 +137,17 @@ export function HomeworkCardPage() {
     onSuccess: (_data, action) => {
       setConfirm(null);
       if (action === 'delete') {
+        invalidateLessonCard();
         toast.success('Черновик удалён');
         navigate('/homework', { replace: true });
         return;
       }
       void queryClient.invalidateQueries({ queryKey: ['homework'] });
+      // Карточка урока живёт своим ключом, под `homework` он не попадает. Сбрасываем
+      // её отдельно: публикация, отмена и удаление меняют состояние блока ДЗ урока
+      // (и публикация вдобавок снимает отметку «ДЗ не задано»), а без сброса урок
+      // до истечения staleTime показывал бы прежнее состояние.
+      invalidateLessonCard();
       toast.success(
         {
           publish: 'Задание опубликовано',
