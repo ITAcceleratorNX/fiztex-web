@@ -26,6 +26,8 @@ interface HistoryPayload {
   previousReason?: string | null;
   substituteTeacherName?: string;
   mainTeacherName?: string;
+  /** Заголовок задания модуля ДЗ, о котором событие. */
+  title?: string | null;
 }
 
 const CANCELLATION_REASONS: Record<string, string> = {
@@ -99,6 +101,12 @@ function describeTopicUpdate(payload: HistoryPayload): string {
   return `Изменена тема урока: ${after} (было ${before})`;
 }
 
+/** Заголовок задания приписывается, если он в снимке есть: события старше его не писали. */
+function withTitle(text: string, payload: HistoryPayload): string {
+  const title = payload.title?.trim();
+  return title ? `${text}: ${title}` : text;
+}
+
 export function describeHistoryEntry(entry: LessonHistoryEntry): string {
   const payload = parsePayload(entry.payload);
 
@@ -134,6 +142,26 @@ export function describeHistoryEntry(entry: LessonHistoryEntry): string {
       return 'Удалён комментарий для учеников';
     case 'TOPIC_UPDATED':
       return describeTopicUpdate(payload);
+    case 'HOMEWORK_CREATED':
+      return 'Выдано домашнее задание урока';
+    case 'HOMEWORK_UPDATED':
+      return 'Изменено домашнее задание урока';
+    case 'HOMEWORK_DELETED':
+      return 'Снято домашнее задание урока';
+    case 'HOMEWORK_ASSIGNMENT_DRAFTED':
+      return withTitle('Создан черновик ДЗ', payload);
+    case 'HOMEWORK_ASSIGNMENT_UPDATED':
+      return withTitle('ДЗ изменено', payload);
+    case 'HOMEWORK_ASSIGNMENT_PUBLISHED':
+      return withTitle('ДЗ опубликовано', payload);
+    case 'HOMEWORK_MARKED_NOT_ASSIGNED':
+      return 'Отмечено «ДЗ не задано»';
+    case 'HOMEWORK_NOT_ASSIGNED_CLEARED':
+      // Публикация снимает отметку сама — строка обязана сказать, что учитель её не
+      // отменял, иначе рядом окажутся два события без видимой связи.
+      return payload.reason === 'HOMEWORK_PUBLISHED'
+        ? 'Отметка «ДЗ не задано» снята: по уроку опубликовано задание'
+        : 'Отметка «ДЗ не задано» снята';
     default:
       return 'Изменение урока';
   }

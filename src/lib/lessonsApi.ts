@@ -88,6 +88,24 @@ export const lessonTeachingApi = {
   clearComment(lessonId: number): Promise<void> {
     return request<void>(`/lessons/${lessonId}/comment`, { method: 'DELETE' });
   },
+
+  /**
+   * «ДЗ не задано» — второе финальное действие по уроку наравне с выдачей задания.
+   *
+   * Ставится только руками: система не выводит отказ из пустоты, поэтому автоматики за
+   * этой кнопкой нет ни на бэкенде, ни здесь.
+   *
+   * Отвечает карточкой целиком — `homeworkState` считается по всем заданиям урока, и
+   * собрать его из ответа на одно действие нельзя.
+   */
+  markHomeworkNotAssigned(lessonId: number): Promise<Lesson> {
+    return request<Lesson>(`/lessons/${lessonId}/homework/not-assigned`, { method: 'POST' });
+  },
+
+  /** Отмена отметки: урок возвращается в «Домашнее задание пока не указано». */
+  clearHomeworkNotAssigned(lessonId: number): Promise<Lesson> {
+    return request<Lesson>(`/lessons/${lessonId}/homework/not-assigned`, { method: 'DELETE' });
+  },
 };
 
 /**

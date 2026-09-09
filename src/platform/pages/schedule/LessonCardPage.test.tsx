@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/lib/api';
@@ -10,6 +11,7 @@ const useAttendanceSheet = vi.fn();
 const useLessonHomework = vi.fn();
 const useLessonGradeSheet = vi.fn();
 const useGradePermission = vi.fn();
+const setHomeworkNotAssigned = vi.fn();
 
 // Роль нужна карточке только ради ссылки «К расписанию»: у учителя она ведёт на его
 // собственный экран, у админа — в конструктор.
@@ -48,7 +50,11 @@ vi.mock('@/hooks/queries', () => ({
   useSetGradePermission: () => idleMutation(),
   useSaveLessonTopic: () => idleMutation(),
   useSaveLessonComment: () => idleMutation(),
+  useSetHomeworkNotAssigned: () => ({ mutate: setHomeworkNotAssigned, isPending: false }),
 }));
+
+/** Права того, кто урок ведёт: состояние ДЗ меняет он, а не администратор. */
+const TEACHING = ['VIEW_CARD', 'VIEW_STUDENTS', 'EDIT_TEACHING_PART'];
 
 /** Урок в том виде, в каком его отдаёт GET /api/lessons/{id} админу. */
 function lesson(overrides: Record<string, unknown> = {}) {
@@ -96,6 +102,7 @@ describe('LessonCardPage', () => {
     useLessonGradeSheet.mockReturnValue({ data: undefined, isPending: false, isError: false });
     useGradePermission.mockReset();
     useGradePermission.mockReturnValue({ data: undefined, isPending: false, isError: false });
+    setHomeworkNotAssigned.mockReset();
   });
 
   it('показывает скелетон, пока урок грузится', () => {
@@ -238,6 +245,91 @@ describe('LessonCardPage', () => {
     renderCard();
     expect(screen.getByText('К этому уроку заданий нет')).toBeInTheDocument();
     expect(screen.getByText('Заданий нет')).toBeInTheDocument();
+  });
+
+
+  /* --- состояния ДЗ (ТЗ «Статусы домашнего задания») --------------------------- */
+
+  /**
+   * Блок ДЗ отвечает не только «что задано», но и «закрыт ли вопрос»: пустой список
+   * одинаков у урока, до которого не дошли руки, и у урока, на который решили не задавать.
+   */
+  it('говорит учителю, что действие по ДЗ не завершено, и предлагает его закрыть', async () => {
+    useLesson.mockReturnValue({
+      data: lesson({ capabilities: TEACHING, homeworkState: 'NOT_SPECIFIED' }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    renderCard();
+
+    expect(screen.getAllByText('Домашнее задание пока не указано').length).toBeGreaterThan(0);
+    await userEvent.click(screen.getByRole('button', { name: 'ДЗ не задано' }));
+    expect(setHomeworkNotAssigned).toHaveBeenCalledWith(true, expect.anything());
+  });
+
+  it('после отметки предлагает передумать, а не отметить второй раз', async () => {
+    useLesson.mockReturnValue({
+      data: lesson({ capabilities: TEACHING, homeworkState: 'NOT_ASSIGNED' }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    renderCard();
+
+    expect(screen.getAllByText('ДЗ не задано').length).toBeGreaterThan(0);
+    await userEvent.click(screen.getByRole('button', { name: 'Отменить отметку' }));
+    expect(setHomeworkNotAssigned).toHaveBeenCalledWith(false, expect.anything());
+  });
+
+  it('не предлагает «ДЗ не задано» поверх выданного задания', () => {
+    useLesson.mockReturnValue({
+      data: lesson({ capabilities: TEACHING, homeworkState: 'ASSIGNED' }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    useLessonHomework.mockReturnValue({
+      data: [{ id: 12, title: 'Упражнения 1–5', status: 'PUBLISHED', lesson: { id: 6 } }],
+      isPending: false,
+      isError: false,
+    });
+    renderCard();
+
+    // Бэкенд ответил бы 409: два финальных состояния одновременно ТЗ запрещает.
+    expect(screen.queryByRole('button', { name: 'ДЗ не задано' })).toBeNull();
+    expect(screen.getAllByText(/ДЗ задано/).length).toBeGreaterThan(0);
+  });
+
+  it('черновик показывает учителю как незакрытое действие', () => {
+    useLesson.mockReturnValue({
+      data: lesson({ capabilities: TEACHING, homeworkState: 'DRAFT' }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    useLessonHomework.mockReturnValue({
+      data: [{ id: 14, title: 'Черновик', status: 'DRAFT', lesson: { id: 6 } }],
+      isPending: false,
+      isError: false,
+    });
+    renderCard();
+
+    expect(screen.getAllByText(/Черновик\. Не опубликовано/).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'ДЗ не задано' })).toBeInTheDocument();
+  });
+
+  it('ученику состояние показывает, а действий не предлагает', () => {
+    useLesson.mockReturnValue({
+      data: lesson({ capabilities: ['VIEW_CARD'], homeworkState: 'NOT_ASSIGNED' }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    renderCard();
+
+    expect(screen.getAllByText('ДЗ не задано').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('button', { name: 'Отменить отметку' })).toBeNull();
   });
 
   it('без права видеть состав урока за заданиями не ходим', () => {
