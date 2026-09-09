@@ -650,6 +650,31 @@ export function useSaveLessonComment(lessonId: number) {
   });
 }
 
+/**
+ * Отметка «ДЗ не задано» и её отмена.
+ *
+ * Ответ — карточка целиком, поэтому она кладётся в кэш, а не перезапрашивается: в ней
+ * лежит `homeworkState`, посчитанный по всем заданиям урока.
+ *
+ * Список заданий урока при этом сбрасывается: отметку снимает публикация задания, и
+ * после неё блок обязан показать и новое состояние, и само задание. `keys.lesson`
+ * общим сбросом не трогаем — он префикс ключей посещаемости, истории и оценок.
+ */
+export function useSetHomeworkNotAssigned(lessonId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (notAssigned: boolean) =>
+      notAssigned
+        ? lessonTeachingApi.markHomeworkNotAssigned(lessonId)
+        : lessonTeachingApi.clearHomeworkNotAssigned(lessonId),
+    onSuccess: (lesson) => {
+      qc.setQueryData(keys.lesson(lessonId), lesson);
+      qc.invalidateQueries({ queryKey: keys.lessonHomework(lessonId) });
+      qc.invalidateQueries({ queryKey: keys.lessonHistory(lessonId) });
+    },
+  });
+}
+
 export function useGradePermission(lessonId: number | null, enabled: boolean) {
   return useQuery({
     queryKey: keys.lessonGradePermission(lessonId ?? 0),
