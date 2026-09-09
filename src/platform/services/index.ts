@@ -85,6 +85,7 @@ export {
   listSchedules,
   getSchedule,
   createSchedule,
+  resolveScheduleDraft,
   publishSchedule,
   checkSchedule,
   getScheduleGrid,
@@ -112,4 +113,5 @@ export type {
   LessonPeriodSlot,
   ConstructorContextGroupSet,
   ConstructorContextSubgroup,
+  CreateScheduleLessonInput,
 } from './schedules';

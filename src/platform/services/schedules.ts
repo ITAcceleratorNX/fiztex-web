@@ -183,6 +183,23 @@ export async function createSchedule(input: {
   });
 }
 
+/**
+ * Черновик класса на период: вернуть существующий или завести новый.
+ *
+ * Отдельно от `createSchedule`, потому что отвечает на другой вопрос — не «создай»,
+ * а «дай, куда писать». Импорт расписания идёт по десяткам классов подряд, и разница
+ * между «черновик уже был» и «черновик создан» для него не событие, а деталь ответа.
+ * Если у класса есть действующая публикация, бэкенд откажет: новую версию заводят
+ * через `createDraftFromPublication`, чтобы не потерять опубликованное молча.
+ */
+export async function resolveScheduleDraft(input: {
+  academicYearId: number;
+  academicPeriodId: number;
+  classId: number;
+}): Promise<ClassSchedule> {
+  return request<ClassSchedule>('/admin/schedules/drafts', { method: 'POST', body: input });
+}
+
 export async function publishSchedule(
   id: number,
   body: PublishScheduleBody,
