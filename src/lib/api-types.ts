@@ -877,7 +877,7 @@ export interface paths {
         };
         get: operations["listRuns"];
         put?: never;
-        post: operations["upload_1"];
+        post: operations["upload_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3364,6 +3364,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/homework/{homeworkId}/my-submission/answer-photos/{photoId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_6"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/my-submission/answer-photos/{photoId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["myPhoto"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/homework/{homeworkId}/my-submission/answers": {
         parameters: {
             query?: never;
@@ -3406,6 +3438,22 @@ export interface paths {
         get: operations["myQuestions"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/my-submission/questions/{questionId}/photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["myDrafts"];
+        put?: never;
+        post: operations["upload_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3499,9 +3547,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["lastGradeSuggestion"];
         put?: never;
         post: operations["suggestGrades"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/submissions/{studentProfileId}/answer-photos/{photoId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["photoOfStudent"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4853,6 +4917,14 @@ export interface components {
             id?: number;
             url?: string;
         };
+        AnswerPhotoView: {
+            contentType?: string;
+            fileName?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            sizeBytes?: number;
+        };
         AnswerRequest: {
             openText?: string;
             /** Format: int64 */
@@ -6164,13 +6236,13 @@ export interface components {
             warningMessage?: string;
         };
         HomeworkAiQuotaView: {
+            /** Format: int64 */
+            callsUsed?: number;
             /** Format: int32 */
-            dailyQuota?: number;
+            dailyCallQuota?: number;
             enabled?: boolean;
             /** Format: int64 */
             remaining?: number;
-            /** Format: int64 */
-            used?: number;
         };
         HomeworkAiResultView: {
             applied?: boolean;
@@ -6258,9 +6330,12 @@ export interface components {
         };
         HomeworkQuestionView: {
             aiGenerated?: boolean;
+            allowPhoto?: boolean;
             gradingCriteria?: string;
             /** Format: int64 */
             id?: number;
+            /** Format: int32 */
+            maxPhotos?: number;
             maxScore?: number;
             options?: components["schemas"]["HomeworkOptionView"][];
             /** Format: int32 */
@@ -6831,6 +6906,7 @@ export interface components {
         };
         MyAnswerView: {
             openText?: string;
+            photos?: components["schemas"]["AnswerPhotoView"][];
             /** Format: int64 */
             questionId?: number;
             selectedOptionIds?: number[];
@@ -7717,7 +7793,10 @@ export interface components {
             questionId?: number;
         };
         QuestionRequest: {
+            allowPhoto?: boolean;
             gradingCriteria?: string;
+            /** Format: int32 */
+            maxPhotos?: number;
             maxScore: number;
             options?: components["schemas"]["OptionRequest"][];
             referenceAnswer?: string;
@@ -8378,8 +8457,11 @@ export interface components {
             updatedAt?: string;
         };
         StudentQuestionView: {
+            allowPhoto?: boolean;
             /** Format: int64 */
             id?: number;
+            /** Format: int32 */
+            maxPhotos?: number;
             maxScore?: number;
             options?: components["schemas"]["StudentOptionView"][];
             /** Format: int32 */
@@ -8484,6 +8566,7 @@ export interface components {
             id?: number;
             maxScore?: number;
             openText?: string;
+            photos?: components["schemas"]["AnswerPhotoView"][];
             /** Format: int64 */
             questionId?: number;
             questionText?: string;
@@ -10756,7 +10839,7 @@ export interface operations {
             };
         };
     };
-    upload_1: {
+    upload_2: {
         parameters: {
             query: {
                 importType: "CLASSES" | "STUDENTS" | "STUDENTS_WITH_PARENTS" | "PARENTS" | "TEACHERS";
@@ -15254,6 +15337,50 @@ export interface operations {
             };
         };
     };
+    delete_6: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                photoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    myPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                photoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
     submitAnswers: {
         parameters: {
             query?: never;
@@ -15321,6 +15448,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StudentQuestionView"][];
+                };
+            };
+        };
+    };
+    myDrafts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                questionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnswerPhotoView"][];
+                };
+            };
+        };
+    };
+    upload_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                questionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnswerPhotoView"];
                 };
             };
         };
@@ -15472,6 +15652,29 @@ export interface operations {
             };
         };
     };
+    lastGradeSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkAiJobView"];
+                };
+            };
+        };
+    };
     suggestGrades: {
         parameters: {
             query?: never;
@@ -15493,6 +15696,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HomeworkAiJobView"];
+                };
+            };
+        };
+    };
+    photoOfStudent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                studentProfileId: number;
+                photoId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
                 };
             };
         };

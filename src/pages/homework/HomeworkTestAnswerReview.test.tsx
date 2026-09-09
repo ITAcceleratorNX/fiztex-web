@@ -3,17 +3,22 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { HomeworkTestAnswerReview } from './HomeworkTestAnswerReview';
 
-const useHomeworkAiJob = vi.fn();
+const useLastGradeSuggestion = vi.fn();
 const useHomeworkAiQuota = vi.fn();
 const useSetAnswerScores = vi.fn();
 const useSuggestGrades = vi.fn();
+
+vi.mock('@/lib/homeworkAiApi', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  homeworkAnswersApi: { photoBlob: vi.fn().mockResolvedValue(new Blob()) },
+}));
 
 vi.mock('@/context/ToastContext', () => ({
   useToast: () => ({ push: vi.fn(), success: vi.fn(), error: vi.fn(), info: vi.fn() }),
 }));
 
 vi.mock('@/hooks/queries', () => ({
-  useHomeworkAiJob: (...args: unknown[]) => useHomeworkAiJob(...args),
+  useLastGradeSuggestion: (...args: unknown[]) => useLastGradeSuggestion(...args),
   useHomeworkAiQuota: (...args: unknown[]) => useHomeworkAiQuota(...args),
   useSetAnswerScores: (...args: unknown[]) => useSetAnswerScores(...args),
   useSuggestGrades: (...args: unknown[]) => useSuggestGrades(...args),
@@ -81,8 +86,8 @@ function renderReview(overrides: Partial<Parameters<typeof HomeworkTestAnswerRev
 describe('HomeworkTestAnswerReview', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    window.localStorage.clear();
-    useHomeworkAiJob.mockReturnValue({ data: undefined });
+    // Состояние задачи приходит с сервера: своего хранилища у экрана нет.
+    useLastGradeSuggestion.mockReturnValue({ data: undefined, refetch: vi.fn() });
     useHomeworkAiQuota.mockReturnValue({ data: { enabled: true, remaining: 20 } });
     useSuggestGrades.mockReturnValue({ mutateAsync: vi.fn(), isPending: false });
     useSetAnswerScores.mockReturnValue({
@@ -121,6 +126,40 @@ describe('HomeworkTestAnswerReview', () => {
         items: [{ answerId: 20, finalScore: 1.5, comment: undefined }],
       }),
     );
+  });
+
+  /**
+   * Задачу мог начать этот же учитель в другом окне или на телефоне. Экран обязан её
+   * показать: раньше идентификатор жил в localStorage, и на втором устройстве кнопка
+   * выглядела нетронутой — второе нажатие стоило вторых денег.
+   */
+  it('показывает задачу, начатую в другом окне, вместо свободной кнопки', () => {
+    useLastGradeSuggestion.mockReturnValue({
+      data: { id: 42, status: 'RUNNING', phase: 'CALLING_MODEL', progressDone: 1, progressTotal: 3 },
+      refetch: vi.fn(),
+    });
+    renderReview();
+
+    expect(screen.getByRole('button', { name: /Проверяю ответы/ })).toBeDisabled();
+  });
+
+  /**
+   * Снимок решения показывается рядом со своим вопросом, а не в общем списке вложений
+   * работы: учитель проверяет по одной задаче за раз.
+   */
+  it('показывает фотографии решения при открытом ответе', async () => {
+    renderReview({
+      answers: [
+        closedAnswer(),
+        openAnswer({
+          openText: '',
+          photos: [{ id: 90, fileName: 'solution.jpg', contentType: 'image/jpeg', sizeBytes: 1024 }],
+        }),
+      ],
+    });
+
+    expect(await screen.findByLabelText('Фотографии решения')).toBeInTheDocument();
+    expect(screen.getByText('Решение на фотографии')).toBeInTheDocument();
   });
 
   it('при выключенном ИИ объясняет это и не блокирует ручную проверку', () => {

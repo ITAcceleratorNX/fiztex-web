@@ -17,6 +17,9 @@ export interface QuestionDraft {
   referenceAnswer: string;
   gradingCriteria: string;
   aiGenerated: boolean;
+  /** Разрешено ли ученику приложить к ответу фото. Только у развёрнутого ответа. */
+  allowPhoto: boolean;
+  maxPhotos: number;
   options: OptionDraft[];
 }
 
@@ -59,6 +62,8 @@ export function emptyQuestion(): QuestionDraft {
     referenceAnswer: '',
     gradingCriteria: '',
     aiGenerated: false,
+    allowPhoto: false,
+    maxPhotos: 1,
     options: [
       { localId: newLocalId(), text: '', correct: true },
       { localId: newLocalId(), text: '', correct: false },
@@ -76,6 +81,8 @@ export function toDraft(question: HomeworkQuestion): QuestionDraft {
     referenceAnswer: question.referenceAnswer ?? '',
     gradingCriteria: question.gradingCriteria ?? '',
     aiGenerated: question.aiGenerated ?? false,
+    allowPhoto: question.allowPhoto ?? false,
+    maxPhotos: Number(question.maxPhotos ?? 1),
     options: (question.options ?? []).map((option) => ({
       localId: newLocalId(),
       text: option.text ?? '',
@@ -87,16 +94,24 @@ export function toDraft(question: HomeworkQuestion): QuestionDraft {
 /** Тело `PUT /questions`: набор заменяется целиком, частичного сохранения нет. */
 export function toRequest(questions: QuestionDraft[]): SaveQuestionsRequest {
   return {
-    questions: questions.map((question) => ({
-      type: question.type,
-      text: question.text.trim(),
-      maxScore: question.maxScore,
-      referenceAnswer: question.referenceAnswer.trim() || undefined,
-      gradingCriteria: question.gradingCriteria.trim() || undefined,
-      options: isChoiceType(question.type)
-        ? question.options.map((option) => ({ text: option.text.trim(), correct: option.correct }))
-        : [],
-    })),
+    questions: questions.map((question) => {
+      // Закрытому вопросу фотография не полагается — ответ на него это отмеченный вариант.
+      // Поле уходит всегда явным, даже когда галочка снята: пустое бэкенд читает как
+      // «не трогать», и снятая галочка тогда не сохранилась бы.
+      const allowPhoto = isChoiceType(question.type) ? false : question.allowPhoto;
+      return {
+        type: question.type,
+        text: question.text.trim(),
+        maxScore: question.maxScore,
+        referenceAnswer: question.referenceAnswer.trim() || undefined,
+        gradingCriteria: question.gradingCriteria.trim() || undefined,
+        allowPhoto,
+        maxPhotos: allowPhoto ? question.maxPhotos : 1,
+        options: isChoiceType(question.type)
+          ? question.options.map((option) => ({ text: option.text.trim(), correct: option.correct }))
+          : [],
+      };
+    }),
   };
 }
 
@@ -120,6 +135,9 @@ export function validateQuestions(questions: QuestionDraft[]): Map<number, strin
     }
     if (!(question.maxScore > 0)) {
       messages.push('Балл за вопрос должен быть больше нуля');
+    }
+    if (question.allowPhoto && (question.maxPhotos < 1 || question.maxPhotos > 5)) {
+      messages.push('Фотографий можно разрешить от одной до пяти');
     }
 
     if (isChoiceType(question.type)) {
@@ -162,6 +180,9 @@ export function withType(question: QuestionDraft, type: HomeworkQuestionType): Q
   if (!isChoiceType(type)) {
     return { ...question, type, options: [] };
   }
+  // Закрытому вопросу фотография не полагается: ответ на него — отмеченный вариант.
+  // Снимаем молча, иначе бэкенд ответит отказом на то, чего учитель уже не видит.
+  question = { ...question, allowPhoto: false, maxPhotos: 1 };
   const options =
     question.options.length >= 2
       ? question.options

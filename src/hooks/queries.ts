@@ -99,6 +99,8 @@ export const keys = {
   homeworkAiJob: (jobId: number) => ['homework', 'ai-generations', jobId] as const,
   homeworkAiJobs: (homeworkId: number) => ['homework', homeworkId, 'ai-generations'] as const,
   homeworkAiQuota: ['homework', 'ai-quota'] as const,
+  homeworkAiGradeSuggestion: (homeworkId: number, studentProfileId: number) =>
+    ['homework', homeworkId, 'submissions', studentProfileId, 'ai-grade-suggestions'] as const,
   lessonMaterials: (lessonId: number, childId?: number) =>
     ['lessons', lessonId, 'materials', childId ?? 'self'] as const,
   // Одно пространство на весь раздел: создание, отмена и возврат меняют оба списка
@@ -1484,6 +1486,27 @@ export function useSaveHomeworkQuestions(homeworkId: number) {
       // questionCount в карточке задания меняется вместе с составом вопросов, а её
       // ключ живёт в самой странице — сбрасываем раздел, как принято в этом файле.
       void qc.invalidateQueries({ queryKey: ['homework'] });
+    },
+  });
+}
+
+/**
+ * Последняя подсказка по работе ученика — то, с чего экран проверки начинает.
+ *
+ * Опрашивается, пока задача идёт, и замолкает на терминальном статусе — как
+ * {@link useHomeworkAiJob}. Отдельный хук нужен потому, что при открытии экрана
+ * идентификатора задачи ещё нет: его и отдаёт этот запрос.
+ */
+export function useLastGradeSuggestion(homeworkId: number | null, studentProfileId: number | null) {
+  return useQuery({
+    queryKey: keys.homeworkAiGradeSuggestion(homeworkId ?? 0, studentProfileId ?? 0),
+    queryFn: ({ signal }) =>
+      homeworkAiApi.lastGradeSuggestion(homeworkId as number, studentProfileId as number, signal),
+    enabled: homeworkId != null && studentProfileId != null,
+    refetchInterval: (query) => {
+      const job = query.state.data;
+      if (!job) return false;
+      return job.status === 'PENDING' || job.status === 'RUNNING' ? 1500 : false;
     },
   });
 }

@@ -227,14 +227,18 @@ export function HomeworkAiGenerateModal({
           {error && <p className="text-sm text-red-500">{error}</p>}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            {/* Остаток показываем всегда: внезапный отказ по лимиту хуже заметного счётчика. */}
+            {/*
+              Остаток показываем всегда: внезапный отказ по лимиту хуже заметного счётчика.
+              Считаются обращения к модели, а не генерации: разбор скана съедает их по
+              одному на страницу, и «осталось 12» не значит «осталось 12 конспектов».
+            */}
             <span className="text-11 text-subtle">
               {quota
                 ? `Осталось ${quota.remaining} ${pluralRu(quota.remaining ?? 0, [
-                    'генерация',
-                    'генерации',
-                    'генераций',
-                  ])} из ${quota.dailyQuota} на сегодня`
+                    'обращение',
+                    'обращения',
+                    'обращений',
+                  ])} к ИИ из ${quota.dailyCallQuota} на сегодня`
                 : ''}
             </span>
             <div className="flex gap-2">
@@ -250,7 +254,7 @@ export function HomeworkAiGenerateModal({
 
           {exhausted && (
             <NoticeBar tone="soft">
-              Лимит генераций на сегодня исчерпан. Задание можно написать самому — это
+              Лимит обращений к ИИ на сегодня исчерпан. Задание можно написать самому — это
               всегда доступно.
             </NoticeBar>
           )}

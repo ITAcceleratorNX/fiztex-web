@@ -44,7 +44,7 @@ describe('HomeworkAiGenerateModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useHomeworkAiQuota.mockReturnValue({
-      data: { enabled: true, dailyQuota: 50, used: 3, remaining: 47 },
+      data: { enabled: true, dailyCallQuota: 50, callsUsed: 3, remaining: 47 },
     });
     useLessonMaterials.mockReturnValue({
       data: [{ id: 10, kind: 'FILE', fileName: 'конспект.pdf' }],
@@ -72,17 +72,17 @@ describe('HomeworkAiGenerateModal', () => {
   /** Внезапный отказ по лимиту хуже заметного счётчика — остаток виден всегда. */
   it('показывает остаток квоты до запуска', () => {
     renderModal();
-    expect(screen.getByText(/Осталось 47 генераций из 50/)).toBeInTheDocument();
+    expect(screen.getByText(/Осталось 47 обращений к ИИ из 50/)).toBeInTheDocument();
   });
 
   it('исчерпанная квота выключает кнопку и объясняет, что делать', () => {
     useHomeworkAiQuota.mockReturnValue({
-      data: { enabled: true, dailyQuota: 50, used: 50, remaining: 0 },
+      data: { enabled: true, dailyCallQuota: 50, callsUsed: 50, remaining: 0 },
     });
     renderModal();
 
     expect(screen.getByRole('button', { name: /Сгенерировать/ })).toBeDisabled();
-    expect(screen.getByText(/Лимит генераций на сегодня исчерпан/)).toBeInTheDocument();
+    expect(screen.getByText(/Лимит обращений к ИИ на сегодня исчерпан/)).toBeInTheDocument();
   });
 
   /** Материалы предложены все: учитель приложил их к уроку именно ради этого. */

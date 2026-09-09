@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Sparkles, X } from 'lucide-react';
 import { AnswerScoreField } from '@/components/ui/AnswerScoreField';
 import { Badge } from '@/components/ui/Badge';
@@ -9,13 +9,15 @@ import { NoticeBar } from '@/components/ui/NoticeBar';
 import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
 import {
-  useHomeworkAiJob,
   useHomeworkAiQuota,
+  useLastGradeSuggestion,
   useSetAnswerScores,
   useSuggestGrades,
 } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import type { HomeworkQuestion, TeacherAnswer } from '@/lib/homeworkAiApi';
+import { homeworkAnswersApi } from '@/lib/homeworkAiApi';
+import { AttachmentThumb } from './AttachmentLink';
 import { cx, pluralRu } from '@/lib/format';
 import {
   isScoreDraftDirty,
@@ -66,12 +68,22 @@ export function HomeworkTestAnswerReview({
 
   const [drafts, setDrafts] = useState<AnswerScoreDrafts>({});
   const [savingAnswerId, setSavingAnswerId] = useState<number | null>(null);
-  const [suggestionJobId, setSuggestionJobId] = useState<number | null>(() =>
-    readSuggestionJobId(homeworkId, studentProfileId),
-  );
-  const handledSuggestionJob = useRef<number | null>(null);
-  const suggestionJobQuery = useHomeworkAiJob(suggestionJobId);
-  const suggestionJob = suggestionJobQuery.data;
+
+  /**
+   * Состояние задачи спрашивается у сервера, а не хранится в браузере: учитель, открывший
+   * проверку на другом устройстве или в другом окне, обязан увидеть ту же задачу. Раньше
+   * идентификатор лежал в localStorage, и на втором устройстве экран выглядел так, будто
+   * подсказки не запускали, — второе нажатие стоило вторых денег.
+   */
+  const suggestionQuery = useLastGradeSuggestion(homeworkId, studentProfileId);
+  const suggestionJob = suggestionQuery.data ?? undefined;
+
+  /**
+   * Задача, за концом которой мы следим. Нужна, чтобы отличить «закончилась при нас» от
+   * «была закончена ещё до открытия экрана»: во втором случае тост «подсказки готовы» —
+   * это сообщение о том, что учитель и так видит в баллах.
+   */
+  const watchedJobId = useRef<number | null>(null);
 
   useEffect(() => {
     setDrafts((previous) => mergeScoreDrafts(answers, previous));
@@ -79,36 +91,37 @@ export function HomeworkTestAnswerReview({
 
   // Один и тот же компонент может остаться смонтированным при переходе к соседнему ученику.
   useEffect(() => {
-    handledSuggestionJob.current = null;
-    setSuggestionJobId(readSuggestionJobId(homeworkId, studentProfileId));
+    watchedJobId.current = null;
   }, [homeworkId, studentProfileId]);
 
-  /** Вернувшийся учитель продолжает опрашивать уже начатую задачу, а не тратит квоту повторно. */
+  const suggestionStatus = suggestionJob?.status;
+  const suggestionJobId = suggestionJob?.id;
+  const isSuggestionRunning = suggestionStatus === 'PENDING' || suggestionStatus === 'RUNNING';
+
+  // Задача, начатая до открытия экрана, тоже наша: за её концом следим так же.
   useEffect(() => {
-    if (!suggestionJob || suggestionJob.id == null || handledSuggestionJob.current === suggestionJob.id) return;
-    if (suggestionJob.status !== 'DONE' && suggestionJob.status !== 'FAILED') return;
+    if (isSuggestionRunning && suggestionJobId != null) {
+      watchedJobId.current = suggestionJobId;
+    }
+  }, [isSuggestionRunning, suggestionJobId]);
 
-    handledSuggestionJob.current = suggestionJob.id;
-    forgetSuggestionJobId(homeworkId, studentProfileId);
-    setSuggestionJobId(null);
+  useEffect(() => {
+    if (suggestionJobId == null || watchedJobId.current !== suggestionJobId) return;
+    if (suggestionStatus !== 'DONE' && suggestionStatus !== 'FAILED') return;
 
-    if (suggestionJob.status === 'DONE') {
+    watchedJobId.current = null;
+
+    if (suggestionStatus === 'DONE') {
       void onRefreshAnswers();
       toast.success(
-        suggestionJob.warningMessage
+        suggestionJob?.warningMessage
           ? `Подсказки ИИ готовы. ${suggestionJob.warningMessage}`
           : 'Подсказки ИИ готовы — проверьте их перед сохранением баллов',
       );
       return;
     }
     toast.error('Не удалось подготовить подсказки ИИ. Баллы можно поставить вручную.');
-  }, [
-    homeworkId,
-    onRefreshAnswers,
-    studentProfileId,
-    suggestionJob,
-    toast,
-  ]);
+  }, [onRefreshAnswers, suggestionJob?.warningMessage, suggestionJobId, suggestionStatus, toast]);
 
   const questionsById = useMemo(
     () =>
@@ -120,14 +133,22 @@ export function HomeworkTestAnswerReview({
     [questions],
   );
   const aiUnavailableText = aiAvailabilityText(quotaQuery.data);
-  const isSuggestionRunning = suggestionJob?.status === 'PENDING' || suggestionJob?.status === 'RUNNING';
+
+  // Стабильная ссылка: AttachmentThumb перезагружает картинку при смене загрузчика, и
+  // новая функция на каждый рендер означала бы бесконечную перезагрузку фотографий.
+  const loadPhoto = useCallback(
+    (photoId: number) => homeworkAnswersApi.photoBlob(homeworkId, studentProfileId, photoId),
+    [homeworkId, studentProfileId],
+  );
 
   async function startSuggestion() {
     try {
       const job = await suggestGrades.mutateAsync(crypto.randomUUID());
       if (job.id == null) throw new Error('AI job id is missing');
-      storeSuggestionJobId(homeworkId, studentProfileId, job.id);
-      setSuggestionJobId(job.id);
+      // Сервер мог вернуть уже идущую или уже законченную задачу по этой попытке —
+      // повторный запрос по неизменённой работе намеренно бесплатный.
+      watchedJobId.current = job.id;
+      await suggestionQuery.refetch();
     } catch (caught) {
       toast.error(
         caught instanceof ApiError
@@ -247,6 +268,7 @@ export function HomeworkTestAnswerReview({
             <TestAnswerCard
               key={answerId ?? `answer-${index}`}
               answer={answer}
+              loadPhoto={loadPhoto}
               question={answer.questionId != null ? questionsById.get(answer.questionId) : undefined}
               index={index + 1}
               draft={draft}
@@ -275,6 +297,7 @@ export function HomeworkTestAnswerReview({
 
 function TestAnswerCard({
   answer,
+  loadPhoto,
   question,
   index,
   draft,
@@ -286,6 +309,7 @@ function TestAnswerCard({
   onSave,
 }: {
   answer: TeacherAnswer;
+  loadPhoto: (photoId: number) => Promise<Blob>;
   question?: HomeworkQuestion;
   index: number;
   draft: AnswerScoreDraft;
@@ -311,7 +335,7 @@ function TestAnswerCard({
       {choice ? (
         <ChoiceAnswer answer={answer} question={question} />
       ) : (
-        <OpenTextAnswer answer={answer} />
+        <OpenTextAnswer answer={answer} loadPhoto={loadPhoto} />
       )}
 
       <AnswerScoreField
@@ -390,16 +414,42 @@ function ChoiceAnswer({ answer, question }: { answer: TeacherAnswer; question?: 
   );
 }
 
-function OpenTextAnswer({ answer }: { answer: TeacherAnswer }) {
+function OpenTextAnswer({
+  answer,
+  loadPhoto,
+}: {
+  answer: TeacherAnswer;
+  loadPhoto: (photoId: number) => Promise<Blob>;
+}) {
   const hasReference = Boolean(answer.referenceAnswer?.trim() || answer.gradingCriteria?.trim());
+  const photos = answer.photos ?? [];
   return (
     <div className="mt-3 flex flex-col gap-2">
       <div className="rounded-xl bg-neutral-bg px-3 py-3">
         <p className="text-11 font-semibold uppercase tracking-wide text-subtle">Ответ ученика</p>
         {answer.openText?.trim() ? (
           <MathText text={answer.openText} className="mt-1 block text-13 text-ink" />
-        ) : (
+        ) : photos.length === 0 ? (
           <p className="mt-1 text-13 italic text-muted">Нет ответа</p>
+        ) : (
+          <p className="mt-1 text-13 italic text-muted">Решение на фотографии</p>
+        )}
+
+        {/*
+          Снимки решения рядом с текстом, а не в общем списке вложений работы: учитель
+          проверяет по одному вопросу за раз, и «какое фото к какой задаче» не должно
+          быть его задачей.
+        */}
+        {photos.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2" aria-label="Фотографии решения">
+            {photos.map((photo, photoIndex) => (
+              <AttachmentThumb
+                key={photo.id ?? `photo-${photoIndex}`}
+                attachment={photo}
+                load={loadPhoto}
+              />
+            ))}
+          </div>
         )}
       </div>
 
@@ -433,34 +483,4 @@ function aiAvailabilityText(quota: { enabled?: boolean; remaining?: number } | u
   if (quota.enabled === false) return 'Подсказки ИИ сейчас недоступны. Баллы можно поставить вручную.';
   if ((quota.remaining ?? 1) <= 0) return 'Лимит подсказок ИИ на сегодня исчерпан. Баллы можно поставить вручную.';
   return null;
-}
-
-function suggestionStorageKey(homeworkId: number, studentProfileId: number) {
-  return `fiztex.homework-ai-grade-suggestion.${homeworkId}.${studentProfileId}`;
-}
-
-function readSuggestionJobId(homeworkId: number, studentProfileId: number): number | null {
-  try {
-    const raw = window.localStorage.getItem(suggestionStorageKey(homeworkId, studentProfileId));
-    const value = raw == null ? NaN : Number(raw);
-    return Number.isInteger(value) && value > 0 ? value : null;
-  } catch {
-    return null;
-  }
-}
-
-function storeSuggestionJobId(homeworkId: number, studentProfileId: number, jobId: number) {
-  try {
-    window.localStorage.setItem(suggestionStorageKey(homeworkId, studentProfileId), String(jobId));
-  } catch {
-    // Приватный режим не должен ломать саму проверку: задача всё равно живёт на сервере.
-  }
-}
-
-function forgetSuggestionJobId(homeworkId: number, studentProfileId: number) {
-  try {
-    window.localStorage.removeItem(suggestionStorageKey(homeworkId, studentProfileId));
-  } catch {
-    // То же самое: это лишь удобство возвращения на страницу, не источник данных.
-  }
 }

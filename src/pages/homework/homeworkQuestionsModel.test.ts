@@ -137,3 +137,34 @@ describe('toRequest', () => {
     expect(body.questions?.[0].options).toEqual([]);
   });
 });
+
+/**
+ * Галочка «фото решения» (AIGRADE-003). Пустое поле бэкенд читает как «не трогать» —
+ * так перегенерация вопроса моделью не теряет настройку учителя, — поэтому форма обязана
+ * присылать его всегда явно, иначе снятая галочка не сохранится.
+ */
+describe('фото решения', () => {
+  it('поле уходит на сервер явным, даже когда галочка снята', () => {
+    const request = toRequest([draft({ type: 'OPEN_TEXT', options: [], allowPhoto: false })]);
+    expect(request.questions?.[0]).toMatchObject({ allowPhoto: false, maxPhotos: 1 });
+  });
+
+  it('у закрытого вопроса фото не отправляется', () => {
+    const request = toRequest([
+      draft({ type: 'SINGLE_CHOICE', allowPhoto: true, maxPhotos: 3, options: options(true, false) }),
+    ]);
+    expect(request.questions?.[0]).toMatchObject({ allowPhoto: false, maxPhotos: 1 });
+  });
+
+  it('смена типа на закрытый снимает разрешение молча', () => {
+    const open = draft({ type: 'OPEN_TEXT', options: [], allowPhoto: true, maxPhotos: 3 });
+    expect(withType(open, 'SINGLE_CHOICE')).toMatchObject({ allowPhoto: false, maxPhotos: 1 });
+  });
+
+  it('число фотографий вне диапазона объясняется до нажатия «Сохранить»', () => {
+    const problems = validateQuestions([
+      draft({ type: 'OPEN_TEXT', options: [], allowPhoto: true, maxPhotos: 9 }),
+    ]);
+    expect(problems.get(0)).toContain('Фотографий можно разрешить от одной до пяти');
+  });
+});

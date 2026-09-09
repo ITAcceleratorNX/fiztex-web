@@ -468,6 +468,44 @@ function QuestionCard({
               ariaLabel="Критерии оценки"
             />
           </Field>
+
+          {/*
+            Решение задачи по физике — это выкладки и чертёж, а не абзац текста: набирать
+            такое на телефоне ученик не станет. Галочка на вопросе, а не на задании,
+            потому что в одном тесте бывает и «дайте определение», и «решите задачу».
+          */}
+          <div className="sm:col-span-2 flex flex-wrap items-center gap-4 rounded-xl bg-neutral-bg px-3 py-3">
+            <label className="flex items-center gap-2 text-13 text-ink">
+              <input
+                type="checkbox"
+                checked={question.allowPhoto}
+                disabled={readOnly}
+                onChange={(event) =>
+                  onChange({ ...question, allowPhoto: event.target.checked })
+                }
+                className="size-4 shrink-0 accent-brand-500"
+              />
+              Разрешить фото решения
+            </label>
+            {question.allowPhoto && (
+              <label className="flex items-center gap-2 text-13 text-muted">
+                Не больше
+                <TextInput
+                  type="number"
+                  min={1}
+                  max={5}
+                  value={String(question.maxPhotos)}
+                  disabled={readOnly}
+                  onChange={(event) =>
+                    onChange({ ...question, maxPhotos: Number(event.target.value) })
+                  }
+                  className="w-16"
+                  aria-label="Сколько фотографий можно приложить"
+                />
+                шт.
+              </label>
+            )}
+          </div>
         </div>
       )}
 

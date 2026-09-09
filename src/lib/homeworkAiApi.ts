@@ -16,6 +16,7 @@ export type HomeworkAiResult = Schema<'HomeworkAiResultView'>;
 export type HomeworkQuestion = Schema<'HomeworkQuestionView'>;
 export type StudentQuestion = Schema<'StudentQuestionView'>;
 export type TeacherAnswer = Schema<'TeacherAnswerView'>;
+export type AnswerPhoto = Schema<'AnswerPhotoView'>;
 export type SaveQuestionsRequest = Schema<'SaveHomeworkQuestionsRequest'>;
 export type StartGenerationRequest = Schema<'StartHomeworkAiGenerationRequest'>;
 export type SetAnswerScoresRequest = Schema<'SetAnswerScoresRequest'>;
@@ -111,6 +112,19 @@ export const homeworkAiApi = {
       `/homework/${homeworkId}/submissions/${studentProfileId}/ai-grade-suggestions`,
       { method: 'POST', headers: idempotent(key) },
     ),
+
+  /**
+   * Последняя подсказка по текущей попытке ученика — или пусто, если её не запускали.
+   *
+   * Состояние идущей задачи спрашивается у сервера, а не хранится в браузере: учитель,
+   * открывший проверку на другом устройстве, обязан увидеть ту же задачу, а не пустой
+   * экран с кнопкой, второе нажатие которой стоило бы вторых денег.
+   */
+  lastGradeSuggestion: (homeworkId: number, studentProfileId: number, signal?: AbortSignal) =>
+    request<HomeworkAiJob | null>(
+      `/homework/${homeworkId}/submissions/${studentProfileId}/ai-grade-suggestions`,
+      { signal },
+    ),
 };
 
 export const homeworkQuestionsApi = {
@@ -133,6 +147,23 @@ export const homeworkQuestionsApi = {
 };
 
 export const homeworkAnswersApi = {
+  /**
+   * Снимок решения, приложенный учеником к открытому вопросу.
+   *
+   * Отдаётся потоком под авторизацией, поэтому в `<img src>` его не поставить: заголовка
+   * там нет. Забирается запросом и живёт object URL-ом — как остальные вложения работы.
+   */
+  photoBlob: (
+    homeworkId: number,
+    studentProfileId: number,
+    photoId: number,
+    signal?: AbortSignal,
+  ) =>
+    requestBlob(
+      `/homework/${homeworkId}/submissions/${studentProfileId}/answer-photos/${photoId}/content`,
+      signal,
+    ),
+
   /**
    * Вопросы для ученика — **только этот адрес**. Учительский `/questions` отдаёт ключ
    * правильных ответов, и обращение к нему с экрана ученика раскрывает тест.
