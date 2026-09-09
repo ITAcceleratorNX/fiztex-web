@@ -65,7 +65,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       keepalive: options.keepalive,
     });
   } catch {
-    throw new ApiError(0, 'Не удалось соединиться с сервером. Проверьте, запущен ли backend.');
+    throw new ApiError(0, 'Нет связи с сервером. Проверьте интернет и попробуйте снова.');
   }
 
   if (response.status === 401) {
@@ -110,7 +110,7 @@ async function requestMultipart<T>(path: string, formData: FormData): Promise<T>
       body: formData,
     });
   } catch {
-    throw new ApiError(0, 'Не удалось соединиться с сервером. Проверьте, запущен ли backend.');
+    throw new ApiError(0, 'Нет связи с сервером. Проверьте интернет и попробуйте снова.');
   }
 
   if (response.status === 401) {

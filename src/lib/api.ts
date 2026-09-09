@@ -119,7 +119,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       signal: options.signal,
     });
   } catch {
-    throw new ApiError(0, 'Не удалось соединиться с сервером. Проверьте, запущен ли backend.');
+    throw new ApiError(0, NO_CONNECTION);
   }
 
   if (response.status === 401) {
@@ -153,7 +153,7 @@ export async function requestMultipart<T>(path: string, formData: FormData, sign
       signal,
     });
   } catch {
-    throw new ApiError(0, 'Не удалось соединиться с сервером. Проверьте, запущен ли backend.');
+    throw new ApiError(0, NO_CONNECTION);
   }
 
   if (response.status === 401) {
@@ -185,7 +185,7 @@ export async function requestBlob(path: string, signal?: AbortSignal): Promise<B
   try {
     response = await fetch(`/api${path}`, { headers, signal });
   } catch {
-    throw new ApiError(0, 'Не удалось соединиться с сервером. Проверьте, запущен ли backend.');
+    throw new ApiError(0, NO_CONNECTION);
   }
 
   if (response.status === 401) handleUnauthorized();
@@ -202,9 +202,33 @@ function safeParse(text: string): unknown {
   }
 }
 
+/**
+ * Сеть недоступна — и человеку это надо сказать так, как оно есть для него.
+ *
+ * <p>«Проверьте, запущен ли backend» — фраза для разработчика: учитель не знает, что такое
+ * backend, и проверить его не может. Причина всё равно одна из двух — связь или сервер, —
+ * и обе описываются одним предложением.
+ */
+const NO_CONNECTION = 'Нет связи с сервером. Проверьте интернет и попробуйте снова.';
+
+/**
+ * Ответ без внятного текста. `Ошибка 500` человеку не говорит ничего: ни что случилось,
+ * ни что делать. Разбирать по коду умеет разработчик — он смотрит в консоль и логи, а
+ * пользователю нужно решение.
+ */
+function fallbackMessage(status: number): string {
+  if (status >= 500) return 'Сервер не ответил. Попробуйте ещё раз через минуту.';
+  if (status === 404) return 'Не найдено. Возможно, страницу уже удалили.';
+  if (status === 403) return 'У вас нет доступа к этому действию.';
+  if (status === 409) return 'Данные изменились, пока вы работали. Обновите страницу.';
+  if (status === 413) return 'Файл слишком большой — выберите файл поменьше.';
+  return 'Не удалось выполнить действие. Попробуйте ещё раз.';
+}
+
 function toApiError(status: number, data: unknown): ApiError {
   const body = data && typeof data === 'object' ? (data as Record<string, unknown>) : undefined;
-  const message = (body && typeof body.message === 'string' && body.message) || `Ошибка ${status}`;
+  const message =
+    (body && typeof body.message === 'string' && body.message) || fallbackMessage(status);
   const code = body && typeof body.code === 'string' ? body.code : undefined;
   const details = body && 'details' in body ? body.details : undefined;
   return new ApiError(status, message, code, details);
