@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -8,7 +8,7 @@ import { ToastProvider } from '@/context/ToastContext';
 import { HomeworkFormPage } from './HomeworkFormPage';
 
 const create = vi.fn();
-const publish = vi.fn();
+const addMaterialFile = vi.fn();
 const listGroups = vi.fn();
 const listHomework = vi.fn();
 const useLesson = vi.fn();
@@ -21,7 +21,7 @@ vi.mock('@/lib/homeworkApi', async (importOriginal) => {
     ...actual,
     homeworkApi: {
       create: (...args: unknown[]) => create(...args),
-      publish: (...args: unknown[]) => publish(...args),
+      addMaterialFile: (...args: unknown[]) => addMaterialFile(...args),
       listGroups: (...args: unknown[]) => listGroups(...args),
       list: (...args: unknown[]) => listHomework(...args),
     },
@@ -86,8 +86,8 @@ async function fillRequiredFields() {
 beforeEach(() => {
   create.mockReset();
   create.mockResolvedValue({ id: 42 });
-  publish.mockReset();
-  publish.mockResolvedValue({ id: 42, status: 'PUBLISHED' });
+  addMaterialFile.mockReset();
+  addMaterialFile.mockResolvedValue({ id: 7 });
   listGroups.mockReset();
   listGroups.mockResolvedValue([]);
   listHomework.mockReset();
@@ -117,47 +117,65 @@ describe('HomeworkFormPage — срок сдачи', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'До следующего урока' }));
 
-    // Поле даты исчезает: вводить нечего, и пустое поле не блокирует публикацию.
+    // Поле даты исчезает: вводить нечего, и пустое поле не блокирует сохранение.
     expect(screen.queryByLabelText('Срок сдачи')).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Опубликовать' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Создать черновик' }));
 
     expect(create).toHaveBeenCalledTimes(1);
     expect(create.mock.calls[0][0]).toMatchObject({ lessonId: 5, dueType: 'NEXT_LESSON' });
     expect(create.mock.calls[0][0].dueAt).toBeUndefined();
-    expect(publish).toHaveBeenCalledWith(42);
   });
 
   it('точный срок по-прежнему требует дату и отправляет её', async () => {
     renderForm();
     await fillRequiredFields();
 
-    // Пока даты нет, публиковать нечего — кнопка выключена.
-    expect(screen.getByRole('button', { name: 'Опубликовать' })).toBeDisabled();
+    // Пока даты нет, сохранять нечего — кнопка выключена.
+    expect(screen.getByRole('button', { name: 'Создать черновик' })).toBeDisabled();
 
     await userEvent.type(screen.getByLabelText('Срок сдачи'), '2026-10-20T15:00');
-    await userEvent.click(screen.getByRole('button', { name: 'Опубликовать' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Создать черновик' }));
 
     expect(create.mock.calls[0][0]).toMatchObject({ dueType: 'EXACT' });
     expect(create.mock.calls[0][0].dueAt).toBe(new Date('2026-10-20T15:00').toISOString());
   });
   /**
-   * Публикация «до следующего урока» падает, если урока впереди нет: момент считает сервер,
-   * и заранее фронт этого не знает. Черновик при этом уже создан — второго быть не должно.
+   * Форма создаёт черновик и на этом заканчивается: публиковать здесь нечего — вопросы и
+   * текст задания генерируются и проверяются на карточке, и до неё задание классу не уходит.
    */
-  it('неудачная публикация не создаёт второе задание, а ведёт в сохранённый черновик', async () => {
-    publish.mockRejectedValue(
-      new ApiError(400, 'Следующий урок по предмету не найден — выберите точную дату или вариант без срока'),
-    );
+  it('создание не публикует задание', async () => {
     renderForm();
     await fillRequiredFields();
 
-    await userEvent.click(screen.getByRole('button', { name: 'До следующего урока' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Опубликовать' }));
+    expect(screen.queryByRole('button', { name: 'Опубликовать' })).not.toBeInTheDocument();
 
-    const notice = await screen.findByText(/Черновик сохранён, но опубликовать не удалось/);
-    expect(notice).toBeInTheDocument();
-    expect(screen.getByText(/Следующий урок по предмету не найден/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'До следующего урока' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Создать черновик' }));
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * Материалы прикладываются после создания, и сбой на них черновик уже не отменяет.
+   * Повтор «в лоб» завёл бы второе задание — вместо этого форма ведёт в созданное.
+   */
+  it('сбой на материалах не создаёт второе задание, а ведёт в сохранённый черновик', async () => {
+    addMaterialFile.mockRejectedValue(new ApiError(413, 'Файл больше 20 МБ'));
+    renderForm();
+    await fillRequiredFields();
+
+    // Поле файла скрыто за кнопкой «Прикрепить файл»: userEvent такой input пропускает,
+    // поэтому событие отправляем напрямую — проверяется поведение формы, а не клик.
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(fileInput, {
+      target: { files: [new File(['x'], 'big.pdf', { type: 'application/pdf' })] },
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'До следующего урока' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Создать черновик' }));
+
+    expect(await screen.findByText(/Черновик создан, но материалы приложить не удалось/))
+        .toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Открыть черновик' }));
     expect(create).toHaveBeenCalledTimes(1);
@@ -218,7 +236,7 @@ describe('HomeworkFormPage — привязка к уроку', () => {
     // Список уроков подгрузился: подсказка про привязку появляется только с уроками.
     await screen.findByText(/Привязанное задание видно на карточке урока/);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Опубликовать' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Создать черновик' }));
 
     const payload = create.mock.calls[0][0];
     expect(payload.lessonId).toBe(41);
@@ -238,7 +256,7 @@ describe('HomeworkFormPage — привязка к уроку', () => {
     await screen.findByText(/Привязанное задание видно на карточке урока/);
 
     await pick('Урок', 'Без привязки к уроку');
-    await userEvent.click(screen.getByRole('button', { name: 'Опубликовать' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Создать черновик' }));
 
     const payload = create.mock.calls[0][0];
     expect(payload.lessonId).toBeUndefined();

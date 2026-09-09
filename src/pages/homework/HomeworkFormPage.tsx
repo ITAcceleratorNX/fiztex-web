@@ -236,12 +236,19 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
     && (recipientType !== 'TEMP_GROUP' || tempGroupId != null);
 
   /**
-   * Одна мутация на «черновик» и «публикацию»: разница только в том, дёргаем ли publish
-   * после создания. Пока она в полёте, обе кнопки заблокированы — двойной клик не должен
-   * создать второе задание (§4.3, §10).
+   * Создание всегда даёт черновик, и публикации здесь нет намеренно.
+   *
+   * <p>Раньше главной кнопкой формы была «Опубликовать», и задание уходило классу прямо
+   * из неё — до того, как учитель увидел его карточку. А ровно там и происходит всё
+   * остальное: генерация текста и вопросов моделью, их проверка и правка. Публиковать в
+   * момент, когда проверять ещё нечего, — значит отправлять ученикам непрочитанное.
+   *
+   * <p>У теста это к тому же невозможно: без вопросов бэкенд его не публикует, а вопросы
+   * добавляются на карточке. Кнопка «Опубликовать» в форме для половины случаев была
+   * обещанием, которое она не могла выполнить.
    */
   const save = useMutation({
-    mutationFn: async (publish: boolean) => {
+    mutationFn: async () => {
       setError(null);
       if (mode === 'edit' && editId != null) {
         const updated = await homeworkApi.update(editId, {
@@ -281,13 +288,14 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
       const created = await homeworkApi.create(input);
       createdId.current = created.id ?? null;
       await uploadFiles(created.id as number);
-      if (publish) return homeworkApi.publish(created.id as number);
       return created;
     },
-    onSuccess: (result, publish) => {
+    onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ['homework'] });
       toast.success(
-        mode === 'edit' ? 'Изменения сохранены' : publish ? 'Задание опубликовано' : 'Черновик сохранён',
+        mode === 'edit'
+          ? 'Изменения сохранены'
+          : 'Черновик создан — проверьте задание и опубликуйте его',
       );
       // Возврат туда, откуда пришли (§4.1): из урока — в урок, иначе — в карточку задания.
       if (mode === 'create' && lessonId) navigate(`/lesson-schedule/lessons/${lessonId}`);
@@ -606,13 +614,15 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
 
       {error && (
         <NoticeBar tone="solid">
-          {createdId.current != null ? `Черновик сохранён, но опубликовать не удалось. ${error}` : error}
+          {createdId.current != null
+            ? `Черновик создан, но материалы приложить не удалось. ${error}`
+            : error}
           <button
             type="button"
             onClick={() =>
               createdId.current != null
                 ? navigate(`/homework/${createdId.current}`)
-                : save.mutate(false)
+                : save.mutate()
             }
             className="ml-2 font-semibold underline"
           >
@@ -625,20 +635,9 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
         <Link to={backTo} className={buttonClassName({ variant: 'secondary' })}>
           Отмена
         </Link>
-        {mode === 'edit' ? (
-          <Button onClick={() => save.mutate(false)} disabled={!valid} loading={busy}>
-            Сохранить
-          </Button>
-        ) : (
-          <>
-            <Button variant="secondary" onClick={() => save.mutate(false)} disabled={!valid || busy}>
-              Сохранить как черновик
-            </Button>
-            <Button onClick={() => save.mutate(true)} disabled={!valid} loading={busy}>
-              Опубликовать
-            </Button>
-          </>
-        )}
+        <Button onClick={() => save.mutate()} disabled={!valid} loading={busy}>
+          {mode === 'edit' ? 'Сохранить' : 'Создать черновик'}
+        </Button>
       </div>
     </div>
   );
