@@ -78,6 +78,7 @@ export const keys = {
   monitoringAttempts: (status?: string) => ['admissions', 'attempts', status ?? 'ALL'] as const,
   attemptLogs: (attemptId: number) => ['admissions', 'attempts', attemptId, 'logs'] as const,
   lesson: (lessonId: number) => ['lessons', lessonId] as const,
+  currentLesson: ['lessons', 'current'] as const,
   lessonHistory: (lessonId: number) => ['lessons', lessonId, 'history'] as const,
   lessonGradePermission: (lessonId: number) =>
     ['lessons', lessonId, 'substitution', 'grade-permission'] as const,
@@ -522,6 +523,27 @@ export function useLesson(lessonId: number | null) {
     queryFn: ({ signal }) => lessonsApi.card(lessonId as number, signal),
     enabled: lessonId != null,
     retry: (failureCount, error) => !isMissingLesson(error) && failureCount < 2,
+  });
+}
+
+/**
+ * Урок для пункта «Текущий урок».
+ *
+ * `staleTime: 0` и перезапрос при каждом входе — не перестраховка, а требование ТЗ §4:
+ * урок, на который ведёт пункт меню, обязан меняться по времени сам, и каждое нажатие
+ * определяет актуальный урок заново. Кэшированный ответ означал бы, что после звонка
+ * пункт ещё какое-то время ведёт в закончившийся урок.
+ *
+ * Открытую карточку это не трогает: она живёт своим `useLesson(id)` и по времени не
+ * переключается — начавшийся следующий урок не должен выдёргивать учителя из работы.
+ */
+export function useCurrentLesson() {
+  return useQuery({
+    queryKey: keys.currentLesson,
+    queryFn: ({ signal }) => lessonsApi.current(undefined, signal),
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
   });
 }
 

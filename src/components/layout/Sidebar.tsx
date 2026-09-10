@@ -132,6 +132,7 @@ function SidebarNavItem({ item }: { item: NavItem }) {
 
 function TopLevelLink({ item }: { item: NavItem }) {
   const Icon = item.icon;
+  if (item.accent) return <AccentLink item={item} />;
   return (
     <NavLink
       to={item.to}
@@ -161,6 +162,32 @@ function TopLevelLink({ item }: { item: NavItem }) {
           ) : null}
         </>
       )}
+    </NavLink>
+  );
+}
+
+/**
+ * Пункт-действие (Figma `sidebar-tekushchiy-urok`): всегда оранжевый, без состояния
+ * «вы здесь».
+ *
+ * <p>Подсветки активного маршрута здесь нет намеренно, а не по недосмотру: адрес пункта —
+ * переход, он сразу заменяет себя карточкой урока, и «активным» этот пункт не бывает
+ * дольше одного кадра. Мигающая подсветка на пути к другому экрану читалась бы как сбой.
+ *
+ * <p>Форма — пилюля, скруглённая только слева и упирающаяся в правый край. Сопряжений
+ * (`nav-fillets`) у неё в макете нет, в отличие от активного пункта: тот «вырезан» из
+ * полотна меню, а эта кнопка положена поверх него.
+ */
+function AccentLink({ item }: { item: NavItem }) {
+  const Icon = item.icon;
+  return (
+    <NavLink
+      to={item.to}
+      end={item.end}
+      className="relative z-10 flex h-12 items-center gap-3 rounded-l-full bg-brand-500 pl-6 pr-3 text-sm font-semibold text-white transition hover:bg-brand-600"
+    >
+      <Icon className="size-5 shrink-0 text-white" />
+      <span className="min-w-0 flex-1 truncate">{item.label}</span>
     </NavLink>
   );
 }

@@ -1371,7 +1371,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["current"];
+        get: operations["current_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3908,6 +3908,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["current"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}": {
         parameters: {
             query?: never;
@@ -6014,6 +6030,12 @@ export interface components {
             startTime: string;
             /** @enum {string} */
             type?: "AVAILABLE" | "UNAVAILABLE";
+        };
+        CurrentLessonView: {
+            lesson?: components["schemas"]["LessonView"];
+            message?: string;
+            /** @enum {string} */
+            status?: "ok" | "schedule_not_published" | "no_upcoming_lessons";
         };
         DashboardResponse: {
             /** Format: int64 */
@@ -11895,7 +11917,7 @@ export interface operations {
             };
         };
     };
-    current: {
+    current_1: {
         parameters: {
             query: {
                 classId: number;
@@ -16431,6 +16453,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PageLessonView"];
+                };
+            };
+        };
+    };
+    current: {
+        parameters: {
+            query?: {
+                childId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentLessonView"];
                 };
             };
         };

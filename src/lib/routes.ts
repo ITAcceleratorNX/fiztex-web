@@ -33,6 +33,11 @@ export const ROUTES = {
   homework: '/homework',
   /** Своё расписание учителя — ролевой экран поверх `/api/schedule/me/week`. */
   mySchedule: '/my-schedule',
+  /**
+   * Пункт «Текущий урок»: адрес-переход, а не экран. Спрашивает
+   * `GET /api/lessons/current` и уводит на карточку найденного урока.
+   */
+  currentLesson: '/current-lesson',
   /** Своё рабочее время учителя: заявка админу поверх `/api/teacher/availability`. */
   myAvailability: '/my-availability',
   /** Журнал класса и итоги четверти (GRADES-FE-001). */
@@ -128,10 +133,15 @@ export function isRouteAllowedForRole(path: string, role: string | undefined): b
  *
  * Своё рабочее время (`/my-availability`) и сервисные заявки (`/service`) — из той же
  * породы: оба читают ролевые эндпоинты вне `/api/admin/*`, и оба уже стоят в меню учителя.
+ *
+ * «Текущий урок» (`/current-lesson`) — тоже ролевой: `GET /api/lessons/current` бэкенд
+ * открывает ученику, учителю и родителю, а администратору отвечает 403 — «своего» урока
+ * у него нет.
  */
 const TEACHER_ROUTE_PREFIXES = [
   ROUTES.homework,
   ROUTES.mySchedule,
+  ROUTES.currentLesson,
   ROUTES.myAvailability,
   ROUTES.journal,
   ROUTES.serviceRequests,

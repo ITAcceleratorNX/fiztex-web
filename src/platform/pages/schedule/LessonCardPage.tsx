@@ -683,7 +683,12 @@ function LessonModules({ lesson }: { lesson: Lesson }) {
   );
 }
 
-function LessonCardSkeleton() {
+/**
+ * Скелет карточки. Экспортируется ради `/current-lesson`: тот резолвит урок и сразу
+ * уходит на эту же карточку, и показывать в ожидании другой спиннер значило бы дважды
+ * менять картинку на пути к одному экрану (ТЗ Быстрый доступ §5).
+ */
+export function LessonCardSkeleton() {
   return (
     <div className="flex animate-pulse flex-col gap-6" aria-busy="true" aria-label="Загрузка урока">
       <div className="h-4 w-72 rounded bg-slate-200" />

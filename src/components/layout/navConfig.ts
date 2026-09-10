@@ -5,6 +5,7 @@ import {
   CalendarRange,
   CalendarDays,
   Clock,
+  Clock3,
   BookText,
   KeyRound,
   Upload,
@@ -31,6 +32,13 @@ export interface NavItem {
   end?: boolean;
   /** Shown when route has no backend yet */
   noApi?: boolean;
+  /**
+   * Пункт-действие, а не раздел: залит фирменным оранжевым независимо от того, где
+   * пользователь сейчас (Figma `sidebar-tekushchiy-urok`). Нужен «Текущему уроку» —
+   * он никуда не приводит сам, а сразу уводит на карточку урока, поэтому подсветки
+   * «вы здесь» у него не бывает в принципе.
+   */
+  accent?: boolean;
   /** Nested items shown when this item or one of its children is on the current route. */
   children?: NavItem[];
 }
@@ -108,6 +116,10 @@ export const TEACHER_NAV_SECTIONS: NavSection[] = [
     id: 'teaching',
     label: '',
     items: [
+      // Первым пунктом и отдельным цветом (Figma `sidebar-tekushchiy-urok-inactive`
+      // и `…-open`): это кнопка «отведи меня к работе», а не ещё один раздел, и
+      // искать её среди разделов учителю пришлось бы каждый урок.
+      { to: ROUTES.currentLesson, label: 'Текущий урок', icon: Clock3, accent: true },
       { to: ROUTES.mySchedule, label: 'Расписание', icon: Calendar },
       { to: ROUTES.myAvailability, label: 'Моё рабочее время', icon: Clock },
       { to: ROUTES.journal, label: 'Журнал оценок', icon: BookOpen },

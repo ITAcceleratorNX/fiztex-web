@@ -28,6 +28,7 @@ import { LessonHomeworkPage } from '@/pages/homework/LessonHomeworkPage';
 import { AttendanceAdminPage } from '@/platform/pages/attendance/AttendanceAdminPage';
 import { MyAvailabilityPage } from '@/pages/schedule/MyAvailabilityPage';
 import { MySchedulePage } from '@/pages/schedule/MySchedulePage';
+import { CurrentLessonPage } from '@/pages/schedule/CurrentLessonPage';
 import { HomeworkGroupsPage } from '@/pages/homework/HomeworkGroupsPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
@@ -158,6 +159,8 @@ export function App() {
         <Route path="/schedule" element={<Navigate to="/lesson-schedule" replace />} />
         {/* Своё расписание учителя: ролевой экран, из него открывается урок. */}
         <Route path={ROUTES.mySchedule} element={<MySchedulePage />} />
+        {/* Не экран, а переход: резолвит актуальный урок и уводит на его карточку. */}
+        <Route path={ROUTES.currentLesson} element={<CurrentLessonPage />} />
         <Route path={ROUTES.myAvailability} element={<MyAvailabilityPage />} />
         <Route path="/lesson-schedule" element={<LessonSchedulePage />} />
         <Route path="/lesson-schedule/lessons/:lessonId" element={<LessonCardPage />} />

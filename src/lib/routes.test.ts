@@ -76,6 +76,9 @@ describe('маршрутизация по роли', () => {
     // читают они `/api/service-requests/my`.
     const teacher = navSectionsForRole('TEACHER').flatMap((s) => s.items.map((i) => i.to));
     expect(teacher).toEqual([
+      // «Текущий урок» стоит первым — это кнопка к работе, а не раздел (ТЗ Быстрый
+      // доступ §1), и её позиция в списке такая же часть решения, как её наличие.
+      '/current-lesson',
       '/my-schedule',
       '/my-availability',
       '/grades',
@@ -105,6 +108,9 @@ describe('маршрутизация по роли', () => {
 
   it('учителю открыто своё расписание, но не админский конструктор', () => {
     expect(isRouteAllowedForRole('/my-schedule', 'TEACHER')).toBe(true);
+    // Пункт «Текущий урок» бесполезен, если прямой заход на него разворачивает роль:
+    // он и есть прямой заход — по нему приходят из меню и из закладки.
+    expect(isRouteAllowedForRole('/current-lesson', 'TEACHER')).toBe(true);
     expect(isRouteAllowedForRole('/lesson-schedule', 'TEACHER')).toBe(false);
     expect(isRouteAllowedForRole('/lesson-schedule/lessons/7', 'TEACHER')).toBe(true);
   });

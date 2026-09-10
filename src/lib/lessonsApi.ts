@@ -8,6 +8,8 @@ export type LessonCapability = NonNullable<Lesson['capabilities']>[number];
 export type LessonChangedField = NonNullable<Lesson['changedFields']>[number];
 
 type LessonPage = Schema<'PageLessonView'>;
+export type CurrentLesson = Schema<'CurrentLessonView'>;
+export type CurrentLessonStatus = NonNullable<CurrentLesson['status']>;
 export type RoleSchedule = Schema<'RoleScheduleView'>;
 export type RoleScheduleLesson = NonNullable<RoleSchedule['lessons']>[number];
 type LessonHistoryPage = Schema<'PageLessonHistoryView'>;
@@ -42,6 +44,22 @@ export const lessonsApi = {
    */
   myWeek(date?: string, signal?: AbortSignal): Promise<RoleSchedule> {
     return request<RoleSchedule>(`/schedule/me/week${pageQuery({ date })}`, { signal });
+  },
+
+  /**
+   * Урок, который открывает пункт «Текущий урок»: идущий сейчас, а если такого нет —
+   * ближайший будущий.
+   *
+   * Выбирает урок бэкенд, а не экран: правило «идёт / следующий сегодня / первый урок
+   * ближайшего учебного дня» опирается на школьный календарь, подгруппы и замены — всё
+   * то, чего у клиента нет. Пустой ответ приходит с причиной в `status`, поэтому «уроков
+   * нет» и «расписание не опубликовано» не приходится выводить из формы ответа.
+   *
+   * `childId` обязателен родителю: у каждого ребёнка свой контекст, и объединять их
+   * бэкенд отказывается (403).
+   */
+  current(childId?: number, signal?: AbortSignal): Promise<CurrentLesson> {
+    return request<CurrentLesson>(`/lessons/current${pageQuery({ childId })}`, { signal });
   },
 
   history(
