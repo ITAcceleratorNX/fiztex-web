@@ -44,6 +44,9 @@ export const ROUTES = {
   journal: '/grades',
   /** Посещаемость по школе — журнал месяца и незакрытые уроки (ATTENDANCE-001 §23). */
   attendance: '/attendance',
+  /** Опросы: список и карточка (вопросы, аудитория, результаты, AI-анализ). */
+  surveys: '/surveys',
+  survey: (id: number | string) => `/surveys/${id}`,
   /** Сервисные заявки автора — Admin и Teacher (SERVICE-FE-001). */
   serviceRequests: '/service',
   serviceRequest: (id: number | string) => `/service/${id}`,

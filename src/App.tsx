@@ -16,6 +16,8 @@ import { ResultReviewPage } from '@/pages/ResultReviewPage';
 import { ReviewPage } from '@/pages/ReviewPage';
 import { SubjectMaterialsPage } from '@/pages/SubjectMaterialsPage';
 import { AiTestsPage } from '@/pages/AiTestsPage';
+import { SurveysPage } from '@/pages/SurveysPage';
+import { SurveyDetailPage } from '@/pages/SurveyDetailPage';
 import { HomeworkListPage } from '@/pages/homework/HomeworkListPage';
 import { JournalPage } from '@/pages/journal/JournalPage';
 import { ServiceRequestsPage } from '@/pages/service/ServiceRequestsPage';
@@ -221,6 +223,8 @@ export function App() {
             этот раздел только читает и ведёт туда. */}
         <Route path={ROUTES.attendance} element={<AttendanceAdminPage />} />
         <Route path="/ai-tests" element={<AiTestsPage />} />
+        <Route path={ROUTES.surveys} element={<SurveysPage />} />
+        <Route path="/surveys/:surveyId" element={<SurveyDetailPage />} />
         <Route
           path="/clubs"
           element={
