@@ -17,7 +17,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_19"];
+        patch: operations["update_20"];
         trace?: never;
     };
     "/api/admin/academic-periods/{id}/archive": {
@@ -29,7 +29,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["archive_12"];
+        post: operations["archive_13"];
         delete?: never;
         options?: never;
         head?: never;
@@ -59,9 +59,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_19"];
+        get: operations["list_21"];
         put?: never;
-        post: operations["create_18"];
+        post: operations["create_19"];
         delete?: never;
         options?: never;
         head?: never;
@@ -81,7 +81,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_18"];
+        patch: operations["update_19"];
         trace?: never;
     };
     "/api/admin/academic-years/{id}/activate": {
@@ -109,7 +109,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["archive_11"];
+        post: operations["archive_12"];
         delete?: never;
         options?: never;
         head?: never;
@@ -139,9 +139,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_18"];
+        get: operations["list_20"];
         put?: never;
-        post: operations["create_17"];
+        post: operations["create_18"];
         delete?: never;
         options?: never;
         head?: never;
@@ -173,7 +173,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["archive_10"];
+        post: operations["archive_11"];
         delete?: never;
         options?: never;
         head?: never;
@@ -251,9 +251,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_17"];
+        get: operations["list_19"];
         put?: never;
-        post: operations["create_16"];
+        post: operations["create_17"];
         delete?: never;
         options?: never;
         head?: never;
@@ -427,9 +427,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_16"];
+        get: operations["list_18"];
         put?: never;
-        post: operations["create_15"];
+        post: operations["create_16"];
         delete?: never;
         options?: never;
         head?: never;
@@ -491,9 +491,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_15"];
+        get: operations["list_17"];
         put?: never;
-        post: operations["create_14"];
+        post: operations["create_15"];
         delete?: never;
         options?: never;
         head?: never;
@@ -513,7 +513,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_17"];
+        patch: operations["update_18"];
         trace?: never;
     };
     "/api/admin/bell-templates/{id}/activate": {
@@ -651,9 +651,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_14"];
+        get: operations["list_16"];
         put?: never;
-        post: operations["create_13"];
+        post: operations["create_14"];
         delete?: never;
         options?: never;
         head?: never;
@@ -670,10 +670,10 @@ export interface paths {
         get: operations["getById_7"];
         put?: never;
         post?: never;
-        delete: operations["delete_5"];
+        delete: operations["delete_6"];
         options?: never;
         head?: never;
-        patch: operations["update_16"];
+        patch: operations["update_17"];
         trace?: never;
     };
     "/api/admin/calendar-events/{id}/activate": {
@@ -715,9 +715,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_13"];
+        get: operations["list_15"];
         put?: never;
-        post: operations["create_12"];
+        post: operations["create_13"];
         delete?: never;
         options?: never;
         head?: never;
@@ -753,7 +753,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_15"];
+        patch: operations["update_16"];
         trace?: never;
     };
     "/api/admin/classes/{id}/archive": {
@@ -765,7 +765,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["archive_9"];
+        post: operations["archive_10"];
         delete?: never;
         options?: never;
         head?: never;
@@ -795,9 +795,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_12"];
+        get: operations["list_14"];
         put?: never;
-        post: operations["create_11"];
+        post: operations["create_12"];
         delete?: never;
         options?: never;
         head?: never;
@@ -817,7 +817,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_14"];
+        patch: operations["update_15"];
         trace?: never;
     };
     "/api/admin/group-sets/{id}/archive": {
@@ -829,7 +829,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["archive_8"];
+        post: operations["archive_9"];
         delete?: never;
         options?: never;
         head?: never;
@@ -877,7 +877,7 @@ export interface paths {
         };
         get: operations["listRuns"];
         put?: never;
-        post: operations["upload_2"];
+        post: operations["upload_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1025,7 +1025,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_13"];
+        patch: operations["update_14"];
         trace?: never;
     };
     "/api/admin/lessons/{lessonId}/cancel": {
@@ -1053,7 +1053,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["restore"];
+        post: operations["restore_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1083,9 +1083,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_11"];
+        get: operations["list_13"];
         put?: never;
-        post: operations["create_10"];
+        post: operations["create_11"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1121,7 +1121,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_12"];
+        patch: operations["update_13"];
         trace?: never;
     };
     "/api/admin/parents/{id}/archive": {
@@ -1133,7 +1133,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["archive_7"];
+        post: operations["archive_8"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1339,9 +1339,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_10"];
+        get: operations["list_12"];
         put?: never;
-        post: operations["create_9"];
+        post: operations["create_10"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1437,7 +1437,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["archive_6"];
+        post: operations["archive_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1579,9 +1579,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_9"];
+        get: operations["list_11"];
         put?: never;
-        post: operations["create_8"];
+        post: operations["create_9"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1601,7 +1601,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_11"];
+        patch: operations["update_12"];
         trace?: never;
     };
     "/api/admin/school-subjects/{id}/archive": {
@@ -1613,7 +1613,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["archive_5"];
+        post: operations["archive_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1659,9 +1659,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_8"];
+        get: operations["list_10"];
         put?: never;
-        post: operations["create_7"];
+        post: operations["create_8"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1697,7 +1697,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_10"];
+        patch: operations["update_11"];
         trace?: never;
     };
     "/api/admin/students/{id}/archive": {
@@ -1709,7 +1709,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["archive_4"];
+        post: operations["archive_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1771,9 +1771,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_7"];
+        get: operations["list_9"];
         put?: never;
-        post: operations["create_6"];
+        post: operations["create_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1793,7 +1793,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_9"];
+        patch: operations["update_10"];
         trace?: never;
     };
     "/api/admin/subgroups/{id}/archive": {
@@ -1805,7 +1805,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["archive_3"];
+        post: operations["archive_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1867,9 +1867,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_6"];
+        get: operations["list_8"];
         put?: never;
-        post: operations["create_5"];
+        post: operations["create_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1901,7 +1901,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["archive_2"];
+        post: operations["archive_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1915,7 +1915,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_23"];
+        get: operations["list_25"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1953,7 +1953,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_8"];
+        patch: operations["update_9"];
         trace?: never;
     };
     "/api/admin/teacher-working-time/{id}/archive": {
@@ -1965,7 +1965,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["archive_1"];
+        post: operations["archive_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1979,9 +1979,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_5"];
+        get: operations["list_7"];
         put?: never;
-        post: operations["create_4"];
+        post: operations["create_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2017,7 +2017,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_7"];
+        patch: operations["update_8"];
         trace?: never;
     };
     "/api/admin/teachers/{id}/archive": {
@@ -2029,7 +2029,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["archive"];
+        post: operations["archive_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2139,9 +2139,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_4"];
+        get: operations["list_6"];
         put?: never;
-        post: operations["create_3"];
+        post: operations["create_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2251,7 +2251,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_22"];
+        get: operations["list_24"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2653,7 +2653,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["create_2"];
+        post: operations["create_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2861,7 +2861,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["create_1"];
+        post: operations["create_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2958,10 +2958,10 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["delete_4"];
+        delete: operations["delete_5"];
         options?: never;
         head?: never;
-        patch: operations["update_6"];
+        patch: operations["update_7"];
         trace?: never;
     };
     "/api/grades/{gradeId}/history": {
@@ -2987,9 +2987,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_2"];
+        get: operations["list_4"];
         put?: never;
-        post: operations["create"];
+        post: operations["create_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3227,7 +3227,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_3"];
+        get: operations["list_5"];
         put?: never;
         post: operations["start"];
         delete?: never;
@@ -3374,7 +3374,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["delete_6"];
+        delete: operations["delete_8"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3469,7 +3469,7 @@ export interface paths {
         };
         get: operations["myDrafts"];
         put?: never;
-        post: operations["upload_1"];
+        post: operations["upload_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3899,7 +3899,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_20"];
+        get: operations["list_22"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3931,7 +3931,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["card"];
+        get: operations["card_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4187,7 +4187,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_21"];
+        get: operations["list_23"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4238,7 +4238,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["delete_3"];
+        delete: operations["delete_4"];
         options?: never;
         head?: never;
         patch: operations["setVisibility"];
@@ -4315,9 +4315,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_1"];
+        get: operations["list_3"];
         put?: never;
-        post: operations["upload"];
+        post: operations["upload_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4334,10 +4334,10 @@ export interface paths {
         get: operations["get_5"];
         put?: never;
         post?: never;
-        delete: operations["delete_2"];
+        delete: operations["delete_3"];
         options?: never;
         head?: never;
-        patch: operations["update_5"];
+        patch: operations["update_6"];
         trace?: never;
     };
     "/api/materials/{id}/download": {
@@ -4719,6 +4719,166 @@ export interface paths {
         put: operations["submit"];
         post?: never;
         delete: operations["withdraw"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/textbook-bindings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_2"];
+        put?: never;
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/textbook-bindings/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/textbook-bindings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_7"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/textbook-bindings/{id}/replacement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["replace_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/textbook-bindings/{id}/termination": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["terminate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/textbooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_1"];
+        put?: never;
+        post: operations["upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/textbooks/duplicate-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["duplicateCheck"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/textbooks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["card"];
+        put?: never;
+        post?: never;
+        delete: operations["delete_2"];
+        options?: never;
+        head?: never;
+        patch: operations["update_5"];
+        trace?: never;
+    };
+    "/api/teacher/textbooks/{id}/archival": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["archive"];
+        delete: operations["restore"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/textbooks/{id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["content"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -5128,6 +5288,15 @@ export interface components {
         AssignTestRequest: {
             applicantIds?: number[];
         };
+        Assignment: {
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            subgroups?: components["schemas"]["Subgroup"][];
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+        };
         AssignmentItem: {
             allowBackNavigation?: boolean;
             /** Format: int64 */
@@ -5438,6 +5607,13 @@ export interface components {
             grades?: string[];
             replaceExisting?: boolean;
             targetsPresent?: boolean;
+        };
+        BindingOptionsView: {
+            years?: components["schemas"]["Year"][];
+        };
+        BindingReplacementView: {
+            created?: components["schemas"]["TextbookBindingView"];
+            ended?: components["schemas"]["TextbookBindingView"];
         };
         CalendarEventTargetView: {
             /** Format: int64 */
@@ -6031,6 +6207,16 @@ export interface components {
             /** @enum {string} */
             type?: "AVAILABLE" | "UNAVAILABLE";
         };
+        CreateTextbookBindingsRequest: {
+            academicPeriodIds?: number[];
+            /** Format: int64 */
+            academicYearId: number;
+            /** Format: date */
+            effectiveFrom?: string;
+            targets?: components["schemas"]["Target"][];
+            /** Format: int64 */
+            textbookId: number;
+        };
         CurrentLessonView: {
             lesson?: components["schemas"]["LessonView"];
             message?: string;
@@ -6070,6 +6256,13 @@ export interface components {
             entries?: components["schemas"]["DiaryEntryView"][];
             /** Format: int64 */
             studentProfileId?: number;
+        };
+        DuplicateCheckRequest: {
+            sha256?: string;
+        };
+        DuplicateCheckView: {
+            duplicate?: boolean;
+            textbook?: components["schemas"]["TextbookView"];
         };
         DuplicateStudentView: {
             firstName?: string;
@@ -7724,6 +7917,24 @@ export interface components {
             /** Format: int32 */
             totalPages?: number;
         };
+        PageTextbookView: {
+            content?: components["schemas"]["TextbookView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
         PageUnfilledLessonView: {
             content?: components["schemas"]["UnfilledLessonView"][];
             empty?: boolean;
@@ -7820,6 +8031,16 @@ export interface components {
             name?: string;
             /** Format: int64 */
             subjectId?: number;
+        };
+        Period: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            academicPeriodName?: string;
+            bindings?: components["schemas"]["TextbookBindingView"][];
+            /** Format: date */
+            endDate?: string;
+            /** Format: date */
+            startDate?: string;
         };
         PeriodFinalView: {
             average?: number;
@@ -7990,6 +8211,12 @@ export interface components {
         };
         RenameRequest: {
             name: string;
+        };
+        ReplaceTextbookRequest: {
+            /** Format: date */
+            effectiveFrom?: string;
+            /** Format: int64 */
+            newTextbookId: number;
         };
         ResolveDraftRequest: {
             /** Format: int64 */
@@ -8454,6 +8681,18 @@ export interface components {
             id?: number;
             payload?: string;
         };
+        Skipped: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            classId?: number;
+            /** Format: int64 */
+            existingBindingId?: number;
+            /** @enum {string} */
+            reason?: "ALREADY_BOUND" | "PERIOD_ENDED";
+            /** Format: int64 */
+            subgroupId?: number;
+        };
         SkippedAssignment: {
             /** Format: int64 */
             applicantId?: number;
@@ -8631,6 +8870,11 @@ export interface components {
             /** Format: int64 */
             subjectId?: number;
         };
+        Subgroup: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
         SubmissionAttachmentView: {
             contentType?: string;
             fileName?: string;
@@ -8704,6 +8948,12 @@ export interface components {
             questionOrder?: number;
             /** @enum {string} */
             type?: "APP_BACKGROUND" | "TAB_SWITCH" | "WINDOW_BLUR" | "PAGE_CLOSE" | "RE_ENTRY" | "SCREENSHOT_ATTEMPT" | "STARTED" | "FOCUS_LOST" | "FOCUS_RETURNED" | "PAGE_CLOSED" | "RESUMED" | "TIME_EXPIRED" | "SUBMITTED" | "CONNECTION_ISSUE";
+        };
+        Target: {
+            /** Format: int64 */
+            classId: number;
+            /** Format: int64 */
+            subgroupId?: number;
         };
         TeacherAnswerView: {
             aiRationale?: string;
@@ -8943,6 +9193,10 @@ export interface components {
             /** Format: int64 */
             publishedSchedules?: number;
         };
+        TerminateBindingRequest: {
+            /** Format: date */
+            effectiveTo?: string;
+        };
         TestAssignmentView: {
             accessCode?: string;
             /** Format: int64 */
@@ -9036,6 +9290,87 @@ export interface components {
             updatedAt?: string;
             /** Format: int32 */
             versionNumber?: number;
+        };
+        TextbookBindingBatchView: {
+            created?: components["schemas"]["TextbookBindingView"][];
+            skipped?: components["schemas"]["Skipped"][];
+        };
+        TextbookBindingView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            academicPeriodName?: string;
+            /** Format: int64 */
+            academicYearId?: number;
+            academicYearName?: string;
+            active?: boolean;
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            createdByName?: string;
+            /** Format: date */
+            effectiveFrom?: string;
+            /** Format: date */
+            effectiveTo?: string;
+            /** @enum {string} */
+            endReason?: "TEACHER" | "REPLACED" | "TEXTBOOK_ARCHIVED";
+            /** Format: date-time */
+            endedAt?: string;
+            endedByName?: string;
+            /** Format: int64 */
+            id?: number;
+            ownTextbook?: boolean;
+            /** Format: int64 */
+            subgroupId?: number;
+            subgroupName?: string;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            /** @enum {string} */
+            textbookFormat?: "PDF" | "DOCX";
+            /** Format: int64 */
+            textbookId?: number;
+            textbookTitle?: string;
+        };
+        TextbookCardView: {
+            textbook?: components["schemas"]["TextbookView"];
+            usage?: components["schemas"]["TextbookUsageView"][];
+        };
+        TextbookUsageView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            academicYearName?: string;
+            periods?: components["schemas"]["Period"][];
+        };
+        TextbookView: {
+            /** Format: int64 */
+            activeBindingCount?: number;
+            /** Format: date-time */
+            archivedAt?: string;
+            contentType?: string;
+            fileName?: string;
+            /** @enum {string} */
+            format?: "PDF" | "DOCX";
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            ownerTeacherProfileId?: number;
+            /** Format: int32 */
+            pageCount?: number;
+            pageNavigation?: boolean;
+            /** Format: int64 */
+            sizeBytes?: number;
+            /** @enum {string} */
+            status?: "ACTIVE" | "ARCHIVED" | "BLOCKED";
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            title?: string;
+            /** Format: int64 */
+            totalBindingCount?: number;
+            /** Format: date-time */
+            uploadedAt?: string;
         };
         TopicScore: {
             /** Format: double */
@@ -9227,6 +9562,11 @@ export interface components {
             /** @enum {string} */
             type?: "AVAILABLE" | "UNAVAILABLE";
         };
+        UpdateTextbookRequest: {
+            /** Format: int64 */
+            subjectId?: number;
+            title?: string;
+        };
         UpdateWorkingDaysRequest: {
             /** Format: int64 */
             academicYearId: number;
@@ -9266,6 +9606,14 @@ export interface components {
             /** Format: int64 */
             version?: number;
         };
+        Year: {
+            assignments?: components["schemas"]["Assignment"][];
+            current?: boolean;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            periods?: components["schemas"]["Period"][];
+        };
         YearFinalView: {
             finalGrade?: components["schemas"]["FinalGradeView"];
             publishedAverage?: number;
@@ -9283,7 +9631,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    update_19: {
+    update_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -9309,7 +9657,7 @@ export interface operations {
             };
         };
     };
-    archive_12: {
+    archive_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -9349,7 +9697,7 @@ export interface operations {
             };
         };
     };
-    list_19: {
+    list_21: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -9371,7 +9719,7 @@ export interface operations {
             };
         };
     };
-    create_18: {
+    create_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -9417,7 +9765,7 @@ export interface operations {
             };
         };
     };
-    update_18: {
+    update_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -9465,7 +9813,7 @@ export interface operations {
             };
         };
     };
-    archive_11: {
+    archive_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -9533,7 +9881,7 @@ export interface operations {
             };
         };
     };
-    list_18: {
+    list_20: {
         parameters: {
             query: {
                 role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
@@ -9558,7 +9906,7 @@ export interface operations {
             };
         };
     };
-    create_17: {
+    create_18: {
         parameters: {
             query?: {
                 force?: boolean;
@@ -9604,7 +9952,7 @@ export interface operations {
             };
         };
     };
-    archive_10: {
+    archive_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -9712,7 +10060,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_19: {
         parameters: {
             query: {
                 status?: "DRAFT" | "PUBLISHED" | "HIDDEN";
@@ -9736,7 +10084,7 @@ export interface operations {
             };
         };
     };
-    create_16: {
+    create_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -10000,7 +10348,7 @@ export interface operations {
             };
         };
     };
-    list_16: {
+    list_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -10020,7 +10368,7 @@ export interface operations {
             };
         };
     };
-    create_15: {
+    create_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -10145,7 +10493,7 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    list_17: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -10169,7 +10517,7 @@ export interface operations {
             };
         };
     };
-    create_14: {
+    create_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -10215,7 +10563,7 @@ export interface operations {
             };
         };
     };
-    update_17: {
+    update_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -10474,7 +10822,7 @@ export interface operations {
             };
         };
     };
-    list_14: {
+    list_16: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -10504,7 +10852,7 @@ export interface operations {
             };
         };
     };
-    create_13: {
+    create_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -10550,7 +10898,7 @@ export interface operations {
             };
         };
     };
-    delete_5: {
+    delete_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -10570,7 +10918,7 @@ export interface operations {
             };
         };
     };
-    update_16: {
+    update_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -10640,7 +10988,7 @@ export interface operations {
             };
         };
     };
-    list_13: {
+    list_15: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -10665,7 +11013,7 @@ export interface operations {
             };
         };
     };
-    create_12: {
+    create_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -10735,7 +11083,7 @@ export interface operations {
             };
         };
     };
-    update_15: {
+    update_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -10761,7 +11109,7 @@ export interface operations {
             };
         };
     };
-    archive_9: {
+    archive_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -10801,7 +11149,7 @@ export interface operations {
             };
         };
     };
-    list_12: {
+    list_14: {
         parameters: {
             query: {
                 classId: number;
@@ -10826,7 +11174,7 @@ export interface operations {
             };
         };
     };
-    create_11: {
+    create_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -10872,7 +11220,7 @@ export interface operations {
             };
         };
     };
-    update_14: {
+    update_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -10898,7 +11246,7 @@ export interface operations {
             };
         };
     };
-    archive_8: {
+    archive_9: {
         parameters: {
             query?: {
                 confirmImpact?: boolean;
@@ -10992,7 +11340,7 @@ export interface operations {
             };
         };
     };
-    upload_2: {
+    upload_3: {
         parameters: {
             query: {
                 importType: "CLASSES" | "STUDENTS" | "STUDENTS_WITH_PARENTS" | "PARENTS" | "TEACHERS";
@@ -11247,7 +11595,7 @@ export interface operations {
             };
         };
     };
-    update_13: {
+    update_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -11299,7 +11647,7 @@ export interface operations {
             };
         };
     };
-    restore: {
+    restore_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -11369,7 +11717,7 @@ export interface operations {
             };
         };
     };
-    list_11: {
+    list_13: {
         parameters: {
             query: {
                 phone?: string;
@@ -11393,7 +11741,7 @@ export interface operations {
             };
         };
     };
-    create_10: {
+    create_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -11461,7 +11809,7 @@ export interface operations {
             };
         };
     };
-    update_12: {
+    update_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -11487,7 +11835,7 @@ export interface operations {
             };
         };
     };
-    archive_7: {
+    archive_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -11843,7 +12191,7 @@ export interface operations {
             };
         };
     };
-    list_10: {
+    list_12: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -11869,7 +12217,7 @@ export interface operations {
             };
         };
     };
-    create_9: {
+    create_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -12011,7 +12359,7 @@ export interface operations {
             };
         };
     };
-    archive_6: {
+    archive_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -12271,7 +12619,7 @@ export interface operations {
             };
         };
     };
-    list_9: {
+    list_11: {
         parameters: {
             query: {
                 name?: string;
@@ -12295,7 +12643,7 @@ export interface operations {
             };
         };
     };
-    create_8: {
+    create_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -12341,7 +12689,7 @@ export interface operations {
             };
         };
     };
-    update_11: {
+    update_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -12367,7 +12715,7 @@ export interface operations {
             };
         };
     };
-    archive_5: {
+    archive_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -12444,7 +12792,7 @@ export interface operations {
             };
         };
     };
-    list_8: {
+    list_10: {
         parameters: {
             query: {
                 classId?: number;
@@ -12470,7 +12818,7 @@ export interface operations {
             };
         };
     };
-    create_7: {
+    create_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -12538,7 +12886,7 @@ export interface operations {
             };
         };
     };
-    update_10: {
+    update_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -12564,7 +12912,7 @@ export interface operations {
             };
         };
     };
-    archive_4: {
+    archive_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -12655,7 +13003,7 @@ export interface operations {
             };
         };
     };
-    list_7: {
+    list_9: {
         parameters: {
             query?: {
                 classId?: number;
@@ -12679,7 +13027,7 @@ export interface operations {
             };
         };
     };
-    create_6: {
+    create_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -12725,7 +13073,7 @@ export interface operations {
             };
         };
     };
-    update_9: {
+    update_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -12751,7 +13099,7 @@ export interface operations {
             };
         };
     };
-    archive_3: {
+    archive_4: {
         parameters: {
             query?: {
                 confirmImpact?: boolean;
@@ -12869,7 +13217,7 @@ export interface operations {
             };
         };
     };
-    list_6: {
+    list_8: {
         parameters: {
             query: {
                 teacherProfileId?: number;
@@ -12896,7 +13244,7 @@ export interface operations {
             };
         };
     };
-    create_5: {
+    create_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -12942,7 +13290,7 @@ export interface operations {
             };
         };
     };
-    archive_2: {
+    archive_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -12962,7 +13310,7 @@ export interface operations {
             };
         };
     };
-    list_23: {
+    list_25: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -13012,7 +13360,7 @@ export interface operations {
             };
         };
     };
-    update_8: {
+    update_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -13038,7 +13386,7 @@ export interface operations {
             };
         };
     };
-    archive_1: {
+    archive_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -13058,7 +13406,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_7: {
         parameters: {
             query: {
                 phone?: string;
@@ -13082,7 +13430,7 @@ export interface operations {
             };
         };
     };
-    create_4: {
+    create_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -13150,7 +13498,7 @@ export interface operations {
             };
         };
     };
-    update_7: {
+    update_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -13176,7 +13524,7 @@ export interface operations {
             };
         };
     };
-    archive: {
+    archive_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -13384,7 +13732,7 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_6: {
         parameters: {
             query?: {
                 useAiGeneration?: boolean;
@@ -13407,7 +13755,7 @@ export interface operations {
             };
         };
     };
-    create_3: {
+    create_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -13624,7 +13972,7 @@ export interface operations {
             };
         };
     };
-    list_22: {
+    list_24: {
         parameters: {
             query?: {
                 grade?: string;
@@ -14247,7 +14595,7 @@ export interface operations {
             };
         };
     };
-    create_2: {
+    create_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -14556,7 +14904,7 @@ export interface operations {
             };
         };
     };
-    create_1: {
+    create_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -14695,7 +15043,7 @@ export interface operations {
             };
         };
     };
-    delete_4: {
+    delete_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -14717,7 +15065,7 @@ export interface operations {
             };
         };
     };
-    update_6: {
+    update_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -14765,7 +15113,7 @@ export interface operations {
             };
         };
     };
-    list_2: {
+    list_4: {
         parameters: {
             query: {
                 scope?: "ACTUAL" | "HISTORY";
@@ -14797,7 +15145,7 @@ export interface operations {
             };
         };
     };
-    create: {
+    create_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -15225,7 +15573,7 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -15490,7 +15838,7 @@ export interface operations {
             };
         };
     };
-    delete_6: {
+    delete_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -15652,7 +16000,7 @@ export interface operations {
             };
         };
     };
-    upload_1: {
+    upload_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -16428,7 +16776,7 @@ export interface operations {
             };
         };
     };
-    list_20: {
+    list_22: {
         parameters: {
             query: {
                 dateFrom?: string;
@@ -16479,7 +16827,7 @@ export interface operations {
             };
         };
     };
-    card: {
+    card_1: {
         parameters: {
             query?: {
                 childId?: number;
@@ -16966,7 +17314,7 @@ export interface operations {
             };
         };
     };
-    list_21: {
+    list_23: {
         parameters: {
             query?: {
                 childId?: number;
@@ -17045,7 +17393,7 @@ export interface operations {
             };
         };
     };
-    delete_3: {
+    delete_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -17238,7 +17586,7 @@ export interface operations {
             };
         };
     };
-    list_1: {
+    list_3: {
         parameters: {
             query: {
                 subjectId: number;
@@ -17260,7 +17608,7 @@ export interface operations {
             };
         };
     };
-    upload: {
+    upload_1: {
         parameters: {
             query: {
                 subjectId: number;
@@ -17315,7 +17663,7 @@ export interface operations {
             };
         };
     };
-    delete_2: {
+    delete_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -17335,7 +17683,7 @@ export interface operations {
             };
         };
     };
-    update_5: {
+    update_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -17946,6 +18294,367 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MyTeacherAvailabilityView"];
+                };
+            };
+        };
+    };
+    list_2: {
+        parameters: {
+            query?: {
+                academicYearId?: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId?: number;
+                textbookId?: number;
+                activeOn?: string;
+                includeEnded?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextbookBindingView"][];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTextbookBindingsRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextbookBindingBatchView"];
+                };
+            };
+        };
+    };
+    options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BindingOptionsView"];
+                };
+            };
+        };
+    };
+    delete_7: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    replace_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceTextbookRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BindingReplacementView"];
+                };
+            };
+        };
+    };
+    terminate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TerminateBindingRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextbookBindingView"];
+                };
+            };
+        };
+    };
+    list_1: {
+        parameters: {
+            query: {
+                subjectId?: number;
+                status?: "ACTIVE" | "ARCHIVED" | "BLOCKED";
+                query?: string;
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageTextbookView"];
+                };
+            };
+        };
+    };
+    upload: {
+        parameters: {
+            query: {
+                title: string;
+                subjectId: number;
+                allowDuplicate?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextbookView"];
+                };
+            };
+        };
+    };
+    duplicateCheck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DuplicateCheckRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuplicateCheckView"];
+                };
+            };
+        };
+    };
+    card: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextbookCardView"];
+                };
+            };
+        };
+    };
+    delete_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTextbookRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextbookView"];
+                };
+            };
+        };
+    };
+    archive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextbookView"];
+                };
+            };
+        };
+    };
+    restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextbookView"];
+                };
+            };
+        };
+    };
+    content: {
+        parameters: {
+            query?: never;
+            header?: {
+                Range?: string;
+                "If-None-Match"?: string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
                 };
             };
         };
