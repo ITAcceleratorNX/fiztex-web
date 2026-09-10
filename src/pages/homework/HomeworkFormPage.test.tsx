@@ -115,10 +115,10 @@ describe('HomeworkFormPage — срок сдачи', () => {
     renderForm();
     await fillRequiredFields();
 
-    await userEvent.click(screen.getByRole('button', { name: 'До следующего урока' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'До следующего урока' }));
 
     // Поле даты исчезает: вводить нечего, и пустое поле не блокирует сохранение.
-    expect(screen.queryByLabelText('Срок сдачи')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Дата и время сдачи')).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Создать черновик' }));
 
@@ -134,7 +134,7 @@ describe('HomeworkFormPage — срок сдачи', () => {
     // Пока даты нет, сохранять нечего — кнопка выключена.
     expect(screen.getByRole('button', { name: 'Создать черновик' })).toBeDisabled();
 
-    await userEvent.type(screen.getByLabelText('Срок сдачи'), '2026-10-20T15:00');
+    await userEvent.type(screen.getByLabelText('Дата и время сдачи'), '2026-10-20T15:00');
     await userEvent.click(screen.getByRole('button', { name: 'Создать черновик' }));
 
     expect(create.mock.calls[0][0]).toMatchObject({ dueType: 'EXACT' });
@@ -150,7 +150,7 @@ describe('HomeworkFormPage — срок сдачи', () => {
 
     expect(screen.queryByRole('button', { name: 'Опубликовать' })).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'До следующего урока' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'До следующего урока' }));
     await userEvent.click(screen.getByRole('button', { name: 'Создать черновик' }));
     expect(create).toHaveBeenCalledTimes(1);
   });
@@ -171,7 +171,7 @@ describe('HomeworkFormPage — срок сдачи', () => {
       target: { files: [new File(['x'], 'big.pdf', { type: 'application/pdf' })] },
     });
 
-    await userEvent.click(screen.getByRole('button', { name: 'До следующего урока' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'До следующего урока' }));
     await userEvent.click(screen.getByRole('button', { name: 'Создать черновик' }));
 
     expect(await screen.findByText(/Черновик создан, но материалы приложить не удалось/))
@@ -208,7 +208,7 @@ describe('HomeworkFormPage — привязка к уроку', () => {
 
   /** Срок не про этот сценарий: берём «без срока», чтобы не заполнять дату. */
   async function chooseNoDueDate() {
-    await userEvent.click(screen.getByRole('button', { name: 'Без срока' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'Без срока' }));
   }
 
   async function chooseClassAndSubject() {

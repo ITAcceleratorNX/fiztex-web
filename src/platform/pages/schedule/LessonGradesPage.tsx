@@ -220,7 +220,9 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
           <EmptyRoster />
         ) : (
           <div className="flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+            {/* `px-3` повторяет отступ строки: с обводкой строка получила поля, и без
+                этого шапка перестала стоять над колонкой имён. */}
+            <div className="flex items-center justify-between border-b border-slate-200 px-3 pb-2">
               <span className="text-11 font-bold uppercase text-slate-400">ФИО Ученика</span>
               {canManage && (
                 <span className="text-11 font-bold uppercase text-slate-400">
@@ -300,9 +302,31 @@ function StudentRow({
 }) {
   const grades = row.grades ?? [];
   const freeSlots = canManage ? Math.max(0, maxGrades - grades.length) : 0;
+  const open = openSlot != null;
 
   return (
-    <div className="flex min-h-[52px] items-center gap-3 border-b border-slate-200 py-3 last:border-b-0">
+    /*
+      Строка обводится под курсором и остаётся обведённой, пока в ней открыт выбор
+      (Figma 2138:5803). До этого клетки стояли в общей сетке одинаковых квадратов, и
+      попасть в чужую строку было проще, чем в свою: поповер накрывал соседей, а ничего
+      не говорило, чью работу оценивают.
+
+      Разделитель — псевдоэлемент, а не `border-b`: обведённая строка должна выглядеть
+      цельной рамкой, и линию под ней нужно убрать, не трогая высоту остальных.
+      Обводка тоже `ring`, а не `border`, — иначе строка на ховере прыгала бы на пиксель.
+    */
+    <div
+      className={cx(
+        'relative flex min-h-[52px] items-center gap-3 rounded-xl px-3 py-3 transition',
+        'after:pointer-events-none after:absolute after:inset-x-3 after:bottom-0',
+        'after:h-px after:bg-slate-200 last:after:hidden',
+        open
+          ? 'z-10 bg-white ring-2 ring-navy-700 after:hidden'
+          : canManage
+            ? 'hover:bg-navy-50/60 hover:ring-1 hover:ring-navy-400/50'
+            : null,
+      )}
+    >
       <p className="min-w-0 flex-1 truncate text-sm text-slate-900">{row.fullName}</p>
 
       <div className="flex shrink-0 items-center gap-2">
@@ -320,6 +344,7 @@ function StudentRow({
             {openSlot === index && (
               <GradePicker
                 scale={scale}
+                studentName={row.fullName}
                 value={grade.scaleCode}
                 gradeType={grade.gradeType ?? null}
                 busy={busy}
@@ -342,6 +367,7 @@ function StudentRow({
               {openSlot === slot && (
                 <GradePicker
                   scale={scale}
+                  studentName={row.fullName}
                   gradeType={draftType}
                   busy={busy}
                   error={error}

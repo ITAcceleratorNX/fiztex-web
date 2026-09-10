@@ -20,6 +20,7 @@ import { GRADE_TYPES, GRADE_TYPE_LABELS } from '@/lib/gradesModel';
  */
 export function GradePicker({
   scale,
+  studentName,
   value,
   gradeType,
   busy,
@@ -31,6 +32,8 @@ export function GradePicker({
   onClose,
 }: {
   scale: GradeScaleValue[];
+  /** Чью оценку выбирают — уходит в имя диалога для скринридера. */
+  studentName?: string | null;
   value?: string | null;
   gradeType?: GradeType | null;
   busy?: boolean;
@@ -64,7 +67,7 @@ export function GradePicker({
     <div
       ref={rootRef}
       role="dialog"
-      aria-label="Выбор оценки"
+      aria-label={studentName ? `Оценка: ${studentName}` : 'Выбор оценки'}
       className={cx(
         'absolute right-0 top-full z-30 mt-2 flex w-[230px] flex-col gap-3 rounded-lg',
         'border border-slate-200 bg-white p-3 shadow-pop animate-scale-in',

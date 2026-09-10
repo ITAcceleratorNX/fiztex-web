@@ -567,8 +567,14 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
             multiple
             hidden
             onChange={(event) => {
-              setFiles((prev) => [...prev, ...Array.from(event.target.files ?? [])]);
-              if (fileInput.current) fileInput.current.value = '';
+              // Список читается ДО сброса значения. `setFiles` с функцией-обновителем
+              // вызывает её при рендере, а не на месте, и к тому моменту `event.target.files`
+              // у обнулённого инпута уже пуст — файл молча терялся, и «Прикрепить файл»
+              // выглядел неработающим. Сброс нужен, чтобы повторный выбор того же файла
+              // снова дал `change`.
+              const picked = Array.from(event.target.files ?? []);
+              event.target.value = '';
+              setFiles((prev) => [...prev, ...picked]);
             }}
           />
           <p className="mt-1 text-11 text-subtle">
@@ -577,27 +583,49 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
         </div>
 
         <div>
-          <p className="label-base">Срок сдачи</p>
-          <div className="mt-1.5 inline-flex gap-1 rounded-xl bg-neutral-bg p-1">
-            {DUE_TYPES.map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={dueType === value}
-                onClick={() => setDueType(value)}
-                className={cx(
-                  'rounded-lg px-4 py-2 text-13 font-medium transition',
-                  dueType === value ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink',
-                )}
-              >
-                {label}
-              </button>
-            ))}
+          <p className="label-base" id="due-type-label">
+            Срок сдачи
+          </p>
+          {/*
+            Выбранный срок — фирменный оранжевый (`brand-500`, он же `--color-brand-orange`
+            из Figma), а не белая пилюля: белое на светло-сером здесь читалось как «ничего
+            не выбрано», и учитель отправлял задание не с тем сроком, который думал.
+
+            Это не {@link SegmentedTabs}: там переключают выборку данных и по макету
+            остаётся белая пилюля. Здесь выбирают значение поля — отсюда и радиогруппа,
+            и другой акцент.
+          */}
+          <div
+            role="radiogroup"
+            aria-labelledby="due-type-label"
+            className="mt-1.5 inline-flex gap-1 rounded-xl bg-neutral-bg p-1"
+          >
+            {DUE_TYPES.map(([value, label]) => {
+              const selected = dueType === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => setDueType(value)}
+                  className={cx(
+                    'rounded-lg px-4 py-2 text-13 transition',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50',
+                    selected
+                      ? 'bg-brand-500 font-semibold text-white shadow-sm'
+                      : 'font-medium text-muted hover:bg-surface hover:text-ink',
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
           {dueType === 'EXACT' && (
             <input
               type="datetime-local"
-              aria-label="Срок сдачи"
+              aria-label="Дата и время сдачи"
               value={dueAt}
               onChange={(event) => setDueAt(event.target.value)}
               className="input-base mt-2 h-10 w-64 text-13"
@@ -674,17 +702,17 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
           {createdId.current != null
             ? `Черновик создан, но материалы приложить не удалось. ${error}`
             : error}
-          <button
-            type="button"
-            onClick={() =>
-              createdId.current != null
-                ? navigate(`/homework/${createdId.current}`)
-                : save.mutate()
-            }
-            className="ml-2 font-semibold underline"
-          >
-            {createdId.current != null ? 'Открыть черновик' : 'Повторить'}
-          </button>
+          {/* Черновик уже есть — выход из этого состояния один, и он в главной кнопке
+              внизу. Вторая кнопка с тем же словом только спрашивала бы, чем они разные. */}
+          {createdId.current == null && (
+            <button
+              type="button"
+              onClick={() => save.mutate()}
+              className="ml-2 font-semibold underline"
+            >
+              Повторить
+            </button>
+          )}
         </NoticeBar>
       )}
 
@@ -692,9 +720,15 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
         <Link to={backTo} className={buttonClassName({ variant: 'secondary' })}>
           Отмена
         </Link>
-        <Button onClick={() => save.mutate()} disabled={!valid} loading={busy}>
-          {mode === 'edit' ? 'Сохранить' : 'Создать черновик'}
-        </Button>
+        {/* Черновик уже заведён, а упали материалы — тогда главная кнопка ведёт в него, а не
+            создаёт второе задание. Ссылка в баннере говорит то же самое; расходиться им нельзя. */}
+        {createdId.current != null ? (
+          <Button onClick={() => navigate(`/homework/${createdId.current}`)}>Открыть черновик</Button>
+        ) : (
+          <Button onClick={() => save.mutate()} disabled={!valid} loading={busy}>
+            {mode === 'edit' ? 'Сохранить' : 'Создать черновик'}
+          </Button>
+        )}
       </div>
     </div>
   );

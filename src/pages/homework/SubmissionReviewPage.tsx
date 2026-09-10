@@ -167,10 +167,17 @@ export function SubmissionReviewPage() {
   const canDecide = status === 'SUBMITTED' && current?.id != null;
   const busy = review.isPending;
 
+  /**
+   * Снимок списка снимается ДО сброса значения инпута: `setPhotos` с функцией-обновителем
+   * вызывает её при рендере, а к тому моменту `FileList` обнулённого инпута уже пуст, и
+   * фотография молча пропадала. Сам сброс нужен, чтобы повторный выбор того же файла
+   * снова дал `change`.
+   */
   function addPhotos(files: FileList | null) {
-    if (!files) return;
-    setPhotos((prev) => [...prev, ...Array.from(files)].slice(0, PHOTO_LIMIT));
+    const picked = files ? Array.from(files) : [];
     if (fileInput.current) fileInput.current.value = '';
+    if (picked.length === 0) return;
+    setPhotos((prev) => [...prev, ...picked].slice(0, PHOTO_LIMIT));
   }
 
   return (
