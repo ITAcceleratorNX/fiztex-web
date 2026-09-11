@@ -189,7 +189,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["block"];
+        post: operations["block_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -237,7 +237,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["unblock"];
+        post: operations["unblock_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1915,7 +1915,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_26"];
+        get: operations["list_27"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2226,6 +2226,70 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["changeAssignmentVersion"];
+        trace?: never;
+    };
+    "/api/admin/textbooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_26"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/textbooks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["card_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/textbooks/{id}/blocking": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["block"];
+        delete: operations["unblock"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/textbooks/{id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["content_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/admissions/access-code/verify": {
@@ -9440,6 +9504,7 @@ export interface components {
             format?: "PDF" | "DOCX";
             /** Format: int64 */
             id?: number;
+            ownerName?: string;
             /** Format: int64 */
             ownerTeacherProfileId?: number;
             /** Format: int32 */
@@ -10058,7 +10123,7 @@ export interface operations {
             };
         };
     };
-    block: {
+    block_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -10126,7 +10191,7 @@ export interface operations {
             };
         };
     };
-    unblock: {
+    unblock_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -13396,7 +13461,7 @@ export interface operations {
             };
         };
     };
-    list_26: {
+    list_27: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -14030,6 +14095,123 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TestAssignmentView"];
+                };
+            };
+        };
+    };
+    list_26: {
+        parameters: {
+            query: {
+                teacherProfileId?: number;
+                subjectId?: number;
+                status?: "ACTIVE" | "ARCHIVED" | "BLOCKED";
+                query?: string;
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageTextbookView"];
+                };
+            };
+        };
+    };
+    card_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextbookCardView"];
+                };
+            };
+        };
+    };
+    block: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextbookView"];
+                };
+            };
+        };
+    };
+    unblock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextbookView"];
+                };
+            };
+        };
+    };
+    content_2: {
+        parameters: {
+            query?: never;
+            header?: {
+                Range?: string;
+                "If-None-Match"?: string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
                 };
             };
         };
