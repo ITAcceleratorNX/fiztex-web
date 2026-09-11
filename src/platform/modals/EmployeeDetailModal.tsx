@@ -8,13 +8,16 @@ import { formatDateTime } from '@/lib/format';
 import { ROUTES } from '@/lib/routes';
 import { useAssignedServiceRequests } from '@/hooks/queries';
 import {
-  EMPLOYEE_ROLES,
+  ASSIGNEE_ROLES,
   EMPLOYEE_ROLE_LABELS,
+  SERVICE_STAFF_ROLES,
   canBlock,
   canUnblock,
   employeeRoleLabel,
   isEmployeeRole,
+  isServiceStaffRole,
   type EmployeeRole,
+  type ServiceStaffRole,
 } from '@/lib/employeesModel';
 import { statusChip } from '@/lib/serviceRequestsModel';
 import { ACCOUNT_STATUS_LABELS, ROLE_LABELS } from '../labels';
@@ -53,27 +56,30 @@ export function EmployeeDetailModal({
   pending: boolean;
 }) {
   const currentRole = isEmployeeRole(employee?.role) ? employee.role : null;
-  const [role, setRole] = useState<EmployeeRole>(currentRole ?? 'CLEANING');
+  const currentServiceStaffRole = isServiceStaffRole(currentRole) ? currentRole : null;
+  const [role, setRole] = useState<ServiceStaffRole>(currentServiceStaffRole ?? 'CLEANING');
 
   // Черновой выбор сбрасывается при открытии и при смене сотрудника: иначе на карточке
   // следующего человека висела бы роль, выбранная для предыдущего.
   useEffect(() => {
-    if (currentRole) setRole(currentRole);
-  }, [currentRole, open]);
+    if (currentServiceStaffRole) setRole(currentServiceStaffRole);
+  }, [currentServiceStaffRole, open]);
 
   const accountId = employee ? Number(employee.id) : null;
-  // Заявки нужны только исполнительским ролям: у охраны своей очереди нет, и заявка на
-  // неё не назначается никогда (SERVICE-BE-002).
-  const assignable = employee != null && employee.role !== 'SECURITY';
+  // Заявки нужны только исполнительским ролям — психолог и охрана в эту очередь не входят
+  // (SERVICE-BE-002; PSYCHOLOGIST-001 §1: разные профессии, разная очередь).
+  const assignable = employee != null && (ASSIGNEE_ROLES as readonly string[]).includes(employee.role);
   const assigned = useAssignedServiceRequests(open && assignable ? accountId : null);
 
   if (!employee) return null;
 
   const blockable = canBlock(employee.status);
   const unblockable = canUnblock(employee.status);
+  // Смена роли — только между тремя служебными (SERVICE-BE-008 §1): психологу это
+  // не предложено вовсе, а не выключенной кнопкой — бэкенд его как источник/цель отклонит.
   // Роль архивного аккаунта менять нечего: бэкенд отвечает отказом, и предлагать это
   // значило бы обещать действие, которого не будет.
-  const roleEditable = currentRole != null && employee.status !== 'ARCHIVED';
+  const roleEditable = currentServiceStaffRole != null && employee.status !== 'ARCHIVED';
   const rows = assigned.data?.content ?? [];
 
   return (
@@ -142,10 +148,10 @@ export function EmployeeDetailModal({
             <Field label="Роль">
               <Select
                 value={role}
-                onChange={(event) => setRole(event.target.value as EmployeeRole)}
+                onChange={(event) => setRole(event.target.value as ServiceStaffRole)}
                 disabled={pending}
               >
-                {EMPLOYEE_ROLES.map((value) => (
+                {SERVICE_STAFF_ROLES.map((value) => (
                   <option key={value} value={value}>
                     {EMPLOYEE_ROLE_LABELS[value]}
                   </option>
@@ -155,7 +161,7 @@ export function EmployeeDetailModal({
             <Button
               variant="secondary"
               onClick={() => onChangeRole(role)}
-              disabled={pending || role === currentRole}
+              disabled={pending || role === currentServiceStaffRole}
             >
               Сменить роль
             </Button>

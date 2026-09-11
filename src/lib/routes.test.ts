@@ -128,4 +128,22 @@ describe('маршрутизация по роли', () => {
     // Занятость учителей в конструкторе — по-прежнему админский экран.
     expect(isRouteAllowedForRole('/lesson-schedule/teachers', 'TEACHER')).toBe(false);
   });
+
+  /**
+   * PSYCHOLOGIST-001 §2: психологу открыт только его кабинет и общий конструктор
+   * вопросов — без явной ветки в `isRouteAllowedForRole`/`navSectionsForRole` роль без
+   * случая получила бы весь админский раздел, как раньше получала бы TEACHER.
+   */
+  it('психологу открыт только его кабинет', () => {
+    expect(landingRouteForRole('PSYCHOLOGIST')).toBe('/psychologist/tests');
+    expect(isRouteAllowedForRole('/psychologist/tests', 'PSYCHOLOGIST')).toBe(true);
+    expect(isRouteAllowedForRole('/tests/12/questions', 'PSYCHOLOGIST')).toBe(true);
+    expect(isRouteAllowedForRole('/dashboard', 'PSYCHOLOGIST')).toBe(false);
+    expect(isRouteAllowedForRole('/ai-tests', 'PSYCHOLOGIST')).toBe(false);
+    expect(isRouteAllowedForRole('/admin/employees', 'PSYCHOLOGIST')).toBe(false);
+    expect(loginRedirectTarget('/dashboard', 'PSYCHOLOGIST')).toBe('/psychologist/tests');
+
+    const psychologist = navSectionsForRole('PSYCHOLOGIST').flatMap((s) => s.items.map((i) => i.to));
+    expect(psychologist).toEqual(['/psychologist/tests']);
+  });
 });

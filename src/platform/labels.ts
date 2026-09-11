@@ -31,6 +31,7 @@ export const ROLE_LABELS: Record<AccountRole, string> = {
   CLEANING: EMPLOYEE_ROLE_LABELS.CLEANING,
   TECHNICIAN: EMPLOYEE_ROLE_LABELS.TECHNICIAN,
   SECURITY: EMPLOYEE_ROLE_LABELS.SECURITY,
+  PSYCHOLOGIST: EMPLOYEE_ROLE_LABELS.PSYCHOLOGIST,
 };
 
 export const ACCOUNT_STATUS_LABELS: Record<AccountStatus, string> = {
@@ -50,6 +51,7 @@ export const ROLE_BADGE_TONE: Record<AccountRole, BadgeTone> = {
   CLEANING: 'blue',
   TECHNICIAN: 'amber',
   SECURITY: 'green',
+  PSYCHOLOGIST: 'purple',
 };
 
 /** Avatar circle color per role — Figma «Пользователи» table. */
@@ -62,6 +64,7 @@ export const ROLE_AVATAR_COLOR: Record<AccountRole, { bg: string; fg: string }> 
   CLEANING: { bg: '#0284c7', fg: '#ffffff' },
   TECHNICIAN: { bg: '#b45309', fg: '#ffffff' },
   SECURITY: { bg: '#059669', fg: '#ffffff' },
+  PSYCHOLOGIST: { bg: '#4f46e5', fg: '#ffffff' },
 };
 
 export const SCHOOL_STATUS_LABELS: Record<SchoolRecordStatus, string> = {

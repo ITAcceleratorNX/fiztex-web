@@ -199,7 +199,7 @@ function QuestionEditor({
           <FormulaField
             value={question.text}
             onChange={(text) => onChange({ ...question, text })}
-            placeholder="Сформулируйте вопрос для поступающего"
+            placeholder="Сформулируйте вопрос"
             ariaLabel="Текст вопроса"
           />
         </Field>

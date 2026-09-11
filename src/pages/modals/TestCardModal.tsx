@@ -15,6 +15,7 @@ import { MathText } from '@/components/ui/MathText';
 import { DraftReviewBanner } from '@/components/ui/DraftReviewBanner';
 import { TestGenerateModal } from './TestGenerateModal';
 import { TestImportModal } from './TestImportModal';
+import type { AiTestsVariant } from '@/pages/AiTestsPage';
 
 function Metric({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
@@ -32,10 +33,12 @@ export function TestCardModal({
   open,
   onClose,
   testId,
+  variant = 'ai',
 }: {
   open: boolean;
   onClose: () => void;
   testId: number | null;
+  variant?: AiTestsVariant;
 }) {
   const navigate = useNavigate();
   const { data: test, isLoading, isError, error, refetch } = useTest(open ? testId : null);
@@ -55,7 +58,7 @@ export function TestCardModal({
         open={open}
         onClose={onClose}
         size="lg"
-        title={test ? test.title : 'AI-тест'}
+        title={test ? test.title : variant === 'psychology' ? 'Психологический тест' : 'AI-тест'}
         subtitle={test ? `${test.subjectName} · ${test.grade}` : undefined}
         footer={
           test ? (

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { Field, TextInput, TextArea, Select } from '@/components/ui/Field';
 import { Toggle } from '@/components/ui/Toggle';
 import type { Test, TestStatus } from '@/lib/types';
+import type { AiTestsVariant } from '@/pages/AiTestsPage';
 import { applicantGradeOptions } from './applicantFormHelpers';
 import { VersionDecisionModal } from './VersionDecisionModal';
 import { useTestForm } from './useTestForm';
@@ -12,14 +13,18 @@ export function TestFormModal({
   onClose,
   test,
   aiTest = false,
+  variant = 'ai',
 }: {
   open: boolean;
   onClose: () => void;
   test: Test | null;
   /** When true, creates/updates an AI test (useAiGeneration=true). */
   aiTest?: boolean;
+  /** Only meaningful when `aiTest` — «AI-тест» или «психологический тест» (PSYCHOLOGIST-001). */
+  variant?: AiTestsVariant;
 }) {
   const f = useTestForm({ active: open, test, aiTest, onSaved: onClose });
+  const psychology = aiTest && variant === 'psychology';
 
   return (
     <>
@@ -27,11 +32,21 @@ export function TestFormModal({
         open={open}
         onClose={onClose}
         size="lg"
-        title={f.isEdit ? 'Редактировать тест' : aiTest ? 'Новый AI-тест' : 'Новый вступительный тест'}
+        title={
+          f.isEdit
+            ? 'Редактировать тест'
+            : psychology
+              ? 'Новый психологический тест'
+              : aiTest
+                ? 'Новый AI-тест'
+                : 'Новый вступительный тест'
+        }
         subtitle={
-          aiTest
-            ? 'Тест по учебным материалам с генерацией вопросов через AI.'
-            : 'Создайте карточку теста и добавьте вопросы вручную. Для тестов по материалам с AI используйте раздел «AI-тесты».'
+          psychology
+            ? 'Создайте вопросы вручную или сгенерируйте их через AI.'
+            : aiTest
+              ? 'Тест по учебным материалам с генерацией вопросов через AI.'
+              : 'Создайте карточку теста и добавьте вопросы вручную. Для тестов по материалам с AI используйте раздел «AI-тесты».'
         }
         footer={
           <>
@@ -134,7 +149,7 @@ export function TestFormModal({
             <TextArea
               value={f.form.rules}
               onChange={(e) => f.set('rules', e.target.value)}
-              placeholder="Инструкция для поступающего"
+              placeholder="Инструкция для того, кто будет проходить тест"
             />
           </Field>
 

@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   ASSIGNEE_ROLES,
   EMPLOYEE_ROLES,
+  SERVICE_STAFF_ROLES,
   canBlock,
   canUnblock,
   employeeRoleLabel,
   employeeState,
   isEmployeeRole,
+  isServiceStaffRole,
 } from './employeesModel';
 
 describe('внутренние сотрудники (SERVICE-FE-004 §3)', () => {
@@ -50,5 +52,24 @@ describe('внутренние сотрудники (SERVICE-FE-004 §3)', () =>
     expect(isEmployeeRole(undefined)).toBe(false);
     expect(employeeRoleLabel('TECHNICIAN')).toBe('Техслужба');
     expect(employeeRoleLabel('ADMIN')).toBe('—');
+  });
+
+  /**
+   * PSYCHOLOGIST-001 §1: психолог заводится в том же разделе, что и три служебные
+   * роли (голый аккаунт, без школьного профиля), но не входит в набор, между которым
+   * бэкенд разрешает смену роли, — иначе пикер «сменить роль на…» предложил бы
+   * действие, которое `changeServiceStaffRole` единственно верно отклонит 409-м.
+   */
+  it('психолог — в списке сотрудников, но не в служебных ролях', () => {
+    expect([...EMPLOYEE_ROLES]).toContain('PSYCHOLOGIST');
+    expect(employeeRoleLabel('PSYCHOLOGIST')).toBe('Психолог');
+
+    expect(isServiceStaffRole('PSYCHOLOGIST')).toBe(false);
+    expect(isServiceStaffRole('CLEANING')).toBe(true);
+    expect(isServiceStaffRole(undefined)).toBe(false);
+    expect([...SERVICE_STAFF_ROLES]).toEqual(['CLEANING', 'TECHNICIAN', 'SECURITY']);
+
+    // Психолог не исполнитель сервисных заявок — та же причина, что у охраны.
+    expect(ASSIGNEE_ROLES as readonly string[]).not.toContain('PSYCHOLOGIST');
   });
 });
