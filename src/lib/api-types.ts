@@ -1915,7 +1915,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_25"];
+        get: operations["list_26"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2251,7 +2251,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_24"];
+        get: operations["list_25"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4187,7 +4187,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_23"];
+        get: operations["list_24"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4285,6 +4285,54 @@ export interface paths {
         };
         get: operations["permission"];
         put: operations["update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/textbook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["select"];
+        post?: never;
+        delete: operations["clear"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/textbooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_23"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/textbooks/{textbookId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["content_1"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -6993,7 +7041,7 @@ export interface components {
         };
         LessonHistoryView: {
             /** @enum {string} */
-            actionType?: "CREATED" | "SUPERSEDED" | "CANCELLED" | "RESTORED" | "ADMIN_UPDATED" | "SUBSTITUTE_ASSIGNED" | "SUBSTITUTE_REVOKED" | "GRADE_PERMISSION_GRANTED" | "GRADE_PERMISSION_REVOKED" | "COMMENT_CREATED" | "COMMENT_UPDATED" | "COMMENT_DELETED" | "TOPIC_UPDATED" | "HOMEWORK_CREATED" | "HOMEWORK_UPDATED" | "HOMEWORK_DELETED" | "HOMEWORK_ASSIGNMENT_DRAFTED" | "HOMEWORK_ASSIGNMENT_PUBLISHED" | "HOMEWORK_ASSIGNMENT_UPDATED" | "HOMEWORK_MARKED_NOT_ASSIGNED" | "HOMEWORK_NOT_ASSIGNED_CLEARED" | "MATERIAL_ADDED" | "MATERIAL_UPDATED" | "MATERIAL_REMOVED";
+            actionType?: "CREATED" | "SUPERSEDED" | "CANCELLED" | "RESTORED" | "ADMIN_UPDATED" | "SUBSTITUTE_ASSIGNED" | "SUBSTITUTE_REVOKED" | "GRADE_PERMISSION_GRANTED" | "GRADE_PERMISSION_REVOKED" | "COMMENT_CREATED" | "COMMENT_UPDATED" | "COMMENT_DELETED" | "TOPIC_UPDATED" | "HOMEWORK_CREATED" | "HOMEWORK_UPDATED" | "HOMEWORK_DELETED" | "HOMEWORK_ASSIGNMENT_DRAFTED" | "HOMEWORK_ASSIGNMENT_PUBLISHED" | "HOMEWORK_ASSIGNMENT_UPDATED" | "HOMEWORK_MARKED_NOT_ASSIGNED" | "HOMEWORK_NOT_ASSIGNED_CLEARED" | "TEXTBOOK_SELECTED" | "TEXTBOOK_CLEARED" | "MATERIAL_ADDED" | "MATERIAL_UPDATED" | "MATERIAL_REMOVED";
             /** Format: int64 */
             actorId?: number;
             actorName?: string;
@@ -7081,6 +7129,34 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        LessonTextbookView: {
+            active?: boolean;
+            /** Format: int64 */
+            bindingId?: number;
+            fileName?: string;
+            /** @enum {string} */
+            format?: "PDF" | "DOCX";
+            /** Format: int32 */
+            pageCount?: number;
+            /** Format: int32 */
+            pageFrom?: number;
+            pageNavigation?: boolean;
+            /** Format: int32 */
+            pageTo?: number;
+            /** Format: int64 */
+            sizeBytes?: number;
+            /** Format: int64 */
+            subgroupId?: number;
+            subgroupName?: string;
+            /** Format: int64 */
+            textbookId?: number;
+            title?: string;
+        };
+        LessonTextbooksView: {
+            available?: components["schemas"]["LessonTextbookView"][];
+            canSelect?: boolean;
+            selected?: components["schemas"]["LessonTextbookView"];
+        };
         LessonView: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -7133,6 +7209,8 @@ export interface components {
             teacher?: components["schemas"]["LessonParticipantView"];
             /** @enum {string} */
             temporalStatus?: "UPCOMING" | "ONGOING" | "FINISHED";
+            /** Format: int32 */
+            textbookCount?: number;
             topic?: string;
             /** @enum {string} */
             viewerRole?: "ADMIN" | "MAIN_TEACHER" | "SUBSTITUTE_TEACHER" | "STUDENT" | "PARENT";
@@ -8566,6 +8644,14 @@ export interface components {
             status?: "ACTIVE" | "ARCHIVED";
             /** Format: date-time */
             updatedAt?: string;
+        };
+        SelectLessonTextbookRequest: {
+            /** Format: int64 */
+            bindingId: number;
+            /** Format: int32 */
+            pageFrom?: number;
+            /** Format: int32 */
+            pageTo?: number;
         };
         ServiceRequestAuditEntryView: {
             event?: components["schemas"]["ServiceRequestHistoryEntryView"];
@@ -13310,7 +13396,7 @@ export interface operations {
             };
         };
     };
-    list_25: {
+    list_26: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -13972,7 +14058,7 @@ export interface operations {
             };
         };
     };
-    list_24: {
+    list_25: {
         parameters: {
             query?: {
                 grade?: string;
@@ -17314,7 +17400,7 @@ export interface operations {
             };
         };
     };
-    list_23: {
+    list_24: {
         parameters: {
             query?: {
                 childId?: number;
@@ -17534,6 +17620,106 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SubstituteGradePermissionView"];
+                };
+            };
+        };
+    };
+    select: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelectLessonTextbookRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonTextbooksView"];
+                };
+            };
+        };
+    };
+    clear: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonTextbooksView"];
+                };
+            };
+        };
+    };
+    list_23: {
+        parameters: {
+            query?: {
+                childId?: number;
+            };
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonTextbooksView"];
+                };
+            };
+        };
+    };
+    content_1: {
+        parameters: {
+            query?: {
+                childId?: number;
+            };
+            header?: {
+                Range?: string;
+                "If-None-Match"?: string;
+            };
+            path: {
+                lessonId: number;
+                textbookId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
                 };
             };
         };
