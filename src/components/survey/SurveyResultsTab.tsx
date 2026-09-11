@@ -2,23 +2,32 @@ import { useState } from 'react';
 import { Field, Select } from '@/components/ui/Field';
 import { StatCard } from '@/components/ui/StatCard';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
+import { SurveyRespondentsSection } from '@/components/survey/SurveyRespondentsSection';
 import { useSurveyStats } from '@/hooks/surveyQueries';
 import { ApiError } from '@/lib/api';
+import type { SurveyMode } from '@/lib/surveyApi';
 
 /**
- * Результаты опроса. Именной и анонимный режим рисуются одинаково: ни `SurveyStatsView`,
- * ни `QuestionStatsView` не несут ничего про автора ответа ни в каком режиме, поэтому
- * прятать здесь нечего.
+ * Результаты опроса. Агрегаты (`SurveyStatsView`/`QuestionStatsView`) рисуются одинаково
+ * для именного и анонимного режима — ни то, ни другое не несёт ничего про автора ответа
+ * ни в каком режиме, и прятать здесь нечего.
  *
- * Класс-фильтр — серверный параметр: смена класса переспрашивает `stats`, а не
- * пересчитывает проценты по уже пришедшему ответу — числитель и знаменатель считает
+ * «Кто ответил» — отдельный блок и отдельный эндпоинт (`SurveyRespondentsSection`),
+ * который показывается только при `mode === 'NAMED'`: у анонимного опроса бэкенд на этот
+ * запрос отвечает 409, и компонент его для анонимного просто не монтирует, а не прячет
+ * визуально уже пришедший ответ.
+ *
+ * Класс-фильтр — серверный параметр: смена класса переспрашивает `stats`/`respondents`,
+ * а не пересчитывает проценты по уже пришедшему ответу — числитель и знаменатель считает
  * бэкенд по тому же срезу.
  */
 export function SurveyResultsTab({
   surveyId,
+  mode,
   classOptions,
 }: {
   surveyId: number;
+  mode: SurveyMode | undefined;
   classOptions: Array<{ id: number; name: string }>;
 }) {
   const [classId, setClassId] = useState<number | undefined>(undefined);
@@ -122,6 +131,8 @@ export function SurveyResultsTab({
               ))}
             </div>
           )}
+
+          {mode === 'NAMED' && <SurveyRespondentsSection surveyId={surveyId} classId={classId} />}
         </>
       )}
     </div>

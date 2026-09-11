@@ -1972,6 +1972,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/surveys/{id}/respondents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["respondents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/surveys/{id}/respondents/{recipientId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["respondentAnswers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/surveys/{id}/stats": {
         parameters: {
             query?: never;
@@ -8625,6 +8657,17 @@ export interface components {
             /** Format: int64 */
             classId: number;
         };
+        RespondentAnswerView: {
+            openText?: string;
+            /** Format: int32 */
+            orderIndex?: number;
+            /** Format: int64 */
+            questionId?: number;
+            questionText?: string;
+            selectedOptionTexts?: string[];
+            /** @enum {string} */
+            type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT";
+        };
         ResultDetailResponse: {
             answers?: components["schemas"]["AnswerReviewItem"][];
             applicantName?: string;
@@ -9441,6 +9484,31 @@ export interface components {
             text?: string;
             /** @enum {string} */
             type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT";
+        };
+        SurveyRespondentAnswersView: {
+            answers?: components["schemas"]["RespondentAnswerView"][];
+            classNames?: string;
+            fullName?: string;
+            /** Format: int64 */
+            recipientId?: number;
+            /** @enum {string} */
+            recipientType?: "STUDENT" | "PARENT";
+            /** @enum {string} */
+            status?: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
+            /** Format: date-time */
+            submittedAt?: string;
+        };
+        SurveyRespondentView: {
+            classNames?: string;
+            fullName?: string;
+            /** Format: int64 */
+            recipientId?: number;
+            /** @enum {string} */
+            recipientType?: "STUDENT" | "PARENT";
+            /** @enum {string} */
+            status?: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
+            /** Format: date-time */
+            submittedAt?: string;
         };
         SurveyStatsView: {
             /** Format: double */
@@ -14045,6 +14113,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SurveyQuestionView"][];
+                };
+            };
+        };
+    };
+    respondents: {
+        parameters: {
+            query?: {
+                classId?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyRespondentView"][];
+                };
+            };
+        };
+    };
+    respondentAnswers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                recipientId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyRespondentAnswersView"];
                 };
             };
         };

@@ -20,6 +20,9 @@ export const surveyKeys = {
   survey: (id: number) => ['surveys', id] as const,
   questions: (id: number) => ['surveys', id, 'questions'] as const,
   stats: (id: number, classId?: number) => ['surveys', id, 'stats', classId ?? 'ALL'] as const,
+  respondents: (id: number, classId?: number) => ['surveys', id, 'respondents', classId ?? 'ALL'] as const,
+  respondentAnswers: (id: number, recipientId: number) =>
+    ['surveys', id, 'respondents', recipientId] as const,
   aiAnalysis: (id: number, scope: SurveyAiScope, classId?: number) =>
     ['surveys', id, 'ai-analysis', scope, classId ?? 'ALL'] as const,
 };
@@ -128,6 +131,27 @@ export function useSurveyStats(id: number | null, classId?: number) {
     queryFn: ({ signal }) => surveyApi.stats(id as number, classId, signal),
     enabled: id != null,
     placeholderData: (previous) => previous,
+  });
+}
+
+/**
+ * Кто ответил — только для именных опросов; на анонимных бэкенд отвечает 409
+ * `SURVEY_ANONYMOUS`, и экран эту ветку не запрашивает вовсе (см. `SurveyResultsTab`).
+ */
+export function useSurveyRespondents(id: number | null, classId?: number) {
+  return useQuery({
+    queryKey: surveyKeys.respondents(id ?? 0, classId),
+    queryFn: ({ signal }) => surveyApi.respondents(id as number, classId, signal),
+    enabled: id != null,
+  });
+}
+
+/** Ответы одного респондента — запрашивается по клику на строку, не заранее. */
+export function useSurveyRespondentAnswers(id: number | null, recipientId: number | null) {
+  return useQuery({
+    queryKey: surveyKeys.respondentAnswers(id ?? 0, recipientId ?? 0),
+    queryFn: ({ signal }) => surveyApi.respondentAnswers(id as number, recipientId as number, signal),
+    enabled: id != null && recipientId != null,
   });
 }
 
