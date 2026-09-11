@@ -33,6 +33,11 @@ export type SurveyMode = NonNullable<Survey['mode']>;
 export type SurveyQuestionType = NonNullable<SurveyQuestion['type']>;
 export type SurveyAiScope = NonNullable<SurveyAiJob['scope']>;
 export type SurveyAiJobStatus = NonNullable<SurveyAiJob['status']>;
+export type SurveyRespondent = Schema<'SurveyRespondentView'>;
+export type RespondentAnswer = Schema<'RespondentAnswerView'>;
+export type SurveyRespondentAnswers = Schema<'SurveyRespondentAnswersView'>;
+export type SurveyRecipientType = NonNullable<SurveyRespondent['recipientType']>;
+export type SurveyResponseStatus = NonNullable<SurveyRespondent['status']>;
 
 /**
  * Ключ идемпотентности запуска AI-анализа — тот же протокол, что у генерации ДЗ
@@ -72,6 +77,17 @@ export const surveyApi = {
 
   stats: (id: number, classId?: number, signal?: AbortSignal) =>
     request<SurveyStats>(`/admin/surveys/${id}/stats${pageQuery({ classId })}`, { signal }),
+
+  /**
+   * Кто ответил — только `mode: 'NAMED'` (409 `SURVEY_ANONYMOUS` иначе). Отдельная ветка
+   * от `stats`: та намеренно никогда не показывает identity ни в одном режиме, это —
+   * единственное место, которое показывает, и только для именных опросов.
+   */
+  respondents: (id: number, classId?: number, signal?: AbortSignal) =>
+    request<SurveyRespondent[]>(`/admin/surveys/${id}/respondents${pageQuery({ classId })}`, { signal }),
+
+  respondentAnswers: (id: number, recipientId: number, signal?: AbortSignal) =>
+    request<SurveyRespondentAnswers>(`/admin/surveys/${id}/respondents/${recipientId}`, { signal }),
 
   /**
    * Последний посчитанный анализ. Ничего не запускает — только отдаёт кэш и признак

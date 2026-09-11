@@ -180,7 +180,11 @@ export function SurveyDetailPage() {
                 />
               )}
               {tab === 'results' && (
-                <SurveyResultsTab surveyId={survey.id as number} classOptions={audienceClassOptions} />
+                <SurveyResultsTab
+                  surveyId={survey.id as number}
+                  mode={survey.mode}
+                  classOptions={audienceClassOptions}
+                />
               )}
               {tab === 'ai' && (
                 <SurveyAiAnalysisTab surveyId={survey.id as number} classOptions={audienceClassOptions} />
