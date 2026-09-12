@@ -68,6 +68,7 @@ const ROLE_BADGE: Record<AccountRole, string> = {
   CLEANING: 'bg-[#f0f9ff] text-[#0284c7]',
   TECHNICIAN: 'bg-[#fffbeb] text-[#b45309]',
   SECURITY: 'bg-[#ecfdf5] text-[#059669]',
+  PSYCHOLOGIST: 'bg-[#f5f3ff] text-[#4f46e5]',
 };
 
 const STATUS_BADGE: Record<AccountStatus, string> = {

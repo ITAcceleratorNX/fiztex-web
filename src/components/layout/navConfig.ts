@@ -22,6 +22,7 @@ import {
   Star,
   Briefcase,
   Wrench,
+  Brain,
   type LucideIcon,
 } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
@@ -134,6 +135,21 @@ export const TEACHER_NAV_SECTIONS: NavSection[] = [
 ];
 
 /**
+ * Меню психолога (PSYCHOLOGIST-001 §2) — единственный пункт, кабинет ни с чем не делится.
+ * Без этой ветки роль без явного случая в {@link navSectionsForRole} получила бы весь
+ * админский `NAV_SECTIONS` — функция различает только TEACHER и SUPER_ADMIN.
+ */
+export const PSYCHOLOGIST_NAV_SECTIONS: NavSection[] = [
+  {
+    id: 'psychologist',
+    label: '',
+    items: [
+      { to: ROUTES.psychologistTests, label: 'Психологические тесты', icon: Brain },
+    ],
+  },
+];
+
+/**
  * Пункт «Сотрудники» внутри «Пользователей» — только Super Admin (SERVICE-FE-004 §3).
  *
  * Ветка собирается здесь, а не объявляется в `NAV_SECTIONS`, потому что зависит от роли:
@@ -144,6 +160,7 @@ const EMPLOYEES_NAV_ITEM: NavItem = { to: ROUTES.employees, label: 'Сотруд
 
 export function navSectionsForRole(role: string | undefined): NavSection[] {
   if (role === 'TEACHER') return TEACHER_NAV_SECTIONS;
+  if (role === 'PSYCHOLOGIST') return PSYCHOLOGIST_NAV_SECTIONS;
   if (role !== 'SUPER_ADMIN') return NAV_SECTIONS;
 
   return NAV_SECTIONS.map((section) =>

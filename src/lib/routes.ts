@@ -52,6 +52,8 @@ export const ROUTES = {
   serviceRequest: (id: number | string) => `/service/${id}`,
   /** Внутренние сотрудники — раздел Super Admin (SERVICE-FE-004 §3). */
   employees: '/admin/employees',
+  /** Кабинет психолога: единственный раздел роли (PSYCHOLOGIST-001 §2). */
+  psychologistTests: '/psychologist/tests',
 } as const;
 
 /**
@@ -81,7 +83,11 @@ export const DEFAULT_AUTHENTICATED_ROUTE = ROUTES.dashboard;
  * чужой адрес разворачивает `isRouteAllowedForRole`.
  */
 export function landingRouteForRole(role: string | undefined): string {
-  return role === 'TEACHER' ? ROUTES.homework : DEFAULT_AUTHENTICATED_ROUTE;
+  if (role === 'TEACHER') return ROUTES.homework;
+  // Тот же случай, что у учителя: `/dashboard` читает `/api/admin/academic-years`,
+  // психологу это 401 — и общий `request()` завершил бы сессию вместо «сюда нельзя».
+  if (role === 'PSYCHOLOGIST') return ROUTES.psychologistTests;
+  return DEFAULT_AUTHENTICATED_ROUTE;
 }
 
 /**
@@ -118,6 +124,9 @@ export function isRouteAllowedForRole(path: string, role: string | undefined): b
   if (SUPER_ADMIN_ROUTE_PREFIXES.some((prefix) => path.startsWith(prefix))) {
     return role === 'SUPER_ADMIN';
   }
+  if (role === 'PSYCHOLOGIST') {
+    return PSYCHOLOGIST_ROUTE_PREFIXES.some((prefix) => path.startsWith(prefix));
+  }
   if (role !== 'TEACHER') return true;
   return TEACHER_ROUTE_PREFIXES.some((prefix) => path.startsWith(prefix));
 }
@@ -150,6 +159,13 @@ const TEACHER_ROUTE_PREFIXES = [
   ROUTES.serviceRequests,
   '/lesson-schedule/lessons/',
 ];
+
+/**
+ * Разделы, доступные психологу (PSYCHOLOGIST-001 §2). Ровно один экран плюс общий
+ * конструктор вопросов `/tests/:testId/questions` — тот же, которым сегодня пользуются
+ * «AI-тесты» и вступительные тесты, психолог входит в него со своей карточки теста.
+ */
+const PSYCHOLOGIST_ROUTE_PREFIXES = [ROUTES.psychologistTests, '/tests/'];
 
 /**
  * Безопасный разбор `state.from` при редиректе на вход: принимаем только

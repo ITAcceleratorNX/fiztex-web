@@ -223,6 +223,10 @@ export function App() {
             этот раздел только читает и ведёт туда. */}
         <Route path={ROUTES.attendance} element={<AttendanceAdminPage />} />
         <Route path="/ai-tests" element={<AiTestsPage />} />
+        {/* Кабинет психолога (PSYCHOLOGIST-001 §2) — та же страница/тот же конструктор,
+            что «AI-тесты», под своей вывеской: бэкенд разделяет их по origin, поэтому
+            психолог здесь физически не видит учебные AI-тесты и наоборот. */}
+        <Route path={ROUTES.psychologistTests} element={<AiTestsPage variant="psychology" />} />
         <Route path={ROUTES.surveys} element={<SurveysPage />} />
         <Route path="/surveys/:surveyId" element={<SurveyDetailPage />} />
         <Route

@@ -16,7 +16,8 @@ export type AccountRole =
   | 'PARENT'
   | 'CLEANING'
   | 'TECHNICIAN'
-  | 'SECURITY';
+  | 'SECURITY'
+  | 'PSYCHOLOGIST';
 
 export type AccountStatus = 'NOT_ACTIVATED' | 'ACTIVE' | 'BLOCKED' | 'ARCHIVED';
 

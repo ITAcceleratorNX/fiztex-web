@@ -5523,7 +5523,7 @@ export interface components {
         AccountLoginResponse: {
             fullName?: string;
             /** @enum {string} */
-            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
             token?: string;
         };
         AccountRef: {
@@ -5553,7 +5553,7 @@ export interface components {
             phone?: string;
             relation?: string;
             /** @enum {string} */
-            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
             /** @enum {string} */
             status?: "NOT_ACTIVATED" | "ACTIVE" | "BLOCKED" | "ARCHIVED";
         };
@@ -6182,7 +6182,7 @@ export interface components {
         };
         ChangeAccountRoleRequest: {
             /** @enum {string} */
-            role: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
+            role: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
         };
         ChangeAssignmentVersionRequest: {
             /** Format: int32 */
@@ -6535,14 +6535,14 @@ export interface components {
             fullName?: string;
             phone?: string;
             /** @enum {string} */
-            role: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
+            role: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
         };
         CreateAccountResponse: {
             /** Format: int64 */
             id?: number;
             issuedCode?: string;
             /** @enum {string} */
-            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
             /** Format: int64 */
             schoolProfileId?: number;
             /** @enum {string} */
@@ -7429,7 +7429,7 @@ export interface components {
             accountId?: number;
             fullName?: string;
             /** @enum {string} */
-            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
         };
         KeyDashboardSummary: {
             /** Format: int32 */
@@ -7485,7 +7485,7 @@ export interface components {
             active?: boolean;
             fullName?: string;
             /** @enum {string} */
-            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
         };
         KeyOperationView: {
             /** Format: uuid */
@@ -7507,7 +7507,7 @@ export interface components {
             accountId?: number;
             fullName?: string;
             /** @enum {string} */
-            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
         };
         KeyUnitCardView: {
             history?: components["schemas"]["KeyEventView"][];
@@ -8018,7 +8018,7 @@ export interface components {
             middleName?: string;
             phone?: string;
             /** @enum {string} */
-            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
             student?: components["schemas"]["StudentPart"];
             teacher?: components["schemas"]["TeacherPart"];
         };
@@ -10263,6 +10263,8 @@ export interface components {
             minPercent?: number;
             /** Format: double */
             minScore?: number;
+            /** @enum {string} */
+            origin?: "CURRICULUM" | "PSYCHOLOGICAL";
             /** Format: int32 */
             questionCount?: number;
             questions?: components["schemas"]["QuestionResponse"][];
@@ -10909,7 +10911,7 @@ export interface operations {
     list_21: {
         parameters: {
             query: {
-                role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
+                role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
                 status?: "NOT_ACTIVATED" | "ACTIVE" | "BLOCKED" | "ARCHIVED";
                 query?: string;
                 pageable: components["schemas"]["Pageable"];
