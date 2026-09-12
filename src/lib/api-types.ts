@@ -7429,7 +7429,7 @@ export interface components {
             accountId?: number;
             fullName?: string;
             /** @enum {string} */
-            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
         };
         KeyDashboardSummary: {
             /** Format: int32 */
@@ -7485,7 +7485,7 @@ export interface components {
             active?: boolean;
             fullName?: string;
             /** @enum {string} */
-            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
         };
         KeyOperationView: {
             /** Format: uuid */
@@ -7507,7 +7507,7 @@ export interface components {
             accountId?: number;
             fullName?: string;
             /** @enum {string} */
-            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY";
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
         };
         KeyUnitCardView: {
             history?: components["schemas"]["KeyEventView"][];
