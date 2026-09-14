@@ -23,6 +23,7 @@ import { JournalPage } from '@/pages/journal/JournalPage';
 import { TextbooksPage } from '@/pages/textbooks/TextbooksPage';
 import { ServiceRequestsPage } from '@/pages/service/ServiceRequestsPage';
 import { ServiceRequestCardPage } from '@/pages/service/ServiceRequestCardPage';
+import { KeysAdminPage } from '@/pages/keys/KeysAdminPage';
 import { HomeworkCardPage } from '@/pages/homework/HomeworkCardPage';
 import { HomeworkQuestionsPage } from '@/pages/homework/HomeworkQuestionsPage';
 import { HomeworkFormPage } from '@/pages/homework/HomeworkFormPage';
@@ -128,6 +129,7 @@ export function App() {
         {/* Внутренние сотрудники — раздел Super Admin (SERVICE-FE-004 §3).
             Роль проверяет `Protected` через `isRouteAllowedForRole`. */}
         <Route path={ROUTES.employees} element={<EmployeesPage />} />
+        <Route path={ROUTES.keys} element={<KeysAdminPage />} />
         <Route path="/admin/classes" element={<ClassesPage />} />
         <Route path="/admin/classes/:classId" element={<ClassDetailPage />} />
         <Route path="/admin/academic-year" element={<AcademicYearPage />} />

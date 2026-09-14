@@ -46,6 +46,17 @@ describe('маршрутизация по роли', () => {
     expect(isRouteAllowedForRole('/admin/users', 'ADMIN')).toBe(true);
   });
 
+  it('физические ключи — только Super Admin', () => {
+    expect(isRouteAllowedForRole('/admin/keys', 'SUPER_ADMIN')).toBe(true);
+    expect(isRouteAllowedForRole('/admin/keys', 'ADMIN')).toBe(false);
+    expect(isRouteAllowedForRole('/admin/keys', 'TEACHER')).toBe(false);
+
+    const items = navSectionsForRole('SUPER_ADMIN').flatMap((section) => section.items);
+    expect(items.map((item) => item.to)).toContain('/admin/keys');
+    expect(navSectionsForRole('ADMIN').flatMap((section) => section.items).map((item) => item.to))
+      .not.toContain('/admin/keys');
+  });
+
   /**
    * Регрессия на петлю входа: страница, выбросившая учителя по 401, оседала в
    * `state.from`, и следующий вход возвращал ровно туда же — выйти было нельзя.

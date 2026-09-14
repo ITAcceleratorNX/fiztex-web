@@ -135,7 +135,7 @@ describe('Sidebar — группы-аккордеон', () => {
     const group = screen.getByRole('button', { name: /Platform Core/i });
     expect(group).toHaveAttribute('aria-expanded', 'false');
     // Число — единственное, что закрытая группа может сказать о себе.
-    expect(within(group).getByText('7')).toBeInTheDocument();
+    expect(within(group).getByText('8')).toBeInTheDocument();
     expect(within(nav()).queryByRole('link', { name: 'Классы' })).not.toBeInTheDocument();
   });
 

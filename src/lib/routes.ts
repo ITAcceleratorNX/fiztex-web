@@ -54,6 +54,8 @@ export const ROUTES = {
   serviceRequest: (id: number | string) => `/service/${id}`,
   /** Внутренние сотрудники — раздел Super Admin (SERVICE-FE-004 §3). */
   employees: '/admin/employees',
+  /** Состояние физических ключей и журнал операций — read-only раздел Super Admin. */
+  keys: '/admin/keys',
   /** Кабинет психолога: единственный раздел роли (PSYCHOLOGIST-001 §2). */
   psychologistTests: '/psychologist/tests',
 } as const;
@@ -67,7 +69,7 @@ export const ROUTES = {
  * администратору — здесь он спрятан потому, что §3 адресует его Super Admin, и это
  * решение продуктовое.
  */
-const SUPER_ADMIN_ROUTE_PREFIXES = [ROUTES.employees];
+const SUPER_ADMIN_ROUTE_PREFIXES = [ROUTES.employees, ROUTES.keys];
 
 /** Куда возвращать после входа, если пользователь не шёл на конкретную страницу. */
 export const DEFAULT_AUTHENTICATED_ROUTE = ROUTES.dashboard;

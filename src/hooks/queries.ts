@@ -54,6 +54,11 @@ import {
   type BindingFilters,
   type SelectLessonTextbookRequest,
 } from '@/lib/textbooksApi';
+import {
+  keysApi,
+  type KeyDashboardFilters,
+  type KeyHistoryFilters,
+} from '@/lib/keysApi';
 import type {
   ApplicantRequest,
   GenerateTestRequest,
@@ -63,6 +68,11 @@ import type {
 } from '@/lib/types';
 
 export const keys = {
+  physicalKeys: ['physical-keys'] as const,
+  physicalKeyDashboard: (filters: KeyDashboardFilters) =>
+    ['physical-keys', 'dashboard', filters] as const,
+  physicalKeyHistory: (filters: KeyHistoryFilters) =>
+    ['physical-keys', 'history', filters] as const,
   subjects: ['subjects'] as const,
   tests: (useAiGeneration?: boolean) =>
     useAiGeneration === true
@@ -175,6 +185,34 @@ export const keys = {
   textbookBindings: (filters: BindingFilters | null) => ['textbooks', 'bindings', filters] as const,
   lessonTextbooks: (lessonId: number) => ['lessons', lessonId, 'textbooks'] as const,
 };
+
+// ---- Physical keys: read-only Super Admin screen (KEYS-FE) ----
+
+export function usePhysicalKeyDashboard(filters: KeyDashboardFilters) {
+  return useQuery({
+    queryKey: keys.physicalKeyDashboard(filters),
+    queryFn: ({ signal }) => keysApi.dashboard(filters, signal),
+    // Поиск/фильтр не мигает пустой таблицей, но между «На посту» и «Выданы»
+    // старые строки не переезжают: это разные физические состояния ключа.
+    placeholderData: (previous, previousQuery) =>
+      (previousQuery?.queryKey[2] as KeyDashboardFilters | undefined)?.state === filters.state
+        ? previous
+        : undefined,
+  });
+}
+
+export function usePhysicalKeyHistory(filters: KeyHistoryFilters) {
+  return useQuery({
+    queryKey: keys.physicalKeyHistory(filters),
+    queryFn: ({ signal }) => keysApi.history(filters, signal),
+    // При листании держим страницу до ответа; новый тип события сначала показывает
+    // собственное loading-состояние, а не журнал от старого фильтра.
+    placeholderData: (previous, previousQuery) =>
+      (previousQuery?.queryKey[2] as KeyHistoryFilters | undefined)?.action === filters.action
+        ? previous
+        : undefined,
+  });
+}
 
 const ADMISSIONS_POLL_MS = 30_000;
 

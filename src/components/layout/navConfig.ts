@@ -161,6 +161,7 @@ export const PSYCHOLOGIST_NAV_SECTIONS: NavSection[] = [
  * двум местам — меню и `isRouteAllowedForRole`.
  */
 const EMPLOYEES_NAV_ITEM: NavItem = { to: ROUTES.employees, label: 'Сотрудники', icon: Wrench };
+const KEYS_NAV_ITEM: NavItem = { to: ROUTES.keys, label: 'Ключи', icon: KeyRound };
 
 export function navSectionsForRole(role: string | undefined): NavSection[] {
   if (role === 'TEACHER') return TEACHER_NAV_SECTIONS;
@@ -171,11 +172,14 @@ export function navSectionsForRole(role: string | undefined): NavSection[] {
     section.id === 'platform'
       ? {
           ...section,
-          items: section.items.map((item) =>
-            item.to === '/admin/users'
-              ? { ...item, children: [...(item.children ?? []), EMPLOYEES_NAV_ITEM] }
-              : item,
-          ),
+          items: [
+            ...section.items.map((item) =>
+              item.to === '/admin/users'
+                ? { ...item, children: [...(item.children ?? []), EMPLOYEES_NAV_ITEM] }
+                : item,
+            ),
+            KEYS_NAV_ITEM,
+          ],
         }
       : section,
   );
