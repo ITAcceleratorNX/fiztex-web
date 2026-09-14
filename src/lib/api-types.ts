@@ -8838,6 +8838,16 @@ export interface components {
             startDate?: string;
             studied?: boolean;
         };
+        PeriodOption: {
+            current?: boolean;
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+        };
         PeriodRefView: {
             /** Format: date */
             endDate?: string;
@@ -10639,7 +10649,7 @@ export interface components {
             /** Format: int64 */
             id?: number;
             name?: string;
-            periods?: components["schemas"]["Period"][];
+            periods?: components["schemas"]["PeriodOption"][];
         };
         YearFinalView: {
             finalGrade?: components["schemas"]["FinalGradeView"];

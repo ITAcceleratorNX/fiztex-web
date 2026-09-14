@@ -8,6 +8,7 @@ import {
   type ReactElement,
   type ReactNode,
   type ChangeEvent,
+  type KeyboardEvent,
   type SelectHTMLAttributes,
 } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
@@ -61,15 +62,8 @@ export function Select({
     const onPointerDown = (event: MouseEvent) => {
       if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
     };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
-    };
     document.addEventListener('mousedown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
+    return () => document.removeEventListener('mousedown', onPointerDown);
   }, [open]);
 
   useEffect(() => {
@@ -77,6 +71,16 @@ export function Select({
       setMenuWidth(triggerRef.current.offsetWidth);
     }
   }, [open]);
+
+  /**
+   * Escape закрывает только список. Слушать его на `document` нельзя: там же его слушает
+   * `Modal`, и нажатие внутри формы закрывало бы вместе со списком всё окно с введённым.
+   */
+  function onEscape(event: KeyboardEvent<HTMLDivElement>) {
+    if (!open || event.key !== 'Escape') return;
+    event.stopPropagation();
+    setOpen(false);
+  }
 
   function emitChange(nextValue: string) {
     if (!isControlled) setInternalValue(nextValue);
@@ -93,7 +97,7 @@ export function Select({
   }
 
   return (
-    <div ref={rootRef} className={cx('relative', className?.includes('w-auto') ? 'inline-block' : 'w-full')}>
+    <div ref={rootRef} onKeyDown={onEscape} className={cx('relative', className?.includes('w-auto') ? 'inline-block' : 'w-full')}>
       {name && <input type="hidden" name={name} value={currentValue} />}
 
       <button

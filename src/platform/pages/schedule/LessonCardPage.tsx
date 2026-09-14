@@ -50,6 +50,7 @@ import {
 import { LessonHomeworkRows } from '@/pages/homework/LessonHomeworkRows';
 import { LessonManagementCard, SubstituteGradeAccessCard } from './LessonManagementCard';
 import { describeHistoryActor, describeHistoryEntry, hhmm } from './lessonHistory';
+import { LessonTextbookField } from './LessonTextbookField';
 
 /**
  * Куда возвращает «К расписанию». У учителя это его собственный экран: админский
@@ -167,6 +168,11 @@ export function LessonCardPage() {
             {lesson.comment?.body}
           </p>
         </TeachingField>
+
+        <hr className="border-slate-200" />
+
+        {/* Учебник — та же учебная часть урока, что тема и комментарий (Figma 2149:4458). */}
+        <LessonTextbookField lessonId={id} locked={periodClosed} />
 
         {lesson.comment?.createdByName && (
           <>

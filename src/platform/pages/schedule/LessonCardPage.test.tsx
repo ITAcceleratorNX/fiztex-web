@@ -11,6 +11,8 @@ const useAttendanceSheet = vi.fn();
 const useLessonHomework = vi.fn();
 const useLessonGradeSheet = vi.fn();
 const useGradePermission = vi.fn();
+const useLessonTextbooks = vi.fn();
+const selectTextbook = vi.fn();
 const setHomeworkNotAssigned = vi.fn();
 
 // Роль нужна карточке только ради ссылки «К расписанию»: у учителя она ведёт на его
@@ -51,7 +53,26 @@ vi.mock('@/hooks/queries', () => ({
   useSaveLessonTopic: () => idleMutation(),
   useSaveLessonComment: () => idleMutation(),
   useSetHomeworkNotAssigned: () => ({ mutate: setHomeworkNotAssigned, isPending: false }),
+  useLessonTextbooks: (...args: unknown[]) => useLessonTextbooks(...args),
+  useSelectLessonTextbook: () => ({ mutate: selectTextbook, isPending: false }),
+  useClearLessonTextbook: () => idleMutation(),
 }));
+
+/** Учебник урока в том виде, в каком его отдаёт GET /api/lessons/{id}/textbooks. */
+function textbook(overrides: Record<string, unknown> = {}) {
+  return {
+    bindingId: 7,
+    textbookId: 3,
+    title: 'Spotlight 5. Student’s Book',
+    format: 'PDF',
+    pageCount: 142,
+    pageNavigation: true,
+    pageFrom: null,
+    pageTo: null,
+    active: true,
+    ...overrides,
+  };
+}
 
 /** Права того, кто урок ведёт: состояние ДЗ меняет он, а не администратор. */
 const TEACHING = ['VIEW_CARD', 'VIEW_STUDENTS', 'EDIT_TEACHING_PART'];
@@ -103,6 +124,85 @@ describe('LessonCardPage', () => {
     useGradePermission.mockReset();
     useGradePermission.mockReturnValue({ data: undefined, isPending: false, isError: false });
     setHomeworkNotAssigned.mockReset();
+    useLessonTextbooks.mockReset();
+    useLessonTextbooks.mockReturnValue({
+      data: { canSelect: false, selected: null, available: [] },
+      isPending: false,
+      isError: false,
+    });
+    selectTextbook.mockReset();
+  });
+
+  describe('учебник урока', () => {
+    it('учитель выбирает из назначенного классу; пока не выбрал — подсказка из макета', async () => {
+      const user = userEvent.setup();
+      useLesson.mockReturnValue({
+        data: lesson({ capabilities: TEACHING }),
+        isPending: false,
+        isError: false,
+        error: null,
+      });
+      useLessonTextbooks.mockReturnValue({
+        data: { canSelect: true, selected: null, available: [textbook()] },
+        isPending: false,
+        isError: false,
+      });
+      renderCard();
+
+      expect(screen.getByText(/Ученики всё равно смогут открыть учебники/)).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Учебник' }));
+      await user.click(screen.getByRole('option', { name: 'Spotlight 5. Student’s Book' }));
+
+      // Выбор уходит назначением, а не учебником: учебник действует у класса через него.
+      expect(selectTextbook).toHaveBeenCalledWith({ bindingId: 7 }, expect.anything());
+    });
+
+    it('страницы у PDF сохраняются диапазоном, когда фокус уходит из обоих полей', async () => {
+      const user = userEvent.setup();
+      useLesson.mockReturnValue({
+        data: lesson({ capabilities: TEACHING }),
+        isPending: false,
+        isError: false,
+        error: null,
+      });
+      useLessonTextbooks.mockReturnValue({
+        data: { canSelect: true, selected: textbook(), available: [textbook()] },
+        isPending: false,
+        isError: false,
+      });
+      renderCard();
+
+      await user.type(screen.getByRole('textbox', { name: 'С какой страницы' }), '24');
+      await user.click(screen.getByRole('textbox', { name: 'По какую страницу' }));
+      expect(selectTextbook).not.toHaveBeenCalled();
+
+      await user.keyboard('26');
+      await user.click(document.body);
+      expect(selectTextbook).toHaveBeenCalledTimes(1);
+      expect(selectTextbook).toHaveBeenCalledWith(
+        { bindingId: 7, pageFrom: 24, pageTo: 26 },
+        expect.anything(),
+      );
+    });
+
+    it('у администратора — только чтение выбранного учителем', () => {
+      useLesson.mockReturnValue({ data: lesson(), isPending: false, isError: false, error: null });
+      useLessonTextbooks.mockReturnValue({
+        data: {
+          canSelect: false,
+          selected: textbook({ pageFrom: 24, pageTo: 26, active: false }),
+          available: [],
+        },
+        isPending: false,
+        isError: false,
+      });
+      renderCard();
+
+      expect(screen.getByText('Spotlight 5. Student’s Book · стр. 24–26')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Открыть' })).toBeInTheDocument();
+      expect(screen.getByText(/больше не назначен классу/)).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Учебник' })).not.toBeInTheDocument();
+    });
   });
 
   it('показывает скелетон, пока урок грузится', () => {

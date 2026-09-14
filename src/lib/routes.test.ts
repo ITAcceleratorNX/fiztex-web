@@ -83,6 +83,7 @@ describe('маршрутизация по роли', () => {
       '/my-availability',
       '/grades',
       '/homework',
+      '/textbooks',
       '/service',
     ]);
 

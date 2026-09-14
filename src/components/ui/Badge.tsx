@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { cx } from '@/lib/format';
 
-export type BadgeTone = 'green' | 'gray' | 'amber' | 'blue' | 'red' | 'purple';
+export type BadgeTone = 'green' | 'gray' | 'amber' | 'blue' | 'red' | 'purple' | 'navy';
 type Tone = BadgeTone;
 
 const tones: Record<Tone, { wrap: string; dot: string }> = {
@@ -11,6 +11,8 @@ const tones: Record<Tone, { wrap: string; dot: string }> = {
   blue: { wrap: 'bg-sky-50 text-sky-700 ring-sky-200', dot: 'bg-sky-500' },
   red: { wrap: 'bg-red-50 text-red-700 ring-red-200', dot: 'bg-red-500' },
   purple: { wrap: 'bg-violet-50 text-violet-700 ring-violet-200', dot: 'bg-violet-500' },
+  // Класс в таблице учебников и в поле «Класс(ы)» (Figma `Class chip` 2149:3177).
+  navy: { wrap: 'bg-indigo-50 text-navy-700 ring-indigo-100', dot: 'bg-navy-700' },
 };
 
 export function Badge({

@@ -1,4 +1,5 @@
 import type { LessonHistoryEntry } from '@/lib/lessonsApi';
+import { pagesLabel } from '@/lib/textbookModel';
 
 /**
  * Журнал урока приходит машинным: тип действия плюс JSON-снимок изменения.
@@ -26,8 +27,11 @@ interface HistoryPayload {
   previousReason?: string | null;
   substituteTeacherName?: string;
   mainTeacherName?: string;
-  /** Заголовок задания модуля ДЗ, о котором событие. */
+  /** Заголовок задания модуля ДЗ или учебника, о котором событие. */
   title?: string | null;
+  /** Страницы выбранного учебника (LIBRARY-BE-001 §6). */
+  pageFrom?: number | null;
+  pageTo?: number | null;
 }
 
 const CANCELLATION_REASONS: Record<string, string> = {
@@ -162,6 +166,12 @@ export function describeHistoryEntry(entry: LessonHistoryEntry): string {
       return payload.reason === 'HOMEWORK_PUBLISHED'
         ? 'Отметка «ДЗ не задано» снята: по уроку опубликовано задание'
         : 'Отметка «ДЗ не задано» снята';
+    case 'TEXTBOOK_SELECTED': {
+      const pages = pagesLabel(payload.pageFrom, payload.pageTo);
+      return withTitle('Выбран учебник', payload) + (pages ? `, ${pages}` : '');
+    }
+    case 'TEXTBOOK_CLEARED':
+      return withTitle('Снят выбор учебника', payload);
     default:
       return 'Изменение урока';
   }

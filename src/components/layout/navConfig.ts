@@ -23,6 +23,7 @@ import {
   Briefcase,
   Wrench,
   Brain,
+  Library,
   type LucideIcon,
 } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
@@ -127,6 +128,9 @@ export const TEACHER_NAV_SECTIONS: NavSection[] = [
       { to: ROUTES.myAvailability, label: 'Моё рабочее время', icon: Clock },
       { to: ROUTES.journal, label: 'Журнал оценок', icon: BookOpen },
       { to: ROUTES.homework, label: 'Домашние задания', icon: BookOpenCheck },
+      // Учебники читают только `/api/teacher/*` — раздел целиком учительский: назначить
+      // учебник можно лишь своему классу по своему предмету (LIBRARY-BE-001 §4).
+      { to: ROUTES.textbooks, label: 'Учебники', icon: Library },
       // Заявки — не учебный раздел, но автор у них тот же (SERVICE-FE-001 §1), и читает
       // он свой `/api/service-requests/my`, а не `/api/admin/*`: учителю сюда можно.
       { to: ROUTES.serviceRequests, label: 'Сервисные заявки', icon: Briefcase },

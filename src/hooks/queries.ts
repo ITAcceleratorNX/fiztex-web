@@ -47,6 +47,13 @@ import {
   type AuditFilter,
 } from '@/lib/serviceRequestsAdminApi';
 import { byRecency } from '@/lib/serviceRequestsModel';
+import {
+  lessonTextbooksApi,
+  teacherTextbooksApi,
+  textbookBindingsApi,
+  type BindingFilters,
+  type SelectLessonTextbookRequest,
+} from '@/lib/textbooksApi';
 import type {
   ApplicantRequest,
   GenerateTestRequest,
@@ -162,6 +169,11 @@ export const keys = {
   publicAnnouncements: (grade: string) => ['announcements', 'public', 'list', grade] as const,
   publicAnnouncementGrades: ['announcements', 'public', 'grades'] as const,
   publicAnnouncement: (id: number) => ['announcements', 'public', id] as const,
+  // Учебники: назначения живут в пространстве 'textbooks', учебники урока — под уроком.
+  // Любое изменение назначений сбрасывает оба: у класса меняется и таблица, и выбор на уроке.
+  textbookBindingOptions: ['textbooks', 'binding-options'] as const,
+  textbookBindings: (filters: BindingFilters | null) => ['textbooks', 'bindings', filters] as const,
+  lessonTextbooks: (lessonId: number) => ['lessons', lessonId, 'textbooks'] as const,
 };
 
 const ADMISSIONS_POLL_MS = 30_000;
@@ -1637,4 +1649,98 @@ export function useSetAnswerScores(homeworkId: number, studentProfileId: number)
       });
     },
   });
+}
+
+// ---- Textbooks (LIBRARY-BE-001, docs/textbook-library-contract.md) ----
+
+export function useTextbookBindingOptions(enabled = true) {
+  return useQuery({
+    queryKey: keys.textbookBindingOptions,
+    queryFn: ({ signal }) => textbookBindingsApi.options(signal),
+    enabled,
+    // Годы, периоды и назначения учителя меняет администратор, а не этот экран.
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useTextbookBindings(filters: BindingFilters | null) {
+  return useQuery({
+    queryKey: keys.textbookBindings(filters),
+    queryFn: ({ signal }) => textbookBindingsApi.list(filters as BindingFilters, signal),
+    enabled: filters != null,
+    placeholderData: (previous) => previous,
+  });
+}
+
+/**
+ * Общий хвост команд над назначениями. Назначение меняет не только таблицу: у уроков класса
+ * меняется список доступных учебников и `LessonView.textbookCount`, поэтому сбрасываются и
+ * уроки — они перечитаются при следующем открытии карточки.
+ */
+function useTextbookBindingCommand<TVars, TResult>(mutationFn: (vars: TVars) => Promise<TResult>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['textbooks'] });
+      void qc.invalidateQueries({ queryKey: ['lessons'] });
+    },
+  });
+}
+
+/** Загрузка в библиотеку. Таблицу не трогает: учебник без назначения в ней не виден. */
+export function useUploadTextbook() {
+  return useMutation({ mutationFn: teacherTextbooksApi.upload });
+}
+
+export function useCheckTextbookDuplicate() {
+  return useMutation({ mutationFn: (sha256: string) => teacherTextbooksApi.duplicateCheck(sha256) });
+}
+
+export function useCreateTextbookBindings() {
+  return useTextbookBindingCommand(textbookBindingsApi.create);
+}
+
+export function useTerminateTextbookBinding() {
+  return useTextbookBindingCommand((bindingId: number) => textbookBindingsApi.terminate(bindingId));
+}
+
+export function useDeleteTextbookBinding() {
+  return useTextbookBindingCommand((bindingId: number) => textbookBindingsApi.remove(bindingId));
+}
+
+export function useLessonTextbooks(lessonId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: keys.lessonTextbooks(lessonId ?? 0),
+    queryFn: ({ signal }) => lessonTextbooksApi.get(lessonId as number, signal),
+    enabled: lessonId != null && enabled,
+  });
+}
+
+/**
+ * Выбор учебника урока. Ответ — блок целиком, он и кладётся в кэш; журнал урока
+ * перечитывается отдельно: выбор пишет в него событие.
+ */
+function useLessonTextbookCommand<TVars>(
+  lessonId: number,
+  mutationFn: (vars: TVars) => ReturnType<typeof lessonTextbooksApi.get>,
+) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: (data) => {
+      qc.setQueryData(keys.lessonTextbooks(lessonId), data);
+      void qc.invalidateQueries({ queryKey: keys.lessonHistory(lessonId) });
+    },
+  });
+}
+
+export function useSelectLessonTextbook(lessonId: number) {
+  return useLessonTextbookCommand(lessonId, (body: SelectLessonTextbookRequest) =>
+    lessonTextbooksApi.select(lessonId, body),
+  );
+}
+
+export function useClearLessonTextbook(lessonId: number) {
+  return useLessonTextbookCommand(lessonId, () => lessonTextbooksApi.clear(lessonId));
 }

@@ -20,6 +20,7 @@ import { SurveysPage } from '@/pages/SurveysPage';
 import { SurveyDetailPage } from '@/pages/SurveyDetailPage';
 import { HomeworkListPage } from '@/pages/homework/HomeworkListPage';
 import { JournalPage } from '@/pages/journal/JournalPage';
+import { TextbooksPage } from '@/pages/textbooks/TextbooksPage';
 import { ServiceRequestsPage } from '@/pages/service/ServiceRequestsPage';
 import { ServiceRequestCardPage } from '@/pages/service/ServiceRequestCardPage';
 import { HomeworkCardPage } from '@/pages/homework/HomeworkCardPage';
@@ -219,6 +220,7 @@ export function App() {
         />
         {/* Журнал класса и итоги четверти (GRADES-FE-001 §5.4, §9). */}
         <Route path={ROUTES.journal} element={<JournalPage />} />
+        <Route path={ROUTES.textbooks} element={<TextbooksPage />} />
         {/* Журнал школы и незакрытые уроки (ATTENDANCE-001 §23). Отметку ставят на уроке —
             этот раздел только читает и ведёт туда. */}
         <Route path={ROUTES.attendance} element={<AttendanceAdminPage />} />
