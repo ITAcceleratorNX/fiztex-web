@@ -5,13 +5,17 @@ import {
   GraduationCap,
   Monitor,
   Shield,
-  ShieldCheck,
   Users,
+  Wrench,
 } from 'lucide-react';
 import { cx } from '@/lib/format';
 import type { AccountRole } from '../types';
 
-export type CreateUserMenuAction = AccountRole | 'IMPORT';
+/**
+ * `EMPLOYEE` — не роль, а один пункт на все служебные: клининг, техслужбу, охрану и
+ * психолога заводит одна модалка, роль выбирается уже в ней.
+ */
+export type CreateUserMenuAction = AccountRole | 'EMPLOYEE' | 'IMPORT';
 
 const ROLE_ITEMS: {
   action: CreateUserMenuAction;
@@ -48,12 +52,15 @@ const ROLE_ITEMS: {
     iconClass: 'text-slate-600',
     hoverClass: 'hover:bg-slate-100 hover:text-slate-800',
   },
-  // Охрана заводится здесь, а работает в мобильном приложении: сервисные заявки
-  // (SERVICE-FE-002). Клининг и техслужба встанут сюда же под SERVICE-FE-003.
+  // Внутренние сотрудники — одним пунктом, а не ролью на каждую службу. Здесь с
+  // SERVICE-FE-002 стояла «Охрана»: других служебных ролей в панели тогда не было.
+  // Клининг, техслужба и психолог пришли разделом «Сотрудники» (SERVICE-FE-004 §3),
+  // а меню продолжало знать одну роль из четырёх — и обычному админу, которому тот
+  // раздел не показывают, других служебных аккаунтов завести было негде.
   {
-    action: 'SECURITY',
-    label: 'Охрана',
-    icon: ShieldCheck,
+    action: 'EMPLOYEE',
+    label: 'Сотрудник',
+    icon: Wrench,
     iconClass: 'text-emerald-600',
     hoverClass: 'hover:bg-emerald-50 hover:text-emerald-700',
   },
