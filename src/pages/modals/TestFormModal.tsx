@@ -185,6 +185,7 @@ export function TestFormModal({
       </Modal>
 
       <VersionDecisionModal
+        audience={variant === 'psychology' ? 'students' : 'applicants'}
         open={f.decisionOpen}
         onClose={() => f.setDecisionOpen(false)}
         loading={f.pending}

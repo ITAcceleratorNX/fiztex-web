@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { questionFromOtherTest, questionFromVariant, questionToRequest } from './testQuestions';
+import {
+  questionFromOtherTest,
+  questionFromVariant,
+  questionToRequest,
+  validateQuestions,
+  type QuestionDraft,
+} from './testQuestions';
 import type { QuestionRequest, QuestionResponse } from './types';
 
 const source: QuestionResponse = {
@@ -79,5 +85,43 @@ describe('questionFromVariant', () => {
   /** Вариант — не копия чужого вопроса, иначе он бы засчитался как «уже добавлен». */
   it('не ссылается на вопрос-источник', () => {
     expect(questionFromVariant(variant).sourceQuestionId).toBeNull();
+  });
+});
+
+describe('validateQuestions', () => {
+  function draft(overrides: Partial<QuestionDraft>): QuestionDraft {
+    return {
+      localId: 'q',
+      id: null,
+      imageUrl: null,
+      isDraft: false,
+      topic: '',
+      difficulty: '',
+      type: 'SINGLE_CHOICE',
+      text: 'Как часто вы чувствуете тревогу?',
+      maxScore: 1,
+      allowPhoto: false,
+      referenceAnswer: '',
+      gradingCriteria: '',
+      options: [
+        { localId: 'a', text: 'Редко', isCorrect: false },
+        { localId: 'b', text: 'Часто', isCorrect: false },
+      ],
+      sourceQuestionId: null,
+      ...overrides,
+    };
+  }
+
+  it('у учебного теста без правильного варианта сохранить нельзя', () => {
+    expect(validateQuestions([draft({})])).toBe('Вопрос 1: отметьте правильный ответ');
+  });
+
+  it('психологический тест не оценивается: ни правильный вариант, ни минимальный балл не нужны', () => {
+    expect(validateQuestions([draft({}), draft({ type: 'MULTIPLE_CHOICE' })], 100, { graded: false })).toBeNull();
+  });
+
+  it('структурные правила у психологического теста остаются', () => {
+    expect(validateQuestions([draft({ options: [{ localId: 'a', text: 'Одно', isCorrect: false }] })], 0, { graded: false }))
+      .toBe('Вопрос 1: нужно минимум 2 варианта ответа');
   });
 });

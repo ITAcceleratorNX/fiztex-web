@@ -16,6 +16,7 @@ import { ResultReviewPage } from '@/pages/ResultReviewPage';
 import { ReviewPage } from '@/pages/ReviewPage';
 import { SubjectMaterialsPage } from '@/pages/SubjectMaterialsPage';
 import { AiTestsPage } from '@/pages/AiTestsPage';
+import { PsychTestResultsPage } from '@/pages/psychology/PsychTestResultsPage';
 import { SurveysPage } from '@/pages/SurveysPage';
 import { SurveyDetailPage } from '@/pages/SurveyDetailPage';
 import { HomeworkListPage } from '@/pages/homework/HomeworkListPage';
@@ -231,6 +232,12 @@ export function App() {
             что «AI-тесты», под своей вывеской: бэкенд разделяет их по origin, поэтому
             психолог здесь физически не видит учебные AI-тесты и наоборот. */}
         <Route path={ROUTES.psychologistTests} element={<AiTestsPage variant="psychology" />} />
+        {/* Именные результаты назначения психотеста (PSYCHOLOGIST-002) — только психологу:
+            бэкенд отвечает остальным ролям 403. */}
+        <Route
+          path={ROUTES.psychologistTestResults(':testId', ':assignmentId')}
+          element={<PsychTestResultsPage />}
+        />
         <Route path={ROUTES.surveys} element={<SurveysPage />} />
         <Route path="/surveys/:surveyId" element={<SurveyDetailPage />} />
         <Route

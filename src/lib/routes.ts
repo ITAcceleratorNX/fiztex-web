@@ -58,6 +58,12 @@ export const ROUTES = {
   keys: '/admin/keys',
   /** Кабинет психолога: единственный раздел роли (PSYCHOLOGIST-001 §2). */
   psychologistTests: '/psychologist/tests',
+  /**
+   * Именные результаты одного назначения (PSYCHOLOGIST-002). Под тем же префиксом, что и
+   * раздел, — отдельного разрешения в `PSYCHOLOGIST_ROUTE_PREFIXES` не нужно.
+   */
+  psychologistTestResults: (testId: number | string, assignmentId: number | string) =>
+    `/psychologist/tests/${testId}/assignments/${assignmentId}`,
 } as const;
 
 /**

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { navSectionsForRole } from '@/components/layout/navConfig';
 import {
+  ROUTES,
   isRouteAllowedForRole,
   landingRouteForRole,
   loginRedirectTarget,
@@ -150,6 +151,8 @@ describe('маршрутизация по роли', () => {
     expect(landingRouteForRole('PSYCHOLOGIST')).toBe('/psychologist/tests');
     expect(isRouteAllowedForRole('/psychologist/tests', 'PSYCHOLOGIST')).toBe(true);
     expect(isRouteAllowedForRole('/tests/12/questions', 'PSYCHOLOGIST')).toBe(true);
+    // Результаты назначения (PSYCHOLOGIST-002) живут под префиксом раздела.
+    expect(isRouteAllowedForRole(ROUTES.psychologistTestResults(12, 5), 'PSYCHOLOGIST')).toBe(true);
     expect(isRouteAllowedForRole('/dashboard', 'PSYCHOLOGIST')).toBe(false);
     expect(isRouteAllowedForRole('/ai-tests', 'PSYCHOLOGIST')).toBe(false);
     expect(isRouteAllowedForRole('/admin/employees', 'PSYCHOLOGIST')).toBe(false);

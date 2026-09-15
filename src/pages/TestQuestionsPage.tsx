@@ -404,7 +404,9 @@ export function TestQuestionsPage() {
 
   async function save(versionStrategy?: VersionStrategy) {
     if (!test) return;
-    const validation = validateQuestions(questions, test.minScore);
+    const validation = validateQuestions(questions, test.minScore, {
+      graded: test.origin !== 'PSYCHOLOGICAL',
+    });
     if (validation) {
       setFormError(validation);
       setActivationViolations([]);
@@ -627,6 +629,7 @@ export function TestQuestionsPage() {
       )}
 
       <VersionDecisionModal
+        audience={test?.origin === 'PSYCHOLOGICAL' ? 'students' : 'applicants'}
         open={decisionOpen}
         onClose={() => setDecisionOpen(false)}
         loading={pending}

@@ -135,6 +135,11 @@ export interface Test {
   shuffleOptions: boolean;
   useAiGeneration: boolean;
   showResultAfterReview: boolean;
+  /**
+   * Чей тест — учебный или психологический (PSYCHOLOGIST-001). Тип взят из
+   * сгенерированной схемы: legacy-интерфейс не растёт, а поле уже приходит тем же ответом.
+   */
+  origin?: Schema<'TestResponse'>['origin'];
   currentVersionNumber: number | null;
   currentVersionCreatedAt: string | null;
   assignmentCount: number;
