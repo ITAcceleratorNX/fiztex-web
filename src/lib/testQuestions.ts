@@ -201,17 +201,7 @@ export function questionToRequest(q: QuestionDraft, orderIndex: number): Questio
   };
 }
 
-/**
- * `graded: false` — психологический тест (PSYCHOLOGIST-002): он не оценивается, поэтому
- * правильный вариант и достижимость минимального балла не проверяются. Те же правила
- * снимает серверный `TestActivationValidator`; разойтись здесь с ним значило бы не дать
- * сохранить то, что сервер принял бы.
- */
-export function validateQuestions(
-  questions: QuestionDraft[],
-  minScore?: number,
-  { graded = true }: { graded?: boolean } = {},
-): string | null {
+export function validateQuestions(questions: QuestionDraft[], minScore?: number): string | null {
   if (questions.length === 0) return 'Добавьте хотя бы один вопрос';
 
   for (let i = 0; i < questions.length; i++) {
@@ -223,14 +213,13 @@ export function validateQuestions(
     if (isChoiceType(q.type)) {
       if (q.options.length < 2) return `Вопрос ${n}: нужно минимум 2 варианта ответа`;
       if (q.options.some((o) => !o.text.trim())) return `Вопрос ${n}: заполните все варианты ответа`;
-      if (!graded) continue;
       const correct = q.options.filter((o) => o.isCorrect).length;
       if (correct === 0) return `Вопрос ${n}: отметьте правильный ответ`;
       if (q.type === 'SINGLE_CHOICE' && correct !== 1) return `Вопрос ${n}: для одного варианта нужен ровно один правильный ответ`;
     }
   }
 
-  if (graded && minScore != null && Number.isFinite(minScore)) {
+  if (minScore != null && Number.isFinite(minScore)) {
     const totalMax = questions
       .filter((q) => !q.isDraft)
       .reduce((sum, q) => sum + (Number.isFinite(q.maxScore) ? q.maxScore : 0), 0);

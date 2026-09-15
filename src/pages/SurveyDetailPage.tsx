@@ -10,30 +10,41 @@ import { SurveyQuestionEditor } from '@/components/survey/SurveyQuestionEditor';
 import { SurveyAudienceTab } from '@/components/survey/SurveyAudienceTab';
 import { SurveyResultsTab } from '@/components/survey/SurveyResultsTab';
 import { SurveyAiAnalysisTab } from '@/components/survey/SurveyAiAnalysisTab';
-import { useEndSurvey, usePublishSurvey, useSurvey } from '@/hooks/surveyQueries';
-import { useAcademicYears, useSchoolClasses } from '@/platform/hooks/useScheduleSettings';
-import { groupClassesByGrade } from '@/lib/platformCoreApi';
-import { canPublishSurvey, publishBlockedReason } from '@/lib/surveyModel';
+import { useEndSurvey, usePublishSurvey, useSurvey, useSurveyAudienceClasses } from '@/hooks/surveyQueries';
+import {
+  SURVEY_VARIANT_COPY,
+  canPublishSurvey,
+  groupAudienceClasses,
+  publishBlockedReason,
+  toAudienceClasses,
+  type SurveyVariant,
+} from '@/lib/surveyModel';
 import { useToast } from '@/context/ToastContext';
 import { ROUTES } from '@/lib/routes';
 import { ApiError } from '@/lib/api';
 
 type SurveyTab = 'questions' | 'audience' | 'results' | 'ai';
 
-const TAB_VALUES: SurveyTab[] = ['questions', 'audience', 'results', 'ai'];
-
 /**
  * Карточка опроса: вопросы, аудитория, результаты, AI-анализ — четыре вкладки одного
  * экрана, а не четыре разных страницы, чтобы переключение между «что задано» и «кто
  * ответил» не теряло контекст опроса.
+ *
+ * `variant="psychology"` — психологический тест психолога (PSYCHOLOGIST-002): те же вкладки
+ * без AI-анализа (ответы учеников во внешнюю модель не отправляются) и аудитория только из
+ * учеников. Чей это опрос, решает бэкенд: психологу чужие опросы отвечают 404.
  */
-export function SurveyDetailPage() {
+export function SurveyDetailPage({ variant = 'school' }: { variant?: SurveyVariant }) {
+  const copy = SURVEY_VARIANT_COPY[variant];
+  const tabValues: SurveyTab[] = copy.aiAnalysis
+    ? ['questions', 'audience', 'results', 'ai']
+    : ['questions', 'audience', 'results'];
   const { surveyId: surveyIdParam } = useParams();
   const surveyId = Number(surveyIdParam);
   const toast = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const tab: SurveyTab = TAB_VALUES.includes(tabParam as SurveyTab) ? (tabParam as SurveyTab) : 'questions';
+  const tab: SurveyTab = tabValues.includes(tabParam as SurveyTab) ? (tabParam as SurveyTab) : 'questions';
 
   const surveyQuery = useSurvey(Number.isFinite(surveyId) ? surveyId : null);
   const survey = surveyQuery.data;
@@ -43,14 +54,12 @@ export function SurveyDetailPage() {
   const [endConfirmOpen, setEndConfirmOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  // Классы школы — общий источник и для дерева выбора аудитории, и для подписей класса
-  // на вкладках результатов и AI-анализа: список один на всех, отдельно не запрашивается.
-  const yearsQuery = useAcademicYears();
-  const years = yearsQuery.data?.content ?? [];
-  const activeYearId = years.find((y) => y.status === 'ACTIVE')?.id ?? years[0]?.id ?? null;
-  const classesQuery = useSchoolClasses(activeYearId);
-  const classes = useMemo(() => classesQuery.data?.content ?? [], [classesQuery.data]);
-  const gradeGroups = useMemo(() => groupClassesByGrade(classes), [classes]);
+  // Классы текущего года — общий источник и для дерева выбора аудитории, и для подписей
+  // класса на вкладках результатов и AI-анализа. Из раздела опросов, а не из /admin/classes:
+  // тот закрыт психологу, а экран у него тот же.
+  const classesQuery = useSurveyAudienceClasses();
+  const classes = useMemo(() => toAudienceClasses(classesQuery.data), [classesQuery.data]);
+  const gradeGroups = useMemo(() => groupAudienceClasses(classes), [classes]);
   const classNameById = useMemo(() => new Map(classes.map((c) => [c.id, c.name])), [classes]);
   const audienceClassOptions = useMemo(
     () =>
@@ -71,7 +80,7 @@ export function SurveyDetailPage() {
     setActionError(null);
     try {
       await publish.mutateAsync();
-      toast.success('Опрос опубликован');
+      toast.success(copy.publishedToast);
     } catch (err) {
       setActionError(err instanceof ApiError ? err.message : 'Не удалось опубликовать опрос');
     }
@@ -80,7 +89,7 @@ export function SurveyDetailPage() {
   async function handleEnd() {
     try {
       await end.mutateAsync();
-      toast.success('Опрос завершён');
+      toast.success(copy.endedToast);
       setEndConfirmOpen(false);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : 'Не удалось завершить опрос');
@@ -95,11 +104,11 @@ export function SurveyDetailPage() {
   return (
     <div>
       <Link
-        to={ROUTES.surveys}
+        to={variant === 'psychology' ? ROUTES.psychologistTests : ROUTES.surveys}
         className="mb-3 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-brand-600"
       >
         <ArrowLeft className="h-4 w-4" />
-        К опросам
+        {copy.backLabel}
       </Link>
 
       {surveyQuery.isLoading ? (
@@ -110,7 +119,7 @@ export function SurveyDetailPage() {
         <div className="card">
           <ErrorBlock
             message={
-              surveyQuery.error instanceof ApiError ? surveyQuery.error.message : 'Не удалось загрузить опрос'
+              surveyQuery.error instanceof ApiError ? surveyQuery.error.message : copy.loadError
             }
             onRetry={() => void surveyQuery.refetch()}
           />
@@ -142,7 +151,7 @@ export function SurveyDetailPage() {
                   «Завершить опрос» — единственный способ закрыть его. */}
               {survey.status === 'ACTIVE' && (
                 <Button variant="danger" onClick={() => setEndConfirmOpen(true)}>
-                  Завершить опрос
+                  {copy.endLabel}
                 </Button>
               )}
             </div>
@@ -163,7 +172,7 @@ export function SurveyDetailPage() {
                 <TabsTrigger value="questions">Вопросы</TabsTrigger>
                 <TabsTrigger value="audience">Аудитория</TabsTrigger>
                 <TabsTrigger value="results">Результаты</TabsTrigger>
-                <TabsTrigger value="ai">AI-анализ</TabsTrigger>
+                {copy.aiAnalysis && <TabsTrigger value="ai">AI-анализ</TabsTrigger>}
               </TabsList>
             </Tabs>
 
@@ -177,6 +186,7 @@ export function SurveyDetailPage() {
                   classes={classes}
                   gradeGroups={gradeGroups}
                   canEdit={Boolean(survey.canEdit)}
+                  studentsOnly={copy.studentsOnly}
                 />
               )}
               {tab === 'results' && (
@@ -186,7 +196,7 @@ export function SurveyDetailPage() {
                   classOptions={audienceClassOptions}
                 />
               )}
-              {tab === 'ai' && (
+              {tab === 'ai' && copy.aiAnalysis && (
                 <SurveyAiAnalysisTab surveyId={survey.id as number} classOptions={audienceClassOptions} />
               )}
             </div>
@@ -196,11 +206,11 @@ export function SurveyDetailPage() {
             open={endConfirmOpen}
             onClose={() => setEndConfirmOpen(false)}
             onConfirm={() => void handleEnd()}
-            title="Завершить опрос?"
+            title={copy.endTitle}
             confirmLabel="Завершить"
             danger
             loading={end.isPending}
-            message="Опрос перестанет принимать ответы. Это действие нельзя отменить."
+            message={copy.endMessage}
           />
         </>
       )}

@@ -16,6 +16,7 @@ import type {
  */
 
 export const surveyKeys = {
+  audienceClasses: ['surveys', 'audience-classes'] as const,
   list: (status?: SurveyStatus) => ['surveys', 'list', status ?? 'ALL'] as const,
   survey: (id: number) => ['surveys', id] as const,
   questions: (id: number) => ['surveys', id, 'questions'] as const,
@@ -84,6 +85,13 @@ export function useSaveSurveyQuestions(id: number) {
       qc.setQueryData(surveyKeys.questions(id), questions);
       qc.invalidateQueries({ queryKey: surveyKeys.survey(id) });
     },
+  });
+}
+
+export function useSurveyAudienceClasses() {
+  return useQuery({
+    queryKey: surveyKeys.audienceClasses,
+    queryFn: ({ signal }) => surveyApi.audienceClasses(signal),
   });
 }
 

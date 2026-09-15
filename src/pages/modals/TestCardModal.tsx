@@ -15,14 +15,6 @@ import { MathText } from '@/components/ui/MathText';
 import { DraftReviewBanner } from '@/components/ui/DraftReviewBanner';
 import { TestGenerateModal } from './TestGenerateModal';
 import { TestImportModal } from './TestImportModal';
-import type { AiTestsVariant } from '@/pages/AiTestsPage';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { useToast } from '@/context/ToastContext';
-import { useClosePsychTestAssignment } from '@/hooks/psychTestQueries';
-import type { PsychTestAssignment } from '@/lib/psychTestsApi';
-import { classesLabel } from '@/lib/psychTestModel';
-import { AssignPsychTestModal } from '@/pages/psychology/AssignPsychTestModal';
-import { PsychTestAssignmentsSection } from '@/pages/psychology/PsychTestAssignmentsSection';
 
 function Metric({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
@@ -40,34 +32,15 @@ export function TestCardModal({
   open,
   onClose,
   testId,
-  variant = 'ai',
 }: {
   open: boolean;
   onClose: () => void;
   testId: number | null;
-  variant?: AiTestsVariant;
 }) {
   const navigate = useNavigate();
   const { data: test, isLoading, isError, error, refetch } = useTest(open ? testId : null);
   const [generateOpen, setGenerateOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-  // Назначение ученикам — только у психологического теста (PSYCHOLOGIST-002).
-  const psychology = variant === 'psychology';
-  const toast = useToast();
-  const [assignOpen, setAssignOpen] = useState(false);
-  const [closeTarget, setCloseTarget] = useState<PsychTestAssignment | null>(null);
-  const closeAssignment = useClosePsychTestAssignment(testId ?? 0);
-
-  async function handleCloseAssignment(assignment: PsychTestAssignment) {
-    try {
-      await closeAssignment.mutateAsync(assignment.id as number);
-      toast.success('Приём ответов закрыт');
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Не удалось закрыть приём');
-    } finally {
-      setCloseTarget(null);
-    }
-  }
 
   const draftCount = test?.draftQuestionCount ?? 0;
   const questionsLabel = test
@@ -82,7 +55,7 @@ export function TestCardModal({
         open={open}
         onClose={onClose}
         size="lg"
-        title={test ? test.title : variant === 'psychology' ? 'Психологический тест' : 'AI-тест'}
+        title={test ? test.title : 'AI-тест'}
         subtitle={test ? `${test.subjectName} · ${test.grade}` : undefined}
         footer={
           test ? (
@@ -131,36 +104,23 @@ export function TestCardModal({
               <Badge tone="blue">{versionLabel(test.currentVersionNumber, test.currentVersionCreatedAt)}</Badge>
             </div>
 
-            {psychology ? (
-              // Психологический тест не оценивается и проходится без таймера, по порядку
-              // вопросов: балл, процент, попытки и перемешивание у него не читаются
-              // (docs/psych-test-contract.md §1), и показывать их — значит обещать то, чего нет.
-              <PsychTestAssignmentsSection
-                test={test}
-                onAssign={() => setAssignOpen(true)}
-                onCloseAssignment={setCloseTarget}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              <Metric icon={<Clock className="h-3.5 w-3.5" />} label="Длительность" value={`${test.durationMinutes} мин`} />
+              <Metric icon={<Target className="h-3.5 w-3.5" />} label="Мин. балл" value={String(test.minScore)} />
+              <Metric icon={<ListChecks className="h-3.5 w-3.5" />} label="Вопросов" value={String(test.questionCount)} />
+              <Metric
+                icon={<Percent className="h-3.5 w-3.5" />}
+                label="Мин. процент"
+                value={test.minPercent != null ? `${test.minPercent}%` : '—'}
               />
-            ) : (
-              <>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                  <Metric icon={<Clock className="h-3.5 w-3.5" />} label="Длительность" value={`${test.durationMinutes} мин`} />
-                  <Metric icon={<Target className="h-3.5 w-3.5" />} label="Мин. балл" value={String(test.minScore)} />
-                  <Metric icon={<ListChecks className="h-3.5 w-3.5" />} label="Вопросов" value={String(test.questionCount)} />
-                  <Metric
-                    icon={<Percent className="h-3.5 w-3.5" />}
-                    label="Мин. процент"
-                    value={test.minPercent != null ? `${test.minPercent}%` : '—'}
-                  />
-                  <Metric icon={<Repeat className="h-3.5 w-3.5" />} label="Попыток" value={String(test.maxAttempts)} />
-                </div>
+              <Metric icon={<Repeat className="h-3.5 w-3.5" />} label="Попыток" value={String(test.maxAttempts)} />
+            </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {test.allowBackNavigation && <Badge tone="gray">Можно возвращаться назад</Badge>}
-                  {test.shuffleQuestions && <Badge tone="gray">Перемешивать вопросы</Badge>}
-                  {test.shuffleOptions && <Badge tone="gray">Перемешивать ответы</Badge>}
-                </div>
-              </>
-            )}
+            <div className="flex flex-wrap gap-2">
+              {test.allowBackNavigation && <Badge tone="gray">Можно возвращаться назад</Badge>}
+              {test.shuffleQuestions && <Badge tone="gray">Перемешивать вопросы</Badge>}
+              {test.shuffleOptions && <Badge tone="gray">Перемешивать ответы</Badge>}
+            </div>
 
             {test.rules && (
               <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-100">
@@ -205,12 +165,8 @@ export function TestCardModal({
                       <p className="mt-1 text-xs text-slate-400">
                         {QUESTION_TYPE_LABELS[q.type]}
                         {difficultyLabel(q.difficulty) ? ` · ${difficultyLabel(q.difficulty)}` : ''}
-                        {!psychology && (
-                          <>
-                            {' · '}
-                            {q.maxScore} {pluralRu(q.maxScore, ['балл', 'балла', 'баллов'])}
-                          </>
-                        )}
+                        {' · '}
+                        {q.maxScore} {pluralRu(q.maxScore, ['балл', 'балла', 'баллов'])}
                       </p>
                     </li>
                   ))}
@@ -252,30 +208,6 @@ export function TestCardModal({
           onClose={() => setImportOpen(false)}
           test={test}
           onComplete={() => navigate(`/tests/${test.id}/questions`)}
-        />
-      )}
-      {psychology && test && (
-        <AssignPsychTestModal
-          open={assignOpen}
-          onClose={() => setAssignOpen(false)}
-          testId={test.id}
-          testTitle={test.title}
-        />
-      )}
-      {psychology && (
-        <ConfirmDialog
-          open={closeTarget != null}
-          onClose={() => setCloseTarget(null)}
-          onConfirm={() => closeTarget && void handleCloseAssignment(closeTarget)}
-          title="Закрыть приём ответов?"
-          confirmLabel="Закрыть приём"
-          loading={closeAssignment.isPending}
-          message={
-            <>
-              Назначение {closeTarget ? <b>{classesLabel(closeTarget)}</b> : null}: отправленные ответы
-              останутся, остальные ученики больше не смогут отправить свои.
-            </>
-          }
         />
       )}
     </>

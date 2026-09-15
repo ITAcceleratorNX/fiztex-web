@@ -1188,70 +1188,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/admin/psych-tests/assignments/{assignmentId}/close": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["closePsychTestAssignment"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/psych-tests/assignments/{assignmentId}/results": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["psychTestResults"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/psych-tests/classes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["psychTestClasses"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/psych-tests/{testId}/assignments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["psychTestAssignments"];
-        put?: never;
-        post: operations["assignPsychTest"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/admin/questions/ai-variant": {
         parameters: {
             query?: never;
@@ -1934,6 +1870,22 @@ export interface paths {
         get: operations["list_9"];
         put?: never;
         post: operations["create_7"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/surveys/audience-classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["audienceClasses"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4932,70 +4884,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/psych-tests/my": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["myPsychTests"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/psych-tests/{assignmentId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["psychTestTaking"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/psych-tests/{assignmentId}/answers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["savePsychTestAnswer"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/psych-tests/{assignmentId}/submit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["submitPsychTest"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/schedule/children": {
         parameters: {
             query?: never;
@@ -5953,11 +5841,6 @@ export interface components {
             /** Format: int64 */
             id?: number;
             parentFullName?: string;
-        };
-        AssignPsychTestRequest: {
-            classIds?: number[];
-            /** Format: date-time */
-            deadlineAt?: string;
         };
         AssignResult: {
             created?: components["schemas"]["AssignmentSummary"][];
@@ -8155,20 +8038,6 @@ export interface components {
             student?: components["schemas"]["StudentPart"];
             teacher?: components["schemas"]["TeacherPart"];
         };
-        MyPsychTestView: {
-            /** Format: int64 */
-            assignmentId?: number;
-            canAnswer?: boolean;
-            /** Format: date-time */
-            deadlineAt?: string;
-            /** Format: int32 */
-            questionCount?: number;
-            /** @enum {string} */
-            responseStatus?: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
-            /** Format: date-time */
-            submittedAt?: string;
-            title?: string;
-        };
         MySubjectFinalsView: {
             periodValues?: {
                 [key: string]: number;
@@ -8212,6 +8081,8 @@ export interface components {
             description?: string;
             /** @enum {string} */
             mode?: "NAMED" | "ANONYMOUS";
+            /** @enum {string} */
+            origin?: "SCHOOL" | "PSYCHOLOGICAL";
             /** @enum {string} */
             responseStatus?: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
             /** Format: date-time */
@@ -9014,113 +8885,6 @@ export interface components {
             /** @enum {string} */
             type?: "AVAILABLE" | "UNAVAILABLE";
         };
-        PsychTestAssignmentView: {
-            acceptingAnswers?: boolean;
-            classes?: components["schemas"]["PsychTestClassRef"][];
-            /** Format: date-time */
-            closedAt?: string;
-            /** Format: int32 */
-            completedCount?: number;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            deadlineAt?: string;
-            /** Format: int64 */
-            id?: number;
-            /** Format: int32 */
-            inProgressCount?: number;
-            /** Format: int32 */
-            recipientsTotal?: number;
-            /** @enum {string} */
-            status?: "ACTIVE" | "CLOSED";
-            /** Format: int64 */
-            testId?: number;
-            testTitle?: string;
-        };
-        PsychTestClassOptionView: {
-            grade?: string;
-            /** Format: int64 */
-            id?: number;
-            letter?: string;
-            name?: string;
-            /** Format: int64 */
-            studentsCount?: number;
-        };
-        PsychTestClassRef: {
-            /** Format: int64 */
-            id?: number;
-            name?: string;
-        };
-        PsychTestOptionForTakingView: {
-            /** Format: int64 */
-            id?: number;
-            /** Format: int32 */
-            orderIndex?: number;
-            text?: string;
-        };
-        PsychTestQuestionForTakingView: {
-            /** Format: int64 */
-            id?: number;
-            imageUrl?: string;
-            options?: components["schemas"]["PsychTestOptionForTakingView"][];
-            /** Format: int32 */
-            orderIndex?: number;
-            text?: string;
-            /** @enum {string} */
-            type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT" | "PHOTO";
-        };
-        PsychTestResultOptionView: {
-            /** Format: int64 */
-            id?: number;
-            text?: string;
-        };
-        PsychTestResultQuestionView: {
-            /** Format: int64 */
-            id?: number;
-            options?: components["schemas"]["PsychTestResultOptionView"][];
-            /** Format: int32 */
-            orderIndex?: number;
-            text?: string;
-            /** @enum {string} */
-            type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT" | "PHOTO";
-        };
-        PsychTestResultsView: {
-            assignment?: components["schemas"]["PsychTestAssignmentView"];
-            questions?: components["schemas"]["PsychTestResultQuestionView"][];
-            students?: components["schemas"]["PsychTestStudentResultView"][];
-        };
-        PsychTestSavedAnswerView: {
-            openText?: string;
-            /** Format: int64 */
-            questionId?: number;
-            selectedOptionIds?: number[];
-        };
-        PsychTestStudentResultView: {
-            answers?: components["schemas"]["PsychTestSavedAnswerView"][];
-            /** Format: int64 */
-            classId?: number;
-            className?: string;
-            /** @enum {string} */
-            status?: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
-            /** Format: int64 */
-            studentId?: number;
-            studentName?: string;
-            /** Format: date-time */
-            submittedAt?: string;
-        };
-        PsychTestTakingView: {
-            /** Format: int64 */
-            assignmentId?: number;
-            canAnswer?: boolean;
-            /** Format: date-time */
-            deadlineAt?: string;
-            instructions?: string;
-            questions?: components["schemas"]["PsychTestQuestionForTakingView"][];
-            /** @enum {string} */
-            responseStatus?: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
-            savedAnswers?: components["schemas"]["PsychTestSavedAnswerView"][];
-            title?: string;
-        };
         PublicAnnouncementItem: {
             /** Format: date-time */
             eventAt?: string;
@@ -9503,12 +9267,6 @@ export interface components {
         };
         SaveHomeworkQuestionsRequest: {
             questions?: components["schemas"]["QuestionRequest"][];
-        };
-        SavePsychTestAnswerRequest: {
-            openText?: string;
-            /** Format: int64 */
-            questionId: number;
-            selectedOptionIds?: number[];
         };
         SaveSurveyQuestionsRequest: {
             questions?: components["schemas"]["SurveyQuestionRequest"][];
@@ -10024,9 +9782,6 @@ export interface components {
             preferredShift?: "FIRST" | "SECOND";
             workingDays: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
         };
-        SubmitPsychTestRequest: {
-            idempotencyToken?: string;
-        };
         SubmitResponse: {
             status?: string;
         };
@@ -10092,6 +9847,15 @@ export interface components {
             /** Format: int32 */
             orderIndex?: number;
             text?: string;
+        };
+        SurveyAudienceClassView: {
+            grade?: string;
+            /** Format: int64 */
+            id?: number;
+            letter?: string;
+            name?: string;
+            /** Format: int64 */
+            studentsCount?: number;
         };
         SurveyListItemView: {
             /** Format: date-time */
@@ -10177,6 +9941,8 @@ export interface components {
             description?: string;
             /** @enum {string} */
             mode?: "NAMED" | "ANONYMOUS";
+            /** @enum {string} */
+            origin?: "SCHOOL" | "PSYCHOLOGICAL";
             questions?: components["schemas"]["SurveyQuestionForTakingView"][];
             /** @enum {string} */
             responseStatus?: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
@@ -10536,8 +10302,6 @@ export interface components {
             minPercent?: number;
             /** Format: double */
             minScore?: number;
-            /** @enum {string} */
-            origin?: "CURRICULUM" | "PSYCHOLOGICAL";
             /** Format: int32 */
             questionCount?: number;
             questions?: components["schemas"]["QuestionResponse"][];
@@ -13227,120 +12991,6 @@ export interface operations {
             };
         };
     };
-    closePsychTestAssignment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                assignmentId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PsychTestAssignmentView"];
-                };
-            };
-        };
-    };
-    psychTestResults: {
-        parameters: {
-            query?: {
-                classId?: number;
-            };
-            header?: never;
-            path: {
-                assignmentId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PsychTestResultsView"];
-                };
-            };
-        };
-    };
-    psychTestClasses: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PsychTestClassOptionView"][];
-                };
-            };
-        };
-    };
-    psychTestAssignments: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                testId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PsychTestAssignmentView"][];
-                };
-            };
-        };
-    };
-    assignPsychTest: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                testId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AssignPsychTestRequest"];
-            };
-        };
-        responses: {
-            /** @description Created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PsychTestAssignmentView"];
-                };
-            };
-        };
-    };
     aiVariant: {
         parameters: {
             query?: never;
@@ -14674,6 +14324,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SurveyView"];
+                };
+            };
+        };
+    };
+    audienceClasses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyAudienceClassView"][];
                 };
             };
         };
@@ -20125,98 +19795,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MyProfileView"];
-                };
-            };
-        };
-    };
-    myPsychTests: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MyPsychTestView"][];
-                };
-            };
-        };
-    };
-    psychTestTaking: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                assignmentId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PsychTestTakingView"];
-                };
-            };
-        };
-    };
-    savePsychTestAnswer: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                assignmentId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SavePsychTestAnswerRequest"];
-            };
-        };
-        responses: {
-            /** @description No Content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    submitPsychTest: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                assignmentId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["SubmitPsychTestRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PsychTestTakingView"];
                 };
             };
         };

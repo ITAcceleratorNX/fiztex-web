@@ -27,6 +27,7 @@ export type SaveSurveyQuestionsRequest = Schema<'SaveSurveyQuestionsRequest'>;
 export type SurveyQuestionRequest = Schema<'SurveyQuestionRequest'>;
 export type SurveyAnswerOptionRequest = Schema<'SurveyAnswerOptionRequest'>;
 export type SetSurveyAudienceRequest = Schema<'SetSurveyAudienceRequest'>;
+export type SurveyAudienceClass = Schema<'SurveyAudienceClassView'>;
 
 export type SurveyStatus = NonNullable<Survey['status']>;
 export type SurveyMode = NonNullable<Survey['mode']>;
@@ -70,6 +71,13 @@ export const surveyApi = {
     request<Survey>(`/admin/surveys/${id}/audience`, { method: 'PUT', body }),
 
   /** 409 `SURVEY_NO_QUESTIONS` / `SURVEY_NO_AUDIENCE` / `SURVEY_NO_TARGET`, если предусловия не выполнены. */
+  /**
+   * Классы текущего года для вкладки «Аудитория». Не `/admin/classes`: тот закрыт психологу, а
+   * аудиторию своего теста он выбирает тем же экраном.
+   */
+  audienceClasses: (signal?: AbortSignal) =>
+    request<SurveyAudienceClass[]>('/admin/surveys/audience-classes', { signal }),
+
   publish: (id: number) => request<Survey>(`/admin/surveys/${id}/publish`, { method: 'POST' }),
 
   /** 409 `SURVEY_NOT_ACTIVE`, если опрос не идёт сейчас. */
