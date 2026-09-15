@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { canPublishSurvey, publishBlockedReason, surveyStatusLabel } from './surveyModel';
+import {
+  SURVEY_VARIANT_COPY,
+  canPublishSurvey,
+  groupAudienceClasses,
+  publishBlockedReason,
+  surveyStatusLabel,
+  toAudienceClasses,
+} from './surveyModel';
 import type { Survey } from './surveyApi';
 
 function survey(overrides: Partial<Survey> = {}): Survey {
@@ -70,3 +77,30 @@ describe('publishBlockedReason', () => {
     expect(publishBlockedReason(survey({ status: 'ACTIVE', questionCount: 0 }))).toBeNull();
   });
 });
+
+describe('классы аудитории', () => {
+  it('параллели сортируются числом, классы — по литере, пустые поля DTO не роняют дерево', () => {
+    const classes = toAudienceClasses([
+      { id: 3, name: '10Б', grade: '10', letter: 'Б', studentsCount: 20 },
+      { id: 1, name: '2А', grade: '2', letter: 'А', studentsCount: 25 },
+      { id: 2, name: '10А', grade: '10', letter: 'А' },
+      { name: 'без id' },
+    ]);
+    expect(classes).toHaveLength(3);
+    expect(classes.find((c) => c.id === 2)?.studentsCount).toBe(0);
+
+    const groups = groupAudienceClasses(classes);
+    expect(groups.map((g) => g.grade)).toEqual(['2', '10']);
+    expect(groups[1].classes.map((c) => c.name)).toEqual(['10А', '10Б']);
+  });
+});
+
+describe('вывески раздела', () => {
+  it('психологический тест — без AI-анализа и только для учеников', () => {
+    expect(SURVEY_VARIANT_COPY.psychology.aiAnalysis).toBe(false);
+    expect(SURVEY_VARIANT_COPY.psychology.studentsOnly).toBe(true);
+    expect(SURVEY_VARIANT_COPY.school.aiAnalysis).toBe(true);
+    expect(SURVEY_VARIANT_COPY.school.studentsOnly).toBe(false);
+  });
+});
+

@@ -5,6 +5,7 @@ import { Field, TextArea, TextInput } from '@/components/ui/Field';
 import { useCreateSurvey } from '@/hooks/surveyQueries';
 import { ApiError } from '@/lib/api';
 import type { SurveyMode } from '@/lib/surveyApi';
+import { SURVEY_VARIANT_COPY, type SurveyVariant } from '@/lib/surveyModel';
 
 /**
  * Создание опроса — модалка, а не отдельная страница: полей мало (название, режим,
@@ -15,11 +16,14 @@ export function SurveyCreateModal({
   open,
   onClose,
   onCreated,
+  variant = 'school',
 }: {
   open: boolean;
   onClose: () => void;
   onCreated: (id: number) => void;
+  variant?: SurveyVariant;
 }) {
+  const copy = SURVEY_VARIANT_COPY[variant];
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [mode, setMode] = useState<SurveyMode>('NAMED');
@@ -66,7 +70,7 @@ export function SurveyCreateModal({
     <Modal
       open={open}
       onClose={close}
-      title="Новый опрос"
+      title={copy.createTitle}
       subtitle="Вопросы и аудитория добавляются на карточке после создания."
       footer={
         <>
@@ -79,7 +83,7 @@ export function SurveyCreateModal({
             loading={create.isPending}
             disabled={!valid}
           >
-            Создать опрос
+            {copy.createLabel}
           </Button>
         </>
       }
@@ -98,20 +102,20 @@ export function SurveyCreateModal({
           </div>
         )}
 
-        <Field label="Название опроса" required>
+        <Field label={copy.nameLabel} required>
           <TextInput
             autoFocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Например: Удовлетворённость учёбой"
+            placeholder={copy.namePlaceholder}
           />
         </Field>
 
-        <Field label="Описание" hint="Необязательно">
+        <Field label={copy.descriptionLabel} hint={copy.descriptionHint}>
           <TextArea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="О чём опрос и зачем он проводится"
+            placeholder={copy.descriptionPlaceholder}
           />
         </Field>
 

@@ -7,7 +7,7 @@ import { useToast } from '@/context/ToastContext';
 import { useSetSurveyAudience } from '@/hooks/surveyQueries';
 import { ApiError } from '@/lib/api';
 import type { Survey } from '@/lib/surveyApi';
-import type { GradeClassGroup, SchoolClassRef } from '@/lib/scheduleSettingsTypes';
+import type { AudienceClass, AudienceGradeGroup } from '@/lib/surveyModel';
 
 /**
  * Аудитория опроса — первый настоящий потребитель `ClassGradePicker`: раньше на него
@@ -19,11 +19,17 @@ export function SurveyAudienceTab({
   classes,
   gradeGroups,
   canEdit,
+  studentsOnly = false,
 }: {
   survey: Survey;
-  classes: SchoolClassRef[];
-  gradeGroups: GradeClassGroup[];
+  classes: AudienceClass[];
+  gradeGroups: AudienceGradeGroup[];
   canEdit: boolean;
+  /**
+   * Психологический тест (PSYCHOLOGIST-002): назначается только ученикам, поэтому переключателей
+   * «Ученики / Родители» нет — сервер отказывает, если родителей всё же включить.
+   */
+  studentsOnly?: boolean;
 }) {
   const toast = useToast();
   const setAudience = useSetSurveyAudience(survey.id as number);
@@ -44,6 +50,9 @@ export function SurveyAudienceTab({
     setTargetsParents(Boolean(survey.targetsParents));
     setSelectedClassIds(new Set(survey.audienceClassIds ?? []));
   }, [survey, dirty]);
+
+  // Число учеников у класса — пустой класс виден до публикации, а не по пустому списку получателей.
+  const studentsByClass = useMemo(() => new Map(classes.map((c) => [c.id, c.studentsCount])), [classes]);
 
   const distinctGrades = useMemo(() => {
     const set = new Set(classes.map((c) => c.grade));
@@ -103,8 +112,8 @@ export function SurveyAudienceTab({
     setError(null);
     try {
       await setAudience.mutateAsync({
-        targetsStudents,
-        targetsParents,
+        targetsStudents: studentsOnly ? true : targetsStudents,
+        targetsParents: studentsOnly ? false : targetsParents,
         classIds: [...selectedClassIds],
       });
       setDirty(false);
@@ -118,7 +127,8 @@ export function SurveyAudienceTab({
     <div className="space-y-5">
       {!canEdit && (
         <p className="text-sm text-slate-500">
-          Опрос опубликован — аудитория теперь доступна только для просмотра.
+          {studentsOnly ? 'Тест опубликован' : 'Опрос опубликован'} — аудитория теперь доступна только для
+          просмотра.
         </p>
       )}
 
@@ -128,24 +138,28 @@ export function SurveyAudienceTab({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Toggle
-          checked={targetsStudents}
-          onChange={(v) => {
-            setDirty(true);
-            setTargetsStudents(v);
-          }}
-          label="Ученики"
-        />
-        <Toggle
-          checked={targetsParents}
-          onChange={(v) => {
-            setDirty(true);
-            setTargetsParents(v);
-          }}
-          label="Родители"
-        />
-      </div>
+      {studentsOnly ? (
+        <p className="text-sm text-slate-500">Тест проходят ученики выбранных классов.</p>
+      ) : (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Toggle
+            checked={targetsStudents}
+            onChange={(v) => {
+              setDirty(true);
+              setTargetsStudents(v);
+            }}
+            label="Ученики"
+          />
+          <Toggle
+            checked={targetsParents}
+            onChange={(v) => {
+              setDirty(true);
+              setTargetsParents(v);
+            }}
+            label="Родители"
+          />
+        </div>
+      )}
 
       {canEdit && distinctGrades.length > 1 && (
         <div className="card flex flex-wrap items-end gap-3 p-4">
@@ -184,6 +198,14 @@ export function SurveyAudienceTab({
           onToggleClass={toggleClass}
           onToggleGrade={toggleGrade}
           disabled={!canEdit}
+          classMeta={(classId) => {
+            const count = studentsByClass.get(classId);
+            return count == null ? null : (
+              <span className={count === 0 ? 'text-xs text-amber-600' : 'text-xs text-slate-400'}>
+                {count === 0 ? 'нет учеников' : `учеников: ${count}`}
+              </span>
+            );
+          }}
         />
       </div>
 

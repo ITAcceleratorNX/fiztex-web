@@ -199,7 +199,7 @@ function QuestionEditor({
           <FormulaField
             value={question.text}
             onChange={(text) => onChange({ ...question, text })}
-            placeholder="Сформулируйте вопрос"
+            placeholder="Сформулируйте вопрос для поступающего"
             ariaLabel="Текст вопроса"
           />
         </Field>
@@ -404,9 +404,7 @@ export function TestQuestionsPage() {
 
   async function save(versionStrategy?: VersionStrategy) {
     if (!test) return;
-    const validation = validateQuestions(questions, test.minScore, {
-      graded: test.origin !== 'PSYCHOLOGICAL',
-    });
+    const validation = validateQuestions(questions, test.minScore);
     if (validation) {
       setFormError(validation);
       setActivationViolations([]);
@@ -629,7 +627,6 @@ export function TestQuestionsPage() {
       )}
 
       <VersionDecisionModal
-        audience={test?.origin === 'PSYCHOLOGICAL' ? 'students' : 'applicants'}
         open={decisionOpen}
         onClose={() => setDecisionOpen(false)}
         loading={pending}
