@@ -21,6 +21,7 @@ import { SurveyDetailPage } from '@/pages/SurveyDetailPage';
 import { HomeworkListPage } from '@/pages/homework/HomeworkListPage';
 import { JournalPage } from '@/pages/journal/JournalPage';
 import { TextbooksPage } from '@/pages/textbooks/TextbooksPage';
+import { FeedbackPage } from '@/pages/feedback/FeedbackPage';
 import { ServiceRequestsPage } from '@/pages/service/ServiceRequestsPage';
 import { ServiceRequestCardPage } from '@/pages/service/ServiceRequestCardPage';
 import { KeysAdminPage } from '@/pages/keys/KeysAdminPage';
@@ -223,6 +224,9 @@ export function App() {
         {/* Журнал класса и итоги четверти (GRADES-FE-001 §5.4, §9). */}
         <Route path={ROUTES.journal} element={<JournalPage />} />
         <Route path={ROUTES.textbooks} element={<TextbooksPage />} />
+        {/* Ежемесячная обратная связь учителя (MONTHLY-FEEDBACK-001): история — тот же экран
+            с прошлым месяцем в фильтре, отдельной страницы у неё нет. */}
+        <Route path={ROUTES.feedback} element={<FeedbackPage />} />
         {/* Журнал школы и незакрытые уроки (ATTENDANCE-001 §23). Отметку ставят на уроке —
             этот раздел только читает и ведёт туда. */}
         <Route path={ROUTES.attendance} element={<AttendanceAdminPage />} />

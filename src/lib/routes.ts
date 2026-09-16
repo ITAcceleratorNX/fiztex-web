@@ -33,6 +33,8 @@ export const ROUTES = {
   homework: '/homework',
   /** Учебники учителя: назначения классам и загрузка в библиотеку (LIBRARY-BE-001). */
   textbooks: '/textbooks',
+  /** Ежемесячная обратная связь учителя: листы классов, публикация, закрытие месяца (MONTHLY-FEEDBACK-001). */
+  feedback: '/feedback',
   /** Своё расписание учителя — ролевой экран поверх `/api/schedule/me/week`. */
   mySchedule: '/my-schedule',
   /**
@@ -162,6 +164,7 @@ export function isRouteAllowedForRole(path: string, role: string | undefined): b
 const TEACHER_ROUTE_PREFIXES = [
   ROUTES.homework,
   ROUTES.textbooks,
+  ROUTES.feedback,
   ROUTES.mySchedule,
   ROUTES.currentLesson,
   ROUTES.myAvailability,

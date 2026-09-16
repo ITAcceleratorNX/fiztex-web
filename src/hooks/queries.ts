@@ -59,6 +59,12 @@ import {
   type KeyDashboardFilters,
   type KeyHistoryFilters,
 } from '@/lib/keysApi';
+import {
+  monthlyFeedbackApi,
+  type FeedbackSheet,
+  type FeedbackSheetKey,
+} from '@/lib/monthlyFeedbackApi';
+import { applySavedEntry, completionChanged } from '@/lib/monthlyFeedbackModel';
 import type {
   ApplicantRequest,
   GenerateTestRequest,
@@ -184,6 +190,14 @@ export const keys = {
   textbookBindingOptions: ['textbooks', 'binding-options'] as const,
   textbookBindings: (filters: BindingFilters | null) => ['textbooks', 'bindings', filters] as const,
   lessonTextbooks: (lessonId: number) => ['lessons', lessonId, 'textbooks'] as const,
+  // Ежемесячная обратная связь учителя (monthly-feedback-contract §7). Листы месяца лежат под
+  // общим префиксом: закрытие месяца снимает `editable` сразу у всех.
+  monthlyFeedbackMonths: ['monthly-feedback', 'teacher', 'months'] as const,
+  monthlyFeedbackHistoryFilters: ['monthly-feedback', 'teacher', 'history-filters'] as const,
+  monthlyFeedbackMonth: (month: string) => ['monthly-feedback', 'teacher', 'month', month] as const,
+  monthlyFeedbackSheets: (month: string) => ['monthly-feedback', 'teacher', 'sheet', month] as const,
+  monthlyFeedbackSheet: (key: FeedbackSheetKey) =>
+    ['monthly-feedback', 'teacher', 'sheet', key.month, key.classId, key.subjectId] as const,
 };
 
 // ---- Physical keys: read-only Super Admin screen (KEYS-FE) ----
@@ -1781,4 +1795,100 @@ export function useSelectLessonTextbook(lessonId: number) {
 
 export function useClearLessonTextbook(lessonId: number) {
   return useLessonTextbookCommand(lessonId, () => lessonTextbooksApi.clear(lessonId));
+}
+
+// ---- Ежемесячная обратная связь учителя (MONTHLY-FEEDBACK-001, docs/monthly-feedback-contract.md) ----
+
+export function useFeedbackMonths() {
+  return useQuery({
+    queryKey: keys.monthlyFeedbackMonths,
+    queryFn: ({ signal }) => monthlyFeedbackApi.months(signal),
+  });
+}
+
+/** Ради месяцев прошлых лет в выборе месяца — см. `monthlyFeedbackApi.historyFilters`. */
+export function useFeedbackHistoryFilters() {
+  return useQuery({
+    queryKey: keys.monthlyFeedbackHistoryFilters,
+    queryFn: ({ signal }) => monthlyFeedbackApi.historyFilters(signal),
+  });
+}
+
+export function useFeedbackMonth(month: string | null) {
+  return useQuery({
+    queryKey: keys.monthlyFeedbackMonth(month ?? ''),
+    queryFn: ({ signal }) => monthlyFeedbackApi.month(month as string, signal),
+    enabled: month != null,
+  });
+}
+
+export function useFeedbackSheet(key: FeedbackSheetKey | null) {
+  return useQuery({
+    queryKey: keys.monthlyFeedbackSheet(key ?? { month: '', classId: 0, subjectId: 0 }),
+    queryFn: ({ signal }) => monthlyFeedbackApi.sheet(key as FeedbackSheetKey, signal),
+    enabled: key != null,
+  });
+}
+
+/**
+ * Автосохранение отзыва. Ответ кладётся в кэш листа точечно — строка и прогресс, без
+ * перезапроса (контракт T4). Исключение — переход через «заполнены все»: `canPublish` считает
+ * сервер, и лист на этом переходе перечитывается, а не досчитывается на клиенте.
+ */
+export function useSaveFeedbackEntry(key: FeedbackSheetKey) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { studentProfileId: number; text: string; version: number | null }) =>
+      monthlyFeedbackApi.saveEntry(
+        { ...key, studentProfileId: vars.studentProfileId },
+        { text: vars.text, version: vars.version },
+      ),
+    onSuccess: (result, vars) => {
+      const sheetKey = keys.monthlyFeedbackSheet(key);
+      const before = qc.getQueryData<FeedbackSheet>(sheetKey);
+      qc.setQueryData<FeedbackSheet>(sheetKey, (sheet) => applySavedEntry(sheet, vars.studentProfileId, result));
+      if (completionChanged(before?.progress, result.progress)) {
+        void qc.invalidateQueries({ queryKey: sheetKey });
+      }
+      // Экран месяца показывает только статусы листов, прогресс в нём перечитывать незачем
+      // сразу — достаточно пометить устаревшим.
+      void qc.invalidateQueries({ queryKey: keys.monthlyFeedbackMonth(key.month), refetchType: 'none' });
+    },
+  });
+}
+
+/** Лист перечитать целиком: 409 «опубликован / закрыт / состав изменился». */
+export function useRefreshFeedbackSheet() {
+  const qc = useQueryClient();
+  return (key: FeedbackSheetKey) => qc.invalidateQueries({ queryKey: keys.monthlyFeedbackSheet(key) });
+}
+
+/**
+ * Публикация. Ответ — лист после публикации; месяц меняет `canClose`, а в истории появляется
+ * опубликованный месяц — оба перечитываются.
+ */
+export function usePublishFeedbackSheet() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (key: FeedbackSheetKey) => monthlyFeedbackApi.publish(key),
+    onSuccess: (sheet, key) => {
+      qc.setQueryData(keys.monthlyFeedbackSheet(key), sheet);
+      void qc.invalidateQueries({ queryKey: keys.monthlyFeedbackMonth(key.month) });
+      void qc.invalidateQueries({ queryKey: keys.monthlyFeedbackMonths });
+      void qc.invalidateQueries({ queryKey: keys.monthlyFeedbackHistoryFilters });
+    },
+  });
+}
+
+/** Закрытие месяца: у всех его листов пропадает `editable`, поэтому они сбрасываются целиком. */
+export function useCloseFeedbackMonth() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (month: string) => monthlyFeedbackApi.closeMonth(month),
+    onSuccess: (view, month) => {
+      qc.setQueryData(keys.monthlyFeedbackMonth(month), view);
+      void qc.invalidateQueries({ queryKey: keys.monthlyFeedbackMonths });
+      void qc.invalidateQueries({ queryKey: keys.monthlyFeedbackSheets(month) });
+    },
+  });
 }

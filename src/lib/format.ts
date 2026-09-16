@@ -52,6 +52,14 @@ export function formatWeekdayDayMonth(iso: string | Date | null | undefined = ne
   return `${WEEKDAYS_LONG[d.getDay()]}, ${d.getDate()} ${MONTHS_GENITIVE[d.getMonth()]}`;
 }
 
+/** "13 сентября 2026" — дата факта полностью, как «Опубликовано 13 сентября 2026». */
+export function formatDayMonthYear(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  return `${d.getDate()} ${MONTHS_GENITIVE[d.getMonth()]} ${d.getFullYear()}`;
+}
+
 /** "Версия 1 · 12 авг. 2026, 10:30" */
 export function versionLabel(versionNumber: number | null | undefined, iso: string | null | undefined): string {
   if (!versionNumber) return 'Без версии';
