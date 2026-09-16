@@ -7453,7 +7453,6 @@ export interface components {
             entryCount?: number;
             /** Format: int32 */
             expectedSubjects?: number;
-            note?: string;
             partial?: boolean;
         };
         FeedbackAiBriefView: {
