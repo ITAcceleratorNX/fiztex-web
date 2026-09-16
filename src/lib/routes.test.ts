@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { navSectionsForRole } from '@/components/layout/navConfig';
 import {
+  ROUTES,
   isRouteAllowedForRole,
   landingRouteForRole,
   loginRedirectTarget,
@@ -142,14 +143,17 @@ describe('маршрутизация по роли', () => {
   });
 
   /**
-   * PSYCHOLOGIST-001 §2: психологу открыт только его кабинет и общий конструктор
-   * вопросов — без явной ветки в `isRouteAllowedForRole`/`navSectionsForRole` роль без
-   * случая получила бы весь админский раздел, как раньше получала бы TEACHER.
+   * Психологу открыт только его кабинет — психологические тесты на опросах (PSYCHOLOGIST-002).
+   * Без явной ветки в `isRouteAllowedForRole`/`navSectionsForRole` роль без случая получила бы
+   * весь админский раздел, как раньше получала бы TEACHER.
    */
   it('психологу открыт только его кабинет', () => {
     expect(landingRouteForRole('PSYCHOLOGIST')).toBe('/psychologist/tests');
     expect(isRouteAllowedForRole('/psychologist/tests', 'PSYCHOLOGIST')).toBe(true);
-    expect(isRouteAllowedForRole('/tests/12/questions', 'PSYCHOLOGIST')).toBe(true);
+    expect(isRouteAllowedForRole(ROUTES.psychologistTest(12), 'PSYCHOLOGIST')).toBe(true);
+    // Конструктор тестов и школьные опросы психологу закрыты.
+    expect(isRouteAllowedForRole('/tests/12/questions', 'PSYCHOLOGIST')).toBe(false);
+    expect(isRouteAllowedForRole('/surveys/12', 'PSYCHOLOGIST')).toBe(false);
     expect(isRouteAllowedForRole('/dashboard', 'PSYCHOLOGIST')).toBe(false);
     expect(isRouteAllowedForRole('/ai-tests', 'PSYCHOLOGIST')).toBe(false);
     expect(isRouteAllowedForRole('/admin/employees', 'PSYCHOLOGIST')).toBe(false);

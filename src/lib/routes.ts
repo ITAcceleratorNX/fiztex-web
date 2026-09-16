@@ -56,8 +56,13 @@ export const ROUTES = {
   employees: '/admin/employees',
   /** Состояние физических ключей и журнал операций — read-only раздел Super Admin. */
   keys: '/admin/keys',
-  /** Кабинет психолога: единственный раздел роли (PSYCHOLOGIST-001 §2). */
+  /**
+   * Кабинет психолога — его психологические тесты (PSYCHOLOGIST-002). Под капотом это опросы
+   * с `origin=PSYCHOLOGICAL`: тот же раздел опросов, но свой адрес, чтобы у психолога не было
+   * пути в школьные `/surveys`.
+   */
   psychologistTests: '/psychologist/tests',
+  psychologistTest: (id: number | string) => `/psychologist/tests/${id}`,
 } as const;
 
 /**
@@ -166,11 +171,10 @@ const TEACHER_ROUTE_PREFIXES = [
 ];
 
 /**
- * Разделы, доступные психологу (PSYCHOLOGIST-001 §2). Ровно один экран плюс общий
- * конструктор вопросов `/tests/:testId/questions` — тот же, которым сегодня пользуются
- * «AI-тесты» и вступительные тесты, психолог входит в него со своей карточки теста.
+ * Разделы, доступные психологу: его психологические тесты (список и карточка). Конструктора
+ * тестов `/tests/` здесь больше нет — психологический тест живёт на опросах (PSYCHOLOGIST-002).
  */
-const PSYCHOLOGIST_ROUTE_PREFIXES = [ROUTES.psychologistTests, '/tests/'];
+const PSYCHOLOGIST_ROUTE_PREFIXES = [ROUTES.psychologistTests];
 
 /**
  * Безопасный разбор `state.from` при редиректе на вход: принимаем только

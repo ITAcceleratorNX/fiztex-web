@@ -1876,6 +1876,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/surveys/audience-classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["audienceClasses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/surveys/{id}": {
         parameters: {
             query?: never;
@@ -8352,6 +8368,8 @@ export interface components {
             /** @enum {string} */
             mode?: "NAMED" | "ANONYMOUS";
             /** @enum {string} */
+            origin?: "SCHOOL" | "PSYCHOLOGICAL";
+            /** @enum {string} */
             responseStatus?: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
             /** Format: date-time */
             startAt?: string;
@@ -10146,6 +10164,15 @@ export interface components {
             orderIndex?: number;
             text?: string;
         };
+        SurveyAudienceClassView: {
+            grade?: string;
+            /** Format: int64 */
+            id?: number;
+            letter?: string;
+            name?: string;
+            /** Format: int64 */
+            studentsCount?: number;
+        };
         SurveyListItemView: {
             /** Format: date-time */
             deadlineAt?: string;
@@ -10230,6 +10257,8 @@ export interface components {
             description?: string;
             /** @enum {string} */
             mode?: "NAMED" | "ANONYMOUS";
+            /** @enum {string} */
+            origin?: "SCHOOL" | "PSYCHOLOGICAL";
             questions?: components["schemas"]["SurveyQuestionForTakingView"][];
             /** @enum {string} */
             responseStatus?: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
@@ -10680,8 +10709,6 @@ export interface components {
             minPercent?: number;
             /** Format: double */
             minScore?: number;
-            /** @enum {string} */
-            origin?: "CURRICULUM" | "PSYCHOLOGICAL";
             /** Format: int32 */
             questionCount?: number;
             questions?: components["schemas"]["QuestionResponse"][];
@@ -14704,6 +14731,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SurveyView"];
+                };
+            };
+        };
+    };
+    audienceClasses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyAudienceClassView"][];
                 };
             };
         };

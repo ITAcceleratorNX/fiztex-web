@@ -11,13 +11,17 @@ import { SurveyCreateModal } from '@/pages/modals/SurveyCreateModal';
 import { ROUTES } from '@/lib/routes';
 import { ApiError } from '@/lib/api';
 import type { SurveyStatus } from '@/lib/surveyApi';
+import { SURVEY_VARIANT_COPY, type SurveyVariant } from '@/lib/surveyModel';
 
 /**
  * Список опросов (Опросы, Phase 2). Список один — без фильтра статуса, список школы
  * короткий, — а счётчики сверху и таблица снизу читают его целиком: фильтр статуса
  * сужает только видимые строки, сводка остаётся про весь список.
  */
-export function SurveysPage() {
+export function SurveysPage({ variant = 'school' }: { variant?: SurveyVariant }) {
+  const copy = SURVEY_VARIANT_COPY[variant];
+  // Психолог открывает тест своим адресом: школьные /surveys ему закрыты (routes.ts).
+  const cardRoute = (id: number) => (variant === 'psychology' ? ROUTES.psychologistTest(id) : ROUTES.survey(id));
   const navigate = useNavigate();
   const surveys = useSurveys();
   const [statusFilter, setStatusFilter] = useState<'ALL' | SurveyStatus>('ALL');
@@ -43,14 +47,12 @@ export function SurveysPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-[34px] font-extrabold leading-tight tracking-tight text-slate-900">
-            Опросы
+            {copy.listTitle}
           </h1>
-          <p className="mt-1 max-w-2xl text-slate-500">
-            Опросы для учеников и родителей: вопросы, аудитория, результаты и AI-анализ ответов.
-          </p>
+          <p className="mt-1 max-w-2xl text-slate-500">{copy.listDescription}</p>
         </div>
         <Button icon={<Plus className="h-4 w-4" />} onClick={() => setCreateOpen(true)}>
-          Создать опрос
+          {copy.createLabel}
         </Button>
       </div>
 
@@ -86,16 +88,12 @@ export function SurveysPage() {
         ) : rows.length === 0 ? (
           <EmptyBlock
             icon={<ListChecks className="h-7 w-7" />}
-            title={statusFilter === 'ALL' ? 'Пока нет опросов' : 'Ничего не найдено'}
-            description={
-              statusFilter === 'ALL'
-                ? 'Создайте опрос, добавьте вопросы и выберите аудиторию.'
-                : 'Измените фильтр по статусу.'
-            }
+            title={statusFilter === 'ALL' ? copy.emptyTitle : 'Ничего не найдено'}
+            description={statusFilter === 'ALL' ? copy.emptyDescription : 'Измените фильтр по статусу.'}
             action={
               statusFilter === 'ALL' ? (
                 <Button icon={<Plus className="h-4 w-4" />} onClick={() => setCreateOpen(true)}>
-                  Создать опрос
+                  {copy.createLabel}
                 </Button>
               ) : undefined
             }
@@ -115,7 +113,7 @@ export function SurveysPage() {
                 {rows.map((row) => (
                   <tr
                     key={row.id}
-                    onClick={() => navigate(ROUTES.survey(row.id as number))}
+                    onClick={() => navigate(cardRoute(row.id as number))}
                     className="cursor-pointer transition hover:bg-slate-50/70"
                   >
                     <td className="px-6 py-3.5 font-semibold text-slate-800">{row.title}</td>
@@ -139,7 +137,8 @@ export function SurveysPage() {
       <SurveyCreateModal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        onCreated={(id) => navigate(ROUTES.survey(id))}
+        onCreated={(id) => navigate(cardRoute(id))}
+        variant={variant}
       />
     </div>
   );

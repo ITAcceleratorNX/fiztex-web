@@ -1,6 +1,15 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import type { GradeClassGroup } from '@/lib/scheduleSettingsTypes';
 import { cx } from '@/lib/format';
+
+/**
+ * Параллель с классами — ровно то, что дерево читает. Структурный тип, а не
+ * `GradeClassGroup`: аудитории опроса классы приходят своим DTO (с числом учеников, но
+ * без полей учебного года), и подгонять его под `SchoolClassRef` пришлось бы заглушками.
+ */
+export interface PickerGradeGroup {
+  grade: string;
+  classes: { id: number; name: string }[];
+}
 
 /**
  * Shared «параллель → классы» tree (bindings + calendar CLASSES scope).
@@ -16,7 +25,7 @@ export function ClassGradePicker({
   disabled,
   className,
 }: {
-  gradeGroups: GradeClassGroup[];
+  gradeGroups: PickerGradeGroup[];
   selectedClassIds: Set<number>;
   onToggleClass: (classId: number) => void;
   onToggleGrade: (classIds: number[]) => void;

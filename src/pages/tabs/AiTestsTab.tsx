@@ -15,39 +15,12 @@ import { CopyTestModal } from '@/pages/modals/CopyTestModal';
 import { formatDate, pluralRu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 import type { Test, TestStatus } from '@/lib/types';
-import type { AiTestsVariant } from '@/pages/AiTestsPage';
 
-const COPY: Record<
-  AiTestsVariant,
-  { createLabel: string; emptyTitle: string; emptyDescription: string; deleteTitle: string; noun: [string, string, string] }
-> = {
-  ai: {
-    createLabel: 'Создать AI-тест',
-    emptyTitle: 'Пока нет AI-тестов',
-    emptyDescription: 'Создайте тест, загрузите материалы предмета и сгенерируйте вопросы через AI.',
-    deleteTitle: 'Удалить AI-тест?',
-    noun: ['AI-теста', 'AI-тестов', 'AI-тестов'],
-  },
-  psychology: {
-    createLabel: 'Создать психологический тест',
-    emptyTitle: 'Пока нет психологических тестов',
-    emptyDescription: 'Создайте тест вручную или сгенерируйте вопросы через AI.',
-    deleteTitle: 'Удалить психологический тест?',
-    noun: ['психологического теста', 'психологических тестов', 'психологических тестов'],
-  },
-};
-
-/**
- * «Скопировать во вступительные тесты» скрыта для `variant="psychology"` — не просто
- * недоступное действие, а бессмысленное: вступительные тесты — экзамен для поступающих,
- * психологический тест туда копировать некому и незачем (PSYCHOLOGIST-001 §4).
- */
-export function AiTestsTab({ variant = 'ai' }: { variant?: AiTestsVariant }) {
+export function AiTestsTab() {
   const { data, isLoading, isError, error, refetch, isSuccess } = useTests(true);
   const del = useDeleteTest();
   const toast = useToast();
   const navigate = useNavigate();
-  const copy = COPY[variant];
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | TestStatus>('ALL');
@@ -79,7 +52,7 @@ export function AiTestsTab({ variant = 'ai' }: { variant?: AiTestsVariant }) {
   async function handleDelete(test: Test) {
     try {
       await del.mutateAsync(test.id);
-      toast.success(variant === 'psychology' ? 'Психологический тест удалён' : 'AI-тест удалён');
+      toast.success('AI-тест удалён');
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : 'Не удалось удалить тест');
     } finally {
@@ -107,25 +80,29 @@ export function AiTestsTab({ variant = 'ai' }: { variant?: AiTestsVariant }) {
         </Select>
         <div className="ml-auto">
           <Button icon={<Plus className="h-4 w-4" />} onClick={openCreate}>
-            {copy.createLabel}
+            Создать AI-тест
           </Button>
         </div>
       </div>
 
       <div className="card overflow-hidden">
         {isLoading ? (
-          <LoadingBlock label="Загрузка…" />
+          <LoadingBlock label="Загрузка AI-тестов…" />
         ) : isError ? (
           <ErrorBlock message={error instanceof ApiError ? error.message : 'Ошибка загрузки'} onRetry={refetch} />
         ) : filtered.length === 0 ? (
           <EmptyBlock
             icon={<Sparkles className="h-7 w-7" />}
-            title={data && data.length > 0 ? 'Ничего не найдено' : copy.emptyTitle}
-            description={data && data.length > 0 ? 'Измените поиск или фильтр.' : copy.emptyDescription}
+            title={data && data.length > 0 ? 'Ничего не найдено' : 'Пока нет AI-тестов'}
+            description={
+              data && data.length > 0
+                ? 'Измените поиск или фильтр.'
+                : 'Создайте тест, загрузите материалы предмета и сгенерируйте вопросы через AI.'
+            }
             action={
               data && data.length === 0 ? (
                 <Button icon={<Plus className="h-4 w-4" />} onClick={openCreate}>
-                  {copy.createLabel}
+                  Создать AI-тест
                 </Button>
               ) : undefined
             }
@@ -205,15 +182,13 @@ export function AiTestsTab({ variant = 'ai' }: { variant?: AiTestsVariant }) {
                           >
                             <ListChecks className="h-4 w-4" />
                           </Link>
-                          {variant === 'ai' && (
-                            <button
-                              onClick={() => setCopyTarget(t)}
-                              title="Скопировать во вступительные тесты"
-                              className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                            >
-                              <Copy className="h-4 w-4" />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => setCopyTarget(t)}
+                            title="Скопировать во вступительные тесты"
+                            className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
                           <button
                             onClick={() => setDeleteTarget(t)}
                             title="Удалить тест"
@@ -233,35 +208,33 @@ export function AiTestsTab({ variant = 'ai' }: { variant?: AiTestsVariant }) {
 
         {isSuccess && filtered.length > 0 && (
           <div className="border-t border-slate-100 px-6 py-3 text-sm text-slate-400">
-            1–{filtered.length} из {filtered.length} {pluralRu(filtered.length, copy.noun)}
+            1–{filtered.length} из {filtered.length}{' '}
+            {pluralRu(filtered.length, ['AI-теста', 'AI-тестов', 'AI-тестов'])}
           </div>
         )}
       </div>
 
-      <TestFormModal open={formOpen} onClose={() => setFormOpen(false)} test={editing} aiTest variant={variant} />
+      <TestFormModal open={formOpen} onClose={() => setFormOpen(false)} test={editing} aiTest />
       <TestCardModal
         open={cardTestId != null}
         onClose={() => setCardTestId(null)}
         testId={cardTestId}
-        variant={variant}
       />
-      {variant === 'ai' && (
-        <CopyTestModal
-          open={copyTarget != null}
-          onClose={() => setCopyTarget(null)}
-          test={copyTarget}
-          onCopied={(copied) => {
-            setCopyTarget(null);
-            // Сразу в карточку копии: следующий шаг администратора — назначить её поступающим.
-            navigate(`/admissions/tests/${copied.id}`);
-          }}
-        />
-      )}
+      <CopyTestModal
+        open={copyTarget != null}
+        onClose={() => setCopyTarget(null)}
+        test={copyTarget}
+        onCopied={(copy) => {
+          setCopyTarget(null);
+          // Сразу в карточку копии: следующий шаг администратора — назначить её поступающим.
+          navigate(`/admissions/tests/${copy.id}`);
+        }}
+      />
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => deleteTarget && handleDelete(deleteTarget)}
-        title={copy.deleteTitle}
+        title="Удалить AI-тест?"
         confirmLabel="Удалить"
         danger
         loading={del.isPending}

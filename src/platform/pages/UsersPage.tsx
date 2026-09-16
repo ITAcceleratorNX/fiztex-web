@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Pencil, Plus, Search } from 'lucide-react';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
+import { EMPLOYEE_ROLES } from '@/lib/employeesModel';
 import { cx, formatDate, initials, pluralRu } from '@/lib/format';
 import { CreateUserMenu, type CreateUserMenuAction } from '../components/CreateUserMenu';
 import { useInvalidateUserStats, useUserStats } from '../hooks/useUserStats';
@@ -18,18 +19,35 @@ import { CreateStudentModal } from '../modals/CreateStudentModal';
 import { CreateTeacherModal } from '../modals/CreateTeacherModal';
 import { UserDetailModal } from '../modals/UserDetailModal';
 import { UserFormModal } from '../modals/UserFormModal';
-import { archiveUser, blockUser, listUsersPage, unblockUser } from '../services';
+import {
+  archiveUser,
+  blockUser,
+  listAccountsByRoles,
+  listUsersPage,
+  unblockUser,
+} from '../services';
 import type { AccountRole, AccountStats, AccountStatus, PlatformUser } from '../types';
 
 const PAGE_SIZE = 20;
 
-const ROLE_FILTERS: { value: AccountRole | 'ALL'; label: string }[] = [
+/**
+ * Псевдороль фильтра: клининг, техслужба, охрана и психолог одной кнопкой.
+ *
+ * Раньше здесь стояла «Охрана» — единственная служебная роль, которую панель знала до
+ * раздела «Сотрудники» (SERVICE-FE-004 §3). Пяти чипов на четыре службы в этой строке
+ * не будет: роль всё равно написана в строке таблицы, а ищут тут человека, а не службу.
+ */
+const EMPLOYEE_FILTER = 'EMPLOYEE';
+
+type RoleFilter = AccountRole | 'ALL' | typeof EMPLOYEE_FILTER;
+
+const ROLE_FILTERS: { value: RoleFilter; label: string }[] = [
   { value: 'ALL', label: 'Все' },
   { value: 'STUDENT', label: 'Ученики' },
   { value: 'PARENT', label: 'Родители' },
   { value: 'TEACHER', label: 'Учителя' },
   { value: 'ADMIN', label: 'Админы' },
-  { value: 'SECURITY', label: 'Охрана' },
+  { value: EMPLOYEE_FILTER, label: 'Сотрудники' },
 ];
 
 /** `countKey` — поле AccountStats, число показывается прямо в кнопке фильтра. */
@@ -133,7 +151,7 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
   const toast = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const role: AccountRole | 'ALL' = forcedRole ?? (searchParams.get('role') as AccountRole | null) ?? 'ALL';
+  const role: RoleFilter = forcedRole ?? (searchParams.get('role') as RoleFilter | null) ?? 'ALL';
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<AccountStatus>('ACTIVE');
   const [page, setPage] = useState(0);
@@ -152,7 +170,7 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
   const stats = role === 'ALL' ? rawStats : undefined;
 
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
-  const [createRole, setCreateRole] = useState<AccountRole | null>(null);
+  const [createRole, setCreateRole] = useState<AccountRole | 'EMPLOYEE' | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selected, setSelected] = useState<PlatformUser | null>(null);
@@ -162,6 +180,19 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
     setLoading(true);
     setError(null);
     try {
+      if (role === EMPLOYEE_FILTER) {
+        // `/admin/accounts` принимает одну роль за раз, поэтому служебные собираются
+        // несколькими запросами — и порядок со страницами здесь клиентские: у сервера
+        // общего порядка для разных выдач нет. Это дёшево по той же причине, что и в
+        // разделе «Сотрудники»: таких аккаунтов в школе десятки, а не тысячи.
+        const rows = await listAccountsByRoles(EMPLOYEE_ROLES, { query, status });
+        rows.sort((a, b) => a.fullName.localeCompare(b.fullName, 'ru'));
+        setUsers(rows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE));
+        setTotalElements(rows.length);
+        setTotalPages(Math.ceil(rows.length / PAGE_SIZE));
+        return;
+      }
+
       const result = await listUsersPage({ query, role, status, page, size: PAGE_SIZE });
       setUsers(result.users);
       setTotalElements(result.totalElements);
@@ -243,17 +274,14 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
     }
   }
 
-  function selectRole(next: AccountRole | 'ALL') {
+  function selectRole(next: RoleFilter) {
     if (next === 'ALL') {
       navigate('/admin/users');
       return;
     }
-    const route = ROLE_ROUTES[next];
-    if (route) {
-      navigate(route);
-    } else {
-      navigate(`/admin/users?role=${next}`);
-    }
+    // У служебных ролей своей страницы нет — они живут в общей таблице под псевдоролью.
+    const route = next === EMPLOYEE_FILTER ? undefined : ROLE_ROUTES[next];
+    navigate(route ?? `/admin/users?role=${next}`);
   }
 
   const rangeFrom = totalElements === 0 ? 0 : page * PAGE_SIZE + 1;
@@ -486,11 +514,11 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
         onClose={() => setCreateRole(null)}
         onSaved={handleCreated}
       />
-      {/* Охрана заводится и отсюда, и из раздела «Сотрудники» — одной и той же модалкой
-          с заданной ролью (SERVICE-FE-004 §3). */}
+      {/* Одна модалка на все служебные роли — та же, что в разделе «Сотрудники»
+          (SERVICE-FE-004 §3). Роль здесь не задана: её выбирают в самой форме, иначе
+          пункт меню пришлось бы заводить на каждую службу. */}
       <CreateEmployeeModal
-        open={createRole === 'SECURITY'}
-        role="SECURITY"
+        open={createRole === 'EMPLOYEE'}
         onClose={() => setCreateRole(null)}
         onSaved={handleCreated}
       />
