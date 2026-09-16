@@ -59,6 +59,12 @@ import {
   type KeyDashboardFilters,
   type KeyHistoryFilters,
 } from '@/lib/keysApi';
+import {
+  equipmentApi,
+  type EquipmentDashboardFilters,
+  type EquipmentHistoryFilters,
+} from '@/lib/equipmentApi';
+import type { Schema } from '@/lib/apiSchemas';
 import type {
   ApplicantRequest,
   GenerateTestRequest,
@@ -68,6 +74,15 @@ import type {
 } from '@/lib/types';
 
 export const keys = {
+  // Техника: всё пространство раздела под одним корнем — любая команда меняет и таблицу,
+  // и карточку, и журнал (история пишется на каждое действие), поэтому сбрасывается корень.
+  equipment: ['equipment'] as const,
+  equipmentDashboard: (filters: EquipmentDashboardFilters) =>
+    ['equipment', 'dashboard', filters] as const,
+  equipmentItems: (query: string) => ['equipment', 'items', query] as const,
+  equipmentUnit: (unitId: number) => ['equipment', 'unit', unitId] as const,
+  equipmentHistory: (filters: EquipmentHistoryFilters) => ['equipment', 'history', filters] as const,
+  equipmentRecipients: (query: string) => ['equipment', 'recipients', query] as const,
   physicalKeys: ['physical-keys'] as const,
   physicalKeyDashboard: (filters: KeyDashboardFilters) =>
     ['physical-keys', 'dashboard', filters] as const,
@@ -185,6 +200,138 @@ export const keys = {
   textbookBindings: (filters: BindingFilters | null) => ['textbooks', 'bindings', filters] as const,
   lessonTextbooks: (lessonId: number) => ['lessons', lessonId, 'textbooks'] as const,
 };
+
+// ---- Техника и инвентарь: раздел Super Admin (ТЗ «Техника и инвентарь») ----
+
+export function useEquipmentDashboard(filters: EquipmentDashboardFilters) {
+  return useQuery({
+    queryKey: keys.equipmentDashboard(filters),
+    queryFn: ({ signal }) => equipmentApi.dashboard(filters, signal),
+    // Поиск и фильтры не мигают пустой таблицей, но между «В наличии» и «Выдано»
+    // старые строки не переезжают: это разные состояния вещи, и показать их не на той
+    // вкладке — соврать про то, где она сейчас.
+    placeholderData: (previous, previousQuery) =>
+      (previousQuery?.queryKey[2] as EquipmentDashboardFilters | undefined)?.state === filters.state
+        ? previous
+        : undefined,
+  });
+}
+
+/** Справочник позиций: фильтр таблицы и выбор «добавить экземпляры в существующую». */
+export function useEquipmentItems(query = '') {
+  return useQuery({
+    queryKey: keys.equipmentItems(query),
+    queryFn: ({ signal }) => equipmentApi.items(query || undefined, signal),
+  });
+}
+
+/** Карточка экземпляра. Открывается по клику в строке, поэтому запрос идёт по требованию. */
+export function useEquipmentUnit(unitId: number | null) {
+  return useQuery({
+    queryKey: keys.equipmentUnit(unitId ?? 0),
+    queryFn: ({ signal }) => equipmentApi.unit(unitId!, signal),
+    enabled: unitId != null,
+  });
+}
+
+export function useEquipmentHistory(filters: EquipmentHistoryFilters) {
+  return useQuery({
+    queryKey: keys.equipmentHistory(filters),
+    queryFn: ({ signal }) => equipmentApi.history(filters, signal),
+    // При листании держим страницу до ответа; смена фильтра показывает своё
+    // loading-состояние, а не журнал от прошлого отбора.
+    placeholderData: (previous, previousQuery) => {
+      const before = previousQuery?.queryKey[2] as EquipmentHistoryFilters | undefined;
+      return before?.action === filters.action && before?.itemId === filters.itemId
+        ? previous
+        : undefined;
+    },
+  });
+}
+
+/** Получатели: активные сотрудники школы. Пустой поиск — «покажи первых», а не ошибка. */
+export function useEquipmentRecipients(query: string, enabled = true) {
+  return useQuery({
+    queryKey: keys.equipmentRecipients(query),
+    queryFn: ({ signal }) => equipmentApi.recipients(query || undefined, signal),
+    enabled,
+  });
+}
+
+/**
+ * Любая команда модуля сбрасывает раздел целиком.
+ *
+ * Точечная инвалидация здесь была бы ложной экономией: выдача меняет обе вкладки (строка
+ * уходит из «В наличии» и появляется в «Выдано»), карточку, счётчики и журнал — событие
+ * пишется на каждое действие. Раздел — это сотни строк, а не миллионы.
+ */
+function useEquipmentCommand<TArgs, TResult>(command: (args: TArgs) => Promise<TResult>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: command,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.equipment });
+    },
+  });
+}
+
+export function useCreateEquipmentItem() {
+  return useEquipmentCommand(equipmentApi.createItem);
+}
+
+export function useUpdateEquipmentItem() {
+  return useEquipmentCommand(
+    ({ itemId, body }: { itemId: number; body: Schema<'UpdateEquipmentItemRequest'> }) =>
+      equipmentApi.updateItem(itemId, body),
+  );
+}
+
+export function useAddEquipmentUnits() {
+  return useEquipmentCommand(
+    ({ itemId, body }: { itemId: number; body: Schema<'AddEquipmentUnitsRequest'> }) =>
+      equipmentApi.addUnits(itemId, body),
+  );
+}
+
+export function useUpdateEquipmentUnit() {
+  return useEquipmentCommand(
+    ({ unitId, body }: { unitId: number; body: Schema<'UpdateEquipmentUnitRequest'> }) =>
+      equipmentApi.updateUnit(unitId, body),
+  );
+}
+
+export function useWriteOffEquipmentUnit() {
+  return useEquipmentCommand(
+    ({ unitId, body }: { unitId: number; body: Schema<'WriteOffEquipmentRequest'> }) =>
+      equipmentApi.writeOff(unitId, body),
+  );
+}
+
+export function useIssueEquipment() {
+  return useEquipmentCommand(equipmentApi.issue);
+}
+
+export function useReturnEquipment() {
+  return useEquipmentCommand(equipmentApi.returnUnits);
+}
+
+export function useTransferEquipment() {
+  return useEquipmentCommand(equipmentApi.transfer);
+}
+
+export function useSetEquipmentProblem() {
+  return useEquipmentCommand(
+    ({ unitId, body }: { unitId: number; body: Schema<'SetEquipmentProblemRequest'> }) =>
+      equipmentApi.setProblem(unitId, body),
+  );
+}
+
+export function useResolveEquipmentProblem() {
+  return useEquipmentCommand(
+    ({ unitId, body }: { unitId: number; body: Schema<'ResolveEquipmentProblemRequest'> }) =>
+      equipmentApi.resolveProblem(unitId, body),
+  );
+}
 
 // ---- Physical keys: read-only Super Admin screen (KEYS-FE) ----
 
