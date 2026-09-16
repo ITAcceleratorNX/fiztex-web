@@ -24,6 +24,7 @@ import { TextbooksPage } from '@/pages/textbooks/TextbooksPage';
 import { ServiceRequestsPage } from '@/pages/service/ServiceRequestsPage';
 import { ServiceRequestCardPage } from '@/pages/service/ServiceRequestCardPage';
 import { KeysAdminPage } from '@/pages/keys/KeysAdminPage';
+import { EquipmentAdminPage } from '@/pages/equipment/EquipmentAdminPage';
 import { HomeworkCardPage } from '@/pages/homework/HomeworkCardPage';
 import { HomeworkQuestionsPage } from '@/pages/homework/HomeworkQuestionsPage';
 import { HomeworkFormPage } from '@/pages/homework/HomeworkFormPage';
@@ -130,6 +131,8 @@ export function App() {
             Роль проверяет `Protected` через `isRouteAllowedForRole`. */}
         <Route path={ROUTES.employees} element={<EmployeesPage />} />
         <Route path={ROUTES.keys} element={<KeysAdminPage />} />
+        {/* Техника и инвентарь — раздел Super Admin (ТЗ «Техника и инвентарь» §2). */}
+        <Route path={ROUTES.equipment} element={<EquipmentAdminPage />} />
         <Route path="/admin/classes" element={<ClassesPage />} />
         <Route path="/admin/classes/:classId" element={<ClassDetailPage />} />
         <Route path="/admin/academic-year" element={<AcademicYearPage />} />

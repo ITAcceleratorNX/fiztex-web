@@ -2884,6 +2884,214 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/equipment/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["equipmentDashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/equipment/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["equipmentHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/equipment/issue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["issueEquipment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/equipment/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["equipmentItems"];
+        put?: never;
+        post: operations["createEquipmentItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/equipment/items/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateEquipmentItem"];
+        trace?: never;
+    };
+    "/api/equipment/items/{itemId}/units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["addEquipmentUnits"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/equipment/recipients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["equipmentRecipients"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/equipment/return": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["returnEquipment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/equipment/transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["transferEquipment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/equipment/units/{unitId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["equipmentUnitCard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateEquipmentUnit"];
+        trace?: never;
+    };
+    "/api/equipment/units/{unitId}/problem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["setEquipmentProblem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/equipment/units/{unitId}/problem/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resolveEquipmentProblem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/equipment/units/{unitId}/write-off": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["writeOffEquipmentUnit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/final-grades": {
         parameters: {
             query?: never;
@@ -4852,6 +5060,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/equipment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["myEquipment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/keys": {
         parameters: {
             query?: never;
@@ -5577,6 +5801,9 @@ export interface components {
             code?: string;
             password?: string;
             phone?: string;
+        };
+        AddEquipmentUnitsRequest: {
+            units?: components["schemas"]["EquipmentUnitDraft"][];
         };
         AddKeyUnitsRequest: {
             /** Format: int32 */
@@ -6589,6 +6816,11 @@ export interface components {
             groupSetId: number;
             name?: string;
         };
+        CreateEquipmentItemRequest: {
+            name?: string;
+            note?: string;
+            units?: components["schemas"]["EquipmentUnitDraft"][];
+        };
         CreateFinalGradeRequest: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -6853,6 +7085,133 @@ export interface components {
             /** Format: int64 */
             studentId?: number;
             subgroupIds?: number[];
+        };
+        EquipmentActorView: {
+            /** Format: int64 */
+            accountId?: number;
+            fullName?: string;
+            /** @enum {string} */
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
+        };
+        EquipmentDashboardSummary: {
+            /** Format: int32 */
+            inStock?: number;
+            /** Format: int32 */
+            issued?: number;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            withProblem?: number;
+        };
+        EquipmentDashboardView: {
+            items?: components["schemas"]["EquipmentItemView"][];
+            summary?: components["schemas"]["EquipmentDashboardSummary"];
+        };
+        EquipmentEventView: {
+            /** @enum {string} */
+            action?: "UNIT_CREATED" | "UNIT_UPDATED" | "ITEM_RENAMED" | "ISSUED" | "RETURNED" | "TRANSFERRED" | "PROBLEM_SET" | "PROBLEM_CHANGED" | "PROBLEM_CLEARED" | "WRITTEN_OFF";
+            actor?: components["schemas"]["EquipmentActorView"];
+            comment?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            holderAfter?: components["schemas"]["EquipmentHolderView"];
+            holderBefore?: components["schemas"]["EquipmentHolderView"];
+            /** Format: int64 */
+            id?: number;
+            inventoryNumber?: string;
+            inventoryNumberBefore?: string;
+            /** Format: int64 */
+            itemId?: number;
+            itemName?: string;
+            itemNameBefore?: string;
+            /** Format: uuid */
+            operationId?: string;
+            /** @enum {string} */
+            problemAfter?: "DAMAGED" | "NOT_WORKING" | "LOST";
+            /** @enum {string} */
+            problemBefore?: "DAMAGED" | "NOT_WORKING" | "LOST";
+            serialNumber?: string;
+            serialNumberBefore?: string;
+            /** Format: int64 */
+            unitId?: number;
+        };
+        EquipmentHolderView: {
+            /** Format: int64 */
+            accountId?: number;
+            active?: boolean;
+            fullName?: string;
+            /** @enum {string} */
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
+        };
+        EquipmentItemOptionView: {
+            /** Format: int32 */
+            activeUnitCount?: number;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            note?: string;
+        };
+        EquipmentItemView: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            note?: string;
+            /** Format: int32 */
+            unitCount?: number;
+            units?: components["schemas"]["EquipmentUnitView"][];
+        };
+        EquipmentOperationView: {
+            /** Format: uuid */
+            operationId?: string;
+            units?: components["schemas"]["EquipmentUnitView"][];
+        };
+        EquipmentProblemView: {
+            /** Format: int64 */
+            id?: number;
+            note?: string;
+            /** Format: date-time */
+            setAt?: string;
+            setBy?: components["schemas"]["EquipmentActorView"];
+            /** @enum {string} */
+            type?: "DAMAGED" | "NOT_WORKING" | "LOST";
+        };
+        EquipmentRecipientView: {
+            /** Format: int64 */
+            accountId?: number;
+            fullName?: string;
+            /** @enum {string} */
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
+        };
+        EquipmentUnitCardView: {
+            history?: components["schemas"]["EquipmentEventView"][];
+            unit?: components["schemas"]["EquipmentUnitView"];
+        };
+        EquipmentUnitDraft: {
+            inventoryNumber?: string;
+            note?: string;
+            serialNumber?: string;
+        };
+        EquipmentUnitView: {
+            holder?: components["schemas"]["EquipmentHolderView"];
+            /** Format: int64 */
+            id?: number;
+            inventoryNumber?: string;
+            issuable?: boolean;
+            issueComment?: string;
+            /** Format: date-time */
+            issuedAt?: string;
+            issuedBy?: components["schemas"]["EquipmentActorView"];
+            /** Format: int64 */
+            itemId?: number;
+            itemName?: string;
+            note?: string;
+            problem?: components["schemas"]["EquipmentProblemView"];
+            serialNumber?: string;
+            /** @enum {string} */
+            state?: "IN_STOCK" | "ISSUED" | "WRITTEN_OFF";
+            transferable?: boolean;
+            /** Format: date-time */
+            writtenOffAt?: string;
         };
         FinalGradeHistoryView: {
             /** @enum {string} */
@@ -7430,6 +7789,12 @@ export interface components {
             /** @enum {string} */
             type?: "CLASSES" | "STUDENTS" | "STUDENTS_WITH_PARENTS" | "PARENTS" | "TEACHERS";
         };
+        IssueEquipmentRequest: {
+            comment?: string;
+            /** Format: int64 */
+            holderAccountId: number;
+            unitIds?: number[];
+        };
         IssueKeysRequest: {
             comment?: string;
             /** Format: int64 */
@@ -7993,6 +8358,19 @@ export interface components {
             studentProfileId?: number;
             subjectName?: string;
         };
+        MyEquipmentView: {
+            inventoryNumber?: string;
+            /** Format: date-time */
+            issuedAt?: string;
+            issuedBy?: components["schemas"]["EquipmentActorView"];
+            /** Format: int64 */
+            itemId?: number;
+            itemName?: string;
+            problem?: components["schemas"]["EquipmentProblemView"];
+            serialNumber?: string;
+            /** Format: int64 */
+            unitId?: number;
+        };
         MyFinalGradesView: {
             /** Format: int64 */
             academicYearId?: number;
@@ -8215,6 +8593,24 @@ export interface components {
         };
         PageClassScheduleView: {
             content?: components["schemas"]["ClassScheduleView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        PageEquipmentEventView: {
+            content?: components["schemas"]["EquipmentEventView"][];
             empty?: boolean;
             first?: boolean;
             last?: boolean;
@@ -9049,6 +9445,9 @@ export interface components {
             /** Format: int64 */
             classId: number;
         };
+        ResolveEquipmentProblemRequest: {
+            comment?: string;
+        };
         ResolveKeyProblemRequest: {
             comment?: string;
         };
@@ -9113,6 +9512,10 @@ export interface components {
             testTitle?: string;
             /** Format: double */
             totalScore?: number;
+        };
+        ReturnEquipmentRequest: {
+            comment?: string;
+            unitIds?: number[];
         };
         ReturnKeysRequest: {
             comment?: string;
@@ -9510,6 +9913,11 @@ export interface components {
         };
         SetAnswerScoresRequest: {
             items: components["schemas"]["AnswerScoreRequest"][];
+        };
+        SetEquipmentProblemRequest: {
+            comment?: string;
+            /** @enum {string} */
+            type: "DAMAGED" | "NOT_WORKING" | "LOST";
         };
         SetGroupStudentsRequest: {
             studentIds: number[];
@@ -10420,6 +10828,12 @@ export interface components {
             /** Format: double */
             percent?: number;
         };
+        TransferEquipmentRequest: {
+            comment?: string;
+            /** Format: int64 */
+            holderAccountId: number;
+            unitIds?: number[];
+        };
         TransferKeysRequest: {
             comment?: string;
             /** Format: int64 */
@@ -10478,6 +10892,15 @@ export interface components {
         };
         UpdateClassSubgroupRequest: {
             name?: string;
+        };
+        UpdateEquipmentItemRequest: {
+            name?: string;
+            note?: string;
+        };
+        UpdateEquipmentUnitRequest: {
+            inventoryNumber?: string;
+            note?: string;
+            serialNumber?: string;
         };
         UpdateGradePermissionRequest: {
             canManageGrades: boolean;
@@ -10669,6 +11092,10 @@ export interface components {
             source?: "DB" | "DEFAULT";
             /** Format: int64 */
             version?: number;
+        };
+        WriteOffEquipmentRequest: {
+            comment?: string;
+            confirmIssued?: boolean;
         };
         Year: {
             assignments?: components["schemas"]["Assignment"][];
@@ -16132,6 +16559,381 @@ export interface operations {
             };
         };
     };
+    equipmentDashboard: {
+        parameters: {
+            query?: {
+                state?: "IN_STOCK" | "ISSUED" | "WRITTEN_OFF";
+                hasProblem?: boolean;
+                itemId?: number;
+                holderId?: number;
+                holderInactive?: boolean;
+                query?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquipmentDashboardView"];
+                };
+            };
+        };
+    };
+    equipmentHistory: {
+        parameters: {
+            query: {
+                unitId?: number;
+                itemId?: number;
+                holderId?: number;
+                actorId?: number;
+                action?: "UNIT_CREATED" | "UNIT_UPDATED" | "ITEM_RENAMED" | "ISSUED" | "RETURNED" | "TRANSFERRED" | "PROBLEM_SET" | "PROBLEM_CHANGED" | "PROBLEM_CLEARED" | "WRITTEN_OFF";
+                from?: string;
+                to?: string;
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageEquipmentEventView"];
+                };
+            };
+        };
+    };
+    issueEquipment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueEquipmentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquipmentOperationView"];
+                };
+            };
+        };
+    };
+    equipmentItems: {
+        parameters: {
+            query?: {
+                query?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquipmentItemOptionView"][];
+                };
+            };
+        };
+    };
+    createEquipmentItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateEquipmentItemRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquipmentItemView"];
+                };
+            };
+        };
+    };
+    updateEquipmentItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                itemId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEquipmentItemRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquipmentItemView"];
+                };
+            };
+        };
+    };
+    addEquipmentUnits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                itemId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddEquipmentUnitsRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquipmentUnitView"][];
+                };
+            };
+        };
+    };
+    equipmentRecipients: {
+        parameters: {
+            query?: {
+                query?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquipmentRecipientView"][];
+                };
+            };
+        };
+    };
+    returnEquipment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReturnEquipmentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquipmentOperationView"];
+                };
+            };
+        };
+    };
+    transferEquipment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferEquipmentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquipmentOperationView"];
+                };
+            };
+        };
+    };
+    equipmentUnitCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquipmentUnitCardView"];
+                };
+            };
+        };
+    };
+    updateEquipmentUnit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEquipmentUnitRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquipmentUnitView"];
+                };
+            };
+        };
+    };
+    setEquipmentProblem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetEquipmentProblemRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquipmentUnitView"];
+                };
+            };
+        };
+    };
+    resolveEquipmentProblem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ResolveEquipmentProblemRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquipmentUnitView"];
+                };
+            };
+        };
+    };
+    writeOffEquipmentUnit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["WriteOffEquipmentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquipmentUnitView"];
+                };
+            };
+        };
+    };
     create_3: {
         parameters: {
             query?: never;
@@ -19756,6 +20558,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    myEquipment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyEquipmentView"][];
+                };
             };
         };
     };
