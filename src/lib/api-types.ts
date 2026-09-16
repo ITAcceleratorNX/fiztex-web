@@ -5108,6 +5108,182 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/monthly-feedback/children/{childId}/months": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["childFeedbackMonths"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/monthly-feedback/children/{childId}/months/{month}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["childFeedbackMonth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/monthly-feedback/children/{childId}/months/{month}/ai-analysis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["childFeedbackAnalysis"];
+        put?: never;
+        post: operations["requestChildFeedbackAnalysis"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/monthly-feedback/teacher/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["teacherFeedbackHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/monthly-feedback/teacher/history/filters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["teacherFeedbackHistoryFilters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/monthly-feedback/teacher/months": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["teacherFeedbackMonths"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/monthly-feedback/teacher/months/{month}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["teacherFeedbackMonth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/monthly-feedback/teacher/months/{month}/classes/{classId}/subjects/{subjectId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["teacherFeedbackSheet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/monthly-feedback/teacher/months/{month}/classes/{classId}/subjects/{subjectId}/publication": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["publishFeedbackSheet"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/monthly-feedback/teacher/months/{month}/classes/{classId}/subjects/{subjectId}/students/{studentProfileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["saveFeedbackEntry"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/monthly-feedback/teacher/months/{month}/closure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["closeFeedbackMonth"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/schedule/children": {
         parameters: {
             query?: never;
@@ -6435,6 +6611,41 @@ export interface components {
             /** Format: int32 */
             value: number;
         };
+        ChildFeedbackCoverageView: {
+            /** Format: int32 */
+            expectedSubjects?: number;
+            partial?: boolean;
+            pendingSubjectNames?: string[];
+            /** Format: int32 */
+            publishedSubjects?: number;
+        };
+        ChildFeedbackEntryView: {
+            className?: string;
+            /** Format: int64 */
+            entryId?: number;
+            /** Format: date-time */
+            publishedAt?: string;
+            teacherName?: string;
+            text?: string;
+        };
+        ChildFeedbackMonthRow: {
+            analysis?: components["schemas"]["FeedbackAiBriefView"];
+            /** @example 2026-09 */
+            month?: string;
+            /** Format: int32 */
+            publishedCount?: number;
+            /** Format: int32 */
+            subjectCount?: number;
+        };
+        ChildFeedbackMonthView: {
+            analysis?: components["schemas"]["FeedbackAiBriefView"];
+            /** Format: int64 */
+            childId?: number;
+            coverage?: components["schemas"]["ChildFeedbackCoverageView"];
+            /** @example 2026-09 */
+            month?: string;
+            subjects?: components["schemas"]["ChildSubjectFeedbackView"][];
+        };
         ChildHomeworkView: {
             /** @enum {string} */
             answerFormat?: "WRITTEN" | "TEST";
@@ -6476,6 +6687,12 @@ export interface components {
             /** Format: int64 */
             id?: number;
             photos?: components["schemas"]["SubmissionAttachmentView"][];
+        };
+        ChildSubjectFeedbackView: {
+            entries?: components["schemas"]["ChildFeedbackEntryView"][];
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
         };
         ChildWorkView: {
             /** Format: int32 */
@@ -7212,6 +7429,74 @@ export interface components {
             transferable?: boolean;
             /** Format: date-time */
             writtenOffAt?: string;
+        };
+        FeedbackAiAnalysisView: {
+            /** Format: int64 */
+            analysisId?: number;
+            basis?: components["schemas"]["FeedbackAiBasisView"];
+            canRequest?: boolean;
+            disclaimer?: string;
+            errorMessage?: string;
+            /** Format: date-time */
+            generatedAt?: string;
+            /** Format: int32 */
+            pollAfterMs?: number;
+            result?: components["schemas"]["FeedbackAiResultView"];
+            stale?: boolean;
+            /** @enum {string} */
+            status?: "NONE" | "PENDING" | "RUNNING" | "DONE" | "FAILED";
+        };
+        FeedbackAiBasisView: {
+            /** Format: int32 */
+            coveredSubjects?: number;
+            /** Format: int32 */
+            entryCount?: number;
+            /** Format: int32 */
+            expectedSubjects?: number;
+            partial?: boolean;
+        };
+        FeedbackAiBriefView: {
+            canRequest?: boolean;
+            /** Format: date-time */
+            generatedAt?: string;
+            stale?: boolean;
+            /** @enum {string} */
+            status?: "NONE" | "PENDING" | "RUNNING" | "DONE" | "FAILED";
+        };
+        FeedbackAiResultView: {
+            concerns?: string[];
+            recommendations?: string[];
+            strengths?: string[];
+            summary?: string;
+        };
+        FeedbackEntryView: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: date-time */
+            publishedAt?: string;
+            text?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int64 */
+            version?: number;
+        };
+        FeedbackNamedRef: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
+        FeedbackProgressView: {
+            /** Format: int32 */
+            filled?: number;
+            /** Format: int32 */
+            missing?: number;
+            /** Format: int32 */
+            total?: number;
+        };
+        FeedbackStudentRef: {
+            fullName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
         };
         FinalGradeHistoryView: {
             /** @enum {string} */
@@ -9095,6 +9380,24 @@ export interface components {
             /** Format: int32 */
             totalPages?: number;
         };
+        PageTeacherFeedbackHistoryRow: {
+            content?: components["schemas"]["TeacherFeedbackHistoryRow"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
         PageTeacherProfileView: {
             content?: components["schemas"]["TeacherProfileView"][];
             empty?: boolean;
@@ -9667,6 +9970,18 @@ export interface components {
             entries?: components["schemas"]["AttendanceEntryChange"][];
             /** Format: int64 */
             expectedVersion?: number;
+        };
+        SaveFeedbackEntryRequest: {
+            text?: string;
+            /**
+             * Format: int64
+             * @description Версия из последнего ответа; null — записи у клиента ещё нет
+             */
+            version?: number;
+        };
+        SaveFeedbackEntryResult: {
+            entry?: components["schemas"]["FeedbackEntryView"];
+            progress?: components["schemas"]["FeedbackProgressView"];
         };
         SaveHomeworkQuestionsRequest: {
             questions?: components["schemas"]["QuestionRequest"][];
@@ -10498,6 +10813,97 @@ export interface components {
             /** Format: int64 */
             version?: number;
             workingDays?: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
+        };
+        TeacherFeedbackHistoryFilters: {
+            classes?: components["schemas"]["FeedbackNamedRef"][];
+            months?: string[];
+            subjects?: components["schemas"]["FeedbackNamedRef"][];
+        };
+        TeacherFeedbackHistoryRow: {
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            /** Format: int64 */
+            entryId?: number;
+            /** @example 2026-09 */
+            month?: string;
+            /** Format: date-time */
+            publishedAt?: string;
+            student?: components["schemas"]["FeedbackStudentRef"];
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            text?: string;
+        };
+        TeacherFeedbackMonthRow: {
+            closed?: boolean;
+            /** @example 2026-09 */
+            month?: string;
+            /** Format: int32 */
+            sheetsPublished?: number;
+            /** Format: int32 */
+            sheetsTotal?: number;
+            /** @enum {string} */
+            state?: "NOT_STARTED" | "IN_PROGRESS" | "READY_TO_CLOSE" | "CLOSED";
+        };
+        TeacherFeedbackMonthView: {
+            canClose?: boolean;
+            closed?: boolean;
+            /** Format: date-time */
+            closedAt?: string;
+            editable?: boolean;
+            /** @example 2026-09 */
+            month?: string;
+            progress?: components["schemas"]["FeedbackProgressView"];
+            sheets?: components["schemas"]["TeacherFeedbackSheetRow"][];
+        };
+        TeacherFeedbackSheetRow: {
+            canPublish?: boolean;
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            /** Format: int32 */
+            filled?: number;
+            /** Format: date-time */
+            publishedAt?: string;
+            /** @enum {string} */
+            scope?: "CLASS" | "SUBGROUPS";
+            /** @enum {string} */
+            status?: "NOT_STARTED" | "DRAFT" | "PUBLISHED";
+            subgroupNames?: string[];
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            /** Format: int32 */
+            total?: number;
+        };
+        TeacherFeedbackSheetView: {
+            canPublish?: boolean;
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            editable?: boolean;
+            /** @example 2026-09 */
+            month?: string;
+            progress?: components["schemas"]["FeedbackProgressView"];
+            /** Format: date-time */
+            publishedAt?: string;
+            /** @enum {string} */
+            status?: "NOT_STARTED" | "DRAFT" | "PUBLISHED";
+            students?: components["schemas"]["TeacherFeedbackStudentRow"][];
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+        };
+        TeacherFeedbackStudentRow: {
+            entry?: components["schemas"]["FeedbackEntryView"];
+            filled?: boolean;
+            firstName?: string;
+            inRoster?: boolean;
+            lastName?: string;
+            middleName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
         };
         TeacherJournalEntryView: {
             attendance?: components["schemas"]["AttendanceMarkingView"];
@@ -20617,6 +21023,294 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MyProfileView"];
+                };
+            };
+        };
+    };
+    childFeedbackMonths: {
+        parameters: {
+            query?: {
+                academicYearId?: number;
+            };
+            header?: never;
+            path: {
+                childId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChildFeedbackMonthRow"][];
+                };
+            };
+        };
+    };
+    childFeedbackMonth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                childId: number;
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChildFeedbackMonthView"];
+                };
+            };
+        };
+    };
+    childFeedbackAnalysis: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                childId: number;
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackAiAnalysisView"];
+                };
+            };
+        };
+    };
+    requestChildFeedbackAnalysis: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                childId: number;
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackAiAnalysisView"];
+                };
+            };
+        };
+    };
+    teacherFeedbackHistory: {
+        parameters: {
+            query?: {
+                academicYearId?: number;
+                month?: string;
+                classId?: number;
+                subjectId?: number;
+                studentProfileId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageTeacherFeedbackHistoryRow"];
+                };
+            };
+        };
+    };
+    teacherFeedbackHistoryFilters: {
+        parameters: {
+            query?: {
+                academicYearId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherFeedbackHistoryFilters"];
+                };
+            };
+        };
+    };
+    teacherFeedbackMonths: {
+        parameters: {
+            query?: {
+                academicYearId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherFeedbackMonthRow"][];
+                };
+            };
+        };
+    };
+    teacherFeedbackMonth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherFeedbackMonthView"];
+                };
+            };
+        };
+    };
+    teacherFeedbackSheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                month: string;
+                classId: number;
+                subjectId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherFeedbackSheetView"];
+                };
+            };
+        };
+    };
+    publishFeedbackSheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                month: string;
+                classId: number;
+                subjectId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherFeedbackSheetView"];
+                };
+            };
+        };
+    };
+    saveFeedbackEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                month: string;
+                classId: number;
+                subjectId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveFeedbackEntryRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaveFeedbackEntryResult"];
+                };
+            };
+        };
+    };
+    closeFeedbackMonth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherFeedbackMonthView"];
                 };
             };
         };

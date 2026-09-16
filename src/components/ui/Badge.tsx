@@ -18,10 +18,13 @@ const tones: Record<Tone, { wrap: string; dot: string }> = {
 export function Badge({
   tone = 'gray',
   dot = false,
+  icon,
   children,
 }: {
   tone?: Tone;
   dot?: boolean;
+  /** Значок вместо точки — «Период открыт» с замком (Figma `period-open-badge` 2162:2088). */
+  icon?: ReactNode;
   children: ReactNode;
 }) {
   const t = tones[tone];
@@ -33,6 +36,7 @@ export function Badge({
       )}
     >
       {dot && <span className={cx('h-1.5 w-1.5 rounded-full', t.dot)} />}
+      {icon}
       {children}
     </span>
   );

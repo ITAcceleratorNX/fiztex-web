@@ -107,11 +107,14 @@ describe('маршрутизация по роли', () => {
       '/grades',
       '/homework',
       '/textbooks',
+      '/feedback',
       '/service',
     ]);
 
     const admin = navSectionsForRole('ADMIN').flatMap((s) => s.items.map((i) => i.to));
     expect(admin).not.toContain('/homework');
+    // Учительские адреса отзывов админу отвечают 403 (monthly-feedback-contract §1).
+    expect(admin).not.toContain('/feedback');
     expect(admin).not.toContain('/my-schedule');
     expect(admin).toContain('/dashboard');
   });

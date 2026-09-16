@@ -41,7 +41,14 @@ export function Select({
   // Кнопка вместо <select>, поэтому имя поля не приходит от <label for>: без этого
   // фильтр без видимой подписи остаётся безымянным для скринридера.
   'aria-label': ariaLabel,
-}: SelectHTMLAttributes<HTMLSelectElement>) {
+  placeholder = 'Выберите…',
+}: SelectHTMLAttributes<HTMLSelectElement> & {
+  /**
+   * Подпись пустого поля. Пункт-заглушка `<option value="">` для этого не годится там, где
+   * «ничего» выбрать нельзя: он попадает в список отмеченным пунктом.
+   */
+  placeholder?: string;
+}) {
   const autoId = useId();
   const listboxId = id ?? autoId;
   const rootRef = useRef<HTMLDivElement>(null);
@@ -117,7 +124,7 @@ export function Select({
         )}
       >
         <span className={cx('truncate', isEmpty && 'text-slate-400')}>
-          {selected?.label ?? 'Выберите…'}
+          {selected?.label ?? placeholder}
         </span>
         <ChevronDown
           className={cx('h-4 w-4 shrink-0 text-slate-400 transition', open && 'rotate-180')}

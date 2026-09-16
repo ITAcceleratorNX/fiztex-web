@@ -25,6 +25,7 @@ import {
   Wrench,
   Brain,
   Library,
+  MessageSquareHeart,
   type LucideIcon,
 } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
@@ -132,6 +133,9 @@ export const TEACHER_NAV_SECTIONS: NavSection[] = [
       // Учебники читают только `/api/teacher/*` — раздел целиком учительский: назначить
       // учебник можно лишь своему классу по своему предмету (LIBRARY-BE-001 §4).
       { to: ROUTES.textbooks, label: 'Учебники', icon: Library },
+      // Отзывы пишет только учитель по своим классам (`/api/monthly-feedback/teacher/*`):
+      // администратору эти адреса отвечают 403, поэтому в его меню пункта нет.
+      { to: ROUTES.feedback, label: 'Обратная связь', icon: MessageSquareHeart },
       // Заявки — не учебный раздел, но автор у них тот же (SERVICE-FE-001 §1), и читает
       // он свой `/api/service-requests/my`, а не `/api/admin/*`: учителю сюда можно.
       { to: ROUTES.serviceRequests, label: 'Сервисные заявки', icon: Briefcase },
