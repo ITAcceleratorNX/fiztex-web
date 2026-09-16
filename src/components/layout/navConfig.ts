@@ -8,6 +8,7 @@ import {
   Clock3,
   BookText,
   KeyRound,
+  Laptop,
   Upload,
   ClipboardList,
   FileCheck2,
@@ -167,6 +168,11 @@ export const PSYCHOLOGIST_NAV_SECTIONS: NavSection[] = [
  */
 const EMPLOYEES_NAV_ITEM: NavItem = { to: ROUTES.employees, label: 'Сотрудники', icon: Wrench };
 const KEYS_NAV_ITEM: NavItem = { to: ROUTES.keys, label: 'Ключи', icon: KeyRound };
+/**
+ * «Техника и инвентарь» стоит рядом с «Ключами», а не в учебном процессе: это учёт
+ * школьного имущества, и ведёт его тот же Super Admin.
+ */
+const EQUIPMENT_NAV_ITEM: NavItem = { to: ROUTES.equipment, label: 'Техника и инвентарь', icon: Laptop };
 
 export function navSectionsForRole(role: string | undefined): NavSection[] {
   if (role === 'TEACHER') return TEACHER_NAV_SECTIONS;
@@ -184,6 +190,7 @@ export function navSectionsForRole(role: string | undefined): NavSection[] {
                 : item,
             ),
             KEYS_NAV_ITEM,
+            EQUIPMENT_NAV_ITEM,
           ],
         }
       : section,

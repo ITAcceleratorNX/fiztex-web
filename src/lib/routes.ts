@@ -59,6 +59,11 @@ export const ROUTES = {
   /** Состояние физических ключей и журнал операций — read-only раздел Super Admin. */
   keys: '/admin/keys',
   /**
+   * Учёт школьной техники и инвентаря — раздел Super Admin. В отличие от ключей, здесь
+   * не только смотрят: технику ведёт тот же человек, который сидит в панели (ТЗ §2).
+   */
+  equipment: '/admin/equipment',
+  /**
    * Кабинет психолога — его психологические тесты (PSYCHOLOGIST-002). Под капотом это опросы
    * с `origin=PSYCHOLOGICAL`: тот же раздел опросов, но свой адрес, чтобы у психолога не было
    * пути в школьные `/surveys`.
@@ -76,7 +81,7 @@ export const ROUTES = {
  * администратору — здесь он спрятан потому, что §3 адресует его Super Admin, и это
  * решение продуктовое.
  */
-const SUPER_ADMIN_ROUTE_PREFIXES = [ROUTES.employees, ROUTES.keys];
+const SUPER_ADMIN_ROUTE_PREFIXES = [ROUTES.employees, ROUTES.keys, ROUTES.equipment];
 
 /** Куда возвращать после входа, если пользователь не шёл на конкретную страницу. */
 export const DEFAULT_AUTHENTICATED_ROUTE = ROUTES.dashboard;

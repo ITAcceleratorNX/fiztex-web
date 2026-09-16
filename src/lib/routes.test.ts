@@ -47,6 +47,17 @@ describe('маршрутизация по роли', () => {
     expect(isRouteAllowedForRole('/admin/users', 'ADMIN')).toBe(true);
   });
 
+  it('техника и инвентарь — только Super Admin', () => {
+    expect(isRouteAllowedForRole('/admin/equipment', 'SUPER_ADMIN')).toBe(true);
+    expect(isRouteAllowedForRole('/admin/equipment', 'ADMIN')).toBe(false);
+    expect(isRouteAllowedForRole('/admin/equipment', 'TEACHER')).toBe(false);
+
+    const items = navSectionsForRole('SUPER_ADMIN').flatMap((section) => section.items);
+    expect(items.map((item) => item.to)).toContain('/admin/equipment');
+    expect(navSectionsForRole('ADMIN').flatMap((section) => section.items).map((item) => item.to))
+      .not.toContain('/admin/equipment');
+  });
+
   it('физические ключи — только Super Admin', () => {
     expect(isRouteAllowedForRole('/admin/keys', 'SUPER_ADMIN')).toBe(true);
     expect(isRouteAllowedForRole('/admin/keys', 'ADMIN')).toBe(false);
