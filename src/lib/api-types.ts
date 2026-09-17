@@ -788,6 +788,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/events/snapshots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["publishSnapshots"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/group-sets": {
         parameters: {
             query?: never;
@@ -1071,6 +1087,38 @@ export interface paths {
         put?: never;
         post: operations["assignSubstitute"];
         delete: operations["revokeSubstitute"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/notifications/diagnostics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["account"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/notifications/diagnostics/test-push": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sendTestPush"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -5284,6 +5332,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications/devices/{installationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["register"];
+        post?: never;
+        delete: operations["unregister"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/schedule/children": {
         parameters: {
             query?: never;
@@ -7430,6 +7494,9 @@ export interface components {
             /** Format: date-time */
             writtenOffAt?: string;
         };
+        EventSnapshotRunView: {
+            sources?: components["schemas"]["SnapshotSourceResult"][];
+        };
         FeedbackAiAnalysisView: {
             /** Format: int64 */
             analysisId?: number;
@@ -8759,6 +8826,34 @@ export interface components {
             canSubmit?: boolean;
             lastDecision?: components["schemas"]["TeacherAvailabilityProposalView"];
         };
+        NotificationAccountDiagnosticsView: {
+            /** Format: int64 */
+            accountId?: number;
+            deliveryMode?: string;
+            devices?: components["schemas"]["PushDeviceDiagnosticsView"][];
+            notifications?: components["schemas"]["NotificationDiagnosticsItemView"][];
+        };
+        NotificationDiagnosticsItemView: {
+            body?: string;
+            channel?: string;
+            /** Format: int64 */
+            childProfileId?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            deliveries?: components["schemas"]["PushDeliveryDiagnosticsView"][];
+            /** Format: date-time */
+            expiresAt?: string;
+            /** Format: uuid */
+            id?: string;
+            kind?: string;
+            role?: string;
+            route?: string;
+            routeParams?: {
+                [key: string]: Record<string, never>;
+            };
+            textError?: string;
+            title?: string;
+        };
         NotificationItem: {
             applicantName?: string;
             /** Format: int64 */
@@ -9628,6 +9723,38 @@ export interface components {
             /** Format: int64 */
             expectedRevision: number;
         };
+        PushDeliveryDiagnosticsView: {
+            /** Format: date-time */
+            acceptedAt?: string;
+            /** Format: int32 */
+            attempts?: number;
+            errorCode?: string;
+            errorMessage?: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            /** Format: uuid */
+            installationId?: string;
+            /** Format: date-time */
+            nextAttemptAt?: string;
+            status?: string;
+            ticketId?: string;
+        };
+        PushDeviceDiagnosticsView: {
+            active?: boolean;
+            appVersion?: string;
+            /** Format: date-time */
+            deactivatedAt?: string;
+            deactivatedReason?: string;
+            /** Format: uuid */
+            installationId?: string;
+            locale?: string;
+            platform?: string;
+            /** Format: date-time */
+            refreshedAt?: string;
+            /** Format: date-time */
+            registeredAt?: string;
+            tokenTail?: string;
+        };
         PutAvailabilityIntervalRequest: {
             /** @enum {string} */
             dayOfWeek: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
@@ -9727,6 +9854,13 @@ export interface components {
         };
         RegenerateQuestionRequest: {
             teacherPrompt?: string;
+        };
+        RegisterDeviceRequest: {
+            appVersion?: string;
+            locale?: string;
+            /** @enum {string} */
+            platform: "IOS" | "ANDROID";
+            token: string;
         };
         RejectAvailabilityProposalRequest: {
             comment?: string;
@@ -9947,6 +10081,9 @@ export interface components {
             /** Format: int32 */
             total?: number;
         };
+        RunEventSnapshotRequest: {
+            sources?: string[];
+        };
         RunLessonGenerationRequest: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -10143,6 +10280,16 @@ export interface components {
             /** Format: int32 */
             pageTo?: number;
         };
+        SendTestPushRequest: {
+            /** Format: int64 */
+            accountId: number;
+            body?: string;
+            params?: {
+                [key: string]: Record<string, never>;
+            };
+            route?: string;
+            title?: string;
+        };
         ServiceRequestAuditEntryView: {
             event?: components["schemas"]["ServiceRequestHistoryEntryView"];
             /** Format: int64 */
@@ -10289,6 +10436,11 @@ export interface components {
             applicantId?: number;
             applicantName?: string;
             reason?: string;
+        };
+        SnapshotSourceResult: {
+            /** Format: int32 */
+            published?: number;
+            source?: string;
         };
         SortObject: {
             empty?: boolean;
@@ -11066,6 +11218,18 @@ export interface components {
             status?: "ASSIGNED" | "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "AWAITING_REVIEW" | "REVIEWED" | "OPEN_FOR_VIEWING";
             /** Format: int32 */
             versionNumber?: number;
+        };
+        TestPushDeviceResultView: {
+            errorCode?: string;
+            errorMessage?: string;
+            /** Format: uuid */
+            installationId?: string;
+            platform?: string;
+            ticketId?: string;
+        };
+        TestPushResultView: {
+            devices?: components["schemas"]["TestPushDeviceResultView"][];
+            notificationId?: string;
         };
         TestRequest: {
             allowBackNavigation?: boolean;
@@ -13046,6 +13210,30 @@ export interface operations {
             };
         };
     };
+    publishSnapshots: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RunEventSnapshotRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventSnapshotRunView"];
+                };
+            };
+        };
+    };
     list_15: {
         parameters: {
             query: {
@@ -13610,6 +13798,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonView"];
+                };
+            };
+        };
+    };
+    account: {
+        parameters: {
+            query: {
+                accountId: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationAccountDiagnosticsView"];
+                };
+            };
+        };
+    };
+    sendTestPush: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendTestPushRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestPushResultView"];
                 };
             };
         };
@@ -21312,6 +21547,50 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["TeacherFeedbackMonthView"];
                 };
+            };
+        };
+    };
+    register: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                installationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterDeviceRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    unregister: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                installationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
