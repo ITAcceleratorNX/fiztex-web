@@ -25,6 +25,7 @@ import {
 } from '@/lib/attendanceApi';
 import { attendanceQrApi, type AttendanceQrSession } from '@/lib/attendanceQrApi';
 import { gradesApi, type GradeType } from '@/lib/gradesApi';
+import { profileApi } from '@/lib/profileApi';
 import {
   finalGradesApi,
   gradebookApi,
@@ -33,7 +34,6 @@ import {
 import { announcementsApi, type AnnouncementFilters, type AnnouncementRequest } from '@/lib/announcementsApi';
 import {
   SECTION_STATUSES,
-  meApi,
   serviceRequestsApi,
   type CreateServiceRequestInput,
   type ServiceSection,
@@ -147,10 +147,11 @@ export const keys = {
     ['homework', homeworkId, 'submissions', studentProfileId, 'ai-recommendation'] as const,
   lessonMaterials: (lessonId: number, childId?: number) =>
     ['lessons', lessonId, 'materials', childId ?? 'self'] as const,
+  /** Свой профиль: один ключ на экран профиля и на `accountId` в карточке заявки. */
+  myProfile: ['me', 'profile'] as const,
   // Одно пространство на весь раздел: создание, отмена и возврат меняют оба списка
   // сразу — заявка уходит из «Моих» в «Историю», — и сбрасывать их порознь значило бы
   // однажды забыть половину.
-  myProfile: ['me', 'profile'] as const,
   serviceRequests: (section: ServiceSection) => ['service-requests', 'list', section] as const,
   serviceRequest: (id: number) => ['service-requests', id] as const,
   serviceRequestHistory: (id: number) => ['service-requests', id, 'history'] as const,
@@ -216,6 +217,19 @@ export const keys = {
 };
 
 // ---- Техника и инвентарь: раздел Super Admin (ТЗ «Техника и инвентарь») ----
+
+/**
+ * Свой профиль. Живёт до конца сессии: ни имя, ни роль, ни состав классов за время
+ * работы не меняются, а спрашивают его и экран профиля, и карточка заявки — ей нужен
+ * только `accountId`, чтобы понять, автор ли смотрящий.
+ */
+export function useMyProfile() {
+  return useQuery({
+    queryKey: keys.myProfile,
+    queryFn: ({ signal }) => profileApi.me(signal),
+    staleTime: Infinity,
+  });
+}
 
 export function useEquipmentDashboard(filters: EquipmentDashboardFilters) {
   return useQuery({
@@ -1419,16 +1433,11 @@ export function usePublicAnnouncement(id: number | null) {
 // ─── Сервисные заявки: сценарий автора (ТЗ SERVICE-FE-001) ────────────────────
 
 /**
- * Свой `accountId`. Живёт долго: за сессию он не меняется, а спрашивают его все три
- * экрана раздела.
+ * Свой `accountId` — из того же профиля, что рисует экран «Мой профиль»: запрос один
+ * и кэш один, иначе два места спрашивали бы `/me/profile` с разной свежестью.
  */
 export function useMyAccountId(): number | undefined {
-  const { data } = useQuery({
-    queryKey: keys.myProfile,
-    queryFn: ({ signal }) => meApi.profile(signal),
-    staleTime: Infinity,
-  });
-  return data?.accountId;
+  return useMyProfile().data?.accountId;
 }
 
 const SERVICE_PAGE_SIZE = 50;

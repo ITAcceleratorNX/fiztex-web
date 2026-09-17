@@ -176,4 +176,10 @@ describe('маршрутизация по роли', () => {
     const psychologist = navSectionsForRole('PSYCHOLOGIST').flatMap((s) => s.items.map((i) => i.to));
     expect(psychologist).toEqual(['/psychologist/tests']);
   });
+
+  it('профиль открыт любой роли: он не читает ни одного административного адреса', () => {
+    for (const role of ['SUPER_ADMIN', 'ADMIN', 'TEACHER', 'PSYCHOLOGIST', undefined]) {
+      expect(isRouteAllowedForRole(ROUTES.profile, role)).toBe(true);
+    }
+  });
 });

@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronsLeft, ChevronsRight, LogOut } from 'lucide-react';
 import { Logo, PhysTechMark } from './Logo';
 import { useAuth } from '@/context/AuthContext';
 import { cx, initials } from '@/lib/format';
 import { navSectionsForRole, type NavItem, type NavSection } from './navConfig';
+import { ROUTES } from '@/lib/routes';
+import { ROLE_LABELS } from '@/platform/labels';
+import type { AccountRole } from '@/platform/types';
 
 /**
  * Ключ свёрнутого состояния. Оно переживает перезагрузку намеренно: свернув панель ради
@@ -187,6 +190,7 @@ export function Sidebar() {
           collapsed={collapsed}
           onToggle={toggle}
           fullName={admin?.fullName}
+          role={admin?.role as AccountRole | undefined}
           onLogout={logout}
         />
       </aside>
@@ -286,12 +290,14 @@ function SidebarFooter({
   collapsed,
   onToggle,
   fullName,
+  role,
   onLogout,
 }: {
   wide: boolean;
   collapsed: boolean;
   onToggle: () => void;
   fullName?: string;
+  role?: AccountRole;
   onLogout: () => void;
 }) {
   const Icon = collapsed ? ChevronsRight : ChevronsLeft;
@@ -313,21 +319,32 @@ function SidebarFooter({
       </div>
 
       {wide ? (
-        <div className="flex items-center gap-2.5 rounded-2xl bg-white/10 px-4 py-3">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-xs font-bold text-white">
-            {fullName ? initials(fullName) : 'A'}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-13 font-semibold text-white">
-              {fullName ?? 'Администратор'}
-            </p>
-            <p className="truncate text-11 text-white/60">Администратор</p>
-          </div>
+        <div className="flex items-center gap-2.5 rounded-2xl bg-white/10 px-2.5 py-2">
+          {/* Карточка человека и есть вход в профиль: отдельного пункта меню у него
+              нет — профиль не раздел школы, а «кто я», и место у него там же, где имя. */}
+          <Link
+            to={ROUTES.profile}
+            className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-1.5 py-1 transition hover:bg-white/10"
+          >
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-xs font-bold text-white">
+              {fullName ? initials(fullName) : 'A'}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-13 font-semibold text-white">
+                {fullName ?? 'Мой профиль'}
+              </span>
+              {/* Роль читается из сессии, а не подписана «Администратор» на всех:
+                  под этим именем в панель входят и учитель, и психолог. */}
+              <span className="block truncate text-11 text-white/60">
+                {role ? ROLE_LABELS[role] ?? role : 'Мой профиль'}
+              </span>
+            </span>
+          </Link>
           <button
             type="button"
             onClick={onLogout}
             title="Выйти"
-            className="rounded-lg p-1.5 text-white/50 transition hover:bg-white/10 hover:text-white"
+            className="shrink-0 rounded-lg p-1.5 text-white/50 transition hover:bg-white/10 hover:text-white"
           >
             <LogOut className="size-4" />
           </button>
@@ -336,12 +353,13 @@ function SidebarFooter({
         /* В макете у рельса нарисован только аватар, но выход убирать нельзя: другого
          * места у него нет, а до наведения панель о нём не расскажет. */
         <div className="flex flex-col items-center gap-2">
-          <span
-            title={fullName ?? 'Администратор'}
-            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white"
+          <Link
+            to={ROUTES.profile}
+            title={fullName ? `${fullName} — мой профиль` : 'Мой профиль'}
+            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white transition hover:bg-white/30"
           >
             {fullName ? initials(fullName) : 'A'}
-          </span>
+          </Link>
           <button
             type="button"
             onClick={onLogout}

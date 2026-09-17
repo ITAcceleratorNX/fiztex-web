@@ -71,19 +71,6 @@ export interface CreateServiceRequestInput {
  * `PUT`/`PATCH`/`DELETE` нет и на бэкенде: содержание заявки после создания неизменяемо
  * (§10), а «удаление» — это отмена, оставляющая запись в базе.
  */
-/**
- * Свой профиль — нужен ровно ради `accountId`: по нему экран решает, автор ли смотрящий,
- * и показывать ли ему «Удалить» и «Вернуть в работу» (§7).
- *
- * В сессии панели этого поля нет: `Admin` из localStorage хранит токен, имя и роль, но не
- * идентификатор аккаунта. Спрашивать его у бэкенда честнее, чем разбирать JWT на клиенте.
- */
-export const meApi = {
-  profile(signal?: AbortSignal): Promise<Schema<'MyProfileView'>> {
-    return request<Schema<'MyProfileView'>>('/me/profile', { signal });
-  },
-};
-
 export const serviceRequestsApi = {
   /**
    * Свои заявки (BE-002 §5.2).
