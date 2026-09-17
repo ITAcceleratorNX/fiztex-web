@@ -624,7 +624,7 @@ Figma не встретились — либо из неотсемплирова
 
 Без сопоставления в Figma (искать при следующем проходе): `Avatar`,
 `ConfirmDialog`, `CopyCode`, `DateRangeInput`, `DraftQuestionBadge`,
-`DraftReviewBanner`, `Modal`, `SearchInput`, `StatCard`, `StateBlock`,
+`DraftReviewBanner`, `Markdown`, `Modal`, `SearchInput`, `StatCard`, `StateBlock`,
 `Switch`, `Tabs`, `TimeInput`, `Toggle`.
 
 `Switch` и `Toggle` — два отдельных файла с похожей ролью; вероятно дубль
@@ -636,6 +636,19 @@ Figma не встретились — либо из неотсемплирова
 |---|---|
 | `Component 1` (инстанс 220×1080 на всех экранах) | `Sidebar` |
 | — | `AppLayout`, `AppHeader`, `Logo` |
+
+### Ответы модели
+
+Отчёты AI приходят разметкой (`SurveyAiAnalysisView.resultMarkdown`) и выводятся через
+`ui/Markdown` — не `<pre>` и **никогда** не `dangerouslySetInnerHTML`: на вход модели шли
+ответы учеников, и единственная надёжная защита от «разметки» из чужого ответа — не иметь
+пути, по которому строка становится html. Разбор — `lib/markdown.ts`, свой, на четыре
+конструкции промпта (заголовок, абзац, список с одним уровнем вложенности, жирный);
+библиотека притащила бы ссылки, таблицы и html ради них.
+
+Первый заголовок отчёта модель делает названием опроса, которое уже стоит над вкладками, —
+`skipLeadingHeading` снимает повтор, а шапку карточки (когда собран, какой охват) рисует
+сам экран: из разметки этого не взять.
 
 ### Формулы
 
