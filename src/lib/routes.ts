@@ -70,6 +70,13 @@ export const ROUTES = {
    */
   psychologistTests: '/psychologist/tests',
   psychologistTest: (id: number | string) => `/psychologist/tests/${id}`,
+  /**
+   * Свой профиль — единственный экран панели, доступный любой вошедшей роли:
+   * он читает `/api/me/profile`, путь без идентификатора, и чужой профиль отсюда
+   * не открыть в принципе. Поэтому он не попадает ни в один ролевой список
+   * разделов, а разрешается отдельной веткой в `isRouteAllowedForRole`.
+   */
+  profile: '/profile',
 } as const;
 
 /**
@@ -137,6 +144,9 @@ export function loginRedirectTarget(from: unknown, role: string | undefined): st
  * здесь — только маршрутизация.
  */
 export function isRouteAllowedForRole(path: string, role: string | undefined): boolean {
+  // Профиль общий: он не читает ни одного административного адреса, и роли,
+  // которым панель показывает три раздела, тоже должны знать, под кем вошли.
+  if (path.startsWith(ROUTES.profile)) return true;
   if (SUPER_ADMIN_ROUTE_PREFIXES.some((prefix) => path.startsWith(prefix))) {
     return role === 'SUPER_ADMIN';
   }
