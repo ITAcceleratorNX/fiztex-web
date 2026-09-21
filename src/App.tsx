@@ -37,6 +37,7 @@ import { MySchedulePage } from '@/pages/schedule/MySchedulePage';
 import { CurrentLessonPage } from '@/pages/schedule/CurrentLessonPage';
 import { HomeworkGroupsPage } from '@/pages/homework/HomeworkGroupsPage';
 import { DashboardPage } from '@/pages/DashboardPage';
+import { ProfilePage } from '@/pages/ProfilePage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import {
   UsersPage,
@@ -233,6 +234,10 @@ export function App() {
         {/* Журнал школы и незакрытые уроки (ATTENDANCE-001 §23). Отметку ставят на уроке —
             этот раздел только читает и ведёт туда. */}
         <Route path={ROUTES.attendance} element={<AttendanceAdminPage />} />
+        {/* Профиль — общий для всех ролей: `/api/me/profile` без идентификатора,
+            чужой профиль отсюда не открыть. Поэтому он и не попадает ни в один
+            ролевой список разделов (`isRouteAllowedForRole` разрешает его отдельно). */}
+        <Route path={ROUTES.profile} element={<ProfilePage />} />
         <Route path="/ai-tests" element={<AiTestsPage />} />
         {/* Кабинет психолога (PSYCHOLOGIST-002) — страницы опросов под своей вывеской:
             психологический тест это опрос психолога, и бэкенд сам отдаёт психологу только
