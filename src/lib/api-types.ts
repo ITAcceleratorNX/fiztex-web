@@ -4884,6 +4884,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/ai-notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["latestLessonAiNotes"];
+        put?: never;
+        post: operations["startLessonAiNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/ai-notes/{noteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getLessonAiNote"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/materials": {
         parameters: {
             query?: never;
@@ -8321,6 +8353,22 @@ export interface components {
             submissionStatus?: "NOT_SUBMITTED" | "SUBMITTED" | "RETURNED" | "DONE";
             title?: string;
         };
+        LessonAiNoteView: {
+            /** Format: date-time */
+            createdAt?: string;
+            errorMessage?: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            /** Format: int64 */
+            id?: number;
+            /** @enum {string} */
+            kind?: "SUMMARY" | "PLAN";
+            /** @enum {string} */
+            status?: "PENDING" | "RUNNING" | "DONE" | "FAILED";
+            teacherPrompt?: string;
+            text?: string;
+            warningMessage?: string;
+        };
         LessonCommentView: {
             body?: string;
             /** Format: date-time */
@@ -10492,6 +10540,13 @@ export interface components {
             /** Format: int32 */
             questionCount?: number;
             teacherPrompt?: string;
+        };
+        StartLessonAiNoteRequest: {
+            /** @enum {string} */
+            kind: "SUMMARY" | "PLAN";
+            materialIds?: number[];
+            teacherPrompt?: string;
+            useTextbook?: boolean;
         };
         StudentActivateRequest: {
             code?: string;
@@ -22730,6 +22785,77 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GenerationJobResponse"];
+                };
+            };
+        };
+    };
+    latestLessonAiNotes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonAiNoteView"][];
+                };
+            };
+        };
+    };
+    startLessonAiNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartLessonAiNoteRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonAiNoteView"];
+                };
+            };
+        };
+    };
+    getLessonAiNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+                noteId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonAiNoteView"];
                 };
             };
         };

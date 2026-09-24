@@ -21,6 +21,7 @@ import { useToast } from '@/context/ToastContext';
 import { ApiError } from '@/lib/api';
 import { lessonMaterialsApi, type LessonMaterial } from '@/lib/homeworkAiApi';
 import { formatWeekdayDayMonth } from '@/lib/format';
+import { LessonAiNotesCard } from './LessonAiNotesCard';
 
 /**
  * Материалы урока — модуль карточки урока (ТЗ HOMEWORK-BE-006, LESSON-MAT-001).
@@ -153,7 +154,7 @@ export function LessonMaterialsPage() {
             title="Материалов пока нет"
             description={
               canManage
-                ? 'Приложите конспект, презентацию или ссылку. По этим материалам можно будет сгенерировать домашнее задание.'
+                ? 'Приложите конспект, презентацию или ссылку. По этим материалам можно сгенерировать шпаргалку к уроку и домашнее задание.'
                 : 'Материалы к уроку прикладывает учитель.'
             }
           />
@@ -207,6 +208,19 @@ export function LessonMaterialsPage() {
             </Button>
           </form>
         </div>
+      )}
+
+      {canManage && !materialsQuery.isPending && (
+        <LessonAiNotesCard
+          lessonId={id}
+          topic={lesson?.topic}
+          subtitle={
+            lesson
+              ? [lesson.subjectName, lesson.className, lesson.topic].filter(Boolean).join(' · ')
+              : undefined
+          }
+          materials={materials}
+        />
       )}
 
       <ConfirmDialog

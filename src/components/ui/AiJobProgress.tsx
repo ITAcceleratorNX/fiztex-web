@@ -5,6 +5,13 @@ import { cx } from '@/lib/format';
 import type { HomeworkAiJob } from '@/lib/homeworkAiApi';
 
 /**
+ * Что компоненту нужно от задачи. Уже, чем `HomeworkAiJob`: так же рисуется и AI-шпаргалка
+ * урока, у которой фаз нет — ей достаётся общее «Начинаю…» и тот же вид ошибки.
+ */
+export type AiJobProgressState = Pick<HomeworkAiJob, 'status' | 'errorMessage' | 'warningMessage'> &
+  Partial<Pick<HomeworkAiJob, 'phase' | 'progressDone' | 'progressTotal'>> & { kind?: string };
+
+/**
  * Состояние задачи AI-генерации словами.
  *
  * <p>Неподвижный индикатор — главная причина, по которой пользователь решает, что
@@ -23,7 +30,7 @@ export function AiJobProgress({
   fallbackAction,
   className,
 }: {
-  job: HomeworkAiJob | undefined;
+  job: AiJobProgressState | undefined;
   /** Что предложить, когда модель не справилась. Обычно «Написать самому». */
   fallbackAction?: ReactNode;
   className?: string;
@@ -79,7 +86,7 @@ export function AiJobProgress({
  * Фаза словами. Счётчик добавляется только там, где шагов правда несколько: «1 из 1» —
  * шум, и бэкенд в таком случае его не присылает.
  */
-function phaseLabel(job: HomeworkAiJob): string {
+function phaseLabel(job: AiJobProgressState): string {
   // «Составляю» подходит конспекту и тесту, но звучит странно рядом с ответами ученика.
   // Вид задачи приходит с тем же job, поэтому не нужен второй проп и два почти одинаковых
   // компонента прогресса.

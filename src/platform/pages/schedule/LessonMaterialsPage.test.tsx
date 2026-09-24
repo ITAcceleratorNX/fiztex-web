@@ -1,10 +1,13 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LessonMaterialsPage } from './LessonMaterialsPage';
 
 const useLesson = vi.fn();
 const useLessonMaterials = vi.fn();
+const useLessonAiNotes = vi.fn();
+const useLessonTextbooks = vi.fn();
+const startNote = vi.fn();
 
 vi.mock('@/context/ToastContext', () => ({
   useToast: () => ({ push: vi.fn(), success: vi.fn(), error: vi.fn(), info: vi.fn() }),
@@ -24,6 +27,9 @@ vi.mock('@/hooks/queries', () => ({
   useAddLessonMaterialLink: () => idleMutation(),
   useSetLessonMaterialVisibility: () => idleMutation(),
   useDeleteLessonMaterial: () => idleMutation(),
+  useLessonAiNotes: (...args: unknown[]) => useLessonAiNotes(...args),
+  useLessonTextbooks: (...args: unknown[]) => useLessonTextbooks(...args),
+  useStartLessonAiNote: () => ({ mutateAsync: startNote, isPending: false }),
 }));
 
 function lesson(capabilities: string[]) {
@@ -65,6 +71,9 @@ describe('LessonMaterialsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useLessonMaterials.mockReturnValue({ data: [], isPending: false, isError: false });
+    useLessonAiNotes.mockReturnValue({ data: [], isPending: false, isError: false });
+    useLessonTextbooks.mockReturnValue({ data: {} });
+    startNote.mockResolvedValue({});
   });
 
   /**
@@ -127,5 +136,94 @@ describe('LessonMaterialsPage', () => {
     renderPage();
 
     expect(screen.getByText(/Не удалось загрузить материалы/)).toBeInTheDocument();
+  });
+
+  describe('AI-шпаргалка', () => {
+    const teacher = () =>
+      useLesson.mockReturnValue({ data: lesson(['VIEW_CARD', 'EDIT_TEACHING_PART']) });
+
+    it('ученику и родителю блока нет', () => {
+      useLesson.mockReturnValue({ data: lesson(['VIEW_CARD']) });
+      renderPage();
+
+      expect(screen.queryByText('AI-шпаргалка к уроку')).not.toBeInTheDocument();
+    });
+
+    /** Ссылку модель не читает — в источниках её нет вовсе, а не «выбрана и пропущена». */
+    it('отправляет выбранные файлы без ссылок и снятых галочек', () => {
+      teacher();
+      useLessonMaterials.mockReturnValue({
+        data: [
+          material({ id: 10, fileName: 'параграф.pdf' }),
+          material({ id: 11, fileName: 'фото.jpg', kind: 'PHOTO' }),
+          material({ id: 12, kind: 'LINK', fileName: undefined, url: 'https://example.org' }),
+        ],
+        isPending: false,
+        isError: false,
+      });
+      renderPage();
+
+      fireEvent.click(screen.getByRole('checkbox', { name: 'фото.jpg' }));
+      fireEvent.change(screen.getByPlaceholderText(/второй закон Ньютона/), {
+        target: { value: 'Плотность' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /Сгенерировать конспект/ }));
+
+      expect(startNote).toHaveBeenCalledWith({
+        kind: 'SUMMARY',
+        materialIds: [10],
+        useTextbook: false,
+        teacherPrompt: 'Плотность',
+      });
+    });
+
+    it('учебник без страниц не выбирается и говорит почему', () => {
+      teacher();
+      useLessonTextbooks.mockReturnValue({
+        data: { selected: { title: 'Физика 7', format: 'PDF', pageFrom: undefined } },
+      });
+      renderPage();
+
+      expect(screen.getByRole('checkbox', { name: /Учебник: Физика 7/ })).toBeDisabled();
+      expect(screen.getByText(/укажите страницы в карточке урока/)).toBeInTheDocument();
+    });
+
+    it('без материалов и темы генерировать не из чего', () => {
+      teacher();
+      renderPage();
+
+      expect(screen.getByRole('button', { name: /Сгенерировать конспект/ })).toBeDisabled();
+    });
+
+    it('готовый план показывается во вкладке «План урока», конспект — в своей', () => {
+      useLesson.mockReturnValue({
+        data: { ...lesson(['VIEW_CARD', 'EDIT_TEACHING_PART']), topic: 'Плотность вещества' },
+      });
+      useLessonAiNotes.mockReturnValue({
+        data: [
+          { id: 1, kind: 'SUMMARY', status: 'DONE', text: '## Главное\nПро плотность' },
+          { id: 2, kind: 'PLAN', status: 'RUNNING' },
+        ],
+        isPending: false,
+        isError: false,
+      });
+      renderPage();
+
+      expect(screen.getByText('Про плотность')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Сгенерировать заново/ })).toBeEnabled();
+
+      // Полноэкранное чтение: тот же текст крупно, Esc закрывает.
+      fireEvent.click(screen.getByRole('button', { name: /На весь экран/ }));
+      const reader = screen.getByRole('dialog', { name: 'Конспект' });
+      expect(reader).toHaveTextContent('Про плотность');
+      expect(reader).toHaveTextContent('Физика · 7А · Плотность вещества');
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('tab', { name: 'План урока' }));
+      expect(screen.queryByText('Про плотность')).not.toBeInTheDocument();
+      // Пока идёт генерация, второй раз её не запустить.
+      expect(screen.getByRole('button', { name: /Сгенерировать план/ })).toBeDisabled();
+    });
   });
 });

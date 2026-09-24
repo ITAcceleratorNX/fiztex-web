@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import { cx } from '@/lib/format';
 import { parseMarkdown } from '@/lib/markdown';
+import { MathText } from '@/components/ui/MathText';
 import type { MarkdownBlock, MarkdownListItem, MarkdownSpan } from '@/lib/markdown';
 
 /**
@@ -20,6 +21,8 @@ export function Markdown({
   source,
   className,
   skipLeadingHeading = false,
+  math = false,
+  size = 'normal',
 }: {
   source: string | null | undefined;
   className?: string;
@@ -29,6 +32,17 @@ export function Markdown({
    * читать его незачем.
    */
   skipLeadingHeading?: boolean;
+  /**
+   * Рисовать формулы `$…$` через `MathText`. Включается там, где текст — учебный материал
+   * (шпаргалка урока), а не отчёт по ответам: там доллар бывает просто долларом.
+   */
+  math?: boolean;
+  /**
+   * `large` — для чтения с экрана урока и с проектора: крупнее кегль и шире колонка.
+   * Проп, а не `className`: `cx` не сливает классы, и `text-15` поверх `text-13` победил бы
+   * по порядку в CSS, а не по порядку в строке.
+   */
+  size?: 'normal' | 'large';
 }) {
   let blocks = parseMarkdown(source);
   if (skipLeadingHeading && blocks[0]?.type === 'heading' && blocks[0].level === 1) {
@@ -37,15 +51,32 @@ export function Markdown({
   if (!blocks.length) return null;
 
   return (
-    <div className={cx('max-w-[70ch] space-y-3 text-13 leading-relaxed text-slate-700', className)}>
+    <div
+      className={cx(
+        size === 'large'
+          ? 'max-w-[80ch] space-y-4 text-lg leading-relaxed text-slate-700'
+          : 'max-w-[70ch] space-y-3 text-13 leading-relaxed text-slate-700',
+        className,
+      )}
+    >
       {blocks.map((block, index) => (
-        <Block key={index} block={block} first={index === 0} />
+        <Block key={index} block={block} first={index === 0} math={math} large={size === 'large'} />
       ))}
     </div>
   );
 }
 
-function Block({ block, first }: { block: MarkdownBlock; first: boolean }) {
+function Block({
+  block,
+  first,
+  math,
+  large,
+}: {
+  block: MarkdownBlock;
+  first: boolean;
+  math: boolean;
+  large: boolean;
+}) {
   if (block.type === 'heading') {
     // Уровни ниже второго встречаются редко и разделами не являются — они ведут
     // себя как подпись к следующему абзацу, поэтому и весят меньше.
@@ -54,12 +85,12 @@ function Block({ block, first }: { block: MarkdownBlock; first: boolean }) {
       <p
         className={cx(
           isSection
-            ? 'text-15 font-bold text-ink'
-            : 'text-13 font-semibold uppercase tracking-wide text-muted',
+            ? cx(large ? 'text-2xl' : 'text-15', 'font-bold text-ink')
+            : cx(large ? 'text-15' : 'text-13', 'font-semibold uppercase tracking-wide text-muted'),
           !first && (isSection ? 'pt-3' : 'pt-1.5'),
         )}
       >
-        <Spans spans={block.spans} />
+        <Spans spans={block.spans} math={math} />
       </p>
     );
   }
@@ -67,7 +98,7 @@ function Block({ block, first }: { block: MarkdownBlock; first: boolean }) {
   if (block.type === 'paragraph') {
     return (
       <p>
-        <Spans spans={block.spans} />
+        <Spans spans={block.spans} math={math} />
       </p>
     );
   }
@@ -75,7 +106,7 @@ function Block({ block, first }: { block: MarkdownBlock; first: boolean }) {
   return (
     <ul className="space-y-2">
       {block.items.map((item, index) => (
-        <Item key={index} item={item} ordinal={block.ordered ? index + 1 : null} />
+        <Item key={index} item={item} ordinal={block.ordered ? index + 1 : null} math={math} />
       ))}
     </ul>
   );
@@ -85,7 +116,15 @@ function Block({ block, first }: { block: MarkdownBlock; first: boolean }) {
  * Пункт списка. Номер — кружок, маркер — точка: нумерованным списком модель
  * отвечает там, где порядок есть (рекомендации по приоритету), и его видно.
  */
-function Item({ item, ordinal }: { item: MarkdownListItem; ordinal: number | null }) {
+function Item({
+  item,
+  ordinal,
+  math,
+}: {
+  item: MarkdownListItem;
+  ordinal: number | null;
+  math: boolean;
+}) {
   return (
     <li className="flex gap-2.5">
       {ordinal != null ? (
@@ -97,7 +136,7 @@ function Item({ item, ordinal }: { item: MarkdownListItem; ordinal: number | nul
       )}
       <div className="min-w-0 space-y-1.5">
         <p>
-          <Spans spans={item.spans} />
+          <Spans spans={item.spans} math={math} />
         </p>
         {item.children.length > 0 && (
           <ul className="space-y-1.5">
@@ -105,7 +144,7 @@ function Item({ item, ordinal }: { item: MarkdownListItem; ordinal: number | nul
               <li key={index} className="flex gap-2.5">
                 <span aria-hidden className="mt-[0.7em] h-px w-2 shrink-0 bg-slate-300" />
                 <p className="min-w-0 text-slate-600">
-                  <Spans spans={child.spans} />
+                  <Spans spans={child.spans} math={math} />
                 </p>
               </li>
             ))}
@@ -116,14 +155,17 @@ function Item({ item, ordinal }: { item: MarkdownListItem; ordinal: number | nul
   );
 }
 
-function Spans({ spans }: { spans: MarkdownSpan[] }) {
+function Spans({ spans, math }: { spans: MarkdownSpan[]; math: boolean }) {
   return (
     <>
-      {spans.map((span, index) => (
-        <Fragment key={index}>
-          {span.bold ? <strong className="font-semibold text-ink">{span.text}</strong> : span.text}
-        </Fragment>
-      ))}
+      {spans.map((span, index) => {
+        const text = math ? <MathText text={span.text} /> : span.text;
+        return (
+          <Fragment key={index}>
+            {span.bold ? <strong className="font-semibold text-ink">{text}</strong> : text}
+          </Fragment>
+        );
+      })}
     </>
   );
 }

@@ -72,6 +72,12 @@ import {
   type EquipmentHistoryFilters,
 } from '@/lib/equipmentApi';
 import type { Schema } from '@/lib/apiSchemas';
+import {
+  isNoteActive,
+  lessonAiNotesApi,
+  type LessonAiNote,
+  type StartLessonAiNoteRequest,
+} from '@/lib/lessonAiNotesApi';
 import type {
   ApplicantRequest,
   GenerateTestRequest,
@@ -154,6 +160,7 @@ export const keys = {
     ['homework', homeworkId, 'submissions', studentProfileId, 'ai-recommendation'] as const,
   lessonMaterials: (lessonId: number, childId?: number) =>
     ['lessons', lessonId, 'materials', childId ?? 'self'] as const,
+  lessonAiNotes: (lessonId: number) => ['lessons', lessonId, 'ai-notes'] as const,
   /** Свой профиль: один ключ на экран профиля и на `accountId` в карточке заявки. */
   myProfile: ['me', 'profile'] as const,
   // Одно пространство на весь раздел: создание, отмена и возврат меняют оба списка
@@ -1668,6 +1675,33 @@ function useLessonMaterialCommand<TVars>(
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['lessons', lessonId, 'materials'] });
       void qc.invalidateQueries({ queryKey: keys.lesson(lessonId) });
+    },
+  });
+}
+
+/**
+ * AI-шпаргалка урока: последняя генерация каждого вида. Опрос идёт, только пока одна из
+ * них в работе, — разбор скана длится минутами, а готовый текст перечитывать незачем.
+ */
+export function useLessonAiNotes(lessonId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: keys.lessonAiNotes(lessonId ?? 0),
+    queryFn: ({ signal }) => lessonAiNotesApi.latest(lessonId as number, signal),
+    enabled: lessonId != null && enabled,
+    refetchInterval: (query) => (query.state.data?.some(isNoteActive) ? 3000 : false),
+  });
+}
+
+export function useStartLessonAiNote(lessonId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: StartLessonAiNoteRequest) => lessonAiNotesApi.start(lessonId, input),
+    // Ответ — строка своего вида целиком; кладём её на место прежней, опрос подхватит дальше.
+    onSuccess: (note) => {
+      qc.setQueryData<LessonAiNote[]>(keys.lessonAiNotes(lessonId), (rows = []) => [
+        ...rows.filter((row) => row.kind !== note.kind),
+        note,
+      ]);
     },
   });
 }
