@@ -79,6 +79,10 @@ describe('Посещаемость за месяц', () => {
     // Выходной — пусто; будущий урок (после 24-го) — тоже пусто, долгом он не считается.
     expect(cellOf('Бекмуратов А.Т.', '05').textContent).toBe('');
     expect(cellOf('Бекмуратов А.Т.', '25').textContent).toBe('');
+
+    const tableViewport = screen.getByRole('table').parentElement;
+    expect(tableViewport).toHaveClass('overflow-x-auto', 'overflow-y-clip');
+    expect(tableViewport).not.toHaveClass('max-h-journal-viewport', 'overflow-auto');
   });
 
   it('чужая пара в адресе не выбирается — вместо чужого журнала приглашение', () => {
