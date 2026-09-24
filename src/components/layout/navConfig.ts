@@ -130,6 +130,9 @@ export const TEACHER_NAV_SECTIONS: NavSection[] = [
       { to: ROUTES.myAvailability, label: 'Моё рабочее время', icon: Clock },
       { to: ROUTES.journal, label: 'Журнал оценок', icon: BookOpen },
       { to: ROUTES.homework, label: 'Домашние задания', icon: BookOpenCheck },
+      // Свой раздел, а не пункт админского `/attendance`: учитель показывает классу код и
+      // смотрит журнал по своим урокам — всё на ролевых адресах (ATTENDANCE-TEACHER-001).
+      { to: ROUTES.myAttendance, label: 'Посещаемость (QR)', icon: QrCode },
       // Учебники читают только `/api/teacher/*` — раздел целиком учительский: назначить
       // учебник можно лишь своему классу по своему предмету (LIBRARY-BE-001 §4).
       { to: ROUTES.textbooks, label: 'Учебники', icon: Library },

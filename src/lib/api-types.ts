@@ -2804,6 +2804,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attendance/teacher-journal/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["journalOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/admin/activate": {
         parameters: {
             query?: never;
@@ -6566,15 +6582,21 @@ export interface components {
         };
         AttendanceSummaryLessonView: {
             attendance?: components["schemas"]["AttendanceMarkingView"];
+            /** @example 14:30:00 */
+            endTime?: string;
             /** Format: date */
             lessonDate?: string;
             /** Format: int64 */
             lessonId?: number;
+            /** @enum {string} */
+            lessonStatus?: "ACTIVE" | "CANCELLED" | "SUPERSEDED";
+            published?: boolean;
             /** @example 14:30:00 */
             startTime?: string;
             subjectName?: string;
         };
         AttendanceSummaryView: {
+            academicYear?: components["schemas"]["AttendanceSummaryYearView"];
             /** Format: int32 */
             attendedCount?: number;
             /** Format: int32 */
@@ -6588,6 +6610,15 @@ export interface components {
             month?: string;
             /** Format: int64 */
             studentProfileId?: number;
+        };
+        AttendanceSummaryYearView: {
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
         };
         AutoSplitRequest: {
             firstName?: string;
@@ -11063,7 +11094,11 @@ export interface components {
             studentProfileId?: number;
         };
         TeacherJournalLessonView: {
+            /** Format: int64 */
+            classId?: number;
             className?: string;
+            /** @example 14:30:00 */
+            endTime?: string;
             entries?: components["schemas"]["TeacherJournalEntryView"][];
             /** Format: date */
             lessonDate?: string;
@@ -11075,10 +11110,26 @@ export interface components {
             startTime?: string;
             /** @enum {string} */
             state?: "NOT_FILLED" | "DRAFT" | "PUBLISHED" | "ANNULLED";
+            /** @enum {string} */
+            status?: "ACTIVE" | "CANCELLED" | "SUPERSEDED";
+            /** Format: int64 */
+            subgroupId?: number;
             subgroupName?: string;
             subjectName?: string;
             /** Format: int32 */
             totalCount?: number;
+        };
+        TeacherJournalOptionsView: {
+            academicYear?: components["schemas"]["TeacherJournalYearView"];
+            scopes?: components["schemas"]["TeacherJournalScopeView"][];
+        };
+        TeacherJournalScopeView: {
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            /** Format: int64 */
+            subgroupId?: number;
+            subgroupName?: string;
         };
         TeacherJournalStudentView: {
             /** Format: int32 */
@@ -11098,6 +11149,15 @@ export interface components {
             /** @example 2025-03 */
             month?: string;
             students?: components["schemas"]["TeacherJournalStudentView"][];
+        };
+        TeacherJournalYearView: {
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
         };
         TeacherPart: {
             assignments?: components["schemas"]["TeachingAssignment"][];
@@ -16996,6 +17056,7 @@ export interface operations {
             query?: {
                 month?: string;
                 classId?: number;
+                subgroupId?: number;
             };
             header?: never;
             path?: never;
@@ -17010,6 +17071,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeacherJournalView"];
+                };
+            };
+        };
+    };
+    journalOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherJournalOptionsView"];
                 };
             };
         };

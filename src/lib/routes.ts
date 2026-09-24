@@ -48,6 +48,14 @@ export const ROUTES = {
   journal: '/grades',
   /** Посещаемость по школе — журнал месяца и незакрытые уроки (ATTENDANCE-001 §23). */
   attendance: '/attendance',
+  /**
+   * Раздел учителя «Посещаемость (QR)» (ATTENDANCE-TEACHER-001): уроки сегодня с кнопкой
+   * «Показать QR», код урока и журнал месяца. Отдельно от `/attendance` — тот журнал школы
+   * читает `/api/admin/*`, а учителю туда нельзя.
+   */
+  myAttendance: '/my-attendance',
+  myAttendanceQr: (lessonId: number | string) => `/my-attendance/lessons/${lessonId}/qr`,
+  myAttendanceMonth: '/my-attendance/month',
   /** Опросы: список и карточка (вопросы, аудитория, результаты, AI-анализ). */
   surveys: '/surveys',
   survey: (id: number | string) => `/surveys/${id}`,
@@ -172,12 +180,16 @@ export function isRouteAllowedForRole(path: string, role: string | undefined): b
  * Своё рабочее время (`/my-availability`) и сервисные заявки (`/service`) — из той же
  * породы: оба читают ролевые эндпоинты вне `/api/admin/*`, и оба уже стоят в меню учителя.
  *
+ * «Посещаемость (QR)» (`/my-attendance`) читает только ролевые адреса: свои уроки дня
+ * (`/api/schedule/me/today`), код урока и журнал учителя (`/api/attendance/teacher-journal`).
+ *
  * «Текущий урок» (`/current-lesson`) — тоже ролевой: `GET /api/lessons/current` бэкенд
  * открывает ученику, учителю и родителю, а администратору отвечает 403 — «своего» урока
  * у него нет.
  */
 const TEACHER_ROUTE_PREFIXES = [
   ROUTES.homework,
+  ROUTES.myAttendance,
   ROUTES.textbooks,
   ROUTES.feedback,
   ROUTES.mySchedule,

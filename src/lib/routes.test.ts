@@ -23,6 +23,12 @@ describe('маршрутизация по роли', () => {
     // Конкретный урок — ролевой экран: карточка, посещаемость и ДЗ урока учителю нужны,
     // а вот конструктор расписания и его настройки остаются админскими.
     expect(isRouteAllowedForRole('/lesson-schedule/lessons/12', 'TEACHER')).toBe(true);
+    // Раздел «Посещаемость (QR)» учителя целиком: список, код урока, журнал месяца.
+    expect(isRouteAllowedForRole('/my-attendance', 'TEACHER')).toBe(true);
+    expect(isRouteAllowedForRole('/my-attendance/lessons/12/qr', 'TEACHER')).toBe(true);
+    expect(isRouteAllowedForRole('/my-attendance/month?scope=3&month=2026-09', 'TEACHER')).toBe(true);
+    // Журнал школы — админский, читает `/api/admin/*`.
+    expect(isRouteAllowedForRole('/attendance', 'TEACHER')).toBe(false);
     expect(isRouteAllowedForRole('/lesson-schedule/lessons/12/homework', 'TEACHER')).toBe(true);
     expect(isRouteAllowedForRole('/lesson-schedule/lessons/12/attendance', 'TEACHER')).toBe(true);
     expect(isRouteAllowedForRole('/lesson-schedule', 'TEACHER')).toBe(false);
@@ -106,6 +112,9 @@ describe('маршрутизация по роли', () => {
       '/my-availability',
       '/grades',
       '/homework',
+      // «Посещаемость (QR)» — свои уроки дня и журнал месяца на ролевых адресах
+      // (ATTENDANCE-TEACHER-001); админский журнал школы `/attendance` учителю закрыт.
+      '/my-attendance',
       '/textbooks',
       '/feedback',
       '/service',
@@ -113,6 +122,7 @@ describe('маршрутизация по роли', () => {
 
     const admin = navSectionsForRole('ADMIN').flatMap((s) => s.items.map((i) => i.to));
     expect(admin).not.toContain('/homework');
+    expect(admin).not.toContain('/my-attendance');
     // Учительские адреса отзывов админу отвечают 403 (monthly-feedback-contract §1).
     expect(admin).not.toContain('/feedback');
     expect(admin).not.toContain('/my-schedule');

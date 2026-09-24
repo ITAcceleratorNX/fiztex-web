@@ -14,6 +14,22 @@ export type AttendanceSheetState = NonNullable<AttendanceSheet['state']>;
 
 type AttendanceHistoryPage = Schema<'PageAttendanceHistoryView'>;
 
+export type TeacherJournal = Schema<'TeacherJournalView'>;
+export type TeacherJournalLesson = Schema<'TeacherJournalLessonView'>;
+export type TeacherJournalStudent = Schema<'TeacherJournalStudentView'>;
+export type TeacherJournalOptions = Schema<'TeacherJournalOptionsView'>;
+export type TeacherJournalScope = Schema<'TeacherJournalScopeView'>;
+export type TeacherJournalYear = Schema<'TeacherJournalYearView'>;
+
+/** Что журнал учителя принимает на вход: месяц и пара «класс + подгруппа». */
+export interface TeacherJournalQuery {
+  /** Месяц вида `2026-09`. */
+  month: string;
+  classId: number;
+  /** Без подгруппы — все уроки класса, и классные, и подгрупповые. */
+  subgroupId?: number | null;
+}
+
 /** Коды отказов, на которые у экрана есть свой ответ (attendance-read-contract §6). */
 export const ATTENDANCE_ERRORS = {
   versionConflict: 'ATTENDANCE_VERSION_CONFLICT',
@@ -91,6 +107,32 @@ export const attendanceApi = {
       { signal },
     );
   },
+
+  /**
+   * Журнал учителя за месяц: уроки с опубликованными отметками и итоги по всему составу
+   * (ATTENDANCE-TEACHER-001). Отменённые уроки приходят со `status: CANCELLED` и без
+   * отметок — таблице нужно отличать отмену от дня без урока.
+   */
+  teacherJournal(query: TeacherJournalQuery, signal?: AbortSignal): Promise<TeacherJournal> {
+    return request<TeacherJournal>(
+      `/attendance/teacher-journal${pageQuery({
+        month: query.month,
+        classId: query.classId,
+        subgroupId: query.subgroupId ?? undefined,
+      })}`,
+      { signal },
+    );
+  },
+
+  /**
+   * Чем заполнить фильтры журнала: учебный год (из него — месяцы) и пары «класс +
+   * подгруппа», в которых у учителя есть уроки. Считаются тем же правилом видимости,
+   * что и сам журнал, — пары, по которой журнал ответит «чужое», в списке не бывает.
+   */
+  teacherJournalOptions(signal?: AbortSignal): Promise<TeacherJournalOptions> {
+    return request<TeacherJournalOptions>('/attendance/teacher-journal/options', { signal });
+  },
+
 };
 
 /** `details.unmarkedStudentProfileIds` из отказа публикации — читается защитно. */

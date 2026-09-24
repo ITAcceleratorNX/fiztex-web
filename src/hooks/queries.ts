@@ -22,6 +22,7 @@ import {
   attendanceApi,
   type AttendanceEntryChange,
   type AttendanceSheet,
+  type TeacherJournalQuery,
 } from '@/lib/attendanceApi';
 import { attendanceQrApi, type AttendanceQrSession } from '@/lib/attendanceQrApi';
 import { gradesApi, type GradeType } from '@/lib/gradesApi';
@@ -128,6 +129,12 @@ export const keys = {
   lessonHomework: (lessonId: number) => ['homework', 'lesson', lessonId, 'all'] as const,
   attendanceHistory: (lessonId: number) => ['lessons', lessonId, 'attendance', 'history'] as const,
   attendanceQr: (lessonId: number) => ['lessons', lessonId, 'attendance', 'qr'] as const,
+  // Раздел «Посещаемость (QR)» учителя: свои уроки на сегодня и журнал месяца. Журнал
+  // живёт под 'attendance', а не под уроком: он собран из многих уроков сразу.
+  myToday: ['schedule', 'me', 'today'] as const,
+  teacherJournalOptions: ['attendance', 'teacher-journal', 'options'] as const,
+  teacherJournal: (query: TeacherJournalQuery) =>
+    ['attendance', 'teacher-journal', query.month, query.classId, query.subgroupId ?? 'all'] as const,
   // Оценки урока: лист лежит под уроком, справочник шкалы — сам по себе, он общий
   // для всех экранов и не зависит ни от урока, ни от роли.
   lessonGradeSheet: (lessonId: number) => ['lessons', lessonId, 'grades', 'sheet'] as const,
@@ -1039,6 +1046,73 @@ export function useOpenAttendanceQr(lessonId: number) {
 
 export function useCloseAttendanceQr(lessonId: number) {
   return useAttendanceQrCommand(lessonId, attendanceQrApi.close);
+}
+
+/**
+ * Период опроса открытого кода. Скан **не двигает** версию листа (контракт QR §6.2), поэтому
+ * узнать о новом отсканировавшем можно только спросив снова; 4 с — середина окна 3–5 с.
+ */
+const QR_POLL_MS = 4_000;
+
+/**
+ * Код урока на отдельной странице «Посещаемость (QR)»: то же состояние, что у
+ * {@link useAttendanceQr}, но с опросом — ради двух вещей:
+ *
+ * <ul>
+ *   <li>счётчика «Отсканировали: N / M», пока код действует;</li>
+ *   <li>момента звонка, если учитель открыл страницу до начала урока: `canOpen` станет
+ *       `true`, и страница откроет код сама — «Показать QR» уже было нажато.</li>
+ * </ul>
+ *
+ * После конца урока опрос встаёт: код просрочен, открыть новый нельзя, меняться нечему.
+ * Сравнение с часами клиента здесь — экономия запросов, а не правило: решает по-прежнему
+ * `canOpen` из ответа.
+ *
+ * Фокус окна не перезапрашивает — ровно как у плаката в листе урока: подменять показанный
+ * классу код из-за переключения вкладки нельзя.
+ */
+export function useLiveAttendanceQr(lessonId: number | null) {
+  return useQuery({
+    queryKey: keys.attendanceQr(lessonId ?? 0),
+    queryFn: ({ signal }) => attendanceQrApi.state(lessonId as number, signal),
+    enabled: lessonId != null,
+    refetchOnWindowFocus: false,
+    retry: false,
+    refetchInterval: (query) => {
+      const session = query.state.data;
+      if (!session || session.status === 'EXPIRED') return false;
+      const endsAt = session.lessonEndsAt ? Date.parse(session.lessonEndsAt) : NaN;
+      return Number.isFinite(endsAt) && endsAt < Date.now() ? false : QR_POLL_MS;
+    },
+  });
+}
+
+/** Свои уроки на сегодня — список раздела «Посещаемость (QR)». */
+export function useMyTodayLessons() {
+  return useQuery({
+    queryKey: keys.myToday,
+    queryFn: ({ signal }) => lessonsApi.myToday(signal),
+  });
+}
+
+/** Фильтры журнала посещаемости: учебный год и пары «класс + подгруппа» учителя. */
+export function useTeacherJournalOptions() {
+  return useQuery({
+    queryKey: keys.teacherJournalOptions,
+    queryFn: ({ signal }) => attendanceApi.teacherJournalOptions(signal),
+  });
+}
+
+/**
+ * Журнал учителя за месяц. `null` — класс ещё не выбран, и запрос не уходит: экран
+ * показывает приглашение выбрать класс, а не пустую таблицу.
+ */
+export function useTeacherJournal(query: TeacherJournalQuery | null) {
+  return useQuery({
+    queryKey: query ? keys.teacherJournal(query) : ['attendance', 'teacher-journal', 'none'],
+    queryFn: ({ signal }) => attendanceApi.teacherJournal(query as TeacherJournalQuery, signal),
+    enabled: query != null,
+  });
 }
 
 export function useAttendanceHistory(lessonId: number | null, enabled: boolean) {

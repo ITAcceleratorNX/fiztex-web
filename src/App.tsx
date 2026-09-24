@@ -32,6 +32,9 @@ import { HomeworkFormPage } from '@/pages/homework/HomeworkFormPage';
 import { SubmissionReviewPage } from '@/pages/homework/SubmissionReviewPage';
 import { LessonHomeworkPage } from '@/pages/homework/LessonHomeworkPage';
 import { AttendanceAdminPage } from '@/platform/pages/attendance/AttendanceAdminPage';
+import { AttendanceMonthPage } from '@/pages/attendance/AttendanceMonthPage';
+import { LessonQrPage } from '@/pages/attendance/LessonQrPage';
+import { TeacherAttendancePage } from '@/pages/attendance/TeacherAttendancePage';
 import { MyAvailabilityPage } from '@/pages/schedule/MyAvailabilityPage';
 import { MySchedulePage } from '@/pages/schedule/MySchedulePage';
 import { CurrentLessonPage } from '@/pages/schedule/CurrentLessonPage';
@@ -231,6 +234,11 @@ export function App() {
         {/* Ежемесячная обратная связь учителя (MONTHLY-FEEDBACK-001): история — тот же экран
             с прошлым месяцем в фильтре, отдельной страницы у неё нет. */}
         <Route path={ROUTES.feedback} element={<FeedbackPage />} />
+        {/* «Посещаемость (QR)» учителя: уроки дня → код урока, и журнал месяца
+            (ATTENDANCE-TEACHER-001). Журнал школы админа живёт отдельно на `/attendance`. */}
+        <Route path={ROUTES.myAttendance} element={<TeacherAttendancePage />} />
+        <Route path="/my-attendance/lessons/:lessonId/qr" element={<LessonQrPage />} />
+        <Route path={ROUTES.myAttendanceMonth} element={<AttendanceMonthPage />} />
         {/* Журнал школы и незакрытые уроки (ATTENDANCE-001 §23). Отметку ставят на уроке —
             этот раздел только читает и ведёт туда. */}
         <Route path={ROUTES.attendance} element={<AttendanceAdminPage />} />

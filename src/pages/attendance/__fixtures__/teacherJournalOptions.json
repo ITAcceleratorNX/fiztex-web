@@ -1,0 +1,28 @@
+{
+ "academicYear": {
+  "id": 1,
+  "name": "2026/2027",
+  "startDate": "2026-08-01",
+  "endDate": "2027-05-25"
+ },
+ "scopes": [
+  {
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null
+  },
+  {
+   "classId": 2,
+   "className": "5Б",
+   "subgroupId": null,
+   "subgroupName": null
+  },
+  {
+   "classId": 3,
+   "className": "6А",
+   "subgroupId": null,
+   "subgroupName": null
+  }
+ ]
+}

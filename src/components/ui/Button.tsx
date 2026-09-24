@@ -2,7 +2,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
 import { cx } from '@/lib/format';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'navy';
 type Size = 'sm' | 'md';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -19,6 +19,11 @@ const variants: Record<Variant, string> = {
     'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 active:bg-slate-100 disabled:text-slate-400',
   ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 active:bg-slate-200',
   danger: 'bg-red-500 text-white hover:bg-red-600 active:bg-red-700 disabled:bg-red-300',
+  // Figma `btn-primary` — фирменный navy. Отдельный вариант, а не замена `primary`:
+  // какая кнопка основная, оранжевая или синяя, — открытый продуктовый вопрос
+  // (см. CLAUDE.md «Расхождения макета и кода»), а экранам, где макет прямо рисует
+  // синюю кнопку действия («Показать QR»), она нужна уже сейчас.
+  navy: 'bg-navy-700 text-white shadow-sm hover:bg-navy-800 active:bg-navy-900 disabled:bg-navy-400',
 };
 
 const sizes: Record<Size, string> = {

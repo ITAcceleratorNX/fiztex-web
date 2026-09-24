@@ -3,6 +3,12 @@ import { QRCodeSVG } from 'qrcode.react';
 interface QrPosterProps {
   /** Строка из ответа бэкенда — рисуется как есть, разбирать её клиенту нечего. */
   payload: string;
+  /**
+   * Верхняя граница стороны кода, px. По умолчанию — 560: плакат в листе урока занимает
+   * почти весь экран. Страница кода раздела «Посещаемость (QR)» кладёт его в карточку
+   * макета (Figma `qr-card`, код 280 px) и задаёт меньше.
+   */
+  maxSize?: number;
 }
 
 /**
@@ -25,11 +31,11 @@ interface QrPosterProps {
  *
  * Ни логотипа, ни рамки поверх кода: всё это съедает контраст на дистанции.
  */
-export function QrPoster({ payload }: QrPosterProps) {
+export function QrPoster({ payload, maxSize = 560 }: QrPosterProps) {
   return (
     <div
       className="mx-auto"
-      style={{ width: 'clamp(180px, min(100vh - 260px, 70vw), 560px)' }}
+      style={{ width: `clamp(180px, min(100vh - 260px, 70vw), ${maxSize}px)` }}
     >
       <QRCodeSVG
         value={payload}

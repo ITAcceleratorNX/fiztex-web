@@ -1,0 +1,583 @@
+{
+ "month": "2026-09",
+ "lessons": [
+  {
+   "lessonId": 43,
+   "lessonDate": "2026-09-01",
+   "startTime": "17:15:00",
+   "endTime": "18:00:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "PUBLISHED",
+   "markedCount": 4,
+   "totalCount": 22,
+   "entries": [
+    {
+     "studentProfileId": 14,
+     "attendance": {
+      "status": "PRESENT",
+      "mark": null,
+      "reason": null,
+      "comment": null
+     }
+    },
+    {
+     "studentProfileId": 13,
+     "attendance": {
+      "status": "PRESENT",
+      "mark": null,
+      "reason": null,
+      "comment": null
+     }
+    },
+    {
+     "studentProfileId": 19,
+     "attendance": {
+      "status": "PRESENT",
+      "mark": null,
+      "reason": null,
+      "comment": null
+     }
+    },
+    {
+     "studentProfileId": 1,
+     "attendance": {
+      "status": "PRESENT",
+      "mark": null,
+      "reason": null,
+      "comment": null
+     }
+    }
+   ]
+  },
+  {
+   "lessonId": 55,
+   "lessonDate": "2026-09-02",
+   "startTime": "18:15:00",
+   "endTime": "19:00:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "PUBLISHED",
+   "markedCount": 4,
+   "totalCount": 22,
+   "entries": [
+    {
+     "studentProfileId": 14,
+     "attendance": {
+      "status": "PRESENT",
+      "mark": "LATE",
+      "reason": null,
+      "comment": null
+     }
+    },
+    {
+     "studentProfileId": 13,
+     "attendance": {
+      "status": "PRESENT",
+      "mark": null,
+      "reason": null,
+      "comment": null
+     }
+    },
+    {
+     "studentProfileId": 19,
+     "attendance": {
+      "status": "PRESENT",
+      "mark": null,
+      "reason": null,
+      "comment": null
+     }
+    },
+    {
+     "studentProfileId": 1,
+     "attendance": {
+      "status": "PRESENT",
+      "mark": null,
+      "reason": null,
+      "comment": null
+     }
+    }
+   ]
+  },
+  {
+   "lessonId": 63,
+   "lessonDate": "2026-09-03",
+   "startTime": "15:15:00",
+   "endTime": "16:00:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "PUBLISHED",
+   "markedCount": 4,
+   "totalCount": 22,
+   "entries": [
+    {
+     "studentProfileId": 14,
+     "attendance": {
+      "status": "PRESENT",
+      "mark": null,
+      "reason": null,
+      "comment": null
+     }
+    },
+    {
+     "studentProfileId": 13,
+     "attendance": {
+      "status": "ABSENT",
+      "mark": null,
+      "reason": "ILLNESS",
+      "comment": null
+     }
+    },
+    {
+     "studentProfileId": 19,
+     "attendance": {
+      "status": "ABSENT",
+      "mark": "EXCUSED",
+      "reason": "COMPETITION",
+      "comment": null
+     }
+    },
+    {
+     "studentProfileId": 1,
+     "attendance": {
+      "status": "PRESENT",
+      "mark": null,
+      "reason": null,
+      "comment": null
+     }
+    }
+   ]
+  },
+  {
+   "lessonId": 69,
+   "lessonDate": "2026-09-04",
+   "startTime": "10:00:00",
+   "endTime": "10:45:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "DRAFT",
+   "markedCount": 22,
+   "totalCount": 22,
+   "entries": [
+    {
+     "studentProfileId": 14,
+     "attendance": null
+    },
+    {
+     "studentProfileId": 13,
+     "attendance": null
+    },
+    {
+     "studentProfileId": 19,
+     "attendance": null
+    },
+    {
+     "studentProfileId": 1,
+     "attendance": null
+    }
+   ]
+  },
+  {
+   "lessonId": 78,
+   "lessonDate": "2026-09-07",
+   "startTime": "08:00:00",
+   "endTime": "08:45:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 79,
+   "lessonDate": "2026-09-07",
+   "startTime": "09:00:00",
+   "endTime": "09:45:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 98,
+   "lessonDate": "2026-09-08",
+   "startTime": "17:15:00",
+   "endTime": "18:00:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 110,
+   "lessonDate": "2026-09-09",
+   "startTime": "18:15:00",
+   "endTime": "19:00:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 118,
+   "lessonDate": "2026-09-10",
+   "startTime": "15:15:00",
+   "endTime": "16:00:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 754,
+   "lessonDate": "2026-09-11",
+   "startTime": "10:00:00",
+   "endTime": "10:45:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 763,
+   "lessonDate": "2026-09-14",
+   "startTime": "08:00:00",
+   "endTime": "08:45:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 764,
+   "lessonDate": "2026-09-14",
+   "startTime": "09:00:00",
+   "endTime": "09:45:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 783,
+   "lessonDate": "2026-09-15",
+   "startTime": "17:15:00",
+   "endTime": "18:00:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 795,
+   "lessonDate": "2026-09-16",
+   "startTime": "18:15:00",
+   "endTime": "19:00:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 803,
+   "lessonDate": "2026-09-17",
+   "startTime": "15:15:00",
+   "endTime": "16:00:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 809,
+   "lessonDate": "2026-09-18",
+   "startTime": "10:00:00",
+   "endTime": "10:45:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 1233,
+   "lessonDate": "2026-09-21",
+   "startTime": "08:00:00",
+   "endTime": "08:45:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 1234,
+   "lessonDate": "2026-09-21",
+   "startTime": "09:00:00",
+   "endTime": "09:45:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 1253,
+   "lessonDate": "2026-09-22",
+   "startTime": "17:15:00",
+   "endTime": "18:00:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 1264,
+   "lessonDate": "2026-09-23",
+   "startTime": "18:15:00",
+   "endTime": "19:00:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 1272,
+   "lessonDate": "2026-09-24",
+   "startTime": "15:15:00",
+   "endTime": "16:00:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 1278,
+   "lessonDate": "2026-09-25",
+   "startTime": "10:00:00",
+   "endTime": "10:45:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 1287,
+   "lessonDate": "2026-09-28",
+   "startTime": "08:00:00",
+   "endTime": "08:45:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 1288,
+   "lessonDate": "2026-09-28",
+   "startTime": "09:00:00",
+   "endTime": "09:45:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 1307,
+   "lessonDate": "2026-09-29",
+   "startTime": "17:15:00",
+   "endTime": "18:00:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  },
+  {
+   "lessonId": 1373,
+   "lessonDate": "2026-09-30",
+   "startTime": "18:15:00",
+   "endTime": "19:00:00",
+   "subjectName": "Математика",
+   "classId": 1,
+   "className": "5А",
+   "subgroupId": null,
+   "subgroupName": null,
+   "status": "ACTIVE",
+   "state": "NOT_FILLED",
+   "markedCount": 0,
+   "totalCount": 0,
+   "entries": []
+  }
+ ],
+ "students": [
+  {
+   "studentProfileId": 14,
+   "fullName": "Амангельдиева Айгерим Маратқызы",
+   "attendedCount": 3,
+   "missedCount": 0,
+   "lateCount": 1,
+   "excusedCount": 0
+  },
+  {
+   "studentProfileId": 13,
+   "fullName": "Амангельдиева Айгуль Маратқызы",
+   "attendedCount": 2,
+   "missedCount": 1,
+   "lateCount": 0,
+   "excusedCount": 0
+  },
+  {
+   "studentProfileId": 19,
+   "fullName": "Байтурсынова Нурай Ерланқызы",
+   "attendedCount": 2,
+   "missedCount": 0,
+   "lateCount": 0,
+   "excusedCount": 1
+  },
+  {
+   "studentProfileId": 1,
+   "fullName": "Бекмуратов Айдар Талғатұлы",
+   "attendedCount": 3,
+   "missedCount": 0,
+   "lateCount": 0,
+   "excusedCount": 0
+  }
+ ]
+}
