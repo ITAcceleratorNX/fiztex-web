@@ -30,18 +30,18 @@ export function AttendanceLegend() {
 }
 
 /**
- * Таблица «ученики × дни месяца» (Figma 2170:2360, h+v scroll).
+ * Таблица «ученики × дни месяца» (Figma 2170:2360).
  *
- * <p>Прокручивается по обеим осям внутри своего окна, а шапка дней и колонка ФИО стоят на
- * месте: в месяце тридцать колонок и три десятка учеников, и без липких краёв через пару
- * прокруток не понять, чья это клетка и какой день.
+ * <p>Таблица растягивается по вертикали вместе со страницей. Внутри остаётся только
+ * горизонтальное переполнение для тридцати колонок дней, а шапка дней и колонка ФИО
+ * остаются липкими при прокрутке страницы и таблицы по горизонтали.
  *
  * <p>Клетка — точки уроков этого дня слева направо по времени. Под курсором и для
  * скринридера — какие уроки и что по каждому (`JournalCell.title`).
  */
 export function AttendanceMonthTable({ days, rows }: { days: MonthDay[]; rows: JournalRow[] }) {
   return (
-    <div className="max-h-journal-viewport overflow-auto rounded-2xl border border-slate-200 bg-white">
+    <div className="overflow-x-auto overflow-y-clip rounded-2xl border border-slate-200 bg-white">
       <table className="w-max border-separate border-spacing-0 text-left">
         <thead>
           <tr>
