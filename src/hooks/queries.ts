@@ -1,4 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  lessonSummaryApi, summaryRunning, type LessonSummary, type SummaryGeneration, type SummarySave,
+} from '@/lib/lessonSummaryApi';
 import { ApiError, api, type CopyTestRequest } from '@/lib/api';
 import {
   lessonAdminApi,
@@ -81,6 +84,9 @@ import type {
 } from '@/lib/types';
 
 export const keys = {
+  lessonSummary: (id: number, childId?: number) => ['lessons', id, 'summary', childId] as const,
+  summarySource: (id: number, type: string, sourceId: number) => ['lessons', id, 'summary-source', type, sourceId] as const,
+  summaryLibrary: (subjectId: number, query: string) => ['summary-library', subjectId, query] as const,
   // Техника: всё пространство раздела под одним корнем — любая команда меняет и таблицу,
   // и карточку, и журнал (история пишется на каждое действие), поэтому сбрасывается корень.
   equipment: ['equipment'] as const,
@@ -1641,6 +1647,74 @@ export function useAssignedServiceRequests(accountId: number | null) {
         signal,
       ),
     enabled: accountId != null,
+  });
+}
+
+// ---- Конспект урока ----
+
+export function useLessonSummary(id: number | null, childId?: number) {
+  return useQuery({
+    queryKey: keys.lessonSummary(id ?? 0, childId),
+    queryFn: ({ signal }) => lessonSummaryApi.get(id as number, childId, signal),
+    enabled: id != null,
+    refetchInterval: (query) => summaryRunning(query.state.data?.latestJob) ? 2000 : false,
+    refetchIntervalInBackground: true,
+  });
+}
+
+export function useSummaryCommands(id: number) {
+  const qc = useQueryClient();
+  const update = (data: LessonSummary) => {
+    qc.setQueryData(keys.lessonSummary(id), data);
+    void qc.invalidateQueries({ queryKey: ['lessons', id, 'summary'] });
+  };
+  const save = useMutation({
+    mutationFn: (body: SummarySave) => lessonSummaryApi.save(id, body), onSuccess: update,
+  });
+  const publish = useMutation({
+    mutationFn: (revision: number) => lessonSummaryApi.publish(id, revision), onSuccess: update,
+  });
+  const unpublish = useMutation({
+    mutationFn: (revision: number) => lessonSummaryApi.unpublish(id, revision), onSuccess: update,
+  });
+  const start = useMutation({
+    mutationFn: ({ key, body }: { key: string; body: SummaryGeneration }) => lessonSummaryApi.start(id, key, body),
+    onSuccess: (job) => {
+      qc.setQueryData<LessonSummary>(keys.lessonSummary(id), (old) => old ? { ...old, latestJob: job } : old);
+      void qc.invalidateQueries({ queryKey: ['lessons', id, 'summary'] });
+    },
+  });
+  return { save, publish, unpublish, start };
+}
+
+export function useSummarySource(id: number, type: SummaryGeneration['sourceType'], sourceId: number | null) {
+  return useQuery({
+    queryKey: keys.summarySource(id, type, sourceId ?? 0),
+    queryFn: ({ signal }) => lessonSummaryApi.source(id, type, sourceId as number, signal),
+    enabled: sourceId != null,
+    retry: false,
+    staleTime: 60_000,
+  });
+}
+
+export function useSummaryLibrary(subjectId: number | undefined, query: string) {
+  return useInfiniteQuery({
+    queryKey: keys.summaryLibrary(subjectId ?? 0, query),
+    queryFn: ({ signal, pageParam }) => lessonSummaryApi.library(subjectId as number, query, pageParam, signal),
+    initialPageParam: 0,
+    getNextPageParam: (last) => last.last === false ? (last.number ?? 0) + 1 : undefined,
+    enabled: subjectId != null,
+  });
+}
+
+export function useUploadSummarySource(id: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => lessonSummaryApi.upload(id, file),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['lessons', id, 'materials'] });
+      void qc.invalidateQueries({ queryKey: keys.lesson(id) });
+    },
   });
 }
 

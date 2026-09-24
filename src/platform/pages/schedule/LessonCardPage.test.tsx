@@ -39,6 +39,7 @@ const idleMutation = () => ({
 });
 
 vi.mock('@/hooks/queries', () => ({
+  useLessonSummary: () => ({ data: { canEdit: true }, isPending: false }),
   useLesson: (...args: unknown[]) => useLesson(...args),
   useLessonHistory: (...args: unknown[]) => useLessonHistory(...args),
   useAttendanceSheet: (...args: unknown[]) => useAttendanceSheet(...args),

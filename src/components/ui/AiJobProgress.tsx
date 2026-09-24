@@ -4,6 +4,8 @@ import { Spinner } from '@/components/ui/StateBlock';
 import { cx } from '@/lib/format';
 import type { HomeworkAiJob } from '@/lib/homeworkAiApi';
 
+type ProgressJob = Pick<HomeworkAiJob, 'status' | 'kind' | 'progressDone' | 'progressTotal' | 'errorMessage' | 'warningMessage'> & { phase?: string };
+
 /**
  * Состояние задачи AI-генерации словами.
  *
@@ -23,7 +25,7 @@ export function AiJobProgress({
   fallbackAction,
   className,
 }: {
-  job: HomeworkAiJob | undefined;
+  job: ProgressJob | undefined;
   /** Что предложить, когда модель не справилась. Обычно «Написать самому». */
   fallbackAction?: ReactNode;
   className?: string;
@@ -79,7 +81,7 @@ export function AiJobProgress({
  * Фаза словами. Счётчик добавляется только там, где шагов правда несколько: «1 из 1» —
  * шум, и бэкенд в таком случае его не присылает.
  */
-function phaseLabel(job: HomeworkAiJob): string {
+function phaseLabel(job: ProgressJob): string {
   // «Составляю» подходит конспекту и тесту, но звучит странно рядом с ответами ученика.
   // Вид задачи приходит с тем же job, поэтому не нужен второй проп и два почти одинаковых
   // компонента прогресса.

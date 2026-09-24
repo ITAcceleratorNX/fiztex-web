@@ -67,6 +67,7 @@ import {
   LessonMaterialsPage,
 } from '@/platform';
 import type { ReactNode } from 'react';
+import { LessonSummaryPage } from '@/platform/pages/schedule/LessonSummaryPage';
 
 function Protected({ children }: { children: ReactNode }) {
   const { isAuthenticated, admin } = useAuth();
@@ -177,6 +178,7 @@ export function App() {
         <Route path={ROUTES.myAvailability} element={<MyAvailabilityPage />} />
         <Route path="/lesson-schedule" element={<LessonSchedulePage />} />
         <Route path="/lesson-schedule/lessons/:lessonId" element={<LessonCardPage />} />
+        <Route path="/lesson-schedule/lessons/:lessonId/summary" element={<LessonSummaryPage />} />
         {/* Лист посещаемости вложен в урок, потому что без урока не существует:
             он заводится не для расписания, а для конкретного LessonInstance. */}
         <Route

@@ -51,6 +51,7 @@ import { LessonHomeworkRows } from '@/pages/homework/LessonHomeworkRows';
 import { LessonManagementCard, SubstituteGradeAccessCard } from './LessonManagementCard';
 import { describeHistoryActor, describeHistoryEntry, hhmm } from './lessonHistory';
 import { LessonTextbookField } from './LessonTextbookField';
+import { LessonSummaryEntry } from './LessonSummaryEntry';
 
 /**
  * Куда возвращает «К расписанию». У учителя это его собственный экран: админский
@@ -190,6 +191,7 @@ export function LessonCardPage() {
         canCreate={canEditTeaching && !periodClosed}
       />
 
+      <LessonSummaryEntry lesson={lesson} />
       <LessonModules lesson={lesson} />
 
       {/*
