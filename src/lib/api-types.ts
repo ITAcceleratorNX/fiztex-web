@@ -4644,6 +4644,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/ai-notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["latestLessonAiNotes"];
+        put?: never;
+        post: operations["startLessonAiNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/ai-notes/{noteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getLessonAiNote"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/attendance": {
         parameters: {
             query?: never;
@@ -4879,38 +4911,6 @@ export interface paths {
         put?: never;
         post: operations["markHomeworkNotAssigned"];
         delete: operations["clearHomeworkNotAssigned"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lessons/{lessonId}/ai-notes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["latestLessonAiNotes"];
-        put?: never;
-        post: operations["startLessonAiNote"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lessons/{lessonId}/ai-notes/{noteId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getLessonAiNote"];
-        put?: never;
-        post?: never;
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -20338,6 +20338,77 @@ export interface operations {
             };
         };
     };
+    latestLessonAiNotes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonAiNoteView"][];
+                };
+            };
+        };
+    };
+    startLessonAiNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartLessonAiNoteRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonAiNoteView"];
+                };
+            };
+        };
+    };
+    getLessonAiNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+                noteId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonAiNoteView"];
+                };
+            };
+        };
+    };
     sheet_1: {
         parameters: {
             query?: never;
@@ -22785,77 +22856,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GenerationJobResponse"];
-                };
-            };
-        };
-    };
-    latestLessonAiNotes: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lessonId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LessonAiNoteView"][];
-                };
-            };
-        };
-    };
-    startLessonAiNote: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lessonId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StartLessonAiNoteRequest"];
-            };
-        };
-        responses: {
-            /** @description Accepted */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LessonAiNoteView"];
-                };
-            };
-        };
-    };
-    getLessonAiNote: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lessonId: number;
-                noteId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LessonAiNoteView"];
                 };
             };
         };
