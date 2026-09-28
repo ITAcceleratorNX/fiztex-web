@@ -10,7 +10,7 @@ import {
   substitutionApi,
   type Lesson,
 } from '@/lib/lessonsApi';
-import { homeworkApi, type Homework } from '@/lib/homeworkApi';
+import { homeworkApi, type Homework, type HomeworkListParams } from '@/lib/homeworkApi';
 import { homeworkAntiCheatApi } from '@/lib/homeworkAntiCheatApi';
 import {
   homeworkAiApi,
@@ -132,6 +132,8 @@ export const keys = {
   // Ключ живёт в пространстве 'homework': любое действие с заданием сбрасывает
   // весь раздел одним `invalidateQueries(['homework'])`, и список урока обязан
   // обновляться вместе с ним, а не жить своей жизнью под ключом урока.
+  homeworkFilterOptions: ['homework', 'filter-options'] as const,
+  homeworkList: (params: HomeworkListParams) => ['homework', 'list', params] as const,
   lessonHomework: (lessonId: number) => ['homework', 'lesson', lessonId, 'all'] as const,
   attendanceHistory: (lessonId: number) => ['lessons', lessonId, 'attendance', 'history'] as const,
   attendanceQr: (lessonId: number) => ['lessons', lessonId, 'attendance', 'qr'] as const,
@@ -2193,6 +2195,43 @@ export function useCloseFeedbackMonth() {
       qc.setQueryData(keys.monthlyFeedbackMonth(month), view);
       void qc.invalidateQueries({ queryKey: keys.monthlyFeedbackMonths });
       void qc.invalidateQueries({ queryKey: keys.monthlyFeedbackSheets(month) });
+    },
+  });
+}
+
+/** Все фильтры и страница входят в ключ; соседние страницы не подменяют друг друга. */
+export function useHomeworkList(params: HomeworkListParams) {
+  return useQuery({
+    queryKey: keys.homeworkList(params),
+    queryFn: ({ signal }) => homeworkApi.list(params, signal),
+  });
+}
+
+/** Действующие назначения не содержат архивные классы. Дополняем справочник при
+ * открытии фильтра ограниченными страницами обеих вкладок, сохраняя только подписи. */
+export function useHomeworkFilterOptions(enabled: boolean) {
+  return useQuery({
+    queryKey: keys.homeworkFilterOptions,
+    enabled,
+    staleTime: 60_000,
+    queryFn: async ({ signal }) => {
+      const classes = new Map<number, string>();
+      const subjects = new Map<number, string>();
+      for (const scope of ['ACTUAL', 'HISTORY'] as const) {
+        for (let page = 0; ; page++) {
+          signal.throwIfAborted();
+          const result = await homeworkApi.list({ scope, page, size: 50 }, signal);
+          for (const row of result.content ?? []) {
+            if (row.classId != null && row.className) classes.set(row.classId, row.className);
+            if (row.subjectId != null && row.subjectName) subjects.set(row.subjectId, row.subjectName);
+          }
+          if (result.last === true || page + 1 >= (result.totalPages ?? 1)) break;
+        }
+      }
+      return {
+        classes: [...classes].map(([id, name]) => ({ id, name })),
+        subjects: [...subjects].map(([id, name]) => ({ id, name })),
+      };
     },
   });
 }

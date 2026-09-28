@@ -1,13 +1,16 @@
-import { useRef, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Info, Users } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
-import { SCOPE_STATUSES, homeworkApi, type Homework, type HomeworkScope } from '@/lib/homeworkApi';
+import { useHomeworkList, useHomeworkFilterOptions, useTextbookBindingOptions } from '@/hooks/queries';
+import { useHomeworkListScroll } from '@/hooks/useHomeworkListScroll';
+import { readHomeworkListState, writeHomeworkListState, type HomeworkListState } from '@/lib/homeworkListNavigation';
+import type { BindingOptions } from '@/lib/textbooksApi';
+import { SCOPE_STATUSES, type Homework, type HomeworkScope } from '@/lib/homeworkApi';
 import {
   EMPTY_FILTERS,
   HomeworkFilters,
@@ -38,47 +41,64 @@ const PAGE_SIZE = 50;
 export function HomeworkListPage() {
   useDocumentTitle('Домашние задания');
 
-  const [scope, setScope] = useState<HomeworkScope>('ACTUAL');
-  const [filters, setFilters] = useState<HomeworkFilterValues>(EMPTY_FILTERS);
-
-  const listQuery = useQuery({
-    queryKey: ['homework', 'list', scope, filters],
-    queryFn: ({ signal }) =>
-      homeworkApi.list(
-        {
-          scope,
-          statuses: filters.status ? [filters.status] : undefined,
-          classId: filters.classId,
-          subjectId: filters.subjectId,
-          dueFrom: filters.dueFrom ? dayStart(filters.dueFrom) : undefined,
-          dueTo: filters.dueTo ? dayEnd(filters.dueTo) : undefined,
-          pendingReviewOnly: filters.pendingReviewOnly || undefined,
-          size: PAGE_SIZE,
-        },
-        signal,
-      ),
-    placeholderData: (previous) => previous,
+  const [optionsRequested, setOptionsRequested] = useState(false);
+  const [search, setSearch] = useSearchParams();
+  const state = useMemo(() => readHomeworkListState(search), [search]);
+  const { scope, filters, page } = state;
+  const canonicalSearch = writeHomeworkListState(state);
+  const url = `/homework${canonicalSearch.size ? `?${canonicalSearch}` : ''}`;
+  const filterKey = JSON.stringify({ scope, filters });
+  const listQuery = useHomeworkList({
+    scope,
+    statuses: filters.status ? [filters.status] : undefined,
+    classId: filters.classId,
+    subjectId: filters.subjectId,
+    dueFrom: filters.dueFrom ? dayStart(filters.dueFrom) : undefined,
+    dueTo: filters.dueTo ? dayEnd(filters.dueTo) : undefined,
+    pendingReviewOnly: filters.pendingReviewOnly || undefined,
+    page,
+    size: PAGE_SIZE,
   });
+  // TanStack убирает placeholderData при ошибке следующей страницы. Сохраняем
+  // последнюю успешную выдачу только для того же набора фильтров.
+  const previous = useRef<{ key: string; data: NonNullable<typeof listQuery.data> }>();
+  if (listQuery.data) previous.current = { key: filterKey, data: listQuery.data };
+  const denied = listQuery.error instanceof ApiError && listQuery.error.status === 403;
+  const data = denied ? undefined : listQuery.data
+    ?? (previous.current?.key === filterKey ? previous.current.data : undefined);
+  const shownPage = data?.number ?? page;
+  const totalPages = data?.totalPages ?? 0;
+  const root = useHomeworkListScroll(url, Boolean(listQuery.data));
+  const optionsQuery = useTextbookBindingOptions(Boolean(data));
+  const historicalOptions = useHomeworkFilterOptions(optionsRequested && Boolean(data));
+  const rows = data?.content ?? [];
+  const filtersActive = hasActiveFilters(filters);
+  const { classes: classOptions, subjects: subjectOptions } = useFilterOptions(rows, optionsQuery.data, filters, historicalOptions.data);
 
-  /**
-   * Переключение вкладки сбрасывает статус, но не остальные фильтры (§4.3): класс и предмет
-   * осмысленны на обеих вкладках, а статус чужой вкладки дал бы заведомо пустую выдачу.
-   */
+  function change(next: HomeworkListState, replace = false) {
+    setSearch(writeHomeworkListState(next), { replace });
+  }
+  function changeFilters(next: HomeworkFilterValues) {
+    change({ scope, filters: next, page: 0 });
+  }
   function changeScope(next: HomeworkScope) {
-    setScope(next);
-    setFilters((current) =>
-      current.status && !SCOPE_STATUSES[next].includes(current.status)
-        ? { ...current, status: undefined }
-        : current,
-    );
+    change({ scope: next, page: 0, filters: {
+      ...filters,
+      status: filters.status && SCOPE_STATUSES[next].includes(filters.status) ? filters.status : undefined,
+    } });
   }
 
-  const rows = listQuery.data?.content ?? [];
-  const filtersActive = hasActiveFilters(filters);
-  const { classes: classOptions, subjects: subjectOptions } = useFilterOptions(rows);
+  // Удаление последнего задания могло сократить число страниц; старый URL не тупик.
+  useEffect(() => {
+    if (listQuery.isSuccess && listQuery.data && page > Math.max(0, (listQuery.data.totalPages ?? 0) - 1)) {
+      setSearch(writeHomeworkListState({ ...state, page: Math.max(0, (listQuery.data.totalPages ?? 0) - 1) }), { replace: true });
+    }
+  }, [listQuery.isSuccess, listQuery.data, page, state, setSearch]);
+  const shownSearch = writeHomeworkListState({ ...state, page: shownPage });
+  const shownUrl = `/homework${shownSearch.size ? `?${shownSearch}` : ''}`;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div ref={root} className="flex flex-col gap-5">
       <h1 className="text-28 font-bold text-ink">Домашние задания</h1>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -94,21 +114,60 @@ export function HomeworkListPage() {
             values={filters}
             classes={classOptions}
             subjects={subjectOptions}
-            onChange={setFilters}
+            onChange={changeFilters}
+            onOpenOptions={() => setOptionsRequested(true)}
           />
           <GroupsButton classId={filters.classId} subjectId={filters.subjectId} />
         </div>
       </div>
 
+      {optionsQuery.isPending && data && <p role="status" className="text-13 text-muted">Загрузка классов и предметов…</p>}
+      {historicalOptions.isFetching && <p role="status" className="text-13 text-muted">Загрузка классов и предметов из истории заданий…</p>}
+      {historicalOptions.isError && (
+        <div role="alert" className="card">
+          <ErrorBlock message="Не удалось загрузить варианты из истории заданий. Доступные варианты сохранены"
+            onRetry={() => void historicalOptions.refetch()} />
+        </div>
+      )}
+      {optionsQuery.isError && (
+        <div role="alert" className="card">
+          <ErrorBlock message="Не удалось загрузить полный список классов и предметов" onRetry={() => void optionsQuery.refetch()} />
+        </div>
+      )}
+      {listQuery.isFetching && data && <p role="status" className="text-13 text-muted">Загрузка страницы {page + 1}…</p>}
+      {listQuery.error && data && (
+        <div role="alert" className="card">
+          <ErrorBlock
+            message={`Не удалось загрузить страницу ${page + 1}. Показана страница ${shownPage + 1}`}
+            onRetry={() => void listQuery.refetch()}
+          />
+        </div>
+      )}
       <HomeworkBody
-        isPending={listQuery.isPending}
-        error={listQuery.error}
+        listUrl={shownUrl}
+        isPending={listQuery.isPending && !data}
+        error={data ? null : listQuery.error}
         rows={rows}
         scope={scope}
         filtersActive={filtersActive}
         onRetry={() => void listQuery.refetch()}
-        onResetFilters={() => setFilters(EMPTY_FILTERS)}
+        onResetFilters={() => changeFilters(EMPTY_FILTERS)}
       />
+
+      {data && totalPages > 1 && (
+        <nav aria-label="Страницы домашних заданий" className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-13 text-muted" aria-live="polite">
+            Страница {shownPage + 1} из {totalPages} · Всего заданий: {data.totalElements}
+          </p>
+          <div className="flex gap-2">
+            <Button variant="secondary" size="sm" disabled={listQuery.isFetching || shownPage === 0}
+              onClick={() => change({ ...state, page: shownPage - 1 })}>Предыдущая страница</Button>
+            <Button variant="secondary" size="sm" disabled={listQuery.isFetching || data.last === true || shownPage + 1 >= totalPages}
+              onClick={() => shownPage + 1 === page && listQuery.isError
+                ? void listQuery.refetch() : change({ ...state, page: shownPage + 1 })}>Следующая страница</Button>
+          </div>
+        </nav>
+      )}
 
       {rows.length > 0 && (
         <div>
@@ -159,6 +218,7 @@ function GroupsButton({ classId, subjectId }: { classId?: number; subjectId?: nu
 }
 
 function HomeworkBody({
+  listUrl,
   isPending,
   error,
   rows,
@@ -167,6 +227,7 @@ function HomeworkBody({
   onRetry,
   onResetFilters,
 }: {
+  listUrl: string;
   isPending: boolean;
   error: unknown;
   rows: Parameters<typeof HomeworkTable>[0]['rows'];
@@ -247,30 +308,21 @@ function HomeworkBody({
     );
   }
 
-  return <HomeworkTable rows={rows} />;
+  return <HomeworkTable rows={rows} returnTo={listUrl} />;
 }
 
-/**
- * Варианты фильтров берутся из самих заданий, а не из справочников `/api/admin/*`.
- *
- * Причина не в экономии запроса: админские справочники учителю отдают 401, а общий
- * `request()` трактует любой 401 как истёкшую сессию — раздел выкидывал учителя на форму
- * входа ровно в момент открытия. Заодно это правильнее по смыслу: учителю нужны его
- * классы и предметы (ТЗ §3), а не список всей школы.
- *
- * Набор накапливается между запросами и не сбрасывается выбранным фильтром. Иначе выбор
- * «7А» сузил бы выдачу до одного класса, список вариантов схлопнулся бы до него же, и
- * переключиться на другой класс стало бы нечем — фильтр запирал бы сам себя.
- */
-function useFilterOptions(rows: Homework[]): { classes: FilterOption[]; subjects: FilterOption[] } {
+/** Контекст назначений не зависит от страницы ДЗ. Просмотренные задания дополняют
+ * его историческими классами; выбранный ID из ссылки остаётся видимым и до загрузки. */
+function useFilterOptions(rows: Homework[], context: BindingOptions | undefined, filters: HomeworkFilterValues, historical?: { classes: FilterOption[]; subjects: FilterOption[] }): { classes: FilterOption[]; subjects: FilterOption[] } {
   const seen = useRef({ classes: new Map<number, string>(), subjects: new Map<number, string>() });
-
-  for (const row of rows) {
+  for (const row of [...(context?.years ?? []).flatMap((year) => year.assignments ?? []), ...rows]) {
     if (row.classId != null && row.className) seen.current.classes.set(row.classId, row.className);
-    if (row.subjectId != null && row.subjectName) {
-      seen.current.subjects.set(row.subjectId, row.subjectName);
-    }
+    if (row.subjectId != null && row.subjectName) seen.current.subjects.set(row.subjectId, row.subjectName);
   }
+  for (const item of historical?.classes ?? []) seen.current.classes.set(item.id, item.name);
+  for (const item of historical?.subjects ?? []) seen.current.subjects.set(item.id, item.name);
+  if (filters.classId != null && !seen.current.classes.has(filters.classId)) seen.current.classes.set(filters.classId, `Класс №${filters.classId}`);
+  if (filters.subjectId != null && !seen.current.subjects.has(filters.subjectId)) seen.current.subjects.set(filters.subjectId, `Предмет №${filters.subjectId}`);
 
   const sort = (map: Map<number, string>): FilterOption[] =>
     [...map.entries()]

@@ -2,15 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { cx } from '@/lib/format';
 import { SCOPE_STATUSES, type HomeworkScope, type HomeworkStatus } from '@/lib/homeworkApi';
-
-export interface HomeworkFilterValues {
-  classId?: number;
-  subjectId?: number;
-  status?: HomeworkStatus;
-  dueFrom?: string;
-  dueTo?: string;
-  pendingReviewOnly: boolean;
-}
+import type { HomeworkFilterValues } from '@/lib/homeworkListNavigation';
+export type { HomeworkFilterValues } from '@/lib/homeworkListNavigation';
 
 export const EMPTY_FILTERS: HomeworkFilterValues = { pendingReviewOnly: false };
 
@@ -54,12 +47,14 @@ export function HomeworkFilters({
   classes,
   subjects,
   onChange,
+  onOpenOptions,
 }: {
   scope: HomeworkScope;
   values: HomeworkFilterValues;
   classes: FilterOption[];
   subjects: FilterOption[];
   onChange: (next: HomeworkFilterValues) => void;
+  onOpenOptions?: () => void;
 }) {
   const extraCount = countExtra(values);
 
@@ -67,6 +62,7 @@ export function HomeworkFilters({
     <div className="flex flex-wrap items-center gap-2">
       <FilterDropdown
         label="Класс"
+        onOpen={onOpenOptions}
         selectedLabel={classes.find((item) => item.id === values.classId)?.name}
         options={classes.map((item) => ({ value: String(item.id), label: item.name }))}
         value={values.classId != null ? String(values.classId) : ''}
@@ -74,6 +70,7 @@ export function HomeworkFilters({
       />
       <FilterDropdown
         label="Предмет"
+        onOpen={onOpenOptions}
         selectedLabel={subjects.find((item) => item.id === values.subjectId)?.name}
         options={subjects.map((item) => ({ value: String(item.id), label: item.name }))}
         value={values.subjectId != null ? String(values.subjectId) : ''}
@@ -116,12 +113,14 @@ function FilterDropdown({
   options,
   value,
   onSelect,
+  onOpen,
 }: {
   label: string;
   selectedLabel?: string;
   options: Array<{ value: string; label: string }>;
   value: string;
   onSelect: (value: string) => void;
+  onOpen?: () => void;
 }) {
   const { open, setOpen, rootRef } = useDismissable();
 
@@ -131,7 +130,10 @@ function FilterDropdown({
         type="button"
         aria-haspopup="listbox"
         aria-expanded={open}
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          if (!open) onOpen?.();
+          setOpen(!open);
+        }}
         className={cx(TRIGGER_CLASS, selectedLabel && 'border-navy-400 text-navy-700')}
       >
         {selectedLabel ?? label}
