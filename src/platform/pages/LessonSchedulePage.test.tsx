@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Link, MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -66,6 +66,28 @@ function renderPage(url = SOURCE) {
   </MemoryRouter></QueryClientProvider>);
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((done) => { resolve = done; });
+  return { promise, resolve };
+}
+
+function gridFor(schedule: ClassSchedule) {
+  return {
+    schedule,
+    weekdays: [],
+    periods: [{
+      id: schedule.bellTemplateId,
+      bellTemplateId: schedule.bellTemplateId,
+      lessonNumber: 1,
+      startTime: '08:00',
+      endTime: '08:45',
+      sortOrder: 1,
+    }],
+    lessons: [],
+  };
+}
+
 async function expectSelection(className = '6Б', scheduleId = 402) {
   await screen.findByRole('button', { name: '2027/2028' });
   await screen.findByRole('button', { name: 'Второй период' });
@@ -97,6 +119,160 @@ afterEach(() => {
 });
 
 describe('LessonSchedulePage · navigation context', () => {
+  it('keeps year, period, class and detail response aligned through A→B→A', async () => {
+    const user = userEvent.setup();
+    const delayedA = deferred<ClassSchedule>();
+    const staleA = { ...makeSchedule(701, 7, 'DRAFT'), academicYearId: 1, academicPeriodId: 11, bellTemplateName: 'Устаревшее расписание A' };
+    const currentA = { ...staleA, bellTemplateName: 'Актуальное расписание A' };
+    const scheduleB = { ...makeSchedule(801, 8, 'DRAFT'), academicYearId: 2, academicPeriodId: 22, bellTemplateName: 'Расписание B' };
+    let aDetailCalls = 0;
+
+    mocks.listPeriods.mockImplementation(async (yearId: string) => yearId === '1'
+      ? [{ id: '11', name: 'Период A' }]
+      : [{ id: '22', name: 'Период B' }]);
+    mocks.listClasses.mockImplementation(async ({ academicYearId }: { academicYearId: string }) => academicYearId === '1'
+      ? [{ id: '7', name: 'Класс A' }]
+      : [{ id: '8', name: 'Класс B' }]);
+    mocks.listSchedules.mockImplementation(async ({ academicYearId }: { academicYearId: number }) =>
+      academicYearId === 1 ? [staleA] : [scheduleB]);
+    mocks.getSchedule.mockImplementation(async (id: number) => {
+      if (id === 701) {
+        aDetailCalls += 1;
+        return aDetailCalls === 1 ? delayedA.promise : currentA;
+      }
+      return scheduleB;
+    });
+    mocks.getScheduleGrid.mockImplementation(async (id: number) => gridFor(id === 701
+      ? (aDetailCalls === 1 ? staleA : currentA)
+      : scheduleB));
+    renderPage('/lesson-schedule?year=1&periodId=11&classId=7&scheduleId=701');
+    await waitFor(() => expect(mocks.getSchedule).toHaveBeenCalledWith(701));
+
+    await user.click(screen.getByRole('button', { name: '2026/2027' }));
+    await user.click(screen.getByRole('option', { name: '2027/2028' }));
+    expect(await screen.findByText('Расписание B')).toBeInTheDocument();
+    expect(screen.getByTestId('url')).toHaveTextContent('year=2&periodId=22&classId=8');
+    expect(mocks.listSchedules).toHaveBeenLastCalledWith({ academicYearId: 2, academicPeriodId: 22, classId: 8 });
+
+    await user.click(screen.getByRole('button', { name: '2027/2028' }));
+    await user.click(screen.getByRole('option', { name: '2026/2027' }));
+    expect(await screen.findByText('Актуальное расписание A')).toBeInTheDocument();
+    expect(screen.getByTestId('url')).toHaveTextContent('year=1&periodId=11&classId=7');
+    expect(mocks.getConstructorContext).toHaveBeenLastCalledWith({
+      academicYearId: 1,
+      classId: 7,
+      academicPeriodId: 11,
+    });
+
+    await act(async () => { delayedA.resolve(staleA); });
+    expect(screen.getByText('Актуальное расписание A')).toBeInTheDocument();
+    expect(screen.queryByText('Устаревшее расписание A')).not.toBeInTheDocument();
+  });
+
+  it('ignores an old schedule-list response when the same year is selected again', async () => {
+    const user = userEvent.setup();
+    const delayedListA = deferred<ClassSchedule[]>();
+    const scheduleA = { ...makeSchedule(701, 7, 'DRAFT'), academicYearId: 1, academicPeriodId: 11, bellTemplateName: 'Расписание A' };
+    const staleVersionA = { ...makeSchedule(702, 7, 'PUBLISHED'), academicYearId: 1, academicPeriodId: 11 };
+    const scheduleB = { ...makeSchedule(801, 8, 'DRAFT'), academicYearId: 2, academicPeriodId: 22, bellTemplateName: 'Расписание B' };
+    let aListCalls = 0;
+
+    mocks.listPeriods.mockImplementation(async (yearId: string) => yearId === '1'
+      ? [{ id: '11', name: 'Период A' }]
+      : [{ id: '22', name: 'Период B' }]);
+    mocks.listClasses.mockImplementation(async ({ academicYearId }: { academicYearId: string }) => academicYearId === '1'
+      ? [{ id: '7', name: 'Класс A' }]
+      : [{ id: '8', name: 'Класс B' }]);
+    mocks.listSchedules.mockImplementation(async ({ academicYearId }: { academicYearId: number }) => {
+      if (academicYearId === 1) {
+        aListCalls += 1;
+        return aListCalls === 1 ? delayedListA.promise : [scheduleA];
+      }
+      return [scheduleB];
+    });
+    mocks.getSchedule.mockImplementation(async (id: number) => id === 701 ? scheduleA : scheduleB);
+    mocks.getScheduleGrid.mockImplementation(async (id: number) => gridFor(id === 701 ? scheduleA : scheduleB));
+    renderPage('/lesson-schedule?year=1&periodId=11&classId=7&scheduleId=701');
+    await waitFor(() => expect(mocks.listSchedules).toHaveBeenCalledWith({
+      academicYearId: 1,
+      academicPeriodId: 11,
+      classId: 7,
+    }));
+
+    await user.click(screen.getByRole('button', { name: '2026/2027' }));
+    await user.click(screen.getByRole('option', { name: '2027/2028' }));
+    expect(await screen.findByText('Расписание B')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '2027/2028' }));
+    await user.click(screen.getByRole('option', { name: '2026/2027' }));
+    expect(await screen.findByText('Расписание A')).toBeInTheDocument();
+    expect(aListCalls).toBe(2);
+
+    await act(async () => { delayedListA.resolve([scheduleA, staleVersionA]); });
+    expect(screen.queryByRole('button', { name: 'Опубликовано' })).not.toBeInTheDocument();
+    expect(screen.getByText('Расписание A')).toBeInTheDocument();
+  });
+
+  it('ignores detail results after the schedule screen unmounts', async () => {
+    const delayedDetail = deferred<ClassSchedule>();
+    mocks.getSchedule.mockImplementation(async (id: number) => id === 402
+      ? delayedDetail.promise
+      : schedules.find((schedule) => schedule.id === id));
+    const view = renderPage();
+    await waitFor(() => expect(mocks.getSchedule).toHaveBeenCalledWith(402));
+
+    view.unmount();
+    await act(async () => { delayedDetail.resolve(schedules.find((schedule) => schedule.id === 402)!); });
+
+    expect(mocks.getConstructorContext).not.toHaveBeenCalled();
+  });
+
+  it.each(['grid', 'history', 'context'] as const)('shows a retryable detail error when %s fails and hides stale actions', async (source) => {
+    const user = userEvent.setup();
+    renderPage();
+    await expectSelection();
+    await screen.findByRole('button', { name: 'Редактировать' });
+    const failure = new Error(`Ошибка ${source}`);
+    if (source === 'grid') mocks.getScheduleGrid.mockRejectedValueOnce(failure);
+    else if (source === 'history') mocks.listScheduleHistory.mockRejectedValueOnce(failure);
+    else mocks.getConstructorContext.mockRejectedValueOnce(failure);
+
+    await user.click(screen.getByRole('button', { name: 'Черновик' }));
+    expect(await screen.findByText(failure.message)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Редактировать' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Проверить' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Повторить' }));
+    expect(await screen.findByRole('button', { name: 'Редактировать' })).toBeInTheDocument();
+  });
+
+  it('does not enable schedule actions when the constructor context response is empty', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await expectSelection();
+    await screen.findByRole('button', { name: 'Редактировать' });
+    mocks.getConstructorContext.mockResolvedValueOnce(null);
+    await user.click(screen.getByRole('button', { name: 'Черновик' }));
+
+    expect(await screen.findByText('Контекст конструктора не загрузился. Повторите загрузку расписания.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Редактировать' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Проверить' })).not.toBeInTheDocument();
+  });
+
+  it('rejects a grid whose schedule context differs from the selected detail', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await expectSelection();
+    await screen.findByRole('button', { name: 'Редактировать' });
+    const mismatchedSchedule = { ...schedules.find((schedule) => schedule.id === 401)!, classId: 1 };
+    mocks.getScheduleGrid.mockResolvedValueOnce(gridFor(mismatchedSchedule));
+
+    await user.click(screen.getByRole('button', { name: 'Черновик' }));
+
+    expect(await screen.findByText('Ответ сервера относится к другому контексту. Повторите загрузку расписания.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Редактировать' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Проверить' })).not.toBeInTheDocument();
+  });
+
   it.each(['Шаблоны звонков', 'Школьный календарь', 'Занятость учителей', 'Подгруппы классов', 'Загрузка из Excel'])('возвращает выбранную публикацию из «%s»', async (name) => {
     const user = userEvent.setup();
     renderPage();
