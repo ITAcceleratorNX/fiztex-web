@@ -11,7 +11,7 @@ import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
 import { FilterSelect } from '@/components/ui/FilterSelect';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { formatDateTime } from '@/lib/format';
 import {
   collapseKeyEvents,
@@ -78,36 +78,37 @@ export function KeysAdminPage() {
           <TabsTrigger value="issued">Выданы</TabsTrigger>
           <TabsTrigger value="history">История</TabsTrigger>
         </TabsList>
+        <TabsContent value={tab} className="mt-6">
+          {tab === 'history' ? (
+            <HistoryPanel
+              page={page}
+              action={action}
+              onActionChange={(value) => {
+                setAction(value);
+                patchParams({ action: value === 'all' ? null : value, page: null });
+              }}
+              onPageChange={(nextPage) => patchParams({ page: nextPage ? String(nextPage) : null })}
+            />
+          ) : (
+            <DashboardPanel
+              state={tab === 'issued' ? 'ISSUED' : 'ON_POST'}
+              query={query}
+              settledQuery={settledQuery}
+              problem={problem}
+              holder={holder}
+              onQueryChange={setQuery}
+              onProblemChange={(value) => {
+                setProblem(value);
+                patchParams({ problem: value === 'all' ? null : value });
+              }}
+              onHolderChange={(value) => {
+                setHolder(value);
+                patchParams({ holder: value === 'all' ? null : value });
+              }}
+            />
+          )}
+        </TabsContent>
       </Tabs>
-
-      {tab === 'history' ? (
-        <HistoryPanel
-          page={page}
-          action={action}
-          onActionChange={(value) => {
-            setAction(value);
-            patchParams({ action: value === 'all' ? null : value, page: null });
-          }}
-          onPageChange={(nextPage) => patchParams({ page: nextPage ? String(nextPage) : null })}
-        />
-      ) : (
-        <DashboardPanel
-          state={tab === 'issued' ? 'ISSUED' : 'ON_POST'}
-          query={query}
-          settledQuery={settledQuery}
-          problem={problem}
-          holder={holder}
-          onQueryChange={setQuery}
-          onProblemChange={(value) => {
-            setProblem(value);
-            patchParams({ problem: value === 'all' ? null : value });
-          }}
-          onHolderChange={(value) => {
-            setHolder(value);
-            patchParams({ holder: value === 'all' ? null : value });
-          }}
-        />
-      )}
     </section>
   );
 }

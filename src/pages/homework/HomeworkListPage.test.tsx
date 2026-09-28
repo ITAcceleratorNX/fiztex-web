@@ -98,7 +98,7 @@ describe('HomeworkListPage', () => {
     renderPage();
     await screen.findByText('Параграф 12, упражнения 1–5');
 
-    await userEvent.click(screen.getByRole('tab', { name: 'История' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'История' }));
 
     expect(lastQuery().scope).toBe('HISTORY');
   });
@@ -123,7 +123,7 @@ describe('HomeworkListPage', () => {
     await userEvent.click(screen.getByRole('option', { name: 'Черновик' }));
     expect(lastQuery().statuses).toEqual(['DRAFT']);
 
-    await userEvent.click(screen.getByRole('tab', { name: 'История' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'История' }));
 
     expect(lastQuery().scope).toBe('HISTORY');
     expect(lastQuery().statuses).toBeUndefined();
@@ -193,7 +193,7 @@ describe('HomeworkListPage', () => {
     renderPage();
     await screen.findByText('Нет актуальных заданий');
 
-    await userEvent.click(screen.getByRole('tab', { name: 'История' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'История' }));
 
     expect(await screen.findByText('В истории пока ничего нет')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Создать задание' })).not.toBeInTheDocument();
@@ -330,7 +330,7 @@ describe('пагинация домашних заданий (UX-04)', () => {
     await waitFor(() => expect(lastQuery()).toMatchObject({ page: 2 }));
     await userEvent.click(screen.getByRole('button', { name: 'Browser Forward' }));
     await waitFor(() => expect(lastQuery()).toMatchObject({ page: 0, statuses: ['DRAFT'] }));
-    await userEvent.click(screen.getByRole('tab', { name: 'История' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'История' }));
     expect(lastQuery()).toMatchObject({ page: 0, scope: 'HISTORY', statuses: undefined });
   });
 

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { LoadingBlock, ErrorBlock } from '@/components/ui/StateBlock';
 import { SurveyStatusBadge } from '@/components/ui/SurveyStatusBadge';
@@ -176,32 +176,31 @@ export function SurveyDetailPage({ variant = 'school' }: { variant?: SurveyVaria
                 <TabsTrigger value="results">Результаты</TabsTrigger>
                 {copy.aiAnalysis && <TabsTrigger value="ai">AI-анализ</TabsTrigger>}
               </TabsList>
+              <TabsContent value={tab} className="mt-5">
+                {tab === 'questions' && (
+                  <SurveyQuestionEditor surveyId={survey.id as number} canEdit={Boolean(survey.canEdit)} />
+                )}
+                {tab === 'audience' && (
+                  <SurveyAudienceTab
+                    survey={survey}
+                    classes={classes}
+                    gradeGroups={gradeGroups}
+                    canEdit={Boolean(survey.canEdit)}
+                    studentsOnly={copy.studentsOnly}
+                  />
+                )}
+                {tab === 'results' && (
+                  <SurveyResultsTab
+                    surveyId={survey.id as number}
+                    mode={survey.mode}
+                    classOptions={audienceClassOptions}
+                  />
+                )}
+                {tab === 'ai' && copy.aiAnalysis && (
+                  <SurveyAiAnalysisTab surveyId={survey.id as number} classOptions={audienceClassOptions} />
+                )}
+              </TabsContent>
             </Tabs>
-
-            <div className="mt-5">
-              {tab === 'questions' && (
-                <SurveyQuestionEditor surveyId={survey.id as number} canEdit={Boolean(survey.canEdit)} />
-              )}
-              {tab === 'audience' && (
-                <SurveyAudienceTab
-                  survey={survey}
-                  classes={classes}
-                  gradeGroups={gradeGroups}
-                  canEdit={Boolean(survey.canEdit)}
-                  studentsOnly={copy.studentsOnly}
-                />
-              )}
-              {tab === 'results' && (
-                <SurveyResultsTab
-                  surveyId={survey.id as number}
-                  mode={survey.mode}
-                  classOptions={audienceClassOptions}
-                />
-              )}
-              {tab === 'ai' && copy.aiAnalysis && (
-                <SurveyAiAnalysisTab surveyId={survey.id as number} classOptions={audienceClassOptions} />
-              )}
-            </div>
           </div>
 
           <ConfirmDialog

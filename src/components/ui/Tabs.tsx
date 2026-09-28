@@ -5,9 +5,11 @@ import {
   useMemo,
   useState,
   type ButtonHTMLAttributes,
+  type KeyboardEvent,
   type ReactNode,
 } from 'react';
 import { cx } from '@/lib/format';
+import { handleRovingFocusKeyDown } from './rovingFocus';
 
 type TabsContextValue = {
   value: string;
@@ -66,6 +68,7 @@ export function TabsList({ children, className }: { children: ReactNode; classNa
   return (
     <div
       role="tablist"
+      aria-orientation="horizontal"
       className={cx(
         'flex gap-1 border-b border-slate-200',
         className,
@@ -85,7 +88,17 @@ export function TabsTrigger({
 }: ButtonHTMLAttributes<HTMLButtonElement> & { value: string }) {
   const { value: active, setValue, baseId } = useTabsContext('TabsTrigger');
   const selected = active === value;
+  const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    rest.onKeyDown?.(event);
+    if (!event.defaultPrevented) {
+      handleRovingFocusKeyDown(event, {
+        itemSelector: '[role="tab"]:not(:disabled)',
+        activateOnArrow: true,
+      });
+    }
+  };
 
+  // Only the selected panel is mounted, so inactive tabs must not reference missing IDs.
   return (
     <button
       type="button"
@@ -93,14 +106,15 @@ export function TabsTrigger({
       {...rest}
       id={`${baseId}-tab-${value}`}
       aria-selected={selected}
-      aria-controls={`${baseId}-panel-${value}`}
-      tabIndex={selected ? 0 : -1}
+      aria-controls={selected ? `${baseId}-panel-${value}` : undefined}
+      tabIndex={selected && !rest.disabled ? 0 : -1}
+      onKeyDown={handleKeyDown}
       onClick={(event) => {
         onClick?.(event);
         if (!event.defaultPrevented) setValue(value);
       }}
       className={cx(
-        '-mb-px border-b-2 px-4 py-2.5 text-sm font-semibold transition',
+        '-mb-px border-b-2 px-4 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50 disabled:cursor-not-allowed disabled:opacity-50',
         selected
           ? 'border-brand-500 text-brand-700'
           : 'border-transparent text-slate-500 hover:text-slate-800',
@@ -129,6 +143,7 @@ export function TabsContent({
       role="tabpanel"
       id={`${baseId}-panel-${value}`}
       aria-labelledby={`${baseId}-tab-${value}`}
+      tabIndex={0}
       className={className}
     >
       {children}

@@ -7,7 +7,7 @@ import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
 import { FilterSelect } from '@/components/ui/FilterSelect';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useEquipmentDashboard, useEquipmentHistory, useEquipmentItems } from '@/hooks/queries';
@@ -128,45 +128,46 @@ export function EquipmentAdminPage() {
           <TabsTrigger value="issued">Выдано</TabsTrigger>
           <TabsTrigger value="history">История</TabsTrigger>
         </TabsList>
+        <TabsContent value={tab} className="mt-6">
+          {tab === 'history' ? (
+            <HistoryPanel
+              page={page}
+              action={action}
+              itemFilter={itemFilter}
+              items={items.data ?? []}
+              onActionChange={(value) => patchParams({ action: value === 'all' ? null : value, page: null })}
+              onItemChange={(value) => patchParams({ item: value === 'all' ? null : value, page: null })}
+              onPageChange={(nextPage) => patchParams({ page: nextPage ? String(nextPage) : null })}
+            />
+          ) : (
+            <DashboardPanel
+              state={tab === 'issued' ? 'ISSUED' : 'IN_STOCK'}
+              query={query}
+              settledQuery={settledQuery}
+              itemFilter={itemFilter}
+              problem={problem}
+              holder={holder}
+              items={items.data ?? []}
+              selected={selected}
+              onQueryChange={setQuery}
+              onItemChange={(value) => patchParams({ item: value === 'all' ? null : value })}
+              onProblemChange={(value) => patchParams({ problem: value === 'all' ? null : value })}
+              onHolderChange={(value) => patchParams({ holder: value === 'all' ? null : value })}
+              onToggle={(unitId) =>
+                setSelected((current) =>
+                  current.includes(unitId)
+                    ? current.filter((id) => id !== unitId)
+                    : [...current, unitId],
+                )
+              }
+              onOpenUnit={setCardUnitId}
+              onIssueSelected={(subtitle) =>
+                setIssueTarget({ mode: 'issue', unitIds: selected, subtitle })
+              }
+            />
+          )}
+        </TabsContent>
       </Tabs>
-
-      {tab === 'history' ? (
-        <HistoryPanel
-          page={page}
-          action={action}
-          itemFilter={itemFilter}
-          items={items.data ?? []}
-          onActionChange={(value) => patchParams({ action: value === 'all' ? null : value, page: null })}
-          onItemChange={(value) => patchParams({ item: value === 'all' ? null : value, page: null })}
-          onPageChange={(nextPage) => patchParams({ page: nextPage ? String(nextPage) : null })}
-        />
-      ) : (
-        <DashboardPanel
-          state={tab === 'issued' ? 'ISSUED' : 'IN_STOCK'}
-          query={query}
-          settledQuery={settledQuery}
-          itemFilter={itemFilter}
-          problem={problem}
-          holder={holder}
-          items={items.data ?? []}
-          selected={selected}
-          onQueryChange={setQuery}
-          onItemChange={(value) => patchParams({ item: value === 'all' ? null : value })}
-          onProblemChange={(value) => patchParams({ problem: value === 'all' ? null : value })}
-          onHolderChange={(value) => patchParams({ holder: value === 'all' ? null : value })}
-          onToggle={(unitId) =>
-            setSelected((current) =>
-              current.includes(unitId)
-                ? current.filter((id) => id !== unitId)
-                : [...current, unitId],
-            )
-          }
-          onOpenUnit={setCardUnitId}
-          onIssueSelected={(subtitle) =>
-            setIssueTarget({ mode: 'issue', unitIds: selected, subtitle })
-          }
-        />
-      )}
 
       <EquipmentItemFormModal
         open={formOpen}

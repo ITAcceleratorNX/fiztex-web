@@ -117,7 +117,7 @@ describe('homework form drafts', () => {
     const { store } = renderForm();
     expect(unload()).toBe(false);
     await fillForm();
-    await userEvent.click(screen.getByRole('tab', { name: 'Вопросами теста' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'Вопросами теста' }));
     await userEvent.click(screen.getByRole('button', { name: /^Следить за прохождением/ }));
     await pickGroup();
     const file = new File(['tasks'], 'tasks.pdf', { type: 'application/pdf' });
@@ -128,7 +128,7 @@ describe('homework form drafts', () => {
     expect(titleInput()).toHaveValue('Мой черновик');
     expect(descriptionInput()).toHaveValue('Решить задачи 1–5');
     expect(screen.getByLabelText('Дата и время сдачи')).toHaveValue('2026-10-20T15:30');
-    expect(screen.getByRole('tab', { name: 'Вопросами теста' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('radio', { name: 'Вопросами теста' })).toHaveAttribute('aria-checked', 'true');
     expect(store.get<HomeworkFormDraft>('homework:new:5')?.values.antiCheatEnabled).toBe(true);
     expect(screen.getByText('tasks.pdf')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole('button', { name: 'Создать черновик' })).toBeEnabled());

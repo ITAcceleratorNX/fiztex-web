@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
@@ -93,22 +93,23 @@ export function ServiceRequestsPage() {
             </TabsTrigger>
           ))}
         </TabsList>
+        <TabsContent value={section} className="mt-6">
+          {section === 'ALL' ? (
+            <AllServiceRequestsTab />
+          ) : section === 'AUDIT' ? (
+            <ServiceAuditTab />
+          ) : (
+            <MySection
+              section={section}
+              page={page}
+              onPageChange={setPage}
+              onCreate={() => setCreateOpen(true)}
+              accountId={accountId}
+              returnTo={`${location.pathname}${location.search}`}
+            />
+          )}
+        </TabsContent>
       </Tabs>
-
-      {section === 'ALL' ? (
-        <AllServiceRequestsTab />
-      ) : section === 'AUDIT' ? (
-        <ServiceAuditTab />
-      ) : (
-        <MySection
-          section={section}
-          page={page}
-          onPageChange={setPage}
-          onCreate={() => setCreateOpen(true)}
-          accountId={accountId}
-          returnTo={`${location.pathname}${location.search}`}
-        />
-      )}
 
       <CreateServiceRequestModal
         open={createOpen}
