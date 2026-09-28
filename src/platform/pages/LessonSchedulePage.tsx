@@ -72,6 +72,8 @@ import {
   type ScheduleStatus,
 } from '../services';
 import type { AcademicPeriod, AcademicYear, SchoolClass } from '../types';
+import { scheduleSettingsHref } from '@/lib/scheduleNavigation';
+import { useScheduleNavigation } from '../hooks/useScheduleNavigation';
 
 const SETTINGS_CARDS = [
   {
@@ -217,12 +219,20 @@ function CheckingCard() {
 export function LessonSchedulePage() {
   const toast = useToast();
   const navigate = useNavigate();
+  const { context: filters, invalid, setContext: setFilters, rememberContext } = useScheduleNavigation();
   const [years, setYears] = useState<AcademicYear[]>([]);
-  const [yearId, setYearId] = useState('');
+  const yearId = filters.year ?? '';
   const [periods, setPeriods] = useState<AcademicPeriod[]>([]);
-  const [periodId, setPeriodId] = useState('');
+  const periodId = filters.periodId ?? '';
   const [classes, setClasses] = useState<SchoolClass[]>([]);
-  const [classFilter, setClassFilter] = useState('');
+  const classFilter = filters.classId ?? '';
+  const [metadataYear, setMetadataYear] = useState('');
+  const metadataReady = !!yearId && metadataYear === yearId;
+  const filtersReady = metadataReady && filters.periodId != null && filters.classId != null
+    && (!periodId || periods.some((period) => period.id === periodId))
+    && (!classFilter || classes.some((schoolClass) => schoolClass.id === classFilter));
+  const filterKey = `${yearId}/${periodId}/${classFilter}`;
+  const [loadedFilterKey, setLoadedFilterKey] = useState('');
   const [schedules, setSchedules] = useState<ClassSchedule[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selected, setSelected] = useState<ClassSchedule | null>(null);
@@ -270,37 +280,70 @@ export function LessonSchedulePage() {
   } | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     void listAcademicYears()
       .then((y) => {
+        if (cancelled) return;
         setYears(y);
-        const active = y.find((item) => item.status === 'ACTIVE') ?? y[0];
-        if (active) setYearId(active.id);
       })
-      .catch((err) => setError(err instanceof Error ? err.message : 'Ошибка загрузки'));
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Ошибка загрузки');
+      });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
-    if (!yearId) return;
+    if (!invalid) return;
+    toast.info('Некорректные параметры расписания сброшены. Выберите нужный контекст.');
+    setFilters({}, true);
+  }, [invalid, setFilters, toast]);
+
+  useEffect(() => {
+    if (years.length === 0 || years.some((year) => year.id === yearId)) return;
+    const nextYear = years.find((year) => year.status === 'ACTIVE') ?? years[0];
+    if (yearId) toast.info('Выбранный учебный год недоступен. Открыт доступный учебный год.');
+    setFilters({
+      year: nextYear.id,
+      ...(yearId ? { periodId: null, classId: null, scheduleId: null } : {}),
+    }, true);
+  }, [years, yearId, setFilters, toast]);
+
+  useEffect(() => {
+    if (!yearId || !years.some((year) => year.id === yearId)) return;
+    let cancelled = false;
+    setMetadataYear('');
     void Promise.all([
       listPeriods(yearId),
       listClasses({ academicYearId: yearId }),
       scheduleSettingsApi.listBellTemplates(Number(yearId)),
     ])
       .then(([p, c, tPage]) => {
+        if (cancelled) return;
         setPeriods(p);
         setClasses(c);
         setTemplates((tPage.content ?? []).map((t) => ({ id: t.id, name: t.name })));
-        if (p[0]) {
-          setPeriodId((prev) => prev || p[0].id);
-          setCreatePeriodId((prev) => prev || p[0].id);
-        }
-        if (c[0]) {
-          setClassFilter((prev) => prev || c[0].id);
-          setCreateClassId((prev) => prev || c[0].id);
-        }
+        setMetadataYear(yearId);
       })
-      .catch((err) => setError(err instanceof Error ? err.message : 'Ошибка метаданных'));
-  }, [yearId]);
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Ошибка метаданных');
+      });
+    return () => { cancelled = true; };
+  }, [yearId, years]);
+
+  useEffect(() => {
+    if (!metadataReady) return;
+    const nextPeriod = filters.periodId === '' || periods.some((p) => p.id === filters.periodId)
+      ? periodId : periods[0]?.id ?? '';
+    const nextClass = filters.classId === '' || classes.some((c) => c.id === filters.classId)
+      ? classFilter : classes[0]?.id ?? '';
+    const unavailable = (!!periodId && nextPeriod !== periodId) || (!!classFilter && nextClass !== classFilter);
+    if (unavailable) toast.info('Выбранный период или класс недоступен в этом году. Фильтры обновлены.');
+    if (nextPeriod !== filters.periodId || nextClass !== filters.classId) {
+      setFilters({ periodId: nextPeriod, classId: nextClass, ...(unavailable ? { scheduleId: null } : {}) }, true);
+    }
+    setCreatePeriodId(nextPeriod);
+    setCreateClassId(nextClass);
+  }, [metadataReady, periods, classes, periodId, classFilter, filters.periodId, filters.classId, setFilters, toast]);
 
   /**
    * Состояние карточек настроек. Отдельным запросом, а не по расписанию: бейджи
@@ -357,7 +400,7 @@ export function LessonSchedulePage() {
   }, [classFilter]);
 
   const reloadSchedules = useCallback(async () => {
-    if (!yearId) return;
+    if (!filtersReady) return;
     setLoading(true);
     setError(null);
     try {
@@ -367,12 +410,13 @@ export function LessonSchedulePage() {
         classId: classFilter ? Number(classFilter) : undefined,
       });
       setSchedules(list);
+      setLoadedFilterKey(filterKey);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось загрузить расписания');
     } finally {
       setLoading(false);
     }
-  }, [yearId, periodId, classFilter]);
+  }, [yearId, periodId, classFilter, filtersReady, filterKey]);
 
   useEffect(() => {
     void reloadSchedules();
@@ -382,11 +426,12 @@ export function LessonSchedulePage() {
   // а не в loadDetail: тот перевызывается после каждого сохранения урока.
   useEffect(() => {
     setEditing(false);
-  }, [selectedId]);
+  }, [selectedId, yearId, periodId, classFilter, filters.scheduleId]);
 
   const loadDetail = useCallback(
-    async (id: number) => {
+    async (id: number, syncNavigation = true) => {
       setSelectedId(id);
+      if (syncNavigation) setFilters({ scheduleId: String(id) });
       setDetailLoading(true);
       setConflictReport(null);
       try {
@@ -410,27 +455,18 @@ export function LessonSchedulePage() {
         setDetailLoading(false);
       }
     },
-    [toast],
+    [toast, setFilters],
   );
 
   // Auto-pick schedule for selected year/period/class (prefer draft).
   useEffect(() => {
-    if (!periodId || !classFilter || schedules.length === 0) {
-      if (!loading && periodId && classFilter && schedules.length === 0) {
-        setSelected(null);
-        setSelectedId(null);
-        setGrid(null);
-      }
-      return;
-    }
+    // Never reject a saved version against a list from another filter context.
+    if (!filtersReady || loading || pending || loadedFilterKey !== filterKey) return;
     const classId = Number(classFilter);
     const period = Number(periodId);
     const forCell = schedules.filter(
       (s) => s.classId === classId && s.academicPeriodId === period,
     );
-    // Уже открытую версию не перебиваем: иначе переключение «Черновик ↔ Опубликовано»
-    // мгновенно откатывалось бы обратно на черновик.
-    if (forCell.some((s) => s.id === selectedId)) return;
     // Вытесненные публикации (PUBLISHED без current) сами по себе не открываются:
     // показывать вместо действующего расписания старую версию нельзя.
     const rank = (s: ClassSchedule) => {
@@ -438,11 +474,23 @@ export function LessonSchedulePage() {
       if (s.status === 'PUBLISHED') return s.current ? 1 : 2;
       return 3;
     };
-    const match = [...forCell].sort((a, b) => rank(a) - rank(b))[0];
-    if (match) {
-      void loadDetail(match.id);
+    const requested = forCell.find((s) => String(s.id) === filters.scheduleId);
+    const match = requested ?? [...forCell].sort((a, b) => rank(a) - rank(b))[0];
+    const nextId = match ? String(match.id) : null;
+    if (filters.scheduleId !== nextId) {
+      if (filters.scheduleId) toast.info('Выбранная версия расписания недоступна. Показана доступная версия.');
+      setFilters({ scheduleId: nextId }, true);
     }
-  }, [schedules, periodId, classFilter, loading, selectedId, loadDetail]);
+    rememberContext({ ...filters, scheduleId: nextId });
+    if (!match) {
+      setSelected(null);
+      setSelectedId(null);
+      setGrid(null);
+    } else if (selectedId !== match.id) {
+      void loadDetail(match.id, false);
+    }
+  }, [schedules, periodId, classFilter, loading, pending, selectedId, loadDetail, filtersReady,
+    loadedFilterKey, filterKey, filters, setFilters, rememberContext, toast]);
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
@@ -462,8 +510,7 @@ export function LessonSchedulePage() {
       });
       toast.success('Расписание создано');
       setCreateOpen(false);
-      setPeriodId(usePeriod);
-      setClassFilter(useClass);
+      setFilters({ periodId: usePeriod, classId: useClass, scheduleId: String(created.id) });
       await reloadSchedules();
       await loadDetail(created.id);
     } catch (err) {
@@ -586,6 +633,7 @@ export function LessonSchedulePage() {
       await archiveSchedule(selectedId);
       toast.success('Архивировано');
       setSelectedId(null);
+      setFilters({ scheduleId: null }, true);
       setSelected(null);
       setGrid(null);
       await reloadSchedules();
@@ -603,8 +651,11 @@ export function LessonSchedulePage() {
         res.warnings?.length > 0 ? ` · предупреждений: ${res.warnings.length}` : '';
       toast.success(`Скопировано уроков: ${res.copiedLessons}${warnMsg}`);
       setCopyOpen(false);
-      if (values.targetClassId) setClassFilter(String(values.targetClassId));
-      if (values.targetAcademicPeriodId) setPeriodId(String(values.targetAcademicPeriodId));
+      setFilters({
+        classId: values.targetClassId ? String(values.targetClassId) : classFilter,
+        periodId: values.targetAcademicPeriodId ? String(values.targetAcademicPeriodId) : periodId,
+        scheduleId: String(res.schedule.id),
+      });
       await reloadSchedules();
       await loadDetail(res.schedule.id);
     } catch (err) {
@@ -825,7 +876,7 @@ export function LessonSchedulePage() {
             return (
               <Link
                 key={card.to}
-                to={card.to}
+                to={scheduleSettingsHref(card.to, filters)}
                 className="flex items-center justify-between gap-2.5 rounded-lg border border-line bg-white p-3 transition hover:border-navy-700"
               >
                 <span className="flex min-w-0 items-center gap-2.5">
@@ -855,7 +906,7 @@ export function LessonSchedulePage() {
           <div className="flex flex-wrap items-center gap-2.5">
             <Select
               value={yearId}
-              onChange={(e) => setYearId(e.target.value)}
+              onChange={(e) => setFilters({ year: e.target.value, periodId: null, classId: null, scheduleId: null })}
               className={FILTER_CONTROL}
             >
               {years.map((y) => (
@@ -866,7 +917,8 @@ export function LessonSchedulePage() {
             </Select>
             <Select
               value={periodId}
-              onChange={(e) => setPeriodId(e.target.value)}
+              onChange={(e) => setFilters({ periodId: e.target.value, scheduleId: null })}
+              disabled={!metadataReady}
               className={FILTER_CONTROL}
             >
               <option value="">Период</option>
@@ -878,7 +930,8 @@ export function LessonSchedulePage() {
             </Select>
             <Select
               value={classFilter}
-              onChange={(e) => setClassFilter(e.target.value)}
+              onChange={(e) => setFilters({ classId: e.target.value, scheduleId: null })}
+              disabled={!metadataReady}
               className={FILTER_CONTROL}
             >
               <option value="">Класс</option>
@@ -1040,7 +1093,7 @@ export function LessonSchedulePage() {
                 построить расписание.
               </p>
               <Link
-                to="/lesson-schedule/bell-templates"
+                to={scheduleSettingsHref('/lesson-schedule/bell-templates', filters)}
                 className="mt-5 inline-flex h-10 items-center rounded-xl bg-navy-700 px-4 text-sm font-semibold text-white hover:bg-navy-800"
               >
                 Перейти к шаблонам

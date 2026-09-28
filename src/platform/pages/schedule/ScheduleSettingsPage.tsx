@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Select } from '@/components/ui/Field';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useAcademicYears } from '@/platform/hooks/useScheduleSettings';
+import { useScheduleReturnTo } from '@/platform/hooks/useScheduleNavigation';
 import { BellTemplatesTab } from './BellTemplatesTab';
 import { ScheduleBreadcrumbs } from './ScheduleBreadcrumbs';
 import { WorkingDaysCard } from './WorkingDaysCard';
@@ -90,6 +91,7 @@ function ownsHeader(section: ScheduleSection): boolean {
 }
 
 export function ScheduleSettingsPage({ section }: { section: ScheduleSection }) {
+  const returnTo = useScheduleReturnTo();
   const [searchParams, setSearchParams] = useSearchParams();
   const yearParam = searchParams.get(YEAR_PARAM);
   const calendarFilters = useMemo(() => parseCalendarFilters(searchParams), [searchParams]);
@@ -165,7 +167,7 @@ export function ScheduleSettingsPage({ section }: { section: ScheduleSection }) 
       {ownsHeader(section) && (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <Link
-            to="/lesson-schedule"
+            to={returnTo}
             className="inline-flex items-center gap-1.5 text-13 font-semibold text-muted transition hover:text-navy-700"
           >
             <ArrowLeft className="size-4" />

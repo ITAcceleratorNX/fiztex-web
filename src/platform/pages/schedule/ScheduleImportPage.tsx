@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { useScheduleReturnTo } from '@/platform/hooks/useScheduleNavigation';
+import { readScheduleContext } from '@/lib/scheduleNavigation';
 import { ArrowLeft, FileSpreadsheet, Loader2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Field';
@@ -134,6 +136,9 @@ async function loadCatalogs(
  */
 export function ScheduleImportPage() {
   const toast = useToast();
+  const returnTo = useScheduleReturnTo();
+  const [searchParams] = useSearchParams();
+  const initialContext = useRef(readScheduleContext(searchParams));
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [years, setYears] = useState<AcademicYear[]>([]);
@@ -171,8 +176,12 @@ export function ScheduleImportPage() {
     void listAcademicYears()
       .then((list) => {
         setYears(list);
-        const active = list.find((year) => year.status === 'ACTIVE') ?? list[0];
-        if (active) setYearId(active.id);
+        const active = list.find((year) => year.id === initialContext.current.year)
+          ?? list.find((year) => year.status === 'ACTIVE') ?? list[0];
+        if (active) {
+          setPeriodId(active.id === initialContext.current.year ? initialContext.current.periodId ?? '' : '');
+          setYearId(active.id);
+        }
       })
       .catch(() => setError('Не удалось загрузить учебные годы'));
   }, []);
@@ -366,7 +375,7 @@ export function ScheduleImportPage() {
     <div className="space-y-5">
       <div className="flex items-center gap-2">
         <Link
-          to="/lesson-schedule"
+          to={returnTo}
           className="inline-flex items-center gap-1.5 text-13 font-semibold text-muted hover:text-navy-700"
         >
           <ArrowLeft className="size-4" /> Расписание
@@ -575,7 +584,7 @@ export function ScheduleImportPage() {
             публикация.
           </div>
           <Link
-            to="/lesson-schedule"
+            to={returnTo}
             className="text-13 font-semibold text-navy-700 hover:underline"
           >
             Открыть расписание

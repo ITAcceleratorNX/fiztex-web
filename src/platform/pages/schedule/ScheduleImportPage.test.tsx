@@ -193,9 +193,9 @@ const CLASS_SCOPE = {
   ],
 };
 
-function renderPage() {
+function renderPage(url = '/lesson-schedule/import') {
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[url]}>
       <ToastProvider>
         <ScheduleImportPage />
       </ToastProvider>
@@ -236,6 +236,20 @@ beforeEach(() => {
 });
 
 describe('ScheduleImportPage', () => {
+
+  it('принимает год и период конструктора и сохраняет исходную ссылку возврата', async () => {
+    listAcademicYears.mockResolvedValue([
+      { id: '1', name: '2026-2027', status: 'ACTIVE' },
+      { id: '2', name: '2027-2028', status: 'PLANNED' },
+    ]);
+    listPeriods.mockResolvedValue([{ id: '21', name: 'Первая четверть' }, { id: '22', name: 'Вторая четверть' }]);
+    const returnTo = '/lesson-schedule?year=2&periodId=22&classId=4&scheduleId=42';
+    renderPage(`/lesson-schedule/import?year=2&periodId=22&returnTo=${encodeURIComponent(returnTo)}`);
+    await screen.findByRole('button', { name: '2027-2028' });
+    await screen.findByRole('button', { name: 'Вторая четверть' });
+    expect(listPeriods).toHaveBeenCalledWith('2');
+    expect(screen.getByRole('link', { name: 'Расписание' })).toHaveAttribute('href', returnTo);
+  });
 
   it('показывает разбор файла и то, что требует исправления', async () => {
     const user = userEvent.setup();
