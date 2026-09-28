@@ -119,6 +119,32 @@ afterEach(() => {
 });
 
 describe('LessonSchedulePage · navigation context', () => {
+  it('changes year, period, and class with the keyboard only', async () => {
+    const user = userEvent.setup();
+    renderPage('/lesson-schedule?year=2&periodId=22&classId=1');
+
+    const year = await screen.findByRole('button', { name: '2027/2028' });
+    year.focus();
+    await user.keyboard('{Enter}{ArrowUp}{Enter}');
+    await waitFor(() => expect(screen.getByTestId('url')).toHaveTextContent('year=1'));
+
+    const period = await screen.findByRole('button', { name: 'Первый период' });
+    period.focus();
+    await user.keyboard('{Enter}{ArrowDown}{Enter}');
+    await waitFor(() => expect(screen.getByTestId('url')).toHaveTextContent('periodId=22'));
+
+    const schoolClass = await screen.findByRole('button', { name: '5А' });
+    schoolClass.focus();
+    await user.keyboard('{Enter}{ArrowDown}{Enter}');
+    await waitFor(() => expect(screen.getByTestId('url')).toHaveTextContent('classId=4'));
+    expect(await screen.findByRole('button', { name: '6Б' })).toBeInTheDocument();
+    await waitFor(() => expect(mocks.listSchedules).toHaveBeenLastCalledWith({
+      academicYearId: 1,
+      academicPeriodId: 22,
+      classId: 4,
+    }));
+  });
+
   it('keeps year, period, class and detail response aligned through A→B→A', async () => {
     const user = userEvent.setup();
     const delayedA = deferred<ClassSchedule>();

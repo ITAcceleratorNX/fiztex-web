@@ -193,6 +193,7 @@ describe('Modal accessibility', () => {
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
     expect(screen.getByRole('dialog', { name: 'Выбор группы' })).toBeInTheDocument();
     expect(onClose).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(trigger);
 
     await user.keyboard('{Escape}');
     expect(onClose).toHaveBeenCalledTimes(1);
