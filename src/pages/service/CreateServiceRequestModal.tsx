@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { AlertTriangle, ArrowLeft, Brush, Plus, Wrench, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Field, TextArea, TextInput } from '@/components/ui/Field';
 import { Modal } from '@/components/ui/Modal';
 import { Switch } from '@/components/ui/Switch';
 import { useCreateServiceRequest } from '@/hooks/queries';
 import { cx } from '@/lib/format';
+import { useBlocker, type BlockerFunction } from 'react-router-dom';
 import {
   FIELD_LIMITS,
   MAX_PHOTOS,
@@ -55,6 +57,23 @@ export function CreateServiceRequestModal({
   // Подсветка появляется после того, как поле покинули, а не с первого символа: красное
   // поле, которого ещё не касались, — упрёк за незаполненную форму.
   const [blurred, setBlurred] = useState<Record<string, boolean>>({});
+  const [discardPromptOpen, setDiscardPromptOpen] = useState(false);
+  const [pendingCloseAttempt, setPendingCloseAttempt] = useState(false);
+  const submitInFlight = useRef(false);
+  const allowNavigation = useRef(false);
+
+  const isDirty = Boolean(
+    serviceType || buildingText || floorText || locationText || emergency || description || photos.length,
+  );
+  const shouldBlockNavigation = open && (isDirty || create.isPending);
+  const blocker = useBlocker(useCallback<BlockerFunction>(({ currentLocation, nextLocation }) => {
+    if (!shouldBlockNavigation || allowNavigation.current) return false;
+    return currentLocation.pathname !== nextLocation.pathname
+      || currentLocation.search !== nextLocation.search
+      || currentLocation.hash !== nextLocation.hash;
+  }, [shouldBlockNavigation]));
+  const navigationBlocked = blocker.state === 'blocked';
+  const leavePromptOpen = discardPromptOpen || navigationBlocked || pendingCloseAttempt;
 
   useEffect(() => {
     if (open) return;
@@ -69,9 +88,21 @@ export function CreateServiceRequestModal({
     setPhotoError(null);
     setBlurred({});
     create.reset();
+    setDiscardPromptOpen(false);
+    setPendingCloseAttempt(false);
     // `create` — объект мутации, он новый на каждый рендер; сбрасываем по факту закрытия.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  useEffect(() => {
+    if (!open || (!isDirty && !create.isPending)) return;
+    const preventDiscard = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', preventDiscard);
+    return () => window.removeEventListener('beforeunload', preventDiscard);
+  }, [create.isPending, isDirty, open]);
 
   const serverFields = fieldErrors(create.error);
   const stepOneValid = Boolean(
@@ -95,6 +126,40 @@ export function CreateServiceRequestModal({
 
   function markBlurred(field: string) {
     return () => setBlurred((prev) => ({ ...prev, [field]: true }));
+  }
+
+  function requestClose() {
+    if (create.isPending || submitInFlight.current) {
+      setPendingCloseAttempt(true);
+      return;
+    }
+    if (isDirty) {
+      setDiscardPromptOpen(true);
+      return;
+    }
+    onClose();
+  }
+
+  function stayOnForm() {
+    if (blocker.state === 'blocked') blocker.reset();
+    setDiscardPromptOpen(false);
+    setPendingCloseAttempt(false);
+  }
+
+  function leaveWithoutSaving() {
+    if (create.isPending || submitInFlight.current) {
+      stayOnForm();
+      return;
+    }
+
+    setDiscardPromptOpen(false);
+    setPendingCloseAttempt(false);
+    if (blocker.state === 'blocked') {
+      onClose();
+      blocker.proceed();
+      return;
+    }
+    onClose();
   }
 
   function addPhotos(event: ChangeEvent<HTMLInputElement>) {
@@ -123,177 +188,224 @@ export function CreateServiceRequestModal({
   }
 
   async function submit() {
-    if (!serviceType || !stepTwoValid) return;
-    const created = await create.mutateAsync({
-      serviceType,
-      emergency,
-      buildingText: buildingText.trim(),
-      floorText: floorText.trim(),
-      locationText: locationText.trim(),
-      description: description.trim(),
-      photos,
-    });
-    onCreated(created);
+    if (!serviceType || !stepTwoValid || create.isPending || submitInFlight.current) return;
+    submitInFlight.current = true;
+    try {
+      const created = await create.mutateAsync({
+        serviceType,
+        emergency,
+        buildingText: buildingText.trim(),
+        floorText: floorText.trim(),
+        locationText: locationText.trim(),
+        description: description.trim(),
+        photos,
+      });
+      setDiscardPromptOpen(false);
+      setPendingCloseAttempt(false);
+      if (blocker.state === 'blocked') blocker.reset();
+      allowNavigation.current = true;
+      onCreated(created);
+    } catch {
+      // The mutation error is shown inline; values and attached files stay in the form.
+    } finally {
+      allowNavigation.current = false;
+      submitInFlight.current = false;
+    }
   }
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title="Создать заявку"
-      subtitle={
-        step === 1 ? 'Выберите тип и укажите местонахождение' : 'Опишите проблему и приложите фото'
-      }
-      footer={
-        <div className="flex w-full items-center justify-between gap-3">
-          <Button variant="secondary" onClick={onClose} disabled={create.isPending}>
-            Отмена
-          </Button>
-          {step === 1 ? (
-            <Button onClick={() => setStep(2)} disabled={!stepOneValid}>
-              Далее
+    <>
+      <Modal
+        open={open}
+        onClose={requestClose}
+        title="Создать заявку"
+        subtitle={
+          step === 1 ? 'Выберите тип и укажите местонахождение' : 'Опишите проблему и приложите фото'
+        }
+        footer={
+          <div className="flex w-full items-center justify-between gap-3">
+            <Button variant="secondary" onClick={requestClose} disabled={create.isPending}>
+              Отмена
             </Button>
-          ) : (
-            <Button onClick={() => void submit()} loading={create.isPending} disabled={!stepTwoValid}>
-              Создать заявку
-            </Button>
+            {step === 1 ? (
+              <Button onClick={() => setStep(2)} disabled={!stepOneValid || create.isPending}>
+                Далее
+              </Button>
+            ) : (
+              <Button onClick={() => void submit()} loading={create.isPending} disabled={!stepTwoValid || create.isPending}>
+                Создать заявку
+              </Button>
+            )}
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          {create.isPending && (
+            <p role="status" className="rounded-lg bg-info-bg px-3 py-2 text-13 text-link">
+              Отправляем заявку. Дождитесь ответа — закрытие окна не отменит отправку.
+            </p>
           )}
-        </div>
-      }
-    >
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          {step === 2 ? (
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              className="inline-flex items-center gap-1.5 text-13 font-semibold text-link transition hover:underline"
-            >
-              <ArrowLeft className="size-4" aria-hidden />
-              Назад
-            </button>
-          ) : (
-            <span />
-          )}
-          <span className="flex items-center gap-2 text-11 text-subtle">
-            <StepDots step={step} />
-            Шаг {step} из 2
-          </span>
-        </div>
+          <div className="flex items-center justify-between">
+            {step === 2 ? (
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                disabled={create.isPending}
+                className="inline-flex items-center gap-1.5 text-13 font-semibold text-link transition hover:underline"
+              >
+                <ArrowLeft className="size-4" aria-hidden />
+                Назад
+              </button>
+            ) : (
+              <span />
+            )}
+            <span className="flex items-center gap-2 text-11 text-subtle">
+              <StepDots step={step} />
+              Шаг {step} из 2
+            </span>
+          </div>
 
-        {/* Отказ, не привязанный к полю: сеть, конфликт, что-то ещё. Полевые ошибки
-            показывают сами поля — дублировать их плашкой значило бы сказать дважды. */}
-        {create.isError && Object.keys(serverFields).length === 0 && (
-          <p
-            role="alert"
-            className="flex items-start gap-2 rounded-lg border-l-4 border-red-500 bg-red-50 px-3 py-2.5 text-13 text-red-600"
-          >
-            <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
-            {actionErrorText(create.error)}
+          {/* Отказ, не привязанный к полю: сеть, конфликт, что-то ещё. Полевые ошибки
+              показывают сами поля — дублировать их плашкой значило бы сказать дважды. */}
+          {create.isError && Object.keys(serverFields).length === 0 && (
+            <p
+              role="alert"
+              className="flex items-start gap-2 rounded-lg border-l-4 border-red-500 bg-red-50 px-3 py-2.5 text-13 text-red-600"
+            >
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
+              {actionErrorText(create.error)}
+            </p>
+          )}
+
+          <fieldset disabled={create.isPending} className="min-w-0 space-y-4">
+            {step === 1 ? (
+              <>
+                <Field label="Тип заявки" required error={serverFields.serviceType}>
+                  <div className="mt-1 grid grid-cols-2 gap-3">
+                    {TYPES.map((type) => {
+                      const Icon = type.icon;
+                      const selected = type.value === serviceType;
+                      return (
+                        <button
+                          key={type.value}
+                          type="button"
+                          aria-pressed={selected}
+                          onClick={() => setServiceType(type.value)}
+                          className={cx(
+                            'flex items-center gap-2.5 rounded-xl border px-4 py-3 text-left text-13 transition',
+                            selected
+                              ? 'border-brand-500 bg-brand-50 font-semibold text-brand-700'
+                              : 'border-line bg-white text-ink hover:border-slate-300',
+                          )}
+                        >
+                          <Icon className="size-4 shrink-0" aria-hidden />
+                          {type.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Field>
+
+                <Field label="Корпус" required error={errorFor('buildingText', buildingText)}>
+                  <TextInput
+                    value={buildingText}
+                    onChange={(e) => setBuildingText(e.target.value)}
+                    onBlur={markBlurred('buildingText')}
+                    placeholder="Например: Корпус А"
+                    maxLength={FIELD_LIMITS.buildingText}
+                    error={Boolean(errorFor('buildingText', buildingText))}
+                  />
+                </Field>
+
+                <Field label="Этаж" required error={errorFor('floorText', floorText)}>
+                  <TextInput
+                    value={floorText}
+                    onChange={(e) => setFloorText(e.target.value)}
+                    onBlur={markBlurred('floorText')}
+                    placeholder="Например: 3"
+                    maxLength={FIELD_LIMITS.floorText}
+                    error={Boolean(errorFor('floorText', floorText))}
+                  />
+                </Field>
+
+                <Field label="Кабинет / зона" required error={errorFor('locationText', locationText)}>
+                  <TextInput
+                    value={locationText}
+                    onChange={(e) => setLocationText(e.target.value)}
+                    onBlur={markBlurred('locationText')}
+                    placeholder="Например: Каб. 204 или Спортзал"
+                    maxLength={FIELD_LIMITS.locationText}
+                    error={Boolean(errorFor('locationText', locationText))}
+                  />
+                </Field>
+
+                <div className="flex items-center justify-between gap-4 border-t border-line pt-4">
+                  <div>
+                    <p className="text-13 font-semibold text-ink">Экстренная заявка</p>
+                    <p className="text-11 text-subtle">Отметьте, если требуется срочное решение</p>
+                  </div>
+                  <Switch checked={emergency} onChange={setEmergency} />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Сводка первого шага: что именно описывают, видно, не возвращаясь назад. */}
+                <p className="rounded-lg bg-neutral-bg px-3 py-2 text-13 text-ink">{summary}</p>
+
+                <Field
+                  label="Описание"
+                  required
+                  error={errorFor('description', description)}
+                  hint={`${description.length} / ${FIELD_LIMITS.description}`}
+                >
+                  <TextArea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    onBlur={markBlurred('description')}
+                    placeholder="Опишите проблему подробнее…"
+                    maxLength={FIELD_LIMITS.description}
+                    rows={5}
+                    error={Boolean(errorFor('description', description))}
+                  />
+                </Field>
+
+                <PhotoPicker
+                  photos={photos}
+                  error={photoError ?? serverFields.photos}
+                  onAdd={addPhotos}
+                  onRemove={(index) => setPhotos((prev) => prev.filter((_, i) => i !== index))}
+                />
+              </>
+            )}
+          </fieldset>
+        </div>
+      </Modal>
+
+      {leavePromptOpen && create.isPending ? (
+        <Modal
+          open
+          onClose={stayOnForm}
+          title="Заявка отправляется"
+          size="sm"
+          footer={<Button onClick={stayOnForm}>Остаться</Button>}
+        >
+          <p className="text-sm leading-relaxed text-slate-600">
+            Отправка уже началась и не отменится при закрытии. Дождитесь ответа сервера, затем решите, что делать дальше.
           </p>
-        )}
-
-        {step === 1 ? (
-          <>
-            <Field label="Тип заявки" required error={serverFields.serviceType}>
-              <div className="mt-1 grid grid-cols-2 gap-3">
-                {TYPES.map((type) => {
-                  const Icon = type.icon;
-                  const selected = type.value === serviceType;
-                  return (
-                    <button
-                      key={type.value}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => setServiceType(type.value)}
-                      className={cx(
-                        'flex items-center gap-2.5 rounded-xl border px-4 py-3 text-left text-13 transition',
-                        selected
-                          ? 'border-brand-500 bg-brand-50 font-semibold text-brand-700'
-                          : 'border-line bg-white text-ink hover:border-slate-300',
-                      )}
-                    >
-                      <Icon className="size-4 shrink-0" aria-hidden />
-                      {type.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </Field>
-
-            <Field label="Корпус" required error={errorFor('buildingText', buildingText)}>
-              <TextInput
-                value={buildingText}
-                onChange={(e) => setBuildingText(e.target.value)}
-                onBlur={markBlurred('buildingText')}
-                placeholder="Например: Корпус А"
-                maxLength={FIELD_LIMITS.buildingText}
-                error={Boolean(errorFor('buildingText', buildingText))}
-              />
-            </Field>
-
-            <Field label="Этаж" required error={errorFor('floorText', floorText)}>
-              <TextInput
-                value={floorText}
-                onChange={(e) => setFloorText(e.target.value)}
-                onBlur={markBlurred('floorText')}
-                placeholder="Например: 3"
-                maxLength={FIELD_LIMITS.floorText}
-                error={Boolean(errorFor('floorText', floorText))}
-              />
-            </Field>
-
-            <Field label="Кабинет / зона" required error={errorFor('locationText', locationText)}>
-              <TextInput
-                value={locationText}
-                onChange={(e) => setLocationText(e.target.value)}
-                onBlur={markBlurred('locationText')}
-                placeholder="Например: Каб. 204 или Спортзал"
-                maxLength={FIELD_LIMITS.locationText}
-                error={Boolean(errorFor('locationText', locationText))}
-              />
-            </Field>
-
-            <div className="flex items-center justify-between gap-4 border-t border-line pt-4">
-              <div>
-                <p className="text-13 font-semibold text-ink">Экстренная заявка</p>
-                <p className="text-11 text-subtle">Отметьте, если требуется срочное решение</p>
-              </div>
-              <Switch checked={emergency} onChange={setEmergency} />
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Сводка первого шага: что именно описывают, видно, не возвращаясь назад. */}
-            <p className="rounded-lg bg-neutral-bg px-3 py-2 text-13 text-ink">{summary}</p>
-
-            <Field
-              label="Описание"
-              required
-              error={errorFor('description', description)}
-              hint={`${description.length} / ${FIELD_LIMITS.description}`}
-            >
-              <TextArea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                onBlur={markBlurred('description')}
-                placeholder="Опишите проблему подробнее…"
-                maxLength={FIELD_LIMITS.description}
-                rows={5}
-                error={Boolean(errorFor('description', description))}
-              />
-            </Field>
-
-            <PhotoPicker
-              photos={photos}
-              error={photoError ?? serverFields.photos}
-              onAdd={addPhotos}
-              onRemove={(index) => setPhotos((prev) => prev.filter((_, i) => i !== index))}
-            />
-          </>
-        )}
-      </div>
-    </Modal>
+        </Modal>
+      ) : (
+        <ConfirmDialog
+          open={leavePromptOpen}
+          onClose={stayOnForm}
+          onConfirm={leaveWithoutSaving}
+          title="Закрыть заявку без сохранения?"
+          message="Введённые данные и выбранные фотографии будут потеряны."
+          confirmLabel="Выйти без сохранения"
+          cancelLabel="Остаться"
+          danger
+        />
+      )}
+    </>
   );
 }
 
