@@ -21,7 +21,7 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Field, Select } from '@/components/ui/Field';
+import { Field, focusFirstInvalidField, Select } from '@/components/ui/Field';
 import { Modal } from '@/components/ui/Modal';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
@@ -289,7 +289,9 @@ export function LessonSchedulePage() {
   const [publishStage, setPublishStage] = useState<PublishStage>('confirm');
   const [createClassId, setCreateClassId] = useState('');
   const [createPeriodId, setCreatePeriodId] = useState('');
+  const [createValidationRequest, setCreateValidationRequest] = useState(0);
   const [bellTemplateId, setBellTemplateId] = useState('');
+  const createFormRef = useRef<HTMLFormElement>(null);
   const [pending, setPending] = useState(false);
   const [checkPending, setCheckPending] = useState(false);
   const scheduleRequestSequence = useRef(0);
@@ -298,6 +300,18 @@ export function LessonSchedulePage() {
   const previousFilterKey = useRef(filterKey);
 
   const scheduleListCurrent = filtersReady && !loading && loadedFilterKey === filterKey;
+  const createPeriodValue = createPeriodId || periodId;
+  const createClassValue = createClassId || classFilter;
+  const createPeriodError = createValidationRequest > 0
+    && (!createPeriodValue || !periods.some((period) => period.id === createPeriodValue))
+    ? 'Выберите действующий период' : undefined;
+  const createClassError = createValidationRequest > 0
+    && (!createClassValue || !classes.some((schoolClass) => schoolClass.id === createClassValue))
+    ? 'Выберите действующий класс' : undefined;
+
+  useEffect(() => {
+    if (createValidationRequest > 0) focusFirstInvalidField(createFormRef.current);
+  }, [createValidationRequest]);
   const selectionMatchesFilters = selected != null
     && selected.academicYearId === Number(yearId)
     && (!periodId || selected.academicPeriodId === Number(periodId))
@@ -637,14 +651,17 @@ export function LessonSchedulePage() {
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
-    const usePeriod = createPeriodId || periodId;
-    const useClass = createClassId || classFilter;
+    const usePeriod = createPeriodValue;
+    const useClass = createClassValue;
     const requestFilterKey = filterKey;
     if (!scheduleListCurrent || filterKeyRef.current !== requestFilterKey
       || !yearId || !usePeriod || !useClass
       || !periods.some((period) => period.id === usePeriod)
       || !classes.some((schoolClass) => schoolClass.id === useClass)) {
-      toast.error('Выберите год, период и класс');
+      setCreateValidationRequest((request) => request + 1);
+      if (!yearId || !scheduleListCurrent || filterKeyRef.current !== requestFilterKey) {
+        toast.error('Выберите действующий учебный год и дождитесь загрузки данных расписания');
+      }
       return;
     }
     setPending(true);
@@ -1337,8 +1354,8 @@ export function LessonSchedulePage() {
           </>
         }
       >
-        <form onSubmit={handleCreate} className="space-y-3">
-          <Field label="Класс" required>
+        <form ref={createFormRef} onSubmit={handleCreate} className="space-y-3">
+          <Field label="Класс" required error={createClassError}>
             <Select
               value={createClassId}
               onChange={(e) => setCreateClassId(e.target.value)}
@@ -1352,7 +1369,7 @@ export function LessonSchedulePage() {
               ))}
             </Select>
           </Field>
-          <Field label="Период" required>
+          <Field label="Период" required error={createPeriodError}>
             <Select
               value={createPeriodId}
               onChange={(e) => setCreatePeriodId(e.target.value)}

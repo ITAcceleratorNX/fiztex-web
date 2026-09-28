@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { AlertTriangle, ArrowLeft, Brush, Plus, Wrench, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { Field, TextArea, TextInput } from '@/components/ui/Field';
+import { Field, focusFirstInvalidField, TextArea, TextInput } from '@/components/ui/Field';
+import { useFieldControlProps } from '@/components/ui/fieldContext';
 import { Modal } from '@/components/ui/Modal';
 import { Switch } from '@/components/ui/Switch';
 import { useCreateServiceRequest } from '@/hooks/queries';
@@ -57,10 +58,13 @@ export function CreateServiceRequestModal({
   // Подсветка появляется после того, как поле покинули, а не с первого символа: красное
   // поле, которого ещё не касались, — упрёк за незаполненную форму.
   const [blurred, setBlurred] = useState<Record<string, boolean>>({});
+  const [stepOneAttempts, setStepOneAttempts] = useState(0);
+  const [stepTwoAttempts, setStepTwoAttempts] = useState(0);
   const [discardPromptOpen, setDiscardPromptOpen] = useState(false);
   const [pendingCloseAttempt, setPendingCloseAttempt] = useState(false);
   const submitInFlight = useRef(false);
   const allowNavigation = useRef(false);
+  const fieldsRef = useRef<HTMLDivElement>(null);
 
   const isDirty = Boolean(
     serviceType || buildingText || floorText || locationText || emergency || description || photos.length,
@@ -87,6 +91,8 @@ export function CreateServiceRequestModal({
     setPhotos([]);
     setPhotoError(null);
     setBlurred({});
+    setStepOneAttempts(0);
+    setStepTwoAttempts(0);
     create.reset();
     setDiscardPromptOpen(false);
     setPendingCloseAttempt(false);
@@ -105,6 +111,8 @@ export function CreateServiceRequestModal({
   }, [create.isPending, isDirty, open]);
 
   const serverFields = fieldErrors(create.error);
+  const serviceTypeError = serverFields.serviceType
+    ?? (stepOneAttempts > 0 && !serviceType ? 'Выберите тип заявки' : undefined);
   const stepOneValid = Boolean(
     serviceType && buildingText.trim() && floorText.trim() && locationText.trim(),
   );
@@ -121,7 +129,35 @@ export function CreateServiceRequestModal({
 
   function errorFor(field: string, value: string): string | undefined {
     if (serverFields[field]) return serverFields[field];
-    return blurred[field] && !value.trim() ? 'Заполните это поле' : undefined;
+    const wasSubmitted = field === 'description' ? stepTwoAttempts > 0 : stepOneAttempts > 0;
+    return (blurred[field] || wasSubmitted) && !value.trim() ? 'Заполните это поле' : undefined;
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    if ((step === 1 && stepOneAttempts > 0) || (step === 2 && stepTwoAttempts > 0)) {
+      focusFirstInvalidField(fieldsRef.current);
+    }
+  }, [open, step, stepOneAttempts, stepTwoAttempts]);
+
+  const hasStepOneServerError = Boolean(
+    serverFields.serviceType || serverFields.buildingText || serverFields.floorText || serverFields.locationText,
+  );
+  useEffect(() => {
+    if (!open || !create.error) return;
+    if (step === 2 && hasStepOneServerError) {
+      setStep(1);
+      return;
+    }
+    focusFirstInvalidField(fieldsRef.current);
+  }, [open, create.error, step, hasStepOneServerError]);
+
+  function goToSecondStep() {
+    if (!stepOneValid) {
+      setStepOneAttempts((attempts) => attempts + 1);
+      return;
+    }
+    setStep(2);
   }
 
   function markBlurred(field: string) {
@@ -188,7 +224,17 @@ export function CreateServiceRequestModal({
   }
 
   async function submit() {
-    if (!serviceType || !stepTwoValid || create.isPending || submitInFlight.current) return;
+    if (!stepOneValid) {
+      setStep(1);
+      setStepOneAttempts((attempts) => attempts + 1);
+      return;
+    }
+    if (!stepTwoValid) {
+      setStepTwoAttempts((attempts) => attempts + 1);
+      return;
+    }
+    if (!serviceType) return;
+    if (create.isPending || submitInFlight.current) return;
     submitInFlight.current = true;
     try {
       const created = await create.mutateAsync({
@@ -228,18 +274,18 @@ export function CreateServiceRequestModal({
               Отмена
             </Button>
             {step === 1 ? (
-              <Button onClick={() => setStep(2)} disabled={!stepOneValid || create.isPending}>
+              <Button onClick={goToSecondStep} disabled={create.isPending}>
                 Далее
               </Button>
             ) : (
-              <Button onClick={() => void submit()} loading={create.isPending} disabled={!stepTwoValid || create.isPending}>
+              <Button onClick={() => void submit()} loading={create.isPending}>
                 Создать заявку
               </Button>
             )}
           </div>
         }
       >
-        <div className="space-y-4">
+        <div ref={fieldsRef} className="space-y-4">
           {create.isPending && (
             <p role="status" className="rounded-lg bg-info-bg px-3 py-2 text-13 text-link">
               Отправляем заявку. Дождитесь ответа — закрытие окна не отменит отправку.
@@ -280,8 +326,8 @@ export function CreateServiceRequestModal({
           <fieldset disabled={create.isPending} className="min-w-0 space-y-4">
             {step === 1 ? (
               <>
-                <Field label="Тип заявки" required error={serverFields.serviceType}>
-                  <div className="mt-1 grid grid-cols-2 gap-3">
+                <Field label="Тип заявки" required error={serviceTypeError}>
+                  <FieldGroup className="mt-1 grid grid-cols-2 gap-3">
                     {TYPES.map((type) => {
                       const Icon = type.icon;
                       const selected = type.value === serviceType;
@@ -303,7 +349,7 @@ export function CreateServiceRequestModal({
                         </button>
                       );
                     })}
-                  </div>
+                  </FieldGroup>
                 </Field>
 
                 <Field label="Корпус" required error={errorFor('buildingText', buildingText)}>
@@ -406,6 +452,23 @@ export function CreateServiceRequestModal({
         />
       )}
     </>
+  );
+}
+
+function FieldGroup({ children, className }: { children: ReactNode; className?: string }) {
+  const fieldProps = useFieldControlProps();
+  return (
+    <div
+      id={fieldProps.id}
+      role="group"
+      aria-labelledby={fieldProps['aria-labelledby']}
+      aria-describedby={fieldProps['aria-describedby']}
+      aria-invalid={fieldProps['aria-invalid']}
+      aria-required={fieldProps['aria-required']}
+      className={className}
+    >
+      {children}
+    </div>
   );
 }
 

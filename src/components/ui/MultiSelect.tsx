@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 import { cx } from '@/lib/format';
 import { Badge } from './Badge';
+import { useFieldControlProps } from './fieldContext';
 
 export type MultiSelectOption = { value: string; label: string; disabled?: boolean };
 
@@ -26,6 +27,10 @@ export function MultiSelect({
   error = false,
   id,
   'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledBy,
+  'aria-describedby': ariaDescribedBy,
+  'aria-invalid': ariaInvalid,
+  'aria-required': ariaRequired,
 }: {
   options: MultiSelectOption[];
   value: string[];
@@ -37,9 +42,21 @@ export function MultiSelect({
   error?: boolean;
   id?: string;
   'aria-label'?: string;
+  'aria-labelledby'?: string;
+  'aria-describedby'?: string;
+  'aria-invalid'?: boolean;
+  'aria-required'?: boolean;
 }) {
   const autoId = useId();
-  const triggerId = id ?? autoId;
+  const fieldProps = useFieldControlProps({
+    id,
+    ariaLabel,
+    ariaLabelledBy,
+    ariaDescribedBy,
+    ariaInvalid: ariaInvalid === true || error ? true : ariaInvalid === false ? false : undefined,
+    ariaRequired,
+  });
+  const triggerId = fieldProps.id ?? autoId;
   const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
 
@@ -80,6 +97,10 @@ export function MultiSelect({
         id={triggerId}
         disabled={disabled}
         aria-label={ariaLabel}
+        aria-labelledby={fieldProps['aria-labelledby']}
+        aria-describedby={fieldProps['aria-describedby']}
+        aria-invalid={fieldProps['aria-invalid']}
+        aria-required={fieldProps['aria-required']}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={`${triggerId}-listbox`}
@@ -112,7 +133,7 @@ export function MultiSelect({
           id={`${triggerId}-listbox`}
           role="listbox"
           aria-multiselectable="true"
-          aria-labelledby={triggerId}
+          aria-labelledby={fieldProps['aria-labelledby'] ?? triggerId}
           className="absolute inset-x-0 z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-xl bg-white py-1 shadow-pop ring-1 ring-slate-200/80 animate-scale-in"
         >
           {options.length === 0 ? (

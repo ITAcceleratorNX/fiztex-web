@@ -129,15 +129,21 @@ describe('HomeworkFormPage — срок сдачи', () => {
     expect(create.mock.calls[0][0].dueAt).toBeUndefined();
   });
 
-  it('точный срок по-прежнему требует дату и отправляет её', async () => {
+  it('точный срок показывает ошибку и фокусирует поле даты, затем отправляет её', async () => {
     renderForm();
     await fillRequiredFields();
 
-    // Пока даты нет, сохранять нечего — кнопка выключена.
-    expect(screen.getByRole('button', { name: 'Создать черновик' })).toBeDisabled();
+    const submit = screen.getByRole('button', { name: 'Создать черновик' });
+    expect(submit).toBeEnabled();
+    await userEvent.click(submit);
+    const dueAt = screen.getByLabelText(/Дата и время сдачи/);
+    expect(dueAt).toHaveFocus();
+    expect(dueAt).toHaveAttribute('aria-invalid', 'true');
+    expect(document.getElementById(dueAt.getAttribute('aria-describedby') as string))
+      .toHaveTextContent('Укажите дату и время сдачи');
 
-    await userEvent.type(screen.getByLabelText('Дата и время сдачи'), '2026-10-20T15:00');
-    await userEvent.click(screen.getByRole('button', { name: 'Создать черновик' }));
+    await userEvent.type(dueAt, '2026-10-20T15:00');
+    await userEvent.click(submit);
 
     expect(create.mock.calls[0][0]).toMatchObject({ dueType: 'EXACT' });
     expect(create.mock.calls[0][0].dueAt).toBe(new Date('2026-10-20T15:00').toISOString());
@@ -214,9 +220,9 @@ describe('HomeworkFormPage — привязка к уроку', () => {
   }
 
   async function chooseClassAndSubject() {
-    await userEvent.click(await screen.findByRole('button', { name: 'Выберите предмет' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Предмет' }));
     await userEvent.click(screen.getByRole('option', { name: 'Математика' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Выберите класс' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Класс' }));
     await userEvent.click(screen.getByRole('option', { name: '7А' }));
   }
 

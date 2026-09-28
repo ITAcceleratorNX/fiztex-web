@@ -98,7 +98,7 @@ describe('TestFormModal', () => {
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: /Черновик/i }));
+    await user.click(screen.getByRole('button', { name: 'Статус' }));
     await user.click(screen.getByRole('option', { name: 'Активен' }));
     await user.click(screen.getByRole('button', { name: 'Сохранить' }));
 
@@ -145,7 +145,7 @@ describe('TestFormModal', () => {
     );
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: /Черновик/i }));
+    await user.click(screen.getByRole('button', { name: 'Статус' }));
     await user.click(screen.getByRole('option', { name: 'Активен' }));
 
     expect(screen.getByText(/Добавьте хотя бы один вопрос, чтобы активировать тест/i)).toBeInTheDocument();
@@ -162,9 +162,9 @@ describe('TestFormModal', () => {
     render(<TestFormModal open onClose={() => {}} test={null} aiTest={false} />);
 
     await user.type(screen.getByPlaceholderText(/Например: Математика/i), 'Новый тест');
-    await user.click(screen.getByRole('button', { name: 'Выберите предмет…' }));
+    await user.click(screen.getByRole('button', { name: 'Предмет' }));
     await user.click(screen.getByRole('option', { name: /Math/ }));
-    await user.click(screen.getByRole('button', { name: 'Выберите класс' }));
+    await user.click(screen.getByRole('button', { name: 'Класс' }));
     await user.click(screen.getByRole('option', { name: '5 класс' }));
     await user.click(screen.getByRole('button', { name: 'Создать тест' }));
 

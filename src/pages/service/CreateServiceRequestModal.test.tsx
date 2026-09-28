@@ -82,6 +82,32 @@ describe('CreateServiceRequestModal — защита незавершённой 
     vi.unstubAllGlobals();
   });
 
+  it('связывает подписи и ошибки с контролами и фокусирует первое незаполненное поле', async () => {
+    const user = userEvent.setup();
+    renderFlow();
+
+    const typeGroup = screen.getByRole('group', { name: /Тип заявки/ });
+    await user.click(screen.getByRole('button', { name: 'Далее' }));
+    expect(typeGroup).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByRole('button', { name: 'Клининг' })).toHaveFocus();
+
+    await user.click(screen.getByRole('button', { name: 'Клининг' }));
+    await user.type(screen.getByLabelText(/Корпус/), 'Корпус Б');
+    await user.type(screen.getByLabelText(/Этаж/), '2');
+    await user.type(screen.getByLabelText(/Кабинет \/ зона/), 'Кабинет 12');
+    await user.click(screen.getByRole('button', { name: 'Далее' }));
+    await user.click(screen.getByRole('button', { name: 'Создать заявку' }));
+
+    const description = screen.getByLabelText(/Описание/);
+    expect(description).toHaveFocus();
+    expect(description).toHaveAttribute('aria-invalid', 'true');
+    const describedBy = description.getAttribute('aria-describedby')?.split(' ') ?? [];
+    expect(describedBy.map((id) => document.getElementById(id)?.textContent).join(' '))
+      .toContain('Заполните это поле');
+    await user.click(screen.getByRole('button', { name: 'Назад' }));
+    expect(screen.getByLabelText('Корпус')).toHaveValue('Корпус Б');
+  });
+
   it.each(['Отмена', 'Escape', 'крестик', 'фон'] as const)(
     '%s закрытие предлагает остаться или отказаться от заполненной формы',
     async (method) => {

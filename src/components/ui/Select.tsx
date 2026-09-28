@@ -13,6 +13,7 @@ import {
 } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 import { cx } from '@/lib/format';
+import { useFieldControlProps } from './fieldContext';
 
 type OptionItem = { value: string; label: string; disabled?: boolean };
 
@@ -38,9 +39,14 @@ export function Select({
   disabled,
   name,
   id,
+  required,
   // Кнопка вместо <select>, поэтому имя поля не приходит от <label for>: без этого
   // фильтр без видимой подписи остаётся безымянным для скринридера.
   'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledBy,
+  'aria-describedby': ariaDescribedBy,
+  'aria-invalid': ariaInvalid,
+  'aria-required': ariaRequired,
   placeholder = 'Выберите…',
 }: SelectHTMLAttributes<HTMLSelectElement> & {
   /**
@@ -50,7 +56,15 @@ export function Select({
   placeholder?: string;
 }) {
   const autoId = useId();
-  const listboxId = id ?? autoId;
+  const fieldProps = useFieldControlProps({
+    id,
+    ariaLabel,
+    ariaLabelledBy,
+    ariaDescribedBy,
+    ariaInvalid: ariaInvalid === true ? true : ariaInvalid === false ? false : undefined,
+    ariaRequired,
+  });
+  const listboxId = fieldProps.id ?? autoId;
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -113,6 +127,10 @@ export function Select({
         id={listboxId}
         disabled={disabled}
         aria-label={ariaLabel}
+        aria-labelledby={fieldProps['aria-labelledby']}
+        aria-describedby={fieldProps['aria-describedby']}
+        aria-invalid={fieldProps['aria-invalid']}
+        aria-required={fieldProps['aria-required'] ?? (required ? true : undefined)}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={`${listboxId}-listbox`}
@@ -136,7 +154,7 @@ export function Select({
         <ul
           id={`${listboxId}-listbox`}
           role="listbox"
-          aria-labelledby={listboxId}
+          aria-labelledby={fieldProps['aria-labelledby'] ?? listboxId}
           style={menuWidth ? { minWidth: menuWidth } : undefined}
           className={cx(
             'absolute z-30 mt-1 max-h-60 overflow-y-auto rounded-xl bg-white py-1 shadow-pop ring-1 ring-slate-200/80 animate-scale-in',

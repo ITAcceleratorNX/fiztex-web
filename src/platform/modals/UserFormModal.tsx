@@ -1,7 +1,7 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
-import { Field, TextInput, Select } from '@/components/ui/Field';
+import { Field, focusFirstInvalidField, TextInput, Select } from '@/components/ui/Field';
 import { useToast } from '@/context/ToastContext';
 import { ROLE_LABELS } from '../labels';
 import { createUser, updateUser } from '../services';
@@ -10,6 +10,7 @@ import type { AccountRole, AccountStatus, PlatformUser } from '../types';
 const EDITABLE_ROLES: AccountRole[] = ['ADMIN', 'TEACHER', 'STUDENT', 'PARENT'];
 
 const PHONE_RE = /^\+?[0-9\s()-]{10,18}$/;
+type UserValidationField = 'fullName' | 'phone' | 'contact' | null;
 
 export function UserFormModal({
   open,
@@ -31,7 +32,10 @@ export function UserFormModal({
   const [status, setStatus] = useState<AccountStatus>('NOT_ACTIVATED');
   const [relationLabel, setRelationLabel] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [validationField, setValidationField] = useState<UserValidationField>(null);
+  const [focusRequest, setFocusRequest] = useState(0);
   const [pending, setPending] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -42,21 +46,33 @@ export function UserFormModal({
     setStatus(user?.status ?? 'NOT_ACTIVATED');
     setRelationLabel(user?.relationLabel ?? '');
     setError(null);
+    setValidationField(null);
   }, [open, user]);
+
+  useEffect(() => {
+    if (focusRequest > 0) focusFirstInvalidField(formRef.current);
+  }, [focusRequest]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setValidationField(null);
     if (!fullName.trim()) {
       setError('Укажите ФИО');
+      setValidationField('fullName');
+      setFocusRequest((request) => request + 1);
       return;
     }
     if (phone.trim() && !PHONE_RE.test(phone.trim())) {
       setError('Неверный формат телефона');
+      setValidationField('phone');
+      setFocusRequest((request) => request + 1);
       return;
     }
     if ((role === 'PARENT' || role === 'TEACHER' || role === 'ADMIN') && !phone.trim() && !email.trim()) {
       setError('Укажите телефон или email');
+      setValidationField('contact');
+      setFocusRequest((request) => request + 1);
       return;
     }
 
@@ -115,12 +131,12 @@ export function UserFormModal({
         </>
       }
     >
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form ref={formRef} onSubmit={onSubmit} className="space-y-4">
         <Field
           label="ФИО"
           required
           hint={!isEdit ? 'Формат: Фамилия Имя Отчество — так заполняется карточка в школе' : undefined}
-          error={error && !fullName.trim() ? error : undefined}
+          error={validationField === 'fullName' ? error ?? undefined : undefined}
         >
           <TextInput value={fullName} onChange={(e) => setFullName(e.target.value)} required />
         </Field>
@@ -138,14 +154,17 @@ export function UserFormModal({
         )}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Телефон">
+          <Field
+            label="Телефон"
+            error={validationField === 'phone' || validationField === 'contact' ? error ?? undefined : undefined}
+          >
             <TextInput
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+77001112233"
             />
           </Field>
-          <Field label="Email">
+          <Field label="Email" error={validationField === 'contact' ? error ?? undefined : undefined}>
             <TextInput
               type="email"
               value={email}
@@ -174,7 +193,7 @@ export function UserFormModal({
           </Field>
         )}
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && !validationField && <p role="alert" className="text-sm text-red-500">{error}</p>}
       </form>
     </Modal>
   );

@@ -1,5 +1,6 @@
 import { cx } from '@/lib/format';
 import { handleRovingFocusKeyDown } from './rovingFocus';
+import { useFieldControlProps } from './fieldContext';
 
 /**
  * Переключатель из двух-трёх равноправных наборов данных (Figma 856:20520 —
@@ -26,11 +27,17 @@ export function SegmentedTabs<T extends string>({
 }) {
   const selectedEnabled = options.some((option) => option.value === value && !option.disabled);
   const tabStopValue = selectedEnabled ? value : options.find((option) => !option.disabled)?.value;
+  const fieldProps = useFieldControlProps();
 
   return (
     <div
+      id={fieldProps.id}
       role="radiogroup"
-      aria-label={ariaLabel}
+      aria-label={fieldProps['aria-labelledby'] ? undefined : ariaLabel}
+      aria-labelledby={fieldProps['aria-labelledby']}
+      aria-describedby={fieldProps['aria-describedby']}
+      aria-invalid={fieldProps['aria-invalid']}
+      aria-required={fieldProps['aria-required']}
       aria-orientation="horizontal"
       className={cx('inline-flex gap-1 rounded-xl bg-neutral-bg p-1', className)}
     >

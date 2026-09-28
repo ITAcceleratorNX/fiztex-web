@@ -81,7 +81,7 @@ async function pick(current: string | RegExp, option: string | RegExp) {
 }
 async function pickGroup() {
   await waitFor(() => expect(mocks.listGroups).toHaveBeenCalled());
-  await pick('Весь класс', 'Временная группа');
+  await pick('Получатели', 'Временная группа');
   await userEvent.click(screen.getByLabelText('Временная группа'));
   await userEvent.click(screen.getByRole('option', { name: /Группа А/ }));
 }
@@ -143,8 +143,8 @@ describe('homework form drafts', () => {
 
   it.each([true, false])('сохраняет класс, предмет и выбор урока (привязка: %s)', async (attached) => {
     const { store } = renderForm('/homework/new');
-    await pick('Выберите предмет', 'Математика');
-    await pick('Выберите класс', '7А');
+    await pick('Предмет', 'Математика');
+    await pick('Класс', '7А');
     await screen.findByText(/Привязанное задание видно/);
     const lessonButton = screen.getAllByRole('button').find((element) => /окт/.test(element.textContent ?? ''))!;
     await userEvent.click(lessonButton);
@@ -152,8 +152,8 @@ describe('homework form drafts', () => {
     await fillForm();
     await openGroups();
     await returnFromGroups();
-    expect(screen.getByRole('button', { name: 'Математика' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '7А' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Предмет' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Класс' })).toBeInTheDocument();
     expect(store.get<HomeworkFormDraft>('homework:new:standalone')?.values.pickedLessonId).toBe(attached ? 42 : undefined);
     expect(store.get<HomeworkFormDraft>('homework:new:standalone')?.values.lessonChoiceMade).toBe(true);
   });
@@ -165,7 +165,7 @@ describe('homework form drafts', () => {
     expect(unload()).toBe(true);
     await userEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(titleInput()).toHaveValue('Ещё не готово');
-    expect(screen.getByRole('button', { name: 'Создать черновик' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Создать черновик' })).toBeEnabled();
     await userEvent.click(screen.getByRole('button', { name: 'Forward' }));
     await userEvent.click(screen.getByRole('link', { name: 'Форма урока 5' }));
     expect(titleInput()).toHaveValue('Ещё не готово');
@@ -183,11 +183,11 @@ describe('homework form drafts', () => {
   it('ручной выбор всего класса не заменяется подгруппой урока после возврата', async () => {
     mocks.subgroupId = 12;
     renderForm();
-    await pick('Подгруппа урока', 'Весь класс');
+    await pick('Получатели', 'Весь класс');
     await fillForm();
     await openGroups();
     await returnFromGroups();
-    expect(screen.getByRole('button', { name: 'Весь класс' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Получатели' })).toBeInTheDocument();
   });
 
   it('повторная загрузка редактируемого задания не стирает изменённый текст', async () => {
@@ -222,7 +222,7 @@ describe('homework form drafts', () => {
     await returnFromGroups();
     await screen.findByText(/По заданию появились ответы/);
     expect(titleInput()).toHaveValue('Новый текст');
-    expect(screen.getByRole('button', { name: 'Весь класс' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Получатели' })).toBeDisabled();
   });
 
   it.each(['removed', 'ARCHIVED'])('убирает только недоступную группу (%s), оставляет форму', async (status) => {
@@ -235,7 +235,7 @@ describe('homework form drafts', () => {
     await screen.findByText(/Группа «Группа А» больше недоступна/);
     expect(titleInput()).toHaveValue('Мой черновик');
     expect(screen.getByLabelText('Временная группа')).toHaveTextContent('Выберите группу');
-    expect(screen.getByRole('button', { name: 'Создать черновик' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Создать черновик' })).toBeEnabled();
   });
 
   it('объясняет переименование и замену ученика при неизменном количестве', async () => {
@@ -261,7 +261,7 @@ describe('homework form drafts', () => {
     await returnFromGroups();
     await screen.findByText(/Не удалось проверить группы/);
     expect(screen.getByLabelText('Временная группа')).toHaveTextContent('Группа А · 2 уч.');
-    expect(screen.getByRole('button', { name: 'Создать черновик' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Создать черновик' })).toBeEnabled();
     mocks.listGroups.mockResolvedValue([originalGroup]);
     await userEvent.click(screen.getByRole('button', { name: 'Повторить' }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Создать черновик' })).toBeEnabled());

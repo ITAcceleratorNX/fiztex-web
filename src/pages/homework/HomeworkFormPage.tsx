@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Paperclip, X } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
-import { Field, Select, TextArea, TextInput } from '@/components/ui/Field';
+import { Field, focusFirstInvalidField, Select, TextArea, TextInput } from '@/components/ui/Field';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { Toggle } from '@/components/ui/Toggle';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
@@ -74,7 +74,9 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey }: {
     pickedLessonId, tempGroupId, files, subjectId, classId } = draft.values;
   const { error, createdId } = draft;
   const [discardOpen, setDiscardOpen] = useState(false);
+  const [validationRequest, setValidationRequest] = useState(0);
   const discardTrigger = useRef<HTMLButtonElement | null>(null);
+  const formRef = useRef<HTMLDivElement>(null);
   const dirty = hasHomeworkChanges(draft);
   const mounted = useRef(true);
   useEffect(() => {
@@ -289,6 +291,33 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey }: {
     && (recipientsLocked || recipientType !== 'TEMP_GROUP' || (groupsQuery.isSuccess && !groupsQuery.isFetching
       && groups.some((group) => group.id === tempGroupId && group.status !== 'ARCHIVED' && (group.studentCount ?? 1) > 0)));
 
+  const validationErrors = {
+    subject: validationRequest > 0 && standalone && subjectId == null ? 'Выберите предмет' : undefined,
+    schoolClass: validationRequest > 0 && standalone && classId == null ? 'Выберите класс' : undefined,
+    title: validationRequest > 0 && !title.trim() ? 'Укажите название задания' : undefined,
+    description: validationRequest > 0 && !description.trim() ? 'Заполните инструкцию ученику' : undefined,
+    dueAt: validationRequest > 0 && dueType === 'EXACT' && !dueAt ? 'Укажите дату и время сдачи' : undefined,
+    recipient: validationRequest > 0 && !recipientsLocked && recipientType === 'SUBGROUP'
+      && !(contextLesson?.subgroupId || existing?.recipients?.subgroupId)
+      ? 'Подгруппа урока недоступна. Выберите других получателей.'
+      : undefined,
+    tempGroup: validationRequest > 0 && !recipientsLocked && recipientType === 'TEMP_GROUP'
+      ? !tempGroupId
+        ? 'Выберите временную группу'
+        : groupsQuery.isError
+          ? 'Не удалось проверить группу. Повторите проверку.'
+          : !groupsQuery.isSuccess || groupsQuery.isFetching
+            ? 'Дождитесь загрузки списка групп'
+            : !groups.some((group) => group.id === tempGroupId && group.status !== 'ARCHIVED' && (group.studentCount ?? 1) > 0)
+              ? 'Группа недоступна или в ней нет учеников'
+              : undefined
+      : undefined,
+  };
+
+  useEffect(() => {
+    if (validationRequest > 0) focusFirstInvalidField(formRef.current);
+  }, [validationRequest]);
+
   /**
    * Создание всегда даёт черновик, и публикации здесь нет намеренно.
    *
@@ -380,7 +409,11 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey }: {
   }
 
   function saveForm() {
-    if (!valid || draftStore.get<HomeworkFormDraft>(draftKey)?.saving || createdId != null) return;
+    if (draftStore.get<HomeworkFormDraft>(draftKey)?.saving || createdId != null) return;
+    if (!valid) {
+      setValidationRequest((request) => request + 1);
+      return;
+    }
     setDraft((current) => ({ ...current, saving: true, error: null }));
     save.mutate();
   }
@@ -415,7 +448,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey }: {
   const formUrl = mode === 'edit' ? `/homework/${editId}/edit` : `/homework/new${lessonId ? `?lessonId=${lessonId}` : ''}`;
 
   return (
-    <div className="flex max-w-4xl flex-col gap-5">
+    <div ref={formRef} className="flex max-w-4xl flex-col gap-5">
       <div className="flex items-center gap-3">
         <Link to={backTo} aria-label="Назад" className="text-subtle transition hover:text-ink">
           <ArrowLeft className="size-5" />
@@ -467,7 +500,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey }: {
       <fieldset disabled={busy} className="card flex min-w-0 flex-col gap-4 p-5">
         {standalone && (
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Предмет" required>
+            <Field label="Предмет" required error={validationErrors.subject}>
               <Select
                 value={subjectId != null ? String(subjectId) : ''}
                 onChange={(event) => changeContext({ subjectId: Number(event.target.value) || undefined })}
@@ -479,7 +512,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey }: {
                 ))}
               </Select>
             </Field>
-            <Field label="Класс" required>
+            <Field label="Класс" required error={validationErrors.schoolClass}>
               <Select
                 value={classId != null ? String(classId) : ''}
                 onChange={(event) => changeContext({ classId: Number(event.target.value) || undefined })}
@@ -523,7 +556,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey }: {
           </Field>
         )}
 
-        <Field label="Название ДЗ" required>
+        <Field label="Название ДЗ" required error={validationErrors.title}>
           <TextInput
             value={title}
             onChange={(event) => setTitle(event.target.value)}
@@ -591,6 +624,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey }: {
         <Field
           label={answerFormat === 'TEST' ? 'Инструкция к тесту' : 'Описание и инструкция ученику'}
           required
+          error={validationErrors.description}
         >
           <TextArea
             value={description}
@@ -696,13 +730,14 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey }: {
             })}
           </div>
           {dueType === 'EXACT' && (
-            <input
-              type="datetime-local"
-              aria-label="Дата и время сдачи"
-              value={dueAt}
-              onChange={(event) => setDueAt(event.target.value)}
-              className="input-base mt-2 h-10 w-64 text-13"
-            />
+            <Field label="Дата и время сдачи" required error={validationErrors.dueAt} className="mt-2 max-w-xs">
+              <TextInput
+                type="datetime-local"
+                value={dueAt}
+                onChange={(event) => setDueAt(event.target.value)}
+                className="h-10 w-64 text-13"
+              />
+            </Field>
           )}
           {dueType === 'NEXT_LESSON' && (
             <p className="mt-2 max-w-prose text-11 text-subtle">
@@ -713,7 +748,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey }: {
           )}
         </div>
 
-        <Field label="Получатели">
+        <Field label="Получатели" error={validationErrors.recipient}>
           <Select
             value={recipientType}
             onChange={(event) => {
@@ -741,24 +776,24 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey }: {
           )}
 
           {recipientType === 'TEMP_GROUP' && (
-            <Select
-              className="mt-2"
-              aria-label="Временная группа"
-              value={tempGroupId != null ? String(tempGroupId) : ''}
-              onChange={(event) => setTempGroupId(Number(event.target.value) || undefined)}
-              disabled={recipientsLocked}
-            >
-              <option value="">Выберите группу</option>
-              {groups.map((group) => (
-                // Подпись собирается строкой: `Select` читает `children` через `String()`,
-                // и массив узлов превратился бы в «Группа, · 0 уч.» с лишней запятой.
-                <option key={group.id} value={group.id}>
-                  {group.studentCount != null
-                    ? `${group.name} · ${group.studentCount} уч.`
-                    : group.name}
-                </option>
-              ))}
-            </Select>
+            <Field label="Временная группа" required error={validationErrors.tempGroup} className="mt-2">
+              <Select
+                value={tempGroupId != null ? String(tempGroupId) : ''}
+                onChange={(event) => setTempGroupId(Number(event.target.value) || undefined)}
+                disabled={recipientsLocked}
+              >
+                <option value="">Выберите группу</option>
+                {groups.map((group) => (
+                  // Подпись собирается строкой: `Select` читает `children` через `String()`,
+                  // и массив узлов превратился бы в «Группа, · 0 уч.» с лишней запятой.
+                  <option key={group.id} value={group.id}>
+                    {group.studentCount != null
+                      ? `${group.name} · ${group.studentCount} уч.`
+                      : group.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
           )}
           {/* Группы заводятся для пары «класс + предмет», поэтому экран открывается с ними. */}
           {targetClassId != null && targetSubjectId != null && !recipientsLocked && (
@@ -822,7 +857,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey }: {
         {createdId != null ? (
           <Button onClick={() => navigate(`/homework/${createdId}`)}>Открыть черновик</Button>
         ) : (
-          <Button onClick={saveForm} disabled={!valid} loading={busy}>
+          <Button onClick={saveForm} loading={busy}>
             {mode === 'edit' ? 'Сохранить' : 'Создать черновик'}
           </Button>
         )}
