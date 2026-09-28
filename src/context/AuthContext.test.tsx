@@ -8,6 +8,7 @@ import { getToken, request, setToken } from '@/lib/api';
 import { keys } from '@/hooks/queries';
 import { ProfilePage } from '@/pages/ProfilePage';
 import type { Admin } from '@/lib/types';
+import { useFormDraftStore, type FormDraftStore } from './FormDraftContext';
 
 const ADMIN: Admin = { email: 'admin', fullName: 'Администратор A', role: 'SUPER_ADMIN', token: 'token-admin' };
 const TEACHER_A: Admin = { email: 'teacher-a', fullName: 'Учитель A', role: 'TEACHER', token: 'token-a' };
@@ -26,12 +27,14 @@ function deferred<T>() {
 
 let auth: ReturnType<typeof useAuth>;
 let client: QueryClient;
+let drafts: FormDraftStore;
 const clients = new Set<QueryClient>();
 const fetchMock = vi.fn<typeof fetch>();
 
 function SessionContents() {
   auth = useAuth();
   client = useQueryClient();
+  drafts = useFormDraftStore();
   clients.add(client);
   const [draft, setDraft] = useState('');
   return (
@@ -87,6 +90,41 @@ afterEach(() => {
 });
 
 describe('account session isolation', () => {
+  it('отмена выхода оставляет черновик, сессию и фокус; подтверждённый выход очищает их', async () => {
+    renderSession(TEACHER_A);
+    await screen.findByText(TEACHER_A.email);
+    const oldDrafts = drafts;
+    const file = new File(['private'], 'work.pdf');
+    drafts.set('homework:new:5', { title: 'Личный черновик', files: [file] });
+    const input = screen.getByLabelText('Локальный черновик');
+    input.focus();
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    act(() => auth.logout());
+    expect(getToken()).toBe(TEACHER_A.token);
+    expect(drafts.hasChanges).toBe(true);
+    expect(input).toHaveFocus();
+    expect(fetchMock).not.toHaveBeenCalledWith('/api/auth/logout', expect.anything());
+    confirm.mockReturnValue(true);
+    act(() => auth.logout());
+    expect(oldDrafts.hasChanges).toBe(false);
+    await act(() => auth.login(TEACHER_B.email, 'test-password'));
+    expect(drafts.get('homework:new:5')).toBeUndefined();
+    oldDrafts.set('homework:new:5', { title: 'Поздний ответ' });
+    expect(oldDrafts.hasChanges).toBe(false);
+    expect(drafts.hasChanges).toBe(false);
+    confirm.mockRestore();
+  });
+
+  it('истечение сессии удаляет локальные черновики без переноса в новый аккаунт', async () => {
+    renderSession(TEACHER_A);
+    await screen.findByText(TEACHER_A.email);
+    const oldDrafts = drafts;
+    drafts.set('homework:edit:8', { title: 'Личные данные' });
+    await act(async () => { await expect(request('/expired')).rejects.toMatchObject({ status: 401 }); });
+    expect(oldDrafts.hasChanges).toBe(false);
+    expect(drafts.hasChanges).toBe(false);
+  });
+
   it.each([ADMIN, TEACHER_A])('не показывает профиль $email после входа другого учителя', async (previous) => {
     renderSession(previous);
     await screen.findByText(previous.email);

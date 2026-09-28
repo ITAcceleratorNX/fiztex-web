@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/lib/api';
 import { ToastProvider } from '@/context/ToastContext';
+import { FormDraftProvider } from '@/context/FormDraftContext';
 import { HomeworkFormPage } from './HomeworkFormPage';
 
 const create = vi.fn();
@@ -41,6 +42,7 @@ vi.mock('@/lib/lessonsApi', async (importOriginal) => {
 
 vi.mock('@/hooks/queries', () => ({
   useLesson: (...args: unknown[]) => useLesson(...args),
+  keys: { lesson: (id: number) => ['lesson', id] },
 }));
 
 function renderForm() {
@@ -49,13 +51,13 @@ function renderForm() {
   });
   return render(
     <QueryClientProvider client={client}>
-      <ToastProvider>
+      <FormDraftProvider><ToastProvider>
         <MemoryRouter initialEntries={['/homework/new?lessonId=5']}>
           <Routes>
             <Route path="/homework/new" element={<HomeworkFormPage mode="create" />} />
           </Routes>
         </MemoryRouter>
-      </ToastProvider>
+      </ToastProvider></FormDraftProvider>
     </QueryClientProvider>,
   );
 }
@@ -67,13 +69,13 @@ function renderStandaloneForm() {
   });
   return render(
     <QueryClientProvider client={client}>
-      <ToastProvider>
+      <FormDraftProvider><ToastProvider>
         <MemoryRouter initialEntries={['/homework/new']}>
           <Routes>
             <Route path="/homework/new" element={<HomeworkFormPage mode="create" />} />
           </Routes>
         </MemoryRouter>
-      </ToastProvider>
+      </ToastProvider></FormDraftProvider>
     </QueryClientProvider>,
   );
 }

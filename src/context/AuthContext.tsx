@@ -11,6 +11,7 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { getToken, setToken, api, onSessionExpired } from '@/lib/api';
 import type { Admin } from '@/lib/types';
+import { FormDraftProvider, FormDraftStore } from './FormDraftContext';
 
 const PROFILE_KEY = 'fiztex.profile';
 
@@ -54,6 +55,7 @@ function createSession(admin: Admin | null, revision = 0) {
   return {
     admin,
     revision,
+    drafts: new FormDraftStore(),
     queryClient: new QueryClient({
       defaultOptions: {
         queries: {
@@ -89,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // client keeps late mutation callbacks confined to the previous session.
     void previous.queryClient.cancelQueries();
     previous.queryClient.clear();
+    previous.drafts.dispose();
     setSession(next);
   }, []);
 
@@ -111,6 +114,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [replaceSession]);
 
   const logout = useCallback(() => {
+    if (sessionRef.current.drafts.hasChanges && !window.confirm(
+      'В этой вкладке есть несохранённые формы. Выйти из аккаунта и удалить введённые данные и выбранные файлы?',
+    )) return;
     const token = getToken();
     if (token) {
       invalidateServerSession(token);
@@ -129,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {/* Remount session consumers too: local form state and notifications must
           not outlive the account that created them. The router stays outside. */}
       <QueryClientProvider key={session.revision} client={session.queryClient}>
-        {children}
+        <FormDraftProvider store={session.drafts}>{children}</FormDraftProvider>
       </QueryClientProvider>
     </AuthContext.Provider>
   );
