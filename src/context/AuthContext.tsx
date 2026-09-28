@@ -9,9 +9,11 @@ import {
   type ReactNode,
 } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { getToken, setToken, api, onSessionExpired } from '@/lib/api';
 import type { Admin } from '@/lib/types';
 import { clearListNavigationSession } from '@/lib/listNavigation';
+import { ROUTES } from '@/lib/routes';
 import { FormDraftProvider, FormDraftStore } from './FormDraftContext';
 
 const PROFILE_KEY = 'fiztex.profile';
@@ -19,6 +21,7 @@ const PROFILE_KEY = 'fiztex.profile';
 interface AuthContextValue {
   admin: Admin | null;
   isAuthenticated: boolean;
+  expiredAccountEmail: string | null;
   login: (email: string, password: string) => Promise<Admin>;
   logout: () => void;
 }
@@ -80,7 +83,9 @@ function invalidateServerSession(token: string): void {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
   const [session, setSession] = useState(() => createSession(loadProfile()));
+  const [expiredAccountEmail, setExpiredAccountEmail] = useState<string | null>(null);
   const sessionRef = useRef(session);
   const { admin } = session;
 
@@ -99,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     return onSessionExpired(() => {
+      setExpiredAccountEmail(sessionRef.current.admin?.email ?? null);
       localStorage.removeItem(PROFILE_KEY);
       // A rejected login has no authenticated session to discard. Keep the
       // login form mounted so it can display its error and retain the input.
@@ -106,10 +112,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, [replaceSession]);
 
-  // Возвращает аккаунт, а не void: вызывающему нужна роль, чтобы выбрать стартовый экран,
-  // а состояние контекста на этот момент ещё не обновилось.
+  // Возвращает ответ входа целиком, чтобы инициатор при необходимости мог проверить
+  // роль и идентичность аккаунта до следующего рендера контекста.
   const login = useCallback(async (email: string, password: string) => {
     const result = await api.login(email, password);
+    setExpiredAccountEmail(null);
     persist(result);
     replaceSession(result);
     return result;
@@ -123,13 +130,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (token) {
       invalidateServerSession(token);
     }
+    setExpiredAccountEmail(null);
     clearLocalSession();
     replaceSession(null);
-  }, [replaceSession]);
+    // Explicit logout must not leave the protected page as the next account's
+    // return target on this device.
+    navigate(ROUTES.staffLogin, { replace: true });
+  }, [navigate, replaceSession]);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ admin, isAuthenticated: Boolean(admin), login, logout }),
-    [admin, login, logout],
+    () => ({ admin, isAuthenticated: Boolean(admin), expiredAccountEmail, login, logout }),
+    [admin, expiredAccountEmail, login, logout],
   );
 
   return (

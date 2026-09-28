@@ -1,7 +1,7 @@
 import { StrictMode, useState } from 'react';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider, useAuth } from './AuthContext';
 import { getToken, request, setToken } from '@/lib/api';
@@ -36,21 +36,24 @@ function SessionContents() {
   client = useQueryClient();
   drafts = useFormDraftStore();
   clients.add(client);
+  const location = useLocation();
   const [draft, setDraft] = useState('');
   return (
     <>
+      <output data-testid="auth-location">{location.pathname + location.search + location.hash}</output>
+      <output data-testid="auth-location-state">{JSON.stringify(location.state ?? null)}</output>
       <input aria-label="Локальный черновик" value={draft} onChange={(event) => setDraft(event.target.value)} />
       {auth.isAuthenticated ? <ProfilePage /> : <p>Нет сессии</p>}
     </>
   );
 }
 
-function renderSession(account: Admin) {
+function renderSession(account: Admin, initialEntries = ['/']) {
   setToken(account.token);
   localStorage.setItem('fiztex.profile', JSON.stringify(account));
   return render(
     <StrictMode>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={initialEntries}>
         <AuthProvider><SessionContents /></AuthProvider>
       </MemoryRouter>
     </StrictMode>,
@@ -90,6 +93,16 @@ afterEach(() => {
 });
 
 describe('account session isolation', () => {
+  it('явный выход очищает адрес возврата перед следующим входом', async () => {
+    renderSession(TEACHER_A, ['/homework/new?lessonId=42&groupId=7#questions']);
+    await screen.findByText(TEACHER_A.email);
+
+    act(() => auth.logout());
+
+    expect(screen.getByTestId('auth-location')).toHaveTextContent('/staff/login');
+    expect(screen.getByTestId('auth-location-state')).toHaveTextContent('null');
+  });
+
   it('отмена выхода оставляет черновик, сессию и фокус; подтверждённый выход очищает их', async () => {
     renderSession(TEACHER_A);
     await screen.findByText(TEACHER_A.email);
@@ -123,6 +136,7 @@ describe('account session isolation', () => {
     await act(async () => { await expect(request('/expired')).rejects.toMatchObject({ status: 401 }); });
     expect(oldDrafts.hasChanges).toBe(false);
     expect(drafts.hasChanges).toBe(false);
+    expect(auth.expiredAccountEmail).toBe(TEACHER_A.email);
   });
 
   it.each([ADMIN, TEACHER_A])('не показывает профиль $email после входа другого учителя', async (previous) => {

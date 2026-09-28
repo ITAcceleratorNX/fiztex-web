@@ -5,6 +5,7 @@ import {
   isRouteAllowedForRole,
   landingRouteForRole,
   loginRedirectTarget,
+  resolveLoginRedirect,
   safeRedirectTarget,
 } from './routes';
 
@@ -96,6 +97,42 @@ describe('маршрутизация по роли', () => {
     expect(safeRedirectTarget('//evil.example')).toBe('/dashboard');
     expect(loginRedirectTarget('//evil.example', 'ADMIN')).toBe('/dashboard');
     expect(loginRedirectTarget('//evil.example', 'TEACHER')).toBe('/homework');
+  });
+
+  it('сохраняет полный внутренний адрес, проверяя роль только по pathname', () => {
+    const target = '/homework/new?lessonId=42&groupId=7#questions';
+    expect(safeRedirectTarget(target)).toBe(target);
+    expect(loginRedirectTarget(target, 'TEACHER')).toBe(target);
+    expect(resolveLoginRedirect('/dashboard?tab=classes#list', 'TEACHER')).toMatchObject({
+      target: '/homework',
+      notice: expect.stringContaining('/dashboard'),
+    });
+    expect(isRouteAllowedForRole('/homework/new?lessonId=42#questions', 'TEACHER')).toBe(true);
+    expect(isRouteAllowedForRole('/homework-malicious', 'TEACHER')).toBe(false);
+  });
+
+  it('не возвращает другой аккаунт в контекст истёкшей сессии', () => {
+    expect(resolveLoginRedirect(
+      '/homework/new?lessonId=42#questions',
+      'TEACHER',
+      'teacher-a@fiztex.local',
+      'teacher-a@fiztex.local',
+    )).toEqual({ target: '/homework/new?lessonId=42#questions' });
+
+    expect(resolveLoginRedirect(
+      '/homework/new?lessonId=42#questions',
+      'TEACHER',
+      'teacher-a@fiztex.local',
+      'teacher-b@fiztex.local',
+    )).toMatchObject({
+      target: '/homework',
+      notice: expect.stringContaining('другой аккаунт'),
+    });
+  });
+
+  it('не возвращает на публичный URL с query и hash', () => {
+    expect(safeRedirectTarget('/?lang=en#privacy')).toBe('/dashboard');
+    expect(safeRedirectTarget('/announcements/17?tab=info#details')).toBe('/dashboard');
   });
 
   it('в меню учителя только его разделы, у админа их нет', () => {
