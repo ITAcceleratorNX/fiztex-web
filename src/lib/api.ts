@@ -37,6 +37,17 @@ const TOKEN_KEY = 'fiztex.token';
 
 // The auth token is a session credential (not application data), so persisting it is fine.
 let authToken: string | null = localStorage.getItem(TOKEN_KEY);
+let sessionRevision = 0;
+
+/** Even signing back into the same account starts a different session. */
+function guardSession(): () => void {
+  const revision = sessionRevision;
+  return () => {
+    if (revision !== sessionRevision) {
+      throw new DOMException('Сессия изменилась.', 'AbortError');
+    }
+  };
+}
 
 type SessionExpiredListener = () => void;
 const sessionExpiredListeners = new Set<SessionExpiredListener>();
@@ -66,6 +77,7 @@ export function getToken(): string | null {
 }
 
 export function setToken(token: string | null): void {
+  sessionRevision += 1;
   authToken = token;
   if (token) localStorage.setItem(TOKEN_KEY, token);
   else localStorage.removeItem(TOKEN_KEY);
@@ -106,6 +118,7 @@ export interface RequestOptions {
 
 /** Shared JSON request helper — used by admissions `api` and schedule-settings client. */
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const assertCurrentSession = guardSession();
   const headers: Record<string, string> = { ...options.headers };
   if (options.body !== undefined) headers['Content-Type'] = 'application/json';
   if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
@@ -119,9 +132,11 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       signal: options.signal,
     });
   } catch {
+    assertCurrentSession();
     throw new ApiError(0, NO_CONNECTION);
   }
 
+  assertCurrentSession();
   if (response.status === 401) {
     handleUnauthorized();
   }
@@ -131,6 +146,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
 
   const text = await response.text();
+  assertCurrentSession();
   const data = text ? safeParse(text) : undefined;
 
   if (!response.ok) {
@@ -141,6 +157,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
 }
 
 export async function requestMultipart<T>(path: string, formData: FormData, signal?: AbortSignal): Promise<T> {
+  const assertCurrentSession = guardSession();
   const headers: Record<string, string> = {};
   if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
 
@@ -153,14 +170,17 @@ export async function requestMultipart<T>(path: string, formData: FormData, sign
       signal,
     });
   } catch {
+    assertCurrentSession();
     throw new ApiError(0, NO_CONNECTION);
   }
 
+  assertCurrentSession();
   if (response.status === 401) {
     handleUnauthorized();
   }
 
   const text = await response.text();
+  assertCurrentSession();
   const data = text ? safeParse(text) : undefined;
 
   if (!response.ok) {
@@ -178,6 +198,7 @@ export async function requestMultipart<T>(path: string, formData: FormData, sign
  * оборачивает его в object URL и обязан освободить через `URL.revokeObjectURL`.
  */
 export async function requestBlob(path: string, signal?: AbortSignal): Promise<Blob> {
+  const assertCurrentSession = guardSession();
   const headers: Record<string, string> = {};
   if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
 
@@ -185,13 +206,21 @@ export async function requestBlob(path: string, signal?: AbortSignal): Promise<B
   try {
     response = await fetch(`/api${path}`, { headers, signal });
   } catch {
+    assertCurrentSession();
     throw new ApiError(0, NO_CONNECTION);
   }
 
+  assertCurrentSession();
   if (response.status === 401) handleUnauthorized();
-  if (!response.ok) throw toApiError(response.status, await response.text().then(safeParse));
+  if (!response.ok) {
+    const text = await response.text();
+    assertCurrentSession();
+    throw toApiError(response.status, safeParse(text));
+  }
 
-  return response.blob();
+  const blob = await response.blob();
+  assertCurrentSession();
+  return blob;
 }
 
 function safeParse(text: string): unknown {

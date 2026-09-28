@@ -4,9 +4,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { getToken, setToken, api, onSessionExpired } from '@/lib/api';
 import type { Admin } from '@/lib/types';
 
@@ -48,6 +50,22 @@ function persist(admin: Admin): void {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(admin));
 }
 
+function createSession(admin: Admin | null, revision = 0) {
+  return {
+    admin,
+    revision,
+    queryClient: new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: 1,
+          refetchOnWindowFocus: false,
+          staleTime: 15_000,
+        },
+      },
+    }),
+  };
+}
+
 /** Fire-and-forget server logout so tokenVersion is bumped; ignores network/HTTP errors. */
 function invalidateServerSession(token: string): void {
   void fetch('/api/auth/logout', {
@@ -59,23 +77,38 @@ function invalidateServerSession(token: string): void {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [admin, setAdmin] = useState<Admin | null>(loadProfile);
+  const [session, setSession] = useState(() => createSession(loadProfile()));
+  const sessionRef = useRef(session);
+  const { admin } = session;
+
+  const replaceSession = useCallback((nextAdmin: Admin | null) => {
+    const previous = sessionRef.current;
+    const next = createSession(nextAdmin, previous.revision + 1);
+    sessionRef.current = next;
+    // Abort active queries and discard both query and mutation caches. A new
+    // client keeps late mutation callbacks confined to the previous session.
+    void previous.queryClient.cancelQueries();
+    previous.queryClient.clear();
+    setSession(next);
+  }, []);
 
   useEffect(() => {
     return onSessionExpired(() => {
       localStorage.removeItem(PROFILE_KEY);
-      setAdmin(null);
+      // A rejected login has no authenticated session to discard. Keep the
+      // login form mounted so it can display its error and retain the input.
+      if (sessionRef.current.admin) replaceSession(null);
     });
-  }, []);
+  }, [replaceSession]);
 
   // Возвращает аккаунт, а не void: вызывающему нужна роль, чтобы выбрать стартовый экран,
   // а состояние контекста на этот момент ещё не обновилось.
   const login = useCallback(async (email: string, password: string) => {
     const result = await api.login(email, password);
     persist(result);
-    setAdmin(result);
+    replaceSession(result);
     return result;
-  }, []);
+  }, [replaceSession]);
 
   const logout = useCallback(() => {
     const token = getToken();
@@ -83,15 +116,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       invalidateServerSession(token);
     }
     clearLocalSession();
-    setAdmin(null);
-  }, []);
+    replaceSession(null);
+  }, [replaceSession]);
 
   const value = useMemo<AuthContextValue>(
     () => ({ admin, isAuthenticated: Boolean(admin), login, logout }),
     [admin, login, logout],
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {/* Remount session consumers too: local form state and notifications must
+          not outlive the account that created them. The router stays outside. */}
+      <QueryClientProvider key={session.revision} client={session.queryClient}>
+        {children}
+      </QueryClientProvider>
+    </AuthContext.Provider>
+  );
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
