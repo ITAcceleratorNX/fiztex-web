@@ -49,8 +49,16 @@ function idempotent(key: string) {
 }
 
 export const surveyApi = {
-  list: (status?: SurveyStatus, signal?: AbortSignal) =>
-    request<SurveyPage>(`/admin/surveys${pageQuery({ status })}`, { signal }),
+  list: (status?: SurveyStatus, pageable: { page?: number; size?: number } = {}, signal?: AbortSignal) => {
+    const query = new URLSearchParams();
+    if (status) query.set('status', status);
+    query.set('page', String(pageable.page ?? 0));
+    query.set('size', String(pageable.size ?? 20));
+    // Порядок стабилен между страницами, включая записи с одинаковым временем.
+    query.append('sort', 'createdAt,desc');
+    query.append('sort', 'id,desc');
+    return request<SurveyPage>(`/admin/surveys?${query}`, { signal });
+  },
 
   card: (id: number, signal?: AbortSignal) => request<Survey>(`/admin/surveys/${id}`, { signal }),
 

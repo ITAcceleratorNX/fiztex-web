@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, ListChecks } from 'lucide-react';
-import { useSurveys } from '@/hooks/surveyQueries';
+import { useSurveyStatusTotals, useSurveys } from '@/hooks/surveyQueries';
 import { StatCard } from '@/components/ui/StatCard';
 import { Select } from '@/components/ui/Field';
 import { Button } from '@/components/ui/Button';
@@ -12,35 +12,58 @@ import { ROUTES } from '@/lib/routes';
 import { ApiError } from '@/lib/api';
 import type { SurveyStatus } from '@/lib/surveyApi';
 import { SURVEY_VARIANT_COPY, type SurveyVariant } from '@/lib/surveyModel';
+import { surveyCardPath } from '@/lib/surveyListNavigation';
+
+const PAGE_SIZE = 20;
+const STATUSES: SurveyStatus[] = ['DRAFT', 'ACTIVE', 'COMPLETED'];
+
+function pageFrom(raw: string | null): number {
+  if (!raw || !/^[1-9]\d*$/.test(raw)) return 0;
+  const value = Number(raw);
+  return Number.isSafeInteger(value) ? value - 1 : 0;
+}
 
 /**
- * Список опросов (Опросы, Phase 2). Список один — без фильтра статуса, список школы
- * короткий, — а счётчики сверху и таблица снизу читают его целиком: фильтр статуса
- * сужает только видимые строки, сводка остаётся про весь список.
+ * Список опросов (Опросы, Phase 2). Сервер применяет фильтр статуса и пагинацию;
+ * сводка сверху показывает точные totals по разным статусам, а таблица — текущую страницу.
  */
 export function SurveysPage({ variant = 'school' }: { variant?: SurveyVariant }) {
   const copy = SURVEY_VARIANT_COPY[variant];
   // Психолог открывает тест своим адресом: школьные /surveys ему закрыты (routes.ts).
   const cardRoute = (id: number) => (variant === 'psychology' ? ROUTES.psychologistTest(id) : ROUTES.survey(id));
   const navigate = useNavigate();
-  const surveys = useSurveys();
-  const [statusFilter, setStatusFilter] = useState<'ALL' | SurveyStatus>('ALL');
+  const [search, setSearch] = useSearchParams();
+  const rawStatus = search.get('status') as SurveyStatus | null;
+  const statusFilter: 'ALL' | SurveyStatus = rawStatus && STATUSES.includes(rawStatus) ? rawStatus : 'ALL';
+  const page = pageFrom(search.get('page'));
+  const surveys = useSurveys(statusFilter === 'ALL' ? undefined : statusFilter, page, PAGE_SIZE);
+  const statusTotals = useSurveyStatusTotals();
   const [createOpen, setCreateOpen] = useState(false);
 
   const allRows = surveys.data?.content ?? [];
-  const summary = useMemo(
-    () => ({
-      total: allRows.length,
-      active: allRows.filter((r) => r.status === 'ACTIVE').length,
-      draft: allRows.filter((r) => r.status === 'DRAFT').length,
-    }),
-    [allRows],
-  );
+  const rows = allRows;
+  const total = surveys.data?.totalElements;
+  const totalPages = surveys.data?.totalPages ?? 0;
+  const totalsReady = statusTotals.every((query) => query.isSuccess);
+  const activeTotal = statusTotals[0]?.data?.totalElements;
+  const draftTotal = statusTotals[1]?.data?.totalElements;
+  const totalAll = statusTotals.reduce((sum, query) => sum + (query.data?.totalElements ?? 0), 0);
 
-  const rows = useMemo(
-    () => (statusFilter === 'ALL' ? allRows : allRows.filter((r) => r.status === statusFilter)),
-    [allRows, statusFilter],
-  );
+  function setFilters(nextStatus: 'ALL' | SurveyStatus, nextPage = 0) {
+    const params = new URLSearchParams(search);
+    if (nextStatus === 'ALL') params.delete('status');
+    else params.set('status', nextStatus);
+    if (nextPage === 0) params.delete('page');
+    else params.set('page', String(nextPage + 1));
+    setSearch(params);
+  }
+
+  const listPath = `${variant === 'psychology' ? '/psychologist/tests' : '/surveys'}${search.size ? `?${search}` : ''}`;
+
+  useEffect(() => {
+    if (surveys.isSuccess && totalPages > 0 && page >= totalPages) setFilters(statusFilter, totalPages - 1);
+    else if (surveys.isSuccess && totalPages === 0 && page > 0) setFilters(statusFilter, 0);
+  }, [surveys.isSuccess, totalPages, page, statusFilter]);
 
   return (
     <div>
@@ -57,15 +80,15 @@ export function SurveysPage({ variant = 'school' }: { variant?: SurveyVariant })
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Всего" value={surveys.isSuccess ? summary.total : '—'} />
-        <StatCard label="Активных" value={surveys.isSuccess ? summary.active : '—'} />
-        <StatCard label="Черновиков" value={surveys.isSuccess ? summary.draft : '—'} />
+        <StatCard label="Всего" value={totalsReady ? totalAll : '—'} />
+        <StatCard label="Активных" value={totalsReady ? activeTotal ?? '—' : '—'} />
+        <StatCard label="Черновиков" value={totalsReady ? draftTotal ?? '—' : '—'} />
       </div>
 
       <div className="mb-4 mt-6 flex items-center gap-3">
         <Select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as 'ALL' | SurveyStatus)}
+          onChange={(e) => setFilters(e.target.value as 'ALL' | SurveyStatus)}
           className="h-11 w-auto"
         >
           <option value="ALL">Статус: Все</option>
@@ -113,7 +136,7 @@ export function SurveysPage({ variant = 'school' }: { variant?: SurveyVariant })
                 {rows.map((row) => (
                   <tr
                     key={row.id}
-                    onClick={() => navigate(cardRoute(row.id as number))}
+                    onClick={() => navigate(surveyCardPath(listPath, cardRoute(row.id as number)))}
                     className="cursor-pointer transition hover:bg-slate-50/70"
                   >
                     <td className="px-6 py-3.5 font-semibold text-slate-800">{row.title}</td>
@@ -133,6 +156,22 @@ export function SurveysPage({ variant = 'school' }: { variant?: SurveyVariant })
           </div>
         )}
       </div>
+
+      {!surveys.isLoading && !surveys.isError && total != null && total > 0 && (
+        <nav aria-label="Страницы опросов" className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-slate-500" aria-live="polite">
+            Страница {page + 1} из {totalPages} · Всего по фильтру: {total}
+          </p>
+          {totalPages > 1 && (
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" disabled={surveys.isFetching || page === 0}
+                onClick={() => setFilters(statusFilter, page - 1)}>Предыдущая страница</Button>
+              <Button variant="secondary" size="sm" disabled={surveys.isFetching || surveys.data?.last === true || page + 1 >= totalPages}
+                onClick={() => setFilters(statusFilter, page + 1)}>Следующая страница</Button>
+            </div>
+          )}
+        </nav>
+      )}
 
       <SurveyCreateModal
         open={createOpen}

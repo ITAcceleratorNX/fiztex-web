@@ -67,7 +67,9 @@ export function ServiceRequestCardPage() {
   const [params] = useSearchParams();
   // Откуда пришли: у Super Admin карточка открывается ещё из «Всех заявок» и журнала,
   // и возвращать его оттуда в «Мои заявки» значило бы терять место в списке.
-  const backTo = serviceListPath(serviceOriginFrom(params.get('from')));
+  const rawPage = params.get('page');
+  const page = rawPage && /^[1-9][0-9]*$/.test(rawPage) ? Number(rawPage) - 1 : 0;
+  const backTo = serviceListPath(serviceOriginFrom(params.get('from')), Number.isSafeInteger(page) ? page : 0);
 
   const accountId = useMyAccountId();
   const cardQuery = useServiceRequest(valid ? id : null);

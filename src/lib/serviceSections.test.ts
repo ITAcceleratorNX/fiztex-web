@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   SERVICE_TABS,
   serviceListPath,
+  serviceRequestCardPath,
   serviceOriginFrom,
   serviceSectionFrom,
 } from './serviceSections';
@@ -25,9 +26,15 @@ describe('вкладки сервисных заявок (SERVICE-FE-004 §5, §
   it('карточка возвращает туда, откуда её открыли', () => {
     expect(serviceListPath('ALL')).toBe('/service?tab=all');
     expect(serviceListPath('AUDIT')).toBe('/service?tab=audit');
+    expect(serviceListPath('HISTORY', 1)).toBe('/service?tab=history&page=2');
     // «Мои заявки» — раздел по умолчанию, и лишний параметр в адресе ему не нужен.
     expect(serviceListPath('ACTIVE')).toBe('/service');
     expect(serviceListPath(null)).toBe('/service');
+  });
+
+  it('ссылка строки передаёт вкладку и страницу в карточку заявки', () => {
+    expect(serviceRequestCardPath(42, 'HISTORY', 1)).toBe('/service/42?from=history&page=2');
+    expect(serviceRequestCardPath(42, 'ACTIVE')).toBe('/service/42?from=active');
   });
 
   it('источник перехода читается обратно, а подделанный — отбрасывается', () => {

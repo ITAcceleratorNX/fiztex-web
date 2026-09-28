@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -44,6 +44,15 @@ export function ServiceRequestsPage() {
   // Чужая вкладка в адресе не должна открывать чужой раздел: разрешённый набор считается
   // по роли, а `?tab=all` под обычным админом читается как «Мои заявки».
   const section = serviceSectionFrom(params.get('tab'), tabs);
+  const rawPage = params.get('page');
+  const requestedPage = rawPage && /^[1-9][0-9]*$/.test(rawPage) ? Number(rawPage) - 1 : 0;
+  const page = Number.isSafeInteger(requestedPage) && requestedPage >= 0 ? requestedPage : 0;
+  const setPage = useCallback((next: number, replace = false) => {
+    const updated = new URLSearchParams(params);
+    if (next === 0) updated.delete('page');
+    else updated.set('page', String(next + 1));
+    setParams(updated, { replace });
+  }, [params, setParams]);
 
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -63,6 +72,7 @@ export function ServiceRequestsPage() {
           const updated = new URLSearchParams(params);
           if (next === 'ACTIVE') updated.delete('tab');
           else updated.set('tab', next.toLowerCase());
+          updated.delete('page');
           setParams(updated, { replace: true });
         }}
       >
@@ -80,7 +90,13 @@ export function ServiceRequestsPage() {
       ) : section === 'AUDIT' ? (
         <ServiceAuditTab />
       ) : (
-        <MySection section={section} onCreate={() => setCreateOpen(true)} accountId={accountId} />
+        <MySection
+          section={section}
+          page={page}
+          onPageChange={setPage}
+          onCreate={() => setCreateOpen(true)}
+          accountId={accountId}
+        />
       )}
 
       <CreateServiceRequestModal
@@ -105,15 +121,27 @@ export function ServiceRequestsPage() {
  */
 function MySection({
   section,
+  page,
+  onPageChange,
   accountId,
   onCreate,
 }: {
   section: ServiceSection;
+  page: number;
+  onPageChange: (page: number, replace?: boolean) => void;
   accountId: number | undefined;
   onCreate: () => void;
 }) {
   const listQuery = useServiceRequests(section);
-  const rows = listQuery.data ?? [];
+  const rows = listQuery.data?.content ?? [];
+  const total = listQuery.data?.totalElements ?? 0;
+  const totalPages = Math.ceil(total / 50);
+  const visibleRows = rows.slice(page * 50, (page + 1) * 50);
+
+  useEffect(() => {
+    if (listQuery.isSuccess && totalPages > 0 && page >= totalPages) onPageChange(totalPages - 1, true);
+    else if (listQuery.isSuccess && totalPages === 0 && page > 0) onPageChange(0, true);
+  }, [listQuery.isSuccess, totalPages, page, onPageChange]);
 
   if (listQuery.isPending) return <ServiceRequestsTableSkeleton />;
   if (listQuery.isError) {
@@ -126,7 +154,22 @@ function MySection({
   }
   if (rows.length === 0) return <SectionEmpty section={section} onCreate={onCreate} />;
 
-  return <ServiceRequestsTable rows={rows} accountId={accountId} />;
+  return (
+    <div className="space-y-4">
+      <ServiceRequestsTable rows={visibleRows} accountId={accountId} section={section} page={page} />
+      {total > 0 && (
+        <nav aria-label="Страницы сервисных заявок" className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-13 text-muted" aria-live="polite">Страница {page + 1} из {totalPages} · Всего заявок: {total}</p>
+          {totalPages > 1 && (
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" disabled={page === 0} onClick={() => onPageChange(page - 1)}>Предыдущая страница</Button>
+              <Button variant="secondary" size="sm" disabled={page + 1 >= totalPages} onClick={() => onPageChange(page + 1)}>Следующая страница</Button>
+            </div>
+          )}
+        </nav>
+      )}
+    </div>
+  );
 }
 
 /**

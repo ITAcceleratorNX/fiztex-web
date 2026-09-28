@@ -40,6 +40,7 @@ import {
   SECTION_STATUSES,
   serviceRequestsApi,
   type CreateServiceRequestInput,
+  type ServiceRequest,
   type ServiceSection,
 } from '@/lib/serviceRequestsApi';
 import {
@@ -1527,22 +1528,58 @@ const SERVICE_PAGE_SIZE = 50;
 /**
  * Раздел списка заявок (§3).
  *
- * Двумя запросами по статусу, а не одним общим с разбором на клиенте: страница это срез,
- * и смешанная выдача из последних заявок могла бы целиком состоять из выполненных —
- * «Мои заявки» показали бы «пусто» при живых новых на следующей странице.
+ * Каждый статусный поток загружается до последней страницы, затем заявки объединяются
+ * по времени события и стабильному ID. Частичную выдачу не показываем как полный список:
+ * «Мои» и «История» должны давать честную общую пагинацию даже при разных объёмах статусов.
  */
 export function useServiceRequests(section: ServiceSection) {
   return useQuery({
     queryKey: keys.serviceRequests(section),
     queryFn: async ({ signal }) => {
-      const pages = await Promise.all(
-        SECTION_STATUSES[section].map((status) =>
-          serviceRequestsApi.my({ status, size: SERVICE_PAGE_SIZE }, signal),
-        ),
-      );
-      return pages.flatMap((page) => page.content ?? []).sort(byRecency);
+      const controller = new AbortController();
+      const cancel = () => controller.abort(signal.reason);
+      if (signal.aborted) cancel();
+      else signal.addEventListener('abort', cancel, { once: true });
+      const streams = await Promise.all(SECTION_STATUSES[section].map(async (status) => {
+        const pages = [];
+        for (let page = 0; ; page++) {
+          controller.signal.throwIfAborted();
+          const result = await serviceRequestsApi.my({ status, page, size: SERVICE_PAGE_SIZE }, controller.signal);
+          pages.push(result);
+          if (result.last === true || (result.totalPages != null && page + 1 >= result.totalPages)) break;
+          if (result.last == null && result.totalPages == null) {
+            throw new Error('Сервер не вернул метаданные пагинации сервисных заявок');
+          }
+        }
+        return { status, pages };
+      })).catch((error: unknown) => {
+        controller.abort(error);
+        throw error;
+      }).finally(() => signal.removeEventListener('abort', cancel));
+      const byId = new Map<number, ServiceRequest>();
+      for (const stream of streams) {
+        for (const page of stream.pages) {
+          for (const request of page.content ?? []) {
+            if (request.id != null) byId.set(request.id, request);
+          }
+        }
+      }
+      const content = [...byId.values()].sort(byRecency);
+      return {
+        content,
+        totalElements: streams.reduce((sum, stream) => sum + (stream.pages[0]?.totalElements ?? 0), 0),
+        totalPages: Math.ceil(streams.reduce((sum, stream) => sum + (stream.pages[0]?.totalElements ?? 0), 0) / SERVICE_PAGE_SIZE),
+        size: SERVICE_PAGE_SIZE,
+        number: 0,
+        streams: streams.map((stream) => ({
+          status: stream.status,
+          totalElements: stream.pages[0]?.totalElements ?? 0,
+          pagesFetched: stream.pages.length,
+          complete: stream.pages.at(-1)?.last === true
+            || (stream.pages[0]?.totalPages != null && stream.pages.length >= stream.pages[0].totalPages),
+        })),
+      };
     },
-    placeholderData: (previous) => previous,
   });
 }
 

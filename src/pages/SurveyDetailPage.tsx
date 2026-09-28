@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
@@ -20,7 +20,7 @@ import {
   type SurveyVariant,
 } from '@/lib/surveyModel';
 import { useToast } from '@/context/ToastContext';
-import { ROUTES } from '@/lib/routes';
+import { surveyListReturnTo } from '@/lib/surveyListNavigation';
 import { ApiError } from '@/lib/api';
 
 type SurveyTab = 'questions' | 'audience' | 'results' | 'ai';
@@ -40,6 +40,8 @@ export function SurveyDetailPage({ variant = 'school' }: { variant?: SurveyVaria
     ? ['questions', 'audience', 'results', 'ai']
     : ['questions', 'audience', 'results'];
   const { surveyId: surveyIdParam } = useParams();
+  const location = useLocation();
+  const backTo = surveyListReturnTo(location.search, variant);
   const surveyId = Number(surveyIdParam);
   const toast = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -104,7 +106,7 @@ export function SurveyDetailPage({ variant = 'school' }: { variant?: SurveyVaria
   return (
     <div>
       <Link
-        to={variant === 'psychology' ? ROUTES.psychologistTests : ROUTES.surveys}
+        to={backTo}
         className="mb-3 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-brand-600"
       >
         <ArrowLeft className="h-4 w-4" />
