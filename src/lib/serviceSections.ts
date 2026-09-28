@@ -60,10 +60,29 @@ export function serviceListPath(from?: ServiceTabValue | null, page = 0): string
 }
 
 /** Ссылка из списка в карточку сохраняет вкладку автора и текущую страницу. */
-export function serviceRequestCardPath(requestId: number, section: ServiceSection, page = 0): string {
+export function serviceRequestCardPath(
+  requestId: number,
+  section: ServiceSection,
+  page = 0,
+  returnTo?: string,
+): string {
   const params = new URLSearchParams({ from: section.toLowerCase() });
   if (page > 0) params.set('page', String(page + 1));
+  if (returnTo) params.set('returnTo', returnTo);
   return `/service/${requestId}?${params}`;
+}
+
+/** Возврат разрешён только на сам список заявок, без внешних адресов и фрагментов. */
+export function safeServiceListReturnPath(raw: string | null): string | null {
+  if (!raw) return null;
+  try {
+    const base = 'https://fiztex.local';
+    const target = new URL(raw, base);
+    if (target.origin !== base || target.pathname !== '/service' || target.hash) return null;
+    return `/service${target.search}`;
+  } catch {
+    return null;
+  }
 }
 
 /** Читает `?from=` карточки обратно во вкладку. Чужое значение — «Мои заявки». */

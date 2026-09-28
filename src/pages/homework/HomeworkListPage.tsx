@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Info, Users } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
@@ -8,6 +8,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
 import { useHomeworkList, useHomeworkFilterOptions, useTextbookBindingOptions } from '@/hooks/queries';
 import { useHomeworkListScroll } from '@/hooks/useHomeworkListScroll';
+import { useListSearchParams } from '@/hooks/useListNavigation';
 import { readHomeworkListState, writeHomeworkListState, type HomeworkListState } from '@/lib/homeworkListNavigation';
 import type { BindingOptions } from '@/lib/textbooksApi';
 import { SCOPE_STATUSES, type Homework, type HomeworkScope } from '@/lib/homeworkApi';
@@ -42,7 +43,9 @@ export function HomeworkListPage() {
   useDocumentTitle('Домашние задания');
 
   const [optionsRequested, setOptionsRequested] = useState(false);
-  const [search, setSearch] = useSearchParams();
+  const [search, setSearch] = useListSearchParams('homework', [
+    'scope', 'status', 'classId', 'subjectId', 'dueFrom', 'dueTo', 'pendingReviewOnly', 'page',
+  ]);
   const state = useMemo(() => readHomeworkListState(search), [search]);
   const { scope, filters, page } = state;
   const canonicalSearch = writeHomeworkListState(state);

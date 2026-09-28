@@ -6,4 +6,11 @@ import { afterEach } from 'vitest';
 // afterEach — а `globals` в vitest.config здесь не включены. Без этого разметка
 // предыдущего теста остаётся в документе, и запросы вида getByRole внезапно находят
 // два элемента вместо одного: тест падает не там, где ошибка.
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  sessionStorage.clear();
+});
+
+// jsdom does not implement scrolling; pages still exercise restoration state without
+// emitting its "not implemented" console warning.
+window.scrollTo = () => undefined;

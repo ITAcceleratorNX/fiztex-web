@@ -1,11 +1,13 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Field, Select, TextInput } from '@/components/ui/Field';
 import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
 import { useServiceAudit } from '@/hooks/queries';
 import { cx, formatDateTime } from '@/lib/format';
+import { isValidIsoDate, mergeSearchParams, parseOneBasedPage, parsePositiveInteger } from '@/lib/listNavigation';
+import { useListScrollRestoration } from '@/hooks/useListNavigation';
 import { ROUTES } from '@/lib/routes';
 import {
   AUDIT_PAGE_SIZE,
@@ -40,9 +42,24 @@ import { ServiceStatusChip } from './ServiceStatusChip';
  * автора действия бэкенд сохраняет в самом событии, а не подтягивает из живого аккаунта.
  */
 export function ServiceAuditTab() {
-  const [filter, setFilter] = useState<AuditFilter>(EMPTY_AUDIT_FILTER);
-  const [actor, setActor] = useState<PickedAccount | null>(null);
-  const [page, setPage] = useState(0);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const rawAction = searchParams.get('auditAction');
+  const rawFrom = searchParams.get('auditFrom');
+  const rawTo = searchParams.get('auditTo');
+  const from = isValidIsoDate(rawFrom) ? rawFrom : '';
+  const parsedTo = isValidIsoDate(rawTo) ? rawTo : '';
+  const to = from && parsedTo && parsedTo < from ? '' : parsedTo;
+  const actorId = parsePositiveInteger(searchParams.get('auditActor'));
+  const page = parseOneBasedPage(searchParams.get('page'));
+  const filter: AuditFilter = {
+    ...EMPTY_AUDIT_FILTER,
+    action: HISTORY_ACTIONS.includes(rawAction as ServiceRequestAction)
+      ? rawAction as ServiceRequestAction : null,
+    actorId,
+    from,
+    to,
+  };
+  const actor: PickedAccount | null = actorId ? { id: actorId, fullName: `Аккаунт #${actorId}` } : null;
   // Снимок и заявка, которой он принадлежит: содержимое забирается по обоим
   // идентификаторам сразу (`/service-requests/{id}/photos/{photoId}/content`).
   const [zoomed, setZoomed] = useState<{ requestId: number; photo: ServiceRequestPhoto } | null>(
@@ -51,20 +68,46 @@ export function ServiceAuditTab() {
 
   const auditQuery = useServiceAudit(filter, page);
 
+  useEffect(() => {
+    const next = mergeSearchParams(searchParams, {
+      auditAction: filter.action,
+      auditActor: filter.actorId,
+      auditFrom: filter.from,
+      auditTo: filter.to,
+      page: page === 0 ? null : page + 1,
+    });
+    if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
+  }, [filter, page, searchParams, setSearchParams]);
+
   function patch(next: Partial<AuditFilter>) {
-    setFilter((prev) => ({ ...prev, ...next }));
-    setPage(0);
+    setSearchParams((current) => mergeSearchParams(current, {
+      ...('action' in next ? { auditAction: next.action } : {}),
+      ...('actorId' in next ? { auditActor: next.actorId } : {}),
+      ...('from' in next ? { auditFrom: next.from } : {}),
+      ...('to' in next ? { auditTo: next.to } : {}),
+      page: null,
+    }));
   }
 
   function reset() {
-    setFilter(EMPTY_AUDIT_FILTER);
-    setActor(null);
-    setPage(0);
+    setSearchParams((current) => mergeSearchParams(current, {
+      auditAction: null, auditActor: null, auditFrom: null, auditTo: null, page: null,
+    }));
   }
 
   const rows = auditQuery.data?.content ?? [];
   const total = auditQuery.data?.totalElements ?? 0;
   const totalPages = auditQuery.data?.totalPages ?? 0;
+  useListScrollRestoration('service', !auditQuery.isPending);
+
+  useEffect(() => {
+    if (!auditQuery.isSuccess) return;
+    if (totalPages > 0 && page >= totalPages) {
+      setSearchParams((current) => mergeSearchParams(current, { page: totalPages === 1 ? null : totalPages }), { replace: true });
+    } else if (totalPages === 0 && page > 0) {
+      setSearchParams((current) => mergeSearchParams(current, { page: null }), { replace: true });
+    }
+  }, [auditQuery.isSuccess, page, setSearchParams, totalPages]);
 
   return (
     <div className="space-y-5">
@@ -91,7 +134,6 @@ export function ServiceAuditTab() {
             placeholder="ФИО пользователя"
             value={actor}
             onChange={(next) => {
-              setActor(next);
               patch({ actorId: next?.id ?? null });
             }}
           />
@@ -100,7 +142,10 @@ export function ServiceAuditTab() {
             <TextInput
               type="date"
               value={filter.from}
-              onChange={(event) => patch({ from: event.target.value })}
+              onChange={(event) => {
+                const nextFrom = event.target.value;
+                patch({ from: nextFrom, ...(filter.to && nextFrom > filter.to ? { to: '' } : {}) });
+              }}
             />
           </Field>
 
@@ -178,6 +223,7 @@ export function ServiceAuditTab() {
                     key={`${entry.requestId}-${entry.event?.id}`}
                     entry={entry}
                     onZoom={setZoomed}
+                    returnTo={`/service${searchParams.size ? `?${searchParams}` : ''}`}
                   />
                 ))}
               </tbody>
@@ -190,7 +236,9 @@ export function ServiceAuditTab() {
             total={total}
             pageSize={AUDIT_PAGE_SIZE}
             unit={['событие', 'события', 'событий']}
-            onPage={setPage}
+            onPage={(nextPage) => setSearchParams((current) => mergeSearchParams(current, {
+              page: nextPage === 0 ? null : nextPage + 1,
+            }))}
           />
         </div>
       )}
@@ -212,9 +260,11 @@ const CELL = 'px-4 py-4 align-top text-13 text-ink';
 function AuditRow({
   entry,
   onZoom,
+  returnTo,
 }: {
   entry: ServiceRequestAuditEntry;
   onZoom: (zoom: { requestId: number; photo: ServiceRequestPhoto }) => void;
+  returnTo: string;
 }) {
   const event = entry.event;
   const requestId = entry.requestId as number;
@@ -233,7 +283,7 @@ function AuditRow({
       <td className={CELL}>
         {/* §9: из события — в заявку. `?from=audit` вернёт обратно в журнал. */}
         <Link
-          to={`${ROUTES.serviceRequest(requestId)}?from=audit`}
+          to={`${ROUTES.serviceRequest(requestId)}?${new URLSearchParams({ from: 'audit', returnTo })}`}
           className="font-semibold text-link hover:underline"
         >
           {entry.requestNumber}

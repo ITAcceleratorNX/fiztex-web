@@ -11,6 +11,7 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { getToken, setToken, api, onSessionExpired } from '@/lib/api';
 import type { Admin } from '@/lib/types';
+import { clearListNavigationSession } from '@/lib/listNavigation';
 import { FormDraftProvider, FormDraftStore } from './FormDraftContext';
 
 const PROFILE_KEY = 'fiztex.profile';
@@ -84,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { admin } = session;
 
   const replaceSession = useCallback((nextAdmin: Admin | null) => {
+    clearListNavigationSession();
     const previous = sessionRef.current;
     const next = createSession(nextAdmin, previous.revision + 1);
     sessionRef.current = next;

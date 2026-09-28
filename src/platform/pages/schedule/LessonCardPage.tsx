@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
   Award,
@@ -36,6 +36,7 @@ import {
 import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api';
+import { isValidIsoDate } from '@/lib/listNavigation';
 import { ROUTES } from '@/lib/routes';
 import type { AttendanceSheet } from '@/lib/attendanceApi';
 import { cx, formatDateTime, formatWeekdayDayMonth, pluralRu } from '@/lib/format';
@@ -57,8 +58,9 @@ import { LessonSummaryEntry } from './LessonSummaryEntry';
  * Куда возвращает «К расписанию». У учителя это его собственный экран: админский
  * конструктор читает `/api/admin/*` и под учителем рвёт сессию (см. `routes.ts`).
  */
-function schedulePathFor(role: string | undefined): string {
-  return role === 'TEACHER' ? ROUTES.mySchedule : '/lesson-schedule';
+function schedulePathFor(role: string | undefined, week: string | null): string {
+  if (role !== 'TEACHER') return '/lesson-schedule';
+  return isValidIsoDate(week) ? `${ROUTES.mySchedule}?week=${week}` : ROUTES.mySchedule;
 }
 
 /**
@@ -76,10 +78,11 @@ export function LessonCardPage() {
   const id = Number(lessonId);
   const lessonQuery = useLesson(Number.isFinite(id) && id > 0 ? id : null);
   const { admin } = useAuth();
+  const [searchParams] = useSearchParams();
   const toast = useToast();
   const saveTopic = useSaveLessonTopic(id);
   const saveComment = useSaveLessonComment(id);
-  const schedulePath = schedulePathFor(admin?.role);
+  const schedulePath = schedulePathFor(admin?.role, searchParams.get('week'));
 
   const lesson = lessonQuery.data;
   const canSeeHistory = hasAny(lesson, ['VIEW_ADMIN_HISTORY', 'VIEW_TEACHER_HISTORY']);
@@ -754,7 +757,7 @@ function NoAccessState() {
       title="У вас нет доступа к этому уроку"
       description="Этот урок относится к другому классу или закреплен за другим преподавателем."
       action={
-        <Button variant="secondary" onClick={() => navigate(schedulePathFor(admin?.role))}>
+        <Button variant="secondary" onClick={() => navigate(schedulePathFor(admin?.role, null))}>
           Вернуться к расписанию
         </Button>
       }

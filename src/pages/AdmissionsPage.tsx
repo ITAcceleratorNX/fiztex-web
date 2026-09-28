@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApplicants, useSubjects, useTests } from '@/hooks/queries';
 import { StatCard } from '@/components/ui/StatCard';
 import { NotificationsBell } from '@/components/admissions/NotificationsBell';
 import { cx } from '@/lib/format';
+import { useListSearchParams } from '@/hooks/useListNavigation';
 import { AdmissionTestsTab } from './tabs/AdmissionTestsTab';
 import { ApplicantsTab } from './tabs/ApplicantsTab';
 import { AnnouncementsTab } from './tabs/AnnouncementsTab';
@@ -23,16 +24,22 @@ function parseTab(value: string | null): TabKey {
 
 export function AdmissionsPage() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [tab, setTab] = useState<TabKey>(() => parseTab(searchParams.get('tab')));
+  const [searchParams, setSearchParams] = useListSearchParams('admissions', ['tab', 'testQ', 'testStatus']);
+  const rawTab = searchParams.get('tab');
+  const tab = parseTab(rawTab);
 
   useEffect(() => {
-    setTab(parseTab(searchParams.get('tab')));
-  }, [searchParams]);
+    if (rawTab == null || rawTab === 'applicants' || rawTab === 'announcements') return;
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('tab');
+    setSearchParams(nextParams, { replace: true });
+  }, [rawTab, searchParams, setSearchParams]);
 
   function selectTab(next: TabKey) {
-    setTab(next);
-    setSearchParams(next === 'tests' ? {} : { tab: next }, { replace: true });
+    const nextParams = new URLSearchParams(searchParams);
+    if (next === 'tests') nextParams.delete('tab');
+    else nextParams.set('tab', next);
+    setSearchParams(nextParams, { replace: true });
   }
 
   const subjects = useSubjects();

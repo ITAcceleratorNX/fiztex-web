@@ -34,11 +34,13 @@ export function ServiceRequestsTable({
   accountId,
   section,
   page,
+  returnTo,
 }: {
   rows: ServiceRequest[];
   accountId: number | undefined;
   section: ServiceSection;
   page: number;
+  returnTo: string;
 }) {
   const navigate = useNavigate();
 
@@ -89,7 +91,7 @@ export function ServiceRequestsTable({
               </td>
 
               <td className={cx(CELL, 'text-right')}>
-                <Button variant="secondary" onClick={() => navigate(serviceRequestCardPath(row.id as number, section, page))}>
+                <Button variant="secondary" onClick={() => navigate(serviceRequestCardPath(row.id as number, section, page, returnTo))}>
                   Открыть
                 </Button>
               </td>

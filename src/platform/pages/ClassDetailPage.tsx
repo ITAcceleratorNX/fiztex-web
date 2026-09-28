@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
 import { formatDate, initials, pluralRu } from '@/lib/format';
+import { parsePositiveInteger } from '@/lib/listNavigation';
 import { ROLE_AVATAR_COLOR, SCHOOL_STATUS_LABELS } from '../labels';
 import {
   ProfileBreadcrumb,
@@ -20,7 +21,23 @@ export function ClassDetailPage() {
   const { classId: classIdParam } = useParams();
   const classId = classIdParam ?? '';
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const toast = useToast();
+  const backTo = (() => {
+    const raw = searchParams.get('returnTo');
+    if (!raw) return '/admin/classes';
+    try {
+      const target = new URL(raw, window.location.origin);
+      if (target.origin !== window.location.origin || target.pathname !== '/admin/classes' || target.hash) {
+        return '/admin/classes';
+      }
+      const year = target.searchParams.get('year');
+      if ([...target.searchParams.keys()].some((key) => key !== 'year')) return '/admin/classes';
+      return year && parsePositiveInteger(year) ? `/admin/classes?year=${year}` : '/admin/classes';
+    } catch {
+      return '/admin/classes';
+    }
+  })();
 
   const [schoolClass, setSchoolClass] = useState<SchoolClass | null>(null);
   const [students, setStudents] = useState<StudentProfile[]>([]);
@@ -78,7 +95,7 @@ export function ClassDetailPage() {
     try {
       await archiveClass(schoolClass.id);
       toast.success('Класс архивирован');
-      navigate('/admin/classes', { replace: true });
+      navigate(backTo, { replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Не удалось архивировать');
     }
@@ -103,7 +120,7 @@ export function ClassDetailPage() {
           <div className="flex flex-col gap-3">
             <ProfileBreadcrumb
               items={[
-                { label: 'Классы', to: '/admin/classes' },
+                { label: 'Классы', to: backTo },
                 { label: schoolClass.name },
               ]}
             />

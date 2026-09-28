@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Pencil, ClipboardList } from 'lucide-react';
 import { useTests } from '@/hooks/queries';
 import { Button } from '@/components/ui/Button';
@@ -11,15 +11,36 @@ import { TestStatusBadge } from '@/components/ui/TestStatusBadge';
 import { TestFormModal } from '@/pages/modals/TestFormModal';
 import { formatDate, pluralRu } from '@/lib/format';
 import { ApiError } from '@/lib/api';
+import { mergeSearchParams } from '@/lib/listNavigation';
 import type { Test, TestStatus } from '@/lib/types';
 
 export function AdmissionTestsTab() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data, isLoading, isError, error, refetch, isSuccess } = useTests(false);
 
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | TestStatus>('ALL');
+  const search = searchParams.get('testQ') ?? '';
+  const rawStatus = searchParams.get('testStatus');
+  const statusFilter: 'ALL' | TestStatus = rawStatus === 'DRAFT' || rawStatus === 'ACTIVE'
+    ? rawStatus
+    : 'ALL';
   const [editing, setEditing] = useState<Test | null>(null);
+
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    if (!search) next.delete('testQ');
+    if (statusFilter === 'ALL') next.delete('testStatus');
+    else next.set('testStatus', statusFilter);
+    if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
+  }, [search, searchParams, setSearchParams, statusFilter]);
+
+  function updateSearch(value: string) {
+    setSearchParams(mergeSearchParams(searchParams, { testQ: value || null }), { replace: true });
+  }
+
+  function updateStatus(value: 'ALL' | TestStatus) {
+    setSearchParams(mergeSearchParams(searchParams, { testStatus: value === 'ALL' ? null : value }));
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -33,10 +54,10 @@ export function AdmissionTestsTab() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <SearchInput value={search} onChange={setSearch} placeholder="Поиск по названию…" className="w-full max-w-xs" />
+        <SearchInput value={search} onChange={updateSearch} placeholder="Поиск по названию…" className="w-full max-w-xs" />
         <Select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as 'ALL' | TestStatus)}
+          onChange={(e) => updateStatus(e.target.value as 'ALL' | TestStatus)}
           className="h-11 w-auto"
         >
           <option value="ALL">Статус: Все</option>

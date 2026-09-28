@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
@@ -9,6 +9,8 @@ import { useToast } from '@/context/ToastContext';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useMyAccountId, useServiceRequests } from '@/hooks/queries';
 import { ROUTES } from '@/lib/routes';
+import { mergeSearchParams, parseOneBasedPage } from '@/lib/listNavigation';
+import { useListScrollRestoration, useListSearchParams } from '@/hooks/useListNavigation';
 import { SERVICE_TABS, serviceSectionFrom } from '@/lib/serviceSections';
 import type { ServiceSection } from '@/lib/serviceRequestsApi';
 import { actionErrorText } from '@/lib/serviceRequestsModel';
@@ -16,6 +18,11 @@ import { AllServiceRequestsTab } from './AllServiceRequestsTab';
 import { CreateServiceRequestModal } from './CreateServiceRequestModal';
 import { ServiceAuditTab } from './ServiceAuditTab';
 import { ServiceRequestsTable, ServiceRequestsTableSkeleton } from './ServiceRequestsTable';
+
+const SERVICE_LIST_STATE_KEYS = [
+  'tab', 'page', 'allStatus', 'allType', 'allEmergency', 'allAuthor', 'allAssignee',
+  'allFrom', 'allTo', 'allQ', 'auditAction', 'auditActor', 'auditFrom', 'auditTo',
+] as const;
 
 /**
  * Сервисные заявки (ТЗ SERVICE-FE-001 §1–§3, SERVICE-FE-004 §2, §5, §9).
@@ -35,18 +42,21 @@ export function ServiceRequestsPage() {
   useDocumentTitle('Сервисные заявки');
 
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
   const { admin } = useAuth();
   const accountId = useMyAccountId();
-  const [params, setParams] = useSearchParams();
+  const [params, setParams] = useListSearchParams('service', SERVICE_LIST_STATE_KEYS);
 
   const tabs = SERVICE_TABS.filter((tab) => !tab.superAdminOnly || admin?.role === 'SUPER_ADMIN');
   // Чужая вкладка в адресе не должна открывать чужой раздел: разрешённый набор считается
   // по роли, а `?tab=all` под обычным админом читается как «Мои заявки».
   const section = serviceSectionFrom(params.get('tab'), tabs);
-  const rawPage = params.get('page');
-  const requestedPage = rawPage && /^[1-9][0-9]*$/.test(rawPage) ? Number(rawPage) - 1 : 0;
-  const page = Number.isSafeInteger(requestedPage) && requestedPage >= 0 ? requestedPage : 0;
+  const page = parseOneBasedPage(params.get('page'));
+  useEffect(() => {
+    const next = mergeSearchParams(params, { page: page === 0 ? null : page + 1 });
+    if (next.toString() !== params.toString()) setParams(next, { replace: true });
+  }, [page, params, setParams]);
   const setPage = useCallback((next: number, replace = false) => {
     const updated = new URLSearchParams(params);
     if (next === 0) updated.delete('page');
@@ -96,6 +106,7 @@ export function ServiceRequestsPage() {
           onPageChange={setPage}
           onCreate={() => setCreateOpen(true)}
           accountId={accountId}
+          returnTo={`${location.pathname}${location.search}`}
         />
       )}
 
@@ -125,18 +136,21 @@ function MySection({
   onPageChange,
   accountId,
   onCreate,
+  returnTo,
 }: {
   section: ServiceSection;
   page: number;
   onPageChange: (page: number, replace?: boolean) => void;
   accountId: number | undefined;
   onCreate: () => void;
+  returnTo: string;
 }) {
   const listQuery = useServiceRequests(section);
   const rows = listQuery.data?.content ?? [];
   const total = listQuery.data?.totalElements ?? 0;
   const totalPages = Math.ceil(total / 50);
   const visibleRows = rows.slice(page * 50, (page + 1) * 50);
+  useListScrollRestoration('service', !listQuery.isPending);
 
   useEffect(() => {
     if (listQuery.isSuccess && totalPages > 0 && page >= totalPages) onPageChange(totalPages - 1, true);
@@ -156,7 +170,7 @@ function MySection({
 
   return (
     <div className="space-y-4">
-      <ServiceRequestsTable rows={visibleRows} accountId={accountId} section={section} page={page} />
+      <ServiceRequestsTable rows={visibleRows} accountId={accountId} section={section} page={page} returnTo={returnTo} />
       {total > 0 && (
         <nav aria-label="Страницы сервисных заявок" className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-13 text-muted" aria-live="polite">Страница {page + 1} из {totalPages} · Всего заявок: {total}</p>

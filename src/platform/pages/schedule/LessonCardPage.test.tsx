@@ -14,11 +14,12 @@ const useGradePermission = vi.fn();
 const useLessonTextbooks = vi.fn();
 const selectTextbook = vi.fn();
 const setHomeworkNotAssigned = vi.fn();
+const session = vi.hoisted(() => ({ role: 'ADMIN' }));
 
 // Роль нужна карточке только ради ссылки «К расписанию»: у учителя она ведёт на его
 // собственный экран, у админа — в конструктор.
 vi.mock('@/context/AuthContext', () => ({
-  useAuth: () => ({ admin: { role: 'ADMIN' } }),
+  useAuth: () => ({ admin: { role: session.role } }),
 }));
 
 vi.mock('@/context/ToastContext', () => ({
@@ -101,9 +102,9 @@ function lesson(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function renderCard() {
+function renderCard(url = '/lesson-schedule/lessons/6') {
   return render(
-    <MemoryRouter initialEntries={['/lesson-schedule/lessons/6']}>
+    <MemoryRouter initialEntries={[url]}>
       <Routes>
         <Route path="/lesson-schedule/lessons/:lessonId" element={<LessonCardPage />} />
       </Routes>
@@ -113,6 +114,7 @@ function renderCard() {
 
 describe('LessonCardPage', () => {
   beforeEach(() => {
+    session.role = 'ADMIN';
     useLesson.mockReset();
     useLessonHistory.mockReset();
     useLessonHistory.mockReturnValue({ data: undefined, isPending: false, isError: false });
@@ -132,6 +134,17 @@ describe('LessonCardPage', () => {
       isError: false,
     });
     selectTextbook.mockReset();
+  });
+
+  it('возвращает учителя к неделе, с которой открыта карточка', () => {
+    session.role = 'TEACHER';
+    useLesson.mockReturnValue({ data: lesson(), isPending: false, isError: false, error: null });
+    renderCard('/lesson-schedule/lessons/6?week=2026-09-28');
+
+    expect(screen.getByRole('link', { name: 'К расписанию' })).toHaveAttribute(
+      'href',
+      '/my-schedule?week=2026-09-28',
+    );
   });
 
   describe('учебник урока', () => {
