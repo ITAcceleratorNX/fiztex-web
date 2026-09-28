@@ -664,6 +664,7 @@ export function DashboardPage() {
                         <button
                           type="button"
                           disabled={classesPage <= 0}
+                          aria-label="Предыдущая страница классов"
                           onClick={() => setClassesPage((p) => Math.max(0, p - 1))}
                           className="flex size-8 items-center justify-center rounded-lg border border-[#e5e7eb] bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-800 disabled:opacity-40"
                         >
@@ -672,6 +673,7 @@ export function DashboardPage() {
                         <button
                           type="button"
                           disabled={classesPage + 1 >= classesTotalPages}
+                          aria-label="Следующая страница классов"
                           onClick={() => setClassesPage((p) => p + 1)}
                           className="flex size-8 items-center justify-center rounded-lg border border-[#e5e7eb] bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-800 disabled:opacity-40"
                         >

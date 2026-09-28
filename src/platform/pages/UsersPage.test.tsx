@@ -124,6 +124,10 @@ describe('UsersPage — состояние списка в адресе', () => 
     );
 
     await screen.findByText('Искаков Тестов');
+    expect(screen.getByRole('link', { name: 'Искаков Тестов' })).toHaveAttribute(
+      'href',
+      '/students/12?q=%D0%98%D1%81%D0%BA%D0%B0%D0%BA%D0%BE%D0%B2&status=BLOCKED&page=2',
+    );
     await waitFor(() => expect(listUsersPage).toHaveBeenCalledWith(expect.objectContaining({
       query: 'Искаков', status: 'BLOCKED', page: 1,
     })));
@@ -137,5 +141,28 @@ describe('UsersPage — состояние списка в адресе', () => 
     await waitFor(() => expect(listUsersPage).toHaveBeenLastCalledWith(expect.objectContaining({
       query: 'Искаков', status: 'BLOCKED', page: 1,
     })));
+  });
+
+  it('даёт отдельные доступные действия для карточки и редактирования пользователя', async () => {
+    listUsersPage.mockResolvedValue({
+      users: [account(13, 'Тестовый Админ', 'ADMIN')],
+      totalElements: 1,
+      totalPages: 1,
+    });
+    renderPage();
+
+    await screen.findByRole('button', {
+      name: 'Открыть карточку пользователя «Тестовый Админ»',
+    });
+    const editUser = screen.getByRole('button', { name: 'Редактировать пользователя «Тестовый Админ»' });
+
+    await userEvent.click(editUser);
+    expect(screen.getByRole('dialog', { name: 'Редактировать пользователя' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Отмена' }));
+
+    await userEvent.click(screen.getByRole('button', {
+      name: 'Открыть карточку пользователя «Тестовый Админ»',
+    }));
+    expect(screen.getByRole('dialog', { name: 'Тестовый Админ' })).toBeInTheDocument();
   });
 });

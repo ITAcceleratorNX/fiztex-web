@@ -112,13 +112,19 @@ export function ApplicantsTab() {
                 {filtered.map((a) => (
                   <tr
                     key={a.id}
-                    onClick={() => setDetail(a)}
-                    className="cursor-pointer transition hover:bg-slate-50/70"
+                    className="transition hover:bg-slate-50/70"
                   >
                     <td className="px-6 py-3.5">
                       <div className="flex items-center gap-3">
                         <Avatar name={a.childFullName} />
-                        <span className="font-semibold text-slate-800">{a.childFullName}</span>
+                        <button
+                          type="button"
+                          onClick={() => setDetail(a)}
+                          aria-label={`Открыть карточку поступающего «${a.childFullName}»`}
+                          className="text-left font-semibold text-slate-800 hover:text-brand-600"
+                        >
+                          {a.childFullName}
+                        </button>
                       </div>
                     </td>
                     <td className="px-6 py-3.5 text-sm text-slate-600">{a.grade}</td>
@@ -142,11 +148,10 @@ export function ApplicantsTab() {
                     <td className="px-6 py-3.5">
                       <div className="flex items-center justify-end gap-1">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            void openEdit(a);
-                          }}
+                          type="button"
+                          onClick={() => void openEdit(a)}
                           title="Редактировать"
+                          aria-label={`Редактировать поступающего «${a.childFullName}»`}
                           className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                         >
                           <Pencil className="h-4 w-4" />

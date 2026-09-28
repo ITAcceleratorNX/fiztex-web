@@ -118,6 +118,7 @@ function QuestionEditor({
               disabled={!question.text.trim()}
               className="rounded-lg p-1.5 text-slate-400 transition hover:bg-brand-50 hover:text-brand-600 disabled:opacity-30"
               title="Создать вариант вопроса с AI"
+              aria-label={`Создать AI-вариант вопроса ${index + 1}`}
             >
               <Sparkles className="h-4 w-4" />
             </button>
@@ -128,6 +129,7 @@ function QuestionEditor({
             disabled={index === 0}
             className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 disabled:opacity-30"
             title="Выше"
+            aria-label={`Переместить вопрос ${index + 1} выше`}
           >
             <ChevronUp className="h-4 w-4" />
           </button>
@@ -137,6 +139,7 @@ function QuestionEditor({
             disabled={index === total - 1}
             className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 disabled:opacity-30"
             title="Ниже"
+            aria-label={`Переместить вопрос ${index + 1} ниже`}
           >
             <ChevronDown className="h-4 w-4" />
           </button>
@@ -145,6 +148,7 @@ function QuestionEditor({
             onClick={onRemove}
             className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-500"
             title="Удалить"
+            aria-label={`Удалить вопрос ${index + 1}`}
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -268,6 +272,7 @@ function QuestionEditor({
                 }
                 disabled={question.options.length <= 2}
                 className="mt-1 rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-500 disabled:opacity-30"
+                aria-label={`Удалить вариант ${optIndex + 1} вопроса ${index + 1}`}
               >
                 <Trash2 className="h-4 w-4" />
               </button>

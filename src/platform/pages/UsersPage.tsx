@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Pencil, Plus, Search } from 'lucide-react';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
@@ -291,15 +291,6 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
     setDetailOpen(true);
   }
 
-  function openRow(user: PlatformUser) {
-    const profileRoute = PROFILE_ROUTES[user.role];
-    if (profileRoute) {
-      navigate({ pathname: `${profileRoute}/${user.id}`, search: searchParams.toString() });
-    } else {
-      openDetail(user);
-    }
-  }
-
   function selectRole(next: RoleFilter) {
     // У служебных ролей своей страницы нет — они живут в общей таблице под псевдоролью.
     const route = next === EMPLOYEE_FILTER || next === 'ALL' ? undefined : ROLE_ROUTES[next];
@@ -451,15 +442,31 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
                 {users.map((user) => (
                   <tr
                     key={user.id}
-                    onClick={() => openRow(user)}
-                    className="h-[52px] cursor-pointer border-b border-[#f3f4f6] transition last:border-b-0 hover:bg-slate-50/80"
+                    className="h-[52px] border-b border-[#f3f4f6] transition last:border-b-0 hover:bg-slate-50/80"
                   >
                     <td className="px-6">
                       <div className="flex min-w-0 items-center gap-3">
                         <UserAvatar name={user.fullName} role={user.role} />
-                        <span className="truncate text-sm font-semibold text-[#1a1f36]">
-                          {user.fullName}
-                        </span>
+                        {PROFILE_ROUTES[user.role] ? (
+                          <Link
+                            to={{
+                              pathname: `${PROFILE_ROUTES[user.role]}/${user.id}`,
+                              search: searchParams.toString(),
+                            }}
+                            className="truncate text-sm font-semibold text-[#1a1f36] hover:text-brand-600"
+                          >
+                            {user.fullName}
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => openDetail(user)}
+                            aria-label={`Открыть карточку пользователя «${user.fullName}»`}
+                            className="truncate text-left text-sm font-semibold text-[#1a1f36] hover:text-brand-600"
+                          >
+                            {user.fullName}
+                          </button>
+                        )}
                       </div>
                     </td>
                     <td className="px-2">
@@ -477,22 +484,20 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
                     <td className="px-2 text-13 text-[#6b7280]">{formatDate(user.createdAt)}</td>
                     <td className="px-2">
                       <div className="flex items-center justify-center">
-                        <button
-                          type="button"
-                          title="Редактировать"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (PROFILE_ROUTES[user.role]) {
-                              navigate(`${PROFILE_ROUTES[user.role]}/${user.id}`);
-                              return;
-                            }
-                            setEditing(user);
-                            setFormOpen(true);
-                          }}
-                          className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                        >
-                          <Pencil className="size-4" />
-                        </button>
+                        {!PROFILE_ROUTES[user.role] && (
+                          <button
+                            type="button"
+                            title="Редактировать"
+                            aria-label={`Редактировать пользователя «${user.fullName}»`}
+                            onClick={() => {
+                              setEditing(user);
+                              setFormOpen(true);
+                            }}
+                            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                          >
+                            <Pencil className="size-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -512,6 +517,7 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
               <button
                 type="button"
                 disabled={page <= 0}
+                aria-label="Предыдущая страница пользователей"
                 onClick={() => setSearchParams(mergeSearchParams(searchParams, {
                   page: page <= 1 ? null : page,
                 }))}
@@ -522,6 +528,7 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
               <button
                 type="button"
                 disabled={page + 1 >= totalPages}
+                aria-label="Следующая страница пользователей"
                 onClick={() => setSearchParams(mergeSearchParams(searchParams, { page: page + 2 }))}
                 className="flex size-8 items-center justify-center rounded-lg border border-[#e5e7eb] bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
               >

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Pencil, ClipboardList } from 'lucide-react';
 import { useTests } from '@/hooks/queries';
 import { Button } from '@/components/ui/Button';
@@ -111,13 +111,17 @@ export function AdmissionTestsTab() {
                 {filtered.map((t) => (
                   <tr
                     key={t.id}
-                    onClick={() => navigate(`/admissions/tests/${t.id}`)}
-                    className="cursor-pointer transition hover:bg-slate-50/70"
+                    className="transition hover:bg-slate-50/70"
                   >
                     <td className="px-6 py-3.5">
                       <div className="flex items-center gap-3">
                         <Avatar name={t.subjectName} size="sm" />
-                        <span className="font-semibold text-slate-800">{t.title}</span>
+                        <Link
+                          to={`/admissions/tests/${t.id}`}
+                          className="font-semibold text-slate-800 hover:text-brand-600"
+                        >
+                          {t.title}
+                        </Link>
                       </div>
                     </td>
                     <td className="px-6 py-3.5 text-sm text-slate-600">{t.subjectName}</td>
@@ -135,11 +139,12 @@ export function AdmissionTestsTab() {
                     <td className="px-6 py-3.5">
                       <div className="flex items-center justify-end gap-1">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
+                          type="button"
+                          onClick={() => {
                             setEditing(t);
                           }}
                           title="Редактировать"
+                          aria-label={`Редактировать тест «${t.title}»`}
                           className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                         >
                           <Pencil className="h-4 w-4" />

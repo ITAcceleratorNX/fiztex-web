@@ -64,6 +64,7 @@ function AttemptsStepper({ value, onChange }: { value: number; onChange: (v: num
       <button
         type="button"
         onClick={() => onChange(Math.max(1, value - 1))}
+        aria-label="Уменьшить максимальное число попыток"
         className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100"
       >
         <Minus className="h-3.5 w-3.5" />
@@ -72,6 +73,7 @@ function AttemptsStepper({ value, onChange }: { value: number; onChange: (v: num
       <button
         type="button"
         onClick={() => onChange(value + 1)}
+        aria-label="Увеличить максимальное число попыток"
         className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100"
       >
         <Plus className="h-3.5 w-3.5" />
