@@ -1,8 +1,9 @@
+import type { ReactNode } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { AppHeader } from './AppHeader';
 
-export function AppLayout() {
+export function AppLayout({ children }: { children?: ReactNode }) {
   const location = useLocation();
   const authNotice = (location.state as { authNotice?: unknown } | null)?.authNotice;
 
@@ -19,7 +20,7 @@ export function AppLayout() {
               {authNotice}
             </p>
           )}
-          <Outlet />
+          {children ?? <Outlet />}
         </div>
       </main>
     </div>

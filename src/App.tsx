@@ -44,6 +44,7 @@ import { HomeworkGroupsPage } from '@/pages/homework/HomeworkGroupsPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
+import { NotFoundRoute } from '@/pages/NotFoundPage';
 import {
   UsersPage,
   EmployeesPage,
@@ -87,8 +88,8 @@ export function App() {
 
       {/*
         Вход администратора на отдельном пути: на главной его больше нет.
-        Редиректа со старого `/login` намеренно нет — его ловит `*` и уводит
-        на публичную главную.
+        Редиректа со старого `/login` намеренно нет — устаревшая ссылка показывает
+        страницу «Страница не найдена» с доступными путями восстановления.
       */}
       {/*
         Уже вошедшему форма входа не нужна — но уводить его надо по роли. Этот редирект
@@ -255,8 +256,8 @@ export function App() {
         <Route path="/service/:requestId" element={<ServiceRequestCardPage />} />
       </Route>
 
-      {/* Неизвестный путь ведёт на публичную главную, а не на форму входа. */}
-      <Route path="*" element={<Navigate to={ROUTES.publicAnnouncements} replace />} />
+      {/* Известные маршруты с неподдерживаемыми ID остаются на своих экранах ошибок. */}
+      <Route path="*" element={<NotFoundRoute />} />
     </Routes>
   );
 }
