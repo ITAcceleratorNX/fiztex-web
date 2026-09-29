@@ -56,17 +56,37 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const [searchParams] = useSearchParams();
   const lessonId = Number(searchParams.get('lessonId')) || undefined;
   const editId = Number(homeworkId) || undefined;
+  const prefilledClassId = mode === 'create' && lessonId == null ? positiveId(searchParams.get('classId')) : undefined;
+  const prefilledSubjectId = mode === 'create' && lessonId == null ? positiveId(searchParams.get('subjectId')) : undefined;
+  const contextParams = new URLSearchParams();
+  if (lessonId != null) contextParams.set('lessonId', String(lessonId));
+  if (prefilledClassId != null) contextParams.set('classId', String(prefilledClassId));
+  if (prefilledSubjectId != null) contextParams.set('subjectId', String(prefilledSubjectId));
 
-  const draftKey = mode === 'edit' ? `homework:edit:${editId}` : `homework:new:${lessonId ?? 'standalone'}`;
-  return <HomeworkFormSession key={draftKey} mode={mode} lessonId={lessonId} editId={editId} draftKey={draftKey} />;
+  const standaloneDraftId = prefilledClassId == null && prefilledSubjectId == null
+    ? 'standalone'
+    : `standalone:${prefilledClassId ?? ''}:${prefilledSubjectId ?? ''}`;
+  const draftKey = mode === 'edit' ? `homework:edit:${editId}`
+    : `homework:new:${lessonId ?? standaloneDraftId}`;
+  return <HomeworkFormSession
+    key={draftKey}
+    mode={mode}
+    lessonId={lessonId}
+    editId={editId}
+    draftKey={draftKey}
+    prefilledClassId={prefilledClassId}
+    prefilledSubjectId={prefilledSubjectId}
+    contextSearch={contextParams.toString()}
+  />;
 }
 
-function HomeworkFormSession({ mode, lessonId, editId, draftKey }: {
+function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassId, prefilledSubjectId, contextSearch }: {
   mode: 'create' | 'edit'; lessonId?: number; editId?: number; draftKey: string;
+  prefilledClassId?: number; prefilledSubjectId?: number; contextSearch: string;
 }) {
   const draftStore = useFormDraftStore();
   const { draft, setDraft, clear } = useFormDraft<HomeworkFormDraft>(draftKey, () => {
-    const values = emptyHomeworkValues();
+    const values = { ...emptyHomeworkValues(), classId: prefilledClassId, subjectId: prefilledSubjectId };
     return { values, baseline: values, initialized: mode === 'create', group: null, notice: null,
       error: null, createdId: null, saving: false };
   }, hasHomeworkChanges);
@@ -162,6 +182,14 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey }: {
     enabled: standalone,
     staleTime: 5 * 60_000,
   });
+  const prefilledContext = [
+    prefilledClassId != null
+      ? `класс «${contextQuery.data?.classes.find(([id]) => id === prefilledClassId)?.[1] ?? `№${prefilledClassId}`}»`
+      : null,
+    prefilledSubjectId != null
+      ? `предмет «${contextQuery.data?.subjects.find(([id]) => id === prefilledSubjectId)?.[1] ?? `№${prefilledSubjectId}`}»`
+      : null,
+  ].filter((part): part is string => part != null);
 
   /**
    * Уроки, к которым можно привязать задание.
@@ -445,7 +473,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey }: {
 
   const busy = save.isPending || draft.saving;
   const backTo = mode === 'edit' ? `/homework/${editId}` : lessonId ? `/lesson-schedule/lessons/${lessonId}` : '/homework';
-  const formUrl = mode === 'edit' ? `/homework/${editId}/edit` : `/homework/new${lessonId ? `?lessonId=${lessonId}` : ''}`;
+  const formUrl = mode === 'edit' ? `/homework/${editId}/edit` : `/homework/new${contextSearch ? `?${contextSearch}` : ''}`;
 
   return (
     <div ref={formRef} className="flex max-w-4xl flex-col gap-5">
@@ -463,6 +491,12 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey }: {
         Обновление страницы или завершение сессии удалит несохранённые изменения.
         {dirty && <span className="mt-1 block font-semibold">Есть несохранённые изменения.</span>}
       </NoticeBar>
+
+      {standalone && prefilledContext.length > 0 && (
+        <NoticeBar tone="soft">
+          Из фильтров списка подставлены {prefilledContext.join(' и ')}. Проверьте значения ниже — их можно изменить.
+        </NoticeBar>
+      )}
 
       {draft.notice && <NoticeBar tone="soft">{draft.notice}</NoticeBar>}
 
@@ -884,6 +918,12 @@ function Ctx({ label, value }: { label: string; value?: string }) {
       <span className="font-medium text-ink">{value}</span>
     </span>
   );
+}
+
+function positiveId(value: string | null): number | undefined {
+  if (value == null) return undefined;
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id > 0 ? id : undefined;
 }
 
 /** Дата в местной зоне со сдвигом в днях — граница окна выбора уроков. */

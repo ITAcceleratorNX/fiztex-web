@@ -93,6 +93,32 @@ describe('HomeworkListPage', () => {
     expect(screen.getByText('Опубликовано')).toBeInTheDocument();
   });
 
+  it.each([0, 18, 50])('кнопка создания доступна в заголовке при %i заданиях и переносит класс с предметом', async (count) => {
+    list.mockResolvedValue(page(Array.from({ length: count }, (_, index) => row({ id: index + 1 }))));
+    renderPage('/homework?classId=7&subjectId=3');
+
+    const createLink = await screen.findByRole('link', { name: 'Создать задание' });
+    expect(createLink).toHaveAttribute('href', '/homework/new?classId=7&subjectId=3');
+    expect(createLink.parentElement).toHaveClass('flex-wrap');
+  });
+
+  it('кнопка создания остаётся доступна в истории с пустым результатом фильтра', async () => {
+    list.mockResolvedValue(page([]));
+    renderPage('/homework?scope=HISTORY&classId=7&subjectId=3');
+
+    expect(await screen.findByText('Ничего не найдено')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Создать задание' }))
+      .toHaveAttribute('href', '/homework/new?classId=7&subjectId=3');
+  });
+
+  it('не показывает создание при запрете доступа учителю', async () => {
+    list.mockRejectedValue(new ApiError(403, 'denied'));
+    renderPage();
+
+    expect(await screen.findByText('Раздел недоступен')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Создать задание' })).not.toBeInTheDocument();
+  });
+
   it('переключение на «Историю» уходит в запрос, а не отбирается на клиенте', async () => {
     list.mockResolvedValue(page([row({ status: 'COMPLETED' })]));
     renderPage();
@@ -188,7 +214,7 @@ describe('HomeworkListPage', () => {
     expect(screen.getByRole('option', { name: '9Б' })).toBeInTheDocument();
   });
 
-  it('пустая «История» — своё состояние без предложения создать задание', async () => {
+  it('пустая «История» объясняет отсутствие записей, а создание остаётся в заголовке', async () => {
     list.mockResolvedValue(page([]));
     renderPage();
     await screen.findByText('Нет актуальных заданий');
@@ -196,7 +222,7 @@ describe('HomeworkListPage', () => {
     await userEvent.click(screen.getByRole('radio', { name: 'История' }));
 
     expect(await screen.findByText('В истории пока ничего нет')).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Создать задание' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Создать задание' })).toHaveAttribute('href', '/homework/new');
   });
 
   it('ошибка загрузки предлагает повтор и повторяет запрос (§8)', async () => {

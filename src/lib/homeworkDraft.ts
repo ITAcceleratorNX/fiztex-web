@@ -78,10 +78,24 @@ export function homeworkFormReturnTo(raw: string | null): string | null {
     if (url.origin !== 'https://fiztex.invalid') return null;
     if (/^\/homework\/[1-9]\d*\/edit$/.test(url.pathname)) return url.pathname;
     if (url.pathname !== '/homework/new') return null;
-    const lesson = url.searchParams.get('lessonId');
-    return lesson && /^[1-9]\d*$/.test(lesson) && Number.isSafeInteger(Number(lesson))
-      ? `/homework/new?lessonId=${lesson}` : '/homework/new';
+    const lessonValue = url.searchParams.get('lessonId');
+    if (lessonValue != null) {
+      const lessonId = positiveInteger(lessonValue);
+      return lessonId != null ? `/homework/new?lessonId=${lessonId}` : '/homework/new';
+    }
+    const context = new URLSearchParams();
+    const classId = positiveInteger(url.searchParams.get('classId'));
+    const subjectId = positiveInteger(url.searchParams.get('subjectId'));
+    if (classId != null) context.set('classId', String(classId));
+    if (subjectId != null) context.set('subjectId', String(subjectId));
+    return `/homework/new${context.size ? `?${context}` : ''}`;
   } catch { return null; }
+}
+
+function positiveInteger(value: string | null): number | undefined {
+  if (!value || !/^[1-9]\d*$/.test(value)) return undefined;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) ? parsed : undefined;
 }
 
 function toLocalInput(iso: string): string {

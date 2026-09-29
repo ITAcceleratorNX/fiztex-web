@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Info, Users } from 'lucide-react';
+import { Info, Plus, Users } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
@@ -77,6 +77,10 @@ export function HomeworkListPage() {
   const rows = data?.content ?? [];
   const filtersActive = hasActiveFilters(filters);
   const { classes: classOptions, subjects: subjectOptions } = useFilterOptions(rows, optionsQuery.data, filters, historicalOptions.data);
+  const createParams = new URLSearchParams();
+  if (filters.classId != null) createParams.set('classId', String(filters.classId));
+  if (filters.subjectId != null) createParams.set('subjectId', String(filters.subjectId));
+  const createUrl = `/homework/new${createParams.size ? `?${createParams}` : ''}`;
 
   function change(next: HomeworkListState, replace = false) {
     setSearch(writeHomeworkListState(next), { replace });
@@ -102,7 +106,15 @@ export function HomeworkListPage() {
 
   return (
     <div ref={root} className="flex flex-col gap-5">
-      <h1 className="text-28 font-bold text-ink">Домашние задания</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="min-w-0 text-28 font-bold text-ink">Домашние задания</h1>
+        {!denied && (
+          <Link to={createUrl} className={buttonClassName({ variant: 'primary', className: 'shrink-0' })}>
+            <Plus className="size-4" aria-hidden />
+            Создать задание
+          </Link>
+        )}
+      </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <SegmentedTabs
@@ -172,13 +184,6 @@ export function HomeworkListPage() {
         </nav>
       )}
 
-      {rows.length > 0 && (
-        <div>
-          <Link to="/homework/new" className={buttonClassName({ variant: 'primary' })}>
-            Создать задание
-          </Link>
-        </div>
-      )}
     </div>
   );
 }
@@ -294,11 +299,6 @@ function HomeworkBody({
             icon={<Info className="size-7" />}
             title="Нет актуальных заданий"
             description="Создайте первое задание — ученики увидят его сразу после публикации"
-            action={
-              <Link to="/homework/new" className={buttonClassName({ variant: 'primary' })}>
-                Создать задание
-              </Link>
-            }
           />
         ) : (
           <EmptyBlock

@@ -63,14 +63,14 @@ function renderForm() {
 }
 
 /** Форма из раздела «Домашние задания»: урока в адресе нет, контекст выбирается руками. */
-function renderStandaloneForm() {
+function renderStandaloneForm(url = '/homework/new') {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   return render(
     <QueryClientProvider client={client}>
       <FormDraftProvider><ToastProvider>
-        <MemoryRouter initialEntries={['/homework/new']}>
+        <MemoryRouter initialEntries={[url]}>
           <Routes>
             <Route path="/homework/new" element={<HomeworkFormPage mode="create" />} />
           </Routes>
@@ -194,6 +194,18 @@ describe('HomeworkFormPage — срок сдачи', () => {
  * Привязка к уроку из раздела «Домашние задания» (иначе она была только у входа с карточки
  * урока, и задание из раздела не показывалось на уроке ни у учителя, ни у ученика).
  */
+describe('HomeworkFormPage — контекст из списка заданий', () => {
+  it('предзаполняет класс и предмет из ссылки и явно показывает их учителю', async () => {
+    renderStandaloneForm('/homework/new?classId=7&subjectId=3');
+
+    expect(await screen.findByText(/Из фильтров списка подставлены класс «7А» и предмет «Математика»/)).toBeInTheDocument();
+    const subject = await screen.findByRole('button', { name: 'Предмет' });
+    const schoolClass = screen.getByRole('button', { name: 'Класс' });
+    expect(subject).toHaveTextContent('Математика');
+    expect(schoolClass).toHaveTextContent('7А');
+  });
+});
+
 describe('HomeworkFormPage — привязка к уроку', () => {
   const lesson = (over: Record<string, unknown> = {}) => ({
     id: 41,
