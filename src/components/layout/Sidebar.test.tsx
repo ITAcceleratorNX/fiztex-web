@@ -172,3 +172,39 @@ describe('Sidebar — группы-аккордеон', () => {
     expect(within(nav()).getByRole('link', { name: 'Расписание' })).toBeInTheDocument();
   });
 });
+
+describe('Sidebar — контраст и клавиатурный фокус', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    role.mockReturnValue('TEACHER');
+  });
+
+  it('различает активный пункт формой и начертанием, а неактивному задаёт контрастный токен и фокус', () => {
+    renderSidebar('/my-schedule');
+
+    const active = within(nav()).getByRole('link', { name: 'Расписание' });
+    const inactive = within(nav()).getByRole('link', { name: 'Журнал оценок' });
+
+    expect(active).toHaveClass('nav-fillets-active', 'bg-white', 'font-semibold');
+    expect(inactive).toHaveClass('text-sidebar-nav', 'hover:text-white/80', 'focus-visible:ring-2');
+  });
+
+  it('использует отдельный контрастный токен и видимый фокус для подписей групп', () => {
+    role.mockReturnValue('SUPER_ADMIN');
+    renderSidebar('/dashboard');
+
+    const group = screen.getByRole('button', { name: /Platform Core/i });
+
+    expect(group).toHaveClass('text-sidebar-heading', 'hover:text-white/80', 'focus-visible:ring-2');
+    expect(within(group).getByText('9')).toHaveClass('text-sidebar-heading');
+  });
+
+  it('сохраняет контраст подпунктов на раскрытой светлой подложке', () => {
+    role.mockReturnValue('SUPER_ADMIN');
+    renderSidebar('/students');
+
+    const inactiveChild = within(nav()).getByRole('link', { name: 'Родители' });
+    expect(inactiveChild).toHaveClass('text-navy-700', 'focus-visible:ring-2');
+    expect(inactiveChild).not.toHaveClass('text-navy-700/80');
+  });
+});
