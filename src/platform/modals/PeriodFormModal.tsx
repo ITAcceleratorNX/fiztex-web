@@ -6,6 +6,7 @@ import { Toggle } from '@/components/ui/Toggle';
 import { useToast } from '@/context/ToastContext';
 import { PERIOD_TYPE_LABELS } from '../labels';
 import { createPeriod, updatePeriod } from '../services';
+import { platformErrorMessage } from '../platformErrorMessage';
 import type {
   AcademicPeriod,
   AcademicPeriodStatus,
@@ -93,7 +94,7 @@ export function PeriodFormModal({
       onSaved();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось сохранить');
+      setError(platformErrorMessage(err, 'Не удалось сохранить период. Проверьте данные и попробуйте ещё раз.'));
     } finally {
       setPending(false);
     }
@@ -135,7 +136,7 @@ export function PeriodFormModal({
             </option>
             {TYPES.map((value) => (
               <option key={value} value={value}>
-                {value === 'CUSTOM' ? 'Кастомный' : PERIOD_TYPE_LABELS[value]}
+                {value === 'CUSTOM' ? 'Свой период' : PERIOD_TYPE_LABELS[value]}
               </option>
             ))}
           </Select>

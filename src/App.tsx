@@ -111,7 +111,7 @@ export function App() {
       >
         <Route path={ROUTES.dashboard} element={<DashboardPage />} />
 
-        {/* Platform Core Lite */}
+        {/* Управление школой */}
         <Route path="/admin" element={<Navigate to={ROUTES.dashboard} replace />} />
         <Route path="/admin/users" element={<UsersPage />} />
         {/* Внутренние сотрудники — раздел Super Admin (SERVICE-FE-004 §3).
@@ -245,7 +245,7 @@ export function App() {
           element={
             <PlaceholderPage
               title="Кружки и события"
-              reason="Backend API для кружков ещё не реализован. Эндпойнтов нет."
+              reason="Раздел скоро появится. Сейчас кружки и события нельзя просматривать или настраивать."
             />
           }
         />

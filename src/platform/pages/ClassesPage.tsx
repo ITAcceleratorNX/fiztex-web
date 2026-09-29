@@ -11,6 +11,7 @@ import { ClassFormModal } from '../modals/ClassFormModal';
 import { archiveClass, listAcademicYears, listClasses } from '../services';
 import type { AcademicYear, SchoolClass } from '../types';
 import { useToast } from '@/context/ToastContext';
+import { platformErrorMessage } from '../platformErrorMessage';
 
 export function ClassesPage() {
   const toast = useToast();
@@ -47,7 +48,7 @@ export function ClassesPage() {
       setYears(yearList);
       setClasses(classList);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось загрузить классы');
+      setError(platformErrorMessage(err, 'Не удалось загрузить классы. Попробуйте ещё раз.'));
     } finally {
       setLoading(false);
     }
@@ -64,14 +65,14 @@ export function ClassesPage() {
       toast.success('Класс архивирован');
       await reload();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не удалось архивировать');
+      toast.error(platformErrorMessage(err, 'Не удалось архивировать класс. Попробуйте ещё раз.'));
     }
   }
 
   return (
     <div>
       <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Классы с реального backend. Создание требует параллель и букву.
+        Создайте классы для выбранного учебного года. Для каждого класса укажите параллель и букву.
       </p>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">

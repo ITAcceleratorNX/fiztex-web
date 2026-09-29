@@ -3,9 +3,9 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
 import { useToast } from '@/context/ToastContext';
-import { ApiError } from '@/lib/api';
 import { createAcademicYear, updateAcademicYear } from '../services';
 import type { AcademicYear, AcademicYearStatus } from '../types';
+import { platformErrorMessage } from '../platformErrorMessage';
 
 export function AcademicYearFormModal({
   open,
@@ -79,13 +79,7 @@ export function AcademicYearFormModal({
       onSaved();
       onClose();
     } catch (err) {
-      if (err instanceof ApiError && err.code === 'ANOTHER_YEAR_ACTIVE') {
-        setError(
-          'Другой учебный год уже активен. Сначала завершите его на главной, затем активируйте этот.',
-        );
-      } else {
-        setError(err instanceof Error ? err.message : 'Не удалось сохранить');
-      }
+      setError(platformErrorMessage(err, 'Не удалось сохранить учебный год. Попробуйте ещё раз.'));
     } finally {
       setPending(false);
     }

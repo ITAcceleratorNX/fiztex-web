@@ -60,7 +60,7 @@ function isBranchActive(item: NavItem, pathname: string): boolean {
  * Боковое меню.
  *
  * <p><b>Два независимых состояния, и это не усложнение, а следствие замера.</b> У
- * администратора шестнадцать пунктов в четырёх группах — это 991 px меню в окно 708 px.
+ * администратора много пунктов в четырёх группах — меню выше доступного окна.
  * Ширина тут ни при чём: свернуть панель в рельс проблему не решает, потому что болит
  * высота. Поэтому:
  *
@@ -283,7 +283,7 @@ function SidebarSection({
  *
  * <p>Кнопка стоит здесь, а не по центру панели, как в макете, и не внутри меню, как было
  * сначала. В макете нарисовано меню учителя из пяти пунктов, и «центр панели» там и есть
- * «сразу под меню»; у администратора пунктов шестнадцать, они доходят до центра, и кнопка
+ * «сразу под меню»; у администратора меню занимает больше места, и кнопка
  * там резала строку синей полосой. Низ панели — единственное место, где она не пересекается
  * с меню ни при какой длине и не уезжает вместе с прокруткой.
  *
@@ -518,16 +518,6 @@ function TopLevelLink({ item }: { item: NavItem }) {
         <>
           <Icon className={cx('size-5 shrink-0', isActive ? 'text-navy-700' : 'text-sidebar-nav')} />
           <span className="min-w-0 flex-1 truncate">{item.label}</span>
-          {item.noApi ? (
-            <span
-              className={cx(
-                'shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide',
-                isActive ? 'bg-navy-50 text-navy-500' : 'bg-white/10 text-white/40',
-              )}
-            >
-              нет API
-            </span>
-          ) : null}
         </>
       )}
     </NavLink>
@@ -584,11 +574,6 @@ function ChildLink({ item, isLast }: { item: NavItem; isLast: boolean }) {
       <>
         <Icon className="size-[18px] shrink-0 text-navy-700" />
         <span className="min-w-0 flex-1 truncate">{item.label}</span>
-        {item.noApi ? (
-          <span className="shrink-0 rounded bg-navy-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-navy-500">
-            нет API
-          </span>
-        ) : null}
       </>
     </NavLink>
   );

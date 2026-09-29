@@ -132,7 +132,7 @@ describe('Sidebar — группы-аккордеон', () => {
   it('закрытая группа показывает число пунктов вместо самих пунктов', () => {
     renderSidebar('/dashboard');
 
-    const group = screen.getByRole('button', { name: /Platform Core/i });
+    const group = screen.getByRole('button', { name: /Управление школой/i });
     expect(group).toHaveAttribute('aria-expanded', 'false');
     // Число — единственное, что закрытая группа может сказать о себе.
     expect(within(group).getByText('9')).toBeInTheDocument();
@@ -142,7 +142,7 @@ describe('Sidebar — группы-аккордеон', () => {
   it('клик по заголовку открывает группу', async () => {
     renderSidebar('/dashboard');
 
-    await userEvent.click(screen.getByRole('button', { name: /Platform Core/i }));
+    await userEvent.click(screen.getByRole('button', { name: /Управление школой/i }));
 
     expect(within(nav()).getByRole('link', { name: 'Классы' })).toBeInTheDocument();
   });
@@ -153,6 +153,15 @@ describe('Sidebar — группы-аккордеон', () => {
     expect(within(nav()).getByRole('link', { name: 'Вступительные тесты' })).toBeInTheDocument();
     // Соседняя группа при этом остаётся закрытой — иначе меню снова не поместится.
     expect(within(nav()).queryByRole('link', { name: 'Классы' })).not.toBeInTheDocument();
+  });
+
+  it('не показывает раздел кружков как действующий пункт меню', async () => {
+    renderSidebar('/dashboard');
+    await userEvent.click(screen.getByRole('button', { name: /Учебный процесс/i }));
+
+    expect(within(nav()).getByRole('link', { name: 'Сервисные заявки' })).toBeInTheDocument();
+    expect(within(nav()).queryByRole('link', { name: 'Кружки и события' })).not.toBeInTheDocument();
+    expect(within(nav()).queryByText(/нет API/i)).not.toBeInTheDocument();
   });
 
   it('открытая группа запоминается между заходами', async () => {
@@ -168,7 +177,7 @@ describe('Sidebar — группы-аккордеон', () => {
     role.mockReturnValue('TEACHER');
     renderSidebar();
 
-    expect(screen.queryByRole('button', { name: /Platform Core/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Управление школой/i })).not.toBeInTheDocument();
     expect(within(nav()).getByRole('link', { name: 'Расписание' })).toBeInTheDocument();
   });
 });
@@ -193,7 +202,7 @@ describe('Sidebar — контраст и клавиатурный фокус', 
     role.mockReturnValue('SUPER_ADMIN');
     renderSidebar('/dashboard');
 
-    const group = screen.getByRole('button', { name: /Platform Core/i });
+    const group = screen.getByRole('button', { name: /Управление школой/i });
 
     expect(group).toHaveClass('text-sidebar-heading', 'hover:text-white/80', 'focus-visible:ring-2');
     expect(within(group).getByText('9')).toHaveClass('text-sidebar-heading');

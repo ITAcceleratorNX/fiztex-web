@@ -20,7 +20,6 @@ import {
   QrCode,
   Sparkles,
   ListChecks,
-  Star,
   Briefcase,
   Wrench,
   Brain,
@@ -35,8 +34,6 @@ export interface NavItem {
   label: string;
   icon: LucideIcon;
   end?: boolean;
-  /** Shown when route has no backend yet */
-  noApi?: boolean;
   /**
    * Пункт-действие, а не раздел: залит фирменным оранжевым независимо от того, где
    * пользователь сейчас (Figma `sidebar-tekushchiy-urok`). Нужен «Текущему уроку» —
@@ -54,7 +51,7 @@ export interface NavSection {
   items: NavItem[];
 }
 
-/** Sidebar for Platform Core + admissions admin. Для учителя см. {@link navSectionsForRole}. */
+/** Меню управления школой и приёмом. Для учителя см. {@link navSectionsForRole}. */
 export const NAV_SECTIONS: NavSection[] = [
   {
     id: 'home',
@@ -64,7 +61,7 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     id: 'platform',
-    label: 'Platform Core',
+    label: 'Управление школой',
     items: [
       {
         to: '/admin/users',
@@ -93,7 +90,6 @@ export const NAV_SECTIONS: NavSection[] = [
       { to: ROUTES.attendance, label: 'Посещаемость', icon: QrCode },
       { to: '/ai-tests', label: 'AI-тесты', icon: Sparkles },
       { to: ROUTES.surveys, label: 'Опросы', icon: ListChecks },
-      { to: '/clubs', label: 'Кружки и события', icon: Star, noApi: true },
       { to: ROUTES.serviceRequests, label: 'Сервисные заявки', icon: Briefcase },
     ],
   },

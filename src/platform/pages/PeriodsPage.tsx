@@ -8,6 +8,7 @@ import { PERIOD_STATUS_LABELS, PERIOD_TYPE_LABELS } from '../labels';
 import { PeriodFormModal } from '../modals/PeriodFormModal';
 import { listAcademicYears, listPeriods } from '../services';
 import type { AcademicPeriod, AcademicYear } from '../types';
+import { platformErrorMessage } from '../platformErrorMessage';
 
 export function PeriodsPage() {
   const [years, setYears] = useState<AcademicYear[]>([]);
@@ -38,7 +39,7 @@ export function PeriodsPage() {
     try {
       setPeriods(await listPeriods(yearId));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось загрузить периоды');
+      setError(platformErrorMessage(err, 'Не удалось загрузить периоды. Попробуйте ещё раз.'));
     } finally {
       setLoading(false);
     }
@@ -46,7 +47,7 @@ export function PeriodsPage() {
 
   useEffect(() => {
     void loadYears().catch((err) => {
-      setError(err instanceof Error ? err.message : 'Не удалось загрузить учебные годы');
+      setError(platformErrorMessage(err, 'Не удалось загрузить учебные годы. Попробуйте ещё раз.'));
       setLoading(false);
     });
   }, [loadYears]);
@@ -58,7 +59,7 @@ export function PeriodsPage() {
   return (
     <div>
       <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Периоды внутри выбранного учебного года — реальный API.
+        Выберите учебный год и добавьте периоды обучения: четверти, триместры или свой период.
       </p>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">

@@ -8,7 +8,7 @@ import { AcademicYearFormModal } from '../modals/AcademicYearFormModal';
 import { activateAcademicYear, archiveAcademicYear, listAcademicYears } from '../services';
 import type { AcademicYear } from '../types';
 import { useToast } from '@/context/ToastContext';
-import { ApiError } from '@/lib/api';
+import { platformErrorMessage } from '../platformErrorMessage';
 
 export function AcademicYearPage() {
   const toast = useToast();
@@ -24,7 +24,7 @@ export function AcademicYearPage() {
     try {
       setYears(await listAcademicYears());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось загрузить учебные годы');
+      setError(platformErrorMessage(err, 'Не удалось загрузить учебные годы. Попробуйте ещё раз.'));
     } finally {
       setLoading(false);
     }
@@ -40,11 +40,7 @@ export function AcademicYearPage() {
       toast.success('Учебный год активирован');
       await reload();
     } catch (err) {
-      if (err instanceof ApiError && err.code === 'ANOTHER_YEAR_ACTIVE') {
-        toast.error('Сначала архивируйте текущий ACTIVE год, затем активируйте этот');
-      } else {
-        toast.error(err instanceof Error ? err.message : 'Не удалось активировать');
-      }
+      toast.error(platformErrorMessage(err, 'Не удалось активировать учебный год. Попробуйте ещё раз.'));
     }
   }
 
@@ -55,16 +51,15 @@ export function AcademicYearPage() {
       toast.success('Учебный год архивирован');
       await reload();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не удалось архивировать');
+      toast.error(platformErrorMessage(err, 'Не удалось завершить учебный год. Попробуйте ещё раз.'));
     }
   }
 
   return (
     <div>
       <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Учебные годы с реального backend. Одновременно активен только один год: при ошибке{' '}
-        <code className="rounded bg-slate-100 px-1">ANOTHER_YEAR_ACTIVE</code> сначала архивируйте
-        текущий ACTIVE, затем активируйте нужный.
+        Одновременно активным может быть только один учебный год. Чтобы выбрать другой, сначала
+        завершите текущий на главной странице.
       </p>
 
       <div className="mb-4">
