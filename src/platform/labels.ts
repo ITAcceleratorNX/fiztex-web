@@ -186,15 +186,12 @@ export const CALENDAR_EVENT_TYPE_DOT: Record<CalendarEventType, string> = {
   OTHER: 'bg-slate-400',
 };
 
-/** Route path → page title for AppHeader on /admin/* routes. */
+/** Route path → title for AppHeader on pages without a page-owned H1. */
 export const ADMIN_PAGE_TITLES: Record<string, string> = {
   '/admin/classes': 'Классы',
   '/admin/academic-year': 'Учебный год',
   '/admin/periods': 'Учебные периоды',
-  '/lesson-schedule/bell-templates': 'Шаблоны звонков',
-  // Школьный календарь и занятость учителей рисуют собственную шапку
-  // (ScheduleBreadcrumbs), поэтому AppHeader для них заголовок не дублирует.
-  '/lesson-schedule/subgroups': 'Подгруппы классов',
+  // Все подстраницы расписания рисуют собственный H1 в ScheduleBreadcrumbs.
   '/admin/school-subjects': 'Школьные предметы',
   '/admin/access-codes': 'Доступы / коды',
   // `/admin/employees` здесь намеренно нет: раздел сотрудников рисует собственный
