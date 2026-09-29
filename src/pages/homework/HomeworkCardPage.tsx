@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Paperclip, Sparkles } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -25,6 +25,7 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock
 import { useToast } from '@/context/ToastContext';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
+import { homeworkListReturnTo } from '@/lib/homeworkListNavigation';
 import { cx, formatDateTime } from '@/lib/format';
 import { homeworkApi, type Homework, type RosterEntry } from '@/lib/homeworkApi';
 import {
@@ -52,6 +53,7 @@ export function HomeworkCardPage() {
   const { homeworkId } = useParams<{ homeworkId: string }>();
   const id = Number(homeworkId);
   const navigate = useNavigate();
+  const backTo = homeworkListReturnTo(useLocation().search);
   const queryClient = useQueryClient();
   const toast = useToast();
 
@@ -137,9 +139,10 @@ export function HomeworkCardPage() {
     onSuccess: (_data, action) => {
       setConfirm(null);
       if (action === 'delete') {
+        void queryClient.invalidateQueries({ queryKey: ['homework'] });
         invalidateLessonCard();
         toast.success('Черновик удалён');
-        navigate('/homework', { replace: true });
+        navigate(backTo, { replace: true });
         return;
       }
       void queryClient.invalidateQueries({ queryKey: ['homework'] });
@@ -173,7 +176,7 @@ export function HomeworkCardPage() {
           title="Задание недоступно"
           description="Оно удалено или относится к урокам другого учителя."
           action={
-            <Link to="/homework" className={buttonClassName({ variant: 'secondary', size: 'sm' })}>
+            <Link to={backTo} className={buttonClassName({ variant: 'secondary', size: 'sm' })}>
               К списку заданий
             </Link>
           }
@@ -213,6 +216,7 @@ export function HomeworkCardPage() {
   return (
     <div className="flex flex-col gap-5">
       <HomeworkHeader
+        backTo={backTo}
         homework={homework}
         materials={materialsQuery.data ?? []}
         busy={busy}
@@ -427,6 +431,7 @@ function HomeworkAiStatus({
 }
 
 function HomeworkHeader({
+  backTo,
   homework,
   materials,
   busy,
@@ -437,6 +442,7 @@ function HomeworkHeader({
   onGenerate,
   onOpenQuestions,
 }: {
+  backTo: string;
   homework: Homework;
   materials: Array<{ id?: number; fileName?: string; url?: string }>;
   busy: boolean;
@@ -456,7 +462,7 @@ function HomeworkHeader({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <Link
-            to="/homework"
+            to={backTo}
             aria-label="К списку заданий"
             className="text-subtle transition hover:text-ink"
           >

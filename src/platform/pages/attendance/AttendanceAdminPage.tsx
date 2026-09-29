@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CalendarX2, ClipboardList } from 'lucide-react';
 import { Select } from '@/components/ui/Field';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { cx, personShortName } from '@/lib/format';
@@ -147,152 +147,153 @@ export function AttendanceAdminPage() {
           <TabsTrigger value="journal">Журнал класса</TabsTrigger>
           <TabsTrigger value="unfilled">Незаполненные уроки</TabsTrigger>
         </TabsList>
-      </Tabs>
+        <TabsContent value={tab} className="mt-5">
+          <div className="flex flex-col gap-5">
 
-      <div className="flex flex-wrap items-center gap-2.5">
-        <Select
-          aria-label="Учебный год"
-          value={yearId != null ? String(yearId) : ''}
-          disabled={yearsQuery.isLoading || years.length === 0}
-          onChange={(e) => patch({ year: e.target.value || null, classId: null, month: null })}
-          className={FILTER_CONTROL}
-        >
-          {years.length === 0 && <option value="">Учебный год</option>}
-          {years.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.name}
-            </option>
-          ))}
-        </Select>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Select
+                aria-label="Учебный год"
+                value={yearId != null ? String(yearId) : ''}
+                disabled={yearsQuery.isLoading || years.length === 0}
+                onChange={(e) => patch({ year: e.target.value || null, classId: null, month: null })}
+                className={FILTER_CONTROL}
+              >
+                {years.length === 0 && <option value="">Учебный год</option>}
+                {years.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.name}
+                  </option>
+                ))}
+              </Select>
 
-        <Select
-          aria-label="Месяц"
-          value={month ?? ''}
-          disabled={months.length === 0}
-          onChange={(e) => patch({ month: e.target.value || null, page: null })}
-          className={FILTER_CONTROL}
-        >
-          {months.length === 0 && <option value="">Месяц</option>}
-          {months.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
+              <Select
+                aria-label="Месяц"
+                value={month ?? ''}
+                disabled={months.length === 0}
+                onChange={(e) => patch({ month: e.target.value || null, page: null })}
+                className={FILTER_CONTROL}
+              >
+                {months.length === 0 && <option value="">Месяц</option>}
+                {months.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
 
-        <Select
-          aria-label="Класс"
-          value={classId != null ? String(classId) : ''}
-          disabled={classesQuery.isLoading || classes.length === 0}
-          onChange={(e) =>
-            patch({
-              classId: e.target.value || null,
-              // И подгруппа, и ученик принадлежат прежнему классу: оставить их значит
-              // фильтровать новый класс по чужим сущностям и всегда видеть пусто.
-              subgroupId: null,
-              studentId: null,
-              page: null,
-            })
-          }
-          className={FILTER_CONTROL}
-        >
-          <option value="">{tab === 'journal' ? 'Выберите класс' : 'Все классы'}</option>
-          {classes.map((schoolClass) => (
-            <option key={schoolClass.id} value={schoolClass.id}>
-              {schoolClass.name}
-            </option>
-          ))}
-        </Select>
+              <Select
+                aria-label="Класс"
+                value={classId != null ? String(classId) : ''}
+                disabled={classesQuery.isLoading || classes.length === 0}
+                onChange={(e) =>
+                  patch({
+                    classId: e.target.value || null,
+                    // И подгруппа, и ученик принадлежат прежнему классу: оставить их значит
+                    // фильтровать новый класс по чужим сущностям и всегда видеть пусто.
+                    subgroupId: null,
+                    studentId: null,
+                    page: null,
+                  })
+                }
+                className={FILTER_CONTROL}
+              >
+                <option value="">{tab === 'journal' ? 'Выберите класс' : 'Все классы'}</option>
+                {classes.map((schoolClass) => (
+                  <option key={schoolClass.id} value={schoolClass.id}>
+                    {schoolClass.name}
+                  </option>
+                ))}
+              </Select>
 
-        {tab === 'journal' && (
-          <>
-            <Select
-              aria-label="Предмет"
-              value={subjectId != null ? String(subjectId) : ''}
-              disabled={subjectsQuery.isLoading}
-              onChange={(e) => patch({ subjectId: e.target.value || null })}
-              className={FILTER_CONTROL}
-            >
-              <option value="">Все предметы</option>
-              {subjects.map((subject) => (
-                <option key={subject.id} value={subject.id}>
-                  {subject.name}
-                </option>
-              ))}
-            </Select>
+              {tab === 'journal' && (
+                <>
+                  <Select
+                    aria-label="Предмет"
+                    value={subjectId != null ? String(subjectId) : ''}
+                    disabled={subjectsQuery.isLoading}
+                    onChange={(e) => patch({ subjectId: e.target.value || null })}
+                    className={FILTER_CONTROL}
+                  >
+                    <option value="">Все предметы</option>
+                    {subjects.map((subject) => (
+                      <option key={subject.id} value={subject.id}>
+                        {subject.name}
+                      </option>
+                    ))}
+                  </Select>
 
-            <Select
-              aria-label="Подгруппа"
-              value={subgroupId != null ? String(subgroupId) : ''}
-              disabled={classId == null || subgroupsQuery.isLoading || subgroups.length === 0}
-              onChange={(e) => patch({ subgroupId: e.target.value || null })}
-              className={FILTER_CONTROL}
-            >
-              <option value="">{subgroupOptionsHint(classId, subgroups.length)}</option>
-              {subgroups.map((subgroup) => (
-                <option key={subgroup.id} value={subgroup.id}>
-                  {subgroupLabel(subgroup)}
-                </option>
-              ))}
-            </Select>
+                  <Select
+                    aria-label="Подгруппа"
+                    value={subgroupId != null ? String(subgroupId) : ''}
+                    disabled={classId == null || subgroupsQuery.isLoading || subgroups.length === 0}
+                    onChange={(e) => patch({ subgroupId: e.target.value || null })}
+                    className={FILTER_CONTROL}
+                  >
+                    <option value="">{subgroupOptionsHint(classId, subgroups.length)}</option>
+                    {subgroups.map((subgroup) => (
+                      <option key={subgroup.id} value={subgroup.id}>
+                        {subgroupLabel(subgroup)}
+                      </option>
+                    ))}
+                  </Select>
 
-            <Select
-              aria-label="Учитель"
-              value={teacherProfileId != null ? String(teacherProfileId) : ''}
-              disabled={teachersQuery.isLoading || teachers.length === 0}
-              onChange={(e) => patch({ teacherId: e.target.value || null })}
-              className={FILTER_CONTROL}
-            >
-              <option value="">Все учителя</option>
-              {teachers.map((teacher) => (
-                <option key={teacher.id} value={teacher.id}>
-                  {personShortName(teacher)}
-                </option>
-              ))}
-            </Select>
+                  <Select
+                    aria-label="Учитель"
+                    value={teacherProfileId != null ? String(teacherProfileId) : ''}
+                    disabled={teachersQuery.isLoading || teachers.length === 0}
+                    onChange={(e) => patch({ teacherId: e.target.value || null })}
+                    className={FILTER_CONTROL}
+                  >
+                    <option value="">Все учителя</option>
+                    {teachers.map((teacher) => (
+                      <option key={teacher.id} value={teacher.id}>
+                        {personShortName(teacher)}
+                      </option>
+                    ))}
+                  </Select>
 
-            <Select
-              aria-label="Ученик"
-              value={studentProfileId != null ? String(studentProfileId) : ''}
-              disabled={classId == null || studentsQuery.isLoading || students.length === 0}
-              onChange={(e) => patch({ studentId: e.target.value || null })}
-              className={FILTER_CONTROL}
-            >
-              <option value="">{classId == null ? 'Сначала класс' : 'Все ученики'}</option>
-              {students.map((student) => (
-                <option key={student.id} value={student.id}>
-                  {personShortName(student)}
-                </option>
-              ))}
-            </Select>
+                  <Select
+                    aria-label="Ученик"
+                    value={studentProfileId != null ? String(studentProfileId) : ''}
+                    disabled={classId == null || studentsQuery.isLoading || students.length === 0}
+                    onChange={(e) => patch({ studentId: e.target.value || null })}
+                    className={FILTER_CONTROL}
+                  >
+                    <option value="">{classId == null ? 'Сначала класс' : 'Все ученики'}</option>
+                    {students.map((student) => (
+                      <option key={student.id} value={student.id}>
+                        {personShortName(student)}
+                      </option>
+                    ))}
+                  </Select>
 
-            <Select
-              aria-label="Статус"
-              value={status ?? ''}
-              onChange={(e) => patch({ status: e.target.value || null })}
-              className={FILTER_CONTROL}
-            >
-              <option value="">Все статусы</option>
-              {STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
+                  <Select
+                    aria-label="Статус"
+                    value={status ?? ''}
+                    onChange={(e) => patch({ status: e.target.value || null })}
+                    className={FILTER_CONTROL}
+                  >
+                    <option value="">Все статусы</option>
+                    {STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </Select>
 
-            <Select
-              aria-label="Причина"
-              value={reason ?? ''}
-              onChange={(e) => patch({ reason: e.target.value || null })}
-              className={FILTER_CONTROL}
-            >
-              <option value="">Все причины</option>
-              {REASON_OPTIONS.filter((option) => option.value != null).map((option) => (
-                <option key={option.value} value={option.value!}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
+                  <Select
+                    aria-label="Причина"
+                    value={reason ?? ''}
+                    onChange={(e) => patch({ reason: e.target.value || null })}
+                    className={FILTER_CONTROL}
+                  >
+                    <option value="">Все причины</option>
+                    {REASON_OPTIONS.filter((option) => option.value != null).map((option) => (
+                      <option key={option.value} value={option.value!}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </Select>
           </>
         )}
       </div>
@@ -316,6 +317,9 @@ export function AttendanceAdminPage() {
           onPageChange={(next) => patch({ page: next > 0 ? next : null })}
         />
       )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

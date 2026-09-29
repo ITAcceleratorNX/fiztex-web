@@ -157,6 +157,7 @@ export function AiTestsTab() {
                           <button
                             onClick={() => setCardTestId(t.id)}
                             title="Открыть карточку"
+                            aria-label={`Открыть карточку AI-теста «${t.title}»`}
                             className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                           >
                             <Eye className="h-4 w-4" />
@@ -164,6 +165,7 @@ export function AiTestsTab() {
                           <Link
                             to={`/subjects/${t.subjectId}/materials`}
                             title="Материалы предмета"
+                            aria-label={`Открыть материалы предмета «${t.subjectName}»`}
                             className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                           >
                             <FolderOpen className="h-4 w-4" />
@@ -171,6 +173,7 @@ export function AiTestsTab() {
                           <button
                             onClick={() => openEdit(t)}
                             title="Редактировать"
+                            aria-label={`Редактировать AI-тест «${t.title}»`}
                             className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                           >
                             <Pencil className="h-4 w-4" />
@@ -178,6 +181,7 @@ export function AiTestsTab() {
                           <Link
                             to={`/tests/${t.id}/questions`}
                             title="Вопросы и ревью"
+                            aria-label={`Открыть вопросы и ревью AI-теста «${t.title}»`}
                             className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                           >
                             <ListChecks className="h-4 w-4" />
@@ -185,6 +189,7 @@ export function AiTestsTab() {
                           <button
                             onClick={() => setCopyTarget(t)}
                             title="Скопировать во вступительные тесты"
+                            aria-label={`Скопировать AI-тест «${t.title}» во вступительные тесты`}
                             className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                           >
                             <Copy className="h-4 w-4" />
@@ -192,6 +197,7 @@ export function AiTestsTab() {
                           <button
                             onClick={() => setDeleteTarget(t)}
                             title="Удалить тест"
+                            aria-label={`Удалить AI-тест «${t.title}»`}
                             className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
                           >
                             <Trash2 className="h-4 w-4" />

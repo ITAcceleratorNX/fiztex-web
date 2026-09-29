@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { HomeworkQuestion, TeacherAnswer } from '@/lib/homeworkAiApi';
 import { HomeworkTestAnswerReview } from './HomeworkTestAnswerReview';
 
 const useLastGradeSuggestion = vi.fn();
@@ -26,7 +27,7 @@ vi.mock('@/hooks/queries', () => ({
   useSuggestGrades: (...args: unknown[]) => useSuggestGrades(...args),
 }));
 
-function closedAnswer(overrides: Record<string, unknown> = {}) {
+function closedAnswer(overrides: Record<string, unknown> = {}): TeacherAnswer {
   return {
     id: 10,
     questionId: 1,
@@ -38,10 +39,10 @@ function closedAnswer(overrides: Record<string, unknown> = {}) {
     autoScore: 0,
     finalScore: null,
     ...overrides,
-  };
+  } as unknown as TeacherAnswer;
 }
 
-function openAnswer(overrides: Record<string, unknown> = {}) {
+function openAnswer(overrides: Record<string, unknown> = {}): TeacherAnswer {
   return {
     id: 20,
     questionId: 2,
@@ -55,7 +56,7 @@ function openAnswer(overrides: Record<string, unknown> = {}) {
     aiRationale: 'Верно названо соотношение, но не указаны единицы.',
     finalScore: null,
     ...overrides,
-  };
+  } as unknown as TeacherAnswer;
 }
 
 const questions = [
@@ -69,7 +70,7 @@ const questions = [
     ],
   },
   { id: 2, type: 'OPEN_TEXT', text: 'Объясните, что такое плотность.', options: [] },
-];
+] as unknown as HomeworkQuestion[];
 
 function renderReview(overrides: Partial<Parameters<typeof HomeworkTestAnswerReview>[0]> = {}) {
   render(

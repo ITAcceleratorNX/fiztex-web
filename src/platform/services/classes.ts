@@ -66,7 +66,7 @@ export async function createClass(input: CreateClassInput): Promise<SchoolClass>
   const grade = input.grade?.trim();
   const letter = input.letter?.trim();
   if (!grade || !letter) {
-    throw new Error('Укажите параллель (grade) и букву класса');
+    throw new Error('Укажите параллель и букву класса');
   }
 
   const dto = await request<SchoolClassDto>('/admin/classes', {

@@ -13,6 +13,7 @@ import {
   useServiceRequestHistory,
 } from '@/hooks/queries';
 import { cx, formatDateTime } from '@/lib/format';
+import { parseOneBasedPage } from '@/lib/listNavigation';
 import type {
   ServiceRequest,
   ServiceRequestHistoryEntry,
@@ -29,7 +30,7 @@ import {
   serviceTypeLabel,
   viewerContext,
 } from '@/lib/serviceRequestsModel';
-import { serviceListPath, serviceOriginFrom } from '@/lib/serviceSections';
+import { safeServiceListReturnPath, serviceListPath, serviceOriginFrom } from '@/lib/serviceSections';
 import { ReopenServiceRequestModal } from './ReopenServiceRequestModal';
 import { ServicePhotoThumb, ServicePhotoViewer } from './ServicePhoto';
 import { EmergencyChip, ServiceStatusChip, ViewerContextChip } from './ServiceStatusChip';
@@ -67,7 +68,9 @@ export function ServiceRequestCardPage() {
   const [params] = useSearchParams();
   // Откуда пришли: у Super Admin карточка открывается ещё из «Всех заявок» и журнала,
   // и возвращать его оттуда в «Мои заявки» значило бы терять место в списке.
-  const backTo = serviceListPath(serviceOriginFrom(params.get('from')));
+  const page = parseOneBasedPage(params.get('page'));
+  const backTo = safeServiceListReturnPath(params.get('returnTo'))
+    ?? serviceListPath(serviceOriginFrom(params.get('from')), page);
 
   const accountId = useMyAccountId();
   const cardQuery = useServiceRequest(valid ? id : null);

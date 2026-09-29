@@ -56,8 +56,8 @@ export function ScheduleImportProblems({
             </tr>
           </thead>
           <tbody>
-            {problems.map((problem) => {
-              const key = `${problem.code}|${problem.className ?? ''}|${problem.value}`;
+            {problems.map((problem, problemIndex) => {
+              const key = `${problem.code}|${problem.className ?? ''}|${problem.value}|${problemIndex}`;
               const chosen = problem.fix
                 ? overrides[problem.fix.kind][problem.fix.key]
                 : undefined;
@@ -78,8 +78,8 @@ export function ScheduleImportProblems({
                   </td>
                   <td className="px-3 py-2.5 tabular-nums text-ink">{problem.lessonCount}</td>
                   <td className="px-3 py-2.5 text-11 text-muted">
-                    {problem.examples.slice(0, 3).map((example) => (
-                      <div key={example}>{example}</div>
+                    {problem.examples.slice(0, 3).map((example, exampleIndex) => (
+                      <div key={`${key}|example|${exampleIndex}`}>{example}</div>
                     ))}
                     {problem.lessonCount > 3 && <div>…</div>}
                   </td>

@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Pencil, Plus, Search } from 'lucide-react';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
 import { EMPLOYEE_ROLES } from '@/lib/employeesModel';
 import { cx, formatDate, initials, pluralRu } from '@/lib/format';
+import { mergeSearchParams, parseOneBasedPage } from '@/lib/listNavigation';
+import { useListScrollRestoration, useListSearchParams } from '@/hooks/useListNavigation';
 import { CreateUserMenu, type CreateUserMenuAction } from '../components/CreateUserMenu';
 import { useInvalidateUserStats, useUserStats } from '../hooks/useUserStats';
 import {
@@ -150,11 +152,17 @@ function UserAvatar({ name, role }: { name: string; role: AccountRole }) {
 export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
   const toast = useToast();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const role: RoleFilter = forcedRole ?? (searchParams.get('role') as RoleFilter | null) ?? 'ALL';
-  const [query, setQuery] = useState('');
-  const [status, setStatus] = useState<AccountStatus>('ACTIVE');
-  const [page, setPage] = useState(0);
+  const [searchParams, setSearchParams] = useListSearchParams('users', ['role', 'q', 'status', 'page']);
+  const rawRole = searchParams.get('role');
+  const role: RoleFilter = forcedRole ?? (
+    ROLE_FILTERS.some((filter) => filter.value === rawRole) ? rawRole as RoleFilter : 'ALL'
+  );
+  const query = searchParams.get('q') ?? '';
+  const rawStatus = searchParams.get('status');
+  const status: AccountStatus = STATUS_TABS.some((tab) => tab.value === rawStatus)
+    ? rawStatus as AccountStatus
+    : 'ACTIVE';
+  const page = parseOneBasedPage(searchParams.get('page'));
 
   const [users, setUsers] = useState<PlatformUser[]>([]);
   const [totalElements, setTotalElements] = useState(0);
@@ -175,6 +183,19 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
   const [detailOpen, setDetailOpen] = useState(false);
   const [selected, setSelected] = useState<PlatformUser | null>(null);
   const [editing, setEditing] = useState<PlatformUser | null>(null);
+  useListScrollRestoration('users', !loading);
+
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    if (forcedRole || role === 'ALL') next.delete('role');
+    else next.set('role', role);
+    if (status === 'ACTIVE') next.delete('status');
+    else next.set('status', status);
+    if (page === 0) next.delete('page');
+    else next.set('page', String(page + 1));
+    if (!query) next.delete('q');
+    if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
+  }, [forcedRole, page, query, role, searchParams, setSearchParams, status]);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -223,8 +244,13 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
   }, [reload, query]);
 
   useEffect(() => {
-    setPage(0);
-  }, [query, role, status]);
+    if (loading || error) return;
+    if (totalPages > 0 && page >= totalPages) {
+      setSearchParams(mergeSearchParams(searchParams, { page: totalPages === 1 ? null : totalPages }), { replace: true });
+    } else if (totalPages === 0 && page > 0) {
+      setSearchParams(mergeSearchParams(searchParams, { page: null }), { replace: true });
+    }
+  }, [error, loading, page, searchParams, setSearchParams, totalPages]);
 
   async function handleBlock(user: PlatformUser) {
     try {
@@ -265,23 +291,15 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
     setDetailOpen(true);
   }
 
-  function openRow(user: PlatformUser) {
-    const profileRoute = PROFILE_ROUTES[user.role];
-    if (profileRoute) {
-      navigate(`${profileRoute}/${user.id}`);
-    } else {
-      openDetail(user);
-    }
-  }
-
   function selectRole(next: RoleFilter) {
-    if (next === 'ALL') {
-      navigate('/admin/users');
-      return;
-    }
     // У служебных ролей своей страницы нет — они живут в общей таблице под псевдоролью.
-    const route = next === EMPLOYEE_FILTER ? undefined : ROLE_ROUTES[next];
-    navigate(route ?? `/admin/users?role=${next}`);
+    const route = next === EMPLOYEE_FILTER || next === 'ALL' ? undefined : ROLE_ROUTES[next];
+    const destination = route ?? '/admin/users';
+    const nextParams = mergeSearchParams(searchParams, {
+      role: route || next === 'ALL' ? null : next,
+      page: null,
+    });
+    navigate({ pathname: destination, search: nextParams.toString() ? `?${nextParams}` : '' });
   }
 
   const rangeFrom = totalElements === 0 ? 0 : page * PAGE_SIZE + 1;
@@ -308,7 +326,13 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
               <Search className="size-3.5 shrink-0 text-[#9ca3af]" />
               <input
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => setSearchParams(
+                  mergeSearchParams(searchParams, {
+                    q: e.target.value || null,
+                    page: null,
+                  }),
+                  { replace: true },
+                )}
                 placeholder="Поиск по ФИО, телефону или Email..."
                 className="h-full w-full bg-transparent text-13 text-slate-800 outline-none placeholder:text-[#9ca3af]"
               />
@@ -363,7 +387,10 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
               <button
                 key={t.value}
                 type="button"
-                onClick={() => setStatus(t.value)}
+                onClick={() => setSearchParams(mergeSearchParams(searchParams, {
+                  status: t.value === 'ACTIVE' ? null : t.value,
+                  page: null,
+                }))}
                 className={cx(
                   'inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-13 transition',
                   selected
@@ -415,15 +442,31 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
                 {users.map((user) => (
                   <tr
                     key={user.id}
-                    onClick={() => openRow(user)}
-                    className="h-[52px] cursor-pointer border-b border-[#f3f4f6] transition last:border-b-0 hover:bg-slate-50/80"
+                    className="h-[52px] border-b border-[#f3f4f6] transition last:border-b-0 hover:bg-slate-50/80"
                   >
                     <td className="px-6">
                       <div className="flex min-w-0 items-center gap-3">
                         <UserAvatar name={user.fullName} role={user.role} />
-                        <span className="truncate text-sm font-semibold text-[#1a1f36]">
-                          {user.fullName}
-                        </span>
+                        {PROFILE_ROUTES[user.role] ? (
+                          <Link
+                            to={{
+                              pathname: `${PROFILE_ROUTES[user.role]}/${user.id}`,
+                              search: searchParams.toString(),
+                            }}
+                            className="truncate text-sm font-semibold text-[#1a1f36] hover:text-brand-600"
+                          >
+                            {user.fullName}
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => openDetail(user)}
+                            aria-label={`Открыть карточку пользователя «${user.fullName}»`}
+                            className="truncate text-left text-sm font-semibold text-[#1a1f36] hover:text-brand-600"
+                          >
+                            {user.fullName}
+                          </button>
+                        )}
                       </div>
                     </td>
                     <td className="px-2">
@@ -441,22 +484,20 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
                     <td className="px-2 text-13 text-[#6b7280]">{formatDate(user.createdAt)}</td>
                     <td className="px-2">
                       <div className="flex items-center justify-center">
-                        <button
-                          type="button"
-                          title="Редактировать"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (PROFILE_ROUTES[user.role]) {
-                              navigate(`${PROFILE_ROUTES[user.role]}/${user.id}`);
-                              return;
-                            }
-                            setEditing(user);
-                            setFormOpen(true);
-                          }}
-                          className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                        >
-                          <Pencil className="size-4" />
-                        </button>
+                        {!PROFILE_ROUTES[user.role] && (
+                          <button
+                            type="button"
+                            title="Редактировать"
+                            aria-label={`Редактировать пользователя «${user.fullName}»`}
+                            onClick={() => {
+                              setEditing(user);
+                              setFormOpen(true);
+                            }}
+                            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                          >
+                            <Pencil className="size-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -476,7 +517,10 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
               <button
                 type="button"
                 disabled={page <= 0}
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                aria-label="Предыдущая страница пользователей"
+                onClick={() => setSearchParams(mergeSearchParams(searchParams, {
+                  page: page <= 1 ? null : page,
+                }))}
                 className="flex size-8 items-center justify-center rounded-lg border border-[#e5e7eb] bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <ChevronLeft className="size-4" />
@@ -484,7 +528,8 @@ export function UsersPage({ forcedRole }: { forcedRole?: AccountRole } = {}) {
               <button
                 type="button"
                 disabled={page + 1 >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
+                aria-label="Следующая страница пользователей"
+                onClick={() => setSearchParams(mergeSearchParams(searchParams, { page: page + 2 }))}
                 className="flex size-8 items-center justify-center rounded-lg border border-[#e5e7eb] bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <ChevronRight className="size-4" />

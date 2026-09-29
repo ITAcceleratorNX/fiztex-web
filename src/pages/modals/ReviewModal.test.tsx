@@ -1,15 +1,27 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ReviewModal } from './ReviewModal';
+
+const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
+
+async function getApiMocks() {
+  const { api } = await import('@/lib/api');
+  return api as unknown as {
+    getReview: ReturnType<typeof vi.fn>;
+    scoreAnswer: ReturnType<typeof vi.fn>;
+    confirmReview: ReturnType<typeof vi.fn>;
+    openResult: ReturnType<typeof vi.fn>;
+  };
+}
 
 vi.mock('@tanstack/react-query', () => ({
   useQueryClient: () => ({ invalidateQueries: vi.fn() }),
 }));
 
 vi.mock('@/context/ToastContext', () => ({
-  useToast: () => ({ success: vi.fn(), error: vi.fn() }),
+  useToast: () => toast,
 }));
 
 vi.mock('@/lib/api', () => {
@@ -41,7 +53,7 @@ describe('ReviewModal AI prefill', () => {
     const aiScore = 2;
     const aiComment = 'AI comment';
 
-    const { api } = await import('@/lib/api');
+    const api = await getApiMocks();
     api.getReview.mockResolvedValue({
       resultId: null,
       attemptId: 1,
@@ -97,7 +109,11 @@ describe('ReviewModal AI prefill', () => {
     expect(screen.queryByText('Изменено админом')).not.toBeInTheDocument();
 
     await user.clear(scoreInput);
+    expect(scoreInput).toHaveAttribute('aria-invalid', 'true');
+    expect(scoreInput).toHaveAccessibleDescription('Укажите балл.');
+    expect(screen.getByRole('button', { name: 'Сохранить' })).toBeDisabled();
     await user.type(scoreInput, '5');
+    expect(scoreInput).toHaveAttribute('aria-invalid', 'false');
 
     expect(screen.getByText('Изменено админом')).toBeInTheDocument();
   });
@@ -108,7 +124,7 @@ describe('ReviewModal AI prefill', () => {
     const finalScore = 5;
     const adminComment = 'My admin comment';
 
-    const { api } = await import('@/lib/api');
+    const api = await getApiMocks();
     api.getReview.mockResolvedValue({
       resultId: null,
       attemptId: 1,
@@ -217,7 +233,7 @@ describe('ReviewModal AI prefill', () => {
   });
 
   it('досылает несохранённые баллы перед подтверждением проверки', async () => {
-    const { api } = await import('@/lib/api');
+    const api = await getApiMocks();
     api.getReview.mockResolvedValue(pendingDetail());
     api.scoreAnswer.mockImplementation(async (_a: number, _q: number, body: any) => {
       const detail = pendingDetail();
@@ -245,6 +261,61 @@ describe('ReviewModal AI prefill', () => {
 
     expect(api.scoreAnswer).toHaveBeenCalledWith(1, 10, { finalScore: 5, adminComment: 'AI comment' });
     expect(api.confirmReview).toHaveBeenCalled();
+  });
+
+  it('держит ошибку сохранения рядом с баллом и даёт повторить действие', async () => {
+    const api = await getApiMocks();
+    api.getReview.mockReset().mockResolvedValue(pendingDetail());
+    api.scoreAnswer.mockReset().mockRejectedValue(new Error('offline'));
+
+    const user = userEvent.setup();
+    render(<ReviewModal open attemptId={1} onClose={() => {}} />);
+
+    const scoreInput = await screen.findByRole('spinbutton');
+    await user.clear(scoreInput);
+    await user.type(scoreInput, '5');
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }));
+
+    const error = await screen.findByRole('alert');
+    expect(error).toHaveTextContent('Не удалось сохранить балл');
+    expect(scoreInput).toHaveValue(5);
+    expect(screen.getByRole('button', { name: 'Сохранить' })).toBeEnabled();
+  });
+
+  it('показывает успех сохранения только после ответа сервера', async () => {
+    const api = await getApiMocks();
+    api.getReview.mockReset().mockResolvedValue(pendingDetail());
+    let resolveSave!: (value: any) => void;
+    const saveRequest = new Promise((resolve) => {
+      resolveSave = resolve;
+    });
+    api.scoreAnswer.mockReset().mockReturnValue(saveRequest);
+
+    toast.success.mockReset();
+    const user = userEvent.setup();
+    render(<ReviewModal open attemptId={1} onClose={() => {}} />);
+
+    const scoreInput = await screen.findByRole('spinbutton');
+    await user.clear(scoreInput);
+    await user.type(scoreInput, '5');
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }));
+
+    expect(toast.success).not.toHaveBeenCalled();
+    resolveSave(pendingDetail());
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Балл сохранён'));
+  });
+
+  it('повторяет загрузку попытки из доступного блока ошибки', async () => {
+    const api = await getApiMocks();
+    api.getReview.mockReset().mockRejectedValue(new Error('сеть недоступна'));
+
+    const user = userEvent.setup();
+    render(<ReviewModal open attemptId={1} onClose={() => {}} />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось загрузить попытку');
+    await user.click(screen.getByRole('button', { name: 'Повторить' }));
+
+    await waitFor(() => expect(api.getReview).toHaveBeenCalledTimes(2));
   });
 });
 
@@ -292,4 +363,3 @@ function pendingDetail(): any {
     finishedAt: null,
   };
 }
-

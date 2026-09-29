@@ -186,7 +186,11 @@ function SummaryPage({ id }: { id: number }) {
               (data.content || dirty) ? <SummaryDocument content={content} /> :
                 <EmptyBlock title="Конспект пока не опубликован" description="Здесь появятся материалы, когда учитель их опубликует." />}
           </div>
-          {error && <div role="alert"><ErrorBlock message={error} /></div>}
+          {error && (
+            <p role="alert" aria-live="assertive" aria-atomic="true" className="text-sm text-red-700">
+              {error}
+            </p>
+          )}
           {data.canEdit && <div className="flex flex-wrap items-center justify-between gap-3 pb-6">
             <div className="flex flex-wrap gap-2">
               {data.publishedAt && <Button variant="ghost" disabled={busy || conflict} onClick={() => setConfirm('unpublish')}>Снять с публикации</Button>}

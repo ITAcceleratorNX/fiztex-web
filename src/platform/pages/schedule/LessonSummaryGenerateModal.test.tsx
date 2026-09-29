@@ -45,7 +45,7 @@ describe('Источник конспекта', () => {
     upload.mockResolvedValue({ id: 22 });
     source.mockImplementation((_id, _type, id) => ({ data: id ? { pageNavigation: false } : undefined }));
     const { container } = render(<LessonSummaryGenerateModal lesson={{ id: 1 }} companionKind="RETELLING" onClose={vi.fn()} />);
-    await user.click(screen.getByRole('tab', { name: 'Загрузить файл' }));
+    await user.click(screen.getByRole('radio', { name: 'Загрузить файл' }));
     const file = new File(['Текст урока'], 'lesson.txt', { type: 'text/plain' });
     await user.upload(container.querySelector('input[type=file]') as HTMLInputElement, file);
     await waitFor(() => expect(upload).toHaveBeenCalledWith(file));

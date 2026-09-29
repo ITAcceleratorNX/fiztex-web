@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Award, CalendarRange, Info } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
@@ -409,9 +409,10 @@ function JournalShell({
           <TabsTrigger value="JOURNAL">Журнал</TabsTrigger>
           <TabsTrigger value="FINALS">Итоги четверти</TabsTrigger>
         </TabsList>
+        <TabsContent value={tab} className="mt-5">
+          {children}
+        </TabsContent>
       </Tabs>
-
-      {children}
     </div>
   );
 }

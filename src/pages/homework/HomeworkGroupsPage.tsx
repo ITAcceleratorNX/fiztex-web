@@ -11,6 +11,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
 import { cx } from '@/lib/format';
 import { homeworkApi, type HomeworkGroup } from '@/lib/homeworkApi';
+import { homeworkFormReturnTo } from '@/lib/homeworkDraft';
 
 /**
  * Временные группы: деление класса на непересекающиеся части (Figma 863:573/620/790,
@@ -33,6 +34,8 @@ export function HomeworkGroupsPage() {
   const classId = Number(params.get('classId')) || undefined;
   const subjectId = Number(params.get('subjectId')) || undefined;
   const homeworkId = Number(params.get('homeworkId')) || undefined;
+  const returnTo = homeworkFormReturnTo(params.get('returnTo'));
+  const backTo = returnTo ?? (homeworkId ? `/homework/${homeworkId}` : '/homework');
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -120,13 +123,13 @@ export function HomeworkGroupsPage() {
     return (
       <div className="card">
         <ErrorBlock message="Не удалось загрузить группы" onRetry={() => void setsQuery.refetch()} />
+        <Link to={backTo} className={buttonClassName({ variant: 'secondary', size: 'sm' })}>Вернуться к заданию</Link>
       </div>
     );
   }
 
   const groups = set?.groups ?? [];
   const busy = mutate.isPending;
-  const backTo = homeworkId ? `/homework/${homeworkId}` : '/homework';
 
   return (
     <div className="flex flex-col gap-5">
@@ -159,6 +162,8 @@ export function HomeworkGroupsPage() {
           </div>
         )}
       </div>
+
+      {returnTo && <NoticeBar tone="soft">После настройки групп вернитесь к форме задания в этой вкладке.</NoticeBar>}
 
       {homework && (
         <div className="rounded-xl bg-neutral-bg/60 px-5 py-3 text-13">
@@ -250,10 +255,10 @@ export function HomeworkGroupsPage() {
         </>
       )}
 
-      {set && !locked && (
+      {(returnTo || (set && !locked)) && (
         <div>
           <Button variant="secondary" onClick={() => navigate(backTo)}>
-            Готово
+            {returnTo ? 'Вернуться к заданию' : 'Готово'}
           </Button>
         </div>
       )}

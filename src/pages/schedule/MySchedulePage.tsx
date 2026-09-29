@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -7,6 +7,8 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { cx, formatWeekdayDayMonth } from '@/lib/format';
 import { lessonsApi, type RoleScheduleLesson } from '@/lib/lessonsApi';
+import { isValidIsoDate, mergeSearchParams } from '@/lib/listNavigation';
+import { useListSearchParams } from '@/hooks/useListNavigation';
 import { hhmm, lessonsAt, localDate, shiftDays, weekColumns, weekRows, weekState } from './myWeek';
 
 /**
@@ -23,7 +25,18 @@ import { hhmm, lessonsAt, localDate, shiftDays, weekColumns, weekRows, weekState
  */
 export function MySchedulePage() {
   const navigate = useNavigate();
-  const [anchor, setAnchor] = useState(() => localDate());
+  const [searchParams, setSearchParams] = useListSearchParams('teacher-schedule', ['week']);
+  const requestedWeek = searchParams.get('week');
+  const anchor = isValidIsoDate(requestedWeek) ? requestedWeek : localDate();
+
+  useEffect(() => {
+    if (requestedWeek == null || isValidIsoDate(requestedWeek)) return;
+    setSearchParams(mergeSearchParams(searchParams, { week: null }), { replace: true });
+  }, [requestedWeek, searchParams, setSearchParams]);
+
+  function setWeek(next: string | null) {
+    setSearchParams(mergeSearchParams(searchParams, { week: next }), { replace: false });
+  }
 
   useDocumentTitle('Моё расписание');
 
@@ -56,18 +69,18 @@ export function MySchedulePage() {
             variant="secondary"
             size="sm"
             aria-label="Предыдущая неделя"
-            onClick={() => setAnchor((current) => shiftDays(current, -7))}
+            onClick={() => setWeek(shiftDays(anchor, -7))}
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <Button variant="secondary" size="sm" onClick={() => setAnchor(localDate())}>
+          <Button variant="secondary" size="sm" onClick={() => setWeek(null)}>
             Текущая неделя
           </Button>
           <Button
             variant="secondary"
             size="sm"
             aria-label="Следующая неделя"
-            onClick={() => setAnchor((current) => shiftDays(current, 7))}
+            onClick={() => setWeek(shiftDays(anchor, 7))}
           >
             <ChevronRight className="size-4" />
           </Button>
@@ -147,7 +160,7 @@ export function MySchedulePage() {
                               key={lesson.lessonInstanceId ?? `${lesson.lessonId}-${index}`}
                               lesson={lesson}
                               onOpen={() =>
-                                navigate(`/lesson-schedule/lessons/${lesson.lessonInstanceId}`)
+                                navigate(`/lesson-schedule/lessons/${lesson.lessonInstanceId}?week=${anchor}`)
                               }
                             />
                           ))}

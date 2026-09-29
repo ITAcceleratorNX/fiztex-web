@@ -176,8 +176,10 @@ export function SurveyQuestionEditor({ surveyId, canEdit }: { surveyId: number; 
                 </div>
                 {canEdit && (
                   <button
+                    type="button"
                     onClick={() => removeQuestion(question.localId)}
                     title="Удалить вопрос"
+                    aria-label={`Удалить вопрос ${index + 1}`}
                     className="mt-6 rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -187,7 +189,7 @@ export function SurveyQuestionEditor({ surveyId, canEdit }: { surveyId: number; 
 
               {isSurveyChoiceType(question.type) && (
                 <div className="space-y-2 pl-8">
-                  {question.options.map((option) => (
+                  {question.options.map((option, optionIndex) => (
                     <div key={option.localId} className="flex items-center gap-2">
                       <TextInput
                         value={option.text}
@@ -198,8 +200,10 @@ export function SurveyQuestionEditor({ surveyId, canEdit }: { surveyId: number; 
                       />
                       {canEdit && question.options.length > 2 && (
                         <button
+                          type="button"
                           onClick={() => removeOption(question.localId, option.localId)}
                           title="Убрать вариант"
+                          aria-label={`Удалить вариант ${optionIndex + 1} вопроса ${index + 1}`}
                           className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
                         >
                           <Trash2 className="h-4 w-4" />

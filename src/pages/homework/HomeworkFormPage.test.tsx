@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/lib/api';
 import { ToastProvider } from '@/context/ToastContext';
+import { FormDraftProvider } from '@/context/FormDraftContext';
 import { HomeworkFormPage } from './HomeworkFormPage';
 
 const create = vi.fn();
@@ -41,6 +42,7 @@ vi.mock('@/lib/lessonsApi', async (importOriginal) => {
 
 vi.mock('@/hooks/queries', () => ({
   useLesson: (...args: unknown[]) => useLesson(...args),
+  keys: { lesson: (id: number) => ['lesson', id] },
 }));
 
 function renderForm() {
@@ -49,31 +51,31 @@ function renderForm() {
   });
   return render(
     <QueryClientProvider client={client}>
-      <ToastProvider>
+      <FormDraftProvider><ToastProvider>
         <MemoryRouter initialEntries={['/homework/new?lessonId=5']}>
           <Routes>
             <Route path="/homework/new" element={<HomeworkFormPage mode="create" />} />
           </Routes>
         </MemoryRouter>
-      </ToastProvider>
+      </ToastProvider></FormDraftProvider>
     </QueryClientProvider>,
   );
 }
 
 /** Форма из раздела «Домашние задания»: урока в адресе нет, контекст выбирается руками. */
-function renderStandaloneForm() {
+function renderStandaloneForm(url = '/homework/new') {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   return render(
     <QueryClientProvider client={client}>
-      <ToastProvider>
-        <MemoryRouter initialEntries={['/homework/new']}>
+      <FormDraftProvider><ToastProvider>
+        <MemoryRouter initialEntries={[url]}>
           <Routes>
             <Route path="/homework/new" element={<HomeworkFormPage mode="create" />} />
           </Routes>
         </MemoryRouter>
-      </ToastProvider>
+      </ToastProvider></FormDraftProvider>
     </QueryClientProvider>,
   );
 }
@@ -127,15 +129,21 @@ describe('HomeworkFormPage — срок сдачи', () => {
     expect(create.mock.calls[0][0].dueAt).toBeUndefined();
   });
 
-  it('точный срок по-прежнему требует дату и отправляет её', async () => {
+  it('точный срок показывает ошибку и фокусирует поле даты, затем отправляет её', async () => {
     renderForm();
     await fillRequiredFields();
 
-    // Пока даты нет, сохранять нечего — кнопка выключена.
-    expect(screen.getByRole('button', { name: 'Создать черновик' })).toBeDisabled();
+    const submit = screen.getByRole('button', { name: 'Создать черновик' });
+    expect(submit).toBeEnabled();
+    await userEvent.click(submit);
+    const dueAt = screen.getByLabelText(/Дата и время сдачи/);
+    expect(dueAt).toHaveFocus();
+    expect(dueAt).toHaveAttribute('aria-invalid', 'true');
+    expect(document.getElementById(dueAt.getAttribute('aria-describedby') as string))
+      .toHaveTextContent('Укажите дату и время сдачи');
 
-    await userEvent.type(screen.getByLabelText('Дата и время сдачи'), '2026-10-20T15:00');
-    await userEvent.click(screen.getByRole('button', { name: 'Создать черновик' }));
+    await userEvent.type(dueAt, '2026-10-20T15:00');
+    await userEvent.click(submit);
 
     expect(create.mock.calls[0][0]).toMatchObject({ dueType: 'EXACT' });
     expect(create.mock.calls[0][0].dueAt).toBe(new Date('2026-10-20T15:00').toISOString());
@@ -186,6 +194,18 @@ describe('HomeworkFormPage — срок сдачи', () => {
  * Привязка к уроку из раздела «Домашние задания» (иначе она была только у входа с карточки
  * урока, и задание из раздела не показывалось на уроке ни у учителя, ни у ученика).
  */
+describe('HomeworkFormPage — контекст из списка заданий', () => {
+  it('предзаполняет класс и предмет из ссылки и явно показывает их учителю', async () => {
+    renderStandaloneForm('/homework/new?classId=7&subjectId=3');
+
+    expect(await screen.findByText(/Из фильтров списка подставлены класс «7А» и предмет «Математика»/)).toBeInTheDocument();
+    const subject = await screen.findByRole('button', { name: 'Предмет' });
+    const schoolClass = screen.getByRole('button', { name: 'Класс' });
+    expect(subject).toHaveTextContent('Математика');
+    expect(schoolClass).toHaveTextContent('7А');
+  });
+});
+
 describe('HomeworkFormPage — привязка к уроку', () => {
   const lesson = (over: Record<string, unknown> = {}) => ({
     id: 41,
@@ -212,9 +232,9 @@ describe('HomeworkFormPage — привязка к уроку', () => {
   }
 
   async function chooseClassAndSubject() {
-    await userEvent.click(await screen.findByRole('button', { name: 'Выберите предмет' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Предмет' }));
     await userEvent.click(screen.getByRole('option', { name: 'Математика' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Выберите класс' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Класс' }));
     await userEvent.click(screen.getByRole('option', { name: '7А' }));
   }
 

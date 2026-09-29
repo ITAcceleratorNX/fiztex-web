@@ -134,11 +134,47 @@ export function landingRouteForRole(role: string | undefined): string {
  * что у `isRouteAllowedForRole`, чтобы вход и навигация не расходились в правилах.
  */
 export function loginRedirectTarget(from: unknown, role: string | undefined): string {
-  const landing = landingRouteForRole(role);
-  if (typeof from !== 'string' || !from) return landing;
+  return resolveLoginRedirect(from, role).target;
+}
 
-  const target = safeRedirectTarget(from);
-  return isRouteAllowedForRole(target, role) ? target : landing;
+export interface LoginRedirectResolution {
+  target: string;
+  notice?: string;
+}
+
+/**
+ * Выбирает безопасный адрес входа с учётом роли и того, кому принадлежала
+ * истёкшая сессия. Контекст страницы не переносится в другой аккаунт.
+ */
+export function resolveLoginRedirect(
+  from: unknown,
+  role: string | undefined,
+  previousLogin?: unknown,
+  currentLogin?: unknown,
+): LoginRedirectResolution {
+  const landing = landingRouteForRole(role);
+  const previousIdentity = normalizeLoginIdentity(previousLogin);
+  const currentIdentity = normalizeLoginIdentity(currentLogin);
+
+  if (previousIdentity && previousIdentity !== currentIdentity) {
+    return {
+      target: landing,
+      notice: 'Вы вошли в другой аккаунт. Страница предыдущей сессии не открыта; показан стартовый раздел вашей роли.',
+    };
+  }
+
+  const target = parseSafeReturnTo(from);
+  if (!target) return { target: landing };
+
+  const pathname = new URL(target, 'https://fiztex.local').pathname;
+  if (!isRouteAllowedForRole(pathname, role)) {
+    return {
+      target: landing,
+      notice: `У этой учётной записи нет доступа к разделу ${pathname}. Открыт стартовый раздел вашей роли.`,
+    };
+  }
+
+  return { target };
 }
 
 /**
@@ -154,15 +190,21 @@ export function loginRedirectTarget(from: unknown, role: string | undefined): st
 export function isRouteAllowedForRole(path: string, role: string | undefined): boolean {
   // Профиль общий: он не читает ни одного административного адреса, и роли,
   // которым панель показывает три раздела, тоже должны знать, под кем вошли.
-  if (path.startsWith(ROUTES.profile)) return true;
-  if (SUPER_ADMIN_ROUTE_PREFIXES.some((prefix) => path.startsWith(prefix))) {
+  if (matchesRoutePrefix(path, ROUTES.profile)) return true;
+  if (SUPER_ADMIN_ROUTE_PREFIXES.some((prefix) => matchesRoutePrefix(path, prefix))) {
     return role === 'SUPER_ADMIN';
   }
   if (role === 'PSYCHOLOGIST') {
-    return PSYCHOLOGIST_ROUTE_PREFIXES.some((prefix) => path.startsWith(prefix));
+    return PSYCHOLOGIST_ROUTE_PREFIXES.some((prefix) => matchesRoutePrefix(path, prefix));
   }
   if (role !== 'TEACHER') return true;
-  return TEACHER_ROUTE_PREFIXES.some((prefix) => path.startsWith(prefix));
+  return TEACHER_ROUTE_PREFIXES.some((prefix) => matchesRoutePrefix(path, prefix));
+}
+
+function matchesRoutePrefix(path: string, prefix: string): boolean {
+  return prefix.endsWith('/')
+    ? path.startsWith(prefix)
+    : path === prefix || path.startsWith(`${prefix}/`);
 }
 
 /**
@@ -212,14 +254,40 @@ const PSYCHOLOGIST_ROUTE_PREFIXES = [ROUTES.psychologistTests];
  * редирект.
  */
 export function safeRedirectTarget(from: unknown): string {
-  if (typeof from !== 'string') return DEFAULT_AUTHENTICATED_ROUTE;
-  // `//host` и `/\host` браузер считает протокол-относительным адресом — это уже наружу.
-  if (!from.startsWith('/') || from.startsWith('//') || from.startsWith('/\\')) {
-    return DEFAULT_AUTHENTICATED_ROUTE;
+  return parseSafeReturnTo(from) ?? DEFAULT_AUTHENTICATED_ROUTE;
+}
+
+function parseSafeReturnTo(from: unknown): string | null {
+  if (
+    typeof from !== 'string' ||
+    !from.startsWith('/') ||
+    from.startsWith('//') ||
+    from.startsWith('/\\')
+  ) {
+    return null;
   }
-  // Возвращать на публичные страницы после входа администратора незачем.
-  if (from === ROUTES.publicAnnouncements || from.startsWith('/announcements')) {
-    return DEFAULT_AUTHENTICATED_ROUTE;
+
+  let url: URL;
+  try {
+    url = new URL(from, 'https://fiztex.local');
+  } catch {
+    return null;
   }
-  return from;
+  if (url.origin !== 'https://fiztex.local') return null;
+
+  // Публичные страницы не требуют входа и не должны стать целью авторедиректа.
+  if (
+    url.pathname === ROUTES.publicAnnouncements ||
+    url.pathname === '/announcements' ||
+    url.pathname.startsWith('/announcements/')
+  ) {
+    return null;
+  }
+
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+function normalizeLoginIdentity(value: unknown): string | null {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  return value.trim().toLowerCase();
 }

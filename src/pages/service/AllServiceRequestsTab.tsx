@@ -1,10 +1,12 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useAllServiceRequests } from '@/hooks/queries';
 import { cx, formatDateTime } from '@/lib/format';
+import { mergeSearchParams, isValidIsoDate, parseOneBasedPage, parsePositiveInteger } from '@/lib/listNavigation';
+import { useListScrollRestoration } from '@/hooks/useListNavigation';
 import { ROUTES } from '@/lib/routes';
 import {
   ADMIN_PAGE_SIZE,
@@ -48,40 +50,97 @@ const COLUMNS = [
 
 const HEAD_CELL = 'px-4 py-3 text-left text-10 font-medium uppercase tracking-wide text-subtle';
 const CELL = 'px-4 py-4 align-middle text-13 text-ink';
+const REQUEST_STATUSES = ['NEW', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const;
+const REQUEST_TYPES = ['CLEANING', 'TECHNICIAN'] as const;
 
 export function AllServiceRequestsTab() {
   const navigate = useNavigate();
-
-  const [filter, setFilter] = useState<AllRequestsFilter>(EMPTY_REQUESTS_FILTER);
-  const [search, setSearch] = useState('');
-  // Выбранных людей держим целиком, а не только их идентификаторы: фильтр обязан
-  // показывать, кто выбран, а второй запрос за именем ради подписи был бы лишним.
-  const [author, setAuthor] = useState<PickedAccount | null>(null);
-  const [assignee, setAssignee] = useState<PickedAccount | null>(null);
-  const [page, setPage] = useState(0);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const rawStatus = searchParams.get('allStatus');
+  const rawType = searchParams.get('allType');
+  const rawEmergency = searchParams.get('allEmergency');
+  const rawFrom = searchParams.get('allFrom');
+  const rawTo = searchParams.get('allTo');
+  const from = isValidIsoDate(rawFrom) ? rawFrom : '';
+  const parsedTo = isValidIsoDate(rawTo) ? rawTo : '';
+  const to = from && parsedTo && parsedTo < from ? '' : parsedTo;
+  const authorId = parsePositiveInteger(searchParams.get('allAuthor'));
+  const assigneeId = parsePositiveInteger(searchParams.get('allAssignee'));
+  const search = searchParams.get('allQ') ?? '';
+  const page = parseOneBasedPage(searchParams.get('page'));
+  const filter: AllRequestsFilter = {
+    ...EMPTY_REQUESTS_FILTER,
+    status: REQUEST_STATUSES.includes(rawStatus as (typeof REQUEST_STATUSES)[number])
+      ? rawStatus as AllRequestsFilter['status'] : null,
+    serviceType: REQUEST_TYPES.includes(rawType as (typeof REQUEST_TYPES)[number])
+      ? rawType as AllRequestsFilter['serviceType'] : null,
+    emergency: rawEmergency === 'true' ? true : rawEmergency === 'false' ? false : null,
+    authorId,
+    assigneeId,
+    createdFrom: from,
+    createdTo: to,
+    search,
+  };
+  const author: PickedAccount | null = authorId ? { id: authorId, fullName: `Аккаунт #${authorId}` } : null;
+  const assignee: PickedAccount | null = assigneeId ? { id: assigneeId, fullName: `Аккаунт #${assigneeId}` } : null;
 
   const debouncedSearch = useDebouncedValue(search);
   const applied: AllRequestsFilter = { ...filter, search: debouncedSearch };
   const listQuery = useAllServiceRequests(applied, page);
 
+  useEffect(() => {
+    const next = mergeSearchParams(searchParams, {
+      allStatus: filter.status,
+      allType: filter.serviceType,
+      allEmergency: filter.emergency,
+      allAuthor: filter.authorId,
+      allAssignee: filter.assigneeId,
+      allFrom: filter.createdFrom,
+      allTo: filter.createdTo,
+      allQ: filter.search || null,
+      page: page === 0 ? null : page + 1,
+    });
+    if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
+  }, [filter, page, searchParams, setSearchParams]);
+
   function patch(next: Partial<AllRequestsFilter>) {
-    setFilter((prev) => ({ ...prev, ...next }));
-    // Любая правка фильтра возвращает на первую страницу: иначе после сужения выдачи
-    // человек оставался бы на седьмой странице, которой больше нет.
-    setPage(0);
+    const nextFrom = 'createdFrom' in next ? next.createdFrom ?? '' : filter.createdFrom;
+    const nextTo = 'createdTo' in next ? next.createdTo ?? '' : filter.createdTo;
+    const dependentTo = nextFrom && nextTo && nextTo < nextFrom ? '' : nextTo;
+    setSearchParams((current) => mergeSearchParams(current, {
+      ...('status' in next ? { allStatus: next.status } : {}),
+      ...('serviceType' in next ? { allType: next.serviceType } : {}),
+      ...('emergency' in next ? { allEmergency: next.emergency } : {}),
+      ...('authorId' in next ? { allAuthor: next.authorId } : {}),
+      ...('assigneeId' in next ? { allAssignee: next.assigneeId } : {}),
+      ...('createdFrom' in next ? { allFrom: next.createdFrom } : {}),
+      ...('createdTo' in next || ('createdFrom' in next && dependentTo !== nextTo)
+        ? { allTo: dependentTo } : {}),
+      ...('search' in next ? { allQ: next.search || null } : {}),
+      page: null,
+    }));
   }
 
   function reset() {
-    setFilter(EMPTY_REQUESTS_FILTER);
-    setSearch('');
-    setAuthor(null);
-    setAssignee(null);
-    setPage(0);
+    setSearchParams((current) => mergeSearchParams(current, {
+      allStatus: null, allType: null, allEmergency: null, allAuthor: null, allAssignee: null,
+      allFrom: null, allTo: null, allQ: null, page: null,
+    }));
   }
 
   const rows = listQuery.data?.content ?? [];
   const total = listQuery.data?.totalElements ?? 0;
   const totalPages = listQuery.data?.totalPages ?? 0;
+  useListScrollRestoration('service', !listQuery.isPending);
+
+  useEffect(() => {
+    if (!listQuery.isSuccess) return;
+    if (totalPages > 0 && page >= totalPages) {
+      setSearchParams((current) => mergeSearchParams(current, { page: totalPages === 1 ? null : totalPages } ), { replace: true });
+    } else if (totalPages === 0 && page > 0) {
+      setSearchParams((current) => mergeSearchParams(current, { page: null }), { replace: true });
+    }
+  }, [listQuery.isSuccess, page, setSearchParams, totalPages]);
 
   return (
     <div className="space-y-5">
@@ -91,16 +150,16 @@ export function AllServiceRequestsTab() {
         author={author}
         assignee={assignee}
         onSearchChange={(value) => {
-          setSearch(value);
-          setPage(0);
+          setSearchParams((current) => mergeSearchParams(current, {
+            allQ: value || null,
+            page: null,
+          }), { replace: true });
         }}
         onChange={patch}
         onAuthorChange={(next) => {
-          setAuthor(next);
           patch({ authorId: next?.id ?? null });
         }}
         onAssigneeChange={(next) => {
-          setAssignee(next);
           patch({ assigneeId: next?.id ?? null });
         }}
         onReset={reset}
@@ -179,8 +238,12 @@ export function AllServiceRequestsTab() {
                       <Button
                         variant="secondary"
                         size="sm"
-                        // `?from=all` возвращает из карточки сюда, а не в «Мои заявки».
-                        onClick={() => navigate(`${ROUTES.serviceRequest(row.id as number)}?from=all`)}
+                        // Возврат сохраняет все фильтры и страницу исходной выдачи.
+                        onClick={() => {
+                          const returnTo = `/service${searchParams.size ? `?${searchParams}` : ''}`;
+                          const cardParams = new URLSearchParams({ from: 'all', returnTo });
+                          navigate(`${ROUTES.serviceRequest(row.id as number)}?${cardParams}`);
+                        }}
                       >
                         Открыть
                       </Button>
@@ -197,7 +260,9 @@ export function AllServiceRequestsTab() {
             total={total}
             pageSize={ADMIN_PAGE_SIZE}
             unit={['заявка', 'заявки', 'заявок']}
-            onPage={setPage}
+            onPage={(nextPage) => setSearchParams((current) => mergeSearchParams(current, {
+              page: nextPage === 0 ? null : nextPage + 1,
+            }))}
           />
         </div>
       )}

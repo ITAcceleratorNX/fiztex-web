@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
-import { ApiError } from '@/lib/api';
+import { platformErrorMessage } from '@/platform/platformErrorMessage';
 import { cx, pluralRu } from '@/lib/format';
 import {
   PERIOD_TYPE_LABELS,
@@ -230,7 +230,7 @@ export function DashboardPage() {
       toast.success('Учебный год завершён');
       await reload();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не удалось завершить год');
+      toast.error(platformErrorMessage(err, 'Не удалось завершить учебный год. Попробуйте ещё раз.'));
     }
   }
 
@@ -240,11 +240,7 @@ export function DashboardPage() {
       toast.success('Учебный год активирован');
       await reload();
     } catch (err) {
-      if (err instanceof ApiError && err.code === 'ANOTHER_YEAR_ACTIVE') {
-        toast.error('Сначала завершите текущий активный год');
-      } else {
-        toast.error(err instanceof Error ? err.message : 'Не удалось активировать');
-      }
+      toast.error(platformErrorMessage(err, 'Не удалось активировать учебный год. Попробуйте ещё раз.'));
     }
   }
 
@@ -664,6 +660,7 @@ export function DashboardPage() {
                         <button
                           type="button"
                           disabled={classesPage <= 0}
+                          aria-label="Предыдущая страница классов"
                           onClick={() => setClassesPage((p) => Math.max(0, p - 1))}
                           className="flex size-8 items-center justify-center rounded-lg border border-[#e5e7eb] bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-800 disabled:opacity-40"
                         >
@@ -672,6 +669,7 @@ export function DashboardPage() {
                         <button
                           type="button"
                           disabled={classesPage + 1 >= classesTotalPages}
+                          aria-label="Следующая страница классов"
                           onClick={() => setClassesPage((p) => p + 1)}
                           className="flex size-8 items-center justify-center rounded-lg border border-[#e5e7eb] bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-800 disabled:opacity-40"
                         >

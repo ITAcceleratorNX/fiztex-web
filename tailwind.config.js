@@ -33,6 +33,10 @@ export default {
         ink: 'var(--color-text-primary)',
         muted: 'var(--color-text-muted)',
         subtle: 'var(--color-text-subtle)',
+        sidebar: {
+          nav: 'var(--color-sidebar-nav-text)',
+          heading: 'var(--color-sidebar-heading-text)',
+        },
         link: 'var(--color-link)',
         line: 'var(--color-border-default)',
         surface: 'var(--color-surface)',

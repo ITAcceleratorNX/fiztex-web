@@ -5,21 +5,37 @@ import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Field';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { SCHOOL_STATUS_LABELS } from '../labels';
+import { mergeSearchParams, parsePositiveInteger } from '@/lib/listNavigation';
+import { useListScrollRestoration, useListSearchParams } from '@/hooks/useListNavigation';
 import { ClassFormModal } from '../modals/ClassFormModal';
 import { archiveClass, listAcademicYears, listClasses } from '../services';
 import type { AcademicYear, SchoolClass } from '../types';
 import { useToast } from '@/context/ToastContext';
+import { platformErrorMessage } from '../platformErrorMessage';
 
 export function ClassesPage() {
   const toast = useToast();
   const navigate = useNavigate();
-  const [yearId, setYearId] = useState<string | 'ALL'>('ALL');
+  const [searchParams, setSearchParams] = useListSearchParams('classes', ['year']);
+  const rawYear = searchParams.get('year');
+  const yearId: string | 'ALL' = parsePositiveInteger(rawYear) ? rawYear! : 'ALL';
   const [years, setYears] = useState<AcademicYear[]>([]);
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<SchoolClass | null>(null);
+  useListScrollRestoration('classes', !loading);
+
+  useEffect(() => {
+    if (rawYear && yearId === 'ALL') {
+      setSearchParams(mergeSearchParams(searchParams, { year: null }), { replace: true });
+    }
+  }, [rawYear, searchParams, setSearchParams, yearId]);
+
+  const returnTo = `/admin/classes${yearId === 'ALL' ? '' : `?year=${yearId}`}`;
+  const detailPath = (id: string) =>
+    `/admin/classes/${id}?${new URLSearchParams({ returnTo }).toString()}`;
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -32,7 +48,7 @@ export function ClassesPage() {
       setYears(yearList);
       setClasses(classList);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось загрузить классы');
+      setError(platformErrorMessage(err, 'Не удалось загрузить классы. Попробуйте ещё раз.'));
     } finally {
       setLoading(false);
     }
@@ -49,19 +65,21 @@ export function ClassesPage() {
       toast.success('Класс архивирован');
       await reload();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не удалось архивировать');
+      toast.error(platformErrorMessage(err, 'Не удалось архивировать класс. Попробуйте ещё раз.'));
     }
   }
 
   return (
     <div>
       <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Классы с реального backend. Создание требует параллель и букву.
+        Создайте классы для выбранного учебного года. Для каждого класса укажите параллель и букву.
       </p>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="sm:w-56">
-          <Select value={yearId} onChange={(e) => setYearId(e.target.value)}>
+          <Select value={yearId} onChange={(e) => setSearchParams(
+            mergeSearchParams(searchParams, { year: e.target.value === 'ALL' ? null : e.target.value }),
+          )}>
             <option value="ALL">Все учебные годы</option>
             {years.map((year) => (
               <option key={year.id} value={year.id}>
@@ -105,7 +123,7 @@ export function ClassesPage() {
                 <tr key={item.id} className="border-b border-slate-50 last:border-0">
                   <td className="px-4 py-3 font-medium text-slate-900">
                     <Link
-                      to={`/admin/classes/${item.id}`}
+                      to={detailPath(item.id)}
                       className="text-navy-700 transition hover:text-navy-800 hover:underline"
                     >
                       {item.name}
@@ -119,7 +137,7 @@ export function ClassesPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate(`/admin/classes/${item.id}`)}
+                        onClick={() => navigate(detailPath(item.id))}
                       >
                         Открыть
                       </Button>

@@ -16,7 +16,7 @@ vi.mock('@/context/ToastContext', () => ({
 
 /** «Класс поступления» — кастомный listbox, а не <select>: открыть триггер и выбрать опцию. */
 async function pickGrade(user: ReturnType<typeof userEvent.setup>, label: string) {
-  await user.click(screen.getByRole('button', { name: 'Выберите класс' }));
+  await user.click(screen.getByRole('button', { name: 'Класс поступления' }));
   await user.click(screen.getByRole('option', { name: label }));
 }
 

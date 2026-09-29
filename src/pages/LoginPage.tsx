@@ -1,5 +1,4 @@
 import { useState, type FormEvent } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Users,
   Calendar,
@@ -14,7 +13,6 @@ import { Field, TextInput } from '@/components/ui/Field';
 import { Logo, PhysTechMark } from '@/components/layout/Logo';
 import { PrivacyLinks } from '@/components/layout/PrivacyLinks';
 import { APP_NAME } from '@/lib/branding';
-import { loginRedirectTarget } from '@/lib/routes';
 
 const FEATURES: { icon: LucideIcon; label: string }[] = [
   { icon: Users, label: 'Ученики, родители и учителя' },
@@ -25,22 +23,17 @@ const FEATURES: { icon: LucideIcon; label: string }[] = [
 
 export function LoginPage() {
   const { login } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const from = (location.state as { from?: string } | null)?.from;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      const account = await login(email, password);
-      navigate(loginRedirectTarget(from, account?.role), { replace: true });
+      await login(email, password);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Не удалось войти');
     } finally {
@@ -113,7 +106,7 @@ export function LoginPage() {
             </Field>
 
             {error && (
-              <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-100">
+              <div role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-100">
                 {error}
               </div>
             )}

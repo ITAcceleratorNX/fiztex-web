@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { useScheduleReturnTo } from '@/platform/hooks/useScheduleNavigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { Loader2, UserPlus, Users } from 'lucide-react';
 import { Select } from '@/components/ui/Field';
@@ -98,6 +99,7 @@ export function SubgroupsTab({
   onStateChange: (next: SubgroupsTabState) => void;
 }) {
   const toast = useToast();
+  const returnTo = useScheduleReturnTo();
   const qc = useQueryClient();
 
   const classesQuery = useSchoolClasses(yearId);
@@ -427,7 +429,7 @@ export function SubgroupsTab({
                 Создать группы
               </button>
               <Link
-                to="/lesson-schedule"
+                to={returnTo}
                 className="text-13 font-semibold text-navy-700 underline hover:text-navy-800"
               >
                 Продолжить со всем классом

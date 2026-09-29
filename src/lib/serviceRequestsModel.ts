@@ -79,7 +79,7 @@ export function eventAt(request: ServiceRequest): string | undefined {
 
 /** Свежие сверху. Порядок раздела задаётся здесь, потому что он склеен из двух выдач. */
 export function byRecency(a: ServiceRequest, b: ServiceRequest): number {
-  return time(eventAt(b)) - time(eventAt(a));
+  return time(eventAt(b)) - time(eventAt(a)) || (b.id ?? 0) - (a.id ?? 0);
 }
 
 /**

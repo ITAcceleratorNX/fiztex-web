@@ -117,10 +117,7 @@ export function MyAvailabilityPage() {
 
   async function onSubmit() {
     if (!draft) return;
-    if (validation.hasErrors) {
-      toast.error('Исправьте ошибки в интервалах перед отправкой');
-      return;
-    }
+    if (validation.hasErrors) return;
     try {
       await submitMutation.mutateAsync(draftToProposalBody(draft, comment));
       setEditing(false);
@@ -244,7 +241,7 @@ export function MyAvailabilityPage() {
               disabled={busy}
               onChange={setWorkingDays}
             />
-            {chipError && <p className="text-11 text-red-500">{chipError}</p>}
+            {chipError && <p role="alert" aria-live="assertive" className="text-11 text-red-500">{chipError}</p>}
 
             <div className="flex flex-wrap items-center gap-3">
               {editing && draft ? (

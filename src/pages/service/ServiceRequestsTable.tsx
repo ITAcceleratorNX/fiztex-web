@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { cx, formatDate } from '@/lib/format';
-import type { ServiceRequest } from '@/lib/serviceRequestsApi';
+import type { ServiceRequest, ServiceSection } from '@/lib/serviceRequestsApi';
 import { locationLine, serviceTypeLabel, eventAt, viewerContext } from '@/lib/serviceRequestsModel';
+import { serviceRequestCardPath } from '@/lib/serviceSections';
 import { EmergencyChip, ServiceStatusChip, ViewerContextChip } from './ServiceStatusChip';
 import { ServicePhotoCell } from './ServicePhoto';
 
@@ -31,9 +32,15 @@ const CELL = 'px-5 py-4 align-middle text-13 text-ink';
 export function ServiceRequestsTable({
   rows,
   accountId,
+  section,
+  page,
+  returnTo,
 }: {
   rows: ServiceRequest[];
   accountId: number | undefined;
+  section: ServiceSection;
+  page: number;
+  returnTo: string;
 }) {
   const navigate = useNavigate();
 
@@ -84,7 +91,7 @@ export function ServiceRequestsTable({
               </td>
 
               <td className={cx(CELL, 'text-right')}>
-                <Button variant="secondary" onClick={() => navigate(`/service/${row.id}`)}>
+                <Button variant="secondary" onClick={() => navigate(serviceRequestCardPath(row.id as number, section, page, returnTo))}>
                   Открыть
                 </Button>
               </td>

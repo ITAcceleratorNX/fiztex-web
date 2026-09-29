@@ -1,12 +1,14 @@
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { AuthenticatedLoginRedirect } from '@/components/auth/AuthenticatedLoginRedirect';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { LoginPage } from '@/pages/LoginPage';
 import { EntranceFlow } from '@/pages/entrance/EntranceFlow';
 import { PublicAnnouncementsPage } from '@/pages/public/PublicAnnouncementsPage';
 import { PublicAnnouncementPage } from '@/pages/public/PublicAnnouncementPage';
 import { PrivacyPolicyPage } from '@/pages/public/PrivacyPolicyPage';
-import { ROUTES, isRouteAllowedForRole, landingRouteForRole } from '@/lib/routes';
+import { ROUTES } from '@/lib/routes';
 import { AdmissionsPage } from '@/pages/AdmissionsPage';
 import { TestDetailPage } from '@/pages/TestDetailPage';
 import { TestCreatePage } from '@/pages/TestCreatePage';
@@ -42,6 +44,7 @@ import { HomeworkGroupsPage } from '@/pages/homework/HomeworkGroupsPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
+import { NotFoundRoute } from '@/pages/NotFoundPage';
 import {
   UsersPage,
   EmployeesPage,
@@ -66,25 +69,10 @@ import {
   LessonGradesPage,
   LessonMaterialsPage,
 } from '@/platform';
-import type { ReactNode } from 'react';
 import { LessonSummaryPage } from '@/platform/pages/schedule/LessonSummaryPage';
 
-function Protected({ children }: { children: ReactNode }) {
-  const { isAuthenticated, admin } = useAuth();
-  const location = useLocation();
-  if (!isAuthenticated) {
-    return <Navigate to={ROUTES.staffLogin} replace state={{ from: location.pathname }} />;
-  }
-  // Чужой раздел разворачиваем сами: под учителем админский экран ответил бы 401,
-  // а тот трактуется как истёкшая сессия — вместо «сюда нельзя» был бы выход из системы.
-  if (!isRouteAllowedForRole(location.pathname, admin?.role)) {
-    return <Navigate to={landingRouteForRole(admin?.role)} replace />;
-  }
-  return <>{children}</>;
-}
-
 export function App() {
-  const { isAuthenticated, admin } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   return (
     <Routes>
@@ -100,41 +88,35 @@ export function App() {
 
       {/*
         Вход администратора на отдельном пути: на главной его больше нет.
-        Редиректа со старого `/login` намеренно нет — его ловит `*` и уводит
-        на публичную главную.
+        Редиректа со старого `/login` намеренно нет — устаревшая ссылка показывает
+        страницу «Страница не найдена» с доступными путями восстановления.
       */}
       {/*
         Уже вошедшему форма входа не нужна — но уводить его надо по роли. Этот редирект
-        срабатывает сразу после успешного входа (состояние меняется, маршрут
-        перерисовывается) и перебивает любой `navigate` из самой формы, поэтому правило
-        обязано жить и здесь тоже, иначе учитель всё равно попадёт на админский дашборд
-        и будет разлогинен первым же 401.
+        срабатывает после успешного входа: он проверяет сохранённый адрес для новой роли
+        и при необходимости выбирает допустимый стартовый экран.
       */}
       <Route
         path={ROUTES.staffLogin}
         element={
-          isAuthenticated ? (
-            <Navigate to={landingRouteForRole(admin?.role)} replace />
-          ) : (
-            <LoginPage />
-          )
+          isAuthenticated ? <AuthenticatedLoginRedirect /> : <LoginPage />
         }
       />
 
       <Route
         element={
-          <Protected>
+          <ProtectedRoute>
             <AppLayout />
-          </Protected>
+          </ProtectedRoute>
         }
       >
         <Route path={ROUTES.dashboard} element={<DashboardPage />} />
 
-        {/* Platform Core Lite */}
+        {/* Управление школой */}
         <Route path="/admin" element={<Navigate to={ROUTES.dashboard} replace />} />
         <Route path="/admin/users" element={<UsersPage />} />
         {/* Внутренние сотрудники — раздел Super Admin (SERVICE-FE-004 §3).
-            Роль проверяет `Protected` через `isRouteAllowedForRole`. */}
+            Роль проверяет `ProtectedRoute` через `isRouteAllowedForRole`. */}
         <Route path={ROUTES.employees} element={<EmployeesPage />} />
         <Route path={ROUTES.keys} element={<KeysAdminPage />} />
         {/* Техника и инвентарь — раздел Super Admin (ТЗ «Техника и инвентарь» §2). */}
@@ -264,7 +246,7 @@ export function App() {
           element={
             <PlaceholderPage
               title="Кружки и события"
-              reason="Backend API для кружков ещё не реализован. Эндпойнтов нет."
+              reason="Раздел скоро появится. Сейчас кружки и события нельзя просматривать или настраивать."
             />
           }
         />
@@ -274,8 +256,8 @@ export function App() {
         <Route path="/service/:requestId" element={<ServiceRequestCardPage />} />
       </Route>
 
-      {/* Неизвестный путь ведёт на публичную главную, а не на форму входа. */}
-      <Route path="*" element={<Navigate to={ROUTES.publicAnnouncements} replace />} />
+      {/* Известные маршруты с неподдерживаемыми ID остаются на своих экранах ошибок. */}
+      <Route path="*" element={<NotFoundRoute />} />
     </Routes>
   );
 }

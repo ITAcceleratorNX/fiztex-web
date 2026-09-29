@@ -1,13 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type SetStateAction } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Paperclip, X } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
-import { Field, Select, TextArea, TextInput } from '@/components/ui/Field';
+import { Field, focusFirstInvalidField, Select, TextArea, TextInput } from '@/components/ui/Field';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { Toggle } from '@/components/ui/Toggle';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { NoticeBar } from '@/components/ui/NoticeBar';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { useFormDraft, useFormDraftStore } from '@/context/FormDraftContext';
+import { describeGroupChange, emptyHomeworkValues, groupSnapshot, hasHomeworkChanges, homeworkValues, type HomeworkFormDraft, type HomeworkFormValues } from '@/lib/homeworkDraft';
 import { useToast } from '@/context/ToastContext';
 import { keys, useLesson } from '@/hooks/queries';
 import { lessonsApi, type Lesson } from '@/lib/lessonsApi';
@@ -17,7 +20,6 @@ import { cx, formatWeekdayDayMonth } from '@/lib/format';
 import {
   homeworkApi,
   ANSWER_FORMATS,
-  type AnswerFormat,
   type CreateHomeworkInput,
   type DueType,
   type RecipientType,
@@ -54,6 +56,69 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const [searchParams] = useSearchParams();
   const lessonId = Number(searchParams.get('lessonId')) || undefined;
   const editId = Number(homeworkId) || undefined;
+  const prefilledClassId = mode === 'create' && lessonId == null ? positiveId(searchParams.get('classId')) : undefined;
+  const prefilledSubjectId = mode === 'create' && lessonId == null ? positiveId(searchParams.get('subjectId')) : undefined;
+  const contextParams = new URLSearchParams();
+  if (lessonId != null) contextParams.set('lessonId', String(lessonId));
+  if (prefilledClassId != null) contextParams.set('classId', String(prefilledClassId));
+  if (prefilledSubjectId != null) contextParams.set('subjectId', String(prefilledSubjectId));
+
+  const standaloneDraftId = prefilledClassId == null && prefilledSubjectId == null
+    ? 'standalone'
+    : `standalone:${prefilledClassId ?? ''}:${prefilledSubjectId ?? ''}`;
+  const draftKey = mode === 'edit' ? `homework:edit:${editId}`
+    : `homework:new:${lessonId ?? standaloneDraftId}`;
+  return <HomeworkFormSession
+    key={draftKey}
+    mode={mode}
+    lessonId={lessonId}
+    editId={editId}
+    draftKey={draftKey}
+    prefilledClassId={prefilledClassId}
+    prefilledSubjectId={prefilledSubjectId}
+    contextSearch={contextParams.toString()}
+  />;
+}
+
+function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassId, prefilledSubjectId, contextSearch }: {
+  mode: 'create' | 'edit'; lessonId?: number; editId?: number; draftKey: string;
+  prefilledClassId?: number; prefilledSubjectId?: number; contextSearch: string;
+}) {
+  const draftStore = useFormDraftStore();
+  const { draft, setDraft, clear } = useFormDraft<HomeworkFormDraft>(draftKey, () => {
+    const values = { ...emptyHomeworkValues(), classId: prefilledClassId, subjectId: prefilledSubjectId };
+    return { values, baseline: values, initialized: mode === 'create', group: null, notice: null,
+      error: null, createdId: null, saving: false };
+  }, hasHomeworkChanges);
+  const { title, description, dueType, answerFormat, antiCheatEnabled, dueAt, recipientType,
+    pickedLessonId, tempGroupId, files, subjectId, classId } = draft.values;
+  const { error, createdId } = draft;
+  const [discardOpen, setDiscardOpen] = useState(false);
+  const [validationRequest, setValidationRequest] = useState(0);
+  const discardTrigger = useRef<HTMLButtonElement | null>(null);
+  const formRef = useRef<HTMLDivElement>(null);
+  const dirty = hasHomeworkChanges(draft);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
+  function setField<K extends keyof HomeworkFormValues>(key: K) {
+    return (update: SetStateAction<HomeworkFormValues[K]>) => setDraft((current) => ({
+      ...current, values: { ...current.values, [key]: typeof update === 'function'
+        ? (update as (value: HomeworkFormValues[K]) => HomeworkFormValues[K])(current.values[key]) : update },
+    }));
+  }
+  const setTitle = setField('title');
+  const setDescription = setField('description');
+  const setDueType = setField('dueType');
+  const setAnswerFormat = setField('answerFormat');
+  const setAntiCheatEnabled = setField('antiCheatEnabled');
+  const setDueAt = setField('dueAt');
+  const setRecipientType = setField('recipientType');
+  const setTempGroupId = setField('tempGroupId');
+  const setFiles = setField('files');
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -66,52 +131,21 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
     queryKey: ['homework', 'card', editId],
     queryFn: ({ signal }) => homeworkApi.card(editId as number, signal),
     enabled: mode === 'edit' && editId != null,
+    refetchOnMount: 'always',
   });
   const existing = cardQuery.data;
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [dueType, setDueType] = useState<DueType>('EXACT');
-  /**
-   * Чем ученик отвечает. Выбирается здесь, а не «получается» из того, что учитель потом
-   * добавил вопрос: раньше один добавленный вопрос молча отбирал у ученика форму отправки.
-   */
-  const [answerFormat, setAnswerFormat] = useState<AnswerFormat>('WRITTEN');
-  /** Античит: наблюдение включает учитель, задание за заданием (ANTICHEAT-001 §2). */
-  const [antiCheatEnabled, setAntiCheatEnabled] = useState(false);
-  const [dueAt, setDueAt] = useState('');
-  const [recipientType, setRecipientType] = useState<RecipientType>('CLASS');
-  /** Урок, выбранный в форме (§2.2 + привязка). Отдельно от `lessonId` из адреса: тот задан
-   *  входом с карточки урока и не меняется, этот — решение учителя прямо здесь. */
-  const [pickedLessonId, setPickedLessonId] = useState<number>();
-  const [tempGroupId, setTempGroupId] = useState<number>();
-  const [files, setFiles] = useState<File[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
-  /**
-   * Задание, которое уже создано в этой сессии формы. Нужно ровно для одного случая:
-   * создание прошло, а публикация — нет (например, у срока «до следующего урока» урока
-   * впереди не оказалось). Черновик при этом существует, и повтор «в лоб» завёл бы второй.
-   */
-  const createdId = useRef<number | null>(null);
 
-  // Правка начинается с текущих значений, а не с пустой формы.
+  // Refetches must not overwrite a restored or already edited form.
   useEffect(() => {
-    if (!existing) return;
-    setTitle(existing.title ?? '');
-    setDescription(existing.description ?? '');
-    setDueType((existing.dueType as DueType) ?? 'EXACT');
-    setAnswerFormat((existing.answerFormat as AnswerFormat) ?? 'WRITTEN');
-    setAntiCheatEnabled(existing.antiCheatEnabled ?? false);
-    setDueAt(existing.dueAt ? toLocalInput(existing.dueAt) : '');
-    setRecipientType((existing.recipients?.type as RecipientType) ?? 'CLASS');
-    setTempGroupId(existing.recipients?.tempGroupId ?? undefined);
-  }, [existing]);
+    if (!existing || draft.initialized || cardQuery.isFetching) return;
+    const values = homeworkValues(existing);
+    setDraft((current) => ({ ...current, values, baseline: values, initialized: true }));
+  }, [existing, draft.initialized, cardQuery.isFetching, setDraft]);
 
   const standalone = mode === 'create' && lessonId == null;
   const recipientsLocked = Boolean(existing?.recipients?.locked);
-  const [subjectId, setSubjectId] = useState<number>();
-  const [classId, setClassId] = useState<number>();
 
   /**
    * Что учитель вообще может выбрать — берётся из его расписания, а не из школьного
@@ -148,6 +182,14 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
     enabled: standalone,
     staleTime: 5 * 60_000,
   });
+  const prefilledContext = [
+    prefilledClassId != null
+      ? `класс «${contextQuery.data?.classes.find(([id]) => id === prefilledClassId)?.[1] ?? `№${prefilledClassId}`}»`
+      : null,
+    prefilledSubjectId != null
+      ? `предмет «${contextQuery.data?.subjects.find(([id]) => id === prefilledSubjectId)?.[1] ?? `№${prefilledSubjectId}`}»`
+      : null,
+  ].filter((part): part is string => part != null);
 
   /**
    * Уроки, к которым можно привязать задание.
@@ -189,31 +231,42 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
    * Выбор остаётся видимым и меняемым — включая «без привязки».
    */
   useEffect(() => {
-    if (!standalone || lessons.length === 0) return;
-    setPickedLessonId((current) => {
-      if (current != null && lessons.some((lesson) => lesson.id === current)) return current;
-      const now = Date.now();
-      const nearest = [...lessons].sort(
-        (a, b) => Math.abs(startMs(a) - now) - Math.abs(startMs(b) - now),
-      )[0];
-      return nearest?.id;
-    });
-  }, [standalone, lessons]);
+    if (!standalone || !lessonsQuery.isSuccess || lessonsQuery.isFetching) return;
+    if (pickedLessonId != null && !lessons.some((lesson) => lesson.id === pickedLessonId)) {
+      setDraft((current) => ({ ...current, values: { ...current.values, pickedLessonId: undefined, lessonChoiceMade: true },
+        notice: 'Выбранный урок больше недоступен. Выберите другой урок или оставьте задание без привязки. Остальные поля сохранены.' }));
+      return;
+    }
+    if (draft.values.lessonChoiceMade) return;
+    if (pickedLessonId != null || lessons.length === 0) return;
+    const now = Date.now();
+    const nearest = [...lessons].sort((a, b) => Math.abs(startMs(a) - now) - Math.abs(startMs(b) - now))[0];
+    setDraft((current) => ({ ...current, values: { ...current.values, pickedLessonId: nearest?.id } }));
+  }, [standalone, lessonsQuery.isSuccess, lessonsQuery.isFetching, lessons, pickedLessonId, draft.values.lessonChoiceMade, setDraft]);
 
-  // Смена класса или предмета обнуляет привязку: урок принадлежал прошлой паре.
-  useEffect(() => {
-    setPickedLessonId(undefined);
-  }, [classId, subjectId]);
+  function changeContext(patch: Partial<HomeworkFormValues>) {
+    setDraft((current) => ({ ...current, group: null, notice: null,
+      values: { ...current.values, ...patch, pickedLessonId: undefined, lessonChoiceMade: false,
+        recipientType: 'CLASS', tempGroupId: undefined } }));
+  }
 
   /** Урок задания: из адреса (вход с карточки урока) либо выбранный в форме. */
   const contextLesson = lessonQuery.data ?? lessons.find((lesson) => lesson.id === pickedLessonId);
   const attachedLessonId = lessonId ?? pickedLessonId;
 
-  // Задание из урока по умолчанию адресовано подгруппе урока, если она есть — и неважно,
-  // пришёл урок из адреса или выбран в форме: получатели у них одни и те же.
+  // Apply the lesson default only once for a new untouched form. A manual choice
+  // of the whole class must survive navigation and query refetches.
+  const defaultRecipientsApplied = useRef(draftStore.get(draftKey) != null);
   useEffect(() => {
-    if (mode === 'create' && contextLesson?.subgroupId) setRecipientType('SUBGROUP');
-  }, [mode, contextLesson]);
+    if (mode !== 'create' || !contextLesson || defaultRecipientsApplied.current) return;
+    defaultRecipientsApplied.current = true;
+    if (contextLesson.subgroupId && recipientType === 'CLASS') {
+      setDraft((current) => ({ ...current,
+        values: { ...current.values, recipientType: 'SUBGROUP' },
+        baseline: { ...current.baseline, recipientType: 'SUBGROUP' },
+      }));
+    }
+  }, [mode, contextLesson, recipientType, setDraft]);
 
   /**
    * Временные группы уже существующего класса (§3.1). Здесь только выбор из готовых —
@@ -223,12 +276,37 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const targetClassId = standalone ? classId : lessonQuery.data?.classId ?? existing?.classId;
   const targetSubjectId = standalone ? subjectId : lessonQuery.data?.subjectId ?? existing?.subjectId;
   const groupsQuery = useQuery({
-    queryKey: ['homework', 'form', 'groups', targetClassId],
-    queryFn: ({ signal }) => homeworkApi.listGroups(targetClassId as number, undefined, signal),
+    queryKey: ['homework', 'form', 'groups', targetClassId, targetSubjectId],
+    queryFn: ({ signal }) => homeworkApi.listGroups(targetClassId as number, targetSubjectId, signal),
     enabled: targetClassId != null && !recipientsLocked,
-    staleTime: 5 * 60_000,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
   const groups = groupsQuery.data ?? [];
+
+  useEffect(() => {
+    if (recipientsLocked && existing) {
+      const savedType = existing.recipients?.type ?? 'CLASS';
+      const savedGroup = existing.recipients?.tempGroupId;
+      if (recipientType !== savedType || tempGroupId !== savedGroup) {
+        setDraft((current) => ({ ...current, values: { ...current.values, recipientType: savedType, tempGroupId: savedGroup },
+          notice: 'По заданию появились ответы: получатели закрыты для изменения. Восстановлен сохранённый состав; текст и срок сохранены.' }));
+      }
+      return;
+    }
+    if (recipientType !== 'TEMP_GROUP' || tempGroupId == null || !groupsQuery.isSuccess || groupsQuery.isFetching) return;
+    const group = groups.find((item) => item.id === tempGroupId && item.status !== 'ARCHIVED');
+    if (!group) {
+      setDraft((current) => ({ ...current, values: { ...current.values, tempGroupId: undefined }, group: null,
+        notice: `Группа «${current.group?.name ?? `№${tempGroupId}`}» больше недоступна. Выберите получателей заново. Остальные поля сохранены.` }));
+      return;
+    }
+    const next = groupSnapshot(group);
+    if (JSON.stringify(next) === JSON.stringify(draft.group)) return;
+    const change = draft.group?.id === next.id ? describeGroupChange(draft.group, next) : null;
+    setDraft((current) => ({ ...current, group: next,
+      notice: next.count === 0 ? `В группе «${next.name}» нет учеников. Выберите других получателей.` : change ?? current.notice }));
+  }, [recipientsLocked, existing, recipientType, tempGroupId, groupsQuery.isSuccess, groupsQuery.isFetching, groups, draft.group, setDraft]);
 
   const hasAnswers = Boolean(existing?.hasAnswers);
 
@@ -237,7 +315,36 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
     // урока» получает момент от бэкенда при публикации.
     && (dueType !== 'EXACT' || dueAt.length > 0)
     && (!standalone || (subjectId != null && classId != null))
-    && (recipientType !== 'TEMP_GROUP' || tempGroupId != null);
+    && (recipientsLocked || recipientType !== 'SUBGROUP' || !!(contextLesson?.subgroupId || existing?.recipients?.subgroupId))
+    && (recipientsLocked || recipientType !== 'TEMP_GROUP' || (groupsQuery.isSuccess && !groupsQuery.isFetching
+      && groups.some((group) => group.id === tempGroupId && group.status !== 'ARCHIVED' && (group.studentCount ?? 1) > 0)));
+
+  const validationErrors = {
+    subject: validationRequest > 0 && standalone && subjectId == null ? 'Выберите предмет' : undefined,
+    schoolClass: validationRequest > 0 && standalone && classId == null ? 'Выберите класс' : undefined,
+    title: validationRequest > 0 && !title.trim() ? 'Укажите название задания' : undefined,
+    description: validationRequest > 0 && !description.trim() ? 'Заполните инструкцию ученику' : undefined,
+    dueAt: validationRequest > 0 && dueType === 'EXACT' && !dueAt ? 'Укажите дату и время сдачи' : undefined,
+    recipient: validationRequest > 0 && !recipientsLocked && recipientType === 'SUBGROUP'
+      && !(contextLesson?.subgroupId || existing?.recipients?.subgroupId)
+      ? 'Подгруппа урока недоступна. Выберите других получателей.'
+      : undefined,
+    tempGroup: validationRequest > 0 && !recipientsLocked && recipientType === 'TEMP_GROUP'
+      ? !tempGroupId
+        ? 'Выберите временную группу'
+        : groupsQuery.isError
+          ? 'Не удалось проверить группу. Повторите проверку.'
+          : !groupsQuery.isSuccess || groupsQuery.isFetching
+            ? 'Дождитесь загрузки списка групп'
+            : !groups.some((group) => group.id === tempGroupId && group.status !== 'ARCHIVED' && (group.studentCount ?? 1) > 0)
+              ? 'Группа недоступна или в ней нет учеников'
+              : undefined
+      : undefined,
+  };
+
+  useEffect(() => {
+    if (validationRequest > 0) focusFirstInvalidField(formRef.current);
+  }, [validationRequest]);
 
   /**
    * Создание всегда даёт черновик, и публикации здесь нет намеренно.
@@ -253,7 +360,7 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
    */
   const save = useMutation({
     mutationFn: async () => {
-      setError(null);
+      setDraft((current) => ({ ...current, error: null }));
       if (mode === 'edit' && editId != null) {
         const updated = await homeworkApi.update(editId, {
           title: title.trim(),
@@ -292,11 +399,12 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
         antiCheatEnabled,
       };
       const created = await homeworkApi.create(input);
-      createdId.current = created.id ?? null;
+      setDraft((current) => ({ ...current, createdId: created.id ?? null }));
       await uploadFiles(created.id as number);
       return created;
     },
     onSuccess: (result) => {
+      clear();
       void queryClient.invalidateQueries({ queryKey: ['homework'] });
       // Карточка урока под ключ `homework` не попадает, а состояние её блока ДЗ
       // изменилось: черновик или публикация закрывают «пока не указано», публикация
@@ -311,21 +419,35 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
           : 'Черновик создан — проверьте задание и опубликуйте его',
       );
       // Возврат туда, откуда пришли (§4.1): из урока — в урок, иначе — в карточку задания.
+      if (!mounted.current) return;
       if (mode === 'create' && lessonId) navigate(`/lesson-schedule/lessons/${lessonId}`);
       else navigate(`/homework/${result.id}`);
     },
     onError: (err) => {
-      setError(err instanceof ApiError ? err.message : 'Не удалось сохранить задание');
+      setDraft((current) => ({ ...current, saving: false, error: err instanceof ApiError ? err.message : 'Не удалось сохранить задание' }));
     },
   });
 
   async function uploadFiles(id: number) {
     for (const file of files) {
       await homeworkApi.addMaterialFile(id, file);
+      // Keep only pending attachments if a later upload fails.
+      setDraft((current) => ({ ...current, values: { ...current.values, files: current.values.files.filter((item) => item !== file) } }));
     }
   }
 
+  function saveForm() {
+    if (draftStore.get<HomeworkFormDraft>(draftKey)?.saving || createdId != null) return;
+    if (!valid) {
+      setValidationRequest((request) => request + 1);
+      return;
+    }
+    setDraft((current) => ({ ...current, saving: true, error: null }));
+    save.mutate();
+  }
+
   if (mode === 'edit' && cardQuery.isPending) return <LoadingBlock label="Загрузка задания…" />;
+  if (mode === 'edit' && !draft.initialized && cardQuery.isFetching) return <LoadingBlock label="Загрузка задания…" />;
   if (mode === 'edit' && (cardQuery.isError || !existing)) {
     return (
       <div className="card">
@@ -349,11 +471,12 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
     );
   }
 
-  const busy = save.isPending;
+  const busy = save.isPending || draft.saving;
   const backTo = mode === 'edit' ? `/homework/${editId}` : lessonId ? `/lesson-schedule/lessons/${lessonId}` : '/homework';
+  const formUrl = mode === 'edit' ? `/homework/${editId}/edit` : `/homework/new${contextSearch ? `?${contextSearch}` : ''}`;
 
   return (
-    <div className="flex max-w-4xl flex-col gap-5">
+    <div ref={formRef} className="flex max-w-4xl flex-col gap-5">
       <div className="flex items-center gap-3">
         <Link to={backTo} aria-label="Назад" className="text-subtle transition hover:text-ink">
           <ArrowLeft className="size-5" />
@@ -362,6 +485,20 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
           {mode === 'edit' ? 'Редактирование задания' : 'Новое домашнее задание'}
         </h1>
       </div>
+
+      <NoticeBar tone="soft">
+        При переходах внутри сайта поля и выбранные файлы сохранятся в этой вкладке.
+        Обновление страницы или завершение сессии удалит несохранённые изменения.
+        {dirty && <span className="mt-1 block font-semibold">Есть несохранённые изменения.</span>}
+      </NoticeBar>
+
+      {standalone && prefilledContext.length > 0 && (
+        <NoticeBar tone="soft">
+          Из фильтров списка подставлены {prefilledContext.join(' и ')}. Проверьте значения ниже — их можно изменить.
+        </NoticeBar>
+      )}
+
+      {draft.notice && <NoticeBar tone="soft">{draft.notice}</NoticeBar>}
 
       {/* Контекст задания: из урока он определён и неизменяем, вне урока — выбирается. */}
       {lessonId ? (
@@ -394,13 +531,13 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
         </NoticeBar>
       )}
 
-      <div className="card flex flex-col gap-4 p-5">
+      <fieldset disabled={busy} className="card flex min-w-0 flex-col gap-4 p-5">
         {standalone && (
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Предмет" required>
+            <Field label="Предмет" required error={validationErrors.subject}>
               <Select
                 value={subjectId != null ? String(subjectId) : ''}
-                onChange={(event) => setSubjectId(Number(event.target.value) || undefined)}
+                onChange={(event) => changeContext({ subjectId: Number(event.target.value) || undefined })}
                 disabled={contextQuery.isPending}
               >
                 <option value="">Выберите предмет</option>
@@ -409,10 +546,10 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
                 ))}
               </Select>
             </Field>
-            <Field label="Класс" required>
+            <Field label="Класс" required error={validationErrors.schoolClass}>
               <Select
                 value={classId != null ? String(classId) : ''}
-                onChange={(event) => setClassId(Number(event.target.value) || undefined)}
+                onChange={(event) => changeContext({ classId: Number(event.target.value) || undefined })}
                 disabled={contextQuery.isPending}
               >
                 <option value="">Выберите класс</option>
@@ -428,7 +565,10 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
           <Field label="Урок">
             <Select
               value={pickedLessonId != null ? String(pickedLessonId) : ''}
-              onChange={(event) => setPickedLessonId(Number(event.target.value) || undefined)}
+              onChange={(event) => {
+                const id = Number(event.target.value) || undefined;
+                setDraft((current) => ({ ...current, values: { ...current.values, pickedLessonId: id, lessonChoiceMade: true } }));
+              }}
               disabled={classId == null || subjectId == null || lessonsQuery.isPending}
             >
               <option value="">Без привязки к уроку</option>
@@ -450,7 +590,7 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
           </Field>
         )}
 
-        <Field label="Название ДЗ" required>
+        <Field label="Название ДЗ" required error={validationErrors.title}>
           <TextInput
             value={title}
             onChange={(event) => setTitle(event.target.value)}
@@ -518,6 +658,7 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
         <Field
           label={answerFormat === 'TEST' ? 'Инструкция к тесту' : 'Описание и инструкция ученику'}
           required
+          error={validationErrors.description}
         >
           <TextArea
             value={description}
@@ -623,13 +764,14 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
             })}
           </div>
           {dueType === 'EXACT' && (
-            <input
-              type="datetime-local"
-              aria-label="Дата и время сдачи"
-              value={dueAt}
-              onChange={(event) => setDueAt(event.target.value)}
-              className="input-base mt-2 h-10 w-64 text-13"
-            />
+            <Field label="Дата и время сдачи" required error={validationErrors.dueAt} className="mt-2 max-w-xs">
+              <TextInput
+                type="datetime-local"
+                value={dueAt}
+                onChange={(event) => setDueAt(event.target.value)}
+                className="h-10 w-64 text-13"
+              />
+            </Field>
           )}
           {dueType === 'NEXT_LESSON' && (
             <p className="mt-2 max-w-prose text-11 text-subtle">
@@ -640,45 +782,61 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
           )}
         </div>
 
-        <Field label="Получатели">
+        <Field label="Получатели" error={validationErrors.recipient}>
           <Select
             value={recipientType}
-            onChange={(event) => setRecipientType(event.target.value as RecipientType)}
+            onChange={(event) => {
+              defaultRecipientsApplied.current = true;
+              setRecipientType(event.target.value as RecipientType);
+            }}
             disabled={recipientsLocked}
           >
             <option value="CLASS">Весь класс</option>
-            {(contextLesson?.subgroupId || existing?.recipients?.subgroupId) && (
+            {(contextLesson?.subgroupId || existing?.recipients?.subgroupId || recipientType === 'SUBGROUP') && (
               <option value="SUBGROUP">Подгруппа урока</option>
             )}
-            {groups.length > 0 && <option value="TEMP_GROUP">Временная группа</option>}
+            {(groups.length > 0 || recipientType === 'TEMP_GROUP') && <option value="TEMP_GROUP">Временная группа</option>}
           </Select>
 
+          {recipientType === 'SUBGROUP' && !lessonQuery.isPending && !contextLesson?.subgroupId && !existing?.recipients?.subgroupId && (
+            <p className="mt-1 text-11 text-subtle">Подгруппа урока больше недоступна. Выберите других получателей. Остальные поля сохранены.</p>
+          )}
+
+          {!recipientsLocked && groupsQuery.isError && (
+            <ErrorBlock message="Не удалось проверить группы. Введённые данные сохранены." onRetry={() => void groupsQuery.refetch()} />
+          )}
+          {recipientType === 'TEMP_GROUP' && groupsQuery.isFetching && (
+            <p className="mt-1 text-11 text-subtle">Проверяем актуальный состав группы…</p>
+          )}
+
           {recipientType === 'TEMP_GROUP' && (
-            <Select
-              className="mt-2"
-              aria-label="Временная группа"
-              value={tempGroupId != null ? String(tempGroupId) : ''}
-              onChange={(event) => setTempGroupId(Number(event.target.value) || undefined)}
-              disabled={recipientsLocked}
-            >
-              <option value="">Выберите группу</option>
-              {groups.map((group) => (
-                // Подпись собирается строкой: `Select` читает `children` через `String()`,
-                // и массив узлов превратился бы в «Группа, · 0 уч.» с лишней запятой.
-                <option key={group.id} value={group.id}>
-                  {group.studentCount != null
-                    ? `${group.name} · ${group.studentCount} уч.`
-                    : group.name}
-                </option>
-              ))}
-            </Select>
+            <Field label="Временная группа" required error={validationErrors.tempGroup} className="mt-2">
+              <Select
+                value={tempGroupId != null ? String(tempGroupId) : ''}
+                onChange={(event) => setTempGroupId(Number(event.target.value) || undefined)}
+                disabled={recipientsLocked}
+              >
+                <option value="">Выберите группу</option>
+                {groups.map((group) => (
+                  // Подпись собирается строкой: `Select` читает `children` через `String()`,
+                  // и массив узлов превратился бы в «Группа, · 0 уч.» с лишней запятой.
+                  <option key={group.id} value={group.id}>
+                    {group.studentCount != null
+                      ? `${group.name} · ${group.studentCount} уч.`
+                      : group.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
           )}
           {/* Группы заводятся для пары «класс + предмет», поэтому экран открывается с ними. */}
           {targetClassId != null && targetSubjectId != null && !recipientsLocked && (
             <Link
               to={`/homework/groups?classId=${targetClassId}&subjectId=${targetSubjectId}${
                 editId ? `&homeworkId=${editId}` : ''
-              }`}
+              }&returnTo=${encodeURIComponent(formUrl)}`}
+              onClick={(event) => { if (busy) event.preventDefault(); }}
+              aria-disabled={busy}
               className="mt-1.5 inline-block text-11 font-medium text-link hover:underline"
             >
               {groups.length > 0 ? 'Настроить группы' : 'Разделить класс на группы'}
@@ -695,19 +853,19 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
             </p>
           ) : null}
         </Field>
-      </div>
+      </fieldset>
 
       {error && (
         <NoticeBar tone="solid">
-          {createdId.current != null
+          {createdId != null
             ? `Черновик создан, но материалы приложить не удалось. ${error}`
             : error}
           {/* Черновик уже есть — выход из этого состояния один, и он в главной кнопке
               внизу. Вторая кнопка с тем же словом только спрашивала бы, чем они разные. */}
-          {createdId.current == null && (
+          {createdId == null && (
             <button
               type="button"
-              onClick={() => save.mutate()}
+              onClick={saveForm}
               className="ml-2 font-semibold underline"
             >
               Повторить
@@ -717,19 +875,37 @@ export function HomeworkFormPage({ mode }: { mode: 'create' | 'edit' }) {
       )}
 
       <div className="flex flex-wrap justify-end gap-2">
+        {dirty && (
+          <Button variant="ghost" disabled={busy} onClick={(event) => {
+            discardTrigger.current = event.currentTarget;
+            setDiscardOpen(true);
+          }}>
+            Удалить локальный черновик
+          </Button>
+        )}
         <Link to={backTo} className={buttonClassName({ variant: 'secondary' })}>
-          Отмена
+          Вернуться позже
         </Link>
         {/* Черновик уже заведён, а упали материалы — тогда главная кнопка ведёт в него, а не
             создаёт второе задание. Ссылка в баннере говорит то же самое; расходиться им нельзя. */}
-        {createdId.current != null ? (
-          <Button onClick={() => navigate(`/homework/${createdId.current}`)}>Открыть черновик</Button>
+        {createdId != null ? (
+          <Button onClick={() => navigate(`/homework/${createdId}`)}>Открыть черновик</Button>
         ) : (
-          <Button onClick={() => save.mutate()} disabled={!valid} loading={busy}>
+          <Button onClick={saveForm} loading={busy}>
             {mode === 'edit' ? 'Сохранить' : 'Создать черновик'}
           </Button>
         )}
       </div>
+      <ConfirmDialog
+        open={discardOpen}
+        onClose={() => { setDiscardOpen(false); discardTrigger.current?.focus(); }}
+        onConfirm={() => { clear(); setDiscardOpen(false); navigate(backTo); }}
+        title="Удалить несохранённые изменения?"
+        message="Введённые поля и ещё не загруженные файлы будут удалены из этой вкладки. Данные, уже сохранённые на сервере, останутся."
+        confirmLabel="Удалить изменения"
+        cancelLabel="Продолжить редактирование"
+        danger
+      />
     </div>
   );
 }
@@ -742,6 +918,12 @@ function Ctx({ label, value }: { label: string; value?: string }) {
       <span className="font-medium text-ink">{value}</span>
     </span>
   );
+}
+
+function positiveId(value: string | null): number | undefined {
+  if (value == null) return undefined;
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id > 0 ? id : undefined;
 }
 
 /** Дата в местной зоне со сдвигом в днях — граница окна выбора уроков. */
@@ -763,12 +945,4 @@ function lessonOptionLabel(lesson: Lesson): string {
   const day = lesson.date ? formatWeekdayDayMonth(lesson.date) : '';
   const time = lesson.startTime ? lesson.startTime.slice(0, 5) : '';
   return [day, time, lesson.subgroupName].filter(Boolean).join(' · ');
-}
-
-/** `datetime-local` работает с местным временем без зоны, а срок хранится моментом. */
-function toLocalInput(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '';
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }

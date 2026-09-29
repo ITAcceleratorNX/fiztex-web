@@ -199,10 +199,7 @@ export function TeacherAvailabilityPanel({
 
   async function onSave() {
     if (!draft) return;
-    if (validateAvailabilityDraft(draft).hasErrors) {
-      toast.error('Исправьте ошибки в интервалах перед сохранением');
-      return;
-    }
+    if (validateAvailabilityDraft(draft).hasErrors) return;
     try {
       const saved = await saveMutation.mutateAsync(draftToPutBody(draft));
       const next = availabilityToDraft(saved);
@@ -301,7 +298,7 @@ export function TeacherAvailabilityPanel({
           disabled={saveMutation.isPending}
           onChange={setWorkingDays}
         />
-        {chipError && <p className="text-11 text-red-500">{chipError}</p>}
+        {chipError && <p role="alert" aria-live="assertive" className="text-11 text-red-500">{chipError}</p>}
 
         <div className="flex flex-wrap items-center gap-3">
           {editing && shownDraft ? (
@@ -354,7 +351,7 @@ export function TeacherAvailabilityPanel({
             disabled={saveMutation.isPending}
             onToggle={(day, period) => setDraft(toggleSlot(shownDraft, day, period))}
           />
-          {intervalError && <p className="text-11 text-red-500">{intervalError}</p>}
+          {intervalError && <p role="alert" aria-live="assertive" className="text-11 text-red-500">{intervalError}</p>}
         </div>
       )}
 

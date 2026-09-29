@@ -5,6 +5,7 @@ import { Field, TextInput, Select } from '@/components/ui/Field';
 import { useToast } from '@/context/ToastContext';
 import { createClass, updateClass } from '../services';
 import type { AcademicYear, SchoolClass } from '../types';
+import { platformErrorMessage } from '../platformErrorMessage';
 
 /**
  * Буква класса — любая буква Unicode (`\p{L}`), а не только латиница с русской
@@ -92,7 +93,7 @@ export function ClassFormModal({
       onSaved();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось сохранить класс');
+      setError(platformErrorMessage(err, 'Не удалось сохранить класс. Проверьте данные и попробуйте ещё раз.'));
     } finally {
       setPending(false);
     }

@@ -171,6 +171,14 @@ describe('TestQuestionsPage activation errors', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
+  it('gives question and answer-option icon actions distinct accessible names', () => {
+    renderAtRoute(10);
+
+    expect(screen.getByRole('button', { name: 'Переместить вопрос 2 выше' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Удалить вопрос 1' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Удалить вариант 1 вопроса 1' })).toBeInTheDocument();
+  });
+
   it('shows an error for a non-numeric test id instead of crashing', () => {
     render(
       <MemoryRouter initialEntries={['/tests/not-a-number/questions']}>

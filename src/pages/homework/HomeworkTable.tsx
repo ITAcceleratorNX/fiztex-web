@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { HomeworkStatusChip } from '@/components/ui/HomeworkStatusChip';
 import { AiGeneratedBadge } from '@/components/ui/AiGeneratedBadge';
 import { cx } from '@/lib/format';
@@ -25,8 +25,10 @@ const HEAD_CELL = 'px-5 py-3 text-left text-10 font-medium uppercase tracking-wi
  * заново: порядок — часть контракта списка (ТЗ §7), и вторая сортировка на клиенте
  * рассыпала бы постраничную выдачу.
  */
-export function HomeworkTable({ rows }: { rows: Homework[] }) {
+export function HomeworkTable({ rows, returnTo }: { rows: Homework[]; returnTo?: string }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const query = new URLSearchParams({ returnTo: returnTo ?? location.pathname + location.search });
   const groups = groupByClass(rows);
 
   return (
@@ -42,8 +44,8 @@ export function HomeworkTable({ rows }: { rows: Homework[] }) {
           </tr>
         </thead>
         <tbody>
-          {groups.map((group) => (
-            <Fragment key={group.className}>
+          {groups.map((group, index) => (
+            <Fragment key={`${group.className}:${index}`}>
               <tr className="bg-neutral-bg/40">
                 <th
                   scope="colgroup"
@@ -57,7 +59,7 @@ export function HomeworkTable({ rows }: { rows: Homework[] }) {
                 <HomeworkRow
                   key={row.id}
                   row={row}
-                  onOpen={() => navigate(`/homework/${row.id}`)}
+                  onOpen={() => navigate(`/homework/${row.id}?${query}`)}
                 />
               ))}
             </Fragment>

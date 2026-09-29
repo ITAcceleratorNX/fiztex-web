@@ -15,6 +15,7 @@ import {
   resetPin,
 } from '../services';
 import type { AccountRole, PlatformUser } from '../types';
+import { platformErrorMessage } from '../platformErrorMessage';
 
 type PendingAction = {
   type: 'resetPin' | 'reissue' | 'resetAccess';
@@ -59,7 +60,7 @@ export function AccessCodesPage() {
     try {
       setUsers(await listAccessCodes({ query, role }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось загрузить пользователей');
+      setError(platformErrorMessage(err, 'Не удалось загрузить данные доступа. Попробуйте ещё раз.'));
     } finally {
       setLoading(false);
     }
@@ -90,7 +91,7 @@ export function AccessCodesPage() {
       setPending(null);
       await reload();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Действие не выполнено');
+      toast.error(platformErrorMessage(err, 'Не удалось изменить доступ. Попробуйте ещё раз.'));
     } finally {
       setBusy(false);
     }
@@ -108,15 +109,15 @@ export function AccessCodesPage() {
       URL.revokeObjectURL(url);
       toast.success('CSV скачан');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не удалось экспортировать');
+      toast.error(platformErrorMessage(err, 'Не удалось скачать список кодов. Попробуйте ещё раз.'));
     }
   }
 
   return (
     <div>
       <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Управление кодами и доступом через реальный API (account id). Для ученика — PIN и
-        персональный код; для родителя/учителя — сброс доступа с новым кодом активации.
+        Для ученика доступны PIN и персональный код. Родителю или учителю можно сбросить доступ,
+        чтобы выдать новый код активации.
       </p>
 
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">

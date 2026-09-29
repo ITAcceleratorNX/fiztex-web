@@ -24,6 +24,8 @@ const OPEN_SECTION_KEY = 'fiztex.sidebar.section';
 
 const RAIL_WIDTH = 'w-[72px]';
 const PANEL_WIDTH = 'w-[220px]';
+const SIDEBAR_FOCUS_RING =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-navy-700';
 
 function readCollapsed(): boolean {
   try {
@@ -58,7 +60,7 @@ function isBranchActive(item: NavItem, pathname: string): boolean {
  * Боковое меню.
  *
  * <p><b>Два независимых состояния, и это не усложнение, а следствие замера.</b> У
- * администратора шестнадцать пунктов в четырёх группах — это 991 px меню в окно 708 px.
+ * администратора много пунктов в четырёх группах — меню выше доступного окна.
  * Ширина тут ни при чём: свернуть панель в рельс проблему не решает, потому что болит
  * высота. Поэтому:
  *
@@ -251,12 +253,15 @@ function SidebarSection({
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center gap-2 px-7 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/30 transition hover:text-white/60"
+        className={cx(
+          'flex w-full items-center gap-2 px-7 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-sidebar-heading transition hover:text-white/80',
+          SIDEBAR_FOCUS_RING,
+        )}
       >
         <span className="min-w-0 flex-1 truncate text-left">{section.label}</span>
         {/* Число пунктов — единственное, что закрытая группа может сказать о себе.
          * Без него «ПРИЁМ ▸» не отличить от пустого раздела. */}
-        {!open && <span className="shrink-0 tabular-nums text-white/25">{section.items.length}</span>}
+        {!open && <span className="shrink-0 tabular-nums text-sidebar-heading">{section.items.length}</span>}
         <ChevronDown
           className={cx('size-3.5 shrink-0 transition-transform', !open && '-rotate-90')}
         />
@@ -278,7 +283,7 @@ function SidebarSection({
  *
  * <p>Кнопка стоит здесь, а не по центру панели, как в макете, и не внутри меню, как было
  * сначала. В макете нарисовано меню учителя из пяти пунктов, и «центр панели» там и есть
- * «сразу под меню»; у администратора пунктов шестнадцать, они доходят до центра, и кнопка
+ * «сразу под меню»; у администратора меню занимает больше места, и кнопка
  * там резала строку синей полосой. Низ панели — единственное место, где она не пересекается
  * с меню ни при какой длине и не уезжает вместе с прокруткой.
  *
@@ -312,7 +317,10 @@ function SidebarFooter({
           title={label}
           aria-label={label}
           aria-expanded={!collapsed}
-          className="flex size-8 items-center justify-center rounded-xl bg-white/10 text-white/60 transition hover:bg-white/20 hover:text-white"
+          className={cx(
+            'flex size-8 items-center justify-center rounded-xl bg-white/10 text-white/60 transition hover:bg-white/20 hover:text-white',
+            SIDEBAR_FOCUS_RING,
+          )}
         >
           <Icon className="size-4" />
         </button>
@@ -324,7 +332,10 @@ function SidebarFooter({
               нет — профиль не раздел школы, а «кто я», и место у него там же, где имя. */}
           <Link
             to={ROUTES.profile}
-            className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-1.5 py-1 transition hover:bg-white/10"
+            className={cx(
+              'flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-1.5 py-1 transition hover:bg-white/10',
+              SIDEBAR_FOCUS_RING,
+            )}
           >
             <span className="flex size-8 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-xs font-bold text-white">
               {fullName ? initials(fullName) : 'A'}
@@ -344,7 +355,10 @@ function SidebarFooter({
             type="button"
             onClick={onLogout}
             title="Выйти"
-            className="shrink-0 rounded-lg p-1.5 text-white/50 transition hover:bg-white/10 hover:text-white"
+            className={cx(
+              'shrink-0 rounded-lg p-1.5 text-white/50 transition hover:bg-white/10 hover:text-white',
+              SIDEBAR_FOCUS_RING,
+            )}
           >
             <LogOut className="size-4" />
           </button>
@@ -356,7 +370,10 @@ function SidebarFooter({
           <Link
             to={ROUTES.profile}
             title={fullName ? `${fullName} — мой профиль` : 'Мой профиль'}
-            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white transition hover:bg-white/30"
+            className={cx(
+              'flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white transition hover:bg-white/30',
+              SIDEBAR_FOCUS_RING,
+            )}
           >
             {fullName ? initials(fullName) : 'A'}
           </Link>
@@ -365,7 +382,10 @@ function SidebarFooter({
             onClick={onLogout}
             title="Выйти"
             aria-label="Выйти"
-            className="rounded-lg p-1.5 text-white/50 transition hover:bg-white/10 hover:text-white"
+            className={cx(
+              'rounded-lg p-1.5 text-white/50 transition hover:bg-white/10 hover:text-white',
+              SIDEBAR_FOCUS_RING,
+            )}
           >
             <LogOut className="size-4" />
           </button>
@@ -394,7 +414,8 @@ function SidebarNavItem({ item }: { item: NavItem }) {
       className={cx(
         // Без overflow-hidden: верхнее сопряжение декора выходит за пределы ветки.
         // Нижний радиус поэтому задан на последнем пункте, а не обрезкой.
-        branchOpen && 'rounded-tl-[24px] rounded-bl-[24px] bg-white/45',
+        // На подложке 70% navy-текст сохраняет контраст 5.63:1.
+        branchOpen && 'rounded-tl-[24px] rounded-bl-[24px] bg-white/70',
       )}
     >
       <NavLink
@@ -402,6 +423,7 @@ function SidebarNavItem({ item }: { item: NavItem }) {
         end={item.end}
         className={cx(
           'nav-fillets relative z-10 flex h-[52px] items-center gap-3 pl-7 pr-3 text-sm transition',
+          SIDEBAR_FOCUS_RING,
           branchOpen
             ? cx(
                 'font-semibold text-navy-700',
@@ -409,17 +431,17 @@ function SidebarNavItem({ item }: { item: NavItem }) {
                   ? 'nav-fillets-active rounded-tl-[24px] bg-white'
                   : 'bg-transparent',
               )
-            : 'font-normal text-white/45 hover:text-white/80',
+            : 'font-normal text-sidebar-nav hover:text-white/80',
         )}
       >
         <item.icon
-          className={cx('size-[18px] shrink-0', branchOpen ? 'text-navy-700' : 'text-white/45')}
+          className={cx('size-[18px] shrink-0', branchOpen ? 'text-navy-700' : 'text-sidebar-nav')}
         />
         <span className="min-w-0 flex-1 truncate">{item.label}</span>
         <ChevronDown
           className={cx(
             'size-6 shrink-0 transition-transform',
-            branchOpen ? 'text-navy-700' : 'text-white/45 -rotate-90',
+            branchOpen ? 'text-navy-700' : 'text-sidebar-nav -rotate-90',
           )}
         />
       </NavLink>
@@ -456,7 +478,7 @@ function RailLink({ item }: { item: NavItem }) {
     ? 'bg-brand-500 text-white hover:bg-brand-600'
     : active
       ? 'bg-white text-navy-700'
-      : 'text-white/45 hover:bg-white/10 hover:text-white/80';
+      : 'text-sidebar-nav hover:bg-white/10 hover:text-white/80';
 
   return (
     <NavLink
@@ -467,6 +489,7 @@ function RailLink({ item }: { item: NavItem }) {
       className={cx(
         'relative z-10 mx-3 flex h-11 items-center justify-center rounded-full transition',
         tone,
+        SIDEBAR_FOCUS_RING,
       )}
     >
       <Icon className="size-[18px] shrink-0" />
@@ -484,26 +507,17 @@ function TopLevelLink({ item }: { item: NavItem }) {
       className={({ isActive }) =>
         cx(
           'nav-fillets relative z-10 flex h-12 items-center gap-3 pl-6 pr-3 text-sm transition',
+          SIDEBAR_FOCUS_RING,
           isActive
             ? 'nav-fillets-active rounded-tl-[24px] rounded-bl-[24px] bg-white font-semibold text-navy-700'
-            : 'font-normal text-white/45 hover:text-white/80',
+            : 'font-normal text-sidebar-nav hover:text-white/80',
         )
       }
     >
       {({ isActive }) => (
         <>
-          <Icon className={cx('size-5 shrink-0', isActive ? 'text-navy-700' : 'text-white/45')} />
+          <Icon className={cx('size-5 shrink-0', isActive ? 'text-navy-700' : 'text-sidebar-nav')} />
           <span className="min-w-0 flex-1 truncate">{item.label}</span>
-          {item.noApi ? (
-            <span
-              className={cx(
-                'shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide',
-                isActive ? 'bg-navy-50 text-navy-500' : 'bg-white/10 text-white/40',
-              )}
-            >
-              нет API
-            </span>
-          ) : null}
         </>
       )}
     </NavLink>
@@ -528,7 +542,10 @@ function AccentLink({ item }: { item: NavItem }) {
     <NavLink
       to={item.to}
       end={item.end}
-      className="relative z-10 flex h-12 items-center gap-3 rounded-l-full bg-brand-500 pl-6 pr-3 text-sm font-semibold text-white transition hover:bg-brand-600"
+      className={cx(
+        'relative z-10 flex h-12 items-center gap-3 rounded-l-full bg-brand-500 pl-6 pr-3 text-sm font-semibold text-white transition hover:bg-brand-600',
+        SIDEBAR_FOCUS_RING,
+      )}
     >
       <Icon className="size-5 shrink-0 text-white" />
       <span className="min-w-0 flex-1 truncate">{item.label}</span>
@@ -545,27 +562,19 @@ function ChildLink({ item, isLast }: { item: NavItem; isLast: boolean }) {
       className={({ isActive }) =>
         cx(
           'nav-fillets relative z-10 flex h-[52px] items-center gap-3 pl-7 pr-3 text-sm transition',
+          SIDEBAR_FOCUS_RING,
           // Радиус на последнем пункте безусловно: обёртка больше не режет по overflow.
           isLast && 'rounded-bl-[24px]',
           isActive
             ? 'nav-fillets-active bg-white font-semibold text-navy-700'
-            : 'font-normal text-navy-700/80 hover:bg-white/40 hover:text-navy-700',
+            : 'font-normal text-navy-700 hover:bg-white/40 hover:text-navy-700',
         )
       }
     >
-      {({ isActive }) => (
-        <>
-          <Icon
-            className={cx('size-[18px] shrink-0', isActive ? 'text-navy-700' : 'text-navy-700/70')}
-          />
-          <span className="min-w-0 flex-1 truncate">{item.label}</span>
-          {item.noApi ? (
-            <span className="shrink-0 rounded bg-navy-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-navy-500">
-              нет API
-            </span>
-          ) : null}
-        </>
-      )}
+      <>
+        <Icon className="size-[18px] shrink-0 text-navy-700" />
+        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+      </>
     </NavLink>
   );
 }

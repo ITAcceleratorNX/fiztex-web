@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { useScheduleReturnTo } from '@/platform/hooks/useScheduleNavigation';
+import { readScheduleContext } from '@/lib/scheduleNavigation';
 import { ArrowLeft, FileSpreadsheet, Loader2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Field';
@@ -134,6 +136,9 @@ async function loadCatalogs(
  */
 export function ScheduleImportPage() {
   const toast = useToast();
+  const returnTo = useScheduleReturnTo();
+  const [searchParams] = useSearchParams();
+  const initialContext = useRef(readScheduleContext(searchParams));
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [years, setYears] = useState<AcademicYear[]>([]);
@@ -146,6 +151,9 @@ export function ScheduleImportPage() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [optionLoadError, setOptionLoadError] = useState<{ kind: 'years' | 'periods'; message: string } | null>(null);
+  const [yearsLoadAttempt, setYearsLoadAttempt] = useState(0);
+  const [periodsLoadAttempt, setPeriodsLoadAttempt] = useState(0);
 
   const [parsed, setParsed] = useState<ParsedWorkbook | null>(null);
   const [catalogs, setCatalogs] = useState<SchoolCatalogs | null>(null);
@@ -168,28 +176,51 @@ export function ScheduleImportPage() {
   const [provisionResults, setProvisionResults] = useState<ProvisionItemResult[]>([]);
 
   useEffect(() => {
+    let cancelled = false;
+    setOptionLoadError((current) => (current?.kind === 'years' ? null : current));
     void listAcademicYears()
       .then((list) => {
+        if (cancelled) return;
         setYears(list);
-        const active = list.find((year) => year.status === 'ACTIVE') ?? list[0];
-        if (active) setYearId(active.id);
+        setOptionLoadError((current) => (current?.kind === 'years' ? null : current));
+        const active = list.find((year) => year.id === initialContext.current.year)
+          ?? list.find((year) => year.status === 'ACTIVE') ?? list[0];
+        if (active) {
+          setPeriodId(active.id === initialContext.current.year ? initialContext.current.periodId ?? '' : '');
+          setYearId(active.id);
+        }
       })
-      .catch(() => setError('Не удалось загрузить учебные годы'));
-  }, []);
+      .catch(() => {
+        if (!cancelled) setOptionLoadError({ kind: 'years', message: 'Не удалось загрузить учебные годы' });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [yearsLoadAttempt]);
 
   useEffect(() => {
     if (!yearId) {
       setPeriods([]);
       setPeriodId('');
+      setOptionLoadError((current) => (current?.kind === 'periods' ? null : current));
       return;
     }
+    let cancelled = false;
+    setOptionLoadError((current) => (current?.kind === 'periods' ? null : current));
     void listPeriods(yearId)
       .then((list) => {
+        if (cancelled) return;
         setPeriods(list);
+        setOptionLoadError((current) => (current?.kind === 'periods' ? null : current));
         setPeriodId((current) => (list.some((p) => p.id === current) ? current : list[0]?.id ?? ''));
       })
-      .catch(() => setError('Не удалось загрузить учебные периоды'));
-  }, [yearId]);
+      .catch(() => {
+        if (!cancelled) setOptionLoadError({ kind: 'periods', message: 'Не удалось загрузить учебные периоды' });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [yearId, periodsLoadAttempt]);
 
   const resolved: ResolvedImport | null = useMemo(() => {
     if (!parsed || !catalogs) return null;
@@ -366,7 +397,7 @@ export function ScheduleImportPage() {
     <div className="space-y-5">
       <div className="flex items-center gap-2">
         <Link
-          to="/lesson-schedule"
+          to={returnTo}
           className="inline-flex items-center gap-1.5 text-13 font-semibold text-muted hover:text-navy-700"
         >
           <ArrowLeft className="size-4" /> Расписание
@@ -411,6 +442,15 @@ export function ScheduleImportPage() {
         </div>
       </section>
 
+      {optionLoadError && (
+        <ErrorBlock
+          message={optionLoadError.message}
+          onRetry={() => {
+            if (optionLoadError.kind === 'years') setYearsLoadAttempt((attempt) => attempt + 1);
+            else setPeriodsLoadAttempt((attempt) => attempt + 1);
+          }}
+        />
+      )}
       {error && <ErrorBlock message={error} />}
 
       {stage === 'upload' && (
@@ -575,7 +615,7 @@ export function ScheduleImportPage() {
             публикация.
           </div>
           <Link
-            to="/lesson-schedule"
+            to={returnTo}
             className="text-13 font-semibold text-navy-700 hover:underline"
           >
             Открыть расписание

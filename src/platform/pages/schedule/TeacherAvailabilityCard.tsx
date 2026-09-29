@@ -337,10 +337,7 @@ export function TeacherAvailabilityCard({
   async function onSave() {
     if (!draft) return;
     const check = validateAvailabilityDraft(draft);
-    if (check.hasErrors) {
-      toast.error('Исправьте ошибки в интервалах перед сохранением');
-      return;
-    }
+    if (check.hasErrors) return;
     try {
       const saved = await saveMutation.mutateAsync(draftToPutBody(draft));
       const next = availabilityToDraft(saved);
@@ -484,6 +481,7 @@ export function TeacherAvailabilityCard({
                     const err = validation.byKey[row.key];
                     const message = rowErrorMessage(err);
                     const hasError = Boolean(message);
+                    const messageId = `availability-error-${row.key}`;
                     return (
                       <li
                         key={row.key}
@@ -506,6 +504,8 @@ export function TeacherAvailabilityCard({
                                 'input-base',
                                 err?.outsideWorkingDay && 'border-red-300',
                               )}
+                              aria-invalid={err?.outsideWorkingDay || undefined}
+                              aria-describedby={message ? messageId : undefined}
                               value={row.dayOfWeek}
                               disabled={saveMutation.isPending}
                               onChange={(e) =>
@@ -527,6 +527,7 @@ export function TeacherAvailabilityCard({
                               id={`start-${row.key}`}
                               value={row.startTime}
                               error={Boolean(err?.endBeforeStart)}
+                              aria-describedby={message ? messageId : undefined}
                               disabled={saveMutation.isPending}
                               onChange={(startTime) => updateInterval(row.key, { startTime })}
                             />
@@ -539,6 +540,7 @@ export function TeacherAvailabilityCard({
                               id={`end-${row.key}`}
                               value={row.endTime}
                               error={Boolean(err?.endBeforeStart)}
+                              aria-describedby={message ? messageId : undefined}
                               disabled={saveMutation.isPending}
                               onChange={(endTime) => updateInterval(row.key, { endTime })}
                             />
@@ -561,7 +563,7 @@ export function TeacherAvailabilityCard({
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
-                        {message && <p className="mt-2 text-xs text-red-600">{message}</p>}
+                        {message && <p id={messageId} className="mt-2 text-xs text-red-600">{message}</p>}
                       </li>
                     );
                   })}

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { surveyApi } from '@/lib/surveyApi';
 import type {
   CreateSurveyRequest,
@@ -17,7 +17,7 @@ import type {
 
 export const surveyKeys = {
   audienceClasses: ['surveys', 'audience-classes'] as const,
-  list: (status?: SurveyStatus) => ['surveys', 'list', status ?? 'ALL'] as const,
+  list: (status?: SurveyStatus, page = 0, size = 20) => ['surveys', 'list', status ?? 'ALL', page, size] as const,
   survey: (id: number) => ['surveys', id] as const,
   questions: (id: number) => ['surveys', id, 'questions'] as const,
   stats: (id: number, classId?: number) => ['surveys', id, 'stats', classId ?? 'ALL'] as const,
@@ -28,10 +28,21 @@ export const surveyKeys = {
     ['surveys', id, 'ai-analysis', scope, classId ?? 'ALL'] as const,
 };
 
-export function useSurveys(status?: SurveyStatus) {
+export function useSurveys(status?: SurveyStatus, page = 0, size = 20) {
   return useQuery({
-    queryKey: surveyKeys.list(status),
-    queryFn: ({ signal }) => surveyApi.list(status, signal),
+    queryKey: surveyKeys.list(status, page, size),
+    queryFn: ({ signal }) => surveyApi.list(status, { page, size }, signal),
+  });
+}
+
+/** Точные итоги статусов берём из totalElements, запросив по одной строке. */
+export function useSurveyStatusTotals() {
+  const statuses: SurveyStatus[] = ['ACTIVE', 'DRAFT', 'COMPLETED'];
+  return useQueries({
+    queries: statuses.map((status) => ({
+      queryKey: surveyKeys.list(status, 0, 1),
+      queryFn: ({ signal }: { signal: AbortSignal }) => surveyApi.list(status, { page: 0, size: 1 }, signal),
+    })),
   });
 }
 

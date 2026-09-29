@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '@/context/ToastContext';
 import { UsersPage } from './UsersPage';
@@ -56,6 +56,16 @@ function renderPage() {
   );
 }
 
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{location.pathname + location.search}</output>;
+}
+
+function ProfileRoute() {
+  const navigate = useNavigate();
+  return <button onClick={() => navigate(-1)}>Back to users</button>;
+}
+
 describe('UsersPage — внутренние сотрудники', () => {
   it('меню создания предлагает «Сотрудник», а не одну охрану', async () => {
     listUsersPage.mockResolvedValue({ users: [], totalElements: 0, totalPages: 0 });
@@ -89,5 +99,70 @@ describe('UsersPage — внутренние сотрудники', () => {
     const names = screen.getAllByText(/Абаев Бек|Ярова Анна/).map((node) => node.textContent);
     expect(names).toEqual(['Абаев Бек', 'Ярова Анна']);
     expect(screen.getByText(/1–2 из 2/)).toBeTruthy();
+  });
+});
+
+describe('UsersPage — состояние списка в адресе', () => {
+  it('возвращает из профиля к поиску, статусу и странице списка', async () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    listUsersPage.mockResolvedValue({
+      users: [account(12, 'Искаков Тестов', 'STUDENT')],
+      totalElements: 21,
+      totalPages: 2,
+    });
+    render(
+      <QueryClientProvider client={qc}>
+        <ToastProvider>
+          <MemoryRouter initialEntries={['/admin/users?q=Искаков&status=BLOCKED&page=2']}>
+            <Routes>
+              <Route path="/admin/users" element={<><UsersPage /><LocationProbe /></>} />
+              <Route path="/students/:id" element={<><ProfileRoute /><LocationProbe /></>} />
+            </Routes>
+          </MemoryRouter>
+        </ToastProvider>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText('Искаков Тестов');
+    expect(screen.getByRole('link', { name: 'Искаков Тестов' })).toHaveAttribute(
+      'href',
+      '/students/12?q=%D0%98%D1%81%D0%BA%D0%B0%D0%BA%D0%BE%D0%B2&status=BLOCKED&page=2',
+    );
+    await waitFor(() => expect(listUsersPage).toHaveBeenCalledWith(expect.objectContaining({
+      query: 'Искаков', status: 'BLOCKED', page: 1,
+    })));
+    await userEvent.click(screen.getByText('Искаков Тестов'));
+    expect(screen.getByTestId('location')).toHaveTextContent(
+      '/students/12?q=%D0%98%D1%81%D0%BA%D0%B0%D0%BA%D0%BE%D0%B2&status=BLOCKED&page=2',
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Back to users' }));
+    await screen.findByDisplayValue('Искаков');
+    await waitFor(() => expect(listUsersPage).toHaveBeenLastCalledWith(expect.objectContaining({
+      query: 'Искаков', status: 'BLOCKED', page: 1,
+    })));
+  });
+
+  it('даёт отдельные доступные действия для карточки и редактирования пользователя', async () => {
+    listUsersPage.mockResolvedValue({
+      users: [account(13, 'Тестовый Админ', 'ADMIN')],
+      totalElements: 1,
+      totalPages: 1,
+    });
+    renderPage();
+
+    await screen.findByRole('button', {
+      name: 'Открыть карточку пользователя «Тестовый Админ»',
+    });
+    const editUser = screen.getByRole('button', { name: 'Редактировать пользователя «Тестовый Админ»' });
+
+    await userEvent.click(editUser);
+    expect(screen.getByRole('dialog', { name: 'Редактировать пользователя' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Отмена' }));
+
+    await userEvent.click(screen.getByRole('button', {
+      name: 'Открыть карточку пользователя «Тестовый Админ»',
+    }));
+    expect(screen.getByRole('dialog', { name: 'Тестовый Админ' })).toBeInTheDocument();
   });
 });

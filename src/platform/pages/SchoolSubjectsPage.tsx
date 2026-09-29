@@ -6,6 +6,7 @@ import { Modal } from '@/components/ui/Modal';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
 import { SCHOOL_STATUS_LABELS } from '../labels';
+import { mergeSearchParams } from '@/lib/listNavigation';
 import {
   archiveSchoolSubject,
   createSchoolSubject,
@@ -13,10 +14,15 @@ import {
   updateSchoolSubject,
 } from '../services';
 import type { SchoolRecordStatus, SchoolSubject } from '../types';
+import { useListSearchParams } from '@/hooks/useListNavigation';
 
 export function SchoolSubjectsPage() {
   const toast = useToast();
-  const [status, setStatus] = useState<SchoolRecordStatus | 'ALL'>('ACTIVE');
+  const [searchParams, setSearchParams] = useListSearchParams('school-subjects', ['status']);
+  const rawStatus = searchParams.get('status');
+  const status: SchoolRecordStatus | 'ALL' = rawStatus === 'ALL' || rawStatus === 'ARCHIVED'
+    ? rawStatus
+    : 'ACTIVE';
   const [items, setItems] = useState<SchoolSubject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +31,11 @@ export function SchoolSubjectsPage() {
   const [name, setName] = useState('');
   const [pending, setPending] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const next = mergeSearchParams(searchParams, { status: status === 'ACTIVE' ? null : status });
+    if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, status]);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -99,7 +110,9 @@ export function SchoolSubjectsPage() {
         <div className="sm:w-44">
           <Select
             value={status}
-            onChange={(e) => setStatus(e.target.value as SchoolRecordStatus | 'ALL')}
+            onChange={(e) => setSearchParams(mergeSearchParams(searchParams, {
+              status: e.target.value === 'ACTIVE' ? null : e.target.value,
+            }))}
           >
             <option value="ALL">Все</option>
             <option value="ACTIVE">Активные</option>
