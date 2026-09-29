@@ -111,13 +111,27 @@ const SETTINGS_CARDS = [
 
 type SettingsCardKey = (typeof SETTINGS_CARDS)[number]['key'];
 
+type LoadState = 'idle' | 'loading' | 'ready' | 'error';
+
 /** Бейдж карточки настроек: раньше был константой «Настроено», теперь — реальное состояние. */
-type CardStatus = { label: string; tone: 'ok' | 'warn' | 'muted' };
+type CardStatus = { label: string; tone: 'ok' | 'warn' | 'muted' | 'loading' | 'error' };
+
+function cardStatusForLoad(
+  state: LoadState,
+  ready: CardStatus,
+  idle: CardStatus,
+): CardStatus {
+  if (state === 'loading') return { label: 'Загрузка', tone: 'loading' };
+  if (state === 'error') return { label: 'Не удалось загрузить', tone: 'error' };
+  return state === 'idle' ? idle : ready;
+}
 
 const CARD_STATUS_TONES: Record<CardStatus['tone'], string> = {
   ok: 'bg-success-bg text-success-fg',
   warn: 'bg-brand-50 text-brand-600',
   muted: 'bg-gray-100 text-gray-500',
+  loading: 'bg-info-bg text-info-fg',
+  error: 'bg-red-50 text-red-700',
 };
 
 const SCHEDULE_STATUS_TONES: Record<ScheduleStatus, string> = {
@@ -229,6 +243,7 @@ export function LessonSchedulePage() {
   const classFilter = filters.classId ?? '';
   const [metadataYear, setMetadataYear] = useState('');
   const metadataReady = !!yearId && metadataYear === yearId;
+  const selectedYearIsValid = years.some((year) => year.id === yearId);
   const filtersReady = metadataReady && filters.periodId != null && filters.classId != null
     && (!periodId || periods.some((period) => period.id === periodId))
     && (!classFilter || classes.some((schoolClass) => schoolClass.id === classFilter));
@@ -268,10 +283,20 @@ export function LessonSchedulePage() {
     null,
   );
   const [groupSetCount, setGroupSetCount] = useState<number | null>(null);
+  const [yearsLoading, setYearsLoading] = useState(true);
+  const [yearsLoadError, setYearsLoadError] = useState(false);
+  const [yearsRetry, setYearsRetry] = useState(0);
+  const [metadataLoading, setMetadataLoading] = useState(false);
+  const [metadataLoadError, setMetadataLoadError] = useState(false);
+  const [metadataRetry, setMetadataRetry] = useState(0);
+  const [settingsSummaryState, setSettingsSummaryState] = useState<LoadState>('idle');
+  const [settingsSummaryYear, setSettingsSummaryYear] = useState('');
+  const [groupSetState, setGroupSetState] = useState<LoadState>('idle');
+  const [groupSetClassId, setGroupSetClassId] = useState('');
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [lessonOpen, setLessonOpen] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
@@ -349,16 +374,22 @@ export function LessonSchedulePage() {
 
   useEffect(() => {
     let cancelled = false;
+    setYearsLoading(true);
+    setYearsLoadError(false);
     void listAcademicYears()
       .then((y) => {
         if (cancelled) return;
         setYears(y);
+        setYearsLoading(false);
       })
-      .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Ошибка загрузки');
+      .catch(() => {
+        if (!cancelled) {
+          setYearsLoadError(true);
+          setYearsLoading(false);
+        }
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [yearsRetry]);
 
   useEffect(() => {
     if (!invalid) return;
@@ -379,7 +410,7 @@ export function LessonSchedulePage() {
     conflictRequestSequence.current += 1;
     setLoadedFilterKey('');
     setSchedules([]);
-    setError(null);
+    setScheduleError(null);
     selectionRef.current = { filterKey, scheduleId: null };
     setSelectedId(null);
     setSelected(null);
@@ -410,13 +441,18 @@ export function LessonSchedulePage() {
   }, [years, yearId, setFilters, toast]);
 
   useEffect(() => {
-    if (!yearId || !years.some((year) => year.id === yearId)) return;
+    if (yearsLoading || yearsLoadError || !yearId || !selectedYearIsValid) {
+      setMetadataLoading(false);
+      return;
+    }
     let cancelled = false;
+    setMetadataLoading(true);
+    setMetadataLoadError(false);
     setMetadataYear('');
     setPeriods([]);
     setClasses([]);
     setTemplates([]);
-    setError(null);
+    setScheduleError(null);
     void Promise.all([
       listPeriods(yearId),
       listClasses({ academicYearId: yearId }),
@@ -428,12 +464,16 @@ export function LessonSchedulePage() {
         setClasses(c);
         setTemplates((tPage.content ?? []).map((t) => ({ id: t.id, name: t.name })));
         setMetadataYear(yearId);
+        setMetadataLoading(false);
       })
-      .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Ошибка метаданных');
+      .catch(() => {
+        if (!cancelled) {
+          setMetadataLoadError(true);
+          setMetadataLoading(false);
+        }
       });
     return () => { cancelled = true; };
-  }, [yearId, years]);
+  }, [yearId, years, yearsLoading, yearsLoadError, selectedYearIsValid, metadataRetry]);
 
   useEffect(() => {
     if (!metadataReady) return;
@@ -455,9 +495,15 @@ export function LessonSchedulePage() {
    * относятся к году целиком и должны быть честными даже до выбора класса.
    */
   useEffect(() => {
-    if (!yearId) return;
+    if (yearsLoading || yearsLoadError || !yearId || !selectedYearIsValid) {
+      setSettingsSummaryState('idle');
+      setSettingsSummaryYear('');
+      return;
+    }
     const academicYearId = Number(yearId);
     let cancelled = false;
+    setSettingsSummaryState('loading');
+    setSettingsSummaryYear(yearId);
     setWorkingDaysSource(null);
     setAvailability(null);
     void Promise.all([
@@ -476,35 +522,47 @@ export function LessonSchedulePage() {
           total: all.totalElements ?? 0,
           needsReview: needsReview.totalElements ?? 0,
         });
+        setSettingsSummaryState('ready');
       })
       .catch(() => {
         if (cancelled) return;
         setWorkingDaysSource(null);
         setAvailability(null);
+        setSettingsSummaryState('error');
       });
     return () => {
       cancelled = true;
     };
-  }, [yearId]);
+  }, [yearId, years, yearsLoading, yearsLoadError, selectedYearIsValid]);
 
   useEffect(() => {
     setGroupSetCount(null);
-    if (!classFilter) {
+    if (!filtersReady || !classFilter) {
+      setGroupSetState('idle');
+      setGroupSetClassId('');
       return;
     }
     let cancelled = false;
+    setGroupSetState('loading');
+    setGroupSetClassId(classFilter);
     void subgroupsApi
       .listGroupSets({ classId: Number(classFilter), status: 'ACTIVE' })
-      .then((sets) => {
-        if (!cancelled) setGroupSetCount(sets.length);
+      .then((sets: unknown[]) => {
+        if (!cancelled) {
+          setGroupSetCount(sets.length);
+          setGroupSetState('ready');
+        }
       })
       .catch(() => {
-        if (!cancelled) setGroupSetCount(null);
+        if (!cancelled) {
+          setGroupSetCount(null);
+          setGroupSetState('error');
+        }
       });
     return () => {
       cancelled = true;
     };
-  }, [classFilter]);
+  }, [classFilter, filtersReady]);
 
   const reloadSchedules = useCallback(async () => {
     if (!filtersReady || filterKeyRef.current !== filterKey) return;
@@ -513,7 +571,7 @@ export function LessonSchedulePage() {
     const isCurrentRequest = () => requestId === scheduleRequestSequence.current
       && requestFilterKey === filterKeyRef.current;
     setLoading(true);
-    setError(null);
+    setScheduleError(null);
     try {
       const list = await listSchedules({
         academicYearId: Number(yearId),
@@ -525,7 +583,7 @@ export function LessonSchedulePage() {
       setLoadedFilterKey(requestFilterKey);
     } catch (err) {
       if (!isCurrentRequest()) return;
-      setError(err instanceof Error ? err.message : 'Не удалось загрузить расписания');
+      setScheduleError('Не удалось загрузить расписание. Проверьте соединение и попробуйте ещё раз.');
     } finally {
       if (isCurrentRequest()) setLoading(false);
     }
@@ -1040,33 +1098,97 @@ export function LessonSchedulePage() {
   );
 
   const settingsStatus: Record<SettingsCardKey, CardStatus> = useMemo(
-    () => ({
-      templates:
-        templates.length > 0
-          ? { label: 'Настроено', tone: 'ok' }
-          : { label: 'Нет шаблонов', tone: 'warn' },
-      calendar:
-        workingDaysSource === 'DB'
-          ? { label: 'Настроено', tone: 'ok' }
-          : { label: 'По умолчанию', tone: 'muted' },
-      teachers:
-        availability == null
-          ? { label: 'Нет данных', tone: 'muted' }
-          : availability.total === 0
-            ? { label: 'Нет учителей', tone: 'warn' }
-            : availability.needsReview > 0
-              ? { label: `Требуют проверки: ${availability.needsReview}`, tone: 'warn' }
-              : { label: 'Настроено', tone: 'ok' },
-      subgroups:
-        groupSetCount == null
-          ? { label: 'Выберите класс', tone: 'muted' }
-          : groupSetCount > 0
-            ? { label: `Наборов: ${groupSetCount}`, tone: 'ok' }
-            : { label: 'Не заданы', tone: 'muted' },
-      // У импорта нет состояния «настроено»: это действие, а не настройка.
-      import: { label: 'Файл .xlsx', tone: 'muted' },
-    }),
-    [templates, workingDaysSource, availability, groupSetCount],
+    () => {
+      const setupState: LoadState = yearsLoadError
+        ? 'error'
+        : yearsLoading
+          ? 'loading'
+          : years.length === 0
+            ? 'idle'
+            : !selectedYearIsValid || (!metadataReady && !metadataLoadError)
+              ? 'loading'
+              : metadataLoadError
+                ? 'error'
+                : 'ready';
+      const summaryState: LoadState = yearsLoadError
+        ? 'error'
+        : yearsLoading
+          ? 'loading'
+          : years.length === 0
+            ? 'idle'
+            : !selectedYearIsValid || settingsSummaryYear !== yearId
+              ? 'loading'
+              : settingsSummaryState;
+      const subgroupStatus: LoadState = yearsLoadError || metadataLoadError
+        ? 'error'
+        : yearsLoading
+          ? 'loading'
+          : years.length === 0
+            ? 'idle'
+            : !metadataReady || !classFilter || groupSetClassId !== classFilter
+              ? (classFilter ? 'loading' : 'idle')
+              : groupSetState;
+      const missingYearStatus: CardStatus = { label: 'Нет учебного года', tone: 'muted' };
+
+      return {
+        templates: cardStatusForLoad(
+          setupState,
+          templates.length > 0
+            ? { label: 'Настроено', tone: 'ok' }
+            : { label: 'Нет шаблонов', tone: 'warn' },
+          missingYearStatus,
+        ),
+        calendar: cardStatusForLoad(
+          summaryState,
+          workingDaysSource === 'DB'
+            ? { label: 'Настроено', tone: 'ok' }
+            : { label: 'По умолчанию', tone: 'muted' },
+          missingYearStatus,
+        ),
+        teachers: cardStatusForLoad(
+          summaryState,
+          availability == null
+            ? { label: 'Нет данных', tone: 'muted' }
+            : availability.total === 0
+              ? { label: 'Нет учителей', tone: 'warn' }
+              : availability.needsReview > 0
+                ? { label: `Требуют проверки: ${availability.needsReview}`, tone: 'warn' }
+                : { label: 'Настроено', tone: 'ok' },
+          missingYearStatus,
+        ),
+        subgroups: cardStatusForLoad(
+          subgroupStatus,
+          groupSetCount == null
+            ? { label: 'Не удалось загрузить', tone: 'error' }
+            : groupSetCount > 0
+              ? { label: `Наборов: ${groupSetCount}`, tone: 'ok' }
+              : { label: 'Не заданы', tone: 'muted' },
+          years.length === 0 && !yearsLoading && !yearsLoadError
+            ? missingYearStatus
+            : { label: 'Выберите класс', tone: 'muted' },
+        ),
+        // У импорта нет состояния «настроено»: это действие, а не настройка.
+        import: { label: 'Файл .xlsx', tone: 'muted' },
+      };
+    },
+    [
+      yearsLoadError,
+      yearsLoading,
+      years.length,
+      selectedYearIsValid,
+      metadataReady,
+      metadataLoadError,
+      settingsSummaryYear,
+      yearId,
+      settingsSummaryState,
+      classFilter,
+      groupSetClassId,
+      groupSetState,
+      templates,
+      workingDaysSource,
+      availability,
+      groupSetCount,
+    ],
   );
 
   return (
@@ -1112,6 +1234,7 @@ export function LessonSchedulePage() {
             <Select
               value={yearId}
               onChange={(e) => setFilters({ year: e.target.value, periodId: null, classId: null, scheduleId: null })}
+              disabled={yearsLoading || yearsLoadError || years.length === 0}
               className={FILTER_CONTROL}
             >
               {years.map((y) => (
@@ -1242,10 +1365,55 @@ export function LessonSchedulePage() {
         </div>
       )}
 
-      {(!filtersReady || loading || (loadedFilterKey !== filterKey && !error)) && <LoadingBlock />}
-      {error && !loading && <ErrorBlock message={error} onRetry={() => void reloadSchedules()} />}
+      {yearsLoading && <LoadingBlock label="Загружаем учебные годы..." />}
+      {!yearsLoading && yearsLoadError && (
+        <ErrorBlock
+          message="Не удалось загрузить учебные годы. Проверьте соединение и попробуйте ещё раз."
+          onRetry={() => {
+            setYearsLoadError(false);
+            setYearsLoading(true);
+            setYearsRetry((attempt) => attempt + 1);
+          }}
+        />
+      )}
+      {!yearsLoading && !yearsLoadError && years.length === 0 && (
+        <div className="card">
+          <EmptyBlock
+            title="Учебные годы не найдены"
+            description="Создайте учебный год, чтобы настроить расписание школы."
+            action={(
+              <Link
+                to="/admin/academic-year"
+                className="inline-flex h-10 items-center rounded-xl bg-navy-700 px-4 text-sm font-semibold text-white hover:bg-navy-800"
+              >
+                Открыть учебные годы
+              </Link>
+            )}
+          />
+        </div>
+      )}
+      {!yearsLoading && !yearsLoadError && years.length > 0 && !metadataReady && !metadataLoadError && (
+        <LoadingBlock label={metadataLoading ? 'Загружаем настройки расписания...' : 'Подготавливаем расписание...'} />
+      )}
+      {!yearsLoading && !yearsLoadError && metadataLoadError && (
+        <ErrorBlock
+          message="Не удалось загрузить периоды, классы и шаблоны звонков. Проверьте соединение и попробуйте ещё раз."
+          onRetry={() => {
+            setMetadataLoadError(false);
+            setMetadataLoading(true);
+            setMetadataRetry((attempt) => attempt + 1);
+          }}
+        />
+      )}
+      {metadataReady && !filtersReady && !metadataLoadError && (
+        <LoadingBlock label="Подготавливаем фильтры расписания..." />
+      )}
+      {filtersReady && loading && <LoadingBlock label="Загружаем расписания..." />}
+      {filtersReady && scheduleError && !loading && (
+        <ErrorBlock message={scheduleError} onRetry={() => void reloadSchedules()} />
+      )}
 
-      {filtersReady && !loading && loadedFilterKey === filterKey && !error && (
+      {filtersReady && !loading && loadedFilterKey === filterKey && !scheduleError && (
         <>
           <ScheduleConflictPanel
             report={conflictReport}

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Link, MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   email: 'admin-a',
   listAcademicYears: vi.fn(), listPeriods: vi.fn(), listClasses: vi.fn(), listSchedules: vi.fn(),
   getSchedule: vi.fn(), getScheduleGrid: vi.fn(), listScheduleHistory: vi.fn(), getConstructorContext: vi.fn(),
+  listBellTemplates: vi.fn(), getWorkingDays: vi.fn(), listAvailabilitySummaries: vi.fn(), listGroupSets: vi.fn(),
   toast: { info: vi.fn(), success: vi.fn(), error: vi.fn() },
 }));
 vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ admin: { email: mocks.email } }) }));
@@ -20,12 +21,12 @@ vi.mock('@/platform/services', async (importOriginal) => ({
   ...mocks,
 }));
 vi.mock('@/lib/scheduleSettingsApi', () => ({ scheduleSettingsApi: {
-  listBellTemplates: async () => ({ content: [] }),
-  getWorkingDays: async () => ({ source: 'DEFAULT' }),
+  listBellTemplates: mocks.listBellTemplates,
+  getWorkingDays: mocks.getWorkingDays,
 } }));
 vi.mock('@/lib/schedule2bApi', () => ({
-  subgroupsApi: { listGroupSets: async () => [] },
-  teacherAvailabilityApi: { listSummaries: async () => ({ totalElements: 0 }) },
+  subgroupsApi: { listGroupSets: mocks.listGroupSets },
+  teacherAvailabilityApi: { listSummaries: mocks.listAvailabilitySummaries },
 }));
 vi.mock('./schedule/LessonHorizonCard', () => ({ LessonHorizonCard: () => null }));
 
@@ -103,6 +104,10 @@ beforeEach(() => {
   mocks.listAcademicYears.mockResolvedValue(years);
   mocks.listPeriods.mockResolvedValue(periods);
   mocks.listClasses.mockResolvedValue(classes);
+  mocks.listBellTemplates.mockResolvedValue({ content: [] });
+  mocks.getWorkingDays.mockResolvedValue({ source: 'DEFAULT' });
+  mocks.listAvailabilitySummaries.mockResolvedValue({ totalElements: 0 });
+  mocks.listGroupSets.mockResolvedValue([]);
   mocks.listSchedules.mockImplementation(async (params: { academicYearId: number; academicPeriodId?: number; classId?: number }) => schedules
     .filter((s) => !params.classId || s.classId === params.classId)
     .map((s) => ({ ...s, academicYearId: params.academicYearId, academicPeriodId: params.academicPeriodId ?? 21 })));
@@ -119,6 +124,103 @@ afterEach(() => {
 });
 
 describe('LessonSchedulePage · navigation context', () => {
+  it('shows a retryable initial error when academic years cannot load, then resumes the full flow', async () => {
+    const user = userEvent.setup();
+    mocks.listAcademicYears.mockRejectedValueOnce(new Error('API unavailable'));
+    renderPage();
+
+    expect(await screen.findByText(/Не удалось загрузить учебные годы/)).toBeInTheDocument();
+    expect(screen.queryByText('Загрузка…')).not.toBeInTheDocument();
+    expect(screen.queryByText('Нет шаблонов')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Повторить' }));
+
+    expect(await screen.findByRole('button', { name: 'Редактировать' })).toBeInTheDocument();
+    expect(mocks.listAcademicYears).toHaveBeenCalledTimes(2);
+    expect(mocks.listPeriods).toHaveBeenCalledTimes(1);
+    expect(mocks.listSchedules).toHaveBeenCalled();
+  });
+
+  it('shows and retries metadata failures without showing false empty states', async () => {
+    const user = userEvent.setup();
+    mocks.listPeriods.mockRejectedValueOnce(new Error('periods unavailable'));
+    mocks.getWorkingDays.mockRejectedValueOnce(new Error('calendar unavailable'));
+    renderPage();
+
+    expect(await screen.findByText(/Не удалось загрузить периоды, классы и шаблоны звонков/)).toBeInTheDocument();
+    expect(screen.queryByText('Загрузка…')).not.toBeInTheDocument();
+    expect(screen.queryByText('Нет шаблонов')).not.toBeInTheDocument();
+    expect(screen.queryByText('По умолчанию')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Повторить' }));
+
+    expect(await screen.findByRole('button', { name: 'Редактировать' })).toBeInTheDocument();
+    expect(mocks.listPeriods).toHaveBeenCalledTimes(2);
+    expect(mocks.listClasses).toHaveBeenCalledTimes(2);
+    expect(mocks.listBellTemplates).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows an empty state when no academic years exist', async () => {
+    mocks.listAcademicYears.mockResolvedValueOnce([]);
+    renderPage('/lesson-schedule');
+
+    expect(await screen.findByText('Учебные годы не найдены')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Открыть учебные годы' })).toHaveAttribute('href', '/admin/academic-year');
+    expect(screen.queryByText(/Загружаем/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Нет шаблонов')).not.toBeInTheDocument();
+    expect(screen.queryByText('По умолчанию')).not.toBeInTheDocument();
+  });
+
+  it('retries the schedule list after its own initial request fails', async () => {
+    const user = userEvent.setup();
+    mocks.listSchedules.mockRejectedValueOnce(new Error('schedule list unavailable'));
+    renderPage();
+
+    expect(await screen.findByText(/Не удалось загрузить расписание/)).toBeInTheDocument();
+    expect(screen.queryByText('Загрузка…')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Повторить' }));
+
+    expect(await screen.findByRole('button', { name: 'Редактировать' })).toBeInTheDocument();
+    expect(mocks.listSchedules).toHaveBeenCalledTimes(2);
+  });
+
+  it('uses loading badges instead of claiming settings are empty or default', async () => {
+    const pendingPeriods = deferred<typeof periods>();
+    const pendingClasses = deferred<typeof classes>();
+    const pendingTemplates = deferred<{ content: never[] }>();
+    mocks.listPeriods.mockReturnValueOnce(pendingPeriods.promise);
+    mocks.listClasses.mockReturnValueOnce(pendingClasses.promise);
+    mocks.listBellTemplates.mockReturnValueOnce(pendingTemplates.promise);
+    renderPage();
+
+    await waitFor(() => expect(screen.getAllByText('Загрузка').length).toBeGreaterThanOrEqual(1));
+    expect(screen.queryByText('Нет шаблонов')).not.toBeInTheDocument();
+
+    await act(async () => {
+      pendingPeriods.resolve(periods);
+      pendingClasses.resolve(classes);
+      pendingTemplates.resolve({ content: [] });
+    });
+    expect(await screen.findByRole('button', { name: 'Редактировать' })).toBeInTheDocument();
+  });
+
+  it('marks failed settings summaries and subgroup requests in their own badges', async () => {
+    mocks.getWorkingDays.mockRejectedValueOnce(new Error('calendar unavailable'));
+    mocks.listGroupSets.mockRejectedValueOnce(new Error('groups unavailable'));
+    renderPage();
+
+    const calendarCard = await screen.findByRole('link', { name: /Школьный календарь/ });
+    const teachersCard = screen.getByRole('link', { name: /Занятость учителей/ });
+    const groupsCard = screen.getByRole('link', { name: /Подгруппы классов/ });
+
+    await waitFor(() => {
+      expect(within(calendarCard).getByText('Не удалось загрузить')).toBeInTheDocument();
+      expect(within(teachersCard).getByText('Не удалось загрузить')).toBeInTheDocument();
+      expect(within(groupsCard).getByText('Не удалось загрузить')).toBeInTheDocument();
+    });
+  });
+
   it('changes year, period, and class with the keyboard only', async () => {
     const user = userEvent.setup();
     renderPage('/lesson-schedule?year=2&periodId=22&classId=1');
