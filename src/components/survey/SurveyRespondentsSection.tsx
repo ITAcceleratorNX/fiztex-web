@@ -117,6 +117,7 @@ function RespondentAnswersModal({
           message={
             answersQuery.error instanceof ApiError ? answersQuery.error.message : 'Не удалось загрузить ответы'
           }
+          onRetry={() => void answersQuery.refetch()}
         />
       ) : !data ? null : (
         <div className="space-y-4">

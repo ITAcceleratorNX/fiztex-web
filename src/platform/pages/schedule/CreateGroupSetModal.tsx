@@ -53,10 +53,7 @@ export function CreateGroupSetModal({
 
   async function onSubmit() {
     const trimmed = name.trim();
-    if (!trimmed) {
-      toast.error('Укажите название набора');
-      return;
-    }
+    if (!trimmed) return;
     try {
       const created = await create.mutateAsync({
         name: trimmed,
@@ -98,16 +95,24 @@ export function CreateGroupSetModal({
       </div>
 
       <div className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1.5">
-          <span className={FIELD_LABEL}>Название</span>
+        <label htmlFor="group-set-name" className="flex flex-col gap-1.5">
+          <span className={FIELD_LABEL}>Название (обязательно)</span>
           <input
+            id="group-set-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Например, Английский"
             autoFocus
             disabled={create.isPending}
+            required
+            aria-required="true"
+            aria-describedby="group-set-name-help"
+            aria-invalid={Boolean(name) && !name.trim()}
             className={cx(FIELD_CONTROL, 'placeholder:text-gray-400')}
           />
+          <span id="group-set-name-help" className="text-xs text-subtle">
+            Укажите название, чтобы создать набор.
+          </span>
         </label>
 
         <label className="flex flex-col gap-1.5">

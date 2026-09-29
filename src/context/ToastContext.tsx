@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
 import { cx } from '@/lib/format';
 
@@ -32,9 +32,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     (kind: ToastKind, message: string) => {
       const id = (counter += 1);
       setToasts((prev) => [...prev, { id, kind, message }]);
-      setTimeout(() => remove(id), 4200);
     },
-    [remove],
+    [],
   );
 
   const value = useMemo<ToastContextValue>(
@@ -50,9 +49,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed bottom-6 right-6 z-[100] flex w-[min(34rem,calc(100vw-3rem))] flex-col gap-2.5">
+      <div className="pointer-events-none fixed bottom-6 right-6 z-[100] flex max-h-[calc(100vh-3rem)] w-[min(34rem,calc(100vw-3rem))] flex-col gap-2.5 overflow-y-auto overscroll-contain">
         {toasts.map((t) => (
-          <ToastItem key={t.id} toast={t} onClose={() => remove(t.id)} />
+          <ToastItem key={t.id} toast={t} onClose={remove} />
         ))}
       </div>
     </ToastContext.Provider>
@@ -92,31 +91,86 @@ const TOAST_STYLES = {
   },
 } as const;
 
-function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
+function autoDismissDelay(toast: Toast): number | null {
+  if (toast.kind === 'error') return null;
+  const wordCount = toast.message.trim().split(/\s+/).filter(Boolean).length;
+  return Math.min(30_000, Math.max(10_000, wordCount * 350));
+}
+
+function ToastItem({ toast, onClose }: { toast: Toast; onClose: (id: number) => void }) {
   const config = TOAST_STYLES[toast.kind];
   const Icon = config.icon;
+  const dismissDelay = autoDismissDelay(toast);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dueAtRef = useRef<number | null>(null);
+  const remainingRef = useRef(dismissDelay ?? 0);
+  const pausedRef = useRef(false);
+
+  const startTimer = useCallback(() => {
+    if (dismissDelay == null || timeoutRef.current != null || pausedRef.current) return;
+    const delay = remainingRef.current;
+    dueAtRef.current = Date.now() + delay;
+    timeoutRef.current = setTimeout(() => onClose(toast.id), delay);
+  }, [dismissDelay, onClose, toast.id]);
+
+  const pauseTimer = useCallback(() => {
+    pausedRef.current = true;
+    if (timeoutRef.current == null || dueAtRef.current == null) return;
+    clearTimeout(timeoutRef.current);
+    remainingRef.current = Math.max(0, dueAtRef.current - Date.now());
+    timeoutRef.current = null;
+    dueAtRef.current = null;
+  }, []);
+
+  const resumeTimer = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false;
+    startTimer();
+  }, [startTimer]);
+
+  useEffect(() => {
+    startTimer();
+    return () => {
+      if (timeoutRef.current != null) clearTimeout(timeoutRef.current);
+    };
+  }, [startTimer]);
 
   return (
     <div
       className={cx(
-        'pointer-events-auto flex items-center gap-2.5 rounded-lg border py-3 pl-4 pr-3 animate-slide-in',
+        'pointer-events-auto flex items-start gap-2 rounded-lg border py-2 pl-4 pr-2 animate-slide-in',
         config.box,
       )}
+      onMouseEnter={pauseTimer}
+      onMouseLeave={resumeTimer}
+      onFocus={pauseTimer}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) resumeTimer();
+      }}
     >
-      <Icon className={cx('shrink-0', config.iconClass)} aria-hidden />
-      <p className={cx('flex-1 text-13 font-semibold', config.text)}>{toast.message}</p>
+      <div
+        role={toast.kind === 'error' ? 'alert' : 'status'}
+        aria-live={toast.kind === 'error' ? 'assertive' : 'polite'}
+        aria-atomic="true"
+        className="flex min-w-0 flex-1 items-start gap-2.5 py-1"
+      >
+        <Icon className={cx('mt-0.5 shrink-0', config.iconClass)} aria-hidden="true" />
+        <p className={cx('min-w-0 flex-1 whitespace-pre-wrap break-words text-13 font-semibold', config.text)}>
+          {toast.message}
+        </p>
+      </div>
       <button
         type="button"
-        onClick={onClose}
-        aria-label="Закрыть"
+        onClick={() => onClose(toast.id)}
+        aria-label={toast.kind === 'error' ? 'Закрыть сообщение об ошибке' : 'Закрыть уведомление'}
         className={cx(
-          'shrink-0 transition',
+          'flex size-11 shrink-0 items-center justify-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-navy-700',
           config.boxedClose
-            ? cx('flex size-5 items-center justify-center rounded-[10px]', config.closeClass)
+            ? cx('rounded-[10px] border bg-white', config.closeClass)
             : config.closeClass,
         )}
       >
-        <X className={config.boxedClose ? 'size-3' : 'size-4'} />
+        <X className="size-4" aria-hidden="true" />
       </button>
     </div>
   );

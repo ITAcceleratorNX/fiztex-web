@@ -151,6 +151,9 @@ export function ScheduleImportPage() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [optionLoadError, setOptionLoadError] = useState<{ kind: 'years' | 'periods'; message: string } | null>(null);
+  const [yearsLoadAttempt, setYearsLoadAttempt] = useState(0);
+  const [periodsLoadAttempt, setPeriodsLoadAttempt] = useState(0);
 
   const [parsed, setParsed] = useState<ParsedWorkbook | null>(null);
   const [catalogs, setCatalogs] = useState<SchoolCatalogs | null>(null);
@@ -173,9 +176,13 @@ export function ScheduleImportPage() {
   const [provisionResults, setProvisionResults] = useState<ProvisionItemResult[]>([]);
 
   useEffect(() => {
+    let cancelled = false;
+    setOptionLoadError((current) => (current?.kind === 'years' ? null : current));
     void listAcademicYears()
       .then((list) => {
+        if (cancelled) return;
         setYears(list);
+        setOptionLoadError((current) => (current?.kind === 'years' ? null : current));
         const active = list.find((year) => year.id === initialContext.current.year)
           ?? list.find((year) => year.status === 'ACTIVE') ?? list[0];
         if (active) {
@@ -183,22 +190,37 @@ export function ScheduleImportPage() {
           setYearId(active.id);
         }
       })
-      .catch(() => setError('Не удалось загрузить учебные годы'));
-  }, []);
+      .catch(() => {
+        if (!cancelled) setOptionLoadError({ kind: 'years', message: 'Не удалось загрузить учебные годы' });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [yearsLoadAttempt]);
 
   useEffect(() => {
     if (!yearId) {
       setPeriods([]);
       setPeriodId('');
+      setOptionLoadError((current) => (current?.kind === 'periods' ? null : current));
       return;
     }
+    let cancelled = false;
+    setOptionLoadError((current) => (current?.kind === 'periods' ? null : current));
     void listPeriods(yearId)
       .then((list) => {
+        if (cancelled) return;
         setPeriods(list);
+        setOptionLoadError((current) => (current?.kind === 'periods' ? null : current));
         setPeriodId((current) => (list.some((p) => p.id === current) ? current : list[0]?.id ?? ''));
       })
-      .catch(() => setError('Не удалось загрузить учебные периоды'));
-  }, [yearId]);
+      .catch(() => {
+        if (!cancelled) setOptionLoadError({ kind: 'periods', message: 'Не удалось загрузить учебные периоды' });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [yearId, periodsLoadAttempt]);
 
   const resolved: ResolvedImport | null = useMemo(() => {
     if (!parsed || !catalogs) return null;
@@ -420,6 +442,15 @@ export function ScheduleImportPage() {
         </div>
       </section>
 
+      {optionLoadError && (
+        <ErrorBlock
+          message={optionLoadError.message}
+          onRetry={() => {
+            if (optionLoadError.kind === 'years') setYearsLoadAttempt((attempt) => attempt + 1);
+            else setPeriodsLoadAttempt((attempt) => attempt + 1);
+          }}
+        />
+      )}
       {error && <ErrorBlock message={error} />}
 
       {stage === 'upload' && (

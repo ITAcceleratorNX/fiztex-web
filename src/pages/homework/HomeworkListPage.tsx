@@ -139,19 +139,19 @@ export function HomeworkListPage() {
       {optionsQuery.isPending && data && <p role="status" className="text-13 text-muted">Загрузка классов и предметов…</p>}
       {historicalOptions.isFetching && <p role="status" className="text-13 text-muted">Загрузка классов и предметов из истории заданий…</p>}
       {historicalOptions.isError && (
-        <div role="alert" className="card">
+        <div className="card">
           <ErrorBlock message="Не удалось загрузить варианты из истории заданий. Доступные варианты сохранены"
             onRetry={() => void historicalOptions.refetch()} />
         </div>
       )}
       {optionsQuery.isError && (
-        <div role="alert" className="card">
+        <div className="card">
           <ErrorBlock message="Не удалось загрузить полный список классов и предметов" onRetry={() => void optionsQuery.refetch()} />
         </div>
       )}
       {listQuery.isFetching && data && <p role="status" className="text-13 text-muted">Загрузка страницы {page + 1}…</p>}
       {listQuery.error && data && (
-        <div role="alert" className="card">
+        <div className="card">
           <ErrorBlock
             message={`Не удалось загрузить страницу ${page + 1}. Показана страница ${shownPage + 1}`}
             onRetry={() => void listQuery.refetch()}

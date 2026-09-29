@@ -8,8 +8,13 @@ export function Spinner({ className }: { className?: string }) {
 
 export function LoadingBlock({ label = 'Загрузка…' }: { label?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate-400">
-      <Loader2 className="h-7 w-7 animate-spin text-brand-500" />
+    <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      className="flex flex-col items-center justify-center gap-3 py-16 text-slate-400"
+    >
+      <Loader2 className="h-7 w-7 animate-spin text-brand-500" aria-hidden="true" />
       <p className="text-sm">{label}</p>
     </div>
   );
@@ -19,9 +24,11 @@ export function ErrorBlock({ message, onRetry }: { message: string; onRetry?: ()
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
-        <AlertTriangle className="h-6 w-6 text-red-500" />
+        <AlertTriangle className="h-6 w-6 text-red-500" aria-hidden="true" />
       </div>
-      <p className="max-w-sm text-sm text-slate-600">{message}</p>
+      <p role="alert" aria-live="assertive" aria-atomic="true" className="max-w-sm text-sm text-slate-600">
+        {message}
+      </p>
       {onRetry && (
         <Button variant="secondary" size="sm" onClick={onRetry}>
           Повторить

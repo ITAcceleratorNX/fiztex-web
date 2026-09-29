@@ -92,10 +92,7 @@ export function HomeworkTestAnswerReview({
     if (answer.id == null) return;
     const draft = drafts[answer.id] ?? scoreDraftFrom(answer);
     const finalScore = scoreFromDraft(draft, answer.maxScore);
-    if (finalScore == null) {
-      toast.error('Введите балл в допустимом диапазоне перед сохранением');
-      return;
-    }
+    if (finalScore == null) return;
 
     setSavingAnswerId(answer.id);
     try {
@@ -407,5 +404,4 @@ function OpenTextAnswer({
     </div>
   );
 }
-
 

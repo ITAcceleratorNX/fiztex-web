@@ -6,10 +6,11 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { TextArea } from '@/components/ui/Field';
-import { Spinner, ErrorBlock } from '@/components/ui/StateBlock';
+import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { formatDateTime } from '@/lib/format';
 import type { AnswerReviewItem, ReviewDetail } from '@/lib/types';
 import { AnswerReviewCard } from '@/components/review/AnswerReviewCard';
+import { validateReviewScore } from '@/components/review/ScoreEditor';
 import { SuspiciousLog } from '@/components/review/SuspiciousLog';
 import type { ScoreDraft } from '@/components/review/constants';
 
@@ -45,6 +46,9 @@ export function ReviewModal({
   const [savingQ, setSavingQ] = useState<number | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [opening, setOpening] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [saveErrors, setSaveErrors] = useState<Record<number, string>>({});
+  const [actionError, setActionError] = useState<string | null>(null);
   const activeAttemptRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -59,6 +63,8 @@ export function ReviewModal({
       setSavingQ(null);
       setConfirming(false);
       setOpening(false);
+      setSaveErrors({});
+      setActionError(null);
       return;
     }
 
@@ -68,6 +74,8 @@ export function ReviewModal({
     setLoading(true);
     setLoadError(null);
     setDetail(null);
+    setSaveErrors({});
+    setActionError(null);
     setDrafts({});
     setSchoolComment('');
     setInternalComment('');
@@ -88,7 +96,7 @@ export function ReviewModal({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, attemptId]);
+  }, [active, attemptId, loadAttempt]);
 
   function applyDetail(d: ReviewDetail) {
     setDetail(d);
@@ -125,11 +133,10 @@ export function ReviewModal({
   async function saveAnswer(a: AnswerReviewItem) {
     if (attemptId == null || activeAttemptRef.current !== attemptId) return;
     const draft = drafts[a.questionId];
-    const score = Number(draft?.score ?? 0);
-    if (Number.isNaN(score) || score < 0 || score > a.maxScore) {
-      toast.error(`Балл должен быть от 0 до ${a.maxScore}`);
-      return;
-    }
+    const rawScore = draft?.score ?? '0';
+    const score = Number(rawScore);
+    if (validateReviewScore(rawScore, a.maxScore)) return;
+    setSaveErrors((previous) => ({ ...previous, [a.questionId]: '' }));
     setSavingQ(a.questionId);
     try {
       const updated = await api.scoreAnswer(attemptId, a.questionId, {
@@ -141,7 +148,10 @@ export function ReviewModal({
       toast.success('Балл сохранён');
     } catch (e) {
       if (activeAttemptRef.current !== attemptId) return;
-      toast.error(e instanceof ApiError ? e.message : 'Не удалось сохранить балл');
+      setSaveErrors((previous) => ({
+        ...previous,
+        [a.questionId]: e instanceof ApiError ? e.message : 'Не удалось сохранить балл. Проверьте соединение и попробуйте снова.',
+      }));
     } finally {
       if (activeAttemptRef.current === attemptId) setSavingQ(null);
     }
@@ -149,16 +159,15 @@ export function ReviewModal({
 
   async function confirm() {
     if (attemptId == null || activeAttemptRef.current !== attemptId) return;
+    setActionError(null);
     setConfirming(true);
     try {
       // Сначала досылаем несохранённые баллы: после подтверждения результат заморожен.
       for (const a of unsavedAnswers) {
         const draft = drafts[a.questionId];
-        const score = Number(draft.score);
-        if (Number.isNaN(score) || score < 0 || score > a.maxScore) {
-          toast.error(`Вопрос ${(detail?.answers ?? []).indexOf(a) + 1}: балл должен быть от 0 до ${a.maxScore}`);
-          return;
-        }
+        const rawScore = draft?.score ?? '0';
+        const score = Number(rawScore);
+        if (validateReviewScore(rawScore, a.maxScore)) return;
         const saved = await api.scoreAnswer(attemptId, a.questionId, {
           finalScore: score,
           adminComment: draft.comment || null,
@@ -173,11 +182,12 @@ export function ReviewModal({
       });
       if (activeAttemptRef.current !== attemptId) return;
       setDetail(updated);
+      setSaveErrors({});
       qc.invalidateQueries({ queryKey: ['results'] });
       toast.success('Проверка подтверждена');
     } catch (e) {
       if (activeAttemptRef.current !== attemptId) return;
-      toast.error(e instanceof ApiError ? e.message : 'Не удалось подтвердить проверку');
+      setActionError(e instanceof ApiError ? e.message : 'Не удалось подтвердить проверку. Ваши изменения остались на странице. Попробуйте ещё раз.');
     } finally {
       if (activeAttemptRef.current === attemptId) setConfirming(false);
     }
@@ -185,6 +195,7 @@ export function ReviewModal({
 
   async function openForViewing() {
     if (attemptId == null || activeAttemptRef.current !== attemptId) return;
+    setActionError(null);
     setOpening(true);
     try {
       const updated = await api.openResult(attemptId);
@@ -194,7 +205,7 @@ export function ReviewModal({
       toast.success('Результат открыт для просмотра');
     } catch (e) {
       if (activeAttemptRef.current !== attemptId) return;
-      toast.error(e instanceof ApiError ? e.message : 'Не удалось открыть результат');
+      setActionError(e instanceof ApiError ? e.message : 'Не удалось открыть результат. Попробуйте ещё раз.');
     } finally {
       if (activeAttemptRef.current === attemptId) setOpening(false);
     }
@@ -202,6 +213,11 @@ export function ReviewModal({
 
   const footer = (
     <>
+      {actionError && (
+        <p role="alert" aria-live="assertive" aria-atomic="true" className="mr-auto min-w-0 basis-full text-sm text-red-700">
+          {actionError}
+        </p>
+      )}
       <Button variant="secondary" onClick={onClose} disabled={confirming || opening}>
         {variant === 'page' ? 'К списку результатов' : 'Закрыть'}
       </Button>
@@ -212,7 +228,13 @@ export function ReviewModal({
               Несохранённых баллов: {unsavedAnswers.length} — подтверждение сохранит их
             </span>
           )}
-          <Button loading={confirming} disabled={loading || !detail} onClick={confirm}>
+          <Button
+            loading={confirming}
+            disabled={loading || !detail || unsavedAnswers.some((answer) =>
+              validateReviewScore(drafts[answer.questionId]?.score ?? '0', answer.maxScore) != null,
+            )}
+            onClick={confirm}
+          >
             Подтвердить проверку
           </Button>
         </>
@@ -226,11 +248,9 @@ export function ReviewModal({
   );
 
   const body = loading ? (
-    <div className="flex justify-center py-16">
-      <Spinner className="h-6 w-6 animate-spin text-brand-500" />
-    </div>
+    <LoadingBlock label="Загружаем попытку…" />
   ) : loadError ? (
-    <ErrorBlock message={loadError} />
+    <ErrorBlock message={loadError} onRetry={() => setLoadAttempt((previous) => previous + 1)} />
   ) : detail ? (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
@@ -264,7 +284,12 @@ export function ReviewModal({
             locked={locked}
             saving={savingQ === a.questionId}
             dirty={unsavedAnswers.includes(a)}
-            onChange={(d) => setDrafts((p) => ({ ...p, [a.questionId]: d }))}
+            saveError={saveErrors[a.questionId] || undefined}
+            onChange={(d) => {
+              setDrafts((previous) => ({ ...previous, [a.questionId]: d }));
+              setSaveErrors((previous) => ({ ...previous, [a.questionId]: '' }));
+              setActionError(null);
+            }}
             onSave={() => saveAnswer(a)}
           />
         ))}
@@ -274,7 +299,10 @@ export function ReviewModal({
         <label className="label-base">Комментарий школы (виден поступающему)</label>
         <TextArea
           value={schoolComment}
-          onChange={(e) => setSchoolComment(e.target.value)}
+          onChange={(e) => {
+            setSchoolComment(e.target.value);
+            setActionError(null);
+          }}
           placeholder="Комментарий, который увидит поступающий после открытия результата…"
           disabled={locked}
           rows={3}
@@ -285,7 +313,10 @@ export function ReviewModal({
         <label className="label-base">Внутренний комментарий (только для школы)</label>
         <TextArea
           value={internalComment}
-          onChange={(e) => setInternalComment(e.target.value)}
+          onChange={(e) => {
+            setInternalComment(e.target.value);
+            setActionError(null);
+          }}
           placeholder="Заметка для школы/админа — поступающий её не увидит…"
           disabled={locked}
           rows={3}
