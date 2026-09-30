@@ -12050,6 +12050,8 @@ export interface components {
             createdAt?: string;
             /** Format: int64 */
             id?: number;
+            sourceId?: string;
+            sourceKind?: string;
             title?: string;
             /** @enum {string} */
             type?: "TEXTBOOK" | "CURRICULUM_PLAN" | "PREPARED_LESSON" | "TEST" | "HOMEWORK" | "DOCUMENT";
