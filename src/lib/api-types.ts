@@ -6045,11 +6045,27 @@ export interface paths {
         };
         get: operations["listFolders"];
         put?: never;
-        post?: never;
+        post: operations["createFolder"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/folders/{folderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteFolder"];
+        options?: never;
+        head?: never;
+        patch: operations["renameFolder"];
         trace?: never;
     };
     "/api/teacher/workspace/folders/{folderId}/items": {
@@ -12000,6 +12016,9 @@ export interface components {
         WorkspaceFolderContentView: {
             folder?: components["schemas"]["WorkspaceFolderView"];
             items?: components["schemas"]["PageWorkspaceItemView"];
+        };
+        WorkspaceFolderRequest: {
+            name: string;
         };
         WorkspaceFolderView: {
             /** Format: date-time */
@@ -23190,6 +23209,76 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PageWorkspaceFolderView"];
+                };
+            };
+        };
+    };
+    createFolder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkspaceFolderRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceFolderView"];
+                };
+            };
+        };
+    };
+    deleteFolder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                folderId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    renameFolder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                folderId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkspaceFolderRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceFolderView"];
                 };
             };
         };
