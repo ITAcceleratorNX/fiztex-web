@@ -6020,6 +6020,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teacher/workspace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getWorkspace"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/folders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listFolders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/folders/{folderId}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getFolderItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/sections/{sectionCode}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getSectionItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tests/{testId}/generate": {
         parameters: {
             query?: never;
@@ -9733,6 +9797,42 @@ export interface components {
             /** Format: int32 */
             totalPages?: number;
         };
+        PageWorkspaceFolderView: {
+            content?: components["schemas"]["WorkspaceFolderView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        PageWorkspaceItemView: {
+            content?: components["schemas"]["WorkspaceItemView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
         Pageable: {
             /** Format: int32 */
             page?: number;
@@ -11896,6 +11996,45 @@ export interface components {
             source?: "DB" | "DEFAULT";
             /** Format: int64 */
             version?: number;
+        };
+        WorkspaceFolderContentView: {
+            folder?: components["schemas"]["WorkspaceFolderView"];
+            items?: components["schemas"]["PageWorkspaceItemView"];
+        };
+        WorkspaceFolderView: {
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        WorkspaceItemView: {
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+            title?: string;
+            /** @enum {string} */
+            type?: "TEXTBOOK" | "CURRICULUM_PLAN" | "PREPARED_LESSON" | "TEST" | "HOMEWORK" | "DOCUMENT";
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        WorkspaceSectionContentView: {
+            items?: components["schemas"]["PageWorkspaceItemView"];
+            section?: components["schemas"]["WorkspaceSectionView"];
+        };
+        WorkspaceSectionView: {
+            code?: string;
+            mutable?: boolean;
+            /** Format: int32 */
+            order?: number;
+            title?: string;
+        };
+        WorkspaceView: {
+            folders?: components["schemas"]["PageWorkspaceFolderView"];
+            sections?: components["schemas"]["WorkspaceSectionView"][];
         };
         WriteOffEquipmentRequest: {
             comment?: string;
@@ -23005,6 +23144,102 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+        };
+    };
+    getWorkspace: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceView"];
+                };
+            };
+        };
+    };
+    listFolders: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageWorkspaceFolderView"];
+                };
+            };
+        };
+    };
+    getFolderItems: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                folderId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceFolderContentView"];
+                };
+            };
+        };
+    };
+    getSectionItems: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                sectionCode: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceSectionContentView"];
                 };
             };
         };
