@@ -6084,6 +6084,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teacher/workspace/folders/{folderId}/items/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["attachItem"];
+        post?: never;
+        delete: operations["detachItem"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teacher/workspace/sections/{sectionCode}/items": {
         parameters: {
             query?: never;
@@ -23305,6 +23321,48 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["WorkspaceFolderContentView"];
                 };
+            };
+        };
+    };
+    attachItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                folderId: number;
+                itemId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    detachItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                folderId: number;
+                itemId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
