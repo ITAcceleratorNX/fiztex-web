@@ -4948,6 +4948,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/materials/workspace-items/{workspaceItemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["addWorkspaceItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/materials/{materialId}": {
         parameters: {
             query?: never;
@@ -21394,6 +21410,40 @@ export interface operations {
         };
         responses: {
             /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonMaterialView"];
+                };
+            };
+        };
+    };
+    addWorkspaceItem: {
+        parameters: {
+            query?: {
+                visibleToStudents?: boolean;
+            };
+            header?: never;
+            path: {
+                lessonId: number;
+                workspaceItemId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Материал уже был прикреплён */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonMaterialView"];
+                };
+            };
+            /** @description Материал прикреплён */
             201: {
                 headers: {
                     [name: string]: unknown;
