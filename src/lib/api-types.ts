@@ -6180,6 +6180,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teacher/workspace/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teacher/workspace/sections/{sectionCode}/items": {
         parameters: {
             query?: never;
@@ -9968,6 +9984,24 @@ export interface components {
             /** Format: int32 */
             totalPages?: number;
         };
+        PageWorkspaceSearchItemView: {
+            content?: components["schemas"]["WorkspaceSearchItemView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
         Pageable: {
             /** Format: int32 */
             page?: number;
@@ -12178,6 +12212,30 @@ export interface components {
             type?: "TEXTBOOK" | "CURRICULUM_PLAN" | "PREPARED_LESSON" | "TEST" | "HOMEWORK" | "DOCUMENT";
             /** Format: date-time */
             updatedAt?: string;
+        };
+        WorkspaceSearchFolderView: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
+        WorkspaceSearchItemView: {
+            /** Format: date-time */
+            addedAt?: string;
+            author?: string;
+            fileExtension?: string;
+            folders?: components["schemas"]["WorkspaceSearchFolderView"][];
+            /** Format: int64 */
+            id?: number;
+            sectionCode?: string;
+            selectable?: boolean;
+            sourceId?: string;
+            sourceKind?: string;
+            title?: string;
+            /** @enum {string} */
+            type?: "TEXTBOOK" | "CURRICULUM_PLAN" | "PREPARED_LESSON" | "TEST" | "HOMEWORK" | "DOCUMENT";
+        };
+        WorkspaceSearchView: {
+            items?: components["schemas"]["PageWorkspaceSearchItemView"];
         };
         WorkspaceSectionContentView: {
             items?: components["schemas"]["PageWorkspaceItemView"];
@@ -23623,6 +23681,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+        };
+    };
+    search: {
+        parameters: {
+            query?: {
+                q?: string;
+                type?: "TEXTBOOK" | "CURRICULUM_PLAN" | "PREPARED_LESSON" | "TEST" | "HOMEWORK" | "DOCUMENT";
+                fileType?: "PDF" | "WORD" | "SPREADSHEET" | "PRESENTATION" | "IMAGE";
+                folderId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceSearchView"];
                 };
             };
         };
