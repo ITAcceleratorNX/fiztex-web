@@ -3886,7 +3886,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["delete_8"];
+        delete: operations["delete_9"];
         options?: never;
         head?: never;
         patch?: never;
@@ -5934,7 +5934,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["delete_7"];
+        delete: operations["delete_8"];
         options?: never;
         head?: never;
         patch?: never;
@@ -6190,7 +6190,7 @@ export interface paths {
         get: operations["get_8"];
         put?: never;
         post?: never;
-        delete?: never;
+        delete: operations["delete_7"];
         options?: never;
         head?: never;
         patch?: never;
@@ -19496,7 +19496,7 @@ export interface operations {
             };
         };
     };
-    delete_8: {
+    delete_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -23209,7 +23209,7 @@ export interface operations {
             };
         };
     };
-    delete_7: {
+    delete_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -23774,6 +23774,35 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["TeacherWorkspaceMaterialView"];
                 };
+            };
+        };
+    };
+    delete_7: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Материал удалён */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Зависимости изменились; обновите preview */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
