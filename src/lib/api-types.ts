@@ -2507,7 +2507,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["content_2"];
+        get: operations["content_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5131,7 +5131,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["content_1"];
+        get: operations["content_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6011,7 +6011,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["content"];
+        get: operations["content_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6156,6 +6156,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_8"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/materials/{id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["content"];
         put?: never;
         post?: never;
         delete?: never;
@@ -17043,7 +17059,7 @@ export interface operations {
             };
         };
     };
-    content_2: {
+    content_3: {
         parameters: {
             query?: never;
             header?: {
@@ -21677,7 +21693,7 @@ export interface operations {
             };
         };
     };
-    content_1: {
+    content_2: {
         parameters: {
             query?: {
                 childId?: number;
@@ -23265,7 +23281,7 @@ export interface operations {
             };
         };
     };
-    content: {
+    content_1: {
         parameters: {
             query?: never;
             header?: {
@@ -23565,6 +23581,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeacherWorkspaceMaterialView"];
+                };
+            };
+        };
+    };
+    content: {
+        parameters: {
+            query?: never;
+            header?: {
+                Range?: string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Файл целиком */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Часть файла по Range */
+            206: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Диапазон выходит за размер файла */
+            416: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
                 };
             };
         };
