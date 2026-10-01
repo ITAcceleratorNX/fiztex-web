@@ -22,8 +22,10 @@ import {
   type JournalQuery,
 } from '@/lib/gradebookApi';
 import { currentMonthKey, finalsByStudent, monthOptionsOf } from '@/lib/journalModel';
+import { weightsCaption } from '@/lib/gradingModel';
 import { JournalFilters, type JournalWindow } from './JournalFilters';
 import { JournalTable } from './JournalTable';
+import { PeriodBreakdownModal } from './PeriodBreakdownModal';
 import { QuarterFinalsTable } from './QuarterFinalsTable';
 
 type JournalTab = 'JOURNAL' | 'FINALS';
@@ -179,6 +181,8 @@ function JournalTab({
   journal: ReturnType<typeof useJournal>;
   finals: ReturnType<typeof useClassFinals>;
 }) {
+  const [breakdown, setBreakdown] = useState<{ studentProfileId: number; name: string } | null>(null);
+
   if (query == null || journal.isPending) return <TableSkeleton />;
 
   if (journal.isError) {
@@ -231,9 +235,25 @@ function JournalTab({
           journal={data!}
           finals={finalsByStudent(finals.data?.rows ?? [])}
           today={todayIso()}
+          onOpenBreakdown={(row) =>
+            setBreakdown({ studentProfileId: row.studentProfileId as number, name: row.studentName ?? '' })
+          }
         />
       </div>
-      <Legend />
+      <Legend policyCaption={data?.gradingPolicy ? weightsCaption(data.gradingPolicy.components) : null} />
+      <PeriodBreakdownModal
+        query={
+          breakdown && query
+            ? {
+                studentProfileId: breakdown.studentProfileId,
+                subjectId: query.subjectId,
+                academicPeriodId: query.academicPeriodId,
+              }
+            : null
+        }
+        studentName={breakdown?.name}
+        onClose={() => setBreakdown(null)}
+      />
     </div>
   );
 }
@@ -251,6 +271,7 @@ function FinalsTab({
   const [error, setError] = useState<string | null>(null);
   const [missing, setMissing] = useState<ReadonlySet<number>>(new Set());
   const [confirmPublish, setConfirmPublish] = useState(false);
+  const [breakdown, setBreakdown] = useState<{ studentProfileId: number; name: string } | null>(null);
 
   if (finalsKey == null || finals.isPending) return <TableSkeleton />;
 
@@ -342,8 +363,25 @@ function FinalsTab({
           highlighted={missing}
           busyStudentId={busyStudentId}
           onPick={(row, value) => void pick(row, value)}
+          onOpenBreakdown={(row) =>
+            setBreakdown({ studentProfileId: row.studentProfileId as number, name: row.studentName ?? '' })
+          }
         />
       </div>
+
+      <PeriodBreakdownModal
+        query={
+          breakdown
+            ? {
+                studentProfileId: breakdown.studentProfileId,
+                subjectId: finalsKey.subjectId,
+                academicPeriodId: finalsKey.academicPeriodId,
+              }
+            : null
+        }
+        studentName={breakdown?.name}
+        onClose={() => setBreakdown(null)}
+      />
 
       {error && (
         <p className="rounded-xl bg-danger-bg px-4 py-3 text-13 font-semibold text-red-600">
@@ -417,9 +455,14 @@ function JournalShell({
   );
 }
 
-function Legend() {
+function Legend({ policyCaption }: { policyCaption: string | null }) {
   return (
     <div className="flex flex-wrap items-center gap-6 px-1 text-13 text-slate-500">
+      {policyCaption && (
+        <span className="flex items-center gap-2 font-medium text-slate-600">
+          Четверть по политике оценивания: {policyCaption}
+        </span>
+      )}
       <span className="flex items-center gap-2">
         <span className="flex size-[26px] items-center justify-center rounded-lg bg-navy-700 text-13 font-bold text-white">
           4

@@ -11,6 +11,9 @@ import type { GradeType, GradeWriteState } from '@/lib/gradesApi';
  * и учитель находит нужное сверху.
  */
 export const GRADE_TYPE_LABELS: Record<GradeType, string> = {
+  FORMATIVE: 'Формативная оценка',
+  SUMMATIVE_SECTION: 'СОР — суммативное за раздел',
+  SUMMATIVE_TERM: 'СОЧ — суммативное за четверть',
   LESSON_WORK: 'Работа на уроке',
   ORAL_ANSWER: 'Устный ответ',
   BOARD_WORK: 'Работа у доски',
@@ -67,3 +70,38 @@ export function formatNumericValue(value: number | string | undefined): string {
   if (value === undefined || value === null) return '';
   return String(value);
 }
+
+/** Коротко — для клетки журнала и подписи под курсором, где на тип есть одно слово. */
+export const GRADE_TYPE_SHORT: Partial<Record<GradeType, string>> = {
+  FORMATIVE: 'ФО',
+  SUMMATIVE_SECTION: 'СОР',
+  SUMMATIVE_TERM: 'СОЧ',
+  HOMEWORK: 'ДЗ',
+};
+
+type GradeValueLike = {
+  scaleCode?: string | null;
+  score?: number | null;
+  maxScore?: number | null;
+};
+
+/**
+ * Как показать оценку человеку (GRADES-003): «4+» по старой шкале, «7» у 10-балльной,
+ * «15/20» у работы из максимума. Форму выбирает сервер — у оценки заполнено ровно одно из
+ * двух представлений, и экран не решает, какое из них верное.
+ */
+export function gradeValueLabel(grade: GradeValueLike | null | undefined): string | null {
+  if (!grade) return null;
+  if (grade.scaleCode) return grade.scaleCode;
+  if (grade.score == null) return null;
+  if (grade.maxScore == null || Number(grade.maxScore) === 10) return trimNumber(grade.score);
+  return `${trimNumber(grade.score)}/${trimNumber(grade.maxScore)}`;
+}
+
+/** `15.00` → «15», `15.5` → «15,5». Баллы сегодня целые, но формат не должен на это полагаться. */
+export function trimNumber(value: number | string): string {
+  const text = String(value);
+  const trimmed = text.includes('.') ? text.replace(/\.?0+$/, '') : text;
+  return trimmed.replace('.', ',');
+}
+

@@ -804,6 +804,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/grading-policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listGradingPolicies"];
+        put?: never;
+        post: operations["createGradingPolicy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/grading-policies/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listGradingPolicyTemplates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/grading-policies/{policyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getGradingPolicy"];
+        put: operations["updateGradingPolicy"];
+        post?: never;
+        delete: operations["deleteGradingPolicy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/grading-policies/{policyId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["activateGradingPolicy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/grading-policies/{policyId}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getGradingPolicyHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/group-sets": {
         parameters: {
             query?: never;
@@ -3220,6 +3300,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/final-grades/my/breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["myPeriodBreakdown"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/final-grades/students/{studentProfileId}": {
         parameters: {
             query?: never;
@@ -3228,6 +3324,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["forStudent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/final-grades/students/{studentProfileId}/breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["periodBreakdown"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3484,6 +3596,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["history_5"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grading/policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getActiveGradingPolicy"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3852,6 +3980,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["grades_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/grades/value-mode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["valueMode"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6154,6 +6298,11 @@ export interface components {
             password?: string;
             phone?: string;
         };
+        ActiveGradingPolicyView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            policy?: components["schemas"]["GradingPolicyView"];
+        };
         AddEquipmentUnitsRequest: {
             units?: components["schemas"]["EquipmentUnitDraft"][];
         };
@@ -6899,8 +7048,10 @@ export interface components {
             average?: number;
             currentMember?: boolean;
             finalGrade?: components["schemas"]["FinalGradeView"];
+            recommendationChanged?: boolean;
             /** Format: int32 */
             recommendedValue?: number;
+            result?: components["schemas"]["PeriodResultSummaryView"];
             studentName?: string;
             /** Format: int64 */
             studentProfileId?: number;
@@ -6911,9 +7062,11 @@ export interface components {
             academicPeriodId?: number;
             /** Format: int64 */
             academicYearId?: number;
+            allowedValues?: number[];
             canManage?: boolean;
             /** Format: int64 */
             classId?: number;
+            gradingPolicy?: components["schemas"]["PolicySummaryView"];
             rows?: components["schemas"]["ClassFinalGradeRowView"][];
             /** Format: int64 */
             subgroupId?: number;
@@ -7026,6 +7179,19 @@ export interface components {
             students?: components["schemas"]["ClassSubgroupStudentView"][];
             /** Format: date-time */
             updatedAt?: string;
+        };
+        ComponentSummaryView: {
+            /** @enum {string} */
+            code?: "FORMATIVE" | "SOR" | "SOCH";
+            contribution?: number;
+            effectiveWeightPercent?: number;
+            maxSum?: number;
+            percent?: number;
+            scoreSum?: number;
+            title?: string;
+            weightPercent?: number;
+            /** Format: int32 */
+            workCount?: number;
         };
         ConfirmAnswerScoreRequest: {
             adminComment?: string;
@@ -7235,7 +7401,7 @@ export interface components {
             /** Format: int64 */
             academicYearId?: number;
             /** @enum {string} */
-            scope: "PERIOD" | "YEAR";
+            scope: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
             /** Format: int64 */
             studentProfileId: number;
             /** Format: int64 */
@@ -7245,14 +7411,25 @@ export interface components {
         };
         CreateGradeRequest: {
             /** @enum {string} */
-            gradeType?: "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            maxScore?: number;
             scaleCode?: string;
+            score?: number;
             /** Format: int64 */
             sourceId: number;
             /** @enum {string} */
             sourceType: "LESSON" | "HOMEWORK";
             /** Format: int64 */
             studentProfileId: number;
+        };
+        CreateGradingPolicyRequest: {
+            /** Format: int64 */
+            academicYearId: number;
+            /** Format: int64 */
+            copyFromPolicyId?: number;
+            name?: string;
+            /** @enum {string} */
+            template?: "KUNDELIK_2020" | "JOURNAL_FORM_2026";
         };
         CreateGroupRequest: {
             /** Format: int64 */
@@ -7624,6 +7801,14 @@ export interface components {
         EventSnapshotRunView: {
             sources?: components["schemas"]["SnapshotSourceResult"][];
         };
+        ExamFinalView: {
+            examGrade?: components["schemas"]["FinalGradeView"];
+            examWeightPercent?: number;
+            finalGrade?: components["schemas"]["FinalGradeView"];
+            recommendationSource?: number;
+            /** Format: int32 */
+            recommendedValue?: number;
+        };
         FeedbackAiAnalysisView: {
             /** Format: int64 */
             analysisId?: number;
@@ -7705,6 +7890,7 @@ export interface components {
             id?: number;
         };
         FinalGradeLockView: {
+            finalLocked?: boolean;
             futurePeriods?: components["schemas"]["PeriodRefView"][];
             locked?: boolean;
             /** Format: date-time */
@@ -7724,7 +7910,7 @@ export interface components {
             /** Format: date-time */
             publishedAt?: string;
             /** @enum {string} */
-            scope?: "PERIOD" | "YEAR";
+            scope?: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
             /** @enum {string} */
             status?: "DRAFT" | "PUBLISHED";
             /** Format: int64 */
@@ -7799,6 +7985,13 @@ export interface components {
             /** Format: int32 */
             sortOrder?: number;
         };
+        GradeValueModeView: {
+            /** @enum {string} */
+            defaultWorkType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            /** @enum {string} */
+            valueMode?: "SCALE" | "POINTS";
+            workTypes?: components["schemas"]["SheetWorkTypeView"][];
+        };
         GradeView: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -7808,13 +8001,15 @@ export interface components {
             createdAt?: string;
             deleted?: boolean;
             /** @enum {string} */
-            gradeType?: "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
             /** Format: int64 */
             id?: number;
+            maxScore?: number;
             numericValue?: number;
             /** Format: date-time */
             publishedAt?: string;
             scaleCode?: string;
+            score?: number;
             /** Format: int64 */
             sourceId?: number;
             /** @enum {string} */
@@ -7893,6 +8088,7 @@ export interface components {
             average?: components["schemas"]["GradebookAverageView"];
             cells?: components["schemas"]["GradebookCellView"][];
             currentMember?: boolean;
+            result?: components["schemas"]["PeriodResultSummaryView"];
             studentName?: string;
             /** Format: int64 */
             studentProfileId?: number;
@@ -7915,6 +8111,7 @@ export interface components {
             /** Format: int64 */
             classId?: number;
             columns?: components["schemas"]["GradebookColumnView"][];
+            gradingPolicy?: components["schemas"]["PolicySummaryView"];
             period?: components["schemas"]["GradebookPeriodView"];
             rows?: components["schemas"]["GradebookRowView"][];
             /** Format: int64 */
@@ -7928,6 +8125,73 @@ export interface components {
             name?: string;
             /** Format: date */
             startDate?: string;
+        };
+        GradingPolicyContentRequest: {
+            bands: components["schemas"]["PolicyBandDto"][];
+            components: components["schemas"]["PolicyComponentDto"][];
+            /** Format: int64 */
+            effectiveFromPeriodId?: number;
+            examWeightPercent?: number;
+            /** Format: int64 */
+            expectedVersion?: number;
+            /** @enum {string} */
+            missingComponentRule: "RENORMALIZE" | "REQUIRE_ALL";
+            name?: string;
+            sourceNote?: string;
+            workTypes: components["schemas"]["PolicyWorkTypeDto"][];
+            /** @enum {string} */
+            yearMethod: "AVERAGE_OF_PERIOD_FINALS";
+        };
+        GradingPolicyHistoryView: {
+            /** @enum {string} */
+            action?: "CREATE" | "UPDATE" | "ACTIVATE" | "RETIRE";
+            /** Format: int64 */
+            actorId?: number;
+            actorName?: string;
+            after?: components["schemas"]["JsonNode"];
+            before?: components["schemas"]["JsonNode"];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+        };
+        GradingPolicyTemplateView: {
+            /** @enum {string} */
+            code?: "KUNDELIK_2020" | "JOURNAL_FORM_2026";
+            content?: components["schemas"]["GradingPolicyContentRequest"];
+            title?: string;
+        };
+        GradingPolicyView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: date-time */
+            activatedAt?: string;
+            activatedByName?: string;
+            bands?: components["schemas"]["PolicyBandDto"][];
+            components?: components["schemas"]["PolicyComponentDto"][];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            effectiveFromPeriodId?: number;
+            effectiveFromPeriodName?: string;
+            examWeightPercent?: number;
+            /** Format: int64 */
+            id?: number;
+            /** @enum {string} */
+            missingComponentRule?: "RENORMALIZE" | "REQUIRE_ALL";
+            name?: string;
+            /** Format: date-time */
+            retiredAt?: string;
+            sourceNote?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "ACTIVE" | "RETIRED";
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int64 */
+            version?: number;
+            workTypes?: components["schemas"]["PolicyWorkTypeDto"][];
+            /** @enum {string} */
+            yearMethod?: "AVERAGE_OF_PERIOD_FINALS";
         };
         GroupSetRef: {
             /** Format: int64 */
@@ -8503,11 +8767,13 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             /** @enum {string} */
-            gradeType?: "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
             /** Format: int64 */
             id?: number;
+            maxScore?: number;
             numericValue?: number;
             scaleCode?: string;
+            score?: number;
             /** Format: int64 */
             studentProfileId?: number;
             /** Format: date-time */
@@ -8523,11 +8789,16 @@ export interface components {
             canManageGrades?: boolean;
             /** @enum {string} */
             capacity?: "MAIN_TEACHER" | "SUBSTITUTE_TEACHER";
+            /** @enum {string} */
+            defaultWorkType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
             /** Format: int64 */
             lessonId?: number;
             /** Format: int32 */
             maxGradesPerStudent?: number;
             students?: components["schemas"]["LessonGradeSheetRowView"][];
+            /** @enum {string} */
+            valueMode?: "SCALE" | "POINTS";
+            workTypes?: components["schemas"]["SheetWorkTypeView"][];
             /** @enum {string} */
             writeState?: "ALLOWED" | "NOT_TEACHING" | "LESSON_CANCELLED" | "LESSON_SUPERSEDED" | "SUBSTITUTION_ENDED" | "SUBSTITUTE_NOT_PERMITTED" | "SUBSTITUTE_WINDOW_NOT_OPEN" | "SUBSTITUTE_WINDOW_CLOSED";
         };
@@ -8955,6 +9226,10 @@ export interface components {
             teacher?: components["schemas"]["TeacherPart"];
         };
         MySubjectFinalsView: {
+            /** Format: int32 */
+            examValue?: number;
+            /** Format: int32 */
+            finalValue?: number;
             periodValues?: {
                 [key: string]: number;
             };
@@ -8967,6 +9242,7 @@ export interface components {
         MySubjectGradesRowView: {
             average?: components["schemas"]["GradeAverageView"];
             grades?: components["schemas"]["GradeView"][];
+            result?: components["schemas"]["PeriodResultSummaryView"];
             /** Format: int64 */
             subjectId?: number;
             subjectName?: string;
@@ -9822,6 +10098,21 @@ export interface components {
             /** Format: date */
             startDate?: string;
         };
+        PeriodBreakdownView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            finalGrade?: components["schemas"]["FinalGradeView"];
+            formula?: string;
+            periodName?: string;
+            policy?: components["schemas"]["PolicySummaryView"];
+            recommendationChanged?: boolean;
+            result?: components["schemas"]["PeriodResultSummaryView"];
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            works?: components["schemas"]["WorkView"][];
+        };
         PeriodFinalView: {
             average?: number;
             /** Format: date */
@@ -9830,8 +10121,10 @@ export interface components {
             name?: string;
             /** Format: int64 */
             periodId?: number;
+            recommendationChanged?: boolean;
             /** Format: int32 */
             recommendedValue?: number;
+            result?: components["schemas"]["PeriodResultSummaryView"];
             /** Format: date */
             startDate?: string;
             studied?: boolean;
@@ -9854,6 +10147,49 @@ export interface components {
             name?: string;
             /** Format: date */
             startDate?: string;
+        };
+        PeriodResultSummaryView: {
+            bandLabel?: string;
+            components?: components["schemas"]["ComponentSummaryView"][];
+            missingComponents?: ("FORMATIVE" | "SOR" | "SOCH")[];
+            percent?: number;
+            /** Format: int64 */
+            policyId?: number;
+            /** Format: int32 */
+            recommendedValue?: number;
+            /** Format: int32 */
+            roundedPercent?: number;
+            /** @enum {string} */
+            status?: "CALCULATED" | "NO_WORKS" | "INCOMPLETE";
+        };
+        PolicyBandDto: {
+            label?: string;
+            /** Format: int32 */
+            minPercent?: number;
+            /** Format: int32 */
+            value?: number;
+        };
+        PolicyComponentDto: {
+            /** @enum {string} */
+            code: "FORMATIVE" | "SOR" | "SOCH";
+            title?: string;
+            weightPercent: number;
+        };
+        PolicySummaryView: {
+            bands?: components["schemas"]["PolicyBandDto"][];
+            components?: components["schemas"]["PolicyComponentDto"][];
+            name?: string;
+            /** Format: int64 */
+            policyId?: number;
+        };
+        PolicyWorkTypeDto: {
+            /** @enum {string} */
+            component?: "FORMATIVE" | "SOR" | "SOCH";
+            /** @enum {string} */
+            scoring: "TEN_POINT" | "RAW_POINTS";
+            weight: number;
+            /** @enum {string} */
+            workType: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
         };
         ProposalIntervalView: {
             /** @enum {string} */
@@ -10610,6 +10946,16 @@ export interface components {
             id?: number;
             payload?: string;
         };
+        SheetWorkTypeView: {
+            /** @enum {string} */
+            component?: "FORMATIVE" | "SOR" | "SOCH";
+            /** Format: int32 */
+            fixedMax?: number;
+            /** @enum {string} */
+            scoring?: "TEN_POINT" | "RAW_POINTS";
+            /** @enum {string} */
+            type?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+        };
         Skipped: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -10674,8 +11020,11 @@ export interface components {
         StudentFinalGradesView: {
             /** Format: int64 */
             academicYearId?: number;
+            allowedValues?: number[];
             /** Format: int64 */
             classId?: number;
+            exam?: components["schemas"]["ExamFinalView"];
+            gradingPolicy?: components["schemas"]["PolicySummaryView"];
             lock?: components["schemas"]["FinalGradeLockView"];
             periods?: components["schemas"]["PeriodFinalView"][];
             /** Format: int64 */
@@ -10812,6 +11161,7 @@ export interface components {
             academicPeriodId?: number;
             average?: components["schemas"]["GradeAverageView"];
             events?: components["schemas"]["StudentGradeEventView"][];
+            result?: components["schemas"]["PeriodResultSummaryView"];
             studentName?: string;
             /** Format: int64 */
             studentProfileId?: number;
@@ -11711,8 +12061,10 @@ export interface components {
         };
         UpdateGradeRequest: {
             /** @enum {string} */
-            gradeType?: "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            maxScore?: number;
             scaleCode?: string;
+            score?: number;
         };
         UpdateHomeworkRequest: {
             /** @enum {string} */
@@ -11885,6 +12237,25 @@ export interface components {
         VerifyCodeResponse: {
             accessToken?: string;
             applicant?: components["schemas"]["ApplicantView"];
+        };
+        WorkView: {
+            /** @enum {string} */
+            component?: "FORMATIVE" | "SOR" | "SOCH";
+            /** Format: date */
+            date?: string;
+            /** Format: int64 */
+            gradeId?: number;
+            /** @enum {string} */
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            maxScore?: number;
+            /** Format: date-time */
+            publishedAt?: string;
+            score?: number;
+            /** Format: int64 */
+            sourceId?: number;
+            /** @enum {string} */
+            sourceType?: "LESSON" | "HOMEWORK";
+            title?: string;
         };
         WorkingDaysView: {
             /** Format: int64 */
@@ -13464,6 +13835,184 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EventSnapshotRunView"];
+                };
+            };
+        };
+    };
+    listGradingPolicies: {
+        parameters: {
+            query: {
+                academicYearId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradingPolicyView"][];
+                };
+            };
+        };
+    };
+    createGradingPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGradingPolicyRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradingPolicyView"];
+                };
+            };
+        };
+    };
+    listGradingPolicyTemplates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradingPolicyTemplateView"][];
+                };
+            };
+        };
+    };
+    getGradingPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradingPolicyView"];
+                };
+            };
+        };
+    };
+    updateGradingPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GradingPolicyContentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradingPolicyView"];
+                };
+            };
+        };
+    };
+    deleteGradingPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    activateGradingPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradingPolicyView"];
+                };
+            };
+        };
+    };
+    getGradingPolicyHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradingPolicyHistoryView"][];
                 };
             };
         };
@@ -17926,6 +18475,30 @@ export interface operations {
             };
         };
     };
+    myPeriodBreakdown: {
+        parameters: {
+            query: {
+                subjectId: number;
+                academicPeriodId: number;
+                childStudentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PeriodBreakdownView"];
+                };
+            };
+        };
+    };
     forStudent: {
         parameters: {
             query: {
@@ -17947,6 +18520,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StudentFinalGradesView"];
+                };
+            };
+        };
+    };
+    periodBreakdown: {
+        parameters: {
+            query: {
+                subjectId: number;
+                academicPeriodId: number;
+            };
+            header?: never;
+            path: {
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PeriodBreakdownView"];
                 };
             };
         };
@@ -18344,6 +18942,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GradeHistoryView"][];
+                };
+            };
+        };
+    };
+    getActiveGradingPolicy: {
+        parameters: {
+            query: {
+                academicYearId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActiveGradingPolicyView"];
                 };
             };
         };
@@ -19015,6 +19635,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GradeView"][];
+                };
+            };
+        };
+    };
+    valueMode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeValueModeView"];
                 };
             };
         };

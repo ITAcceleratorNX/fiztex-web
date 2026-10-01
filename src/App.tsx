@@ -22,6 +22,7 @@ import { SurveysPage } from '@/pages/SurveysPage';
 import { SurveyDetailPage } from '@/pages/SurveyDetailPage';
 import { HomeworkListPage } from '@/pages/homework/HomeworkListPage';
 import { JournalPage } from '@/pages/journal/JournalPage';
+import { GradingPolicyPage } from '@/platform/pages/grading/GradingPolicyPage';
 import { TextbooksPage } from '@/pages/textbooks/TextbooksPage';
 import { FeedbackPage } from '@/pages/feedback/FeedbackPage';
 import { ServiceRequestsPage } from '@/pages/service/ServiceRequestsPage';
@@ -214,6 +215,8 @@ export function App() {
         />
         {/* Журнал класса и итоги четверти (GRADES-FE-001 §5.4, §9). */}
         <Route path={ROUTES.journal} element={<JournalPage />} />
+        {/* Политика оценивания (GRADES-003): веса ФО/СОР/СОЧ, пороги, вес экзамена. */}
+        <Route path={ROUTES.gradingPolicy} element={<GradingPolicyPage />} />
         <Route path={ROUTES.textbooks} element={<TextbooksPage />} />
         {/* Ежемесячная обратная связь учителя (MONTHLY-FEEDBACK-001): история — тот же экран
             с прошлым месяцем в фильтре, отдельной страницы у неё нет. */}
