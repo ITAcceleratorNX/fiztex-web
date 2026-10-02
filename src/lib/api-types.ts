@@ -12770,6 +12770,8 @@ export interface components {
             createdAt?: string;
             /** Format: int64 */
             id?: number;
+            /** Format: int64 */
+            itemCount?: number;
             name?: string;
             /** Format: date-time */
             updatedAt?: string;
