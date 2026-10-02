@@ -269,4 +269,23 @@ describe('JournalPage', () => {
     expect(screen.queryByRole('button', { name: '2' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '5' })).toBeInTheDocument();
   });
+
+  /** Публикация — только после окончания четверти; выставлять итоги можно заранее. */
+  it('до окончания четверти кнопка публикации выключена и называет дату', () => {
+    useClassFinals.mockReturnValue({
+      data: finals({
+        publicationOpen: false,
+        publishableFrom: '2026-10-26',
+        rows: [{ ...finals().rows[0], finalGrade: { id: 3, value: 4, status: 'DRAFT' } }],
+      }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+
+    renderPage('?tab=finals');
+
+    expect(screen.getByRole('button', { name: 'Опубликовать итоги четверти' })).toBeDisabled();
+    expect(screen.getByText(/опубликовать — после окончания четверти, с 26\.10/)).toBeInTheDocument();
+  });
 });

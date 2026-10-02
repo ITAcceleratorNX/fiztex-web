@@ -21,7 +21,12 @@ import {
   type ClassFinalGradeRow,
   type JournalQuery,
 } from '@/lib/gradebookApi';
-import { currentMonthKey, finalsByStudent, monthOptionsOf } from '@/lib/journalModel';
+import {
+  currentMonthKey,
+  finalsByStudent,
+  monthOptionsOf,
+  shortDate as formatShortDate,
+} from '@/lib/journalModel';
 import { weightsCaption } from '@/lib/gradingModel';
 import { JournalFilters, type JournalWindow } from './JournalFilters';
 import { JournalTable } from './JournalTable';
@@ -297,6 +302,9 @@ function FinalsTab({
   const allFilled = rows.length > 0 && filled === rows.length;
   const allPublished =
     rows.length > 0 && rows.every((row) => row.finalGrade?.status === 'PUBLISHED');
+  // Публиковать итоги можно только после окончания четверти — дату считает сервер.
+  const publicationOpen = data.publicationOpen !== false;
+  const publishableFrom = data.publishableFrom ? formatShortDate(data.publishableFrom) : null;
 
   async function pick(row: ClassFinalGradeRow, value: number) {
     setError(null);
@@ -334,6 +342,10 @@ function FinalsTab({
       await publish.mutateAsync(finalsKey!);
       setMissing(new Set());
     } catch (failure) {
+      if (failure instanceof ApiError && failure.code === FINAL_GRADE_ERRORS.periodNotEnded) {
+        setError(failure.message);
+        return;
+      }
       if (failure instanceof ApiError && failure.code === FINAL_GRADE_ERRORS.setIncomplete) {
         setMissing(new Set(incompleteStudentIdsFrom(failure.details)));
         setError('Итоги выставлены не всем ученикам — опубликовать четверть нельзя');
@@ -393,17 +405,19 @@ function FinalsTab({
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-6 py-5">
           <p className="flex items-center gap-3 text-13 text-slate-600">
             <span
-              className={`size-2 shrink-0 rounded-full ${allPublished ? 'bg-green-500' : allFilled ? 'bg-brand-500' : 'bg-slate-300'}`}
+              className={`size-2 shrink-0 rounded-full ${allPublished ? 'bg-green-500' : allFilled && publicationOpen ? 'bg-brand-500' : 'bg-slate-300'}`}
             />
             {allPublished
               ? 'Итоги четверти опубликованы — их видят ученик и родитель'
-              : allFilled
-                ? `Все итоги выставлены (${filled} из ${rows.length}) — можно публиковать`
-                : `Выставьте оценку всем ученикам, чтобы опубликовать итоги четверти (${filled} из ${rows.length} оценено)`}
+              : !publicationOpen
+                ? `Итоги можно выставлять уже сейчас, а опубликовать — после окончания четверти${publishableFrom ? `, с ${publishableFrom}` : ''} (${filled} из ${rows.length} выставлено)`
+                : allFilled
+                  ? `Все итоги выставлены (${filled} из ${rows.length}) — можно публиковать`
+                  : `Выставьте оценку всем ученикам, чтобы опубликовать итоги четверти (${filled} из ${rows.length} оценено)`}
           </p>
           <Button
             onClick={() => setConfirmPublish(true)}
-            disabled={!allFilled || allPublished}
+            disabled={!allFilled || allPublished || !publicationOpen}
             loading={publish.isPending}
           >
             Опубликовать итоги четверти

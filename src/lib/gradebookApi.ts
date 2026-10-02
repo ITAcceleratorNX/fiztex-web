@@ -31,6 +31,7 @@ export const FINAL_GRADE_ERRORS = {
   yearLocked: 'FINAL_GRADE_YEAR_LOCKED',
   alreadyExists: 'FINAL_GRADE_ALREADY_EXISTS',
   notAccessible: 'FINAL_GRADE_NOT_ACCESSIBLE',
+  periodNotEnded: 'FINAL_GRADE_PERIOD_NOT_ENDED',
 } as const;
 
 /**

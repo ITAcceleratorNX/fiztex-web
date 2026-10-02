@@ -7067,6 +7067,9 @@ export interface components {
             /** Format: int64 */
             classId?: number;
             gradingPolicy?: components["schemas"]["PolicySummaryView"];
+            publicationOpen?: boolean;
+            /** Format: date */
+            publishableFrom?: string;
             rows?: components["schemas"]["ClassFinalGradeRowView"][];
             /** Format: int64 */
             subgroupId?: number;
