@@ -6068,6 +6068,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teacher/textbooks/{id}/dependencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["dependencies_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teacher/workspace": {
         parameters: {
             query?: never;
@@ -8395,9 +8411,11 @@ export interface components {
             /** Format: int64 */
             id?: number;
             /** @enum {string} */
-            kind?: "FILE" | "PHOTO" | "LINK";
+            kind?: "FILE" | "PHOTO" | "LINK" | "TEXTBOOK";
             /** Format: int64 */
             sizeBytes?: number;
+            /** Format: int64 */
+            textbookId?: number;
             url?: string;
         };
         HomeworkOptionView: {
@@ -12160,6 +12178,17 @@ export interface components {
             textbook?: components["schemas"]["TextbookView"];
             usage?: components["schemas"]["TextbookUsageView"][];
         };
+        TextbookDependenciesView: {
+            canDelete?: boolean;
+            deleteBlockReason?: string;
+            /** Format: int64 */
+            historicalClassBindings?: number;
+            homeworkIds?: number[];
+            /** Format: int64 */
+            homeworkMaterials?: number;
+            requiresDetachConfirmation?: boolean;
+            revision?: string;
+        };
         TextbookUsageView: {
             /** Format: int64 */
             academicYearId?: number;
@@ -12515,7 +12544,7 @@ export interface components {
             selectable?: boolean;
             sourceId?: string;
             sourceKind?: string;
-            supportedActions?: ("ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "APPLY_TEST_TO_HOMEWORK")[];
+            supportedActions?: ("ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "ATTACH_TEXTBOOK_TO_HOMEWORK" | "APPLY_TEST_TO_HOMEWORK")[];
             title?: string;
             /** @enum {string} */
             type?: "TEXTBOOK" | "CURRICULUM_PLAN" | "PREPARED_LESSON" | "TEST" | "HOMEWORK" | "DOCUMENT";
@@ -20666,7 +20695,10 @@ export interface operations {
     download_2: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                Range?: string;
+                "If-None-Match"?: string;
+            };
             path: {
                 id: number;
                 materialId: number;
@@ -23653,8 +23685,12 @@ export interface operations {
     };
     delete_2: {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                confirmDetach?: boolean;
+            };
+            header?: {
+                "If-Match"?: string;
+            };
             path: {
                 id: number;
             };
@@ -23762,6 +23798,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+        };
+    };
+    dependencies_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextbookDependenciesView"];
                 };
             };
         };
@@ -24144,7 +24202,7 @@ export interface operations {
                 q?: string;
                 type?: "TEXTBOOK" | "CURRICULUM_PLAN" | "PREPARED_LESSON" | "TEST" | "HOMEWORK" | "DOCUMENT";
                 fileType?: "PDF" | "WORD" | "SPREADSHEET" | "PRESENTATION" | "IMAGE";
-                usage?: "ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "APPLY_TEST_TO_HOMEWORK";
+                usage?: "ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "ATTACH_TEXTBOOK_TO_HOMEWORK" | "APPLY_TEST_TO_HOMEWORK";
                 folderId?: number;
                 page?: number;
                 size?: number;
