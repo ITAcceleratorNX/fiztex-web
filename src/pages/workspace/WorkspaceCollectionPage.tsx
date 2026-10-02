@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, FileText, Folder, MoreHorizontal, Plus } from 'lucide-react';
+import { ArrowLeft, FileText, Folder, Plus } from 'lucide-react';
+import { ActionMenu } from '@/components/ui/ActionMenu';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -11,6 +12,7 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock
 import { useToast } from '@/context/ToastContext';
 import {
   useDeleteWorkspaceFolder, useDetachWorkspaceFolderItem, useRenameWorkspaceFolder,
+  useRenameWorkspaceMaterial,
   useTeacherWorkspaceFolder, useTeacherWorkspaceSearch, useTeacherWorkspaceSection,
 } from '@/hooks/queries';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -19,6 +21,7 @@ import { openWorkspaceDocument } from '@/lib/teacherWorkspaceOpen';
 import { ROUTES } from '@/lib/routes';
 import type { WorkspaceMaterialType, WorkspaceSearchItem } from '@/lib/teacherWorkspaceApi';
 import { CreateMaterialModal } from './CreateMaterialModal';
+import { DeleteMaterialModal } from './DeleteMaterialModal';
 import { FolderMembershipModal } from './FolderMembershipModal';
 
 const sectionTypes: Record<string, WorkspaceMaterialType | null> = {
@@ -35,14 +38,15 @@ function formatDate(value?: string) {
   return value ? new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(value)) : '—';
 }
 
-function WorkspaceRow({ item, folderId, onOpen, onAddToFolder, onRemove }: {
+function WorkspaceRow({ item, folderId, onOpen, onAddToFolder, onRemove, onRename, onDelete }: {
   item: WorkspaceSearchItem;
   folderId?: number;
   onOpen: () => void;
   onAddToFolder: () => void;
   onRemove: () => void;
+  onRename: () => void;
+  onDelete: () => void;
 }) {
-  const [menuOpen, setMenuOpen] = useState(false);
   const format = item.fileExtension?.toUpperCase();
   return (
     <div className="flex min-h-16 items-center gap-2 border-b border-slate-200 px-5 py-3 last:border-b-0">
@@ -54,16 +58,13 @@ function WorkspaceRow({ item, folderId, onOpen, onAddToFolder, onRemove }: {
       <span className="hidden w-52 shrink-0 items-center gap-2 text-13 text-slate-700 md:flex">
         {item.author || '—'}
       </span>
-      <div className="relative shrink-0">
-        <button type="button" aria-label={`Действия: ${item.title}`} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)} className="flex size-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700">
-          <MoreHorizontal className="size-5" />
-        </button>
-        {menuOpen && <div className="absolute right-0 top-9 z-20 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-popover">
-          <button type="button" onClick={() => { setMenuOpen(false); onOpen(); }} className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50">Открыть</button>
-          <button type="button" onClick={() => { setMenuOpen(false); onAddToFolder(); }} className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50">Добавить в папку / изменить папку</button>
-          {folderId != null && <button type="button" onClick={() => { setMenuOpen(false); onRemove(); }} className="block w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">Убрать из этой папки</button>}
-        </div>}
-      </div>
+      <ActionMenu label={`Действия: ${item.title}`} items={[
+        { label: 'Открыть', onSelect: onOpen },
+        ...(item.sourceKind === 'teacher-workspace-material' ? [{ label: 'Переименовать', onSelect: onRename }] : []),
+        { label: 'Добавить в папку / изменить папку', onSelect: onAddToFolder },
+        ...(folderId != null ? [{ label: 'Убрать из этой папки', onSelect: onRemove, danger: true }] : []),
+        ...(item.sourceKind === 'teacher-workspace-material' ? [{ label: 'Удалить', onSelect: onDelete, danger: true }] : []),
+      ]} />
     </div>
   );
 }
@@ -91,9 +92,13 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
   const [renameValue, setRenameValue] = useState('');
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [removeItem, setRemoveItem] = useState<WorkspaceSearchItem | null>(null);
+  const [renameItem, setRenameItem] = useState<WorkspaceSearchItem | null>(null);
+  const [materialTitle, setMaterialTitle] = useState('');
+  const [deleteItem, setDeleteItem] = useState<WorkspaceSearchItem | null>(null);
   const rename = useRenameWorkspaceFolder();
   const deleteFolder = useDeleteWorkspaceFolder();
   const detach = useDetachWorkspaceFolderItem();
+  const renameMaterial = useRenameWorkspaceMaterial();
   const title = isFolder ? folder.data?.folder?.name : section.data?.section?.title;
   useDocumentTitle(title ? `${title} — Рабочее пространство` : 'Рабочее пространство');
   const list = isFolder ? folder : section;
@@ -162,6 +167,19 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
     }
   }
 
+  async function saveMaterialRename(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const id = Number(renameItem?.sourceId);
+    if (!Number.isSafeInteger(id) || id <= 0 || !materialTitle.trim()) return;
+    try {
+      await renameMaterial.mutateAsync({ id, title: materialTitle.trim() });
+      setRenameItem(null);
+      toast.success('Материал переименован');
+    } catch (caught) {
+      toast.error(caught instanceof ApiError ? caught.message : 'Не удалось переименовать материал');
+    }
+  }
+
   if (isFolder && (!Number.isInteger(folderId) || folderId <= 0)) return <ErrorBlock message="Папка не найдена" />;
   if (!isFolder && !(code in sectionTypes)) return <ErrorBlock message="Раздел не найден" />;
   if (list.isPending) return <LoadingBlock />;
@@ -178,13 +196,10 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
         </div>
         <div className="flex items-center gap-2">
           {(isFolder || code === 'DOCUMENTS') && <Button size="sm" icon={<Plus className="size-4" />} onClick={() => setAdding(true)}>{isFolder ? 'Добавить материал' : 'Добавить'}</Button>}
-          {isFolder && <div className="relative group">
-            <button type="button" aria-label="Действия с папкой" className="flex size-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600"><MoreHorizontal className="size-5" /></button>
-            <div className="invisible absolute right-0 top-9 z-20 w-48 rounded-xl border border-slate-200 bg-white p-1 shadow-popover group-hover:visible group-focus-within:visible">
-              <button type="button" onClick={() => { setRenameValue(title ?? ''); setRenameOpen(true); }} className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50">Переименовать</button>
-              <button type="button" onClick={() => setDeleteOpen(true)} className="block w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">Удалить папку</button>
-            </div>
-          </div>}
+          {isFolder && <ActionMenu label="Действия с папкой" items={[
+            { label: 'Переименовать', onSelect: () => { setRenameValue(title ?? ''); setRenameOpen(true); } },
+            { label: 'Удалить папку', onSelect: () => setDeleteOpen(true), danger: true },
+          ]} />}
         </div>
       </header>
       {searchEnabled && search.isPending && <LoadingBlock />}
@@ -196,7 +211,7 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
         <div className="flex h-11 items-center border-b border-slate-200 bg-slate-50 px-5 text-xs font-bold uppercase text-slate-400">
           <span className="flex-1">Материал</span><span className="hidden w-52 md:block">Добавил</span><span className="w-8" />
         </div>
-        {items.map((item) => item.id != null && <WorkspaceRow key={item.id} item={item} folderId={isFolder ? folderId : undefined} onOpen={() => void open(item)} onAddToFolder={() => setAddingToFolder(item)} onRemove={() => setRemoveItem(item)} />)}
+        {items.map((item) => item.id != null && <WorkspaceRow key={item.id} item={item} folderId={isFolder ? folderId : undefined} onOpen={() => void open(item)} onAddToFolder={() => setAddingToFolder(item)} onRemove={() => setRemoveItem(item)} onRename={() => { setRenameItem(item); setMaterialTitle(item.title ?? ''); }} onDelete={() => setDeleteItem(item)} />)}
       </div>}
       {total > 20 && <div className="mt-4 flex justify-end gap-2">
         <Button variant="secondary" size="sm" disabled={page === 0} onClick={() => setPage(page - 1)}>Назад</Button>
@@ -204,6 +219,15 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
       </div>}
       <CreateMaterialModal open={adding} onClose={() => setAdding(false)} folderId={isFolder ? folderId : undefined} />
       <FolderMembershipModal item={addingToFolder} onClose={() => setAddingToFolder(null)} />
+      <DeleteMaterialModal item={deleteItem} onClose={() => setDeleteItem(null)} />
+      <Modal open={renameItem != null} onClose={() => setRenameItem(null)} title="Переименовать материал" size="sm" footer={<>
+        <Button variant="secondary" onClick={() => setRenameItem(null)} disabled={renameMaterial.isPending}>Отмена</Button>
+        <Button type="submit" form="rename-workspace-material" loading={renameMaterial.isPending} disabled={!materialTitle.trim()}>Сохранить</Button>
+      </>}>
+        <form id="rename-workspace-material" onSubmit={saveMaterialRename}>
+          <Field label="Название материала" required><TextInput autoFocus value={materialTitle} maxLength={300} onChange={(event) => setMaterialTitle(event.target.value)} /></Field>
+        </form>
+      </Modal>
       <Modal open={renameOpen} onClose={() => setRenameOpen(false)} title="Переименовать папку" size="sm" footer={<><Button variant="secondary" onClick={() => setRenameOpen(false)}>Отмена</Button><Button type="submit" form="rename-workspace-folder" loading={rename.isPending} disabled={!renameValue.trim()}>Сохранить</Button></>}>
         <form id="rename-workspace-folder" onSubmit={saveRename}><Field label="Название папки" required><TextInput autoFocus value={renameValue} maxLength={120} onChange={(event) => setRenameValue(event.target.value)} /></Field></form>
       </Modal>

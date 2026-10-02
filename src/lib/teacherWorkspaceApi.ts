@@ -8,6 +8,7 @@ export type WorkspaceSectionContent = Schema<'WorkspaceSectionContentView'>;
 export type WorkspaceSearch = Schema<'WorkspaceSearchView'>;
 export type WorkspaceSearchItem = Schema<'WorkspaceSearchItemView'>;
 export type WorkspaceMaterial = Schema<'TeacherWorkspaceMaterialView'>;
+export type WorkspaceDependencies = Schema<'TeacherWorkspaceDependenciesView'>;
 export type WorkspaceMaterialType = NonNullable<WorkspaceSearchItem['type']>;
 export type WorkspaceFileType = 'PDF' | 'WORD' | 'SPREADSHEET' | 'PRESENTATION' | 'IMAGE';
 export type WorkspaceSearchQuery = {
@@ -53,6 +54,12 @@ export const teacherWorkspaceApi = {
     request<void>(`${root}/folders/${folderId}/items/${itemId}`, { method: 'DELETE' }),
   material: (id: number, signal?: AbortSignal) =>
     request<WorkspaceMaterial>(`${root}/materials/${id}`, { signal }),
+  renameMaterial: (id: number, body: Schema<'RenameTeacherWorkspaceMaterialRequest'>) =>
+    request<WorkspaceMaterial>(`${root}/materials/${id}`, { method: 'PATCH', body }),
+  materialDependencies: (id: number, signal?: AbortSignal) =>
+    request<WorkspaceDependencies>(`${root}/materials/${id}/dependencies`, { signal }),
+  deleteMaterial: (id: number, revision: string) =>
+    request<void>(`${root}/materials/${id}`, { method: 'DELETE', headers: { 'If-Match': revision } }),
   materialContent: (id: number, signal?: AbortSignal) =>
     requestBlob(`${root}/materials/${id}/content`, signal),
   materials: (page = 0, signal?: AbortSignal) =>

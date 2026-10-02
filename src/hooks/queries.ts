@@ -95,6 +95,7 @@ export const keys = {
     ['teacher-workspace', 'search', query] as const,
   teacherWorkspaceMaterials: (page: number) => ['teacher-workspace', 'materials', page] as const,
   teacherWorkspaceMaterial: (id: number) => ['teacher-workspace', 'material', id] as const,
+  teacherWorkspaceDependencies: (id: number) => ['teacher-workspace', 'dependencies', id] as const,
   lessonSummary: (id: number, childId?: number) => ['lessons', id, 'summary', childId] as const,
   summarySource: (id: number, type: string, sourceId: number) => ['lessons', id, 'summary-source', type, sourceId] as const,
   summaryLibrary: (subjectId: number, query: string) => ['summary-library', subjectId, query] as const,
@@ -295,6 +296,14 @@ export function useTeacherWorkspaceMaterial(id: number | null) {
   });
 }
 
+export function useTeacherWorkspaceDependencies(id: number | null) {
+  return useQuery({
+    queryKey: keys.teacherWorkspaceDependencies(id ?? 0),
+    queryFn: ({ signal }) => teacherWorkspaceApi.materialDependencies(id!, signal),
+    enabled: id != null,
+  });
+}
+
 function useWorkspaceMutation<T, V>(mutationFn: (variables: V) => Promise<T>) {
   const client = useQueryClient();
   return useMutation({
@@ -332,6 +341,16 @@ export function useUploadWorkspaceFile() {
 
 export function useCreateWorkspaceLink() {
   return useWorkspaceMutation(teacherWorkspaceApi.createLink);
+}
+
+export function useRenameWorkspaceMaterial() {
+  return useWorkspaceMutation(({ id, title }: { id: number; title: string }) =>
+    teacherWorkspaceApi.renameMaterial(id, { title }));
+}
+
+export function useDeleteWorkspaceMaterial() {
+  return useWorkspaceMutation(({ id, revision }: { id: number; revision: string }) =>
+    teacherWorkspaceApi.deleteMaterial(id, revision));
 }
 
 // ---- Техника и инвентарь: раздел Super Admin (ТЗ «Техника и инвентарь») ----
