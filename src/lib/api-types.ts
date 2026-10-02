@@ -12515,6 +12515,7 @@ export interface components {
             selectable?: boolean;
             sourceId?: string;
             sourceKind?: string;
+            supportedActions?: ("ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "APPLY_TEST_TO_HOMEWORK")[];
             title?: string;
             /** @enum {string} */
             type?: "TEXTBOOK" | "CURRICULUM_PLAN" | "PREPARED_LESSON" | "TEST" | "HOMEWORK" | "DOCUMENT";
@@ -24143,6 +24144,7 @@ export interface operations {
                 q?: string;
                 type?: "TEXTBOOK" | "CURRICULUM_PLAN" | "PREPARED_LESSON" | "TEST" | "HOMEWORK" | "DOCUMENT";
                 fileType?: "PDF" | "WORD" | "SPREADSHEET" | "PRESENTATION" | "IMAGE";
+                usage?: "ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "APPLY_TEST_TO_HOMEWORK";
                 folderId?: number;
                 page?: number;
                 size?: number;
