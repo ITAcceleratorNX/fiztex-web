@@ -21,6 +21,7 @@ import { useToast } from '@/context/ToastContext';
 import { ApiError } from '@/lib/api';
 import { homeworkApi } from '@/lib/homeworkApi';
 import { checkFormulas } from '@/lib/formulaChecks';
+import { TestTemplateActions } from './TestTemplateActions';
 import {
   QUESTION_TYPES,
   QUESTION_TYPE_LABELS,
@@ -156,6 +157,10 @@ export function HomeworkQuestionsPage() {
           <h1 className="text-28 font-bold text-ink">Вопросы задания</h1>
           {homework && <p className="truncate text-13 text-muted">{homework.title}</p>}
         </div>
+        {homework?.answerFormat === 'TEST' && !dirty && !questionsQuery.isPending && !questionsQuery.isError &&
+          <TestTemplateActions homeworkId={id} homeworkTitle={homework.title ?? 'Тест'}
+            questionCount={questions.length} canApply={!readOnly}
+            onApplied={() => { void questionsQuery.refetch(); }} />}
         {!readOnly && (
           <Button onClick={() => void onSave()} disabled={!canSave} loading={save.isPending}>
             Сохранить

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Folder, Link2, Search } from 'lucide-react';
+import { FileText, Folder, Link2, ListChecks, Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { FileTypeBadge } from '@/components/ui/FileTypeBadge';
 import { FilterChip } from '@/components/ui/FilterChip';
@@ -9,7 +9,7 @@ import { SelectableRow } from '@/components/ui/SelectableRow';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useTeacherWorkspaceFolders, useTeacherWorkspaceSearch } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
-import type { WorkspaceFileType, WorkspaceSearchItem, WorkspaceUsage } from '@/lib/teacherWorkspaceApi';
+import type { WorkspaceFileType, WorkspaceMaterialType, WorkspaceSearchItem, WorkspaceUsage } from '@/lib/teacherWorkspaceApi';
 
 const formats: { label: string; value: WorkspaceFileType | '' }[] = [
   { label: 'Все', value: '' },
@@ -20,8 +20,10 @@ const formats: { label: string; value: WorkspaceFileType | '' }[] = [
   { label: 'JPG', value: 'IMAGE' },
 ];
 
-export function WorkspaceMaterialPickerModal({ usage, onClose, onConfirm }: {
-  usage: Extract<WorkspaceUsage, 'ATTACH_DOCUMENT_TO_HOMEWORK' | 'ATTACH_DOCUMENT_TO_LESSON'>;
+export function WorkspaceMaterialPickerModal({ usage, type = 'DOCUMENT', singleSelect = false, onClose, onConfirm }: {
+  usage: WorkspaceUsage;
+  type?: WorkspaceMaterialType;
+  singleSelect?: boolean;
   onClose: () => void;
   onConfirm: (items: WorkspaceSearchItem[]) => Promise<void> | void;
 }) {
@@ -35,7 +37,7 @@ export function WorkspaceMaterialPickerModal({ usage, onClose, onConfirm }: {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const folders = useTeacherWorkspaceFolders(folderPage);
-  const search = useTeacherWorkspaceSearch({ q, type: 'DOCUMENT', fileType: fileType || undefined, folderId, usage, page });
+  const search = useTeacherWorkspaceSearch({ q, type, fileType: type === 'DOCUMENT' ? fileType || undefined : undefined, folderId, usage, page });
 
   useEffect(() => {
     if (input === q) return;
@@ -47,7 +49,10 @@ export function WorkspaceMaterialPickerModal({ usage, onClose, onConfirm }: {
     if (item.id == null) return;
     setSelected((current) => {
       const next = new Map(current);
-      if (checked) next.set(item.id!, item); else next.delete(item.id!);
+      if (checked) {
+        if (singleSelect) next.clear();
+        next.set(item.id!, item);
+      } else next.delete(item.id!);
       return next;
     });
   }
@@ -72,10 +77,10 @@ export function WorkspaceMaterialPickerModal({ usage, onClose, onConfirm }: {
   </>}>
     <div className="space-y-5">
       <SearchInput value={input} onChange={setInput} placeholder="Поиск по названию" className="w-full" />
-      <div className="flex flex-wrap items-center gap-2">
+      {type === 'DOCUMENT' && <div className="flex flex-wrap items-center gap-2">
         <span className="mr-1 text-13 font-medium text-slate-500">Тип материала</span>
         {formats.map((format) => <FilterChip key={format.label} label={format.label} selected={fileType === format.value} onClick={() => { setFileType(format.value); setPage(0); }} />)}
-      </div>
+      </div>}
       <div className="space-y-2">
         <p className="text-13 font-medium text-slate-500">Папка</p>
         {folders.isPending ? <LoadingBlock /> : folders.isError ? <ErrorBlock message="Не удалось загрузить данные" onRetry={() => folders.refetch()} /> : <>
@@ -100,8 +105,8 @@ export function WorkspaceMaterialPickerModal({ usage, onClose, onConfirm }: {
         {search.data?.items?.content?.map((item) => item.id != null && <SelectableRow
           key={item.id}
           title={item.title ?? `Материал №${item.id}`}
-          meta={item.fileExtension?.toUpperCase() ?? 'Ссылка'}
-          icon={item.fileExtension ? <FileTypeBadge format={item.fileExtension} /> : <Link2 className="size-5 text-cyan-600" />}
+          meta={item.fileExtension?.toUpperCase() ?? (type === 'TEST' ? 'Тест' : type === 'PREPARED_LESSON' ? 'Подготовленный урок' : 'Ссылка')}
+          icon={item.fileExtension ? <FileTypeBadge format={item.fileExtension} /> : type === 'TEST' ? <ListChecks className="size-5 text-navy-700" /> : type === 'PREPARED_LESSON' ? <FileText className="size-5 text-navy-700" /> : <Link2 className="size-5 text-cyan-600" />}
           checked={selected.has(item.id!)}
           disabled={item.selectable === false}
           onChange={(checked) => toggle(item, checked)}

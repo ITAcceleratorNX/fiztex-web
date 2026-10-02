@@ -25,6 +25,8 @@ import { DeleteMaterialModal } from './DeleteMaterialModal';
 import { FolderMembershipModal } from './FolderMembershipModal';
 import { FolderItemPickerModal } from './FolderItemPickerModal';
 import { ReuseMaterialModal } from './ReuseMaterialModal';
+import { ReuseTestTemplateModal } from './ReuseTestTemplateModal';
+import { TestTemplateDetailModal } from './TestTemplateDetailModal';
 
 const sectionTypes: Record<string, WorkspaceMaterialType | null> = {
   ACHIEVEMENTS: null,
@@ -65,7 +67,7 @@ function WorkspaceRow({ item, folderId, onOpen, onAddToFolder, onRemove, onRenam
         { label: 'Открыть', onSelect: onOpen },
         ...(item.sourceKind === 'teacher-workspace-material' ? [{ label: 'Переименовать', onSelect: onRename }] : []),
         { label: 'Добавить в папку / изменить папку', onSelect: onAddToFolder },
-        ...(item.supportedActions?.some((action) => action === 'ATTACH_DOCUMENT_TO_HOMEWORK' || action === 'ATTACH_DOCUMENT_TO_LESSON')
+        ...(item.supportedActions?.some((action) => action === 'ATTACH_DOCUMENT_TO_HOMEWORK' || action === 'ATTACH_DOCUMENT_TO_LESSON' || action === 'APPLY_TEST_TO_HOMEWORK')
           ? [{ label: 'Использовать повторно', onSelect: onReuse }] : []),
         ...(folderId != null ? [{ label: 'Убрать из этой папки', onSelect: onRemove, danger: true }] : []),
         ...(item.sourceKind === 'teacher-workspace-material' ? [{ label: 'Удалить', onSelect: onDelete, danger: true }] : []),
@@ -102,6 +104,7 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
   const [materialTitle, setMaterialTitle] = useState('');
   const [deleteItem, setDeleteItem] = useState<WorkspaceSearchItem | null>(null);
   const [reuseItem, setReuseItem] = useState<WorkspaceSearchItem | null>(null);
+  const [testDetail, setTestDetail] = useState<WorkspaceSearchItem | null>(null);
   const rename = useRenameWorkspaceFolder();
   const deleteFolder = useDeleteWorkspaceFolder();
   const detach = useDetachWorkspaceFolderItem();
@@ -122,6 +125,10 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
   }
 
   async function open(item: WorkspaceSearchItem) {
+    if (item.sourceKind === 'homework-test-template') {
+      setTestDetail(item);
+      return;
+    }
     if (item.sourceKind === 'teacher-homework' && item.sourceId) {
       navigate(`/homework/${item.sourceId}`);
       return;
@@ -229,7 +236,11 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
       {isFolder && pickingExisting && <FolderItemPickerModal folderId={folderId} onClose={() => setPickingExisting(false)} />}
       <FolderMembershipModal item={addingToFolder} onClose={() => setAddingToFolder(null)} />
       <DeleteMaterialModal item={deleteItem} onClose={() => setDeleteItem(null)} />
-      {reuseItem && <ReuseMaterialModal key={reuseItem.id} item={reuseItem} onClose={() => setReuseItem(null)} />}
+      {reuseItem?.sourceKind === 'homework-test-template'
+        ? <ReuseTestTemplateModal key={reuseItem.id} item={reuseItem} onClose={() => setReuseItem(null)} />
+        : reuseItem && <ReuseMaterialModal key={reuseItem.id} item={reuseItem} onClose={() => setReuseItem(null)} />}
+      {testDetail && <TestTemplateDetailModal key={testDetail.id} item={testDetail} onClose={() => setTestDetail(null)}
+        onReuse={() => { setReuseItem(testDetail); setTestDetail(null); }} />}
       <Modal open={renameItem != null} onClose={() => setRenameItem(null)} title="Переименовать материал" size="sm" footer={<>
         <Button variant="secondary" onClick={() => setRenameItem(null)} disabled={renameMaterial.isPending}>Отмена</Button>
         <Button type="submit" form="rename-workspace-material" loading={renameMaterial.isPending} disabled={!materialTitle.trim()}>Сохранить</Button>

@@ -77,6 +77,7 @@ import {
 } from '@/lib/equipmentApi';
 import type { Schema } from '@/lib/apiSchemas';
 import { teacherWorkspaceApi, type WorkspaceSearchQuery } from '@/lib/teacherWorkspaceApi';
+import { testTemplateApi } from '@/lib/testTemplateApi';
 import type {
   ApplicantRequest,
   GenerateTestRequest,
@@ -96,6 +97,8 @@ export const keys = {
   teacherWorkspaceMaterials: (page: number) => ['teacher-workspace', 'materials', page] as const,
   teacherWorkspaceMaterial: (id: number) => ['teacher-workspace', 'material', id] as const,
   teacherWorkspaceDependencies: (id: number) => ['teacher-workspace', 'dependencies', id] as const,
+  testTemplate: (id: number) => ['teacher-workspace', 'test-template', id] as const,
+  testTemplateTarget: (homeworkId: number) => ['homework', homeworkId, 'test-template-target'] as const,
   lessonSummary: (id: number, childId?: number) => ['lessons', id, 'summary', childId] as const,
   summarySource: (id: number, type: string, sourceId: number) => ['lessons', id, 'summary-source', type, sourceId] as const,
   summaryLibrary: (subjectId: number, query: string) => ['summary-library', subjectId, query] as const,
@@ -378,6 +381,40 @@ export function useAttachWorkspaceDocumentToLesson() {
       void client.invalidateQueries({ queryKey: ['lessons'] });
       void client.invalidateQueries({ queryKey: keys.teacherWorkspace });
     },
+  });
+}
+
+export function useTestTemplate(id: number | null) {
+  return useQuery({
+    queryKey: keys.testTemplate(id ?? 0),
+    queryFn: ({ signal }) => testTemplateApi.current(id!, signal),
+    enabled: id != null,
+  });
+}
+
+export function useTestTemplateTarget(homeworkId: number | null) {
+  return useQuery({
+    queryKey: keys.testTemplateTarget(homeworkId ?? 0),
+    queryFn: ({ signal }) => testTemplateApi.target(homeworkId!, signal),
+    enabled: homeworkId != null,
+  });
+}
+
+export function useCreateTestTemplate() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ body, key }: { body: Schema<'HomeworkTestTemplateSaveRequest'>; key: string }) =>
+      testTemplateApi.create(body, key),
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
+  });
+}
+
+export function useApplyTestTemplate(homeworkId: number) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ body, key }: { body: Schema<'HomeworkTestTemplateApplyRequest'>; key: string }) =>
+      testTemplateApi.apply(homeworkId, body, key),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['homework'] }),
   });
 }
 
