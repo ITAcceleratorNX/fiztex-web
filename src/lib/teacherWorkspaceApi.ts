@@ -10,12 +10,14 @@ export type WorkspaceSearchItem = Schema<'WorkspaceSearchItemView'>;
 export type WorkspaceMaterial = Schema<'TeacherWorkspaceMaterialView'>;
 export type WorkspaceDependencies = Schema<'TeacherWorkspaceDependenciesView'>;
 export type WorkspaceMaterialType = NonNullable<WorkspaceSearchItem['type']>;
+export type WorkspaceUsage = NonNullable<WorkspaceSearchItem['supportedActions']>[number];
 export type WorkspaceFileType = 'PDF' | 'WORD' | 'SPREADSHEET' | 'PRESENTATION' | 'IMAGE';
 export type WorkspaceSearchQuery = {
   q?: string;
   type?: WorkspaceMaterialType;
   fileType?: WorkspaceFileType;
   folderId?: number;
+  usage?: WorkspaceUsage;
   page?: number;
 };
 
@@ -40,6 +42,7 @@ export const teacherWorkspaceApi = {
     if (query.type) params.set('type', query.type);
     if (query.fileType) params.set('fileType', query.fileType);
     if (query.folderId) params.set('folderId', String(query.folderId));
+    if (query.usage) params.set('usage', query.usage);
     return request<WorkspaceSearch>(`${root}/search?${params}`, { signal });
   },
   createFolder: (name: string) =>

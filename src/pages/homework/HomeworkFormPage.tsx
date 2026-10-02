@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type SetStateAction } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Paperclip, X } from 'lucide-react';
+import { ArrowLeft, FolderOpen, Paperclip, X } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { Field, focusFirstInvalidField, Select, TextArea, TextInput } from '@/components/ui/Field';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
@@ -9,6 +9,7 @@ import { Toggle } from '@/components/ui/Toggle';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { NoticeBar } from '@/components/ui/NoticeBar';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { WorkspaceMaterialPickerModal } from '@/components/workspace/WorkspaceMaterialPickerModal';
 import { useFormDraft, useFormDraftStore } from '@/context/FormDraftContext';
 import { describeGroupChange, emptyHomeworkValues, groupSnapshot, hasHomeworkChanges, homeworkValues, type HomeworkFormDraft, type HomeworkFormValues } from '@/lib/homeworkDraft';
 import { useToast } from '@/context/ToastContext';
@@ -16,6 +17,7 @@ import { keys, useLesson } from '@/hooks/queries';
 import { lessonsApi, type Lesson } from '@/lib/lessonsApi';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
+import { teacherWorkspaceApi } from '@/lib/teacherWorkspaceApi';
 import { cx, formatWeekdayDayMonth } from '@/lib/format';
 import {
   homeworkApi,
@@ -91,9 +93,10 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
       error: null, createdId: null, saving: false };
   }, hasHomeworkChanges);
   const { title, description, dueType, answerFormat, antiCheatEnabled, dueAt, recipientType,
-    pickedLessonId, tempGroupId, files, subjectId, classId } = draft.values;
+    pickedLessonId, tempGroupId, files, workspaceItems, subjectId, classId } = draft.values;
   const { error, createdId } = draft;
   const [discardOpen, setDiscardOpen] = useState(false);
+  const [workspacePickerOpen, setWorkspacePickerOpen] = useState(false);
   const [validationRequest, setValidationRequest] = useState(0);
   const discardTrigger = useRef<HTMLButtonElement | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
@@ -119,6 +122,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
   const setRecipientType = setField('recipientType');
   const setTempGroupId = setField('tempGroupId');
   const setFiles = setField('files');
+  const setWorkspaceItems = setField('workspaceItems');
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -361,6 +365,11 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
   const save = useMutation({
     mutationFn: async () => {
       setDraft((current) => ({ ...current, error: null }));
+      if (createdId != null) {
+        await uploadFiles(createdId);
+        await attachWorkspaceItems(createdId);
+        return homeworkApi.card(createdId);
+      }
       if (mode === 'edit' && editId != null) {
         const updated = await homeworkApi.update(editId, {
           title: title.trim(),
@@ -380,6 +389,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
           });
         }
         await uploadFiles(editId);
+        await attachWorkspaceItems(editId);
         return updated;
       }
 
@@ -401,6 +411,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
       const created = await homeworkApi.create(input);
       setDraft((current) => ({ ...current, createdId: created.id ?? null }));
       await uploadFiles(created.id as number);
+      await attachWorkspaceItems(created.id as number);
       return created;
     },
     onSuccess: (result) => {
@@ -436,9 +447,21 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
     }
   }
 
+  async function attachWorkspaceItems(id: number) {
+    for (const item of workspaceItems) {
+      if (item.id == null) continue;
+      await teacherWorkspaceApi.attachDocumentToHomework(id, item.id);
+      // Сохраняем только неотправленные материалы, если следующий запрос завершится ошибкой.
+      setDraft((current) => ({ ...current, values: {
+        ...current.values,
+        workspaceItems: current.values.workspaceItems.filter((pending) => pending.id !== item.id),
+      } }));
+    }
+  }
+
   function saveForm() {
-    if (draftStore.get<HomeworkFormDraft>(draftKey)?.saving || createdId != null) return;
-    if (!valid) {
+    if (draftStore.get<HomeworkFormDraft>(draftKey)?.saving) return;
+    if (createdId == null && !valid) {
       setValidationRequest((request) => request + 1);
       return;
     }
@@ -698,8 +721,21 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
                 </button>
               </span>
             ))}
+            {workspaceItems.map((item) => (
+              <span key={item.id} className="inline-flex items-center gap-1.5 rounded bg-neutral-bg px-2 py-1 text-11 text-neutral-fg">
+                <FolderOpen className="size-3" aria-hidden />
+                {item.title ?? `Материал №${item.id}`}
+                <button type="button" onClick={() => setWorkspaceItems((prev) => prev.filter((entry) => entry.id !== item.id))}
+                  aria-label={`Убрать ${item.title ?? `материал №${item.id}`}`} className="text-subtle transition hover:text-ink">
+                  <X className="size-3" />
+                </button>
+              </span>
+            ))}
             <Button variant="secondary" size="sm" onClick={() => fileInput.current?.click()} disabled={busy}>
               Прикрепить файл
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => setWorkspacePickerOpen(true)} disabled={busy}>
+              Выбрать из рабочего пространства
             </Button>
           </div>
           <input
@@ -719,7 +755,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
             }}
           />
           <p className="mt-1 text-11 text-subtle">
-            Файлы загрузятся после сохранения задания. Ограничения по типу и размеру проверяет сервер.
+            Файлы и выбранные материалы добавятся после сохранения задания. Ограничения по типу и размеру проверяет сервер.
           </p>
         </div>
 
@@ -860,17 +896,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
           {createdId != null
             ? `Черновик создан, но материалы приложить не удалось. ${error}`
             : error}
-          {/* Черновик уже есть — выход из этого состояния один, и он в главной кнопке
-              внизу. Вторая кнопка с тем же словом только спрашивала бы, чем они разные. */}
-          {createdId == null && (
-            <button
-              type="button"
-              onClick={saveForm}
-              className="ml-2 font-semibold underline"
-            >
-              Повторить
-            </button>
-          )}
+          <button type="button" onClick={saveForm} className="ml-2 font-semibold underline">Повторить</button>
         </NoticeBar>
       )}
 
@@ -886,16 +912,22 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
         <Link to={backTo} className={buttonClassName({ variant: 'secondary' })}>
           Вернуться позже
         </Link>
-        {/* Черновик уже заведён, а упали материалы — тогда главная кнопка ведёт в него, а не
-            создаёт второе задание. Ссылка в баннере говорит то же самое; расходиться им нельзя. */}
+        {/* Черновик уже заведён: повторяем только неприложенные материалы, не создавая дубль ДЗ. */}
         {createdId != null ? (
-          <Button onClick={() => navigate(`/homework/${createdId}`)}>Открыть черновик</Button>
+          <><Button variant="secondary" onClick={() => navigate(`/homework/${createdId}`)}>Открыть черновик</Button>
+            <Button onClick={saveForm} loading={busy}>Повторить добавление материалов</Button></>
         ) : (
           <Button onClick={saveForm} loading={busy}>
             {mode === 'edit' ? 'Сохранить' : 'Создать черновик'}
           </Button>
         )}
       </div>
+      {workspacePickerOpen && <WorkspaceMaterialPickerModal usage="ATTACH_DOCUMENT_TO_HOMEWORK"
+        onClose={() => setWorkspacePickerOpen(false)}
+        onConfirm={(items) => setWorkspaceItems((current) => {
+          const ids = new Set(current.map((item) => item.id));
+          return [...current, ...items.filter((item) => !ids.has(item.id)).map(({ id, title }) => ({ id, title }))];
+        })} />}
       <ConfirmDialog
         open={discardOpen}
         onClose={() => { setDiscardOpen(false); discardTrigger.current?.focus(); }}

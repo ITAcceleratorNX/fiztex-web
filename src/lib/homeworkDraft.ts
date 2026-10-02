@@ -1,4 +1,5 @@
 import type { AnswerFormat, DueType, Homework, HomeworkGroup, RecipientType } from './homeworkApi';
+import type { WorkspaceSearchItem } from './teacherWorkspaceApi';
 
 export interface HomeworkFormValues {
   title: string;
@@ -14,6 +15,7 @@ export interface HomeworkFormValues {
   pickedLessonId?: number;
   lessonChoiceMade: boolean;
   files: File[];
+  workspaceItems: Pick<WorkspaceSearchItem, 'id' | 'title'>[];
 }
 
 export interface GroupSnapshot {
@@ -36,7 +38,7 @@ export interface HomeworkFormDraft {
 
 export function emptyHomeworkValues(): HomeworkFormValues {
   return { title: '', description: '', dueType: 'EXACT', dueAt: '', answerFormat: 'WRITTEN',
-    antiCheatEnabled: false, recipientType: 'CLASS', lessonChoiceMade: false, files: [] };
+    antiCheatEnabled: false, recipientType: 'CLASS', lessonChoiceMade: false, files: [], workspaceItems: [] };
 }
 
 export function homeworkValues(existing: Homework): HomeworkFormValues {

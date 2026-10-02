@@ -250,10 +250,11 @@ export function useTeacherWorkspaceHome(page = 0) {
   });
 }
 
-export function useTeacherWorkspaceFolders(page = 0) {
+export function useTeacherWorkspaceFolders(page = 0, enabled = true) {
   return useQuery({
     queryKey: keys.teacherWorkspaceFolders(page),
     queryFn: ({ signal }) => teacherWorkspaceApi.folders(page, signal),
+    enabled,
   });
 }
 

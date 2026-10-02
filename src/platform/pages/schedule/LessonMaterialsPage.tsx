@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Link2, Trash2, Upload } from 'lucide-react';
+import { ArrowLeft, FolderOpen, Link2, Trash2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Switch } from '@/components/ui/Switch';
@@ -8,9 +8,11 @@ import { Badge } from '@/components/ui/Badge';
 import { TextInput } from '@/components/ui/Field';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { AttachmentChip } from '@/pages/homework/AttachmentLink';
+import { WorkspaceMaterialPickerModal } from '@/components/workspace/WorkspaceMaterialPickerModal';
 import {
   useAddLessonMaterialFile,
   useAddLessonMaterialLink,
+  useAttachWorkspaceDocumentToLesson,
   useDeleteLessonMaterial,
   useLesson,
   useLessonMaterials,
@@ -45,12 +47,14 @@ export function LessonMaterialsPage() {
   const materialsQuery = useLessonMaterials(valid ? id : null);
   const addFile = useAddLessonMaterialFile(id);
   const addLink = useAddLessonMaterialLink(id);
+  const attachWorkspace = useAttachWorkspaceDocumentToLesson();
   const setVisibility = useSetLessonMaterialVisibility(id);
   const removeMaterial = useDeleteLessonMaterial(id);
 
   const fileInput = useRef<HTMLInputElement>(null);
   const [url, setUrl] = useState('');
   const [pendingDelete, setPendingDelete] = useState<LessonMaterial | null>(null);
+  const [workspacePickerOpen, setWorkspacePickerOpen] = useState(false);
 
   const lesson = lessonQuery.data;
   const materials = materialsQuery.data ?? [];
@@ -190,6 +194,10 @@ export function LessonMaterialsPage() {
               <Upload className="size-4" aria-hidden />
               Загрузить файл
             </Button>
+            <Button variant="secondary" disabled={busy} onClick={() => setWorkspacePickerOpen(true)}>
+              <FolderOpen className="size-4" aria-hidden />
+              Выбрать из рабочего пространства
+            </Button>
             <span className="text-11 text-subtle">Документ, PDF или фотография, до 50 МБ</span>
           </div>
 
@@ -223,6 +231,15 @@ export function LessonMaterialsPage() {
         onConfirm={() => void onDelete()}
         onClose={() => setPendingDelete(null)}
       />
+      {workspacePickerOpen && <WorkspaceMaterialPickerModal usage="ATTACH_DOCUMENT_TO_LESSON"
+        onClose={() => setWorkspacePickerOpen(false)}
+        onConfirm={async (items) => {
+          for (const item of items) {
+            if (item.id == null) continue;
+            await attachWorkspace.mutateAsync({ lessonId: id, itemId: item.id, visibleToStudents: true });
+          }
+          toast.success('Материалы добавлены к уроку');
+        }} />}
     </div>
   );
 }
