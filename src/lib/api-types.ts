@@ -5012,6 +5012,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/preparation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getLessonPreparationTargetState"];
+        put: operations["applyLessonPreparation"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/students": {
         parameters: {
             query?: never;
@@ -9091,7 +9107,7 @@ export interface components {
         };
         LessonHistoryView: {
             /** @enum {string} */
-            actionType?: "CREATED" | "SUPERSEDED" | "CANCELLED" | "RESTORED" | "ADMIN_UPDATED" | "SUBSTITUTE_ASSIGNED" | "SUBSTITUTE_REVOKED" | "GRADE_PERMISSION_GRANTED" | "GRADE_PERMISSION_REVOKED" | "COMMENT_CREATED" | "COMMENT_UPDATED" | "COMMENT_DELETED" | "TOPIC_UPDATED" | "HOMEWORK_CREATED" | "HOMEWORK_UPDATED" | "HOMEWORK_DELETED" | "HOMEWORK_ASSIGNMENT_DRAFTED" | "HOMEWORK_ASSIGNMENT_PUBLISHED" | "HOMEWORK_ASSIGNMENT_UPDATED" | "HOMEWORK_MARKED_NOT_ASSIGNED" | "HOMEWORK_NOT_ASSIGNED_CLEARED" | "TEXTBOOK_SELECTED" | "TEXTBOOK_CLEARED" | "MATERIAL_ADDED" | "MATERIAL_UPDATED" | "MATERIAL_REMOVED";
+            actionType?: "CREATED" | "SUPERSEDED" | "CANCELLED" | "RESTORED" | "ADMIN_UPDATED" | "SUBSTITUTE_ASSIGNED" | "SUBSTITUTE_REVOKED" | "GRADE_PERMISSION_GRANTED" | "GRADE_PERMISSION_REVOKED" | "COMMENT_CREATED" | "COMMENT_UPDATED" | "COMMENT_DELETED" | "TOPIC_UPDATED" | "PREPARATION_APPLIED" | "HOMEWORK_CREATED" | "HOMEWORK_UPDATED" | "HOMEWORK_DELETED" | "HOMEWORK_ASSIGNMENT_DRAFTED" | "HOMEWORK_ASSIGNMENT_PUBLISHED" | "HOMEWORK_ASSIGNMENT_UPDATED" | "HOMEWORK_MARKED_NOT_ASSIGNED" | "HOMEWORK_NOT_ASSIGNED_CLEARED" | "TEXTBOOK_SELECTED" | "TEXTBOOK_CLEARED" | "MATERIAL_ADDED" | "MATERIAL_UPDATED" | "MATERIAL_REMOVED";
             /** Format: int64 */
             actorId?: number;
             actorName?: string;
@@ -9179,6 +9195,27 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        LessonPreparationApplicationView: {
+            /** Format: int32 */
+            addedDocuments?: number;
+            /** Format: date-time */
+            appliedAt?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int64 */
+            preparationId?: number;
+            targetRevision?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        LessonPreparationApplyRequest: {
+            confirmReplace?: boolean;
+            expectedTargetRevision: string;
+            /** Format: int32 */
+            version: number;
+            /** Format: int64 */
+            workspaceItemId: number;
+        };
         LessonPreparationCreateRequest: {
             documentWorkspaceItemIds?: number[];
             summary: components["schemas"]["LessonSummaryContent"];
@@ -9224,6 +9261,26 @@ export interface components {
             title?: string;
             /** Format: date-time */
             updatedAt?: string;
+        };
+        LessonPreparationTargetState: {
+            canApply?: boolean;
+            changedSinceApply?: boolean;
+            draftSummary?: components["schemas"]["LessonSummaryContent"];
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int32 */
+            materialCount?: number;
+            /** Format: int64 */
+            preparationId?: number;
+            /** Format: int32 */
+            preparationVersion?: number;
+            publishedSummary?: components["schemas"]["LessonSummaryContent"];
+            /** Format: int64 */
+            selectedTextbookId?: number;
+            /** Format: int64 */
+            summaryRevision?: number;
+            targetRevision?: string;
+            topic?: string;
         };
         LessonPreparationTextbookRequest: {
             /** Format: int32 */
@@ -12747,7 +12804,7 @@ export interface components {
             selectable?: boolean;
             sourceId?: string;
             sourceKind?: string;
-            supportedActions?: ("ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "ATTACH_TEXTBOOK_TO_HOMEWORK" | "SELECT_TEXTBOOK_FOR_LESSON" | "APPLY_TEST_TO_HOMEWORK")[];
+            supportedActions?: ("ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "ATTACH_TEXTBOOK_TO_HOMEWORK" | "SELECT_TEXTBOOK_FOR_LESSON" | "APPLY_TEST_TO_HOMEWORK" | "APPLY_PREPARATION_TO_LESSON")[];
             title?: string;
             /** @enum {string} */
             type?: "TEXTBOOK" | "CURRICULUM_PLAN" | "PREPARED_LESSON" | "TEST" | "HOMEWORK" | "DOCUMENT";
@@ -22066,6 +22123,54 @@ export interface operations {
             };
         };
     };
+    getLessonPreparationTargetState: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationTargetState"];
+                };
+            };
+        };
+    };
+    applyLessonPreparation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonPreparationApplyRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationApplicationView"];
+                };
+            };
+        };
+    };
     students: {
         parameters: {
             query?: {
@@ -24620,7 +24725,7 @@ export interface operations {
                 q?: string;
                 type?: "TEXTBOOK" | "CURRICULUM_PLAN" | "PREPARED_LESSON" | "TEST" | "HOMEWORK" | "DOCUMENT";
                 fileType?: "PDF" | "WORD" | "SPREADSHEET" | "PRESENTATION" | "IMAGE";
-                usage?: "ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "ATTACH_TEXTBOOK_TO_HOMEWORK" | "SELECT_TEXTBOOK_FOR_LESSON" | "APPLY_TEST_TO_HOMEWORK";
+                usage?: "ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "ATTACH_TEXTBOOK_TO_HOMEWORK" | "SELECT_TEXTBOOK_FOR_LESSON" | "APPLY_TEST_TO_HOMEWORK" | "APPLY_PREPARATION_TO_LESSON";
                 folderId?: number;
                 page?: number;
                 size?: number;
