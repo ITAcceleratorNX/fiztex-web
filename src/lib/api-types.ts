@@ -4212,6 +4212,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/homework/{homeworkId}/test-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTestTemplateTargetState"];
+        put?: never;
+        post: operations["applyTestTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/homework/{id}": {
         parameters: {
             query?: never;
@@ -6292,6 +6308,22 @@ export interface paths {
         patch: operations["renameTestTemplate"];
         trace?: never;
     };
+    "/api/teacher/workspace/tests/{id}/dependencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTestTemplateDependencies"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teacher/workspace/tests/{id}/versions": {
         parameters: {
             query?: never;
@@ -8340,7 +8372,7 @@ export interface components {
         };
         HomeworkHistoryEntryView: {
             /** @enum {string} */
-            action?: "CREATED" | "UPDATED" | "MATERIALS_CHANGED" | "PUBLISHED" | "COMPLETED" | "REOPENED" | "CANCELLED" | "DELETED" | "COPIED" | "RECIPIENTS_CHANGED" | "RECIPIENTS_DISTRIBUTED" | "RECIPIENTS_SNAPSHOT" | "RECIPIENTS_LOCKED" | "RECIPIENT_DEACTIVATED" | "SUBMITTED" | "RESUBMITTED" | "SUBMISSION_FAILED" | "REVIEW_DONE" | "REVIEW_RETURNED" | "GROUP_CREATED" | "GROUP_RENAMED" | "GROUP_ARCHIVED" | "GROUP_DELETED" | "GROUP_STUDENTS_CHANGED" | "GROUP_SET_CREATED" | "GROUP_SET_RENAMED" | "GROUP_SET_ARCHIVED";
+            action?: "CREATED" | "UPDATED" | "MATERIALS_CHANGED" | "TEST_TEMPLATE_APPLIED" | "PUBLISHED" | "COMPLETED" | "REOPENED" | "CANCELLED" | "DELETED" | "COPIED" | "RECIPIENTS_CHANGED" | "RECIPIENTS_DISTRIBUTED" | "RECIPIENTS_SNAPSHOT" | "RECIPIENTS_LOCKED" | "RECIPIENT_DEACTIVATED" | "SUBMITTED" | "RESUBMITTED" | "SUBMISSION_FAILED" | "REVIEW_DONE" | "REVIEW_RETURNED" | "GROUP_CREATED" | "GROUP_RENAMED" | "GROUP_ARCHIVED" | "GROUP_DELETED" | "GROUP_STUDENTS_CHANGED" | "GROUP_SET_CREATED" | "GROUP_SET_RENAMED" | "GROUP_SET_ARCHIVED";
             /** Format: int64 */
             actorAccountId?: number;
             /** Format: date-time */
@@ -8422,10 +8454,39 @@ export interface components {
             /** Format: int64 */
             studentProfileId?: number;
         };
+        HomeworkTestTemplateApplicationView: {
+            /** Format: date-time */
+            appliedAt?: string;
+            /** Format: int64 */
+            homeworkId?: number;
+            /** Format: int32 */
+            questionCount?: number;
+            questionRevision?: string;
+            /** Format: int64 */
+            templateId?: number;
+            /** Format: int32 */
+            version?: number;
+        };
+        HomeworkTestTemplateApplyRequest: {
+            confirmReplace?: boolean;
+            expectedQuestionRevision: string;
+            /** Format: int32 */
+            version: number;
+            /** Format: int64 */
+            workspaceItemId: number;
+        };
         HomeworkTestTemplateDefinition: {
             questions?: components["schemas"]["HomeworkTestTemplateQuestion"][];
             /** Format: int32 */
             schemaVersion?: number;
+        };
+        HomeworkTestTemplateDependencyPreview: {
+            /** Format: int32 */
+            activeApplications?: number;
+            homeworkIds?: number[];
+            revision?: string;
+            /** Format: int64 */
+            templateId?: number;
         };
         HomeworkTestTemplateNewVersionRequest: {
             /** Format: int64 */
@@ -8469,6 +8530,19 @@ export interface components {
             title?: string;
             /** Format: date-time */
             updatedAt?: string;
+        };
+        HomeworkTestTemplateTargetState: {
+            answerFormat?: string;
+            changedSinceApply?: boolean;
+            /** Format: int64 */
+            homeworkId?: number;
+            /** Format: int32 */
+            questionCount?: number;
+            questionRevision?: string;
+            /** Format: int64 */
+            templateId?: number;
+            /** Format: int32 */
+            templateVersion?: number;
         };
         HomeworkTestTemplateVersionView: {
             author?: string;
@@ -20228,6 +20302,56 @@ export interface operations {
             };
         };
     };
+    getTestTemplateTargetState: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateTargetState"];
+                };
+            };
+        };
+    };
+    applyTestTemplate: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HomeworkTestTemplateApplyRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateApplicationView"];
+                };
+            };
+        };
+    };
     get_1: {
         parameters: {
             query?: never;
@@ -24138,8 +24262,12 @@ export interface operations {
     };
     deleteTestTemplate: {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                confirmDetach?: boolean;
+            };
+            header?: {
+                "If-Match"?: string;
+            };
             path: {
                 id: number;
             };
@@ -24178,6 +24306,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HomeworkTestTemplateSummaryView"];
+                };
+            };
+        };
+    };
+    getTestTemplateDependencies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateDependencyPreview"];
                 };
             };
         };
