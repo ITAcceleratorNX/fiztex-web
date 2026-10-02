@@ -23,6 +23,7 @@ import type { WorkspaceMaterialType, WorkspaceSearchItem } from '@/lib/teacherWo
 import { CreateMaterialModal } from './CreateMaterialModal';
 import { DeleteMaterialModal } from './DeleteMaterialModal';
 import { FolderMembershipModal } from './FolderMembershipModal';
+import { ReuseMaterialModal } from './ReuseMaterialModal';
 
 const sectionTypes: Record<string, WorkspaceMaterialType | null> = {
   ACHIEVEMENTS: null,
@@ -38,7 +39,7 @@ function formatDate(value?: string) {
   return value ? new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(value)) : '—';
 }
 
-function WorkspaceRow({ item, folderId, onOpen, onAddToFolder, onRemove, onRename, onDelete }: {
+function WorkspaceRow({ item, folderId, onOpen, onAddToFolder, onRemove, onRename, onDelete, onReuse }: {
   item: WorkspaceSearchItem;
   folderId?: number;
   onOpen: () => void;
@@ -46,6 +47,7 @@ function WorkspaceRow({ item, folderId, onOpen, onAddToFolder, onRemove, onRenam
   onRemove: () => void;
   onRename: () => void;
   onDelete: () => void;
+  onReuse: () => void;
 }) {
   const format = item.fileExtension?.toUpperCase();
   return (
@@ -62,6 +64,8 @@ function WorkspaceRow({ item, folderId, onOpen, onAddToFolder, onRemove, onRenam
         { label: 'Открыть', onSelect: onOpen },
         ...(item.sourceKind === 'teacher-workspace-material' ? [{ label: 'Переименовать', onSelect: onRename }] : []),
         { label: 'Добавить в папку / изменить папку', onSelect: onAddToFolder },
+        ...(item.supportedActions?.some((action) => action === 'ATTACH_DOCUMENT_TO_HOMEWORK' || action === 'ATTACH_DOCUMENT_TO_LESSON')
+          ? [{ label: 'Использовать повторно', onSelect: onReuse }] : []),
         ...(folderId != null ? [{ label: 'Убрать из этой папки', onSelect: onRemove, danger: true }] : []),
         ...(item.sourceKind === 'teacher-workspace-material' ? [{ label: 'Удалить', onSelect: onDelete, danger: true }] : []),
       ]} />
@@ -95,6 +99,7 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
   const [renameItem, setRenameItem] = useState<WorkspaceSearchItem | null>(null);
   const [materialTitle, setMaterialTitle] = useState('');
   const [deleteItem, setDeleteItem] = useState<WorkspaceSearchItem | null>(null);
+  const [reuseItem, setReuseItem] = useState<WorkspaceSearchItem | null>(null);
   const rename = useRenameWorkspaceFolder();
   const deleteFolder = useDeleteWorkspaceFolder();
   const detach = useDetachWorkspaceFolderItem();
@@ -211,7 +216,7 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
         <div className="flex h-11 items-center border-b border-slate-200 bg-slate-50 px-5 text-xs font-bold uppercase text-slate-400">
           <span className="flex-1">Материал</span><span className="hidden w-52 md:block">Добавил</span><span className="w-8" />
         </div>
-        {items.map((item) => item.id != null && <WorkspaceRow key={item.id} item={item} folderId={isFolder ? folderId : undefined} onOpen={() => void open(item)} onAddToFolder={() => setAddingToFolder(item)} onRemove={() => setRemoveItem(item)} onRename={() => { setRenameItem(item); setMaterialTitle(item.title ?? ''); }} onDelete={() => setDeleteItem(item)} />)}
+        {items.map((item) => item.id != null && <WorkspaceRow key={item.id} item={item} folderId={isFolder ? folderId : undefined} onOpen={() => void open(item)} onAddToFolder={() => setAddingToFolder(item)} onRemove={() => setRemoveItem(item)} onRename={() => { setRenameItem(item); setMaterialTitle(item.title ?? ''); }} onDelete={() => setDeleteItem(item)} onReuse={() => setReuseItem(item)} />)}
       </div>}
       {total > 20 && <div className="mt-4 flex justify-end gap-2">
         <Button variant="secondary" size="sm" disabled={page === 0} onClick={() => setPage(page - 1)}>Назад</Button>
@@ -220,6 +225,7 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
       <CreateMaterialModal open={adding} onClose={() => setAdding(false)} folderId={isFolder ? folderId : undefined} />
       <FolderMembershipModal item={addingToFolder} onClose={() => setAddingToFolder(null)} />
       <DeleteMaterialModal item={deleteItem} onClose={() => setDeleteItem(null)} />
+      {reuseItem && <ReuseMaterialModal key={reuseItem.id} item={reuseItem} onClose={() => setReuseItem(null)} />}
       <Modal open={renameItem != null} onClose={() => setRenameItem(null)} title="Переименовать материал" size="sm" footer={<>
         <Button variant="secondary" onClick={() => setRenameItem(null)} disabled={renameMaterial.isPending}>Отмена</Button>
         <Button type="submit" form="rename-workspace-material" loading={renameMaterial.isPending} disabled={!materialTitle.trim()}>Сохранить</Button>

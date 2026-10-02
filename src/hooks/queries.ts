@@ -353,6 +353,33 @@ export function useDeleteWorkspaceMaterial() {
     teacherWorkspaceApi.deleteMaterial(id, revision));
 }
 
+export function useAttachWorkspaceDocumentToHomework() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ homeworkId, itemId }: { homeworkId: number; itemId: number }) =>
+      teacherWorkspaceApi.attachDocumentToHomework(homeworkId, itemId),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ['homework'] });
+      void client.invalidateQueries({ queryKey: keys.teacherWorkspace });
+    },
+  });
+}
+
+export function useAttachWorkspaceDocumentToLesson() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ lessonId, itemId, visibleToStudents }: {
+      lessonId: number;
+      itemId: number;
+      visibleToStudents: boolean;
+    }) => teacherWorkspaceApi.attachDocumentToLesson(lessonId, itemId, visibleToStudents),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ['lessons'] });
+      void client.invalidateQueries({ queryKey: keys.teacherWorkspace });
+    },
+  });
+}
+
 // ---- Техника и инвентарь: раздел Super Admin (ТЗ «Техника и инвентарь») ----
 
 /**
@@ -899,13 +926,14 @@ export function useLesson(lessonId: number | null) {
  * Открытую карточку это не трогает: она живёт своим `useLesson(id)` и по времени не
  * переключается — начавшийся следующий урок не должен выдёргивать учителя из работы.
  */
-export function useCurrentLesson() {
+export function useCurrentLesson(enabled = true) {
   return useQuery({
     queryKey: keys.currentLesson,
     queryFn: ({ signal }) => lessonsApi.current(undefined, signal),
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: 'always',
+    enabled,
   });
 }
 
@@ -2358,10 +2386,11 @@ export function useCloseFeedbackMonth() {
 }
 
 /** Все фильтры и страница входят в ключ; соседние страницы не подменяют друг друга. */
-export function useHomeworkList(params: HomeworkListParams) {
+export function useHomeworkList(params: HomeworkListParams, enabled = true) {
   return useQuery({
     queryKey: keys.homeworkList(params),
     queryFn: ({ signal }) => homeworkApi.list(params, signal),
+    enabled,
   });
 }
 

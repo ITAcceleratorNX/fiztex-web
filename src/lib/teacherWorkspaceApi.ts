@@ -71,4 +71,8 @@ export const teacherWorkspaceApi = {
   },
   createLink: (body: Schema<'CreateTeacherWorkspaceLinkRequest'>) =>
     request<WorkspaceMaterial>(`${root}/materials/links`, { method: 'POST', body }),
+  attachDocumentToHomework: (homeworkId: number, workspaceItemId: number) =>
+    request<Schema<'HomeworkMaterialView'>>(`/homework/${homeworkId}/materials/workspace-items/${workspaceItemId}`, { method: 'POST' }),
+  attachDocumentToLesson: (lessonId: number, workspaceItemId: number, visibleToStudents = true) =>
+    request<Schema<'LessonMaterialView'>>(`/lessons/${lessonId}/materials/workspace-items/${workspaceItemId}?visibleToStudents=${visibleToStudents}`, { method: 'POST' }),
 };
