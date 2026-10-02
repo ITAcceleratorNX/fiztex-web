@@ -27,6 +27,8 @@ import { FolderItemPickerModal } from './FolderItemPickerModal';
 import { ReuseMaterialModal } from './ReuseMaterialModal';
 import { ReuseTestTemplateModal } from './ReuseTestTemplateModal';
 import { TestTemplateDetailModal } from './TestTemplateDetailModal';
+import { ReuseLessonPreparationModal } from './ReuseLessonPreparationModal';
+import { LessonPreparationDetailModal } from './LessonPreparationDetailModal';
 
 const sectionTypes: Record<string, WorkspaceMaterialType | null> = {
   ACHIEVEMENTS: null,
@@ -67,7 +69,7 @@ function WorkspaceRow({ item, folderId, onOpen, onAddToFolder, onRemove, onRenam
         { label: 'Открыть', onSelect: onOpen },
         ...(item.sourceKind === 'teacher-workspace-material' ? [{ label: 'Переименовать', onSelect: onRename }] : []),
         { label: 'Добавить в папку / изменить папку', onSelect: onAddToFolder },
-        ...(item.supportedActions?.some((action) => action === 'ATTACH_DOCUMENT_TO_HOMEWORK' || action === 'ATTACH_DOCUMENT_TO_LESSON' || action === 'APPLY_TEST_TO_HOMEWORK')
+        ...(item.supportedActions?.some((action) => action === 'ATTACH_DOCUMENT_TO_HOMEWORK' || action === 'ATTACH_DOCUMENT_TO_LESSON' || action === 'APPLY_TEST_TO_HOMEWORK' || action === 'APPLY_PREPARATION_TO_LESSON')
           ? [{ label: 'Использовать повторно', onSelect: onReuse }] : []),
         ...(folderId != null ? [{ label: 'Убрать из этой папки', onSelect: onRemove, danger: true }] : []),
         ...(item.sourceKind === 'teacher-workspace-material' ? [{ label: 'Удалить', onSelect: onDelete, danger: true }] : []),
@@ -105,6 +107,7 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
   const [deleteItem, setDeleteItem] = useState<WorkspaceSearchItem | null>(null);
   const [reuseItem, setReuseItem] = useState<WorkspaceSearchItem | null>(null);
   const [testDetail, setTestDetail] = useState<WorkspaceSearchItem | null>(null);
+  const [preparationDetail, setPreparationDetail] = useState<WorkspaceSearchItem | null>(null);
   const rename = useRenameWorkspaceFolder();
   const deleteFolder = useDeleteWorkspaceFolder();
   const detach = useDetachWorkspaceFolderItem();
@@ -127,6 +130,10 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
   async function open(item: WorkspaceSearchItem) {
     if (item.sourceKind === 'homework-test-template') {
       setTestDetail(item);
+      return;
+    }
+    if (item.sourceKind === 'lesson-preparation') {
+      setPreparationDetail(item);
       return;
     }
     if (item.sourceKind === 'teacher-homework' && item.sourceId) {
@@ -238,9 +245,13 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
       <DeleteMaterialModal item={deleteItem} onClose={() => setDeleteItem(null)} />
       {reuseItem?.sourceKind === 'homework-test-template'
         ? <ReuseTestTemplateModal key={reuseItem.id} item={reuseItem} onClose={() => setReuseItem(null)} />
+        : reuseItem?.sourceKind === 'lesson-preparation'
+          ? <ReuseLessonPreparationModal key={reuseItem.id} item={reuseItem} onClose={() => setReuseItem(null)} />
         : reuseItem && <ReuseMaterialModal key={reuseItem.id} item={reuseItem} onClose={() => setReuseItem(null)} />}
       {testDetail && <TestTemplateDetailModal key={testDetail.id} item={testDetail} onClose={() => setTestDetail(null)}
         onReuse={() => { setReuseItem(testDetail); setTestDetail(null); }} />}
+      {preparationDetail && <LessonPreparationDetailModal key={preparationDetail.id} item={preparationDetail}
+        onClose={() => setPreparationDetail(null)} onReuse={() => { setReuseItem(preparationDetail); setPreparationDetail(null); }} />}
       <Modal open={renameItem != null} onClose={() => setRenameItem(null)} title="Переименовать материал" size="sm" footer={<>
         <Button variant="secondary" onClick={() => setRenameItem(null)} disabled={renameMaterial.isPending}>Отмена</Button>
         <Button type="submit" form="rename-workspace-material" loading={renameMaterial.isPending} disabled={!materialTitle.trim()}>Сохранить</Button>

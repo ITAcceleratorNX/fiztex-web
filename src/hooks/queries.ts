@@ -78,6 +78,7 @@ import {
 import type { Schema } from '@/lib/apiSchemas';
 import { teacherWorkspaceApi, type WorkspaceSearchQuery } from '@/lib/teacherWorkspaceApi';
 import { testTemplateApi } from '@/lib/testTemplateApi';
+import { lessonPreparationApi } from '@/lib/lessonPreparationApi';
 import type {
   ApplicantRequest,
   GenerateTestRequest,
@@ -99,6 +100,8 @@ export const keys = {
   teacherWorkspaceDependencies: (id: number) => ['teacher-workspace', 'dependencies', id] as const,
   testTemplate: (id: number) => ['teacher-workspace', 'test-template', id] as const,
   testTemplateTarget: (homeworkId: number) => ['homework', homeworkId, 'test-template-target'] as const,
+  lessonPreparation: (id: number) => ['teacher-workspace', 'lesson-preparation', id] as const,
+  lessonPreparationTarget: (lessonId: number) => ['lessons', lessonId, 'preparation-target'] as const,
   lessonSummary: (id: number, childId?: number) => ['lessons', id, 'summary', childId] as const,
   summarySource: (id: number, type: string, sourceId: number) => ['lessons', id, 'summary-source', type, sourceId] as const,
   summaryLibrary: (subjectId: number, query: string) => ['summary-library', subjectId, query] as const,
@@ -415,6 +418,41 @@ export function useApplyTestTemplate(homeworkId: number) {
     mutationFn: ({ body, key }: { body: Schema<'HomeworkTestTemplateApplyRequest'>; key: string }) =>
       testTemplateApi.apply(homeworkId, body, key),
     onSuccess: () => client.invalidateQueries({ queryKey: ['homework'] }),
+  });
+}
+
+export function useLessonPreparation(id: number | null) {
+  return useQuery({
+    queryKey: keys.lessonPreparation(id ?? 0),
+    queryFn: ({ signal }) => lessonPreparationApi.current(id!, signal),
+    enabled: id != null,
+  });
+}
+
+export function useLessonPreparationTarget(lessonId: number | null) {
+  return useQuery({
+    queryKey: keys.lessonPreparationTarget(lessonId ?? 0),
+    queryFn: ({ signal }) => lessonPreparationApi.target(lessonId!, signal),
+    enabled: lessonId != null,
+  });
+}
+
+export function useCreateLessonPreparation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: lessonPreparationApi.create,
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
+  });
+}
+
+export function useApplyLessonPreparation(lessonId: number) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schema<'LessonPreparationApplyRequest'>) => lessonPreparationApi.apply(lessonId, body),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ['lessons'] });
+      void client.invalidateQueries({ queryKey: keys.teacherWorkspace });
+    },
   });
 }
 
