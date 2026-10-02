@@ -5156,6 +5156,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/textbook/workspace-items/{workspaceItemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["selectWorkspaceItem"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/textbooks": {
         parameters: {
             query?: never;
@@ -11023,6 +11039,12 @@ export interface components {
             /** Format: int32 */
             pageTo?: number;
         };
+        SelectWorkspaceLessonTextbookRequest: {
+            /** Format: int32 */
+            pageFrom?: number;
+            /** Format: int32 */
+            pageTo?: number;
+        };
         SendTestPushRequest: {
             /** Format: int64 */
             accountId: number;
@@ -12544,7 +12566,7 @@ export interface components {
             selectable?: boolean;
             sourceId?: string;
             sourceKind?: string;
-            supportedActions?: ("ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "ATTACH_TEXTBOOK_TO_HOMEWORK" | "APPLY_TEST_TO_HOMEWORK")[];
+            supportedActions?: ("ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "ATTACH_TEXTBOOK_TO_HOMEWORK" | "SELECT_TEXTBOOK_FOR_LESSON" | "APPLY_TEST_TO_HOMEWORK")[];
             title?: string;
             /** @enum {string} */
             type?: "TEXTBOOK" | "CURRICULUM_PLAN" | "PREPARED_LESSON" | "TEST" | "HOMEWORK" | "DOCUMENT";
@@ -22161,6 +22183,33 @@ export interface operations {
             };
         };
     };
+    selectWorkspaceItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+                workspaceItemId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelectWorkspaceLessonTextbookRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonTextbooksView"];
+                };
+            };
+        };
+    };
     list_25: {
         parameters: {
             query?: {
@@ -24202,7 +24251,7 @@ export interface operations {
                 q?: string;
                 type?: "TEXTBOOK" | "CURRICULUM_PLAN" | "PREPARED_LESSON" | "TEST" | "HOMEWORK" | "DOCUMENT";
                 fileType?: "PDF" | "WORD" | "SPREADSHEET" | "PRESENTATION" | "IMAGE";
-                usage?: "ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "ATTACH_TEXTBOOK_TO_HOMEWORK" | "APPLY_TEST_TO_HOMEWORK";
+                usage?: "ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "ATTACH_TEXTBOOK_TO_HOMEWORK" | "SELECT_TEXTBOOK_FOR_LESSON" | "APPLY_TEST_TO_HOMEWORK";
                 folderId?: number;
                 page?: number;
                 size?: number;
