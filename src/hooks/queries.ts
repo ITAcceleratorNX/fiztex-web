@@ -76,6 +76,7 @@ import {
   type EquipmentHistoryFilters,
 } from '@/lib/equipmentApi';
 import type { Schema } from '@/lib/apiSchemas';
+import { teacherWorkspaceApi, type WorkspaceSearchQuery } from '@/lib/teacherWorkspaceApi';
 import type {
   ApplicantRequest,
   GenerateTestRequest,
@@ -85,6 +86,15 @@ import type {
 } from '@/lib/types';
 
 export const keys = {
+  teacherWorkspace: ['teacher-workspace'] as const,
+  teacherWorkspaceHome: (page: number) => ['teacher-workspace', 'home', page] as const,
+  teacherWorkspaceFolders: (page: number) => ['teacher-workspace', 'folders', page] as const,
+  teacherWorkspaceFolder: (id: number, page: number) => ['teacher-workspace', 'folder', id, page] as const,
+  teacherWorkspaceSection: (code: string, page: number) => ['teacher-workspace', 'section', code, page] as const,
+  teacherWorkspaceSearch: (query: WorkspaceSearchQuery) =>
+    ['teacher-workspace', 'search', query] as const,
+  teacherWorkspaceMaterials: (page: number) => ['teacher-workspace', 'materials', page] as const,
+  teacherWorkspaceMaterial: (id: number) => ['teacher-workspace', 'material', id] as const,
   lessonSummary: (id: number, childId?: number) => ['lessons', id, 'summary', childId] as const,
   summarySource: (id: number, type: string, sourceId: number) => ['lessons', id, 'summary-source', type, sourceId] as const,
   summaryLibrary: (subjectId: number, query: string) => ['summary-library', subjectId, query] as const,
@@ -231,6 +241,98 @@ export const keys = {
   monthlyFeedbackSheet: (key: FeedbackSheetKey) =>
     ['monthly-feedback', 'teacher', 'sheet', key.month, key.classId, key.subjectId] as const,
 };
+
+export function useTeacherWorkspaceHome(page = 0) {
+  return useQuery({
+    queryKey: keys.teacherWorkspaceHome(page),
+    queryFn: ({ signal }) => teacherWorkspaceApi.home(page, signal),
+  });
+}
+
+export function useTeacherWorkspaceFolders(page = 0) {
+  return useQuery({
+    queryKey: keys.teacherWorkspaceFolders(page),
+    queryFn: ({ signal }) => teacherWorkspaceApi.folders(page, signal),
+  });
+}
+
+export function useTeacherWorkspaceFolder(id: number, page = 0, enabled = true) {
+  return useQuery({
+    queryKey: keys.teacherWorkspaceFolder(id, page),
+    queryFn: ({ signal }) => teacherWorkspaceApi.folder(id, page, signal),
+    enabled,
+  });
+}
+
+export function useTeacherWorkspaceSection(code: string, page = 0, enabled = true) {
+  return useQuery({
+    queryKey: keys.teacherWorkspaceSection(code, page),
+    queryFn: ({ signal }) => teacherWorkspaceApi.section(code, page, signal),
+    enabled,
+  });
+}
+
+export function useTeacherWorkspaceSearch(query: WorkspaceSearchQuery, enabled = true) {
+  return useQuery({
+    queryKey: keys.teacherWorkspaceSearch(query),
+    queryFn: ({ signal }) => teacherWorkspaceApi.search(query, signal),
+    enabled,
+  });
+}
+
+export function useTeacherWorkspaceMaterials(page = 0) {
+  return useQuery({
+    queryKey: keys.teacherWorkspaceMaterials(page),
+    queryFn: ({ signal }) => teacherWorkspaceApi.materials(page, signal),
+  });
+}
+
+export function useTeacherWorkspaceMaterial(id: number | null) {
+  return useQuery({
+    queryKey: keys.teacherWorkspaceMaterial(id ?? 0),
+    queryFn: ({ signal }) => teacherWorkspaceApi.material(id!, signal),
+    enabled: id != null,
+  });
+}
+
+function useWorkspaceMutation<T, V>(mutationFn: (variables: V) => Promise<T>) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
+  });
+}
+
+export function useCreateWorkspaceFolder() {
+  return useWorkspaceMutation(teacherWorkspaceApi.createFolder);
+}
+
+export function useRenameWorkspaceFolder() {
+  return useWorkspaceMutation(({ id, name }: { id: number; name: string }) =>
+    teacherWorkspaceApi.renameFolder(id, name));
+}
+
+export function useDeleteWorkspaceFolder() {
+  return useWorkspaceMutation(teacherWorkspaceApi.deleteFolder);
+}
+
+export function useAttachWorkspaceFolderItem() {
+  return useWorkspaceMutation(({ folderId, itemId }: { folderId: number; itemId: number }) =>
+    teacherWorkspaceApi.attachToFolder(folderId, itemId));
+}
+
+export function useDetachWorkspaceFolderItem() {
+  return useWorkspaceMutation(({ folderId, itemId }: { folderId: number; itemId: number }) =>
+    teacherWorkspaceApi.detachFromFolder(folderId, itemId));
+}
+
+export function useUploadWorkspaceFile() {
+  return useWorkspaceMutation(teacherWorkspaceApi.uploadFile);
+}
+
+export function useCreateWorkspaceLink() {
+  return useWorkspaceMutation(teacherWorkspaceApi.createLink);
+}
 
 // ---- Техника и инвентарь: раздел Super Admin (ТЗ «Техника и инвентарь») ----
 
