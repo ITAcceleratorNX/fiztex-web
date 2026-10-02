@@ -670,7 +670,7 @@ export interface paths {
         get: operations["getById_7"];
         put?: never;
         post?: never;
-        delete: operations["delete_7"];
+        delete: operations["delete_8"];
         options?: never;
         head?: never;
         patch: operations["update_18"];
@@ -3470,7 +3470,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["delete_6"];
+        delete: operations["delete_7"];
         options?: never;
         head?: never;
         patch: operations["update_8"];
@@ -4990,7 +4990,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["delete_5"];
+        delete: operations["delete_6"];
         options?: never;
         head?: never;
         patch: operations["setVisibility"];
@@ -5259,10 +5259,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_7"];
+        get: operations["get_8"];
         put?: never;
         post?: never;
-        delete: operations["delete_4"];
+        delete: operations["delete_5"];
         options?: never;
         head?: never;
         patch: operations["update_7"];
@@ -5966,10 +5966,10 @@ export interface paths {
         get: operations["current"];
         put?: never;
         post?: never;
-        delete: operations["delete_3"];
+        delete: operations["delete_4"];
         options?: never;
         head?: never;
-        patch: operations["rename"];
+        patch: operations["rename_1"];
         trace?: never;
     };
     "/api/teacher/lesson-preparations/{id}/dependencies": {
@@ -6142,7 +6142,7 @@ export interface paths {
         get: operations["card"];
         put?: never;
         post?: never;
-        delete: operations["delete_2"];
+        delete: operations["delete_3"];
         options?: never;
         head?: never;
         patch: operations["update_6"];
@@ -6331,13 +6331,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_8"];
+        get: operations["get_7"];
         put?: never;
         post?: never;
-        delete: operations["delete_8"];
+        delete: operations["delete_2"];
         options?: never;
         head?: never;
-        patch?: never;
+        patch: operations["rename"];
         trace?: never;
     };
     "/api/teacher/workspace/materials/{id}/content": {
@@ -10857,6 +10857,9 @@ export interface components {
         RenameRequest: {
             name: string;
         };
+        RenameTeacherWorkspaceMaterialRequest: {
+            title: string;
+        };
         ReplaceTextbookRequest: {
             /** Format: date */
             effectiveFrom?: string;
@@ -14125,7 +14128,7 @@ export interface operations {
             };
         };
     };
-    delete_7: {
+    delete_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -19210,7 +19213,7 @@ export interface operations {
             };
         };
     };
-    delete_6: {
+    delete_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -22052,7 +22055,7 @@ export interface operations {
             };
         };
     };
-    delete_5: {
+    delete_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -22653,7 +22656,7 @@ export interface operations {
             };
         };
     };
-    get_7: {
+    get_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -22675,7 +22678,7 @@ export interface operations {
             };
         };
     };
-    delete_4: {
+    delete_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -23843,7 +23846,7 @@ export interface operations {
             };
         };
     };
-    delete_3: {
+    delete_4: {
         parameters: {
             query?: never;
             header: {
@@ -23865,7 +23868,7 @@ export interface operations {
             };
         };
     };
-    rename: {
+    rename_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -24208,7 +24211,7 @@ export interface operations {
             };
         };
     };
-    delete_2: {
+    delete_3: {
         parameters: {
             query?: {
                 confirmDetach?: boolean;
@@ -24606,7 +24609,7 @@ export interface operations {
             };
         };
     };
-    get_8: {
+    get_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -24628,7 +24631,7 @@ export interface operations {
             };
         };
     };
-    delete_8: {
+    delete_2: {
         parameters: {
             query?: never;
             header: {
@@ -24654,6 +24657,32 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    rename: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RenameTeacherWorkspaceMaterialRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherWorkspaceMaterialView"];
+                };
             };
         };
     };
