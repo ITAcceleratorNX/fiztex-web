@@ -6260,6 +6260,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teacher/workspace/tests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listTestTemplates"];
+        put?: never;
+        post: operations["createTestTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/tests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCurrentTestTemplate"];
+        put?: never;
+        post?: never;
+        delete: operations["deleteTestTemplate"];
+        options?: never;
+        head?: never;
+        patch: operations["renameTestTemplate"];
+        trace?: never;
+    };
+    "/api/teacher/workspace/tests/{id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createTestTemplateVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/tests/{id}/versions/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTestTemplateVersion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tests/{testId}/generate": {
         parameters: {
             query?: never;
@@ -8358,6 +8422,67 @@ export interface components {
             /** Format: int64 */
             studentProfileId?: number;
         };
+        HomeworkTestTemplateDefinition: {
+            questions?: components["schemas"]["HomeworkTestTemplateQuestion"][];
+            /** Format: int32 */
+            schemaVersion?: number;
+        };
+        HomeworkTestTemplateNewVersionRequest: {
+            /** Format: int64 */
+            sourceHomeworkId: number;
+        };
+        HomeworkTestTemplateOption: {
+            correct?: boolean;
+            text?: string;
+        };
+        HomeworkTestTemplateQuestion: {
+            aiGenerated?: boolean;
+            allowPhoto?: boolean;
+            gradingCriteria?: string;
+            /** Format: int32 */
+            maxPhotos?: number;
+            maxScore?: number;
+            options?: components["schemas"]["HomeworkTestTemplateOption"][];
+            referenceAnswer?: string;
+            text?: string;
+            /** @enum {string} */
+            type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT";
+        };
+        HomeworkTestTemplateRenameRequest: {
+            title: string;
+        };
+        HomeworkTestTemplateSaveRequest: {
+            /** Format: int64 */
+            sourceHomeworkId: number;
+            title: string;
+        };
+        HomeworkTestTemplateSummaryView: {
+            author?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int32 */
+            currentVersion?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int32 */
+            questionCount?: number;
+            title?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        HomeworkTestTemplateVersionView: {
+            author?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            definition?: components["schemas"]["HomeworkTestTemplateDefinition"];
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            sourceHomeworkId?: number;
+            title?: string;
+            /** Format: int32 */
+            version?: number;
+        };
         HomeworkView: {
             /** @enum {string} */
             answerFormat?: "WRITTEN" | "TEST";
@@ -9440,6 +9565,24 @@ export interface components {
         };
         PageHomeworkHistoryEntryView: {
             content?: components["schemas"]["HomeworkHistoryEntryView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        PageHomeworkTestTemplateSummaryView: {
+            content?: components["schemas"]["HomeworkTestTemplateSummaryView"][];
             empty?: boolean;
             first?: boolean;
             last?: boolean;
@@ -23918,6 +24061,174 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WorkspaceSectionContentView"];
+                };
+            };
+        };
+    };
+    listTestTemplates: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageHomeworkTestTemplateSummaryView"];
+                };
+            };
+        };
+    };
+    createTestTemplate: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HomeworkTestTemplateSaveRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateVersionView"];
+                };
+            };
+        };
+    };
+    getCurrentTestTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateVersionView"];
+                };
+            };
+        };
+    };
+    deleteTestTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    renameTestTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HomeworkTestTemplateRenameRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateSummaryView"];
+                };
+            };
+        };
+    };
+    createTestTemplateVersion: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HomeworkTestTemplateNewVersionRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateVersionView"];
+                };
+            };
+        };
+    };
+    getTestTemplateVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateVersionView"];
                 };
             };
         };
