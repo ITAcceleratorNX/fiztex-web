@@ -461,7 +461,8 @@ function JournalShell({
           <TabsTrigger value="JOURNAL">Журнал</TabsTrigger>
           <TabsTrigger value="FINALS">Итоги четверти</TabsTrigger>
         </TabsList>
-        <TabsContent value={tab} className="mt-5">
+        {/* Отступ между фильтрами и таблицей: без него карточка таблицы прилипала к полям. */}
+        <TabsContent value={tab} className="mt-5 flex flex-col gap-5">
           {children}
         </TabsContent>
       </Tabs>

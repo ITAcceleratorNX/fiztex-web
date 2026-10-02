@@ -57,28 +57,38 @@ export function JournalTable({
             ))}
             {policy ? (
               <>
-                {policyComponents.map((component) => (
+                {policyComponents.map((component, index) => (
                   <th
                     key={component.code}
                     title={`${component.title}, вес ${component.weightPercent}%`}
-                    className="w-16 px-1 py-3 text-center text-11 font-bold uppercase text-slate-400"
+                    style={{ right: componentOffset(index, policyComponents.length) }}
+                    className={cx(
+                      STICKY,
+                      COMPONENT_WIDTH,
+                      'px-1 py-3 text-center text-11 font-bold uppercase text-slate-400',
+                      index === 0 && STICKY_EDGE,
+                    )}
                   >
                     {component.code ? COMPONENT_SHORT[component.code] : '—'} %
                   </th>
                 ))}
                 <th
                   title={policy.name ?? undefined}
-                  className="w-24 px-2 py-3 text-center text-11 font-bold uppercase text-slate-400"
+                  style={{ right: FINAL_WIDTH_PX }}
+                  className={cx(STICKY, 'w-24 min-w-24 px-2 py-3 text-center text-11 font-bold uppercase text-slate-400')}
                 >
                   Итог %
                 </th>
               </>
             ) : (
-              <th className="w-20 px-2 py-3 text-center text-11 font-bold uppercase text-slate-400">
+              <th
+                style={{ right: FINAL_WIDTH_PX }}
+                className={cx(STICKY, STICKY_EDGE, 'w-20 min-w-20 px-2 py-3 text-center text-11 font-bold uppercase text-slate-400')}
+              >
                 Ср. балл
               </th>
             )}
-            <th className="w-24 px-2 py-3 text-center text-11 font-bold uppercase text-slate-400">
+            <th className={cx(STICKY, 'right-0 w-24 min-w-24 px-2 py-3 text-center text-11 font-bold uppercase text-slate-400')}>
               Итог. четв.
             </th>
           </tr>
@@ -155,13 +165,16 @@ export function JournalTable({
                 {policy ? (
                   <ResultCells row={row} codes={policyComponents.map((c) => c.code ?? '')} onOpen={onOpenBreakdown} />
                 ) : (
-                  <td className="px-2 py-2 text-center font-semibold text-slate-900">
+                  <td
+                    style={{ right: FINAL_WIDTH_PX }}
+                    className={cx(STICKY, STICKY_EDGE, 'w-20 min-w-20 px-2 py-2 text-center font-semibold text-slate-900')}
+                  >
                     <span title={averageHint(row.average?.count, row.average?.visibleCount)}>
                       {formatAverage(row.average?.value)}
                     </span>
                   </td>
                 )}
-                <td className="px-2 py-2 text-center font-semibold text-slate-900">
+                <td className={cx(STICKY, 'right-0 w-24 min-w-24 px-2 py-2 text-center font-semibold text-slate-900')}>
                   {finalValueLabel(finals.get(studentId))}
                 </td>
               </tr>
@@ -239,13 +252,17 @@ function ResultCells({
 
   return (
     <>
-      {codes.map((code) => {
+      {codes.map((code, index) => {
         const component = byCode.get(code);
         return (
           <td
             key={code}
+            style={{ right: componentOffset(index, codes.length) }}
             className={cx(
+              STICKY,
+              COMPONENT_WIDTH,
               'px-1 py-2 text-center text-13 text-slate-700',
+              index === 0 && STICKY_EDGE,
               component?.contribution == null && 'text-slate-400',
             )}
             title={
@@ -258,7 +275,7 @@ function ResultCells({
           </td>
         );
       })}
-      <td className="px-2 py-2 text-center">
+      <td style={{ right: FINAL_WIDTH_PX }} className={cx(STICKY, 'w-24 min-w-24 px-2 py-2 text-center')}>
         <button
           type="button"
           disabled={!onOpen}
@@ -276,5 +293,23 @@ function ResultCells({
       </td>
     </>
   );
+}
+
+/**
+ * Итоговые колонки закреплены справа: уроков в четверти два-три десятка, и без закрепления
+ * проценты и итог оказывались за горизонтальной прокруткой — ради них журнал и открывают.
+ * Ширины фиксированы, потому что от них считаются отступы закреплённых колонок.
+ */
+const STICKY = 'sticky z-10 bg-white';
+/** Левая граница закреплённого блока — уроки уходят под неё при прокрутке. */
+const STICKY_EDGE = 'border-l border-slate-200';
+const COMPONENT_WIDTH = 'w-16 min-w-16';
+const COMPONENT_WIDTH_PX = 64;
+/** Ширина «Итог. четв.» и «Итог %» (`w-24`). */
+const FINAL_WIDTH_PX = 96;
+
+/** Отступ справа для i-го компонента: за ним остальные компоненты, «Итог %» и «Итог. четв.». */
+function componentOffset(index: number, count: number): number {
+  return FINAL_WIDTH_PX * 2 + COMPONENT_WIDTH_PX * (count - 1 - index);
 }
 
