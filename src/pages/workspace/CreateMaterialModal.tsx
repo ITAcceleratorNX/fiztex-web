@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link2, UploadCloud } from 'lucide-react';
+import { FolderOpen, Link2, UploadCloud } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ChoiceRow } from '@/components/ui/ChoiceRow';
 import { Field, TextArea, TextInput } from '@/components/ui/Field';
@@ -11,10 +11,11 @@ import { ApiError } from '@/lib/api';
 
 const accept = '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.webp';
 
-export function CreateMaterialModal({ open, onClose, folderId }: {
+export function CreateMaterialModal({ open, onClose, folderId, onPickExisting }: {
   open: boolean;
   onClose: () => void;
   folderId?: number;
+  onPickExisting?: () => void;
 }) {
   const [mode, setMode] = useState<'choose' | 'upload' | 'link'>('choose');
   const [file, setFile] = useState<File | null>(null);
@@ -81,6 +82,7 @@ export function CreateMaterialModal({ open, onClose, folderId }: {
       {mode === 'choose' ? <div className="grid gap-3">
         <ChoiceRow icon={<UploadCloud className="size-5" />} title="Загрузить файл" onClick={() => setMode('upload')} />
         <ChoiceRow icon={<Link2 className="size-5" />} title="Внешний ресурс" onClick={() => setMode('link')} />
+        {folderId != null && onPickExisting && <ChoiceRow icon={<FolderOpen className="size-5" />} title="Выбрать из рабочего пространства" onClick={() => { close(); onPickExisting(); }} />}
       </div> : <form id="workspace-create-material" onSubmit={save} className="space-y-4">
         {mode === 'upload' ? <div>
           <FileDropzone file={file} onChange={(next) => { setFile(next); setError(''); }} disabled={busy || createdItemId != null} accept={accept} formatsLabel="PDF, DOC/DOCX, PPT/PPTX, XLS/XLSX, изображения — до 50 МБ" size="lg" />

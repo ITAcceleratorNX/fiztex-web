@@ -23,6 +23,7 @@ import type { WorkspaceMaterialType, WorkspaceSearchItem } from '@/lib/teacherWo
 import { CreateMaterialModal } from './CreateMaterialModal';
 import { DeleteMaterialModal } from './DeleteMaterialModal';
 import { FolderMembershipModal } from './FolderMembershipModal';
+import { FolderItemPickerModal } from './FolderItemPickerModal';
 import { ReuseMaterialModal } from './ReuseMaterialModal';
 
 const sectionTypes: Record<string, WorkspaceMaterialType | null> = {
@@ -91,6 +92,7 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
     isFolder ? Number.isInteger(folderId) && folderId > 0 : Boolean(sectionType),
   );
   const [adding, setAdding] = useState(false);
+  const [pickingExisting, setPickingExisting] = useState(false);
   const [addingToFolder, setAddingToFolder] = useState<WorkspaceSearchItem | null>(null);
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameValue, setRenameValue] = useState('');
@@ -222,7 +224,9 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
         <Button variant="secondary" size="sm" disabled={page === 0} onClick={() => setPage(page - 1)}>Назад</Button>
         <Button variant="secondary" size="sm" disabled={(page + 1) * 20 >= total} onClick={() => setPage(page + 1)}>Далее</Button>
       </div>}
-      <CreateMaterialModal open={adding} onClose={() => setAdding(false)} folderId={isFolder ? folderId : undefined} />
+      <CreateMaterialModal open={adding} onClose={() => setAdding(false)} folderId={isFolder ? folderId : undefined}
+        onPickExisting={isFolder ? () => setPickingExisting(true) : undefined} />
+      {isFolder && pickingExisting && <FolderItemPickerModal folderId={folderId} onClose={() => setPickingExisting(false)} />}
       <FolderMembershipModal item={addingToFolder} onClose={() => setAddingToFolder(null)} />
       <DeleteMaterialModal item={deleteItem} onClose={() => setDeleteItem(null)} />
       {reuseItem && <ReuseMaterialModal key={reuseItem.id} item={reuseItem} onClose={() => setReuseItem(null)} />}
