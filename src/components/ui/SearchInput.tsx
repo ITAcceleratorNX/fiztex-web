@@ -6,11 +6,13 @@ export function SearchInput({
   onChange,
   placeholder,
   className,
+  size = 'md',
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  size?: 'md' | 'lg';
 }) {
   return (
     <div className={cx('relative', className)}>
@@ -19,7 +21,10 @@ export function SearchInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-400/30"
+        className={cx(
+          'w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-400/30',
+          size === 'lg' ? 'h-12' : 'h-11',
+        )}
       />
     </div>
   );
