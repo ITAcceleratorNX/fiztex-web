@@ -41,7 +41,7 @@ import { hhmm } from './lessonHistory';
  * открывается только на чтение, и об этом говорит строка сверху, а не пустые клетки.
  *
  * <p>Пустых мест ровно столько, сколько разрешено оценок за урок
- * (`maxGradesPerStudent`, сегодня три). Число приходит с сервера: свой лимит на
+ * (`maxGradesPerStudent`, сейчас одно — решение школы от 02.10.2026). Число приходит с сервера: свой лимит на
  * клиенте разошёлся бы с тем, что принимает бэкенд.
  *
  * <p><b>Шкала или баллы — тоже решает сервер</b> (GRADES-003): в периоде, который считается
@@ -100,7 +100,7 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
   }
 
   const rows = sheet.students ?? [];
-  const maxGrades = sheet.maxGradesPerStudent ?? 3;
+  const maxGrades = sheet.maxGradesPerStudent ?? 1;
   const pointsMode = sheet.valueMode === 'POINTS';
   const workTypes = sheet.workTypes ?? [];
   const defaultWorkType = (sheet.defaultWorkType ?? 'FORMATIVE') as GradeType;
@@ -281,7 +281,9 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
               <span className="text-11 font-bold uppercase text-slate-400">ФИО Ученика</span>
               {canManage && (
                 <span className="text-11 font-bold uppercase text-slate-400">
-                  до {maxGrades} {pluralRu(maxGrades, ['оценки', 'оценок', 'оценок'])} за урок
+                  {maxGrades === 1
+                    ? 'одна оценка за урок'
+                    : `до ${maxGrades} ${pluralRu(maxGrades, ['оценки', 'оценок', 'оценок'])} за урок`}
                 </span>
               )}
             </div>
