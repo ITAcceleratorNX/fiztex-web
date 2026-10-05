@@ -228,8 +228,8 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
       {(!searchEnabled || (!search.isError && !search.isPending)) && items.length === 0 && <div className="flex min-h-[30rem] items-center justify-center">
         <EmptyBlock icon={isFolder ? <Folder className="size-8" /> : <FileText className="size-8" />} title={isFolder ? 'В этой папке пока нет материалов' : 'В этом разделе пока нет материалов'} />
       </div>}
-      {!search.isError && items.length > 0 && <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        <div className="flex h-11 items-center border-b border-slate-200 bg-slate-50 px-5 text-xs font-bold uppercase text-slate-400">
+      {!search.isError && items.length > 0 && <div className="rounded-2xl border border-slate-200 bg-white">
+        <div className="flex h-11 items-center rounded-t-2xl border-b border-slate-200 bg-slate-50 px-5 text-xs font-bold uppercase text-slate-400">
           <span className="flex-1">Материал</span><span className="hidden w-52 md:block">Добавил</span><span className="w-8" />
         </div>
         {items.map((item) => item.id != null && <WorkspaceRow key={item.id} item={item} folderId={isFolder ? folderId : undefined} onOpen={() => void open(item)} onAddToFolder={() => setAddingToFolder(item)} onRemove={() => setRemoveItem(item)} onRename={() => { setRenameItem(item); setMaterialTitle(item.title ?? ''); }} onDelete={() => setDeleteItem(item)} onReuse={() => setReuseItem(item)} />)}
