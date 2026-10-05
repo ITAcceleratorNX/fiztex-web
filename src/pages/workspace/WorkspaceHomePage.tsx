@@ -179,28 +179,32 @@ export function WorkspaceHomePage() {
   return (
     <div className="bg-white p-2 md:p-4">
       <h1 className="text-28 font-bold text-slate-900">Рабочее пространство</h1>
-      <div className="mt-5 flex flex-col gap-4 md:flex-row">
-        <SearchInput value={input} onChange={setInput} placeholder="Поиск по материалам" size="lg" className="min-w-0 flex-1" />
-        <Select aria-label="Тип материала" value={type ?? ''} onChange={(event) => {
-          const nextType = event.target.value;
-          setParams((current) => {
-            const next = new URLSearchParams(current);
-            if (nextType) next.set('type', nextType); else next.delete('type');
-            if (nextType !== 'DOCUMENT') next.delete('fileType');
-            next.delete('page');
-            return next;
-          });
-        }} className="h-12 w-full rounded-xl md:w-56">
-          <option value="">Тип материала</option>
-          {Object.entries(typeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-        </Select>
-        {type === 'DOCUMENT' && (
-          <Select aria-label="Тип файла" value={fileType ?? ''} onChange={(event) => patch('fileType', event.target.value)} className="h-12 w-full rounded-xl md:w-40">
-            <option value="">Все файлы</option>
-            <option value="PDF">PDF</option><option value="WORD">DOC/DOCX</option>
-            <option value="SPREADSHEET">XLS/XLSX</option><option value="PRESENTATION">PPT/PPTX</option>
-            <option value="IMAGE">Изображения</option>
+      <div className="mt-5 flex flex-wrap gap-4">
+        <SearchInput value={input} onChange={setInput} placeholder="Поиск по материалам" size="lg" className="min-w-0 basis-64 grow" />
+        <div className="w-full shrink-0 sm:w-56">
+          <Select aria-label="Тип материала" value={type ?? ''} onChange={(event) => {
+            const nextType = event.target.value;
+            setParams((current) => {
+              const next = new URLSearchParams(current);
+              if (nextType) next.set('type', nextType); else next.delete('type');
+              if (nextType !== 'DOCUMENT') next.delete('fileType');
+              next.delete('page');
+              return next;
+            });
+          }} className="h-12 w-full rounded-xl">
+            <option value="">Тип материала</option>
+            {Object.entries(typeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </Select>
+        </div>
+        {type === 'DOCUMENT' && (
+          <div className="w-full shrink-0 sm:w-40">
+            <Select aria-label="Тип файла" value={fileType ?? ''} onChange={(event) => patch('fileType', event.target.value)} className="h-12 w-full rounded-xl">
+              <option value="">Все файлы</option>
+              <option value="PDF">PDF</option><option value="WORD">DOC/DOCX</option>
+              <option value="SPREADSHEET">XLS/XLSX</option><option value="PRESENTATION">PPT/PPTX</option>
+              <option value="IMAGE">Изображения</option>
+            </Select>
+          </div>
         )}
       </div>
 
