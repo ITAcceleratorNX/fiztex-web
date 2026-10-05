@@ -29,6 +29,7 @@ import { ReuseTestTemplateModal } from './ReuseTestTemplateModal';
 import { TestTemplateDetailModal } from './TestTemplateDetailModal';
 import { ReuseLessonPreparationModal } from './ReuseLessonPreparationModal';
 import { LessonPreparationDetailModal } from './LessonPreparationDetailModal';
+import { materialTypeLabels } from './materialTypeLabels';
 
 const sectionTypes: Record<string, WorkspaceMaterialType | null> = {
   ACHIEVEMENTS: null,
@@ -55,12 +56,13 @@ function WorkspaceRow({ item, folderId, onOpen, onAddToFolder, onRemove, onRenam
   onReuse: () => void;
 }) {
   const format = item.fileExtension?.toUpperCase();
+  const kindLabel = item.type === 'DOCUMENT' ? 'Ссылка' : (item.type && materialTypeLabels[item.type]) || 'Материал';
   return (
     <div className="flex min-h-16 items-center gap-2 border-b border-slate-200 px-5 py-3 last:border-b-0">
-      <span className="shrink-0">{format ? <FileTypeBadge format={format} /> : <Badge tone="navy">{item.type === 'DOCUMENT' ? 'Ссылка' : item.type}</Badge>}</span>
+      <span className="shrink-0">{format ? <FileTypeBadge format={format} /> : <Badge tone="navy">{kindLabel}</Badge>}</span>
       <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:underline">
         <span className="block truncate text-sm font-semibold text-slate-900">{item.title}</span>
-        <span className="mt-0.5 block text-xs text-slate-400">{format || (item.type === 'DOCUMENT' ? 'Ссылка' : 'Материал')} · Добавлен {formatDate(item.addedAt)}</span>
+        <span className="mt-0.5 block text-xs text-slate-400">{format || kindLabel} · Добавлен {formatDate(item.addedAt)}</span>
       </button>
       <span className="hidden w-52 shrink-0 items-center gap-2 text-13 text-slate-700 md:flex">
         {item.author || '—'}

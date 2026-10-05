@@ -11,15 +11,7 @@ import { useToast } from '@/context/ToastContext';
 import { useAttachWorkspaceFolderItem, useTeacherWorkspaceSearch } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import type { WorkspaceMaterialType, WorkspaceSearchItem } from '@/lib/teacherWorkspaceApi';
-
-const typeLabels: Record<WorkspaceMaterialType, string> = {
-  TEXTBOOK: 'Учебник',
-  CURRICULUM_PLAN: 'КТП',
-  PREPARED_LESSON: 'Подготовленный урок',
-  TEST: 'Тест',
-  HOMEWORK: 'Домашнее задание',
-  DOCUMENT: 'Документ или ссылка',
-};
+import { materialTypeLabels } from './materialTypeLabels';
 
 export function FolderItemPickerModal({ folderId, onClose }: { folderId: number; onClose: () => void }) {
   const [input, setInput] = useState('');
@@ -79,14 +71,14 @@ export function FolderItemPickerModal({ folderId, onClose }: { folderId: number;
       <SearchInput value={input} onChange={setInput} placeholder="Поиск по материалам" className="w-full" />
       <Select aria-label="Тип материала" value={type} onChange={(event) => { setType(event.target.value as WorkspaceMaterialType | ''); setPage(0); }} className="w-full">
         <option value="">Все типы материалов</option>
-        {Object.entries(typeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        {Object.entries(materialTypeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
       </Select>
       {search.isPending ? <LoadingBlock /> : search.isError ? <ErrorBlock message="Не удалось загрузить данные" onRetry={() => search.refetch()} />
         : (search.data?.items?.content ?? []).length === 0 ? <EmptyBlock icon={<Search className="size-7" />} title={q ? 'Ничего не найдено' : 'Здесь пока нет материалов'} />
           : <div className="max-h-72 space-y-2 overflow-y-auto">
             {search.data?.items?.content?.map((item) => item.id != null && <SelectableRow key={item.id}
               title={item.title ?? `Материал №${item.id}`}
-              meta={item.fileExtension?.toUpperCase() ?? (item.type ? typeLabels[item.type] : 'Материал')}
+              meta={item.fileExtension?.toUpperCase() ?? (item.type ? materialTypeLabels[item.type] : 'Материал')}
               icon={item.fileExtension ? <FileTypeBadge format={item.fileExtension} /> : undefined}
               checked={selected.has(item.id)}
               disabled={item.folders?.some((folder) => folder.id === folderId)}
