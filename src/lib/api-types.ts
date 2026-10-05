@@ -5099,7 +5099,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["job"];
+        get: operations["job_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6478,6 +6478,54 @@ export interface paths {
         get: operations["listTestTemplates"];
         put?: never;
         post: operations["createTestTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/tests/ai-generations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["generate_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/tests/ai-generations/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/tests/ai-generations/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["job"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -8680,6 +8728,50 @@ export interface components {
             /** Format: int64 */
             studentProfileId?: number;
         };
+        HomeworkTestAiGenerateRequest: {
+            audience?: string;
+            language?: string;
+            /** Format: int32 */
+            openQuestionCount: number;
+            /** Format: int32 */
+            pageFrom?: number;
+            /** Format: int32 */
+            pageTo?: number;
+            /** Format: int32 */
+            questionCount: number;
+            /** @enum {string} */
+            sourceType?: "TEXTBOOK" | "DOCUMENT";
+            teacherPrompt?: string;
+            topic?: string;
+            /** Format: int64 */
+            workspaceItemId?: number;
+        };
+        HomeworkTestAiJobView: {
+            /** Format: date-time */
+            createdAt?: string;
+            errorMessage?: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            /** Format: int64 */
+            id?: number;
+            phase?: string;
+            /** Format: int32 */
+            progressDone?: number;
+            /** Format: int32 */
+            progressTotal?: number;
+            request?: components["schemas"]["HomeworkTestAiGenerateRequest"];
+            result?: components["schemas"]["HomeworkTestTemplateDefinition"];
+            sourceName?: string;
+            /** @enum {string} */
+            status?: "PENDING" | "RUNNING" | "DONE" | "FAILED";
+            warningMessage?: string;
+        };
+        HomeworkTestAiOverview: {
+            aiEnabled?: boolean;
+            latestJob?: components["schemas"]["HomeworkTestAiJobView"];
+            /** Format: int64 */
+            remainingCalls?: number;
+        };
         HomeworkTestTemplateApplicationView: {
             /** Format: date-time */
             appliedAt?: string;
@@ -8702,6 +8794,8 @@ export interface components {
             workspaceItemId: number;
         };
         HomeworkTestTemplateCreateFromQuestionsRequest: {
+            /** Format: int64 */
+            aiJobId?: number;
             questions: components["schemas"]["QuestionRequest"][];
             title?: string;
         };
@@ -8775,9 +8869,12 @@ export interface components {
             templateVersion?: number;
         };
         HomeworkTestTemplateVersionFromQuestionsRequest: {
+            /** Format: int64 */
+            aiJobId?: number;
             /** Format: int32 */
             expectedVersion: number;
             questions: components["schemas"]["QuestionRequest"][];
+            title?: string;
         };
         HomeworkTestTemplateVersionView: {
             author?: string;
@@ -22484,7 +22581,7 @@ export interface operations {
             };
         };
     };
-    job: {
+    job_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -25097,6 +25194,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HomeworkTestTemplateVersionView"];
+                };
+            };
+        };
+    };
+    generate_1: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HomeworkTestAiGenerateRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestAiJobView"];
+                };
+            };
+        };
+    };
+    overview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestAiOverview"];
+                };
+            };
+        };
+    };
+    job: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestAiJobView"];
                 };
             };
         };

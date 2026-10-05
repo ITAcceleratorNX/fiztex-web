@@ -77,7 +77,7 @@ import {
 } from '@/lib/equipmentApi';
 import type { Schema } from '@/lib/apiSchemas';
 import { teacherWorkspaceApi, type WorkspaceSearchQuery } from '@/lib/teacherWorkspaceApi';
-import { testTemplateApi } from '@/lib/testTemplateApi';
+import { testTemplateApi, type TestAiOverview, type TestAiRequest } from '@/lib/testTemplateApi';
 import { lessonPreparationApi, type PreparationAiOverview, type PreparationAiRequest } from '@/lib/lessonPreparationApi';
 import type {
   ApplicantRequest,
@@ -99,6 +99,7 @@ export const keys = {
   teacherWorkspaceMaterial: (id: number) => ['teacher-workspace', 'material', id] as const,
   teacherWorkspaceDependencies: (id: number) => ['teacher-workspace', 'dependencies', id] as const,
   testTemplate: (id: number) => ['teacher-workspace', 'test-template', id] as const,
+  testAiOverview: ['teacher-workspace', 'test-ai-overview'] as const,
   testTemplateDependencies: (id: number) => ['teacher-workspace', 'test-template', id, 'dependencies'] as const,
   testTemplateTarget: (homeworkId: number) => ['homework', homeworkId, 'test-template-target'] as const,
   lessonPreparation: (id: number) => ['teacher-workspace', 'lesson-preparation', id] as const,
@@ -389,6 +390,31 @@ export function useAttachWorkspaceDocumentToLesson() {
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['lessons'] });
       void client.invalidateQueries({ queryKey: keys.teacherWorkspace });
+    },
+  });
+}
+
+export function useTestAiOverview() {
+  return useQuery({
+    queryKey: keys.testAiOverview,
+    queryFn: ({ signal }) => testTemplateApi.aiOverview(signal),
+    refetchInterval: (query) => {
+      const status = query.state.data?.latestJob?.status;
+      return status === 'PENDING' || status === 'RUNNING' ? 2000 : false;
+    },
+    refetchIntervalInBackground: true,
+  });
+}
+
+export function useStartTestAiGeneration() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ body, key }: { body: TestAiRequest; key: string }) => testTemplateApi.startAi(body, key),
+    onSuccess: (job) => {
+      client.setQueryData<TestAiOverview>(keys.testAiOverview,
+        (old) => old ? { ...old, latestJob: job } : old);
+      void client.invalidateQueries({ queryKey: keys.testAiOverview });
+      void client.invalidateQueries({ queryKey: keys.homeworkAiQuota });
     },
   });
 }

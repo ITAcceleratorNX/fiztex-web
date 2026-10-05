@@ -1,6 +1,7 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import type { TestAiJob } from '@/lib/testTemplateApi';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/lib/api';
 import { WorkspaceTestEditorPage } from './WorkspaceTestEditorPage';
@@ -11,6 +12,12 @@ const template = vi.fn();
 
 vi.mock('@/context/ToastContext', () => ({
   useToast: () => ({ success: vi.fn() }),
+}));
+vi.mock('./GenerateWorkspaceTestModal', () => ({
+  GenerateWorkspaceTestModal: ({ onUse, onClose }: { onUse: (job: TestAiJob) => void; onClose: () => void }) =>
+    <button onClick={() => { onUse({ id: 19, request: { topic: 'Плотность', questionCount: 1, openQuestionCount: 1 }, result: { questions: [
+      { type: 'OPEN_TEXT', text: 'Вопрос от ИИ', maxScore: 1, referenceAnswer: 'Ответ', aiGenerated: true },
+    ] } }); onClose(); }}>Использовать вопросы</button>,
 }));
 vi.mock('@/hooks/queries', () => ({
   useTestTemplate: (...args: unknown[]) => template(...args),
@@ -67,7 +74,7 @@ describe('WorkspaceTestEditorPage', () => {
     await user.type(screen.getByRole('textbox', { name: 'Текст вопроса 1' }), 'Новый вопрос');
     await user.click(screen.getByRole('button', { name: 'Сохранить' }));
     await waitFor(() => expect(version).toHaveBeenCalledWith({ body: {
-      expectedVersion: 3, questions: [expect.objectContaining({ text: 'Новый вопрос' })],
+      expectedVersion: 3, title: 'Механика', questions: [expect.objectContaining({ text: 'Новый вопрос' })],
     }, key: expect.any(String) }));
   });
 
@@ -88,6 +95,62 @@ describe('WorkspaceTestEditorPage', () => {
     expect(screen.getByRole('button', { name: 'Сохранить' })).toBeDisabled();
     await user.click(screen.getByRole('button', { name: 'Загрузить актуальную версию' }));
     expect(await screen.findByRole('textbox', { name: 'Текст вопроса 1' })).toHaveValue('Правка другого учителя');
+  });
+
+  it('переносит вопросы ИИ в черновик и сохраняет происхождение при явном сохранении', async () => {
+    const user = userEvent.setup();
+    renderEditor('/workspace/tests/new');
+    await user.click(screen.getByRole('button', { name: 'Сгенерировать с ИИ' }));
+    await user.click(screen.getByRole('button', { name: 'Использовать вопросы' }));
+    expect(screen.getByRole('textbox', { name: 'Название теста' })).toHaveValue('Плотность');
+    expect(screen.getByRole('textbox', { name: 'Текст вопроса 1' })).toHaveValue('Вопрос от ИИ');
+    expect(create).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }));
+    await waitFor(() => expect(create).toHaveBeenCalledWith({ body: expect.objectContaining({ aiJobId: 19, title: 'Плотность' }), key: expect.any(String) }));
+  });
+
+  it('сохраняет ручные вопросы до подтверждения замены и позволяет отказаться', async () => {
+    const user = userEvent.setup();
+    renderEditor('/workspace/tests/new');
+    await user.click(screen.getByRole('button', { name: 'Добавить вопрос' }));
+    await user.type(screen.getByRole('textbox', { name: 'Текст вопроса 1' }), 'Мой вопрос');
+    await user.click(screen.getByRole('button', { name: 'Сгенерировать с ИИ' }));
+    await user.click(screen.getByRole('button', { name: 'Использовать вопросы' }));
+    expect(screen.getByText('Заменить вопросы теста?')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Текст вопроса 1', hidden: true })).toHaveValue('Мой вопрос');
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Отмена' }));
+    expect(screen.getByRole('textbox', { name: 'Текст вопроса 1' })).toHaveValue('Мой вопрос');
+    await user.click(screen.getByRole('button', { name: 'Сгенерировать с ИИ' }));
+    await user.click(screen.getByRole('button', { name: 'Использовать вопросы' }));
+    await user.click(screen.getByRole('button', { name: 'Заменить вопросы' }));
+    expect(screen.getByRole('textbox', { name: 'Текст вопроса 1' })).toHaveValue('Вопрос от ИИ');
+  });
+
+  it('не подменяет базовую версию черновика после фонового обновления', async () => {
+    const data = { title: 'Механика', version: 3, definition: { questions: [
+      { type: 'OPEN_TEXT', text: 'Мой вопрос', maxScore: 1 },
+    ] } };
+    template.mockReturnValue({ data, isPending: false, isError: false });
+    const user = userEvent.setup();
+    renderEditor('/workspace/tests/7/edit');
+    await screen.findByRole('textbox', { name: 'Текст вопроса 1' });
+    data.version = 4;
+    await user.type(screen.getByRole('textbox', { name: 'Название теста' }), ' — правка');
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }));
+    await waitFor(() => expect(version).toHaveBeenCalledWith({ body: expect.objectContaining({
+      expectedVersion: 3, title: 'Механика — правка',
+    }), key: expect.any(String) }));
+  });
+
+  it('запрашивает подтверждение ухода по навигационной цепочке при несохранённых правках', async () => {
+    const user = userEvent.setup();
+    renderEditor('/workspace/tests/new');
+    await user.type(screen.getByRole('textbox', { name: 'Название теста' }), 'Механика');
+    await user.click(screen.getByRole('link', { name: 'Тесты' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('Уйти без сохранения?');
+    expect(screen.queryByText('Раздел тестов')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Уйти' }));
+    expect(await screen.findByText('Раздел тестов')).toBeInTheDocument();
   });
 
   it('показывает ошибку загрузки редактируемого теста', () => {

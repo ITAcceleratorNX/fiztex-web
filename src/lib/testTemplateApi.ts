@@ -4,10 +4,17 @@ import type { Schema } from './apiSchemas';
 export type TestTemplateVersion = Schema<'HomeworkTestTemplateVersionView'>;
 export type TestTemplateTarget = Schema<'HomeworkTestTemplateTargetState'>;
 export type TestTemplateDependencies = Schema<'HomeworkTestTemplateDependencyPreview'>;
+export type TestAiRequest = Schema<'HomeworkTestAiGenerateRequest'>;
+export type TestAiJob = Schema<'HomeworkTestAiJobView'>;
+export type TestAiOverview = Schema<'HomeworkTestAiOverview'>;
 
 const root = '/teacher/workspace/tests';
 
 export const testTemplateApi = {
+  aiOverview: (signal?: AbortSignal) =>
+    request<TestAiOverview>(`${root}/ai-generations/overview`, { signal }),
+  startAi: (body: TestAiRequest, key: string) =>
+    request<TestAiJob>(`${root}/ai-generations`, { method: 'POST', headers: { 'Idempotency-Key': key }, body }),
   current: (id: number, signal?: AbortSignal) =>
     request<TestTemplateVersion>(`${root}/${id}`, { signal }),
   create: (body: Schema<'HomeworkTestTemplateSaveRequest'>, key: string) =>
