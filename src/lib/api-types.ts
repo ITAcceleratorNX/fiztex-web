@@ -4292,6 +4292,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/homework/{id}/copy-to-lesson": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["copyToLesson"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/homework/{id}/history": {
         parameters: {
             query?: never;
@@ -7752,6 +7768,15 @@ export interface components {
         };
         CopyBellTemplateRequest: {
             name?: string;
+        };
+        CopyHomeworkToLessonRequest: {
+            confirmRecipients: boolean;
+            /** Format: date-time */
+            dueAt?: string;
+            /** @enum {string} */
+            dueType: "EXACT" | "NEXT_LESSON" | "NONE";
+            /** Format: int64 */
+            lessonId: number;
         };
         CopyScheduleRequest: {
             /** Format: int64 */
@@ -21046,6 +21071,34 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkView"];
+                };
+            };
+        };
+    };
+    copyToLesson: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CopyHomeworkToLessonRequest"];
+            };
+        };
         responses: {
             /** @description Created */
             201: {

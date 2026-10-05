@@ -23,6 +23,7 @@ import { openWorkspaceDocument } from '@/lib/teacherWorkspaceOpen';
 import { ROUTES } from '@/lib/routes';
 import type { WorkspaceMaterialType, WorkspaceSearchItem } from '@/lib/teacherWorkspaceApi';
 import { CreateMaterialModal } from './CreateMaterialModal';
+import { CopyHomeworkToLessonModal } from './CopyHomeworkToLessonModal';
 import { CreateLessonPreparationModal } from './CreateLessonPreparationModal';
 import { DeleteMaterialModal } from './DeleteMaterialModal';
 import { FolderMembershipModal } from './FolderMembershipModal';
@@ -75,6 +76,8 @@ function WorkspaceRow({ item, folderId, onOpen, onAddToFolder, onRemove, onRenam
         { label: 'Открыть', onSelect: onOpen },
         ...(item.sourceKind === 'teacher-workspace-material' ? [{ label: 'Переименовать', onSelect: onRename }] : []),
         { label: 'Добавить в папку / изменить папку', onSelect: onAddToFolder },
+        ...(item.sourceKind === 'teacher-homework' && item.sourceId
+          ? [{ label: 'Скопировать в другой урок', onSelect: onReuse }] : []),
         ...(item.supportedActions?.some((action) => action === 'ATTACH_DOCUMENT_TO_HOMEWORK' || action === 'ATTACH_DOCUMENT_TO_LESSON' || action === 'APPLY_TEST_TO_HOMEWORK' || action === 'APPLY_PREPARATION_TO_LESSON')
           ? [{ label: 'Использовать повторно', onSelect: onReuse }] : []),
         ...(folderId != null ? [{ label: 'Убрать из этой папки', onSelect: onRemove, danger: true }] : []),
@@ -268,7 +271,10 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
         ? <ReuseTestTemplateModal key={reuseItem.id} item={reuseItem} onClose={() => setReuseItem(null)} />
         : reuseItem?.sourceKind === 'lesson-preparation'
           ? <ReuseLessonPreparationModal key={reuseItem.id} item={reuseItem} onClose={() => setReuseItem(null)} />
-        : reuseItem && <ReuseMaterialModal key={reuseItem.id} item={reuseItem} onClose={() => setReuseItem(null)} />}
+          : reuseItem?.sourceKind === 'teacher-homework'
+            ? <CopyHomeworkToLessonModal key={reuseItem.id} sourceId={Number(reuseItem.sourceId)} onClose={() => setReuseItem(null)}
+              onCopied={(id) => { setReuseItem(null); navigate(homeworkCardFromWorkspace(id, location)); }} />
+            : reuseItem && <ReuseMaterialModal key={reuseItem.id} item={reuseItem} onClose={() => setReuseItem(null)} />}
       {textbookDetail && <TextbookDetailModal key={textbookDetail.id} item={textbookDetail} onClose={() => setTextbookDetail(null)} />}
       {testDetail && <TestTemplateDetailModal key={testDetail.id} item={testDetail} origin={location} onClose={() => setTestDetail(null)}
         onReuse={() => { setReuseItem(testDetail); setTestDetail(null); }} />}

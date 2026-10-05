@@ -26,8 +26,10 @@ function readableDate(value: string) {
   return new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long' }).format(new Date(`${value}T12:00:00`));
 }
 
-export function LessonDestinationPicker({ selectedId, onSelect }: {
+export function LessonDestinationPicker({ selectedId, onSelect, subjectId, excludeLessonId }: {
   selectedId: number | null;
+  subjectId?: number;
+  excludeLessonId?: number;
   onSelect: (lesson: Lesson | null) => void;
 }) {
   const [date, setDate] = useState(() => localDate(new Date()));
@@ -41,6 +43,13 @@ export function LessonDestinationPicker({ selectedId, onSelect }: {
     setDate(next);
     setPage(0);
     onSelect(null);
+  }
+
+  function unavailable(lesson: Lesson) {
+    if (!lesson.capabilities?.includes('EDIT_TEACHING_PART') || lesson.academicPeriodStatus !== 'ACTIVE') return 'Недоступен для изменения';
+    if (lesson.id === excludeLessonId) return 'Урок исходного ДЗ';
+    if (subjectId != null && lesson.subjectId !== subjectId) return 'Другой предмет';
+    return undefined;
   }
 
   return <div className="space-y-4">
@@ -63,10 +72,9 @@ export function LessonDestinationPicker({ selectedId, onSelect }: {
             title={`${lesson.subjectName || 'Урок'} · ${lesson.className || 'Класс'}`}
             description={[lesson.date && readableDate(lesson.date), lesson.startTime?.slice(0, 5),
               lesson.subgroupName, lesson.topic,
-              (!lesson.capabilities?.includes('EDIT_TEACHING_PART') || lesson.academicPeriodStatus !== 'ACTIVE')
-                && 'Недоступен для изменения'].filter(Boolean).join(' · ')}
+              unavailable(lesson)].filter(Boolean).join(' · ')}
             selected={selectedId === lesson.id}
-            disabled={!lesson.capabilities?.includes('EDIT_TEACHING_PART') || lesson.academicPeriodStatus !== 'ACTIVE'}
+            disabled={Boolean(unavailable(lesson))}
             onClick={() => onSelect(lesson)}
           />)}
         </div>}

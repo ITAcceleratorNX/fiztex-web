@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Paperclip, Sparkles } from 'lucide-react';
+import { ArrowLeft, Copy, Paperclip, Sparkles } from 'lucide-react';
+import { CopyHomeworkToLessonModal } from '@/pages/workspace/CopyHomeworkToLessonModal';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -70,6 +71,7 @@ export function HomeworkCardPage() {
   const [generateKind, setGenerateKind] = useState<GenerateKind | null>(null);
   const [confirmRegenerate, setConfirmRegenerate] = useState<GenerateKind | null>(null);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [copyOpen, setCopyOpen] = useState(false);
 
   const cardQuery = useQuery({
     queryKey: ['homework', 'card', id],
@@ -239,6 +241,7 @@ export function HomeworkCardPage() {
         busy={busy}
         onPublish={() => mutate.mutate('publish')}
         onEdit={() => navigate(withHomeworkReturnTo(`/homework/${id}/edit`, location.search))}
+        onCopy={() => setCopyOpen(true)}
         onAsk={setConfirm}
         aiGenerated={homework.creationMode != null && homework.creationMode !== 'MANUAL'}
         onGenerate={askGenerate}
@@ -295,6 +298,12 @@ export function HomeworkCardPage() {
           />
         </>
       )}
+
+      {copyOpen && <CopyHomeworkToLessonModal sourceId={id} onClose={() => setCopyOpen(false)}
+        onCopied={(copyId) => {
+          setCopyOpen(false);
+          navigate(withHomeworkReturnTo(`/homework/${copyId}`, location.search));
+        }} />}
 
       <HomeworkAiGenerateModal
         open={generateKind != null}
@@ -456,6 +465,7 @@ function HomeworkHeader({
   aiGenerated,
   onPublish,
   onEdit,
+  onCopy,
   onAsk,
   onGenerate,
   onOpenQuestions,
@@ -469,6 +479,7 @@ function HomeworkHeader({
   aiGenerated: boolean;
   onPublish: () => void;
   onEdit: () => void;
+  onCopy: () => void;
   onAsk: (action: 'complete' | 'reopen' | 'cancel' | 'delete') => void;
   onGenerate: (kind: GenerateKind) => void;
   onOpenQuestions: () => void;
@@ -493,6 +504,9 @@ function HomeworkHeader({
         </div>
 
         <div className="flex shrink-0 flex-wrap gap-2">
+          <Button variant="secondary" size="sm" icon={<Copy className="size-4" />} onClick={onCopy} disabled={busy}>
+            Скопировать в другой урок
+          </Button>
           {actions.canEdit && (
             <Button variant="secondary" size="sm" onClick={onEdit} disabled={busy}>
               Редактировать

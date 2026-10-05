@@ -4,14 +4,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '@/context/ToastContext';
+import { homeworkApi } from '@/lib/homeworkApi';
 import { HomeworkCardPage } from './HomeworkCardPage';
+import { WorkspaceCollectionPage } from '@/pages/workspace/WorkspaceCollectionPage';
 
 vi.mock('@/lib/homeworkApi', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/homeworkApi')>();
   return { ...actual, homeworkApi: {
     ...actual.homeworkApi,
-    card: vi.fn().mockResolvedValue({ id: 42, title: 'Контрольная работа', status: 'DRAFT', answerFormat: 'TEXT', dueType: 'NONE' }),
+    card: vi.fn().mockImplementation((id: number) => Promise.resolve({ id, title: id === 42 ? 'Контрольная работа' : 'Копия контрольной', subjectId: 3, status: 'DRAFT', answerFormat: 'TEXT', dueType: 'NONE' })),
     listMaterials: vi.fn().mockResolvedValue([]),
+    copyToLesson: vi.fn().mockResolvedValue({ id: 99, title: 'Копия контрольной', status: 'DRAFT', answerFormat: 'TEXT', dueType: 'NONE' }),
   } };
 });
 
@@ -21,11 +24,22 @@ vi.mock('@/hooks/queries', async (importOriginal) => {
     useHomeworkAiJobs: () => ({ data: [] }),
     useApplyHomeworkAiResult: () => ({ isPending: false }),
     useDiscardHomeworkAiResult: () => ({ isPending: false }),
+    useWorkspaceLessonTargets: () => ({ data: { content: [{ id: 8, subjectId: 3, subjectName: 'Физика', className: '7Б', academicPeriodStatus: 'ACTIVE', capabilities: ['EDIT_TEACHING_PART'] }], totalPages: 1 }, isPending: false, isError: false }),
   };
 });
 
 vi.mock('./HomeworkAiGenerateModal', () => ({ HomeworkAiGenerateModal: () => null }));
 vi.mock('./HomeworkAiCompareModal', () => ({ HomeworkAiCompareModal: () => null }));
+
+vi.mock('@/lib/teacherWorkspaceApi', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/teacherWorkspaceApi')>();
+  return { ...actual, teacherWorkspaceApi: { ...actual.teacherWorkspaceApi,
+    section: vi.fn().mockResolvedValue({ section: { title: 'Домашние задания' } }),
+    folder: vi.fn().mockResolvedValue({ folder: { id: 7, name: 'Мой класс' } }),
+    folders: vi.fn().mockResolvedValue({ content: [] }),
+    search: vi.fn().mockResolvedValue({ items: { content: [{ id: 81, sourceId: '42', sourceKind: 'teacher-homework', type: 'HOMEWORK', title: 'Контрольная работа' }], totalElements: 1 } }),
+  } };
+});
 
 function CurrentUrl() {
   const location = useLocation();
@@ -61,5 +75,43 @@ describe('Карточка ДЗ из рабочего пространства',
     await userEvent.click(screen.getByRole('link', { name: 'К разделу «Домашние задания»' }));
     expect(screen.getByTestId('url')).toHaveTextContent('/workspace/sections/HOMEWORK?page=2');
     expect(screen.getByText('Раздел рабочего пространства')).toBeInTheDocument();
+  });
+
+  it('после копирования сохраняет возврат из новой карточки в исходный раздел', async () => {
+    renderCard('/workspace/sections/HOMEWORK?page=2');
+    await userEvent.click(await screen.findByRole('button', { name: 'Скопировать в другой урок' }));
+    await userEvent.click(await screen.findByRole('button', { name: /Физика · 7Б/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Срок сдачи копии' }));
+    await userEvent.click(screen.getByRole('option', { name: 'Без срока' }));
+    await userEvent.click(screen.getByRole('checkbox'));
+    await userEvent.click(screen.getByRole('button', { name: 'Создать черновик' }));
+    await screen.findByRole('heading', { name: 'Копия контрольной' });
+    expect(homeworkApi.copyToLesson).toHaveBeenCalledWith(42, { lessonId: 8, dueType: 'NONE', confirmRecipients: true }, expect.any(String));
+    expect(screen.getByTestId('url')).toHaveTextContent(`/homework/99?${new URLSearchParams({ returnTo: '/workspace/sections/HOMEWORK?page=2' })}`);
+    await userEvent.click(screen.getByRole('link', { name: 'К разделу «Домашние задания»' }));
+    expect(screen.getByTestId('url')).toHaveTextContent('/workspace/sections/HOMEWORK?page=2');
+  });
+
+  it.each(['/workspace/sections/HOMEWORK?page=2', '/workspace/folders/7?page=1'])('копирует из меню материала и сохраняет путь %s', async (path) => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><ToastProvider><MemoryRouter initialEntries={[path]}>
+      <CurrentUrl />
+      <Routes>
+        <Route path="/workspace/sections/:sectionCode" element={<WorkspaceCollectionPage kind="section" />} />
+        <Route path="/workspace/folders/:folderId" element={<WorkspaceCollectionPage kind="folder" />} />
+        <Route path="/homework/:homeworkId" element={<HomeworkCardPage />} />
+      </Routes>
+    </MemoryRouter></ToastProvider></QueryClientProvider>);
+    await userEvent.click(await screen.findByRole('button', { name: 'Действия: Контрольная работа' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Скопировать в другой урок' }));
+    await userEvent.click(await screen.findByRole('button', { name: /Физика · 7Б/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Срок сдачи копии' }));
+    await userEvent.click(screen.getByRole('option', { name: 'Без срока' }));
+    await userEvent.click(screen.getByRole('checkbox'));
+    await userEvent.click(screen.getByRole('button', { name: 'Создать черновик' }));
+    await screen.findByRole('heading', { name: 'Копия контрольной' });
+    expect(screen.getByTestId('url')).toHaveTextContent(`/homework/99?${new URLSearchParams({ returnTo: path })}`);
+    const breadcrumbs = screen.getByRole('navigation', { name: 'Навигационная цепочка' });
+    expect(within(breadcrumbs).getByRole('link', { name: path.includes('folders') ? 'Личная папка' : 'Домашние задания' })).toHaveAttribute('href', path);
   });
 });

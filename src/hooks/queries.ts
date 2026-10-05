@@ -157,6 +157,7 @@ export const keys = {
   // весь раздел одним `invalidateQueries(['homework'])`, и список урока обязан
   // обновляться вместе с ним, а не жить своей жизнью под ключом урока.
   homeworkFilterOptions: ['homework', 'filter-options'] as const,
+  homeworkCard: (id: number) => ['homework', 'card', id] as const,
   homeworkList: (params: HomeworkListParams) => ['homework', 'list', params] as const,
   lessonHomework: (lessonId: number) => ['homework', 'lesson', lessonId, 'all'] as const,
   attendanceHistory: (lessonId: number) => ['lessons', lessonId, 'attendance', 'history'] as const,
@@ -2582,6 +2583,28 @@ export function useCloseFeedbackMonth() {
       qc.setQueryData(keys.monthlyFeedbackMonth(month), view);
       void qc.invalidateQueries({ queryKey: keys.monthlyFeedbackMonths });
       void qc.invalidateQueries({ queryKey: keys.monthlyFeedbackSheets(month) });
+    },
+  });
+}
+
+export function useHomeworkCard(id: number | null) {
+  return useQuery({
+    queryKey: keys.homeworkCard(id ?? 0),
+    queryFn: ({ signal }) => homeworkApi.card(id!, signal),
+    enabled: id != null && Number.isSafeInteger(id) && id > 0,
+  });
+}
+
+export function useCopyHomeworkToLesson(sourceId: number) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ body, key }: { body: Schema<'CopyHomeworkToLessonRequest'>; key: string }) =>
+      homeworkApi.copyToLesson(sourceId, body, key),
+    onSuccess: (copy) => {
+      if (copy.id != null) client.setQueryData(keys.homeworkCard(copy.id), copy);
+      void client.invalidateQueries({ queryKey: ['homework'] });
+      void client.invalidateQueries({ queryKey: ['lessons'] });
+      void client.invalidateQueries({ queryKey: keys.teacherWorkspace });
     },
   });
 }

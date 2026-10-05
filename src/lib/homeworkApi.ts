@@ -91,6 +91,11 @@ export const homeworkApi = {
   create: (input: CreateHomeworkInput) =>
     request<Homework>('/homework', { method: 'POST', body: input }),
 
+  copyToLesson: (homeworkId: number, body: Schema<'CopyHomeworkToLessonRequest'>, key: string) =>
+    request<Homework>(`/homework/${homeworkId}/copy-to-lesson`, {
+      method: 'POST', headers: { 'Idempotency-Key': key }, body,
+    }),
+
   update: (homeworkId: number, input: UpdateHomeworkInput) =>
     request<Homework>(`/homework/${homeworkId}`, { method: 'PUT', body: input }),
 
