@@ -45,6 +45,7 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { WorkspaceHomePage } from '@/pages/workspace/WorkspaceHomePage';
 import { WorkspaceCollectionPage } from '@/pages/workspace/WorkspaceCollectionPage';
+import { WorkspaceTestEditorPage } from '@/pages/workspace/WorkspaceTestEditorPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import { NotFoundRoute } from '@/pages/NotFoundPage';
 import {
@@ -218,6 +219,8 @@ export function App() {
         <Route path={ROUTES.journal} element={<JournalPage />} />
         <Route path={ROUTES.textbooks} element={<TextbooksPage />} />
         <Route path={ROUTES.workspace} element={<WorkspaceHomePage />} />
+        <Route path={ROUTES.workspaceTestNew} element={<WorkspaceTestEditorPage mode="create" />} />
+        <Route path="/workspace/tests/:templateId/edit" element={<WorkspaceTestEditorPage mode="edit" />} />
         <Route path="/workspace/sections/:sectionCode" element={<WorkspaceCollectionPage kind="section" />} />
         <Route path="/workspace/folders/:folderId" element={<WorkspaceCollectionPage kind="folder" />} />
         {/* Ежемесячная обратная связь учителя (MONTHLY-FEEDBACK-001): история — тот же экран

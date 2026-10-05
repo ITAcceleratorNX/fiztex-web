@@ -234,6 +234,8 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
             <Button size="sm" icon={<Plus className="size-4" />}
               onClick={() => { setGeneratePreparation(false); setAddingPreparation(true); }}>Создать заготовку</Button>
           </>}
+          {!isFolder && code === 'TESTS' && <Button size="sm" icon={<Plus className="size-4" />}
+            onClick={() => navigate(ROUTES.workspaceTestNew, { state: { returnTo: location.pathname + location.search } })}>Создать тест</Button>}
           {isFolder && <ActionMenu label="Действия с папкой" items={[
             { label: 'Переименовать', onSelect: () => { setRenameValue(title ?? ''); setRenameOpen(true); } },
             { label: 'Удалить папку', onSelect: () => setDeleteOpen(true), danger: true },

@@ -37,6 +37,8 @@ export const ROUTES = {
   workspace: '/workspace',
   workspaceSection: (code: string) => `/workspace/sections/${encodeURIComponent(code)}`,
   workspaceFolder: (id: number | string) => `/workspace/folders/${id}`,
+  workspaceTestNew: '/workspace/tests/new',
+  workspaceTestEdit: (id: number | string) => `/workspace/tests/${id}/edit`,
   /** Ежемесячная обратная связь учителя: листы классов, публикация, закрытие месяца (MONTHLY-FEEDBACK-001). */
   feedback: '/feedback',
   /** Своё расписание учителя — ролевой экран поверх `/api/schedule/me/week`. */

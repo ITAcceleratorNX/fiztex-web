@@ -99,6 +99,7 @@ export const keys = {
   teacherWorkspaceMaterial: (id: number) => ['teacher-workspace', 'material', id] as const,
   teacherWorkspaceDependencies: (id: number) => ['teacher-workspace', 'dependencies', id] as const,
   testTemplate: (id: number) => ['teacher-workspace', 'test-template', id] as const,
+  testTemplateDependencies: (id: number) => ['teacher-workspace', 'test-template', id, 'dependencies'] as const,
   testTemplateTarget: (homeworkId: number) => ['homework', homeworkId, 'test-template-target'] as const,
   lessonPreparation: (id: number) => ['teacher-workspace', 'lesson-preparation', id] as const,
   lessonPreparationTarget: (lessonId: number) => ['lessons', lessonId, 'preparation-target'] as const,
@@ -413,6 +414,49 @@ export function useCreateTestTemplate() {
   return useMutation({
     mutationFn: ({ body, key }: { body: Schema<'HomeworkTestTemplateSaveRequest'>; key: string }) =>
       testTemplateApi.create(body, key),
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
+  });
+}
+
+export function useCreateTestTemplateFromQuestions() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ body, key }: { body: Schema<'HomeworkTestTemplateCreateFromQuestionsRequest'>; key: string }) =>
+      testTemplateApi.createFromQuestions(body, key),
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
+  });
+}
+
+export function useVersionTestTemplateFromQuestions(id: number) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ body, key }: { body: Schema<'HomeworkTestTemplateVersionFromQuestionsRequest'>; key: string }) =>
+      testTemplateApi.versionFromQuestions(id, body, key),
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
+  });
+}
+
+export function useRenameTestTemplate() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, title }: { id: number; title: string }) => testTemplateApi.rename(id, { title }),
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
+  });
+}
+
+export function useTestTemplateDependencies(id: number | null) {
+  return useQuery({
+    queryKey: keys.testTemplateDependencies(id ?? 0),
+    queryFn: ({ signal }) => testTemplateApi.dependencies(id!, signal),
+    enabled: id != null,
+  });
+}
+
+export function useDeleteTestTemplate() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, dependencies }: { id: number; dependencies: Awaited<ReturnType<typeof testTemplateApi.dependencies>> }) =>
+      testTemplateApi.delete(id, dependencies),
     onSuccess: () => client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
   });
 }

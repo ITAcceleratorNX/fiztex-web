@@ -22,7 +22,7 @@ export function ReuseTestTemplateModal({ item, onClose }: { item: WorkspaceSearc
   const [error, setError] = useState('');
   const templateId = Number(item.sourceId);
   const template = useTestTemplate(Number.isSafeInteger(templateId) && templateId > 0 ? templateId : null);
-  const homework = useHomeworkList({ scope: 'ACTUAL', page, size: 10 });
+  const homework = useHomeworkList({ scope: 'ACTUAL', statuses: ['DRAFT', 'PUBLISHED'], page, size: 10 });
   const target = useTestTemplateTarget(homeworkId);
   const apply = useApplyTestTemplate(homeworkId ?? 0);
   const toast = useToast();
@@ -59,7 +59,8 @@ export function ReuseTestTemplateModal({ item, onClose }: { item: WorkspaceSearc
       {template.isPending ? <LoadingBlock /> : template.isError ? <ErrorBlock message="Не удалось загрузить данные" onRetry={() => template.refetch()} />
         : <p className="text-sm text-slate-600">{item.title} · версия {template.data?.version} · {template.data?.definition?.questions?.length ?? 0} вопросов</p>}
       {homework.isPending ? <LoadingBlock /> : homework.isError ? <ErrorBlock message="Не удалось загрузить данные" onRetry={() => homework.refetch()} />
-        : !available ? <EmptyBlock icon={<BookOpen className="size-7" />} title="Нет доступных домашних заданий" />
+        : !available ? <EmptyBlock icon={<BookOpen className="size-7" />}
+          title={(homework.data?.totalPages ?? 0) > 1 ? 'На этой странице нет доступных домашних заданий' : 'Нет доступных домашних заданий'} />
           : <div className="max-h-72 space-y-2 overflow-y-auto">
             {choices.map((entry) => entry.id != null && <ChoiceRow key={entry.id} icon={<BookOpen className="size-5" />}
               title={entry.title ?? `ДЗ №${entry.id}`}

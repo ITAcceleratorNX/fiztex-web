@@ -148,6 +148,7 @@ export function QuestionCard({
                 type="button"
                 variant="secondary"
                 size="sm"
+                disabled={question.options.length >= 10}
                 onClick={() =>
                   onChange({
                     ...question,
