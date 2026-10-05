@@ -120,7 +120,7 @@ export function HomeworkTestAnswerReview({
 
   if (questionsLoading) {
     return (
-      <section className="card">
+      <section className="card px-4 sm:px-6">
         <LoadingBlock label="Загрузка вопросов теста…" />
       </section>
     );
@@ -128,7 +128,7 @@ export function HomeworkTestAnswerReview({
 
   if (questionsError) {
     return (
-      <section className="card">
+      <section className="card px-4 sm:px-6">
         <ErrorBlock message="Не удалось загрузить вопросы теста" onRetry={onRetryQuestions} />
       </section>
     );

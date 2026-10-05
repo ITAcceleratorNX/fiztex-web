@@ -1,6 +1,7 @@
+import { PageHeader } from '@/components/ui/PageHeader';
 import { useState, type FormEvent } from 'react';
-import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, FileText, Folder, Plus, Sparkles } from 'lucide-react';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { FileText, Folder, Plus, Sparkles } from 'lucide-react';
 import { ActionMenu } from '@/components/ui/ActionMenu';
 import { Badge } from '@/components/ui/Badge';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
@@ -20,6 +21,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
 import { homeworkCardFromWorkspace } from '@/lib/homeworkListNavigation';
 import { openWorkspaceDocument } from '@/lib/teacherWorkspaceOpen';
+import { workspaceSectionLabel } from '@/lib/workspaceSections';
 import { ROUTES } from '@/lib/routes';
 import type { WorkspaceMaterialType, WorkspaceSearchItem } from '@/lib/teacherWorkspaceApi';
 import { CreateMaterialModal } from './CreateMaterialModal';
@@ -46,6 +48,16 @@ const sectionTypes: Record<string, WorkspaceMaterialType | null> = {
   DOCUMENTS: 'DOCUMENT',
 };
 
+const sectionDescriptions: Record<string, string> = {
+  ACHIEVEMENTS: 'Медали, грамоты и другие достижения.',
+  TEXTBOOKS: 'Личная библиотека учебников и источников для подготовки занятий.',
+  CURRICULUM_PLANS: 'Планы тем и занятий по вашим предметам.',
+  PREPARED_LESSONS: 'Создайте заготовку с темой, конспектом и материалами, затем подключайте её к нескольким урокам.',
+  TESTS: 'Соберите вопросы один раз и используйте сохранённый тест в разных домашних заданиях.',
+  HOMEWORK: 'Открывайте задания, проверяйте ответы или создавайте копии для других уроков.',
+  DOCUMENTS: 'Загружайте файлы и сохраняйте ссылки, чтобы добавлять их к урокам и домашним заданиям.',
+};
+
 function formatDate(value?: string) {
   return value ? new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(value)) : '—';
 }
@@ -63,16 +75,17 @@ function WorkspaceRow({ item, folderId, onOpen, onAddToFolder, onRemove, onRenam
   const format = item.fileExtension?.toUpperCase();
   const kindLabel = item.type === 'DOCUMENT' ? 'Ссылка' : (item.type && materialTypeLabels[item.type]) || 'Материал';
   return (
-    <div className="flex min-h-16 items-center gap-2 border-b border-slate-200 px-5 py-3 last:border-b-0">
+    <div className="flex min-h-20 items-center gap-3 border-b border-line px-4 py-4 last:border-b-0 sm:px-5">
       <span className="shrink-0">{format ? <FileTypeBadge format={format} /> : <Badge tone="navy">{kindLabel}</Badge>}</span>
       <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:underline">
-        <span className="block truncate text-sm font-semibold text-slate-900">{item.title}</span>
-        <span className="mt-0.5 block text-xs text-slate-400">{format || kindLabel} · Добавлен {formatDate(item.addedAt)}</span>
+        <span className="block break-words text-sm font-semibold leading-relaxed text-ink">{item.title}</span>
+        <span className="mt-1 block text-13 text-muted">Добавлен {formatDate(item.addedAt)}</span>
+        {item.author && <span className="mt-1 block break-words text-13 text-muted lg:hidden">Добавил: {item.author}</span>}
       </button>
-      <span className="hidden w-52 shrink-0 items-center gap-2 text-13 text-slate-700 md:flex">
+      <span className="hidden w-44 shrink-0 items-center gap-2 break-words text-13 text-muted lg:flex">
         {item.author || '—'}
       </span>
-      <ActionMenu label={`Действия: ${item.title}`} items={[
+      <ActionMenu triggerLabel="Действия" label={`Действия: ${item.title}`} items={[
         { label: 'Открыть', onSelect: onOpen },
         ...(item.sourceKind === 'teacher-workspace-material' ? [{ label: 'Переименовать', onSelect: onRename }] : []),
         { label: 'Добавить в папку / изменить папку', onSelect: onAddToFolder },
@@ -216,21 +229,21 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
 
   if (isFolder && (!Number.isInteger(folderId) || folderId <= 0)) return <ErrorBlock message="Папка не найдена" />;
   if (!isFolder && !(code in sectionTypes)) return <ErrorBlock message="Раздел не найден" />;
-  if (list.isPending) return <LoadingBlock />;
-  if (list.isError) return <ErrorBlock message="Не удалось загрузить данные" onRetry={() => list.refetch()} />;
+  if (list.isPending || list.isError) return <div className="page-stack">
+    <PageHeader title={title ?? (isFolder ? 'Личная папка' : workspaceSectionLabel(location.pathname) ?? 'Материалы')}
+      back={{ to: ROUTES.workspace, label: 'Вернуться в рабочее пространство' }} />
+    {list.isPending ? <LoadingBlock /> : <ErrorBlock message="Не удалось загрузить данные" onRetry={() => list.refetch()} />}
+  </div>;
 
   return (
-    <div className="min-h-[calc(100vh-6rem)] bg-white p-2 md:p-4">
-      <header className="mb-7 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link to={ROUTES.workspace} aria-label="Вернуться в рабочее пространство" className="flex size-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200"><ArrowLeft className="size-5" /></Link>
-          <div><Breadcrumbs items={[{ label: 'Рабочее пространство', to: ROUTES.workspace },
-            { label: isFolder ? `Личная папка — ${title}` : title ?? 'Раздел' }]} />
-            <h1 className="mt-1 text-2xl font-bold text-slate-900">{isFolder ? `Личная папка — ${title}` : title}</h1>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {(isFolder || code === 'DOCUMENTS') && <Button size="sm" icon={<Plus className="size-4" />} onClick={() => setAdding(true)}>{isFolder ? 'Добавить материал' : 'Добавить'}</Button>}
+    <div className="page-stack">
+      <Breadcrumbs items={[{ label: 'Рабочее пространство', to: ROUTES.workspace },
+        { label: isFolder ? `Личная папка — ${title}` : title ?? 'Раздел' }]} />
+      <PageHeader title={isFolder ? `Личная папка — ${title}` : title}
+        back={{ to: ROUTES.workspace, label: 'Вернуться в рабочее пространство' }}
+        description={isFolder ? 'Материалы из разных разделов, собранные в одном месте.' : sectionDescriptions[code]}
+        actions={<>
+          {(isFolder || code === 'DOCUMENTS') && <Button size="sm" icon={<Plus className="size-4" />} onClick={() => setAdding(true)}>Добавить материал</Button>}
           {!isFolder && code === 'PREPARED_LESSONS' && <>
             <Button size="sm" variant="secondary" icon={<Sparkles className="size-4" />}
               onClick={() => { setGeneratePreparation(true); setAddingPreparation(true); }}>Создать с ИИ</Button>
@@ -243,16 +256,15 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
             { label: 'Переименовать', onSelect: () => { setRenameValue(title ?? ''); setRenameOpen(true); } },
             { label: 'Удалить папку', onSelect: () => setDeleteOpen(true), danger: true },
           ]} />}
-        </div>
-      </header>
+        </>} />
       {searchEnabled && search.isPending && <LoadingBlock />}
       {searchEnabled && search.isError && <ErrorBlock message="Не удалось загрузить данные" onRetry={() => search.refetch()} />}
-      {(!searchEnabled || (!search.isError && !search.isPending)) && items.length === 0 && <div className="flex min-h-[30rem] items-center justify-center">
+      {(!searchEnabled || (!search.isError && !search.isPending)) && items.length === 0 && <div className="rounded-2xl border border-dashed border-line px-4 py-8">
         <EmptyBlock icon={isFolder ? <Folder className="size-8" /> : <FileText className="size-8" />} title={isFolder ? 'В этой папке пока нет материалов' : 'В этом разделе пока нет материалов'} />
       </div>}
       {!search.isError && items.length > 0 && <div className="rounded-2xl border border-slate-200 bg-white">
-        <div className="flex h-11 items-center rounded-t-2xl border-b border-slate-200 bg-slate-50 px-5 text-xs font-bold uppercase text-slate-400">
-          <span className="flex-1">Материал</span><span className="hidden w-52 md:block">Добавил</span><span className="w-8" />
+        <div className="flex min-h-11 items-center rounded-t-2xl border-b border-line bg-canvas px-4 py-3 text-13 font-semibold text-muted sm:px-5">
+          <span className="flex-1">Материалы · {total}</span><span className="hidden w-44 lg:block">Добавил</span><span className="w-28" />
         </div>
         {items.map((item) => item.id != null && <WorkspaceRow key={item.id} item={item} folderId={isFolder ? folderId : undefined} onOpen={() => void open(item)} onAddToFolder={() => setAddingToFolder(item)} onRemove={() => setRemoveItem(item)} onRename={() => { setRenameItem(item); setMaterialTitle(item.title ?? ''); }} onDelete={() => setDeleteItem(item)} onReuse={() => setReuseItem(item)} />)}
       </div>}

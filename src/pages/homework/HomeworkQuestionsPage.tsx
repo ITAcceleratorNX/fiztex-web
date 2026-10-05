@@ -1,6 +1,7 @@
+import { PageHeader } from '@/components/ui/PageHeader';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/Button';
 import { NoticeBar } from '@/components/ui/NoticeBar';
@@ -134,20 +135,10 @@ export function HomeworkQuestionsPage() {
   }
 
   return (
-    <div className="flex max-w-4xl flex-col gap-5">
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={leave}
-          aria-label="К заданию"
-          className="text-subtle transition hover:text-ink"
-        >
-          <ArrowLeft className="size-5" />
-        </button>
-        <div className="min-w-0 flex-1">
-          <h1 className="text-28 font-bold text-ink">Вопросы задания</h1>
-          {homework && <p className="truncate text-13 text-muted">{homework.title}</p>}
-        </div>
+    <div className="page-stack max-w-4xl">
+      <PageHeader title="Вопросы задания" description={homework?.title}
+        back={{ onClick: leave, label: 'К заданию', disabled: save.isPending }}
+        actions={<>
         {homework?.answerFormat === 'TEST' && !dirty && !questionsQuery.isPending && !questionsQuery.isError &&
           <TestTemplateActions homeworkId={id} homeworkTitle={homework.title ?? 'Тест'}
             questionCount={questions.length} canApply={!readOnly}
@@ -157,7 +148,7 @@ export function HomeworkQuestionsPage() {
             Сохранить
           </Button>
         )}
-      </div>
+        </>} />
 
       {/* Выключенные кнопки без объяснения читаются как поломка. */}
       {frozen && (
@@ -173,18 +164,18 @@ export function HomeworkQuestionsPage() {
       )}
 
       {questionsQuery.isPending ? (
-        <div className="card">
+        <div className="card px-4 sm:px-6">
           <LoadingBlock label="Загрузка вопросов…" />
         </div>
       ) : questionsQuery.isError ? (
-        <div className="card">
+        <div className="card px-4 sm:px-6">
           <ErrorBlock
             message="Не удалось загрузить вопросы"
             onRetry={() => void questionsQuery.refetch()}
           />
         </div>
       ) : questions.length === 0 ? (
-        <div className="card">
+        <div className="card px-4 sm:px-6">
           <EmptyBlock
             title="Вопросов пока нет"
             description={

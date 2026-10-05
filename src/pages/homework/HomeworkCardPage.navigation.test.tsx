@@ -62,6 +62,19 @@ function renderCard(returnTo: string) {
 }
 
 describe('Карточка ДЗ из рабочего пространства', () => {
+  it('отделяет удаление от основных действий и сохраняет подтверждение', async () => {
+    renderCard('/workspace/sections/HOMEWORK');
+    await screen.findByRole('heading', { name: 'Контрольная работа' });
+    expect(screen.queryByRole('button', { name: 'Удалить черновик' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Другие действия с заданием' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Удалить черновик' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Удалить' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Отмена' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Контрольная работа' })).toBeInTheDocument();
+  });
+
   it('показывает путь и возвращает в тот же раздел на ту же страницу', async () => {
     renderCard('/workspace/sections/HOMEWORK?page=2');
     await screen.findByRole('heading', { name: 'Контрольная работа' });

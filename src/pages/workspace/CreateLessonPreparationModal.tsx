@@ -132,7 +132,7 @@ export function CreateLessonPreparationModal({ onClose, onCreated, initialGenera
           {documents.length === 0 ? <p className="text-sm text-slate-500">Материалы не добавлены</p>
             : <ul className="space-y-2">{documents.map((item) => <li key={item.id}
               className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
-              <span className="min-w-0 truncate">{item.title}</span>
+              <span className="min-w-0 flex-1 break-words">{item.title}</span>
               <button type="button" aria-label={`Убрать ${item.title}`} onClick={() => setDocuments((current) => current.filter((entry) => entry.id !== item.id))}
                 className="shrink-0 rounded-lg p-1 text-slate-500 hover:bg-slate-200"><X className="size-4" /></button>
             </li>)}</ul>}
@@ -141,7 +141,7 @@ export function CreateLessonPreparationModal({ onClose, onCreated, initialGenera
           <p className="text-sm font-semibold text-slate-900">Учебник</p>
           <p className="text-xs text-slate-500">Необязательно. При применении учебник должен быть назначен классу выбранного урока.</p>
           {textbook && <div className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
-            <span className="min-w-0 truncate">{textbook.title}</span>
+            <span className="min-w-0 flex-1 break-words">{textbook.title}</span>
             <button type="button" aria-label="Убрать учебник" onClick={() => setTextbook(null)}
               className="shrink-0 rounded-lg p-1 text-slate-500 hover:bg-slate-200"><X className="size-4" /></button>
           </div>}

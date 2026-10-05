@@ -1,6 +1,7 @@
+import { PageHeader } from '@/components/ui/PageHeader';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Sparkles } from 'lucide-react';
+import { Plus, Sparkles } from 'lucide-react';
 import { QuestionCard } from '@/components/homework/QuestionCard';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { Button } from '@/components/ui/Button';
@@ -130,10 +131,15 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
   }
 
   if (mode === 'edit' && id == null) return <ErrorBlock message="Тест не найден" />;
-  if (mode === 'edit' && template.isPending) return <LoadingBlock />;
-  if (mode === 'edit' && template.isError) return <ErrorBlock message="Не удалось загрузить данные" onRetry={() => template.refetch()} />;
+  if (mode === 'edit' && template.isPending) return <div className="page-stack max-w-4xl">
+    <PageHeader title="Редактирование теста" back={{ onClick: leave, label: 'Назад к тестам' }} /><LoadingBlock />
+  </div>;
+  if (mode === 'edit' && template.isError) return <div className="page-stack max-w-4xl">
+    <PageHeader title="Редактирование теста" back={{ onClick: leave, label: 'Назад к тестам' }} />
+    <ErrorBlock message="Не удалось загрузить данные" onRetry={() => template.refetch()} />
+  </div>;
 
-  return <div className="mx-auto flex w-full min-w-0 max-w-4xl flex-col gap-6">
+  return <div className="page-stack max-w-4xl">
     <div onClickCapture={(event) => {
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const link = event.target instanceof Element ? event.target.closest('a') : null;
@@ -145,13 +151,9 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
       { label: 'Тесты', to: returnTo },
       { label: mode === 'create' ? 'Новый тест' : 'Редактирование' },
     ]} /></div>
-    <header className="flex items-start gap-3">
-      <Button variant="secondary" size="sm" onClick={leave} disabled={saving} aria-label="Назад к тестам" icon={<ArrowLeft className="size-4" />} />
-      <div className="min-w-0 space-y-2">
-        <h1 className="text-24 font-bold text-ink sm:text-28">{mode === 'create' ? 'Новый тест' : 'Редактирование теста'}</h1>
-        <p className="text-sm leading-relaxed text-muted">Соберите вопросы один раз и используйте тест в разных домашних заданиях.</p>
-      </div>
-    </header>
+    <PageHeader title={mode === 'create' ? 'Новый тест' : 'Редактирование теста'}
+      back={{ onClick: leave, disabled: saving, label: 'Назад к тестам' }}
+      description="Соберите вопросы один раз и используйте тест в разных домашних заданиях." />
 
     <section className="card space-y-3 p-4 sm:p-6" aria-label="Настройки теста">
       <Field label="Название теста" required error={showProblems && !title.trim() ? 'Введите название' : undefined}>
@@ -184,7 +186,7 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
       {questions.length >= 50 && <p className="text-13 text-muted">В одном тесте может быть до 50 вопросов.</p>}
     </section>
 
-    <div className="sticky bottom-4 z-10 space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
+    <div className="sm:sticky sm:bottom-4 sm:z-10 space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
       {showProblems && !valid && <p role="alert" className="text-sm text-danger-fg">
         {!title.trim() ? 'Укажите название теста.' : questions.length === 0 ? 'Добавьте хотя бы один вопрос.' : 'Проверьте отмеченные вопросы перед сохранением.'}
       </p>}

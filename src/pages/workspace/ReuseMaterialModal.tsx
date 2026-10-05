@@ -55,7 +55,7 @@ export function ReuseMaterialModal({ item, onClose }: {
     open
     onClose={() => { if (!busy) onClose(); }}
     title={destination === 'choose' ? 'Куда добавить?' : destination === 'homework' ? 'Выберите домашнее задание' : 'Выберите урок'}
-    size="md"
+    size="lg"
     footer={destination === 'choose' ? undefined : <>
       <Button variant="secondary" onClick={() => setDestination('choose')} disabled={busy}>Назад</Button>
       <Button onClick={() => void save()} loading={busy} disabled={destination === 'homework' ? homeworkId == null : !lessonAvailable}>Добавить</Button>

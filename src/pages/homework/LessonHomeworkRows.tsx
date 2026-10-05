@@ -46,12 +46,12 @@ export function LessonHomeworkRows({
           className={cx(
             'flex items-center justify-between gap-4 border-b border-line px-5 py-3 text-left last:border-b-0',
             canOpen
-              ? 'transition hover:bg-neutral-bg/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400/50'
+              ? 'transition hover:bg-neutral-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400/50'
               : 'cursor-default',
           )}
         >
           <span className="min-w-0">
-            <span className="block truncate text-sm font-medium text-ink">{row.title}</span>
+            <span className="block break-words text-sm font-medium leading-relaxed text-ink">{row.title}</span>
             <span className="text-13 text-subtle">
               {dueLabel(row)}
               {lessonId != null && row.lesson?.id !== lessonId && ' · срок на этом уроке'}

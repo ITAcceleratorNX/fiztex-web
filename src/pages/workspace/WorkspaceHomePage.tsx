@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/ui/PageHeader';
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -8,7 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { FileTypeBadge } from '@/components/ui/FileTypeBadge';
 import { SearchInput } from '@/components/ui/SearchInput';
-import { Select } from '@/components/ui/Select';
+import { Field, Select } from '@/components/ui/Field';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { WorkspaceSectionCard } from '@/components/ui/WorkspaceSectionCard';
 import { useTeacherWorkspaceHome, useTeacherWorkspaceSearch } from '@/hooks/queries';
@@ -31,7 +32,7 @@ const sectionPresentation = {
   TEXTBOOKS: { description: 'Личная библиотека учебников', tone: 'navy', icon: BookText },
   CURRICULUM_PLANS: { description: 'Календарно-тематическое планирование', tone: 'teal', icon: CalendarCheck2 },
   PREPARED_LESSONS: { description: 'Заготовки и конспекты', tone: 'orange', icon: NotebookPen },
-  TESTS: { description: 'Тесты и контрольные работы', tone: 'navy', icon: ListChecks },
+  TESTS: { description: 'Вопросы для повторного использования в ДЗ', tone: 'navy', icon: ListChecks },
   HOMEWORK: { description: 'Учёт домашних заданий', tone: 'teal', icon: BookOpen },
   DOCUMENTS: { description: 'Файлы и документы', tone: 'orange', icon: FileText },
 } as const;
@@ -84,14 +85,14 @@ function Results({ items, total, page, onPage, onOpen }: {
   }
 
   return (
-    <section aria-label="Результаты поиска" className="mt-8">
+    <section aria-label="Результаты поиска" className="min-w-0">
       <div className="mb-4 flex items-center justify-between text-slate-500">
         <h2 className="text-11 font-bold uppercase">Результаты поиска</h2>
         <span className="text-13">{pluralMaterials(total)}</span>
       </div>
-      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-        <div className="min-w-[860px]">
-          <div className="grid grid-cols-[minmax(0,2fr)_7rem_minmax(0,1.4fr)_11rem] gap-4 border-b border-slate-200 bg-slate-50 px-6 py-3 text-xs font-bold text-slate-500">
+      <div className="rounded-2xl border border-line bg-surface">
+        <div className="min-w-0">
+          <div className="hidden rounded-t-2xl lg:grid lg:grid-cols-[minmax(0,2fr)_7rem_minmax(0,1.4fr)_11rem] gap-4 border-b border-slate-200 bg-slate-50 px-6 py-3 text-xs font-bold text-slate-500">
             <span>Материал</span><span>Дата</span><span>Источник</span><span>Добавил</span>
           </div>
           {items.map((item) => (
@@ -99,15 +100,15 @@ function Results({ items, total, page, onPage, onOpen }: {
               type="button"
               key={item.id}
               onClick={() => onOpen(item)}
-              className="grid w-full grid-cols-[minmax(0,2fr)_7rem_minmax(0,1.4fr)_11rem] items-center gap-4 border-b border-slate-200 px-6 py-3 text-left text-sm last:border-b-0 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-navy-700"
+              className="grid w-full min-w-0 grid-cols-1 items-start gap-2 rounded-2xl lg:grid-cols-[minmax(0,2fr)_7rem_minmax(0,1.4fr)_11rem] lg:items-center lg:gap-4 border-b border-slate-200 px-6 py-3 text-left text-sm last:border-b-0 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-navy-700"
             >
-              <span className="flex min-w-0 items-center gap-3">
+              <span className="flex min-w-0 flex-wrap items-center gap-3">
                 <MaterialKind item={item} />
-                <span className="truncate font-semibold text-slate-900">{item.title}</span>
+                <span className="min-w-0 flex-1 break-words font-semibold text-ink">{item.title}</span>
               </span>
               <span className="text-xs text-slate-500">{item.addedAt ? new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(item.addedAt)) : '—'}</span>
-              <span className="min-w-0 truncate"><span className="rounded-md bg-slate-100 px-2 py-1 text-11 text-slate-500">{sourceLabel(item)}</span></span>
-              <span className="truncate text-xs text-slate-700">{item.author || '—'}</span>
+              <span className="min-w-0 break-words"><span className="text-13 text-muted">{sourceLabel(item)}</span></span>
+              <span className="break-words text-13 text-muted">{item.author || '—'}</span>
             </button>
           ))}
         </div>
@@ -196,11 +197,11 @@ export function WorkspaceHomePage() {
   }
 
   return (
-    <div className="bg-white p-2 md:p-4">
-      <h1 className="text-28 font-bold text-slate-900">Рабочее пространство</h1>
-      <div className="mt-5 flex flex-wrap gap-4">
-        <SearchInput value={input} onChange={setInput} placeholder="Поиск по материалам" size="lg" className="min-w-0 basis-64 grow" />
-        <div className="w-full shrink-0 sm:w-56">
+    <div className="page-stack">
+      <PageHeader title="Рабочее пространство" description="Храните материалы, собирайте тесты и заготовки уроков, используйте их в занятиях и домашних заданиях." />
+      <div className="flex flex-wrap items-end gap-3">
+        <Field label="Поиск по материалам" className="min-w-0 basis-64 grow"><SearchInput value={input} onChange={setInput} placeholder="Название материала или папки" size="lg" /></Field>
+        <Field label="Тип материала" className="w-full shrink-0 sm:w-56">
           <Select aria-label="Тип материала" value={type ?? ''} onChange={(event) => {
             const nextType = event.target.value;
             setParams((current) => {
@@ -211,20 +212,28 @@ export function WorkspaceHomePage() {
               return next;
             });
           }} className="h-12 w-full rounded-xl">
-            <option value="">Тип материала</option>
+            <option value="">Все материалы</option>
             {Object.entries(typeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </Select>
-        </div>
+        </Field>
         {type === 'DOCUMENT' && (
-          <div className="w-full shrink-0 sm:w-40">
+          <Field label="Тип файла" className="w-full shrink-0 sm:w-40">
             <Select aria-label="Тип файла" value={fileType ?? ''} onChange={(event) => patch('fileType', event.target.value)} className="h-12 w-full rounded-xl">
               <option value="">Все файлы</option>
               <option value="PDF">PDF</option><option value="WORD">DOC/DOCX</option>
               <option value="SPREADSHEET">XLS/XLSX</option><option value="PRESENTATION">PPT/PPTX</option>
               <option value="IMAGE">Изображения</option>
             </Select>
-          </div>
+          </Field>
         )}
+        {(searchActive || input) && <Button variant="ghost" onClick={() => {
+          setInput('');
+          setParams((current) => {
+            const next = new URLSearchParams(current);
+            ['q', 'type', 'fileType', 'page'].forEach((key) => next.delete(key));
+            return next;
+          });
+        }}>Сбросить поиск</Button>}
       </div>
 
       {searchActive ? (
@@ -245,9 +254,9 @@ export function WorkspaceHomePage() {
         <ErrorBlock message="Не удалось загрузить данные" onRetry={() => home.refetch()} />
       ) : (
         <>
-          <section className="mt-8">
-            <h2 className="mb-4 text-11 font-bold uppercase text-slate-500">Разделы</h2>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+          <section className="min-w-0">
+            <h2 className="mb-4 text-base font-semibold text-ink">Разделы</h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {(home.data?.sections ?? []).map((section) => {
                 const presentation = sectionPresentation[section.code as keyof typeof sectionPresentation];
                 if (!section.code || !presentation) return null;
@@ -263,9 +272,9 @@ export function WorkspaceHomePage() {
               })}
             </div>
           </section>
-          <section className="mt-8">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-11 font-bold uppercase text-slate-500">Мои папки</h2>
+          <section className="min-w-0">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-base font-semibold text-ink">Мои папки</h2>
               <Button size="sm" icon={<Plus className="size-4" />} onClick={() => setCreating(true)}>Создать папку</Button>
             </div>
             {(home.data?.folders?.content ?? []).length === 0 ? (
@@ -275,8 +284,8 @@ export function WorkspaceHomePage() {
                 {home.data?.folders?.content?.map((folder) => folder.id != null && (
                   <Link key={folder.id} to={ROUTES.workspaceFolder(folder.id)} className="flex min-h-[68px] items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3.5 transition hover:border-navy-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700">
                     <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600"><Folder className="size-5" /></span>
-                    <span className="min-w-0 flex-1 truncate text-15 font-medium text-slate-900">{folder.name}</span>
-                    <span className="text-sm text-slate-500">{pluralMaterials(folder.itemCount ?? 0)}</span>
+                    <span className="min-w-0 flex-1 break-words text-15 font-medium text-slate-900">{folder.name}</span>
+                    <span className="shrink-0 text-sm text-muted">{pluralMaterials(folder.itemCount ?? 0)}</span>
                     <ChevronRight className="size-4 shrink-0 text-slate-400" aria-hidden="true" />
                   </Link>
                 ))}

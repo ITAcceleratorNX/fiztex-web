@@ -36,7 +36,7 @@ export function ReuseLessonPreparationModal({ item, onClose }: { item: Workspace
     }
   }
 
-  return <Modal open onClose={() => { if (!apply.isPending) onClose(); }} title="Использовать заготовку" size="md" footer={<>
+  return <Modal open onClose={() => { if (!apply.isPending) onClose(); }} title="Использовать заготовку" size="lg" footer={<>
     <Button variant="secondary" onClick={onClose} disabled={apply.isPending}>Отмена</Button>
     <Button onClick={() => void save()} loading={apply.isPending}
       disabled={!available || preparation.isPending || preparation.isError || !target.data?.targetRevision}>

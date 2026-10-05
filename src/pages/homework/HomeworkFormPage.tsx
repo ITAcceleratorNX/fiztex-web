@@ -1,7 +1,8 @@
+import { PageHeader } from '@/components/ui/PageHeader';
 import { useEffect, useRef, useState, type SetStateAction } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, FolderOpen, Paperclip, X } from 'lucide-react';
+import { FolderOpen, Paperclip, X } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { Field, focusFirstInvalidField, Select, TextArea, TextInput } from '@/components/ui/Field';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
@@ -477,14 +478,14 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
   if (mode === 'edit' && !draft.initialized && cardQuery.isFetching) return <LoadingBlock label="Загрузка задания…" />;
   if (mode === 'edit' && (cardQuery.isError || !existing)) {
     return (
-      <div className="card">
+      <div className="card px-4 sm:px-6">
         <ErrorBlock message="Не удалось загрузить задание" onRetry={() => void cardQuery.refetch()} />
       </div>
     );
   }
   if (mode === 'edit' && existing && existing.status !== 'DRAFT' && existing.status !== 'PUBLISHED') {
     return (
-      <div className="card">
+      <div className="card px-4 sm:px-6">
         <EmptyBlock
           title="Задание нельзя редактировать"
           description="Завершённые и отменённые задания доступны только для просмотра."
@@ -503,15 +504,10 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
   const formUrl = mode === 'edit' ? withHomeworkReturnTo(`/homework/${editId}/edit`, locationSearch) : `/homework/new${contextSearch ? `?${contextSearch}` : ''}`;
 
   return (
-    <div ref={formRef} className="flex max-w-4xl flex-col gap-5">
-      <div className="flex items-center gap-3">
-        <Link to={backTo} aria-label="Назад" className="text-subtle transition hover:text-ink">
-          <ArrowLeft className="size-5" />
-        </Link>
-        <h1 className="text-28 font-bold text-ink">
-          {mode === 'edit' ? 'Редактирование задания' : 'Новое домашнее задание'}
-        </h1>
-      </div>
+    <div ref={formRef} className="page-stack max-w-4xl">
+      <PageHeader title={mode === 'edit' ? 'Редактирование задания' : 'Новое домашнее задание'}
+        back={{ to: backTo, label: 'Назад' }}
+        description="Заполните задание, выберите срок и получателей. Ученики увидят его после публикации." />
 
       <NoticeBar tone="soft">
         При переходах внутри сайта поля и выбранные файлы сохранятся в этой вкладке.
@@ -529,7 +525,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
 
       {/* Контекст задания: из урока он определён и неизменяем, вне урока — выбирается. */}
       {lessonId ? (
-        <div className="rounded-xl bg-neutral-bg/60 px-4 py-3 text-13">
+        <div className="rounded-xl bg-neutral-bg px-4 py-3 text-13">
           {lessonQuery.isPending ? (
             <span className="text-subtle">Загрузка урока…</span>
           ) : lessonQuery.data ? (
@@ -558,7 +554,9 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
         </NoticeBar>
       )}
 
-      <fieldset disabled={busy} className="card flex min-w-0 flex-col gap-4 p-5">
+      <fieldset disabled={busy} className="card flex min-w-0 flex-col gap-6 p-4 sm:p-6">
+        <section className="form-section" aria-labelledby="homework-content-title">
+          <h2 id="homework-content-title" className="text-lg font-semibold text-ink">Содержание задания</h2>
         {standalone && (
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Предмет" required error={validationErrors.subject}>
@@ -605,7 +603,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
                 </option>
               ))}
             </Select>
-            <p className="mt-1 text-11 text-subtle">
+            <p className="mt-1 text-13 text-muted">
               {classId == null || subjectId == null
                 ? 'Выберите класс и предмет — уроки подставятся из вашего расписания.'
                 : lessonsQuery.isPending
@@ -638,13 +636,13 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
             onChange={setAnswerFormat}
             ariaLabel="Как ученик отвечает"
           />
-          <p className="mt-1.5 text-11 text-muted">
+          <p className="mt-1.5 text-13 text-muted">
             {answerFormat === 'TEST'
               ? 'Ученик отвечает на вопросы в приложении. Вопросы добавляются на карточке задания.'
               : 'Ученик присылает текст, фотографии решения и файлы.'}
           </p>
           {mode === 'edit' && (existing?.questionCount ?? 0) > 0 && answerFormat === 'TEST' && (
-            <p className="mt-1.5 text-11 text-muted">
+            <p className="mt-1.5 text-13 text-muted">
               Чтобы перевести задание в работу текстом, сначала удалите вопросы.
             </p>
           )}
@@ -667,7 +665,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
                 : 'Приложение отметит попытки сделать скриншот текста задания.'
             }
           />
-          <p className="mt-1.5 text-11 text-muted">
+          <p className="mt-1.5 text-13 text-muted">
             События видны при проверке работы. Тест не прерывается, оценка не меняется —
             решение остаётся за вами.
           </p>
@@ -698,7 +696,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
             rows={answerFormat === 'TEST' ? 3 : 5}
             maxLength={4000}
           />
-          <p className="mt-1.5 text-11 text-muted">
+          <p className="mt-1.5 text-13 text-muted">
             {answerFormat === 'TEST'
               ? 'Сама работа — это вопросы: они добавляются на карточке задания после создания.'
               : 'Ученик присылает ответ текстом, фотографиями и файлами.'}
@@ -758,11 +756,14 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
               setFiles((prev) => [...prev, ...picked]);
             }}
           />
-          <p className="mt-1 text-11 text-subtle">
+          <p className="mt-1 text-13 text-muted">
             Файлы и выбранные материалы добавятся после сохранения задания. Ограничения по типу и размеру проверяет сервер.
           </p>
         </div>
 
+        </section>
+        <section className="form-section" aria-labelledby="homework-delivery-title">
+          <h2 id="homework-delivery-title" className="text-lg font-semibold text-ink">Срок и получатели</h2>
         <div>
           <p className="label-base" id="due-type-label">
             Срок сдачи
@@ -779,7 +780,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
           <div
             role="radiogroup"
             aria-labelledby="due-type-label"
-            className="mt-1.5 inline-flex gap-1 rounded-xl bg-neutral-bg p-1"
+            className="mt-1.5 inline-flex max-w-full flex-wrap gap-1 rounded-xl bg-neutral-bg p-1"
           >
             {DUE_TYPES.map(([value, label]) => {
               const selected = dueType === value;
@@ -814,7 +815,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
             </Field>
           )}
           {dueType === 'NEXT_LESSON' && (
-            <p className="mt-2 max-w-prose text-11 text-subtle">
+            <p className="mt-2 max-w-prose text-13 text-muted">
               Дату подставит сервер при публикации — по ближайшему уроку этого предмета
               в классе. Точную дату видно на карточке задания после публикации; если урока
               впереди не окажется, сервер попросит выбрать дату или вариант без срока.
@@ -839,14 +840,14 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
           </Select>
 
           {recipientType === 'SUBGROUP' && !lessonQuery.isPending && !contextLesson?.subgroupId && !existing?.recipients?.subgroupId && (
-            <p className="mt-1 text-11 text-subtle">Подгруппа урока больше недоступна. Выберите других получателей. Остальные поля сохранены.</p>
+            <p className="mt-1 text-13 text-muted">Подгруппа урока больше недоступна. Выберите других получателей. Остальные поля сохранены.</p>
           )}
 
           {!recipientsLocked && groupsQuery.isError && (
             <ErrorBlock message="Не удалось проверить группы. Введённые данные сохранены." onRetry={() => void groupsQuery.refetch()} />
           )}
           {recipientType === 'TEMP_GROUP' && groupsQuery.isFetching && (
-            <p className="mt-1 text-11 text-subtle">Проверяем актуальный состав группы…</p>
+            <p className="mt-1 text-13 text-muted">Проверяем актуальный состав группы…</p>
           )}
 
           {recipientType === 'TEMP_GROUP' && (
@@ -884,15 +885,16 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
           )}
 
           {recipientsLocked ? (
-            <p className="mt-1 text-11 text-subtle">
+            <p className="mt-1 text-13 text-muted">
               Состав получателей закрыт: по заданию уже есть ответы.
             </p>
           ) : existing?.recipients?.totalCount ? (
-            <p className="mt-1 text-11 text-subtle">
+            <p className="mt-1 text-13 text-muted">
               Сейчас получателей: {existing.recipients.totalCount}
             </p>
           ) : null}
         </Field>
+        </section>
       </fieldset>
 
       {error && (
@@ -904,7 +906,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
         </NoticeBar>
       )}
 
-      <div className="flex flex-wrap justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-3 rounded-2xl border border-line bg-surface p-4 sm:sticky sm:bottom-4 sm:z-10 sm:shadow-card">
         {dirty && (
           <Button variant="ghost" disabled={busy} onClick={(event) => {
             discardTrigger.current = event.currentTarget;
