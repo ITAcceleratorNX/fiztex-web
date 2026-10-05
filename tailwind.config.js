@@ -40,6 +40,7 @@ export default {
         link: 'var(--color-link)',
         line: 'var(--color-border-default)',
         surface: 'var(--color-surface)',
+        canvas: 'var(--color-canvas)',
         disabled: 'var(--color-bg-disabled)',
         info: {
           bg: 'var(--color-info-bg)',

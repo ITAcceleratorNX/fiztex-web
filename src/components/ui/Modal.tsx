@@ -287,24 +287,24 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
           sizes[size],
         )}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
-          <div>
-            <h2 id={titleId} className="text-lg font-bold text-slate-900">{title}</h2>
-            {subtitle && <p id={subtitleId} className="mt-0.5 text-sm text-slate-500">{subtitle}</p>}
+        <div className="flex items-start justify-between gap-3 border-b border-line px-4 py-5 sm:px-6">
+          <div className="min-w-0 flex-1">
+            <h2 id={titleId} className="break-words text-lg font-bold text-ink">{title}</h2>
+            {subtitle && <p id={subtitleId} className="mt-1 break-words text-sm leading-relaxed text-muted">{subtitle}</p>}
           </div>
           <button
             data-modal-close
             type="button"
             aria-label="Закрыть окно"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 focus-visible:ring-offset-2"
+            className="flex size-10 shrink-0 items-center justify-center rounded-lg text-muted transition hover:bg-neutral-bg hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 focus-visible:ring-offset-2"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <div className="px-6 py-5">{children}</div>
+        <div className="min-w-0 px-4 py-5 sm:px-6">{children}</div>
         {footer && (
-          <div className="flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 px-6 py-4">
+          <div className="flex flex-wrap items-center justify-end gap-3 border-t border-line px-4 py-4 sm:px-6">
             {footer}
           </div>
         )}

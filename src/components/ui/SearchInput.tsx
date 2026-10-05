@@ -1,5 +1,6 @@
 import { Search } from 'lucide-react';
 import { cx } from '@/lib/format';
+import { useFieldControlProps } from './fieldContext';
 
 export function SearchInput({
   value,
@@ -7,17 +8,22 @@ export function SearchInput({
   placeholder,
   className,
   size = 'md',
+  'aria-label': ariaLabel,
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
   size?: 'md' | 'lg';
+  'aria-label'?: string;
 }) {
+  const fieldProps = useFieldControlProps({ ariaLabel });
   return (
     <div className={cx('relative', className)}>
       <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
       <input
+        {...fieldProps}
+        aria-label={ariaLabel ?? (fieldProps['aria-labelledby'] ? undefined : placeholder)}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}

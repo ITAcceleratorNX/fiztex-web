@@ -8,7 +8,7 @@ export interface ActionMenuItem {
   disabled?: boolean;
 }
 
-export function ActionMenu({ label, items }: { label: string; items: ActionMenuItem[] }) {
+export function ActionMenu({ label, items, triggerLabel }: { label: string; items: ActionMenuItem[]; triggerLabel?: string }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -40,9 +40,9 @@ export function ActionMenu({ label, items }: { label: string; items: ActionMenuI
       aria-expanded={open}
       aria-controls={open ? menuId : undefined}
       onClick={() => setOpen((value) => !value)}
-      className="flex size-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700"
-    ><MoreHorizontal className="size-5" aria-hidden="true" /></button>
-    {open && <div id={menuId} className="absolute right-0 top-9 z-20 w-64 rounded-xl border border-slate-200 bg-white p-1 shadow-popover">
+      className={`flex h-11 items-center justify-center gap-2 rounded-xl text-sm font-medium text-muted transition hover:bg-neutral-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 ${triggerLabel ? 'border border-line bg-surface px-3' : 'w-11'}`}
+    ><MoreHorizontal className="size-5" aria-hidden="true" />{triggerLabel}</button>
+    {open && <div id={menuId} className="absolute right-0 top-full z-20 mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-line bg-surface p-1 shadow-popover">
       {items.map((item, index) => <button
         key={`${item.label}-${index}`}
         type="button"
