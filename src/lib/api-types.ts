@@ -17,7 +17,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_21"];
+        patch: operations["update_22"];
         trace?: never;
     };
     "/api/admin/academic-periods/{id}/archive": {
@@ -59,9 +59,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_23"];
+        get: operations["list_24"];
         put?: never;
-        post: operations["create_21"];
+        post: operations["create_22"];
         delete?: never;
         options?: never;
         head?: never;
@@ -81,7 +81,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_20"];
+        patch: operations["update_21"];
         trace?: never;
     };
     "/api/admin/academic-years/{id}/activate": {
@@ -139,9 +139,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_22"];
+        get: operations["list_23"];
         put?: never;
-        post: operations["create_20"];
+        post: operations["create_21"];
         delete?: never;
         options?: never;
         head?: never;
@@ -251,9 +251,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_21"];
+        get: operations["list_22"];
         put?: never;
-        post: operations["create_19"];
+        post: operations["create_20"];
         delete?: never;
         options?: never;
         head?: never;
@@ -427,9 +427,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_20"];
+        get: operations["list_21"];
         put?: never;
-        post: operations["create_18"];
+        post: operations["create_19"];
         delete?: never;
         options?: never;
         head?: never;
@@ -491,9 +491,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_19"];
+        get: operations["list_20"];
         put?: never;
-        post: operations["create_17"];
+        post: operations["create_18"];
         delete?: never;
         options?: never;
         head?: never;
@@ -513,7 +513,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_19"];
+        patch: operations["update_20"];
         trace?: never;
     };
     "/api/admin/bell-templates/{id}/activate": {
@@ -651,9 +651,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_18"];
+        get: operations["list_19"];
         put?: never;
-        post: operations["create_16"];
+        post: operations["create_17"];
         delete?: never;
         options?: never;
         head?: never;
@@ -673,7 +673,7 @@ export interface paths {
         delete: operations["delete_8"];
         options?: never;
         head?: never;
-        patch: operations["update_18"];
+        patch: operations["update_19"];
         trace?: never;
     };
     "/api/admin/calendar-events/{id}/activate": {
@@ -715,9 +715,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_17"];
+        get: operations["list_18"];
         put?: never;
-        post: operations["create_15"];
+        post: operations["create_16"];
         delete?: never;
         options?: never;
         head?: never;
@@ -753,7 +753,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_17"];
+        patch: operations["update_18"];
         trace?: never;
     };
     "/api/admin/classes/{id}/archive": {
@@ -804,6 +804,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/grading-policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listGradingPolicies"];
+        put?: never;
+        post: operations["createGradingPolicy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/grading-policies/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listGradingPolicyTemplates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/grading-policies/{policyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getGradingPolicy"];
+        put: operations["updateGradingPolicy"];
+        post?: never;
+        delete: operations["deleteGradingPolicy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/grading-policies/{policyId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["activateGradingPolicy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/grading-policies/{policyId}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getGradingPolicyHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/group-sets": {
         parameters: {
             query?: never;
@@ -811,9 +891,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_16"];
+        get: operations["list_17"];
         put?: never;
-        post: operations["create_14"];
+        post: operations["create_15"];
         delete?: never;
         options?: never;
         head?: never;
@@ -833,7 +913,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_16"];
+        patch: operations["update_17"];
         trace?: never;
     };
     "/api/admin/group-sets/{id}/archive": {
@@ -1041,7 +1121,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_15"];
+        patch: operations["update_16"];
         trace?: never;
     };
     "/api/admin/lessons/{lessonId}/cancel": {
@@ -1053,7 +1133,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel_2"];
+        post: operations["cancel_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1131,9 +1211,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_15"];
+        get: operations["list_16"];
         put?: never;
-        post: operations["create_13"];
+        post: operations["create_14"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1169,7 +1249,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_14"];
+        patch: operations["update_15"];
         trace?: never;
     };
     "/api/admin/parents/{id}/archive": {
@@ -1291,7 +1371,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_14"];
+        get: operations["get_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1355,7 +1435,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_9"];
+        get: operations["history_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1387,9 +1467,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_14"];
+        get: operations["list_15"];
         put?: never;
-        post: operations["create_12"];
+        post: operations["create_13"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1563,7 +1643,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_8"];
+        get: operations["history_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1627,9 +1707,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_13"];
+        get: operations["list_14"];
         put?: never;
-        post: operations["create_11"];
+        post: operations["create_12"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1649,7 +1729,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_13"];
+        patch: operations["update_14"];
         trace?: never;
     };
     "/api/admin/school-subjects/{id}/archive": {
@@ -1707,9 +1787,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_12"];
+        get: operations["list_13"];
         put?: never;
-        post: operations["create_10"];
+        post: operations["create_11"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1745,7 +1825,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_12"];
+        patch: operations["update_13"];
         trace?: never;
     };
     "/api/admin/students/{id}/archive": {
@@ -1819,9 +1899,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_11"];
+        get: operations["list_12"];
         put?: never;
-        post: operations["create_9"];
+        post: operations["create_10"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1841,7 +1921,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_11"];
+        patch: operations["update_12"];
         trace?: never;
     };
     "/api/admin/subgroups/{id}/archive": {
@@ -1915,9 +1995,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_10"];
+        get: operations["list_11"];
         put?: never;
-        post: operations["create_8"];
+        post: operations["create_9"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2091,9 +2171,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_9"];
+        get: operations["list_10"];
         put?: never;
-        post: operations["create_7"];
+        post: operations["create_8"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2139,7 +2219,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_30"];
+        get: operations["list_31"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2155,7 +2235,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_13"];
+        get: operations["get_14"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2177,7 +2257,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_10"];
+        patch: operations["update_11"];
         trace?: never;
     };
     "/api/admin/teacher-working-time/{id}/archive": {
@@ -2203,9 +2283,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_8"];
+        get: operations["list_9"];
         put?: never;
-        post: operations["create_6"];
+        post: operations["create_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2241,7 +2321,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_9"];
+        patch: operations["update_10"];
         trace?: never;
     };
     "/api/admin/teachers/{id}/archive": {
@@ -2363,9 +2443,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_7"];
+        get: operations["list_8"];
         put?: never;
-        post: operations["create_5"];
+        post: operations["create_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2459,7 +2539,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_29"];
+        get: operations["list_30"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2539,7 +2619,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_28"];
+        get: operations["list_29"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2571,7 +2651,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_12"];
+        get: operations["get_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3165,7 +3245,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["create_4"];
+        post: operations["create_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3211,7 +3291,23 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["my_4"];
+        get: operations["my_5"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/final-grades/my/breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["myPeriodBreakdown"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3228,6 +3324,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["forStudent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/final-grades/students/{studentProfileId}/breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["periodBreakdown"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3259,7 +3371,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_7"];
+        get: operations["history_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3292,6 +3404,86 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getJob"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grade-corrections/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["my_4"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grade-corrections/{correctionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_9"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["update_9"];
+        trace?: never;
+    };
+    "/api/grade-corrections/{correctionId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancel_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grade-corrections/{correctionId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["complete_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grade-corrections/{correctionId}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3373,7 +3565,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["create_3"];
+        post: operations["create_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3492,6 +3684,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/grading/policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getActiveGradingPolicy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/homework": {
         parameters: {
             query?: never;
@@ -3499,9 +3707,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_5"];
+        get: operations["list_6"];
         put?: never;
-        post: operations["create_2"];
+        post: operations["create_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3675,7 +3883,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_11"];
+        get: operations["get_12"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3739,7 +3947,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_6"];
+        get: operations["list_7"];
         put?: never;
         post: operations["start_1"];
         delete?: never;
@@ -3852,6 +4060,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["grades_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/grades/value-mode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["valueMode"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4651,7 +4875,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_25"];
+        get: operations["list_26"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4836,6 +5060,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/grade-corrections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_5"];
+        put?: never;
+        post: operations["create_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/grades": {
         parameters: {
             query?: never;
@@ -4939,7 +5179,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_27"];
+        get: operations["list_28"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5211,7 +5451,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_26"];
+        get: operations["list_27"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5723,7 +5963,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_10"];
+        get: operations["get_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5931,7 +6171,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_9"];
+        get: operations["get_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6363,7 +6603,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_24"];
+        get: operations["list_25"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6777,6 +7017,11 @@ export interface components {
             code?: string;
             password?: string;
             phone?: string;
+        };
+        ActiveGradingPolicyView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            policy?: components["schemas"]["GradingPolicyView"];
         };
         AddEquipmentUnitsRequest: {
             units?: components["schemas"]["EquipmentUnitDraft"][];
@@ -7523,8 +7768,10 @@ export interface components {
             average?: number;
             currentMember?: boolean;
             finalGrade?: components["schemas"]["FinalGradeView"];
+            recommendationChanged?: boolean;
             /** Format: int32 */
             recommendedValue?: number;
+            result?: components["schemas"]["PeriodResultSummaryView"];
             studentName?: string;
             /** Format: int64 */
             studentProfileId?: number;
@@ -7535,9 +7782,14 @@ export interface components {
             academicPeriodId?: number;
             /** Format: int64 */
             academicYearId?: number;
+            allowedValues?: number[];
             canManage?: boolean;
             /** Format: int64 */
             classId?: number;
+            gradingPolicy?: components["schemas"]["PolicySummaryView"];
+            publicationOpen?: boolean;
+            /** Format: date */
+            publishableFrom?: string;
             rows?: components["schemas"]["ClassFinalGradeRowView"][];
             /** Format: int64 */
             subgroupId?: number;
@@ -7650,6 +7902,19 @@ export interface components {
             students?: components["schemas"]["ClassSubgroupStudentView"][];
             /** Format: date-time */
             updatedAt?: string;
+        };
+        ComponentSummaryView: {
+            /** @enum {string} */
+            code?: "FORMATIVE" | "SOR" | "SOCH";
+            contribution?: number;
+            effectiveWeightPercent?: number;
+            maxSum?: number;
+            percent?: number;
+            scoreSum?: number;
+            title?: string;
+            weightPercent?: number;
+            /** Format: int32 */
+            workCount?: number;
         };
         ConfirmAnswerScoreRequest: {
             adminComment?: string;
@@ -7868,7 +8133,7 @@ export interface components {
             /** Format: int64 */
             academicYearId?: number;
             /** @enum {string} */
-            scope: "PERIOD" | "YEAR";
+            scope: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
             /** Format: int64 */
             studentProfileId: number;
             /** Format: int64 */
@@ -7876,16 +8141,37 @@ export interface components {
             /** Format: int32 */
             value: number;
         };
+        CreateGradeCorrectionRequest: {
+            comment?: string;
+            /** Format: date */
+            deadline: string;
+            /** Format: int64 */
+            homeworkId?: number;
+            /** Format: int64 */
+            studentProfileId: number;
+            temporaryGrade?: components["schemas"]["GradeValueInput"];
+        };
         CreateGradeRequest: {
             /** @enum {string} */
-            gradeType?: "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            maxScore?: number;
             scaleCode?: string;
+            score?: number;
             /** Format: int64 */
             sourceId: number;
             /** @enum {string} */
             sourceType: "LESSON" | "HOMEWORK";
             /** Format: int64 */
             studentProfileId: number;
+        };
+        CreateGradingPolicyRequest: {
+            /** Format: int64 */
+            academicYearId: number;
+            /** Format: int64 */
+            copyFromPolicyId?: number;
+            name?: string;
+            /** @enum {string} */
+            template?: "KUNDELIK_2020" | "JOURNAL_FORM_2026";
         };
         CreateGroupRequest: {
             /** Format: int64 */
@@ -8262,6 +8548,14 @@ export interface components {
         EventSnapshotRunView: {
             sources?: components["schemas"]["SnapshotSourceResult"][];
         };
+        ExamFinalView: {
+            examGrade?: components["schemas"]["FinalGradeView"];
+            examWeightPercent?: number;
+            finalGrade?: components["schemas"]["FinalGradeView"];
+            recommendationSource?: number;
+            /** Format: int32 */
+            recommendedValue?: number;
+        };
         FeedbackAiAnalysisView: {
             /** Format: int64 */
             analysisId?: number;
@@ -8343,6 +8637,7 @@ export interface components {
             id?: number;
         };
         FinalGradeLockView: {
+            finalLocked?: boolean;
             futurePeriods?: components["schemas"]["PeriodRefView"][];
             locked?: boolean;
             /** Format: date-time */
@@ -8362,7 +8657,7 @@ export interface components {
             /** Format: date-time */
             publishedAt?: string;
             /** @enum {string} */
-            scope?: "PERIOD" | "YEAR";
+            scope?: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
             /** @enum {string} */
             status?: "DRAFT" | "PUBLISHED";
             /** Format: int64 */
@@ -8418,6 +8713,52 @@ export interface components {
             /** Format: int64 */
             count?: number;
         };
+        GradeCorrectionHistoryView: {
+            /** @enum {string} */
+            action?: "CREATED" | "COMMENT_CHANGED" | "DEADLINE_CHANGED" | "TEMPORARY_GRADE_CHANGED" | "COMPLETED" | "CANCELLED";
+            /** @enum {string} */
+            actorAs?: "MAIN_TEACHER" | "SUBSTITUTE_TEACHER";
+            /** Format: int64 */
+            actorId?: number;
+            actorName?: string;
+            /** @enum {string} */
+            actorRole?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
+            after?: components["schemas"]["JsonNode"];
+            before?: components["schemas"]["JsonNode"];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+        };
+        GradeCorrectionView: {
+            /** Format: date-time */
+            closedAt?: string;
+            comment?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            createdBy?: number;
+            /** Format: date */
+            deadline?: string;
+            /** Format: int64 */
+            finalGradeId?: number;
+            /** Format: int64 */
+            homeworkId?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            lessonId?: number;
+            overdue?: boolean;
+            /** @enum {string} */
+            status?: "REQUIRED" | "OVERDUE" | "COMPLETED" | "CANCELLED";
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            temporaryGrade?: components["schemas"]["TemporaryGradeView"];
+            /** Format: date-time */
+            updatedAt?: string;
+        };
         GradeHistoryView: {
             /** @enum {string} */
             action?: "CREATE" | "UPDATE" | "DELETE";
@@ -8437,6 +8778,20 @@ export interface components {
             /** Format: int32 */
             sortOrder?: number;
         };
+        GradeValueInput: {
+            /** @enum {string} */
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            maxScore?: number;
+            scaleCode?: string;
+            score?: number;
+        };
+        GradeValueModeView: {
+            /** @enum {string} */
+            defaultWorkType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            /** @enum {string} */
+            valueMode?: "SCALE" | "POINTS";
+            workTypes?: components["schemas"]["SheetWorkTypeView"][];
+        };
         GradeView: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -8446,13 +8801,15 @@ export interface components {
             createdAt?: string;
             deleted?: boolean;
             /** @enum {string} */
-            gradeType?: "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
             /** Format: int64 */
             id?: number;
+            maxScore?: number;
             numericValue?: number;
             /** Format: date-time */
             publishedAt?: string;
             scaleCode?: string;
+            score?: number;
             /** Format: int64 */
             sourceId?: number;
             /** @enum {string} */
@@ -8531,6 +8888,7 @@ export interface components {
             average?: components["schemas"]["GradebookAverageView"];
             cells?: components["schemas"]["GradebookCellView"][];
             currentMember?: boolean;
+            result?: components["schemas"]["PeriodResultSummaryView"];
             studentName?: string;
             /** Format: int64 */
             studentProfileId?: number;
@@ -8553,6 +8911,7 @@ export interface components {
             /** Format: int64 */
             classId?: number;
             columns?: components["schemas"]["GradebookColumnView"][];
+            gradingPolicy?: components["schemas"]["PolicySummaryView"];
             period?: components["schemas"]["GradebookPeriodView"];
             rows?: components["schemas"]["GradebookRowView"][];
             /** Format: int64 */
@@ -8566,6 +8925,73 @@ export interface components {
             name?: string;
             /** Format: date */
             startDate?: string;
+        };
+        GradingPolicyContentRequest: {
+            bands: components["schemas"]["PolicyBandDto"][];
+            components: components["schemas"]["PolicyComponentDto"][];
+            /** Format: int64 */
+            effectiveFromPeriodId?: number;
+            examWeightPercent?: number;
+            /** Format: int64 */
+            expectedVersion?: number;
+            /** @enum {string} */
+            missingComponentRule: "RENORMALIZE" | "REQUIRE_ALL";
+            name?: string;
+            sourceNote?: string;
+            workTypes: components["schemas"]["PolicyWorkTypeDto"][];
+            /** @enum {string} */
+            yearMethod: "AVERAGE_OF_PERIOD_FINALS";
+        };
+        GradingPolicyHistoryView: {
+            /** @enum {string} */
+            action?: "CREATE" | "UPDATE" | "ACTIVATE" | "RETIRE";
+            /** Format: int64 */
+            actorId?: number;
+            actorName?: string;
+            after?: components["schemas"]["JsonNode"];
+            before?: components["schemas"]["JsonNode"];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+        };
+        GradingPolicyTemplateView: {
+            /** @enum {string} */
+            code?: "KUNDELIK_2020" | "JOURNAL_FORM_2026";
+            content?: components["schemas"]["GradingPolicyContentRequest"];
+            title?: string;
+        };
+        GradingPolicyView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: date-time */
+            activatedAt?: string;
+            activatedByName?: string;
+            bands?: components["schemas"]["PolicyBandDto"][];
+            components?: components["schemas"]["PolicyComponentDto"][];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            effectiveFromPeriodId?: number;
+            effectiveFromPeriodName?: string;
+            examWeightPercent?: number;
+            /** Format: int64 */
+            id?: number;
+            /** @enum {string} */
+            missingComponentRule?: "RENORMALIZE" | "REQUIRE_ALL";
+            name?: string;
+            /** Format: date-time */
+            retiredAt?: string;
+            sourceNote?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "ACTIVE" | "RETIRED";
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int64 */
+            version?: number;
+            workTypes?: components["schemas"]["PolicyWorkTypeDto"][];
+            /** @enum {string} */
+            yearMethod?: "AVERAGE_OF_PERIOD_FINALS";
         };
         GroupSetRef: {
             /** Format: int64 */
@@ -9304,11 +9730,13 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             /** @enum {string} */
-            gradeType?: "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
             /** Format: int64 */
             id?: number;
+            maxScore?: number;
             numericValue?: number;
             scaleCode?: string;
+            score?: number;
             /** Format: int64 */
             studentProfileId?: number;
             /** Format: date-time */
@@ -9324,11 +9752,16 @@ export interface components {
             canManageGrades?: boolean;
             /** @enum {string} */
             capacity?: "MAIN_TEACHER" | "SUBSTITUTE_TEACHER";
+            /** @enum {string} */
+            defaultWorkType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
             /** Format: int64 */
             lessonId?: number;
             /** Format: int32 */
             maxGradesPerStudent?: number;
             students?: components["schemas"]["LessonGradeSheetRowView"][];
+            /** @enum {string} */
+            valueMode?: "SCALE" | "POINTS";
+            workTypes?: components["schemas"]["SheetWorkTypeView"][];
             /** @enum {string} */
             writeState?: "ALLOWED" | "NOT_TEACHING" | "LESSON_CANCELLED" | "LESSON_SUPERSEDED" | "SUBSTITUTION_ENDED" | "SUBSTITUTE_NOT_PERMITTED" | "SUBSTITUTE_WINDOW_NOT_OPEN" | "SUBSTITUTE_WINDOW_CLOSED";
         };
@@ -9892,6 +10325,26 @@ export interface components {
             studentProfileId?: number;
             subjects?: components["schemas"]["MySubjectFinalsView"][];
         };
+        MyGradeCorrectionView: {
+            comment?: string;
+            /** Format: date */
+            deadline?: string;
+            /** Format: int64 */
+            homeworkId?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            overdue?: boolean;
+            /** @enum {string} */
+            status?: "REQUIRED" | "OVERDUE" | "COMPLETED" | "CANCELLED";
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            temporaryGrade?: components["schemas"]["TemporaryGradeView"];
+        };
         MyKeyView: {
             /** Format: int64 */
             groupId?: number;
@@ -9930,6 +10383,10 @@ export interface components {
             teacher?: components["schemas"]["TeacherPart"];
         };
         MySubjectFinalsView: {
+            /** Format: int32 */
+            examValue?: number;
+            /** Format: int32 */
+            finalValue?: number;
             periodValues?: {
                 [key: string]: number;
             };
@@ -9942,6 +10399,7 @@ export interface components {
         MySubjectGradesRowView: {
             average?: components["schemas"]["GradeAverageView"];
             grades?: components["schemas"]["GradeView"][];
+            result?: components["schemas"]["PeriodResultSummaryView"];
             /** Format: int64 */
             subjectId?: number;
             subjectName?: string;
@@ -10905,6 +11363,21 @@ export interface components {
             /** Format: date */
             startDate?: string;
         };
+        PeriodBreakdownView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            finalGrade?: components["schemas"]["FinalGradeView"];
+            formula?: string;
+            periodName?: string;
+            policy?: components["schemas"]["PolicySummaryView"];
+            recommendationChanged?: boolean;
+            result?: components["schemas"]["PeriodResultSummaryView"];
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            works?: components["schemas"]["WorkView"][];
+        };
         PeriodFinalView: {
             average?: number;
             /** Format: date */
@@ -10913,8 +11386,10 @@ export interface components {
             name?: string;
             /** Format: int64 */
             periodId?: number;
+            recommendationChanged?: boolean;
             /** Format: int32 */
             recommendedValue?: number;
+            result?: components["schemas"]["PeriodResultSummaryView"];
             /** Format: date */
             startDate?: string;
             studied?: boolean;
@@ -10937,6 +11412,49 @@ export interface components {
             name?: string;
             /** Format: date */
             startDate?: string;
+        };
+        PeriodResultSummaryView: {
+            bandLabel?: string;
+            components?: components["schemas"]["ComponentSummaryView"][];
+            missingComponents?: ("FORMATIVE" | "SOR" | "SOCH")[];
+            percent?: number;
+            /** Format: int64 */
+            policyId?: number;
+            /** Format: int32 */
+            recommendedValue?: number;
+            /** Format: int32 */
+            roundedPercent?: number;
+            /** @enum {string} */
+            status?: "CALCULATED" | "NO_WORKS" | "INCOMPLETE";
+        };
+        PolicyBandDto: {
+            label?: string;
+            /** Format: int32 */
+            minPercent?: number;
+            /** Format: int32 */
+            value?: number;
+        };
+        PolicyComponentDto: {
+            /** @enum {string} */
+            code: "FORMATIVE" | "SOR" | "SOCH";
+            title?: string;
+            weightPercent: number;
+        };
+        PolicySummaryView: {
+            bands?: components["schemas"]["PolicyBandDto"][];
+            components?: components["schemas"]["PolicyComponentDto"][];
+            name?: string;
+            /** Format: int64 */
+            policyId?: number;
+        };
+        PolicyWorkTypeDto: {
+            /** @enum {string} */
+            component?: "FORMATIVE" | "SOR" | "SOCH";
+            /** @enum {string} */
+            scoring: "TEN_POINT" | "RAW_POINTS";
+            weight: number;
+            /** @enum {string} */
+            workType: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
         };
         ProposalIntervalView: {
             /** @enum {string} */
@@ -11702,6 +12220,16 @@ export interface components {
             id?: number;
             payload?: string;
         };
+        SheetWorkTypeView: {
+            /** @enum {string} */
+            component?: "FORMATIVE" | "SOR" | "SOCH";
+            /** Format: int32 */
+            fixedMax?: number;
+            /** @enum {string} */
+            scoring?: "TEN_POINT" | "RAW_POINTS";
+            /** @enum {string} */
+            type?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+        };
         Skipped: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -11766,8 +12294,11 @@ export interface components {
         StudentFinalGradesView: {
             /** Format: int64 */
             academicYearId?: number;
+            allowedValues?: number[];
             /** Format: int64 */
             classId?: number;
+            exam?: components["schemas"]["ExamFinalView"];
+            gradingPolicy?: components["schemas"]["PolicySummaryView"];
             lock?: components["schemas"]["FinalGradeLockView"];
             periods?: components["schemas"]["PeriodFinalView"][];
             /** Format: int64 */
@@ -11904,6 +12435,7 @@ export interface components {
             academicPeriodId?: number;
             average?: components["schemas"]["GradeAverageView"];
             events?: components["schemas"]["StudentGradeEventView"][];
+            result?: components["schemas"]["PeriodResultSummaryView"];
             studentName?: string;
             /** Format: int64 */
             studentProfileId?: number;
@@ -12562,6 +13094,14 @@ export interface components {
             /** Format: int64 */
             publishedSchedules?: number;
         };
+        TemporaryGradeView: {
+            /** @enum {string} */
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            maxScore?: number;
+            numericValue?: number;
+            scaleCode?: string;
+            score?: number;
+        };
         TerminateBindingRequest: {
             /** Format: date */
             effectiveTo?: string;
@@ -12850,13 +13390,23 @@ export interface components {
             note?: string;
             serialNumber?: string;
         };
+        UpdateGradeCorrectionRequest: {
+            comment?: string;
+            /** Format: date */
+            deadline?: string;
+            empty?: boolean;
+            removeTemporaryGrade?: boolean;
+            temporaryGrade?: components["schemas"]["GradeValueInput"];
+        };
         UpdateGradePermissionRequest: {
             canManageGrades: boolean;
         };
         UpdateGradeRequest: {
             /** @enum {string} */
-            gradeType?: "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            maxScore?: number;
             scaleCode?: string;
+            score?: number;
         };
         UpdateHomeworkRequest: {
             /** @enum {string} */
@@ -13030,6 +13580,25 @@ export interface components {
             accessToken?: string;
             applicant?: components["schemas"]["ApplicantView"];
         };
+        WorkView: {
+            /** @enum {string} */
+            component?: "FORMATIVE" | "SOR" | "SOCH";
+            /** Format: date */
+            date?: string;
+            /** Format: int64 */
+            gradeId?: number;
+            /** @enum {string} */
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            maxScore?: number;
+            /** Format: date-time */
+            publishedAt?: string;
+            score?: number;
+            /** Format: int64 */
+            sourceId?: number;
+            /** @enum {string} */
+            sourceType?: "LESSON" | "HOMEWORK";
+            title?: string;
+        };
         WorkingDaysView: {
             /** Format: int64 */
             academicYearId?: number;
@@ -13141,7 +13710,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    update_21: {
+    update_22: {
         parameters: {
             query?: never;
             header?: never;
@@ -13207,7 +13776,7 @@ export interface operations {
             };
         };
     };
-    list_23: {
+    list_24: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -13229,7 +13798,7 @@ export interface operations {
             };
         };
     };
-    create_21: {
+    create_22: {
         parameters: {
             query?: never;
             header?: never;
@@ -13275,7 +13844,7 @@ export interface operations {
             };
         };
     };
-    update_20: {
+    update_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -13391,7 +13960,7 @@ export interface operations {
             };
         };
     };
-    list_22: {
+    list_23: {
         parameters: {
             query: {
                 role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
@@ -13416,7 +13985,7 @@ export interface operations {
             };
         };
     };
-    create_20: {
+    create_21: {
         parameters: {
             query?: {
                 force?: boolean;
@@ -13570,7 +14139,7 @@ export interface operations {
             };
         };
     };
-    list_21: {
+    list_22: {
         parameters: {
             query: {
                 status?: "DRAFT" | "PUBLISHED" | "HIDDEN";
@@ -13594,7 +14163,7 @@ export interface operations {
             };
         };
     };
-    create_19: {
+    create_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -13858,7 +14427,7 @@ export interface operations {
             };
         };
     };
-    list_20: {
+    list_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -13878,7 +14447,7 @@ export interface operations {
             };
         };
     };
-    create_18: {
+    create_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -14003,7 +14572,7 @@ export interface operations {
             };
         };
     };
-    list_19: {
+    list_20: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -14027,7 +14596,7 @@ export interface operations {
             };
         };
     };
-    create_17: {
+    create_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -14073,7 +14642,7 @@ export interface operations {
             };
         };
     };
-    update_19: {
+    update_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -14332,7 +14901,7 @@ export interface operations {
             };
         };
     };
-    list_18: {
+    list_19: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -14362,7 +14931,7 @@ export interface operations {
             };
         };
     };
-    create_16: {
+    create_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -14428,7 +14997,7 @@ export interface operations {
             };
         };
     };
-    update_18: {
+    update_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -14498,7 +15067,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_18: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -14523,7 +15092,7 @@ export interface operations {
             };
         };
     };
-    create_15: {
+    create_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -14593,7 +15162,7 @@ export interface operations {
             };
         };
     };
-    update_17: {
+    update_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -14683,7 +15252,185 @@ export interface operations {
             };
         };
     };
-    list_16: {
+    listGradingPolicies: {
+        parameters: {
+            query: {
+                academicYearId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradingPolicyView"][];
+                };
+            };
+        };
+    };
+    createGradingPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGradingPolicyRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradingPolicyView"];
+                };
+            };
+        };
+    };
+    listGradingPolicyTemplates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradingPolicyTemplateView"][];
+                };
+            };
+        };
+    };
+    getGradingPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradingPolicyView"];
+                };
+            };
+        };
+    };
+    updateGradingPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GradingPolicyContentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradingPolicyView"];
+                };
+            };
+        };
+    };
+    deleteGradingPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    activateGradingPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradingPolicyView"];
+                };
+            };
+        };
+    };
+    getGradingPolicyHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradingPolicyHistoryView"][];
+                };
+            };
+        };
+    };
+    list_17: {
         parameters: {
             query: {
                 classId: number;
@@ -14708,7 +15455,7 @@ export interface operations {
             };
         };
     };
-    create_14: {
+    create_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -14754,7 +15501,7 @@ export interface operations {
             };
         };
     };
-    update_16: {
+    update_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -15129,7 +15876,7 @@ export interface operations {
             };
         };
     };
-    update_15: {
+    update_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -15155,7 +15902,7 @@ export interface operations {
             };
         };
     };
-    cancel_2: {
+    cancel_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -15298,7 +16045,7 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    list_16: {
         parameters: {
             query: {
                 phone?: string;
@@ -15322,7 +16069,7 @@ export interface operations {
             };
         };
     };
-    create_13: {
+    create_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -15390,7 +16137,7 @@ export interface operations {
             };
         };
     };
-    update_14: {
+    update_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -15605,7 +16352,7 @@ export interface operations {
             };
         };
     };
-    get_14: {
+    get_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -15702,7 +16449,7 @@ export interface operations {
             };
         };
     };
-    history_9: {
+    history_10: {
         parameters: {
             query: {
                 entityType: "BELL_TEMPLATE" | "WORKING_DAYS" | "CALENDAR_EVENT" | "TEACHER_AVAILABILITY" | "GROUP_SET" | "SUBGROUP" | "LESSON_GENERATION";
@@ -15772,7 +16519,7 @@ export interface operations {
             };
         };
     };
-    list_14: {
+    list_15: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -15798,7 +16545,7 @@ export interface operations {
             };
         };
     };
-    create_12: {
+    create_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -16054,7 +16801,7 @@ export interface operations {
             };
         };
     };
-    history_8: {
+    history_9: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -16200,7 +16947,7 @@ export interface operations {
             };
         };
     };
-    list_13: {
+    list_14: {
         parameters: {
             query: {
                 name?: string;
@@ -16224,7 +16971,7 @@ export interface operations {
             };
         };
     };
-    create_11: {
+    create_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -16270,7 +17017,7 @@ export interface operations {
             };
         };
     };
-    update_13: {
+    update_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -16373,7 +17120,7 @@ export interface operations {
             };
         };
     };
-    list_12: {
+    list_13: {
         parameters: {
             query: {
                 classId?: number;
@@ -16399,7 +17146,7 @@ export interface operations {
             };
         };
     };
-    create_10: {
+    create_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -16467,7 +17214,7 @@ export interface operations {
             };
         };
     };
-    update_12: {
+    update_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -16584,7 +17331,7 @@ export interface operations {
             };
         };
     };
-    list_11: {
+    list_12: {
         parameters: {
             query?: {
                 classId?: number;
@@ -16608,7 +17355,7 @@ export interface operations {
             };
         };
     };
-    create_9: {
+    create_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -16654,7 +17401,7 @@ export interface operations {
             };
         };
     };
-    update_11: {
+    update_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -16798,7 +17545,7 @@ export interface operations {
             };
         };
     };
-    list_10: {
+    list_11: {
         parameters: {
             query: {
                 status?: "DRAFT" | "ACTIVE" | "COMPLETED";
@@ -16821,7 +17568,7 @@ export interface operations {
             };
         };
     };
-    create_8: {
+    create_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -17154,7 +17901,7 @@ export interface operations {
             };
         };
     };
-    list_9: {
+    list_10: {
         parameters: {
             query: {
                 teacherProfileId?: number;
@@ -17181,7 +17928,7 @@ export interface operations {
             };
         };
     };
-    create_7: {
+    create_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -17247,7 +17994,7 @@ export interface operations {
             };
         };
     };
-    list_30: {
+    list_31: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -17273,7 +18020,7 @@ export interface operations {
             };
         };
     };
-    get_13: {
+    get_14: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -17297,7 +18044,7 @@ export interface operations {
             };
         };
     };
-    update_10: {
+    update_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -17343,7 +18090,7 @@ export interface operations {
             };
         };
     };
-    list_8: {
+    list_9: {
         parameters: {
             query: {
                 phone?: string;
@@ -17367,7 +18114,7 @@ export interface operations {
             };
         };
     };
-    create_6: {
+    create_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -17435,7 +18182,7 @@ export interface operations {
             };
         };
     };
-    update_9: {
+    update_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -17669,7 +18416,7 @@ export interface operations {
             };
         };
     };
-    list_7: {
+    list_8: {
         parameters: {
             query?: {
                 useAiGeneration?: boolean;
@@ -17692,7 +18439,7 @@ export interface operations {
             };
         };
     };
-    create_5: {
+    create_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -17885,7 +18632,7 @@ export interface operations {
             };
         };
     };
-    list_29: {
+    list_30: {
         parameters: {
             query: {
                 teacherProfileId?: number;
@@ -18026,7 +18773,7 @@ export interface operations {
             };
         };
     };
-    list_28: {
+    list_29: {
         parameters: {
             query?: {
                 grade?: string;
@@ -18068,7 +18815,7 @@ export interface operations {
             };
         };
     };
-    get_12: {
+    get_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -19045,7 +19792,7 @@ export interface operations {
             };
         };
     };
-    create_4: {
+    create_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -19118,7 +19865,7 @@ export interface operations {
             };
         };
     };
-    my_4: {
+    my_5: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -19137,6 +19884,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MyFinalGradesView"];
+                };
+            };
+        };
+    };
+    myPeriodBreakdown: {
+        parameters: {
+            query: {
+                subjectId: number;
+                academicPeriodId: number;
+                childStudentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PeriodBreakdownView"];
                 };
             };
         };
@@ -19162,6 +19933,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StudentFinalGradesView"];
+                };
+            };
+        };
+    };
+    periodBreakdown: {
+        parameters: {
+            query: {
+                subjectId: number;
+                academicPeriodId: number;
+            };
+            header?: never;
+            path: {
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PeriodBreakdownView"];
                 };
             };
         };
@@ -19192,7 +19988,7 @@ export interface operations {
             };
         };
     };
-    history_7: {
+    history_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -19254,6 +20050,147 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GenerationJobResponse"];
+                };
+            };
+        };
+    };
+    my_4: {
+        parameters: {
+            query?: {
+                childStudentProfileId?: number;
+                lessonId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyGradeCorrectionView"][];
+                };
+            };
+        };
+    };
+    get_9: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                correctionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeCorrectionView"];
+                };
+            };
+        };
+    };
+    update_9: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                correctionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGradeCorrectionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeCorrectionView"];
+                };
+            };
+        };
+    };
+    cancel_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                correctionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeCorrectionView"];
+                };
+            };
+        };
+    };
+    complete_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                correctionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GradeValueInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeCorrectionView"];
+                };
+            };
+        };
+    };
+    history_7: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                correctionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeCorrectionHistoryView"][];
                 };
             };
         };
@@ -19354,7 +20291,7 @@ export interface operations {
             };
         };
     };
-    create_3: {
+    create_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -19563,7 +20500,29 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    getActiveGradingPolicy: {
+        parameters: {
+            query: {
+                academicYearId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActiveGradingPolicyView"];
+                };
+            };
+        };
+    };
+    list_6: {
         parameters: {
             query: {
                 scope?: "ACTUAL" | "HISTORY";
@@ -19595,7 +20554,7 @@ export interface operations {
             };
         };
     };
-    create_2: {
+    create_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -19931,7 +20890,7 @@ export interface operations {
             };
         };
     };
-    get_11: {
+    get_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -20023,7 +20982,7 @@ export interface operations {
             };
         };
     };
-    list_6: {
+    list_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -20230,6 +21189,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GradeView"][];
+                };
+            };
+        };
+    };
+    valueMode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeValueModeView"];
                 };
             };
         };
@@ -21710,7 +22691,7 @@ export interface operations {
             };
         };
     };
-    list_25: {
+    list_26: {
         parameters: {
             query: {
                 dateFrom?: string;
@@ -22045,6 +23026,56 @@ export interface operations {
             };
         };
     };
+    list_5: {
+        parameters: {
+            query?: {
+                includeClosed?: boolean;
+            };
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeCorrectionView"][];
+                };
+            };
+        };
+    };
+    create_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGradeCorrectionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeCorrectionView"];
+                };
+            };
+        };
+    };
     grades: {
         parameters: {
             query?: never;
@@ -22248,7 +23279,7 @@ export interface operations {
             };
         };
     };
-    list_27: {
+    list_28: {
         parameters: {
             query?: {
                 childId?: number;
@@ -22809,7 +23840,7 @@ export interface operations {
             };
         };
     };
-    list_26: {
+    list_27: {
         parameters: {
             query?: {
                 childId?: number;
@@ -23709,7 +24740,7 @@ export interface operations {
             };
         };
     };
-    get_10: {
+    get_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -24021,7 +25052,7 @@ export interface operations {
             };
         };
     };
-    get_9: {
+    get_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -24934,7 +25965,7 @@ export interface operations {
             };
         };
     };
-    list_24: {
+    list_25: {
         parameters: {
             query?: {
                 page?: number;

@@ -27,6 +27,7 @@ import {
   MessageSquareHeart,
   LayoutGrid,
   type LucideIcon,
+  Scale,
 } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
 
@@ -88,6 +89,8 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { to: '/lesson-schedule', label: 'Расписание', icon: Calendar },
       { to: ROUTES.journal, label: 'Журнал оценок', icon: BookOpen },
+      // Правила расчёта четвертной (GRADES-003) — рядом с журналом, который по ним считает.
+      { to: ROUTES.gradingPolicy, label: 'Политика оценивания', icon: Scale },
       { to: ROUTES.attendance, label: 'Посещаемость', icon: QrCode },
       { to: '/ai-tests', label: 'AI-тесты', icon: Sparkles },
       { to: ROUTES.surveys, label: 'Опросы', icon: ListChecks },

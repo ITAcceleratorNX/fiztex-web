@@ -1,9 +1,14 @@
-import { Lock } from 'lucide-react';
+import { AlertTriangle, Lock } from 'lucide-react';
 import { cx } from '@/lib/format';
 import type { ClassFinalGradeRow, ClassFinalGrades } from '@/lib/gradebookApi';
 import { formatAverage } from '@/lib/journalModel';
+import { COMPONENT_SHORT, formatPercent, resultStatusHint } from '@/lib/gradingModel';
 
-/** Итоговая — только целые 2…5, без знаков (final-grades-contract §3). */
+/**
+ * Итоговая — только целые 2…5, без знаков (final-grades-contract §3). Это запасной список:
+ * допустимые значения приходят в ответе (`allowedValues`) — по политике оценивания это
+ * значения её порогов (GRADES-003).
+ */
 export const FINAL_VALUES = [2, 3, 4, 5] as const;
 
 /**
@@ -16,21 +21,32 @@ export const FINAL_VALUES = [2, 3, 4, 5] as const;
  *
  * <p>Пустой средний и пустая рекомендация — законное состояние (оценок за четверть нет),
  * и руками выставить итог это не мешает.
+ *
+ * <p>В четверти по политике оценивания (GRADES-003) вместо среднего — процент: он
+ * открывает расшифровку с работами и формулой. Если оценки правили после выставления
+ * итога и рекомендация теперь другая, рядом с итогом стоит предупреждение — итог при этом
+ * не меняется сам.
  */
 export function QuarterFinalsTable({
   finals,
   highlighted,
   busyStudentId,
   onPick,
+  onOpenBreakdown,
 }: {
   finals: ClassFinalGrades;
   /** Кого не хватило для публикации — сервер называет их поимённо. */
   highlighted: ReadonlySet<number>;
   busyStudentId: number | null;
   onPick: (row: ClassFinalGradeRow, value: number) => void;
+  onOpenBreakdown?: (row: ClassFinalGradeRow) => void;
 }) {
   const canManage = Boolean(finals.canManage);
   const rows = finals.rows ?? [];
+  const byPolicy = finals.gradingPolicy != null;
+  const options = finals.allowedValues && finals.allowedValues.length > 0
+    ? finals.allowedValues
+    : [...FINAL_VALUES];
 
   return (
     <div className="overflow-x-auto">
@@ -41,7 +57,7 @@ export function QuarterFinalsTable({
               ФИО Ученика
             </th>
             <th className="px-6 py-3 text-center text-11 font-bold uppercase text-slate-400">
-              Средний балл
+              {byPolicy ? 'Процент за четверть' : 'Средний балл'}
             </th>
             <th className="px-6 py-3 text-center text-11 font-bold uppercase text-slate-400">
               Рекомендованная оценка
@@ -80,7 +96,18 @@ export function QuarterFinalsTable({
                 </td>
 
                 <td className="px-6 py-3 text-center font-semibold text-slate-900">
-                  {formatAverage(row.average)}
+                  {byPolicy ? (
+                    <button
+                      type="button"
+                      onClick={() => onOpenBreakdown?.(row)}
+                      title={resultStatusHint(row.result) ?? componentsLine(row)}
+                      className="rounded-lg px-2 py-1 transition hover:bg-navy-50 hover:text-navy-700"
+                    >
+                      {row.result?.percent != null ? formatPercent(row.result.percent) : '—'}
+                    </button>
+                  ) : (
+                    formatAverage(row.average)
+                  )}
                 </td>
 
                 <td className="px-6 py-3">
@@ -107,12 +134,21 @@ export function QuarterFinalsTable({
                       </span>
                     ) : canManage ? (
                       <FinalValuePicker
+                        options={options}
                         value={value}
                         busy={busyStudentId === studentId}
                         onPick={(next) => onPick(row, next)}
                       />
                     ) : (
                       <span className="text-15 font-bold text-slate-900">{value ?? '—'}</span>
+                    )}
+                    {row.recommendationChanged && (
+                      <span
+                        title="Оценки изменили после выставления итога — рекомендация сейчас другая"
+                        className="text-brand-600"
+                      >
+                        <AlertTriangle className="size-4" />
+                      </span>
                     )}
                     {row.finalGrade?.status === 'PUBLISHED' && (
                       <span className="rounded bg-success-bg px-2 py-0.5 text-10 font-bold uppercase text-success-fg">
@@ -136,10 +172,12 @@ export function QuarterFinalsTable({
  * ничего не меняет, а нажатие по соседней меняет значение сразу.
  */
 function FinalValuePicker({
+  options,
   value,
   busy,
   onPick,
 }: {
+  options: number[];
   value: number | null;
   busy: boolean;
   onPick: (value: number) => void;
@@ -151,7 +189,7 @@ function FinalValuePicker({
         busy && 'pointer-events-none opacity-60',
       )}
     >
-      {FINAL_VALUES.map((option) => {
+      {options.map((option) => {
         const selected = value === option;
         return (
           <button
@@ -172,4 +210,12 @@ function FinalValuePicker({
       })}
     </span>
   );
+}
+
+/** «ФО 84,29% · СОР 72,5% · СОЧ 90%» — подсказка под курсором у процента. */
+function componentsLine(row: ClassFinalGradeRow): string {
+  return (row.result?.components ?? [])
+    .filter((component) => component.workCount)
+    .map((component) => `${component.code ? COMPONENT_SHORT[component.code] : ''} ${formatPercent(component.percent)}`)
+    .join(' · ');
 }

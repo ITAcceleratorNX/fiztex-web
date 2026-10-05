@@ -21,9 +21,16 @@ import {
   type ClassFinalGradeRow,
   type JournalQuery,
 } from '@/lib/gradebookApi';
-import { currentMonthKey, finalsByStudent, monthOptionsOf } from '@/lib/journalModel';
+import {
+  currentMonthKey,
+  finalsByStudent,
+  monthOptionsOf,
+  shortDate as formatShortDate,
+} from '@/lib/journalModel';
+import { weightsCaption } from '@/lib/gradingModel';
 import { JournalFilters, type JournalWindow } from './JournalFilters';
 import { JournalTable } from './JournalTable';
+import { PeriodBreakdownModal } from './PeriodBreakdownModal';
 import { QuarterFinalsTable } from './QuarterFinalsTable';
 
 type JournalTab = 'JOURNAL' | 'FINALS';
@@ -179,6 +186,8 @@ function JournalTab({
   journal: ReturnType<typeof useJournal>;
   finals: ReturnType<typeof useClassFinals>;
 }) {
+  const [breakdown, setBreakdown] = useState<{ studentProfileId: number; name: string } | null>(null);
+
   if (query == null || journal.isPending) return <TableSkeleton />;
 
   if (journal.isError) {
@@ -231,9 +240,25 @@ function JournalTab({
           journal={data!}
           finals={finalsByStudent(finals.data?.rows ?? [])}
           today={todayIso()}
+          onOpenBreakdown={(row) =>
+            setBreakdown({ studentProfileId: row.studentProfileId as number, name: row.studentName ?? '' })
+          }
         />
       </div>
-      <Legend />
+      <Legend policyCaption={data?.gradingPolicy ? weightsCaption(data.gradingPolicy.components) : null} />
+      <PeriodBreakdownModal
+        query={
+          breakdown && query
+            ? {
+                studentProfileId: breakdown.studentProfileId,
+                subjectId: query.subjectId,
+                academicPeriodId: query.academicPeriodId,
+              }
+            : null
+        }
+        studentName={breakdown?.name}
+        onClose={() => setBreakdown(null)}
+      />
     </div>
   );
 }
@@ -251,6 +276,7 @@ function FinalsTab({
   const [error, setError] = useState<string | null>(null);
   const [missing, setMissing] = useState<ReadonlySet<number>>(new Set());
   const [confirmPublish, setConfirmPublish] = useState(false);
+  const [breakdown, setBreakdown] = useState<{ studentProfileId: number; name: string } | null>(null);
 
   if (finalsKey == null || finals.isPending) return <TableSkeleton />;
 
@@ -276,6 +302,9 @@ function FinalsTab({
   const allFilled = rows.length > 0 && filled === rows.length;
   const allPublished =
     rows.length > 0 && rows.every((row) => row.finalGrade?.status === 'PUBLISHED');
+  // Публиковать итоги можно только после окончания четверти — дату считает сервер.
+  const publicationOpen = data.publicationOpen !== false;
+  const publishableFrom = data.publishableFrom ? formatShortDate(data.publishableFrom) : null;
 
   async function pick(row: ClassFinalGradeRow, value: number) {
     setError(null);
@@ -313,6 +342,10 @@ function FinalsTab({
       await publish.mutateAsync(finalsKey!);
       setMissing(new Set());
     } catch (failure) {
+      if (failure instanceof ApiError && failure.code === FINAL_GRADE_ERRORS.periodNotEnded) {
+        setError(failure.message);
+        return;
+      }
       if (failure instanceof ApiError && failure.code === FINAL_GRADE_ERRORS.setIncomplete) {
         setMissing(new Set(incompleteStudentIdsFrom(failure.details)));
         setError('Итоги выставлены не всем ученикам — опубликовать четверть нельзя');
@@ -342,8 +375,25 @@ function FinalsTab({
           highlighted={missing}
           busyStudentId={busyStudentId}
           onPick={(row, value) => void pick(row, value)}
+          onOpenBreakdown={(row) =>
+            setBreakdown({ studentProfileId: row.studentProfileId as number, name: row.studentName ?? '' })
+          }
         />
       </div>
+
+      <PeriodBreakdownModal
+        query={
+          breakdown
+            ? {
+                studentProfileId: breakdown.studentProfileId,
+                subjectId: finalsKey.subjectId,
+                academicPeriodId: finalsKey.academicPeriodId,
+              }
+            : null
+        }
+        studentName={breakdown?.name}
+        onClose={() => setBreakdown(null)}
+      />
 
       {error && (
         <p className="rounded-xl bg-danger-bg px-4 py-3 text-13 font-semibold text-red-600">
@@ -355,17 +405,19 @@ function FinalsTab({
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-6 py-5">
           <p className="flex items-center gap-3 text-13 text-slate-600">
             <span
-              className={`size-2 shrink-0 rounded-full ${allPublished ? 'bg-green-500' : allFilled ? 'bg-brand-500' : 'bg-slate-300'}`}
+              className={`size-2 shrink-0 rounded-full ${allPublished ? 'bg-green-500' : allFilled && publicationOpen ? 'bg-brand-500' : 'bg-slate-300'}`}
             />
             {allPublished
               ? 'Итоги четверти опубликованы — их видят ученик и родитель'
-              : allFilled
-                ? `Все итоги выставлены (${filled} из ${rows.length}) — можно публиковать`
-                : `Выставьте оценку всем ученикам, чтобы опубликовать итоги четверти (${filled} из ${rows.length} оценено)`}
+              : !publicationOpen
+                ? `Итоги можно выставлять уже сейчас, а опубликовать — после окончания четверти${publishableFrom ? `, с ${publishableFrom}` : ''} (${filled} из ${rows.length} выставлено)`
+                : allFilled
+                  ? `Все итоги выставлены (${filled} из ${rows.length}) — можно публиковать`
+                  : `Выставьте оценку всем ученикам, чтобы опубликовать итоги четверти (${filled} из ${rows.length} оценено)`}
           </p>
           <Button
             onClick={() => setConfirmPublish(true)}
-            disabled={!allFilled || allPublished}
+            disabled={!allFilled || allPublished || !publicationOpen}
             loading={publish.isPending}
           >
             Опубликовать итоги четверти
@@ -409,7 +461,8 @@ function JournalShell({
           <TabsTrigger value="JOURNAL">Журнал</TabsTrigger>
           <TabsTrigger value="FINALS">Итоги четверти</TabsTrigger>
         </TabsList>
-        <TabsContent value={tab} className="mt-5">
+        {/* Отступ между фильтрами и таблицей: без него карточка таблицы прилипала к полям. */}
+        <TabsContent value={tab} className="mt-5 flex flex-col gap-5">
           {children}
         </TabsContent>
       </Tabs>
@@ -417,9 +470,14 @@ function JournalShell({
   );
 }
 
-function Legend() {
+function Legend({ policyCaption }: { policyCaption: string | null }) {
   return (
     <div className="flex flex-wrap items-center gap-6 px-1 text-13 text-slate-500">
+      {policyCaption && (
+        <span className="flex items-center gap-2 font-medium text-slate-600">
+          Четверть по политике оценивания: {policyCaption}
+        </span>
+      )}
       <span className="flex items-center gap-2">
         <span className="flex size-[26px] items-center justify-center rounded-lg bg-navy-700 text-13 font-bold text-white">
           4

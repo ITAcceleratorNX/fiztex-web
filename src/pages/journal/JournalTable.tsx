@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
 import { GradeChip } from '@/components/ui/GradeChip';
 import { cx } from '@/lib/format';
-import type { ClassFinalGradeRow, Gradebook, GradebookColumn } from '@/lib/gradebookApi';
+import type { ClassFinalGradeRow, Gradebook, GradebookColumn, GradebookRow } from '@/lib/gradebookApi';
+import { GRADE_TYPE_LABELS, gradeValueLabel } from '@/lib/gradesModel';
+import type { GradeType } from '@/lib/gradesApi';
+import { COMPONENT_SHORT, componentsByCode, formatPercent, resultStatusHint } from '@/lib/gradingModel';
 import {
   cellsByColumn,
   columnCaption,
@@ -19,18 +22,27 @@ import {
  * <p>Колонка приходит и для отменённого урока (`active: false`, контракт §3): оценки на
  * ней настоящие и в среднем участвуют, новых не будет. Такой столбец рисуется
  * приглушённым — и это единственное, чем он отличается.
+ *
+ * <p><b>Четверть по политике оценивания</b> (GRADES-003) вместо «Ср. балла» показывает
+ * проценты компонентов (ФО, СОР, СОЧ) и итоговый процент с рекомендацией — числа приходят
+ * в строке готовыми. Итоговый процент открывает расшифровку: из каких работ и по какой
+ * формуле он получен.
  */
 export function JournalTable({
   journal,
   finals,
   today,
+  onOpenBreakdown,
 }: {
   journal: Gradebook;
   finals: Map<number, ClassFinalGradeRow>;
   today: string;
+  onOpenBreakdown?: (row: GradebookRow) => void;
 }) {
   const columns = journal.columns ?? [];
   const rows = journal.rows ?? [];
+  const policy = journal.gradingPolicy ?? null;
+  const policyComponents = policy?.components ?? [];
 
   return (
     <div className="overflow-x-auto">
@@ -43,10 +55,40 @@ export function JournalTable({
             {columns.map((column) => (
               <ColumnHead key={column.key} column={column} today={today} />
             ))}
-            <th className="w-20 px-2 py-3 text-center text-11 font-bold uppercase text-slate-400">
-              Ср. балл
-            </th>
-            <th className="w-24 px-2 py-3 text-center text-11 font-bold uppercase text-slate-400">
+            {policy ? (
+              <>
+                {policyComponents.map((component, index) => (
+                  <th
+                    key={component.code}
+                    title={`${component.title}, вес ${component.weightPercent}%`}
+                    style={{ right: componentOffset(index, policyComponents.length) }}
+                    className={cx(
+                      STICKY,
+                      COMPONENT_WIDTH,
+                      'px-1 py-3 text-center text-11 font-bold uppercase text-slate-400',
+                      index === 0 && STICKY_EDGE,
+                    )}
+                  >
+                    {component.code ? COMPONENT_SHORT[component.code] : '—'} %
+                  </th>
+                ))}
+                <th
+                  title={policy.name ?? undefined}
+                  style={{ right: FINAL_WIDTH_PX }}
+                  className={cx(STICKY, 'w-24 min-w-24 px-2 py-3 text-center text-11 font-bold uppercase text-slate-400')}
+                >
+                  Итог %
+                </th>
+              </>
+            ) : (
+              <th
+                style={{ right: FINAL_WIDTH_PX }}
+                className={cx(STICKY, STICKY_EDGE, 'w-20 min-w-20 px-2 py-3 text-center text-11 font-bold uppercase text-slate-400')}
+              >
+                Ср. балл
+              </th>
+            )}
+            <th className={cx(STICKY, 'right-0 w-24 min-w-24 px-2 py-3 text-center text-11 font-bold uppercase text-slate-400')}>
               Итог. четв.
             </th>
           </tr>
@@ -91,8 +133,13 @@ export function JournalTable({
                             <GradeChip
                               key={grade.id}
                               size="sm"
-                              value={grade.scaleCode}
-                              title={column.title ?? undefined}
+                              value={gradeValueLabel(grade)}
+                              title={[
+                                grade.gradeType ? GRADE_TYPE_LABELS[grade.gradeType as GradeType] : null,
+                                column.title,
+                              ]
+                                .filter(Boolean)
+                                .join(' · ') || undefined}
                             />
                           ))}
                         </span>
@@ -115,12 +162,19 @@ export function JournalTable({
                   );
                 })}
 
-                <td className="px-2 py-2 text-center font-semibold text-slate-900">
-                  <span title={averageHint(row.average?.count, row.average?.visibleCount)}>
-                    {formatAverage(row.average?.value)}
-                  </span>
-                </td>
-                <td className="px-2 py-2 text-center font-semibold text-slate-900">
+                {policy ? (
+                  <ResultCells row={row} codes={policyComponents.map((c) => c.code ?? '')} onOpen={onOpenBreakdown} />
+                ) : (
+                  <td
+                    style={{ right: FINAL_WIDTH_PX }}
+                    className={cx(STICKY, STICKY_EDGE, 'w-20 min-w-20 px-2 py-2 text-center font-semibold text-slate-900')}
+                  >
+                    <span title={averageHint(row.average?.count, row.average?.visibleCount)}>
+                      {formatAverage(row.average?.value)}
+                    </span>
+                  </td>
+                )}
+                <td className={cx(STICKY, 'right-0 w-24 min-w-24 px-2 py-2 text-center font-semibold text-slate-900')}>
                   {finalValueLabel(finals.get(studentId))}
                 </td>
               </tr>
@@ -177,4 +231,84 @@ function ColumnHead({ column, today }: { column: GradebookColumn; today: string 
 function averageHint(count: number | undefined, visibleCount: number | undefined): string {
   if (count == null || visibleCount == null || count === visibleCount) return '';
   return `В среднем учтено ${count} оценок, в этом журнале видно ${visibleCount} — остальные получены в другом классе`;
+}
+
+/**
+ * Проценты строки по политике: доля каждого компонента и итог с рекомендацией. Компонент
+ * без работ — прочерк, а не 0%: «не писали СОЧ» и «написали на ноль» — разные факты.
+ */
+function ResultCells({
+  row,
+  codes,
+  onOpen,
+}: {
+  row: GradebookRow;
+  codes: string[];
+  onOpen?: (row: GradebookRow) => void;
+}) {
+  const result = row.result;
+  const byCode = componentsByCode(result);
+  const hint = resultStatusHint(result);
+
+  return (
+    <>
+      {codes.map((code, index) => {
+        const component = byCode.get(code);
+        return (
+          <td
+            key={code}
+            style={{ right: componentOffset(index, codes.length) }}
+            className={cx(
+              STICKY,
+              COMPONENT_WIDTH,
+              'px-1 py-2 text-center text-13 text-slate-700',
+              index === 0 && STICKY_EDGE,
+              component?.contribution == null && 'text-slate-400',
+            )}
+            title={
+              component?.workCount
+                ? `${component.scoreSum} из ${component.maxSum}, работ: ${component.workCount}`
+                : 'Работ нет'
+            }
+          >
+            {component?.workCount ? formatPercent(component.percent) : '—'}
+          </td>
+        );
+      })}
+      <td style={{ right: FINAL_WIDTH_PX }} className={cx(STICKY, 'w-24 min-w-24 px-2 py-2 text-center')}>
+        <button
+          type="button"
+          disabled={!onOpen}
+          onClick={() => onOpen?.(row)}
+          title={hint ?? 'Открыть расчёт'}
+          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 font-semibold text-slate-900 transition hover:bg-navy-50 hover:text-navy-700 disabled:hover:bg-transparent"
+        >
+          {result?.roundedPercent != null ? `${result.roundedPercent}%` : '—'}
+          {result?.recommendedValue != null && (
+            <span className="flex size-[22px] items-center justify-center rounded-md bg-slate-100 text-11 font-bold text-slate-600">
+              {result.recommendedValue}
+            </span>
+          )}
+        </button>
+      </td>
+    </>
+  );
+}
+
+/**
+ * Итоговые колонки закреплены справа: уроков в четверти два-три десятка, и без закрепления
+ * проценты и итог оказывались за горизонтальной прокруткой — ради них журнал и открывают.
+ * Ширины фиксированы, потому что от них считаются отступы закреплённых колонок.
+ */
+const STICKY = 'sticky z-10 bg-white';
+/** Левая граница закреплённого блока — уроки уходят под неё при прокрутке. */
+const STICKY_EDGE = 'border-l border-slate-200';
+const COMPONENT_WIDTH = 'w-16 min-w-16';
+const COMPONENT_WIDTH_PX = 64;
+/** Ширина «Итог. четв.» и «Итог %» (`w-24`). */
+const FINAL_WIDTH_PX = 96;
+
+/** Отступ справа для i-го компонента: за ним остальные компоненты, «Итог %» и «Итог. четв.». */
+function componentOffset(index: number, count: number): number {
+  return FINAL_WIDTH_PX * 2 + COMPONENT_WIDTH_PX * (count - 1 - index);
 }

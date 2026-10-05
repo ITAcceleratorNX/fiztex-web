@@ -52,6 +52,12 @@ export const ROUTES = {
   myAvailability: '/my-availability',
   /** Журнал класса и итоги четверти (GRADES-FE-001). */
   journal: '/grades',
+  /**
+   * Политика оценивания школы (GRADES-003) — администрации. Не под `/grades`: тот префикс
+   * открыт учителю, а экран читает `/api/admin/grading-policies`, и учительский токен
+   * получил бы 401 и разлогинился.
+   */
+  gradingPolicy: '/admin/grading-policy',
   /** Посещаемость по школе — журнал месяца и незакрытые уроки (ATTENDANCE-001 §23). */
   attendance: '/attendance',
   /**
