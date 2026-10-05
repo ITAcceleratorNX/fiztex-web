@@ -141,6 +141,8 @@ export const keys = {
   monitoringAttempts: (status?: string) => ['admissions', 'attempts', status ?? 'ALL'] as const,
   attemptLogs: (attemptId: number) => ['admissions', 'attempts', attemptId, 'logs'] as const,
   lesson: (lessonId: number) => ['lessons', lessonId] as const,
+  workspaceLessonTargets: (dateFrom: string, dateTo: string, page: number) =>
+    ['lessons', 'workspace-targets', dateFrom, dateTo, page] as const,
   currentLesson: ['lessons', 'current'] as const,
   lessonHistory: (lessonId: number) => ['lessons', lessonId, 'history'] as const,
   lessonGradePermission: (lessonId: number) =>
@@ -989,6 +991,13 @@ export function useLesson(lessonId: number | null) {
     queryFn: ({ signal }) => lessonsApi.card(lessonId as number, signal),
     enabled: lessonId != null,
     retry: (failureCount, error) => !isMissingLesson(error) && failureCount < 2,
+  });
+}
+
+export function useWorkspaceLessonTargets(dateFrom: string, dateTo: string, page: number) {
+  return useQuery({
+    queryKey: keys.workspaceLessonTargets(dateFrom, dateTo, page),
+    queryFn: ({ signal }) => lessonsApi.list({ dateFrom, dateTo, status: 'ACTIVE', page, size: 20 }, signal),
   });
 }
 

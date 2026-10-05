@@ -7,10 +7,12 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock
 import { useToast } from '@/context/ToastContext';
 import {
   useAttachWorkspaceDocumentToHomework, useAttachWorkspaceDocumentToLesson,
-  useCurrentLesson, useHomeworkList,
+  useHomeworkList,
 } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
+import type { Lesson } from '@/lib/lessonsApi';
 import type { WorkspaceSearchItem } from '@/lib/teacherWorkspaceApi';
+import { LessonDestinationPicker } from './LessonDestinationPicker';
 
 type Destination = 'choose' | 'homework' | 'lesson';
 
@@ -21,16 +23,16 @@ export function ReuseMaterialModal({ item, onClose }: {
   const [destination, setDestination] = useState<Destination>('choose');
   const [page, setPage] = useState(0);
   const [homeworkId, setHomeworkId] = useState<number | null>(null);
+  const [lesson, setLesson] = useState<Lesson | null>(null);
   const [visibleToStudents, setVisibleToStudents] = useState(true);
   const homework = useHomeworkList({ scope: 'ACTUAL', page, size: 10 }, destination === 'homework');
-  const currentLesson = useCurrentLesson(destination === 'lesson');
   const attachHomework = useAttachWorkspaceDocumentToHomework();
   const attachLesson = useAttachWorkspaceDocumentToLesson();
   const toast = useToast();
   const busy = attachHomework.isPending || attachLesson.isPending;
   const itemId = item.id;
-  const lesson = currentLesson.data?.lesson;
-  const lessonAvailable = lesson?.id != null && lesson.capabilities?.includes('EDIT_TEACHING_PART');
+  const lessonAvailable = lesson?.id != null && lesson.capabilities?.includes('EDIT_TEACHING_PART')
+    && lesson.academicPeriodStatus === 'ACTIVE';
   const canHomework = item.supportedActions?.includes('ATTACH_DOCUMENT_TO_HOMEWORK') ?? false;
   const canLesson = item.supportedActions?.includes('ATTACH_DOCUMENT_TO_LESSON') ?? false;
 
@@ -52,7 +54,7 @@ export function ReuseMaterialModal({ item, onClose }: {
   return <Modal
     open
     onClose={() => { if (!busy) onClose(); }}
-    title={destination === 'choose' ? 'Куда добавить?' : destination === 'homework' ? 'Выберите домашнее задание' : 'Текущий урок'}
+    title={destination === 'choose' ? 'Куда добавить?' : destination === 'homework' ? 'Выберите домашнее задание' : 'Выберите урок'}
     size="md"
     footer={destination === 'choose' ? undefined : <>
       <Button variant="secondary" onClick={() => setDestination('choose')} disabled={busy}>Назад</Button>
@@ -61,7 +63,7 @@ export function ReuseMaterialModal({ item, onClose }: {
   >
     {destination === 'choose' ? <div className="space-y-2">
       {canHomework && <ChoiceRow icon={<BookOpen className="size-5" />} title="Домашнее задание" onClick={() => { setPage(0); setHomeworkId(null); setDestination('homework'); }} />}
-      {canLesson && <ChoiceRow icon={<NotebookPen className="size-5" />} title="Текущий урок" onClick={() => setDestination('lesson')} />}
+      {canLesson && <ChoiceRow icon={<NotebookPen className="size-5" />} title="Урок" onClick={() => setDestination('lesson')} />}
     </div> : destination === 'homework' ? <>
       {homework.isPending ? <LoadingBlock /> : homework.isError ? (
         <ErrorBlock message="Не удалось загрузить данные" onRetry={() => homework.refetch()} />
@@ -81,15 +83,8 @@ export function ReuseMaterialModal({ item, onClose }: {
         <Button variant="secondary" size="sm" disabled={page === 0} onClick={() => { setHomeworkId(null); setPage(page - 1); }}>Назад</Button>
         <Button variant="secondary" size="sm" disabled={page + 1 >= (homework.data?.totalPages ?? 0)} onClick={() => { setHomeworkId(null); setPage(page + 1); }}>Далее</Button>
       </div>}
-    </> : currentLesson.isPending ? <LoadingBlock /> : currentLesson.isError ? (
-      <ErrorBlock message="Не удалось загрузить данные" onRetry={() => currentLesson.refetch()} />
-    ) : !lessonAvailable ? (
-      <EmptyBlock icon={<NotebookPen className="size-7" />} title="Нет доступного урока" description={currentLesson.data?.message} />
-    ) : <div className="space-y-4">
-      <div className="rounded-xl border border-slate-200 p-4 text-sm text-slate-900">
-        <p className="font-semibold">{lesson.subjectName || 'Урок'} · {lesson.className || 'Класс'}</p>
-        <p className="mt-1 text-slate-500">{lesson.date ? new Intl.DateTimeFormat('ru-RU').format(new Date(`${lesson.date}T12:00:00`)) : ''}{lesson.lessonNumber ? ` · Урок ${lesson.lessonNumber}` : ''}</p>
-      </div>
+    </> : <div className="space-y-4">
+      <LessonDestinationPicker selectedId={lesson?.id ?? null} onSelect={setLesson} />
       <label className="flex items-center gap-3 text-sm text-slate-700">
         <input type="checkbox" checked={visibleToStudents} onChange={(event) => setVisibleToStudents(event.target.checked)} className="size-5 accent-navy-700" />
         Показывать ученикам

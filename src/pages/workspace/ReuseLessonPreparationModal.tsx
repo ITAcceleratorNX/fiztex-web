@@ -1,17 +1,17 @@
 import { useState } from 'react';
-import { NotebookPen } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
-import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
+import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
-import { useApplyLessonPreparation, useCurrentLesson, useLessonPreparation, useLessonPreparationTarget } from '@/hooks/queries';
+import { useApplyLessonPreparation, useLessonPreparation, useLessonPreparationTarget } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
+import type { Lesson } from '@/lib/lessonsApi';
 import type { WorkspaceSearchItem } from '@/lib/teacherWorkspaceApi';
+import { LessonDestinationPicker } from './LessonDestinationPicker';
 
 export function ReuseLessonPreparationModal({ item, onClose }: { item: WorkspaceSearchItem; onClose: () => void }) {
   const [error, setError] = useState('');
-  const current = useCurrentLesson();
-  const lesson = current.data?.lesson;
+  const [lesson, setLesson] = useState<Lesson | null>(null);
   const lessonId = lesson?.id ?? null;
   const target = useLessonPreparationTarget(lessonId);
   const sourceId = Number(item.sourceId);
@@ -28,7 +28,7 @@ export function ReuseLessonPreparationModal({ item, onClose }: { item: Workspace
     try {
       await apply.mutateAsync({ workspaceItemId: item.id, version: preparation.data.version,
         expectedTargetRevision: target.data.targetRevision, confirmReplace: replacing });
-      toast.success('Заготовка применена к текущему уроку');
+      toast.success('Заготовка применена к уроку');
       onClose();
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : 'Не удалось применить заготовку');
@@ -46,13 +46,10 @@ export function ReuseLessonPreparationModal({ item, onClose }: { item: Workspace
     <div className="space-y-4">
       {preparation.isPending ? <LoadingBlock /> : preparation.isError ? <ErrorBlock message="Не удалось загрузить данные" onRetry={() => preparation.refetch()} />
         : <p className="text-sm text-slate-600">{item.title} · версия {preparation.data?.version} · {preparation.data?.documents?.length ?? 0} материалов</p>}
-      {current.isPending || (lessonId != null && target.isPending) ? <LoadingBlock /> : current.isError || (lessonId != null && target.isError) ?
-        <ErrorBlock message="Не удалось загрузить данные" onRetry={() => { void current.refetch(); if (lessonId != null) void target.refetch(); }} />
-        : !available ? <EmptyBlock icon={<NotebookPen className="size-7" />} title="Нет доступного урока" description={current.data?.message} />
-          : <div className="rounded-xl border border-slate-200 p-4 text-sm text-slate-900">
-            <p className="font-semibold">{lesson?.subjectName || 'Урок'} · {lesson?.className || 'Класс'}</p>
-            <p className="mt-1 text-slate-500">{lesson?.topic || 'Тема не указана'}</p>
-          </div>}
+      <LessonDestinationPicker selectedId={lessonId} onSelect={(selected) => { setLesson(selected); setError(''); }} />
+      {lessonId != null && (target.isPending ? <LoadingBlock /> : target.isError ?
+        <ErrorBlock message="Не удалось загрузить данные" onRetry={() => target.refetch()} /> :
+        !target.data?.canApply ? <p className="text-sm text-slate-600">Этот урок нельзя изменить.</p> : null)}
       {available && replacing && <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">Тема или конспект урока уже заполнены. Применение заготовки заменит их сохранённой версией.</p>}
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
     </div>
