@@ -5956,6 +5956,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teacher/lesson-preparations/ai-generations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["startAiGeneration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/lesson-preparations/ai-generations/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["aiOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/lesson-preparations/ai-generations/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["aiJob"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/lesson-preparations/ai-source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["aiSource"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teacher/lesson-preparations/{id}": {
         parameters: {
             query?: never;
@@ -9194,6 +9258,59 @@ export interface components {
             startTime?: string;
             /** Format: date-time */
             updatedAt?: string;
+        };
+        LessonPreparationAiGenerateRequest: {
+            /** @enum {string} */
+            companionKind: "RETELLING" | "PLAN";
+            language?: string;
+            /** Format: int32 */
+            pageFrom?: number;
+            /** Format: int32 */
+            pageTo?: number;
+            /** @enum {string} */
+            sourceType: "DOCUMENT" | "TEXTBOOK";
+            teacherPrompt?: string;
+            /** Format: int64 */
+            workspaceItemId: number;
+        };
+        LessonPreparationAiJobView: {
+            /** Format: date-time */
+            createdAt?: string;
+            errorMessage?: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            /** Format: int64 */
+            id?: number;
+            phase?: string;
+            /** Format: int32 */
+            progressDone?: number;
+            /** Format: int32 */
+            progressTotal?: number;
+            request?: components["schemas"]["LessonPreparationAiGenerateRequest"];
+            result?: components["schemas"]["LessonSummaryContent"];
+            sourceName?: string;
+            /** @enum {string} */
+            status?: "PENDING" | "RUNNING" | "DONE" | "FAILED";
+            warningMessage?: string;
+        };
+        LessonPreparationAiOverview: {
+            aiEnabled?: boolean;
+            latestJob?: components["schemas"]["LessonPreparationAiJobView"];
+            /** Format: int32 */
+            remainingCalls?: number;
+        };
+        LessonPreparationAiSourceView: {
+            format?: string;
+            /** Format: int32 */
+            maxPages?: number;
+            /** Format: int32 */
+            pageCount?: number;
+            pageNavigation?: boolean;
+            /** @enum {string} */
+            sourceType?: "DOCUMENT" | "TEXTBOOK";
+            title?: string;
+            /** Format: int64 */
+            workspaceItemId?: number;
         };
         LessonPreparationApplicationView: {
             /** Format: int32 */
@@ -23820,6 +23937,97 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonPreparationVersionView"];
+                };
+            };
+        };
+    };
+    startAiGeneration: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonPreparationAiGenerateRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationAiJobView"];
+                };
+            };
+        };
+    };
+    aiOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationAiOverview"];
+                };
+            };
+        };
+    };
+    aiJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationAiJobView"];
+                };
+            };
+        };
+    };
+    aiSource: {
+        parameters: {
+            query: {
+                sourceType: "DOCUMENT" | "TEXTBOOK";
+                workspaceItemId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationAiSourceView"];
                 };
             };
         };

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { X } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
 import { WorkspaceMaterialPickerModal } from '@/components/workspace/WorkspaceMaterialPickerModal';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -11,8 +11,11 @@ import { useCreateLessonPreparation } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import type { SummaryContent } from '@/lib/lessonSummaryApi';
 import type { WorkspaceSearchItem } from '@/lib/teacherWorkspaceApi';
+import { GenerateLessonPreparationModal } from './GenerateLessonPreparationModal';
 
-export function CreateLessonPreparationModal({ onClose, onCreated }: { onClose: () => void; onCreated?: () => void }) {
+export function CreateLessonPreparationModal({ onClose, onCreated, initialGenerate = false }: {
+  onClose: () => void; onCreated?: () => void; initialGenerate?: boolean;
+}) {
   const [title, setTitle] = useState('');
   const [topic, setTopic] = useState('');
   const [summaryText, setSummaryText] = useState('');
@@ -24,10 +27,32 @@ export function CreateLessonPreparationModal({ onClose, onCreated }: { onClose: 
   const [preview, setPreview] = useState(false);
   const [error, setError] = useState('');
   const [discardOpen, setDiscardOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(initialGenerate);
+  const [pendingGenerated, setPendingGenerated] = useState<{ content: SummaryContent; source: WorkspaceSearchItem | null } | null>(null);
   const create = useCreateLessonPreparation();
   const toast = useToast();
   const canSave = Boolean(title.trim() && topic.trim() && (summaryText.trim() || companionText.trim()));
   const hasChanges = Boolean(title || topic || summaryText || companionText || documents.length || textbook);
+
+  function applyGenerated(content: SummaryContent, source: WorkspaceSearchItem | null) {
+    const generatedTitle = content.title?.trim() ?? '';
+    setTitle(generatedTitle);
+    setTopic(generatedTitle);
+    setSummaryText(content.summaryText ?? '');
+    setCompanionText(content.companionText ?? '');
+    setCompanionKind(content.companionKind ?? 'PLAN');
+    if (source?.id != null && source.type === 'DOCUMENT') {
+      setDocuments((current) => current.some((item) => item.id === source.id) ? current : [...current, source]);
+    }
+    if (source?.id != null && source.type === 'TEXTBOOK') setTextbook(source);
+    setPreview(false);
+  }
+
+  function useGenerated(content: SummaryContent, source: WorkspaceSearchItem | null) {
+    if (title.trim() || topic.trim() || summaryText.trim() || companionText.trim()) {
+      setPendingGenerated({ content, source });
+    } else applyGenerated(content, source);
+  }
 
   function requestClose() {
     if (create.isPending) return;
@@ -60,7 +85,12 @@ export function CreateLessonPreparationModal({ onClose, onCreated }: { onClose: 
       <Button type="submit" form="create-lesson-preparation" loading={create.isPending} disabled={!canSave}>Сохранить заготовку</Button>
     </>}>
       <form id="create-lesson-preparation" onSubmit={(event) => void save(event)} className="space-y-5">
-        <p className="text-sm text-slate-600">Создайте конспект один раз, затем выбирайте эту заготовку в нужных уроках.</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-slate-600">Создайте конспект один раз, затем выбирайте эту заготовку в нужных уроках.</p>
+          <Button type="button" size="sm" variant="secondary" icon={<Sparkles className="size-4" />} onClick={() => setAiOpen(true)}>
+            Создать с ИИ
+          </Button>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Название заготовки" required>
             <TextInput autoFocus value={title} maxLength={300} onChange={(event) => setTitle(event.target.value)} />
@@ -129,6 +159,11 @@ export function CreateLessonPreparationModal({ onClose, onCreated }: { onClose: 
       })} />}
     {picker === 'textbook' && <WorkspaceMaterialPickerModal usage="SELECT_TEXTBOOK_FOR_LESSON" type="TEXTBOOK" singleSelect
       onClose={() => setPicker(null)} onConfirm={(items) => setTextbook(items[0] ?? null)} />}
+    {aiOpen && <GenerateLessonPreparationModal onClose={() => setAiOpen(false)} onUse={useGenerated} />}
+    <ConfirmDialog open={pendingGenerated != null} onClose={() => setPendingGenerated(null)}
+      onConfirm={() => { if (pendingGenerated) applyGenerated(pendingGenerated.content, pendingGenerated.source); setPendingGenerated(null); }}
+      title="Заменить текст заготовки?" message="Название, тема и текст будут заменены результатом ИИ. Прикреплённые материалы сохранятся."
+      confirmLabel="Заменить" />
     <ConfirmDialog open={discardOpen} onClose={() => setDiscardOpen(false)} onConfirm={onClose}
       title="Закрыть без сохранения?" message="Изменения в заготовке будут потеряны."
       confirmLabel="Не сохранять" danger />

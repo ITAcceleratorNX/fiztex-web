@@ -20,6 +20,16 @@ vi.mock('@/components/workspace/WorkspaceMaterialPickerModal', () => ({
     onClose();
   }}>Подтвердить {type === 'TEXTBOOK' ? 'учебник' : 'документ'}</button>,
 }));
+vi.mock('./GenerateLessonPreparationModal', () => ({
+  GenerateLessonPreparationModal: ({ onUse, onClose }: {
+    onUse: (content: object, source: object) => void; onClose: () => void;
+  }) => <button onClick={() => {
+    onUse({ title: 'Законы Ньютона', summaryText: 'Сила меняет движение',
+      companionText: '1. Первый закон', companionKind: 'PLAN' },
+    { id: 42, title: 'Механика.pdf', type: 'DOCUMENT' });
+    onClose();
+  }}>Использовать результат ИИ</button>,
+}));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -72,5 +82,30 @@ describe('CreateLessonPreparationModal', () => {
     expect(onClose).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: 'Не сохранять' }));
     expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('переносит результат ИИ в независимую заготовку и прикрепляет источник', async () => {
+    render(<CreateLessonPreparationModal initialGenerate onClose={vi.fn()} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Использовать результат ИИ' }));
+    expect(screen.getByRole('textbox', { name: 'Название заготовки' })).toHaveValue('Законы Ньютона');
+    expect(screen.getByRole('textbox', { name: 'Тема урока' })).toHaveValue('Законы Ньютона');
+    expect(screen.getByRole('textbox', { name: 'Краткий конспект' })).toHaveValue('Сила меняет движение');
+    await userEvent.click(screen.getByRole('button', { name: 'Сохранить заготовку' }));
+    await waitFor(() => expect(create).toHaveBeenCalledWith({
+      title: 'Законы Ньютона', topic: 'Законы Ньютона',
+      summary: { title: 'Законы Ньютона', summaryText: 'Сила меняет движение',
+        companionText: '1. Первый закон', companionKind: 'PLAN' },
+      documentWorkspaceItemIds: [42],
+    }));
+  });
+
+  it('спрашивает подтверждение перед заменой введённого текста результатом ИИ', async () => {
+    render(<CreateLessonPreparationModal onClose={vi.fn()} />);
+    await userEvent.type(screen.getByRole('textbox', { name: 'Название заготовки' }), 'Мой вариант');
+    await userEvent.click(screen.getByRole('button', { name: 'Создать с ИИ' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Использовать результат ИИ' }));
+    expect(screen.getByRole('textbox', { name: 'Название заготовки' })).toHaveValue('Мой вариант');
+    await userEvent.click(screen.getByRole('button', { name: 'Заменить' }));
+    expect(screen.getByRole('textbox', { name: 'Название заготовки' })).toHaveValue('Законы Ньютона');
   });
 });

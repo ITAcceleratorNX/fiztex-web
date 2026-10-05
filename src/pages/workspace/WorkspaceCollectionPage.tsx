@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, FileText, Folder, Plus } from 'lucide-react';
+import { ArrowLeft, FileText, Folder, Plus, Sparkles } from 'lucide-react';
 import { ActionMenu } from '@/components/ui/ActionMenu';
 import { Badge } from '@/components/ui/Badge';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
@@ -104,6 +104,7 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
   );
   const [adding, setAdding] = useState(false);
   const [addingPreparation, setAddingPreparation] = useState(false);
+  const [generatePreparation, setGeneratePreparation] = useState(false);
   const [pickingExisting, setPickingExisting] = useState(false);
   const [addingToFolder, setAddingToFolder] = useState<WorkspaceSearchItem | null>(null);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -227,8 +228,12 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
         </div>
         <div className="flex items-center gap-2">
           {(isFolder || code === 'DOCUMENTS') && <Button size="sm" icon={<Plus className="size-4" />} onClick={() => setAdding(true)}>{isFolder ? 'Добавить материал' : 'Добавить'}</Button>}
-          {!isFolder && code === 'PREPARED_LESSONS' && <Button size="sm" icon={<Plus className="size-4" />}
-            onClick={() => setAddingPreparation(true)}>Создать заготовку</Button>}
+          {!isFolder && code === 'PREPARED_LESSONS' && <>
+            <Button size="sm" variant="secondary" icon={<Sparkles className="size-4" />}
+              onClick={() => { setGeneratePreparation(true); setAddingPreparation(true); }}>Создать с ИИ</Button>
+            <Button size="sm" icon={<Plus className="size-4" />}
+              onClick={() => { setGeneratePreparation(false); setAddingPreparation(true); }}>Создать заготовку</Button>
+          </>}
           {isFolder && <ActionMenu label="Действия с папкой" items={[
             { label: 'Переименовать', onSelect: () => { setRenameValue(title ?? ''); setRenameOpen(true); } },
             { label: 'Удалить папку', onSelect: () => setDeleteOpen(true), danger: true },
@@ -252,7 +257,8 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
       </div>}
       <CreateMaterialModal open={adding} onClose={() => setAdding(false)} folderId={isFolder ? folderId : undefined}
         onPickExisting={isFolder ? () => setPickingExisting(true) : undefined} />
-      {addingPreparation && <CreateLessonPreparationModal onClose={() => setAddingPreparation(false)} onCreated={() => setPage(0)} />}
+      {addingPreparation && <CreateLessonPreparationModal initialGenerate={generatePreparation}
+        onClose={() => setAddingPreparation(false)} onCreated={() => setPage(0)} />}
       {isFolder && pickingExisting && <FolderItemPickerModal folderId={folderId} onClose={() => setPickingExisting(false)} />}
       <FolderMembershipModal item={addingToFolder} onClose={() => setAddingToFolder(null)} />
       <DeleteMaterialModal item={deleteItem} onClose={() => setDeleteItem(null)} />

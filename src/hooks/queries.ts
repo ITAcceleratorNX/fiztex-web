@@ -78,7 +78,7 @@ import {
 import type { Schema } from '@/lib/apiSchemas';
 import { teacherWorkspaceApi, type WorkspaceSearchQuery } from '@/lib/teacherWorkspaceApi';
 import { testTemplateApi } from '@/lib/testTemplateApi';
-import { lessonPreparationApi } from '@/lib/lessonPreparationApi';
+import { lessonPreparationApi, type PreparationAiOverview, type PreparationAiRequest } from '@/lib/lessonPreparationApi';
 import type {
   ApplicantRequest,
   GenerateTestRequest,
@@ -102,6 +102,8 @@ export const keys = {
   testTemplateTarget: (homeworkId: number) => ['homework', homeworkId, 'test-template-target'] as const,
   lessonPreparation: (id: number) => ['teacher-workspace', 'lesson-preparation', id] as const,
   lessonPreparationTarget: (lessonId: number) => ['lessons', lessonId, 'preparation-target'] as const,
+  preparationAiOverview: ['teacher-workspace', 'preparation-ai', 'overview'] as const,
+  preparationAiSource: (type: string, id: number) => ['teacher-workspace', 'preparation-ai', 'source', type, id] as const,
   lessonSummary: (id: number, childId?: number) => ['lessons', id, 'summary', childId] as const,
   summarySource: (id: number, type: string, sourceId: number) => ['lessons', id, 'summary-source', type, sourceId] as const,
   summaryLibrary: (subjectId: number, query: string) => ['summary-library', subjectId, query] as const,
@@ -445,6 +447,41 @@ export function useCreateLessonPreparation() {
   return useMutation({
     mutationFn: lessonPreparationApi.create,
     onSuccess: () => client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
+  });
+}
+
+export function usePreparationAiOverview(enabled = true) {
+  return useQuery({
+    queryKey: keys.preparationAiOverview,
+    queryFn: ({ signal }) => lessonPreparationApi.aiOverview(signal),
+    enabled,
+    refetchInterval: (query) => {
+      const status = query.state.data?.latestJob?.status;
+      return status === 'PENDING' || status === 'RUNNING' ? 2000 : false;
+    },
+    refetchIntervalInBackground: true,
+  });
+}
+
+export function usePreparationAiSource(type: NonNullable<PreparationAiRequest['sourceType']>, id: number | null) {
+  return useQuery({
+    queryKey: keys.preparationAiSource(type, id ?? 0),
+    queryFn: ({ signal }) => lessonPreparationApi.aiSource(type, id!, signal),
+    enabled: id != null,
+    retry: false,
+    staleTime: 60_000,
+  });
+}
+
+export function useStartPreparationAiGeneration() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ body, key }: { body: PreparationAiRequest; key: string }) => lessonPreparationApi.startAi(body, key),
+    onSuccess: (job) => {
+      client.setQueryData<PreparationAiOverview>(keys.preparationAiOverview,
+        (old) => old ? { ...old, latestJob: job } : old);
+      void client.invalidateQueries({ queryKey: keys.preparationAiOverview });
+    },
   });
 }
 
