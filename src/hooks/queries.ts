@@ -29,6 +29,7 @@ import {
 } from '@/lib/attendanceApi';
 import { attendanceQrApi, type AttendanceQrSession } from '@/lib/attendanceQrApi';
 import { gradesApi, type GradeType, type GradeValueInput } from '@/lib/gradesApi';
+import { gradeCorrectionsApi, type CorrectionGradeValue } from '@/lib/gradeCorrectionsApi';
 import { breakdownApi, gradingPolicyApi, type GradingPolicyContent } from '@/lib/gradingApi';
 import { profileApi } from '@/lib/profileApi';
 import {
@@ -172,6 +173,12 @@ export const keys = {
   // Оценки урока: лист лежит под уроком, справочник шкалы — сам по себе, он общий
   // для всех экранов и не зависит ни от урока, ни от роли.
   lessonGradeSheet: (lessonId: number) => ['lessons', lessonId, 'grades', 'sheet'] as const,
+  // Исправления работы — тоже под уроком: их сбрасывают те же команды, что и лист.
+  lessonCorrections: (lessonId: number) => ['lessons', lessonId, 'grades', 'corrections'] as const,
+  lessonCorrectionHistory: (lessonId: number) =>
+    ['lessons', lessonId, 'grades', 'corrections', 'history'] as const,
+  lessonCorrectionNextLesson: (lessonId: number) =>
+    ['lessons', lessonId, 'grades', 'corrections', 'next-lesson'] as const,
   homeworkGrades: (homeworkId: number) => ['homework', homeworkId, 'grades'] as const,
   homeworkQuestions: (homeworkId: number) => ['homework', homeworkId, 'questions'] as const,
   homeworkMyQuestions: (homeworkId: number) => ['homework', homeworkId, 'my-questions'] as const,
@@ -1651,6 +1658,90 @@ export function useUpdateGrade(lessonId: number) {
 
 export function useDeleteGrade(lessonId: number) {
   return useGradeCommand(lessonId, (vars: { gradeId: number }) => gradesApi.remove(vars.gradeId));
+}
+
+/**
+ * Исправления урока (контракт `grade-correction-contract.md`). Запрашиваются вместе с листом
+ * и при том же праве (`VIEW_GRADES`): без него сервер ответит 403.
+ */
+export function useLessonCorrections(lessonId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: keys.lessonCorrections(lessonId ?? 0),
+    queryFn: ({ signal }) => gradeCorrectionsApi.byLesson(lessonId as number, signal),
+    enabled: lessonId != null && enabled,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useLessonCorrectionHistory(lessonId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: keys.lessonCorrectionHistory(lessonId ?? 0),
+    queryFn: ({ signal }) => gradeCorrectionsApi.lessonHistory(lessonId as number, signal),
+    enabled: lessonId != null && enabled,
+    refetchOnWindowFocus: false,
+  });
+}
+
+/** Дата «До следующего урока» нужна только открытой форме — отсюда `enabled`. */
+export function useCorrectionNextLesson(lessonId: number, enabled: boolean) {
+  return useQuery({
+    queryKey: keys.lessonCorrectionNextLesson(lessonId),
+    queryFn: ({ signal }) => gradeCorrectionsApi.nextLesson(lessonId, signal),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Команды исправления. Сбрасывают и лист: завершение пишет обычную оценку урока, и строка
+ * ученика должна показать её без повторного открытия урока (ТЗ FE §3, §6).
+ */
+function useCorrectionCommand<TVars>(lessonId: number, mutationFn: (vars: TVars) => Promise<unknown>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.lessonCorrections(lessonId) });
+      qc.invalidateQueries({ queryKey: keys.lessonGradeSheet(lessonId) });
+      qc.invalidateQueries({ queryKey: ['gradebook'] });
+    },
+  });
+}
+
+export function useCreateCorrection(lessonId: number) {
+  return useCorrectionCommand(
+    lessonId,
+    (vars: {
+      studentProfileId: number;
+      comment: string;
+      deadline: string;
+      temporaryGrade?: CorrectionGradeValue | null;
+    }) => gradeCorrectionsApi.create(lessonId, vars),
+  );
+}
+
+export function useUpdateCorrection(lessonId: number) {
+  return useCorrectionCommand(
+    lessonId,
+    (vars: {
+      correctionId: number;
+      comment?: string;
+      deadline?: string;
+      temporaryGrade?: CorrectionGradeValue;
+      removeTemporaryGrade?: boolean;
+    }) => {
+      const { correctionId, ...body } = vars;
+      return gradeCorrectionsApi.update(correctionId, body);
+    },
+  );
+}
+
+export function useCompleteCorrection(lessonId: number) {
+  return useCorrectionCommand(
+    lessonId,
+    (vars: { correctionId: number } & CorrectionGradeValue) =>
+      gradeCorrectionsApi.complete(vars.correctionId, { ...valueOf(vars), gradeType: vars.gradeType ?? null }),
+  );
 }
 
 /**
