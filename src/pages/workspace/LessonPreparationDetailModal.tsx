@@ -20,6 +20,7 @@ export function LessonPreparationDetailModal({ item, onClose, onReuse }: {
     {preparation.isPending ? <LoadingBlock /> : preparation.isError ?
       <ErrorBlock message="Не удалось загрузить данные" onRetry={() => preparation.refetch()} /> : <div className="space-y-4">
         <p className="text-sm text-slate-600">Версия {preparation.data?.version} · Тема: {preparation.data?.topic || 'не указана'}</p>
+        <p className="text-sm text-slate-600">Эту заготовку можно применить к нескольким урокам через их конспекты.</p>
         {preparation.data?.summary && <SummaryDocument content={preparation.data.summary} />}
         <div>
           <p className="mb-2 text-sm font-semibold text-slate-900">Материалы</p>
@@ -29,6 +30,11 @@ export function LessonPreparationDetailModal({ item, onClose, onReuse }: {
               {document.title ?? `Материал ${index + 1}`}{document.available === false ? ' · недоступен' : ''}
             </li>)}</ul>}
         </div>
+        {preparation.data?.textbook && <div>
+          <p className="mb-2 text-sm font-semibold text-slate-900">Учебник</p>
+          <p className="text-sm text-slate-700">{preparation.data.textbook.title || 'Учебник'}
+            {preparation.data.textbook.available === false ? ' · недоступен' : ''}</p>
+        </div>}
       </div>}
   </Modal>;
 }

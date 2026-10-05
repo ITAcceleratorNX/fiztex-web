@@ -23,6 +23,7 @@ import { openWorkspaceDocument } from '@/lib/teacherWorkspaceOpen';
 import { ROUTES } from '@/lib/routes';
 import type { WorkspaceMaterialType, WorkspaceSearchItem } from '@/lib/teacherWorkspaceApi';
 import { CreateMaterialModal } from './CreateMaterialModal';
+import { CreateLessonPreparationModal } from './CreateLessonPreparationModal';
 import { DeleteMaterialModal } from './DeleteMaterialModal';
 import { FolderMembershipModal } from './FolderMembershipModal';
 import { FolderItemPickerModal } from './FolderItemPickerModal';
@@ -102,6 +103,7 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
     isFolder ? Number.isInteger(folderId) && folderId > 0 : Boolean(sectionType),
   );
   const [adding, setAdding] = useState(false);
+  const [addingPreparation, setAddingPreparation] = useState(false);
   const [pickingExisting, setPickingExisting] = useState(false);
   const [addingToFolder, setAddingToFolder] = useState<WorkspaceSearchItem | null>(null);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -225,6 +227,8 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
         </div>
         <div className="flex items-center gap-2">
           {(isFolder || code === 'DOCUMENTS') && <Button size="sm" icon={<Plus className="size-4" />} onClick={() => setAdding(true)}>{isFolder ? 'Добавить материал' : 'Добавить'}</Button>}
+          {!isFolder && code === 'PREPARED_LESSONS' && <Button size="sm" icon={<Plus className="size-4" />}
+            onClick={() => setAddingPreparation(true)}>Создать заготовку</Button>}
           {isFolder && <ActionMenu label="Действия с папкой" items={[
             { label: 'Переименовать', onSelect: () => { setRenameValue(title ?? ''); setRenameOpen(true); } },
             { label: 'Удалить папку', onSelect: () => setDeleteOpen(true), danger: true },
@@ -248,6 +252,7 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
       </div>}
       <CreateMaterialModal open={adding} onClose={() => setAdding(false)} folderId={isFolder ? folderId : undefined}
         onPickExisting={isFolder ? () => setPickingExisting(true) : undefined} />
+      {addingPreparation && <CreateLessonPreparationModal onClose={() => setAddingPreparation(false)} onCreated={() => setPage(0)} />}
       {isFolder && pickingExisting && <FolderItemPickerModal folderId={folderId} onClose={() => setPickingExisting(false)} />}
       <FolderMembershipModal item={addingToFolder} onClose={() => setAddingToFolder(null)} />
       <DeleteMaterialModal item={deleteItem} onClose={() => setDeleteItem(null)} />

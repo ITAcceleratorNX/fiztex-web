@@ -35,7 +35,7 @@ export function LessonPreparationActions({ lessonId, lessonTopic, summary, onApp
 
   function openSave() {
     setTitle(lessonTopic?.trim() || summary?.title?.trim() || '');
-    setTopic(lessonTopic ?? '');
+    setTopic(lessonTopic?.trim() || summary?.title?.trim() || '');
     setDocuments([]);
     setError('');
     setSaveOpen(true);
@@ -43,7 +43,7 @@ export function LessonPreparationActions({ lessonId, lessonTopic, summary, onApp
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!summary || !canSave || !title.trim()) return;
+    if (!summary || !canSave || !title.trim() || !topic.trim()) return;
     setError('');
     try {
       await create.mutateAsync({ title: title.trim(), topic: topic.trim(), summary,
@@ -79,12 +79,12 @@ export function LessonPreparationActions({ lessonId, lessonTopic, summary, onApp
     <Button variant="secondary" size="sm" onClick={() => setPreparationPickerOpen(true)}>Выбрать заготовку урока</Button>
     <Modal open={saveOpen} onClose={() => { if (!create.isPending) setSaveOpen(false); }} title="Сохранить заготовку урока" size="md" footer={<>
       <Button variant="secondary" onClick={() => setSaveOpen(false)} disabled={create.isPending}>Отмена</Button>
-      <Button type="submit" form="save-lesson-preparation" loading={create.isPending} disabled={!title.trim() || !summary}>Сохранить</Button>
+      <Button type="submit" form="save-lesson-preparation" loading={create.isPending} disabled={!title.trim() || !topic.trim() || !summary}>Сохранить</Button>
     </>}>
       <form id="save-lesson-preparation" onSubmit={(event) => void save(event)} className="space-y-4">
         <p className="text-sm text-slate-600">Тема, сохранённый конспект и выбранные материалы станут заготовкой для других уроков.</p>
         <Field label="Название" required><TextInput value={title} maxLength={300} onChange={(event) => setTitle(event.target.value)} required /></Field>
-        <Field label="Тема урока"><TextInput value={topic} maxLength={300} onChange={(event) => setTopic(event.target.value)} /></Field>
+        <Field label="Тема урока" required><TextInput value={topic} maxLength={300} onChange={(event) => setTopic(event.target.value)} /></Field>
         <div className="space-y-2">
           <p className="text-sm font-medium text-slate-700">Материалы</p>
           {documents.map((item) => <div key={item.id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">

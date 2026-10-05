@@ -41,6 +41,14 @@ describe('LessonPreparationActions', () => {
     }));
   });
 
+  it('подставляет название конспекта как обязательную тему, если у урока её нет', async () => {
+    render(<LessonPreparationActions lessonId={5} lessonTopic="" summary={summary} onApplied={vi.fn()} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Сохранить как заготовку' }));
+    expect(screen.getByRole('textbox', { name: 'Тема урока' })).toHaveValue('Давление');
+    await userEvent.click(screen.getByRole('button', { name: 'Сохранить' }));
+    await waitFor(() => expect(create).toHaveBeenCalledWith(expect.objectContaining({ topic: 'Давление' })));
+  });
+
   it('предупреждает о замене текущей темы и применяет версию к уроку', async () => {
     const onApplied = vi.fn();
     render(<LessonPreparationActions lessonId={5} lessonTopic="Давление" summary={summary} onApplied={onApplied} />);
