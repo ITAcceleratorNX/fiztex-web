@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { cx } from '@/lib/format';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'navy';
-type Size = 'sm' | 'md';
+type Size = 'sm' | 'md' | 'icon';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -29,6 +29,7 @@ const variants: Record<Variant, string> = {
 const sizes: Record<Size, string> = {
   sm: 'h-9 px-3.5 text-sm',
   md: 'h-11 px-5 text-sm',
+  icon: 'size-11 shrink-0 p-0 text-sm',
 };
 
 /**

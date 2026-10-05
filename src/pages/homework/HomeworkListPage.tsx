@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/ui/PageHeader';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Info, Plus, Users } from 'lucide-react';
@@ -105,16 +106,11 @@ export function HomeworkListPage() {
   const shownUrl = `/homework${shownSearch.size ? `?${shownSearch}` : ''}`;
 
   return (
-    <div ref={root} className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="min-w-0 text-28 font-bold text-ink">Домашние задания</h1>
-        {!denied && (
-          <Link to={createUrl} className={buttonClassName({ variant: 'primary', className: 'shrink-0' })}>
-            <Plus className="size-4" aria-hidden />
-            Создать задание
-          </Link>
-        )}
-      </div>
+    <div ref={root} className="page-stack">
+      <PageHeader title="Домашние задания" description="Создавайте задания, следите за сроками и проверяйте работы учеников."
+        actions={!denied && <Link to={createUrl} className={buttonClassName({ variant: 'primary', className: 'gap-2' })}>
+          <Plus className="size-4" aria-hidden />Создать задание
+        </Link>} />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <SegmentedTabs
@@ -133,25 +129,26 @@ export function HomeworkListPage() {
             onOpenOptions={() => setOptionsRequested(true)}
           />
           <GroupsButton classId={filters.classId} subjectId={filters.subjectId} />
+          {filtersActive && rows.length > 0 && <Button variant="ghost" size="sm" onClick={() => changeFilters(EMPTY_FILTERS)}>Сбросить фильтры</Button>}
         </div>
       </div>
 
       {optionsQuery.isPending && data && <p role="status" className="text-13 text-muted">Загрузка классов и предметов…</p>}
       {historicalOptions.isFetching && <p role="status" className="text-13 text-muted">Загрузка классов и предметов из истории заданий…</p>}
       {historicalOptions.isError && (
-        <div className="card">
+        <div className="card px-4 sm:px-6">
           <ErrorBlock message="Не удалось загрузить варианты из истории заданий. Доступные варианты сохранены"
             onRetry={() => void historicalOptions.refetch()} />
         </div>
       )}
       {optionsQuery.isError && (
-        <div className="card">
+        <div className="card px-4 sm:px-6">
           <ErrorBlock message="Не удалось загрузить полный список классов и предметов" onRetry={() => void optionsQuery.refetch()} />
         </div>
       )}
       {listQuery.isFetching && data && <p role="status" className="text-13 text-muted">Загрузка страницы {page + 1}…</p>}
       {listQuery.error && data && (
-        <div className="card">
+        <div className="card px-4 sm:px-6">
           <ErrorBlock
             message={`Не удалось загрузить страницу ${page + 1}. Показана страница ${shownPage + 1}`}
             onRetry={() => void listQuery.refetch()}
@@ -250,7 +247,7 @@ function HomeworkBody({
     // 403 — не сбой загрузки: у аккаунта нет учительского доступа к разделу (§8).
     if (error instanceof ApiError && error.status === 403) {
       return (
-        <div className="card">
+        <div className="card px-4 sm:px-6">
           <EmptyBlock
             icon={<Info className="size-7" />}
             title="Раздел недоступен"
@@ -260,7 +257,7 @@ function HomeworkBody({
       );
     }
     return (
-      <div className="card">
+      <div className="card px-4 sm:px-6">
         <ErrorBlock
           message={
             error instanceof ApiError && error.status === 0
@@ -278,7 +275,7 @@ function HomeworkBody({
     // во втором сбрасывать нечего (§8).
     if (filtersActive) {
       return (
-        <div className="card">
+        <div className="card px-4 sm:px-6">
           <EmptyBlock
             icon={<Info className="size-7" />}
             title="Ничего не найдено"
@@ -293,7 +290,7 @@ function HomeworkBody({
       );
     }
     return (
-      <div className="card">
+      <div className="card px-4 sm:px-6">
         {scope === 'ACTUAL' ? (
           <EmptyBlock
             icon={<Info className="size-7" />}

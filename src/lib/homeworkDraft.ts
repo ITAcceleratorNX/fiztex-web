@@ -1,4 +1,6 @@
 import type { AnswerFormat, DueType, Homework, HomeworkGroup, RecipientType } from './homeworkApi';
+import type { WorkspaceSearchItem } from './teacherWorkspaceApi';
+import { withHomeworkReturnTo } from './homeworkListNavigation';
 
 export interface HomeworkFormValues {
   title: string;
@@ -14,6 +16,7 @@ export interface HomeworkFormValues {
   pickedLessonId?: number;
   lessonChoiceMade: boolean;
   files: File[];
+  workspaceItems: Pick<WorkspaceSearchItem, 'id' | 'title'>[];
 }
 
 export interface GroupSnapshot {
@@ -36,7 +39,7 @@ export interface HomeworkFormDraft {
 
 export function emptyHomeworkValues(): HomeworkFormValues {
   return { title: '', description: '', dueType: 'EXACT', dueAt: '', answerFormat: 'WRITTEN',
-    antiCheatEnabled: false, recipientType: 'CLASS', lessonChoiceMade: false, files: [] };
+    antiCheatEnabled: false, recipientType: 'CLASS', lessonChoiceMade: false, files: [], workspaceItems: [] };
 }
 
 export function homeworkValues(existing: Homework): HomeworkFormValues {
@@ -76,7 +79,9 @@ export function homeworkFormReturnTo(raw: string | null): string | null {
   try {
     const url = new URL(raw, 'https://fiztex.invalid');
     if (url.origin !== 'https://fiztex.invalid') return null;
-    if (/^\/homework\/[1-9]\d*\/edit$/.test(url.pathname)) return url.pathname;
+    if (/^\/homework\/[1-9]\d*\/edit$/.test(url.pathname)) {
+      return withHomeworkReturnTo(url.pathname, url.search);
+    }
     if (url.pathname !== '/homework/new') return null;
     const lessonValue = url.searchParams.get('lessonId');
     if (lessonValue != null) {

@@ -33,6 +33,12 @@ export const ROUTES = {
   homework: '/homework',
   /** Учебники учителя: назначения классам и загрузка в библиотеку (LIBRARY-BE-001). */
   textbooks: '/textbooks',
+  /** Личная библиотека и папки учителя. */
+  workspace: '/workspace',
+  workspaceSection: (code: string) => `/workspace/sections/${encodeURIComponent(code)}`,
+  workspaceFolder: (id: number | string) => `/workspace/folders/${id}`,
+  workspaceTestNew: '/workspace/tests/new',
+  workspaceTestEdit: (id: number | string) => `/workspace/tests/${id}/edit`,
   /** Ежемесячная обратная связь учителя: листы классов, публикация, закрытие месяца (MONTHLY-FEEDBACK-001). */
   feedback: '/feedback',
   /** Своё расписание учителя — ролевой экран поверх `/api/schedule/me/week`. */
@@ -236,6 +242,7 @@ function matchesRoutePrefix(path: string, prefix: string): boolean {
  * у него нет.
  */
 const TEACHER_ROUTE_PREFIXES = [
+  ROUTES.workspace,
   ROUTES.homework,
   ROUTES.myAttendance,
   ROUTES.textbooks,

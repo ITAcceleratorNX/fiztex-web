@@ -25,6 +25,7 @@ import {
   Brain,
   Library,
   MessageSquareHeart,
+  LayoutGrid,
   type LucideIcon,
   Scale,
 } from 'lucide-react';
@@ -135,6 +136,7 @@ export const TEACHER_NAV_SECTIONS: NavSection[] = [
       // Учебники читают только `/api/teacher/*` — раздел целиком учительский: назначить
       // учебник можно лишь своему классу по своему предмету (LIBRARY-BE-001 §4).
       { to: ROUTES.textbooks, label: 'Учебники', icon: Library },
+      { to: ROUTES.workspace, label: 'Рабочее пространство', icon: LayoutGrid },
       // Отзывы пишет только учитель по своим классам (`/api/monthly-feedback/teacher/*`):
       // администратору эти адреса отвечают 403, поэтому в его меню пункта нет.
       { to: ROUTES.feedback, label: 'Обратная связь', icon: MessageSquareHeart },

@@ -219,4 +219,3 @@ function componentsLine(row: ClassFinalGradeRow): string {
     .map((component) => `${component.code ? COMPONENT_SHORT[component.code] : ''} ${formatPercent(component.percent)}`)
     .join(' · ');
 }
-

@@ -1,7 +1,8 @@
+import { PageHeader } from '@/components/ui/PageHeader';
 import { useEffect, useRef, useState, type SetStateAction } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Paperclip, X } from 'lucide-react';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { FolderOpen, Paperclip, X } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { Field, focusFirstInvalidField, Select, TextArea, TextInput } from '@/components/ui/Field';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
@@ -9,6 +10,7 @@ import { Toggle } from '@/components/ui/Toggle';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { NoticeBar } from '@/components/ui/NoticeBar';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { WorkspaceMaterialPickerModal } from '@/components/workspace/WorkspaceMaterialPickerModal';
 import { useFormDraft, useFormDraftStore } from '@/context/FormDraftContext';
 import { describeGroupChange, emptyHomeworkValues, groupSnapshot, hasHomeworkChanges, homeworkValues, type HomeworkFormDraft, type HomeworkFormValues } from '@/lib/homeworkDraft';
 import { useToast } from '@/context/ToastContext';
@@ -16,6 +18,8 @@ import { keys, useLesson } from '@/hooks/queries';
 import { lessonsApi, type Lesson } from '@/lib/lessonsApi';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
+import { withHomeworkReturnTo } from '@/lib/homeworkListNavigation';
+import { teacherWorkspaceApi } from '@/lib/teacherWorkspaceApi';
 import { cx, formatWeekdayDayMonth } from '@/lib/format';
 import {
   homeworkApi,
@@ -91,9 +95,10 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
       error: null, createdId: null, saving: false };
   }, hasHomeworkChanges);
   const { title, description, dueType, answerFormat, antiCheatEnabled, dueAt, recipientType,
-    pickedLessonId, tempGroupId, files, subjectId, classId } = draft.values;
+    pickedLessonId, tempGroupId, files, workspaceItems, subjectId, classId } = draft.values;
   const { error, createdId } = draft;
   const [discardOpen, setDiscardOpen] = useState(false);
+  const [workspacePickerOpen, setWorkspacePickerOpen] = useState(false);
   const [validationRequest, setValidationRequest] = useState(0);
   const discardTrigger = useRef<HTMLButtonElement | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
@@ -119,8 +124,10 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
   const setRecipientType = setField('recipientType');
   const setTempGroupId = setField('tempGroupId');
   const setFiles = setField('files');
+  const setWorkspaceItems = setField('workspaceItems');
 
   const navigate = useNavigate();
+  const locationSearch = useLocation().search;
   const queryClient = useQueryClient();
   const toast = useToast();
 
@@ -361,6 +368,11 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
   const save = useMutation({
     mutationFn: async () => {
       setDraft((current) => ({ ...current, error: null }));
+      if (createdId != null) {
+        await uploadFiles(createdId);
+        await attachWorkspaceItems(createdId);
+        return homeworkApi.card(createdId);
+      }
       if (mode === 'edit' && editId != null) {
         const updated = await homeworkApi.update(editId, {
           title: title.trim(),
@@ -380,6 +392,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
           });
         }
         await uploadFiles(editId);
+        await attachWorkspaceItems(editId);
         return updated;
       }
 
@@ -401,6 +414,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
       const created = await homeworkApi.create(input);
       setDraft((current) => ({ ...current, createdId: created.id ?? null }));
       await uploadFiles(created.id as number);
+      await attachWorkspaceItems(created.id as number);
       return created;
     },
     onSuccess: (result) => {
@@ -421,7 +435,9 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
       // Возврат туда, откуда пришли (§4.1): из урока — в урок, иначе — в карточку задания.
       if (!mounted.current) return;
       if (mode === 'create' && lessonId) navigate(`/lesson-schedule/lessons/${lessonId}`);
-      else navigate(`/homework/${result.id}`);
+      else navigate(mode === 'edit'
+        ? withHomeworkReturnTo(`/homework/${result.id}`, locationSearch)
+        : `/homework/${result.id}`);
     },
     onError: (err) => {
       setDraft((current) => ({ ...current, saving: false, error: err instanceof ApiError ? err.message : 'Не удалось сохранить задание' }));
@@ -436,9 +452,21 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
     }
   }
 
+  async function attachWorkspaceItems(id: number) {
+    for (const item of workspaceItems) {
+      if (item.id == null) continue;
+      await teacherWorkspaceApi.attachDocumentToHomework(id, item.id);
+      // Сохраняем только неотправленные материалы, если следующий запрос завершится ошибкой.
+      setDraft((current) => ({ ...current, values: {
+        ...current.values,
+        workspaceItems: current.values.workspaceItems.filter((pending) => pending.id !== item.id),
+      } }));
+    }
+  }
+
   function saveForm() {
-    if (draftStore.get<HomeworkFormDraft>(draftKey)?.saving || createdId != null) return;
-    if (!valid) {
+    if (draftStore.get<HomeworkFormDraft>(draftKey)?.saving) return;
+    if (createdId == null && !valid) {
       setValidationRequest((request) => request + 1);
       return;
     }
@@ -450,19 +478,19 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
   if (mode === 'edit' && !draft.initialized && cardQuery.isFetching) return <LoadingBlock label="Загрузка задания…" />;
   if (mode === 'edit' && (cardQuery.isError || !existing)) {
     return (
-      <div className="card">
+      <div className="card px-4 sm:px-6">
         <ErrorBlock message="Не удалось загрузить задание" onRetry={() => void cardQuery.refetch()} />
       </div>
     );
   }
   if (mode === 'edit' && existing && existing.status !== 'DRAFT' && existing.status !== 'PUBLISHED') {
     return (
-      <div className="card">
+      <div className="card px-4 sm:px-6">
         <EmptyBlock
           title="Задание нельзя редактировать"
           description="Завершённые и отменённые задания доступны только для просмотра."
           action={
-            <Link to={`/homework/${editId}`} className={buttonClassName({ variant: 'secondary', size: 'sm' })}>
+            <Link to={withHomeworkReturnTo(`/homework/${editId}`, locationSearch)} className={buttonClassName({ variant: 'secondary', size: 'sm' })}>
               К заданию
             </Link>
           }
@@ -472,19 +500,14 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
   }
 
   const busy = save.isPending || draft.saving;
-  const backTo = mode === 'edit' ? `/homework/${editId}` : lessonId ? `/lesson-schedule/lessons/${lessonId}` : '/homework';
-  const formUrl = mode === 'edit' ? `/homework/${editId}/edit` : `/homework/new${contextSearch ? `?${contextSearch}` : ''}`;
+  const backTo = mode === 'edit' ? withHomeworkReturnTo(`/homework/${editId}`, locationSearch) : lessonId ? `/lesson-schedule/lessons/${lessonId}` : '/homework';
+  const formUrl = mode === 'edit' ? withHomeworkReturnTo(`/homework/${editId}/edit`, locationSearch) : `/homework/new${contextSearch ? `?${contextSearch}` : ''}`;
 
   return (
-    <div ref={formRef} className="flex max-w-4xl flex-col gap-5">
-      <div className="flex items-center gap-3">
-        <Link to={backTo} aria-label="Назад" className="text-subtle transition hover:text-ink">
-          <ArrowLeft className="size-5" />
-        </Link>
-        <h1 className="text-28 font-bold text-ink">
-          {mode === 'edit' ? 'Редактирование задания' : 'Новое домашнее задание'}
-        </h1>
-      </div>
+    <div ref={formRef} className="page-stack max-w-4xl">
+      <PageHeader title={mode === 'edit' ? 'Редактирование задания' : 'Новое домашнее задание'}
+        back={{ to: backTo, label: 'Назад' }}
+        description="Заполните задание, выберите срок и получателей. Ученики увидят его после публикации." />
 
       <NoticeBar tone="soft">
         При переходах внутри сайта поля и выбранные файлы сохранятся в этой вкладке.
@@ -502,7 +525,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
 
       {/* Контекст задания: из урока он определён и неизменяем, вне урока — выбирается. */}
       {lessonId ? (
-        <div className="rounded-xl bg-neutral-bg/60 px-4 py-3 text-13">
+        <div className="rounded-xl bg-neutral-bg px-4 py-3 text-13">
           {lessonQuery.isPending ? (
             <span className="text-subtle">Загрузка урока…</span>
           ) : lessonQuery.data ? (
@@ -531,7 +554,9 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
         </NoticeBar>
       )}
 
-      <fieldset disabled={busy} className="card flex min-w-0 flex-col gap-4 p-5">
+      <fieldset disabled={busy} className="card flex min-w-0 flex-col gap-6 p-4 sm:p-6">
+        <section className="form-section" aria-labelledby="homework-content-title">
+          <h2 id="homework-content-title" className="text-lg font-semibold text-ink">Содержание задания</h2>
         {standalone && (
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Предмет" required error={validationErrors.subject}>
@@ -578,7 +603,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
                 </option>
               ))}
             </Select>
-            <p className="mt-1 text-11 text-subtle">
+            <p className="mt-1 text-13 text-muted">
               {classId == null || subjectId == null
                 ? 'Выберите класс и предмет — уроки подставятся из вашего расписания.'
                 : lessonsQuery.isPending
@@ -611,13 +636,13 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
             onChange={setAnswerFormat}
             ariaLabel="Как ученик отвечает"
           />
-          <p className="mt-1.5 text-11 text-muted">
+          <p className="mt-1.5 text-13 text-muted">
             {answerFormat === 'TEST'
               ? 'Ученик отвечает на вопросы в приложении. Вопросы добавляются на карточке задания.'
               : 'Ученик присылает текст, фотографии решения и файлы.'}
           </p>
           {mode === 'edit' && (existing?.questionCount ?? 0) > 0 && answerFormat === 'TEST' && (
-            <p className="mt-1.5 text-11 text-muted">
+            <p className="mt-1.5 text-13 text-muted">
               Чтобы перевести задание в работу текстом, сначала удалите вопросы.
             </p>
           )}
@@ -640,7 +665,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
                 : 'Приложение отметит попытки сделать скриншот текста задания.'
             }
           />
-          <p className="mt-1.5 text-11 text-muted">
+          <p className="mt-1.5 text-13 text-muted">
             События видны при проверке работы. Тест не прерывается, оценка не меняется —
             решение остаётся за вами.
           </p>
@@ -671,7 +696,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
             rows={answerFormat === 'TEST' ? 3 : 5}
             maxLength={4000}
           />
-          <p className="mt-1.5 text-11 text-muted">
+          <p className="mt-1.5 text-13 text-muted">
             {answerFormat === 'TEST'
               ? 'Сама работа — это вопросы: они добавляются на карточке задания после создания.'
               : 'Ученик присылает ответ текстом, фотографиями и файлами.'}
@@ -698,8 +723,21 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
                 </button>
               </span>
             ))}
+            {workspaceItems.map((item) => (
+              <span key={item.id} className="inline-flex items-center gap-1.5 rounded bg-neutral-bg px-2 py-1 text-11 text-neutral-fg">
+                <FolderOpen className="size-3" aria-hidden />
+                {item.title ?? `Материал №${item.id}`}
+                <button type="button" onClick={() => setWorkspaceItems((prev) => prev.filter((entry) => entry.id !== item.id))}
+                  aria-label={`Убрать ${item.title ?? `материал №${item.id}`}`} className="text-subtle transition hover:text-ink">
+                  <X className="size-3" />
+                </button>
+              </span>
+            ))}
             <Button variant="secondary" size="sm" onClick={() => fileInput.current?.click()} disabled={busy}>
               Прикрепить файл
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => setWorkspacePickerOpen(true)} disabled={busy}>
+              Выбрать из рабочего пространства
             </Button>
           </div>
           <input
@@ -718,11 +756,14 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
               setFiles((prev) => [...prev, ...picked]);
             }}
           />
-          <p className="mt-1 text-11 text-subtle">
-            Файлы загрузятся после сохранения задания. Ограничения по типу и размеру проверяет сервер.
+          <p className="mt-1 text-13 text-muted">
+            Файлы и выбранные материалы добавятся после сохранения задания. Ограничения по типу и размеру проверяет сервер.
           </p>
         </div>
 
+        </section>
+        <section className="form-section" aria-labelledby="homework-delivery-title">
+          <h2 id="homework-delivery-title" className="text-lg font-semibold text-ink">Срок и получатели</h2>
         <div>
           <p className="label-base" id="due-type-label">
             Срок сдачи
@@ -739,7 +780,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
           <div
             role="radiogroup"
             aria-labelledby="due-type-label"
-            className="mt-1.5 inline-flex gap-1 rounded-xl bg-neutral-bg p-1"
+            className="mt-1.5 inline-flex max-w-full flex-wrap gap-1 rounded-xl bg-neutral-bg p-1"
           >
             {DUE_TYPES.map(([value, label]) => {
               const selected = dueType === value;
@@ -774,7 +815,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
             </Field>
           )}
           {dueType === 'NEXT_LESSON' && (
-            <p className="mt-2 max-w-prose text-11 text-subtle">
+            <p className="mt-2 max-w-prose text-13 text-muted">
               Дату подставит сервер при публикации — по ближайшему уроку этого предмета
               в классе. Точную дату видно на карточке задания после публикации; если урока
               впереди не окажется, сервер попросит выбрать дату или вариант без срока.
@@ -799,14 +840,14 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
           </Select>
 
           {recipientType === 'SUBGROUP' && !lessonQuery.isPending && !contextLesson?.subgroupId && !existing?.recipients?.subgroupId && (
-            <p className="mt-1 text-11 text-subtle">Подгруппа урока больше недоступна. Выберите других получателей. Остальные поля сохранены.</p>
+            <p className="mt-1 text-13 text-muted">Подгруппа урока больше недоступна. Выберите других получателей. Остальные поля сохранены.</p>
           )}
 
           {!recipientsLocked && groupsQuery.isError && (
             <ErrorBlock message="Не удалось проверить группы. Введённые данные сохранены." onRetry={() => void groupsQuery.refetch()} />
           )}
           {recipientType === 'TEMP_GROUP' && groupsQuery.isFetching && (
-            <p className="mt-1 text-11 text-subtle">Проверяем актуальный состав группы…</p>
+            <p className="mt-1 text-13 text-muted">Проверяем актуальный состав группы…</p>
           )}
 
           {recipientType === 'TEMP_GROUP' && (
@@ -844,15 +885,16 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
           )}
 
           {recipientsLocked ? (
-            <p className="mt-1 text-11 text-subtle">
+            <p className="mt-1 text-13 text-muted">
               Состав получателей закрыт: по заданию уже есть ответы.
             </p>
           ) : existing?.recipients?.totalCount ? (
-            <p className="mt-1 text-11 text-subtle">
+            <p className="mt-1 text-13 text-muted">
               Сейчас получателей: {existing.recipients.totalCount}
             </p>
           ) : null}
         </Field>
+        </section>
       </fieldset>
 
       {error && (
@@ -860,21 +902,11 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
           {createdId != null
             ? `Черновик создан, но материалы приложить не удалось. ${error}`
             : error}
-          {/* Черновик уже есть — выход из этого состояния один, и он в главной кнопке
-              внизу. Вторая кнопка с тем же словом только спрашивала бы, чем они разные. */}
-          {createdId == null && (
-            <button
-              type="button"
-              onClick={saveForm}
-              className="ml-2 font-semibold underline"
-            >
-              Повторить
-            </button>
-          )}
+          <button type="button" onClick={saveForm} className="ml-2 font-semibold underline">Повторить</button>
         </NoticeBar>
       )}
 
-      <div className="flex flex-wrap justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-3 rounded-2xl border border-line bg-surface p-4 sm:sticky sm:bottom-4 sm:z-10 sm:shadow-card">
         {dirty && (
           <Button variant="ghost" disabled={busy} onClick={(event) => {
             discardTrigger.current = event.currentTarget;
@@ -886,16 +918,22 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
         <Link to={backTo} className={buttonClassName({ variant: 'secondary' })}>
           Вернуться позже
         </Link>
-        {/* Черновик уже заведён, а упали материалы — тогда главная кнопка ведёт в него, а не
-            создаёт второе задание. Ссылка в баннере говорит то же самое; расходиться им нельзя. */}
+        {/* Черновик уже заведён: повторяем только неприложенные материалы, не создавая дубль ДЗ. */}
         {createdId != null ? (
-          <Button onClick={() => navigate(`/homework/${createdId}`)}>Открыть черновик</Button>
+          <><Button variant="secondary" onClick={() => navigate(`/homework/${createdId}`)}>Открыть черновик</Button>
+            <Button onClick={saveForm} loading={busy}>Повторить добавление материалов</Button></>
         ) : (
           <Button onClick={saveForm} loading={busy}>
             {mode === 'edit' ? 'Сохранить' : 'Создать черновик'}
           </Button>
         )}
       </div>
+      {workspacePickerOpen && <WorkspaceMaterialPickerModal usage="ATTACH_DOCUMENT_TO_HOMEWORK"
+        onClose={() => setWorkspacePickerOpen(false)}
+        onConfirm={(items) => setWorkspaceItems((current) => {
+          const ids = new Set(current.map((item) => item.id));
+          return [...current, ...items.filter((item) => !ids.has(item.id)).map(({ id, title }) => ({ id, title }))];
+        })} />}
       <ConfirmDialog
         open={discardOpen}
         onClose={() => { setDiscardOpen(false); discardTrigger.current?.focus(); }}

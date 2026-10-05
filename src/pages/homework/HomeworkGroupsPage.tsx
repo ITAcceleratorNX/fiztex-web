@@ -1,7 +1,8 @@
+import { PageHeader } from '@/components/ui/PageHeader';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, GripVertical, Shuffle } from 'lucide-react';
+import { GripVertical, Shuffle } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { Field, Select } from '@/components/ui/Field';
 import { NoticeBar } from '@/components/ui/NoticeBar';
@@ -104,7 +105,7 @@ export function HomeworkGroupsPage() {
 
   if (classId == null || subjectId == null) {
     return (
-      <div className="card">
+      <div className="card px-4 sm:px-6">
         <EmptyBlock
           title="Не указан класс или предмет"
           description="Группы заводятся для конкретной пары «класс + предмет» — откройте экран из задания."
@@ -121,7 +122,7 @@ export function HomeworkGroupsPage() {
   if (setsQuery.isPending) return <LoadingBlock label="Загрузка групп…" />;
   if (setsQuery.isError) {
     return (
-      <div className="card">
+      <div className="card px-4 sm:px-6">
         <ErrorBlock message="Не удалось загрузить группы" onRetry={() => void setsQuery.refetch()} />
         <Link to={backTo} className={buttonClassName({ variant: 'secondary', size: 'sm' })}>Вернуться к заданию</Link>
       </div>
@@ -132,15 +133,10 @@ export function HomeworkGroupsPage() {
   const busy = mutate.isPending;
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Link to={backTo} aria-label="Назад" className="text-subtle transition hover:text-ink">
-            <ArrowLeft className="size-5" />
-          </Link>
-          <h1 className="text-28 font-bold text-ink">Временные группы</h1>
-        </div>
-
+    <div className="page-stack">
+      <PageHeader title="Временные группы" back={{ to: backTo, label: 'Назад' }}
+        description="Распределяйте учеников по группам. Изменения сохраняются сразу."
+        actions={<>
         {set && !locked && (
           <div className="flex flex-wrap gap-2">
             <Button
@@ -148,8 +144,8 @@ export function HomeworkGroupsPage() {
               size="sm"
               disabled={busy}
               onClick={() => mutate.mutate({ kind: 'redistribute', count: groups.length })}
-            >
-              <Shuffle className="size-4" aria-hidden /> Перемешать случайно
+              icon={<Shuffle className="size-4" />}>
+              Перемешать случайно
             </Button>
             <Button
               variant="secondary"
@@ -161,12 +157,12 @@ export function HomeworkGroupsPage() {
             </Button>
           </div>
         )}
-      </div>
+        </>} />
 
       {returnTo && <NoticeBar tone="soft">После настройки групп вернитесь к форме задания в этой вкладке.</NoticeBar>}
 
       {homework && (
-        <div className="rounded-xl bg-neutral-bg/60 px-5 py-3 text-13">
+        <div className="rounded-xl bg-neutral-bg px-5 py-3 text-13">
           <span className="text-subtle">ДЗ: </span>
           <span className="font-medium text-ink">{homework.title}</span>
           <span className="mx-2 text-subtle">·</span>
@@ -183,7 +179,7 @@ export function HomeworkGroupsPage() {
       )}
 
       {!set ? (
-        <div className="card">
+        <div className="card px-4 sm:px-6">
           <EmptyBlock
             title="Класс ещё не разделён"
             description="Выберите, на сколько групп разделить класс — состав распределится случайно, а потом его можно поправить вручную."

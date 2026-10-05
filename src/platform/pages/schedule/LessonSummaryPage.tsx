@@ -16,6 +16,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
 import { summaryRunning, type SummaryContent } from '@/lib/lessonSummaryApi';
 import { LessonSummaryGenerateModal } from './LessonSummaryGenerateModal';
+import { LessonPreparationActions } from './LessonPreparationActions';
 
 export function LessonSummaryPage() {
   const { lessonId } = useParams();
@@ -109,6 +110,10 @@ function SummaryPage({ id }: { id: number }) {
         <h1 className="text-28 font-bold text-ink">Конспект урока</h1>
         <p className="text-sm text-muted">{[lesson.data?.subjectName, lesson.data?.className, lesson.data?.topic].filter(Boolean).join(' · ')}</p>
       </div>
+      {data?.canEdit && !dirty && <div className="flex flex-wrap gap-2">
+        <LessonPreparationActions lessonId={id} lessonTopic={lesson.data?.topic ?? undefined} summary={data.content ?? undefined}
+          onApplied={() => { void query.refetch(); void lesson.refetch(); }} />
+      </div>}
       {!valid ? <ErrorBlock message="Урок не найден" /> : query.isPending ? <LoadingBlock label="Загружаем конспект…" /> :
         query.isError ? <ErrorBlock message={query.error.message} onRetry={() => void query.refetch()} /> : data && <>
           {!data.canEdit && data.hasUnpublishedChanges && <NoticeBar tone="soft">

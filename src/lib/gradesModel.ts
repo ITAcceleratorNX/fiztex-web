@@ -104,4 +104,3 @@ export function trimNumber(value: number | string): string {
   const trimmed = text.includes('.') ? text.replace(/\.?0+$/, '') : text;
   return trimmed.replace('.', ',');
 }
-

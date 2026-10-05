@@ -12,11 +12,20 @@ import { HomeworkGroupsPage } from './HomeworkGroupsPage';
 
 const mocks = vi.hoisted(() => ({
   create: vi.fn(), update: vi.fn(), card: vi.fn(), setRecipients: vi.fn(), listGroups: vi.fn(),
-  listGroupSets: vi.fn(), addMaterialFile: vi.fn(), subgroupId: undefined as number | undefined,
+  listGroupSets: vi.fn(), addMaterialFile: vi.fn(), attachWorkspace: vi.fn(), subgroupId: undefined as number | undefined,
 }));
 vi.mock('@/lib/homeworkApi', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/lib/homeworkApi')>(),
   homeworkApi: { ...mocks, list: async () => ({ content: [] }) },
+}));
+vi.mock('@/lib/teacherWorkspaceApi', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/teacherWorkspaceApi')>();
+  return { ...actual, teacherWorkspaceApi: { ...actual.teacherWorkspaceApi,
+    attachDocumentToHomework: (...args: unknown[]) => mocks.attachWorkspace(...args) } };
+});
+vi.mock('@/components/workspace/WorkspaceMaterialPickerModal', () => ({
+  WorkspaceMaterialPickerModal: ({ onConfirm }: { onConfirm: (items: { id: number; title: string }[]) => void }) =>
+    <button onClick={() => onConfirm([{ id: 12, title: 'Конспект урока' }])}>Выбрать Конспект урока</button>,
 }));
 vi.mock('@/lib/lessonsApi', () => ({ lessonsApi: {
   myWeek: async () => ({ lessons: [{ classId: 7, className: '7А', subjectId: 3, subjectName: 'Математика' }] }),
@@ -108,6 +117,7 @@ beforeEach(() => {
   mocks.listGroups.mockResolvedValue([originalGroup]);
   mocks.listGroupSets.mockResolvedValue([]);
   mocks.addMaterialFile.mockResolvedValue({ id: 11 });
+  mocks.attachWorkspace.mockResolvedValue({ id: 13 });
   mocks.setRecipients.mockResolvedValue({});
 });
 afterEach(() => { cleanup(); clients.splice(0).forEach((client) => client.clear()); });
@@ -290,6 +300,26 @@ describe('homework form drafts', () => {
     await returnFromGroups();
     expect(screen.queryByRole('button', { name: 'Создать черновик' })).not.toBeInTheDocument();
     expect(screen.getByText('big.pdf')).toBeInTheDocument();
+    expect(mocks.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('сохраняет выбор из рабочего пространства и повторяет неудачное прикрепление без второго ДЗ', async () => {
+    mocks.attachWorkspace.mockRejectedValueOnce(new ApiError(503, 'Сервис временно недоступен'));
+    mocks.card.mockResolvedValue({ ...originalCard, id: 99 });
+    const { store } = renderForm();
+    await fillForm();
+    await userEvent.click(screen.getByRole('button', { name: 'Выбрать из рабочего пространства' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Выбрать Конспект урока' }));
+    await openGroups();
+    await returnFromGroups();
+    expect(screen.getByText('Конспект урока')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Создать черновик' }));
+    await screen.findByRole('button', { name: 'Повторить добавление материалов' });
+    expect(mocks.create).toHaveBeenCalledTimes(1);
+    await userEvent.click(screen.getByRole('button', { name: 'Повторить добавление материалов' }));
+    await waitFor(() => expect(store.hasChanges).toBe(false));
+    expect(mocks.attachWorkspace).toHaveBeenCalledTimes(2);
+    expect(mocks.attachWorkspace).toHaveBeenCalledWith(99, 12);
     expect(mocks.create).toHaveBeenCalledTimes(1);
   });
 

@@ -133,17 +133,32 @@ export function validateQuestions(questions: QuestionDraft[]): Map<number, strin
     if (!question.text.trim()) {
       messages.push('Текст вопроса пустой');
     }
-    if (!(question.maxScore > 0)) {
-      messages.push('Балл за вопрос должен быть больше нуля');
+    if (question.text.trim().length > 4000) {
+      messages.push('Текст вопроса не может быть длиннее 4000 символов');
+    }
+    if (!(question.maxScore >= 0.5)) {
+      messages.push('Балл за вопрос должен быть не меньше 0,5');
+    }
+    if (question.referenceAnswer.trim().length > 4000 || question.gradingCriteria.trim().length > 4000) {
+      messages.push('Эталонный ответ и критерии не могут быть длиннее 4000 символов');
     }
     if (question.allowPhoto && (question.maxPhotos < 1 || question.maxPhotos > 5)) {
       messages.push('Фотографий можно разрешить от одной до пяти');
     }
 
     if (isChoiceType(question.type)) {
+      if (question.options.length > 10) {
+        messages.push('Допускается не больше десяти вариантов ответа');
+      }
+      if (question.options.some((option) => option.text.trim().length > 2000)) {
+        messages.push('Вариант ответа не может быть длиннее 2000 символов');
+      }
       const filled = question.options.filter((option) => option.text.trim());
       if (filled.length < 2) {
         messages.push('Нужно минимум два варианта ответа');
+      }
+      if (filled.length !== question.options.length) {
+        messages.push('Заполните каждый вариант ответа');
       }
       const correct = question.options.filter((option) => option.correct).length;
       if (question.type === 'SINGLE_CHOICE' && correct !== 1) {

@@ -1,8 +1,12 @@
+import { PageHeader } from '@/components/ui/PageHeader';
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Paperclip, Sparkles } from 'lucide-react';
+import { Copy, Paperclip, Sparkles } from 'lucide-react';
+import { CopyHomeworkToLessonModal } from '@/pages/workspace/CopyHomeworkToLessonModal';
 import { Button, buttonClassName } from '@/components/ui/Button';
+import { ActionMenu } from '@/components/ui/ActionMenu';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { HomeworkStatusChip } from '@/components/ui/HomeworkStatusChip';
 import { AiGeneratedBadge } from '@/components/ui/AiGeneratedBadge';
@@ -25,7 +29,9 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock
 import { useToast } from '@/context/ToastContext';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
-import { homeworkListReturnTo } from '@/lib/homeworkListNavigation';
+import { homeworkCardReturnTo, withHomeworkReturnTo } from '@/lib/homeworkListNavigation';
+import { ROUTES } from '@/lib/routes';
+import { workspaceSectionLabel } from '@/lib/workspaceSections';
 import { cx, formatDateTime } from '@/lib/format';
 import { homeworkApi, type Homework, type RosterEntry } from '@/lib/homeworkApi';
 import {
@@ -42,9 +48,9 @@ import {
 /**
  * Карточка домашнего задания учителя (ТЗ FE-Teacher-002 §5–7, Figma 863:929…1483).
  *
- * Одна и та же карточка открывается из урока и из списка HOMEWORK-005.1 — это одно
+ * Одна и та же карточка открывается из урока, списка и рабочего пространства — это одно
  * задание и один экран (§5), поэтому маршрут адресует Homework, а не путь, которым сюда
- * пришли. Откуда пришёл пользователь, влияет только на кнопку «назад».
+ * пришли. Источник сохраняется для навигационной цепочки и возврата назад.
  *
  * Получатели живут здесь же, а не на отдельной вкладке: в макете это один экран, и для
  * учителя «задание» и «кто что сдал» — один вопрос, а не два.
@@ -53,7 +59,12 @@ export function HomeworkCardPage() {
   const { homeworkId } = useParams<{ homeworkId: string }>();
   const id = Number(homeworkId);
   const navigate = useNavigate();
-  const backTo = homeworkListReturnTo(useLocation().search);
+  const location = useLocation();
+  const backTo = homeworkCardReturnTo(location.search);
+  const fromWorkspace = backTo.startsWith(ROUTES.workspace);
+  const sourceLabel = workspaceSectionLabel(backTo)
+    ?? (backTo.startsWith('/workspace/folders/') ? 'Личная папка' : 'Результаты поиска');
+  const backLabel = fromWorkspace ? `К разделу «${sourceLabel}»` : 'К списку заданий';
   const queryClient = useQueryClient();
   const toast = useToast();
 
@@ -62,6 +73,7 @@ export function HomeworkCardPage() {
   const [generateKind, setGenerateKind] = useState<GenerateKind | null>(null);
   const [confirmRegenerate, setConfirmRegenerate] = useState<GenerateKind | null>(null);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [copyOpen, setCopyOpen] = useState(false);
 
   const cardQuery = useQuery({
     queryKey: ['homework', 'card', id],
@@ -171,13 +183,13 @@ export function HomeworkCardPage() {
   if (cardQuery.error instanceof ApiError && [403, 404].includes(cardQuery.error.status)) {
     // 404 на чужом задании — это «нет доступа»: знание id прав не даёт (§10, HOMEWORK-001 §6).
     return (
-      <div className="card">
+      <div className="card px-4 sm:px-6">
         <EmptyBlock
           title="Задание недоступно"
           description="Оно удалено или относится к урокам другого учителя."
           action={
             <Link to={backTo} className={buttonClassName({ variant: 'secondary', size: 'sm' })}>
-              К списку заданий
+              {backLabel}
             </Link>
           }
         />
@@ -186,7 +198,7 @@ export function HomeworkCardPage() {
   }
   if (cardQuery.isError || !homework) {
     return (
-      <div className="card">
+      <div className="card px-4 sm:px-6">
         <ErrorBlock message="Не удалось загрузить задание" onRetry={() => void cardQuery.refetch()} />
       </div>
     );
@@ -214,18 +226,28 @@ export function HomeworkCardPage() {
   const busy = mutate.isPending;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="page-stack">
+      <Breadcrumbs items={fromWorkspace ? [
+        { label: 'Рабочее пространство', to: ROUTES.workspace },
+        { label: sourceLabel, to: backTo },
+        { label: homework.title ?? 'Домашнее задание' },
+      ] : [
+        { label: 'Домашние задания', to: backTo },
+        { label: homework.title ?? 'Домашнее задание' },
+      ]} />
       <HomeworkHeader
         backTo={backTo}
+        backLabel={backLabel}
         homework={homework}
         materials={materialsQuery.data ?? []}
         busy={busy}
         onPublish={() => mutate.mutate('publish')}
-        onEdit={() => navigate(`/homework/${id}/edit`)}
+        onEdit={() => navigate(withHomeworkReturnTo(`/homework/${id}/edit`, location.search))}
+        onCopy={() => setCopyOpen(true)}
         onAsk={setConfirm}
         aiGenerated={homework.creationMode != null && homework.creationMode !== 'MANUAL'}
         onGenerate={askGenerate}
-        onOpenQuestions={() => navigate(`/homework/${id}/questions`)}
+        onOpenQuestions={() => navigate(withHomeworkReturnTo(`/homework/${id}/questions`, location.search))}
       />
 
       <HomeworkAiStatus
@@ -235,7 +257,7 @@ export function HomeworkCardPage() {
       />
 
       {homework.status === 'DRAFT' ? (
-        <div className="card">
+        <div className="card px-4 sm:px-6">
           <EmptyBlock
             title="Задание ещё не опубликовано"
             description="Получатели фиксируются при публикации — до неё списка учеников нет."
@@ -274,10 +296,16 @@ export function HomeworkCardPage() {
             error={rosterQuery.isError}
             onRetry={() => void rosterQuery.refetch()}
             canOpen={actions.canReview}
-            onOpen={(student) => navigate(`/homework/${id}/students/${student.studentProfileId}`)}
+            onOpen={(student) => navigate(withHomeworkReturnTo(`/homework/${id}/students/${student.studentProfileId}`, location.search))}
           />
         </>
       )}
+
+      {copyOpen && <CopyHomeworkToLessonModal sourceId={id} onClose={() => setCopyOpen(false)}
+        onCopied={(copyId) => {
+          setCopyOpen(false);
+          navigate(withHomeworkReturnTo(`/homework/${copyId}`, location.search));
+        }} />}
 
       <HomeworkAiGenerateModal
         open={generateKind != null}
@@ -285,7 +313,7 @@ export function HomeworkCardPage() {
         homeworkId={id}
         lessonId={homework.lesson?.id ?? null}
         kind={generateKind ?? 'MATERIAL'}
-        onWriteManually={() => navigate(`/homework/${id}/edit`)}
+        onWriteManually={() => navigate(withHomeworkReturnTo(`/homework/${id}/edit`, location.search))}
         onAwaitingDecision={() => {
           setGenerateKind(null);
           setCompareOpen(true);
@@ -432,17 +460,20 @@ function HomeworkAiStatus({
 
 function HomeworkHeader({
   backTo,
+  backLabel,
   homework,
   materials,
   busy,
   aiGenerated,
   onPublish,
   onEdit,
+  onCopy,
   onAsk,
   onGenerate,
   onOpenQuestions,
 }: {
   backTo: string;
+  backLabel: string;
   homework: Homework;
   materials: Array<{ id?: number; fileName?: string; url?: string }>;
   busy: boolean;
@@ -450,6 +481,7 @@ function HomeworkHeader({
   aiGenerated: boolean;
   onPublish: () => void;
   onEdit: () => void;
+  onCopy: () => void;
   onAsk: (action: 'complete' | 'reopen' | 'cancel' | 'delete') => void;
   onGenerate: (kind: GenerateKind) => void;
   onOpenQuestions: () => void;
@@ -458,100 +490,32 @@ function HomeworkHeader({
   const isTest = homework.answerFormat === 'TEST';
 
   return (
-    <div className="card flex flex-col gap-3 p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <Link
-            to={backTo}
-            aria-label="К списку заданий"
-            className="text-subtle transition hover:text-ink"
-          >
-            <ArrowLeft className="size-5" />
-          </Link>
-          <h1 className="truncate text-2xl font-bold text-ink">{homework.title}</h1>
-          <HomeworkStatusChip status={homework.status} overdue={homework.overdue} />
-          {aiGenerated && <AiGeneratedBadge />}
-        </div>
+    <div className="card flex min-w-0 flex-col gap-5 p-4 sm:p-6">
+      <PageHeader title={homework.title} back={{ to: backTo, label: backLabel }}
+        meta={<><HomeworkStatusChip status={homework.status} overdue={homework.overdue} />
+          {aiGenerated && <AiGeneratedBadge />}</>}
+        actions={<>
+          {actions.canEdit && <Button variant="secondary" size="sm" onClick={onEdit} disabled={busy}>Редактировать</Button>}
+          {isTest && (actions.canEdit || (homework.questionCount ?? 0) > 0) &&
+            <Button variant="secondary" size="sm" onClick={onOpenQuestions} disabled={busy}>
+              {(homework.questionCount ?? 0) > 0 ? `Вопросы · ${homework.questionCount}` : 'Вопросы'}
+            </Button>}
+          <Button variant="secondary" size="sm" icon={<Copy className="size-4" />} onClick={onCopy} disabled={busy}>Скопировать в другой урок</Button>
+          {actions.canPublish && <Button size="sm" onClick={onPublish} loading={busy}>Опубликовать</Button>}
+          {actions.canComplete && <Button size="sm" onClick={() => onAsk('complete')} disabled={busy}>Завершить</Button>}
+          {actions.canReopen && <Button size="sm" onClick={() => onAsk('reopen')} disabled={busy}>Открыть повторно</Button>}
+          {(actions.canCancel || actions.canDelete) && <ActionMenu label="Другие действия с заданием" triggerLabel="Ещё" items={[
+            ...(actions.canCancel ? [{ label: 'Отменить задание', onSelect: () => onAsk('cancel'), disabled: busy, danger: true }] : []),
+            ...(actions.canDelete ? [{ label: 'Удалить черновик', onSelect: () => onAsk('delete'), disabled: busy, danger: true }] : []),
+          ]} />}
+        </>} />
+      {actions.canEdit && homework.status === 'DRAFT' && <div className="flex flex-wrap items-center gap-2 border-t border-line pt-4">
+        <span className="mr-1 text-13 font-medium text-muted">Помощь ИИ</span>
+        <Button variant="secondary" size="sm" icon={<Sparkles className="size-4" />} onClick={() => onGenerate('MATERIAL')} disabled={busy}>Создать текст задания</Button>
+        {isTest && <Button variant="secondary" size="sm" icon={<Sparkles className="size-4" />} onClick={() => onGenerate('TEST')} disabled={busy}>Создать вопросы теста</Button>}
+      </div>}
 
-        <div className="flex shrink-0 flex-wrap gap-2">
-          {actions.canEdit && (
-            <Button variant="secondary" size="sm" onClick={onEdit} disabled={busy}>
-              Редактировать
-            </Button>
-          )}
-          {/* Генерация — только пока задание черновик: после публикации ученики уже
-              видят текст, и подменять его машинным вариантом нельзя. */}
-          {/* Вопросы — только у теста, и показываем их даже когда их ноль: тест собирают
-              руками, не только моделью. У работы текстом вопросов не бывает вовсе, и
-              кнопка, ведущая в редактор, который откажет, — обещание, которого нет. */}
-          {isTest && (actions.canEdit || (homework.questionCount ?? 0) > 0) ? (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onOpenQuestions}
-              disabled={busy}
-            >
-              {(homework.questionCount ?? 0) > 0
-                ? `Вопросы · ${homework.questionCount}`
-                : 'Вопросы'}
-            </Button>
-          ) : null}
-          {/* Генерация — только пока задание черновик, и каждая кнопка наполняет своё:
-              одна текст задания, другая вопросы. «Конспект» она называлась ошибочно —
-              модель составляет условие для ученика, а не пересказ урока. */}
-          {actions.canEdit && homework.status === 'DRAFT' && (
-            <>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => onGenerate('MATERIAL')}
-                disabled={busy}
-              >
-                <Sparkles className="size-3.5" aria-hidden />
-                Текст задания
-              </Button>
-              {isTest && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => onGenerate('TEST')}
-                  disabled={busy}
-                >
-                  <Sparkles className="size-3.5" aria-hidden />
-                  Вопросы теста
-                </Button>
-              )}
-            </>
-          )}
-          {actions.canPublish && (
-            <Button size="sm" onClick={onPublish} loading={busy}>
-              Опубликовать
-            </Button>
-          )}
-          {actions.canCancel && (
-            <Button variant="secondary" size="sm" onClick={() => onAsk('cancel')} disabled={busy}>
-              Отменить
-            </Button>
-          )}
-          {actions.canComplete && (
-            <Button variant="secondary" size="sm" onClick={() => onAsk('complete')} disabled={busy}>
-              Завершить
-            </Button>
-          )}
-          {actions.canReopen && (
-            <Button size="sm" onClick={() => onAsk('reopen')} disabled={busy}>
-              Открыть повторно
-            </Button>
-          )}
-          {actions.canDelete && (
-            <Button variant="danger" size="sm" onClick={() => onAsk('delete')} disabled={busy}>
-              Удалить
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <dl className="flex flex-wrap items-center gap-x-6 gap-y-1.5 text-13">
+      <dl className="flex flex-wrap items-start gap-x-6 gap-y-3 rounded-xl bg-canvas p-4 text-13">
         <Meta label="Предмет" value={homework.subjectName} />
         <Meta
           label="Класс"
@@ -589,7 +553,7 @@ function HomeworkHeader({
           промпта (HomeworkAiPrompts), да и учитель может набрать формулу руками.
           Сырым текстом ученик увидел бы \frac вместо дроби. */}
       {homework.description ? (
-        <MathText text={homework.description} className="block text-sm text-muted" />
+        <MathText text={homework.description} className="block break-words text-sm leading-relaxed text-ink" />
       ) : null}
 
       {materials.length > 0 && (
@@ -635,17 +599,17 @@ function RosterTable({
   canOpen: boolean;
   onOpen: (student: RosterEntry) => void;
 }) {
-  if (loading) return <div className="card"><LoadingBlock label="Загрузка учеников…" /></div>;
+  if (loading) return <div className="card px-4 sm:px-6"><LoadingBlock label="Загрузка учеников…" /></div>;
   if (error) {
     return (
-      <div className="card">
+      <div className="card px-4 sm:px-6">
         <ErrorBlock message="Не удалось загрузить список учеников" onRetry={onRetry} />
       </div>
     );
   }
   if (students.length === 0) {
     return (
-      <div className="card">
+      <div className="card px-4 sm:px-6">
         <EmptyBlock title="Нет учеников" description="Под выбранный фильтр не подходит ни один ученик." />
       </div>
     );
@@ -654,7 +618,7 @@ function RosterTable({
   return (
     <div className="card overflow-hidden p-0">
       <table className="w-full border-collapse">
-        <thead className="border-b border-line bg-neutral-bg/40">
+        <thead className="border-b border-line bg-canvas">
           <tr>
             <th scope="col" className="px-5 py-3 text-left text-10 font-medium uppercase tracking-wide text-subtle">Ученик</th>
             <th scope="col" className="w-40 px-5 py-3 text-left text-10 font-medium uppercase tracking-wide text-subtle">Статус</th>
@@ -687,7 +651,7 @@ function RosterTable({
                 className={cx(
                   'border-b border-line last:border-b-0 transition',
                   clickable
-                    ? 'cursor-pointer hover:bg-neutral-bg/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400/50'
+                    ? 'cursor-pointer hover:bg-neutral-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400/50'
                     : 'cursor-default',
                 )}
               >

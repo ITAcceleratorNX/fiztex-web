@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AdminJournal, UnfilledLesson } from '@/lib/attendanceAdminApi';
 import { AttendanceAdminPage } from './AttendanceAdminPage';
 
@@ -125,6 +125,9 @@ function renderPage(path = '/attendance') {
 
 describe('AttendanceAdminPage', () => {
   beforeEach(() => {
+    // Only Date is frozen: user-event and React keep their real timers.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 8, 15, 12));
     vi.clearAllMocks();
     classSubgroups.mockReturnValue({
       data: [
@@ -150,6 +153,8 @@ describe('AttendanceAdminPage', () => {
       refetch: vi.fn(),
     });
   });
+
+  afterEach(() => vi.useRealTimers());
 
   /**
    * Таблицы «ученики × уроки» без класса не существует, поэтому запрос не уходит вовсе:
@@ -243,11 +248,11 @@ describe('AttendanceAdminPage', () => {
     expect(classStudents).toHaveBeenCalledWith(3, null);
   });
 
-  it('месяц по умолчанию берётся из границ учебного года', async () => {
+  it('текущий месяц выбирается из учебного года и меняется в фильтре', async () => {
     const user = userEvent.setup();
     renderPage('/attendance?classId=11');
 
-    // Сентябрь — первый месяц года, он же и подставлен без параметра в адресе.
+    // В этом сценарии сейчас сентябрь; реальная дата запуска на выбор не влияет.
     expect(journalHook).toHaveBeenCalledWith(expect.objectContaining({ month: '2026-09' }));
 
     await user.click(screen.getByRole('button', { name: 'Месяц' }));
@@ -259,6 +264,28 @@ describe('AttendanceAdminPage', () => {
     expect(journalHook).toHaveBeenLastCalledWith(
       expect.objectContaining({ month: '2026-10', classId: 11 }),
     );
+  });
+
+  it.each([
+    { today: new Date(2026, 8, 15, 12), expected: '2026-09' },
+    { today: new Date(2026, 9, 15, 12), expected: '2026-10' },
+    { today: new Date(2027, 0, 15, 12), expected: '2027-01' },
+    { today: new Date(2026, 7, 15, 12), expected: '2027-05' },
+    { today: new Date(2027, 7, 15, 12), expected: '2027-05' },
+  ])('выбирает $expected при текущей дате $today', ({ today, expected }) => {
+    vi.setSystemTime(today);
+    renderPage('/attendance?classId=11');
+
+    // Внутри выбранного года — текущий месяц, вне его — последний доступный.
+    expect(journalHook).toHaveBeenCalledWith(expect.objectContaining({ month: expected }));
+    expect(unfilledHook).toHaveBeenCalledWith(expect.objectContaining({ month: expected }));
+  });
+
+  it('месяц из адреса имеет приоритет над текущей датой', () => {
+    vi.setSystemTime(new Date(2026, 9, 15, 12));
+    renderPage('/attendance?classId=11&month=2026-11');
+
+    expect(journalHook).toHaveBeenCalledWith(expect.objectContaining({ month: '2026-11' }));
   });
 
   it('клетка и заголовок столбца ведут в лист урока — правят отметку там', () => {

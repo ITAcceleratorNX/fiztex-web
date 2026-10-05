@@ -10,13 +10,13 @@ const COLUMNS = [
   { key: 'title', label: 'Название', className: 'w-auto' },
   { key: 'subject', label: 'Предмет', className: 'w-40' },
   { key: 'class', label: 'Класс', className: 'w-24' },
-  { key: 'lesson', label: 'Привязка', className: 'w-32' },
-  { key: 'due', label: 'Дедлайн', className: 'w-28' },
+  { key: 'lesson', label: 'Урок', className: 'w-32' },
+  { key: 'due', label: 'Срок сдачи', className: 'w-28' },
   { key: 'status', label: 'Статус', className: 'w-36' },
-  { key: 'progress', label: 'Прогресс', className: 'w-24' },
+  { key: 'progress', label: 'Сдали', className: 'w-24' },
 ] as const;
 
-const HEAD_CELL = 'px-5 py-3 text-left text-10 font-medium uppercase tracking-wide text-subtle';
+const HEAD_CELL = 'px-5 py-3 text-left text-xs font-semibold text-muted';
 
 /**
  * Таблица заданий, сгруппированная по классу (Figma 856:20520).
@@ -32,9 +32,9 @@ export function HomeworkTable({ rows, returnTo }: { rows: Homework[]; returnTo?:
   const groups = groupByClass(rows);
 
   return (
-    <div className="card overflow-hidden p-0">
+    <div className="card overflow-x-auto p-0">
       <table className="w-full border-collapse">
-        <thead className="border-b border-line bg-neutral-bg/40">
+        <thead className="border-b border-line bg-canvas">
           <tr>
             {COLUMNS.map((column) => (
               <th key={column.key} scope="col" className={cx(HEAD_CELL, column.className)}>
@@ -46,7 +46,7 @@ export function HomeworkTable({ rows, returnTo }: { rows: Homework[]; returnTo?:
         <tbody>
           {groups.map((group, index) => (
             <Fragment key={`${group.className}:${index}`}>
-              <tr className="bg-neutral-bg/40">
+              <tr className="bg-canvas">
                 <th
                   scope="colgroup"
                   colSpan={COLUMNS.length}
@@ -83,7 +83,7 @@ function HomeworkRow({ row, onOpen }: { row: Homework; onOpen: () => void }) {
       tabIndex={0}
       role="button"
       aria-label={`Открыть задание «${row.title ?? ''}»`}
-      className="cursor-pointer border-b border-line last:border-b-0 transition hover:bg-neutral-bg/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400/50"
+      className="cursor-pointer border-b border-line last:border-b-0 transition hover:bg-neutral-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400/50"
     >
       <td className="px-5 py-3 text-sm font-medium text-ink">
         <span className="flex items-center gap-2">
@@ -176,9 +176,9 @@ function progressLabel(row: Homework): string {
 /** Скелет строки таблицы (Figma 856:20805): та же сетка колонок, чтобы шапка не дёргалась. */
 export function HomeworkTableSkeleton({ rows = 8 }: { rows?: number }) {
   return (
-    <div className="card overflow-hidden p-0">
+    <div className="card overflow-x-auto p-0">
       <table className="w-full border-collapse">
-        <thead className="border-b border-line bg-neutral-bg/40">
+        <thead className="border-b border-line bg-canvas">
           <tr>
             {COLUMNS.map((column) => (
               <th key={column.key} scope="col" className={cx(HEAD_CELL, column.className)}>

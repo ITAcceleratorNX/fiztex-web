@@ -2,6 +2,7 @@ import { request, requestBlob, requestMultipart } from '@/lib/api';
 import type { Schema } from '@/lib/apiSchemas';
 
 export type Textbook = Schema<'TextbookView'>;
+export type TextbookCard = Schema<'TextbookCardView'>;
 export type TextbookBinding = Schema<'TextbookBindingView'>;
 export type BindingOptions = Schema<'BindingOptionsView'>;
 export type BindingOptionsYear = Schema<'Year'>;
@@ -39,6 +40,10 @@ export type BindingFilters = {
  * библиотеки, архив и переименование в макетах пока не нарисованы.
  */
 export const teacherTextbooksApi = {
+  card(textbookId: number, signal?: AbortSignal): Promise<TextbookCard> {
+    return request<TextbookCard>(`/teacher/textbooks/${textbookId}`, { signal });
+  },
+
   /**
    * Загрузка файла в библиотеку. Сервер сам определяет формат по сигнатуре и ещё раз
    * проверяет дубль по содержимому: на повтор отвечает 409 `TEXTBOOK_DUPLICATE` с уже
