@@ -237,6 +237,7 @@ export const keys = {
   // Учебники: назначения живут в пространстве 'textbooks', учебники урока — под уроком.
   // Любое изменение назначений сбрасывает оба: у класса меняется и таблица, и выбор на уроке.
   textbookBindingOptions: ['textbooks', 'binding-options'] as const,
+  teacherTextbookCard: (id: number) => ['textbooks', 'card', id] as const,
   textbookBindings: (filters: BindingFilters | null) => ['textbooks', 'bindings', filters] as const,
   lessonTextbooks: (lessonId: number) => ['lessons', lessonId, 'textbooks'] as const,
   // Ежемесячная обратная связь учителя (monthly-feedback-contract §7). Листы месяца лежат под
@@ -2272,6 +2273,14 @@ export function useSetAnswerScores(homeworkId: number, studentProfileId: number)
 }
 
 // ---- Textbooks (LIBRARY-BE-001, docs/textbook-library-contract.md) ----
+
+export function useTeacherTextbookCard(id: number | null) {
+  return useQuery({
+    queryKey: keys.teacherTextbookCard(id ?? 0),
+    queryFn: ({ signal }) => teacherTextbooksApi.card(id as number, signal),
+    enabled: id != null,
+  });
+}
 
 export function useTextbookBindingOptions(enabled = true) {
   return useQuery({

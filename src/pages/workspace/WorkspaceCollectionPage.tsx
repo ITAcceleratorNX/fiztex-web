@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'reac
 import { ArrowLeft, FileText, Folder, Plus } from 'lucide-react';
 import { ActionMenu } from '@/components/ui/ActionMenu';
 import { Badge } from '@/components/ui/Badge';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Field, TextInput } from '@/components/ui/Field';
@@ -30,6 +31,7 @@ import { ReuseTestTemplateModal } from './ReuseTestTemplateModal';
 import { TestTemplateDetailModal } from './TestTemplateDetailModal';
 import { ReuseLessonPreparationModal } from './ReuseLessonPreparationModal';
 import { LessonPreparationDetailModal } from './LessonPreparationDetailModal';
+import { TextbookDetailModal } from './TextbookDetailModal';
 import { materialTypeLabels } from './materialTypeLabels';
 
 const sectionTypes: Record<string, WorkspaceMaterialType | null> = {
@@ -112,6 +114,7 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
   const [reuseItem, setReuseItem] = useState<WorkspaceSearchItem | null>(null);
   const [testDetail, setTestDetail] = useState<WorkspaceSearchItem | null>(null);
   const [preparationDetail, setPreparationDetail] = useState<WorkspaceSearchItem | null>(null);
+  const [textbookDetail, setTextbookDetail] = useState<WorkspaceSearchItem | null>(null);
   const rename = useRenameWorkspaceFolder();
   const deleteFolder = useDeleteWorkspaceFolder();
   const detach = useDetachWorkspaceFolderItem();
@@ -145,7 +148,7 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
       return;
     }
     if (item.sourceKind === 'teacher-textbook') {
-      navigate(ROUTES.textbooks);
+      setTextbookDetail(item);
       return;
     }
     if (item.sourceKind !== 'teacher-workspace-material' || !item.sourceId) {
@@ -215,7 +218,8 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
       <header className="mb-7 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Link to={ROUTES.workspace} aria-label="Вернуться в рабочее пространство" className="flex size-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200"><ArrowLeft className="size-5" /></Link>
-          <div><p className="text-11 font-semibold uppercase text-slate-500">Рабочее пространство</p>
+          <div><Breadcrumbs items={[{ label: 'Рабочее пространство', to: ROUTES.workspace },
+            { label: isFolder ? `Личная папка — ${title}` : title ?? 'Раздел' }]} />
             <h1 className="mt-1 text-2xl font-bold text-slate-900">{isFolder ? `Личная папка — ${title}` : title}</h1>
           </div>
         </div>
@@ -252,7 +256,8 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
         : reuseItem?.sourceKind === 'lesson-preparation'
           ? <ReuseLessonPreparationModal key={reuseItem.id} item={reuseItem} onClose={() => setReuseItem(null)} />
         : reuseItem && <ReuseMaterialModal key={reuseItem.id} item={reuseItem} onClose={() => setReuseItem(null)} />}
-      {testDetail && <TestTemplateDetailModal key={testDetail.id} item={testDetail} onClose={() => setTestDetail(null)}
+      {textbookDetail && <TextbookDetailModal key={textbookDetail.id} item={textbookDetail} onClose={() => setTextbookDetail(null)} />}
+      {testDetail && <TestTemplateDetailModal key={testDetail.id} item={testDetail} origin={location} onClose={() => setTestDetail(null)}
         onReuse={() => { setReuseItem(testDetail); setTestDetail(null); }} />}
       {preparationDetail && <LessonPreparationDetailModal key={preparationDetail.id} item={preparationDetail}
         onClose={() => setPreparationDetail(null)} onReuse={() => { setReuseItem(preparationDetail); setPreparationDetail(null); }} />}

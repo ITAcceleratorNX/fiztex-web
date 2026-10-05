@@ -1,4 +1,5 @@
 import { SCOPE_STATUSES, type HomeworkScope, type HomeworkStatus } from './homeworkApi';
+import { workspaceSectionLabel } from './workspaceSections';
 
 export interface HomeworkFilterValues {
   classId?: number;
@@ -72,7 +73,7 @@ function workspaceReturnTo(target: string | null): string | null {
   try {
     const url = new URL(target, 'https://fiztex.local');
     const folder = /^\/workspace\/folders\/([1-9]\d*)$/.exec(url.pathname);
-    const workspacePath = url.pathname === '/workspace' || url.pathname === '/workspace/sections/HOMEWORK'
+    const workspacePath = url.pathname === '/workspace' || workspaceSectionLabel(url.pathname) != null
       || (folder != null && Number.isSafeInteger(Number(folder[1])));
     if (url.origin === 'https://fiztex.local' && workspacePath) return `${url.pathname}${url.search}`;
   } catch {

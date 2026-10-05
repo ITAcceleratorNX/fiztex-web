@@ -20,6 +20,11 @@ import { ROUTES } from '@/lib/routes';
 import { openWorkspaceDocument } from '@/lib/teacherWorkspaceOpen';
 import type { WorkspaceMaterialType, WorkspaceSearchItem, WorkspaceFileType } from '@/lib/teacherWorkspaceApi';
 import { CreateFolderModal } from './CreateFolderModal';
+import { LessonPreparationDetailModal } from './LessonPreparationDetailModal';
+import { ReuseLessonPreparationModal } from './ReuseLessonPreparationModal';
+import { ReuseTestTemplateModal } from './ReuseTestTemplateModal';
+import { TestTemplateDetailModal } from './TestTemplateDetailModal';
+import { TextbookDetailModal } from './TextbookDetailModal';
 
 const sectionPresentation = {
   ACHIEVEMENTS: { description: 'Медали и грамоты', tone: 'orange', icon: Award },
@@ -131,6 +136,10 @@ export function WorkspaceHomePage() {
   const searchPage = validPage(params.get('page'));
   const [input, setInput] = useState(q);
   const [creating, setCreating] = useState(false);
+  const [textbookDetail, setTextbookDetail] = useState<WorkspaceSearchItem | null>(null);
+  const [testDetail, setTestDetail] = useState<WorkspaceSearchItem | null>(null);
+  const [preparationDetail, setPreparationDetail] = useState<WorkspaceSearchItem | null>(null);
+  const [reuseItem, setReuseItem] = useState<WorkspaceSearchItem | null>(null);
   const searchActive = Boolean(q.trim() || type || fileType);
   const home = useTeacherWorkspaceHome(folderPage);
   const search = useTeacherWorkspaceSearch({ q, type, fileType, page: searchPage }, searchActive);
@@ -159,12 +168,20 @@ export function WorkspaceHomePage() {
   }
 
   async function open(item: WorkspaceSearchItem) {
+    if (item.sourceKind === 'homework-test-template') {
+      setTestDetail(item);
+      return;
+    }
+    if (item.sourceKind === 'lesson-preparation') {
+      setPreparationDetail(item);
+      return;
+    }
     if (item.sourceKind === 'teacher-homework' && item.sourceId) {
       navigate(homeworkCardFromWorkspace(item.sourceId, location));
       return;
     }
     if (item.sourceKind === 'teacher-textbook') {
-      navigate(ROUTES.textbooks);
+      setTextbookDetail(item);
       return;
     }
     if (item.sourceKind === 'teacher-workspace-material') {
@@ -276,6 +293,15 @@ export function WorkspaceHomePage() {
         setCreating(false);
         if (folder.id != null) navigate(ROUTES.workspaceFolder(folder.id));
       }} />
+      {textbookDetail && <TextbookDetailModal key={textbookDetail.id} item={textbookDetail} onClose={() => setTextbookDetail(null)} />}
+      {testDetail && <TestTemplateDetailModal key={testDetail.id} item={testDetail} origin={location}
+        onClose={() => setTestDetail(null)} onReuse={() => { setReuseItem(testDetail); setTestDetail(null); }} />}
+      {preparationDetail && <LessonPreparationDetailModal key={preparationDetail.id} item={preparationDetail}
+        onClose={() => setPreparationDetail(null)} onReuse={() => { setReuseItem(preparationDetail); setPreparationDetail(null); }} />}
+      {reuseItem?.sourceKind === 'homework-test-template'
+        ? <ReuseTestTemplateModal key={reuseItem.id} item={reuseItem} onClose={() => setReuseItem(null)} />
+        : reuseItem?.sourceKind === 'lesson-preparation'
+          ? <ReuseLessonPreparationModal key={reuseItem.id} item={reuseItem} onClose={() => setReuseItem(null)} /> : null}
     </div>
   );
 }

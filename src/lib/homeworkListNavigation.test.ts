@@ -35,6 +35,8 @@ describe('URL списка домашних заданий', () => {
 
   it.each([
     '/workspace/sections/HOMEWORK?page=2',
+    '/workspace/sections/TESTS?page=2',
+    '/workspace/sections/TEXTBOOKS?page=1',
     '/workspace/folders/17?page=3',
     '/workspace?type=HOMEWORK&q=проверочная&page=1',
   ])('сохраняет возврат в рабочее пространство: %s', (source) => {
@@ -49,7 +51,7 @@ describe('URL списка домашних заданий', () => {
 
   it.each([
     'https://example.com/workspace', '//example.com/workspace', '/workspace\\evil',
-    '/workspace/sections/TEXTBOOKS', '/workspace/folders/0', '/workspace/folders/999999999999999999999',
+    '/workspace/sections/UNKNOWN', '/workspace/folders/0', '/workspace/folders/999999999999999999999',
     '/workspace#other', '/admin',
   ])('не принимает произвольный источник карточки %s', (source) => {
     const search = `?${new URLSearchParams({ returnTo: source })}`;

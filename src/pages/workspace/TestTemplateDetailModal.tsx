@@ -4,10 +4,12 @@ import { MathText } from '@/components/ui/MathText';
 import { Modal } from '@/components/ui/Modal';
 import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useTestTemplate } from '@/hooks/queries';
+import { homeworkCardFromWorkspace } from '@/lib/homeworkListNavigation';
 import type { WorkspaceSearchItem } from '@/lib/teacherWorkspaceApi';
 
-export function TestTemplateDetailModal({ item, onClose, onReuse }: {
+export function TestTemplateDetailModal({ item, origin, onClose, onReuse }: {
   item: WorkspaceSearchItem;
+  origin: { pathname: string; search: string };
   onClose: () => void;
   onReuse: () => void;
 }) {
@@ -26,7 +28,7 @@ export function TestTemplateDetailModal({ item, onClose, onReuse }: {
           <MathText text={question.text ?? ''} />
         </div>)}
         {template.data?.sourceHomeworkId != null && <Link className="text-sm font-semibold text-navy-700 hover:underline"
-          to={`/homework/${template.data.sourceHomeworkId}`} onClick={onClose}>Открыть исходное ДЗ</Link>}
+          to={homeworkCardFromWorkspace(template.data.sourceHomeworkId, origin)} onClick={onClose}>Открыть исходное ДЗ</Link>}
       </div>}
   </Modal>;
 }

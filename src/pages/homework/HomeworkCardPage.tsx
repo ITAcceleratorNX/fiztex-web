@@ -28,6 +28,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
 import { homeworkCardReturnTo, withHomeworkReturnTo } from '@/lib/homeworkListNavigation';
 import { ROUTES } from '@/lib/routes';
+import { workspaceSectionLabel } from '@/lib/workspaceSections';
 import { cx, formatDateTime } from '@/lib/format';
 import { homeworkApi, type Homework, type RosterEntry } from '@/lib/homeworkApi';
 import {
@@ -58,8 +59,8 @@ export function HomeworkCardPage() {
   const location = useLocation();
   const backTo = homeworkCardReturnTo(location.search);
   const fromWorkspace = backTo.startsWith(ROUTES.workspace);
-  const sourceLabel = backTo.startsWith('/workspace/sections/HOMEWORK') ? 'Домашние задания'
-    : backTo.startsWith('/workspace/folders/') ? 'Личная папка' : 'Результаты поиска';
+  const sourceLabel = workspaceSectionLabel(backTo)
+    ?? (backTo.startsWith('/workspace/folders/') ? 'Личная папка' : 'Результаты поиска');
   const backLabel = fromWorkspace ? `К разделу «${sourceLabel}»` : 'К списку заданий';
   const queryClient = useQueryClient();
   const toast = useToast();
