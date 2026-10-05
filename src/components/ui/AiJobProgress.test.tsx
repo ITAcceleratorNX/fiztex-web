@@ -15,7 +15,7 @@ function job(overrides: Partial<HomeworkAiJob>): HomeworkAiJob {
 describe('AiJobProgress', () => {
   it('называет фазу словами и добавляет счётчик шагов', () => {
     render(<AiJobProgress job={job({ phase: 'READING_MATERIALS', progressDone: 4, progressTotal: 12 })} />);
-    expect(screen.getByText('Читаю материалы урока · 4 из 12')).toBeInTheDocument();
+    expect(screen.getByText('Читаю материалы · 4 из 12')).toBeInTheDocument();
   });
 
   /** «1 из 1» — шум: у одиночного вызова бэкенд счётчик и не присылает. */

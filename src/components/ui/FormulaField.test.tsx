@@ -88,6 +88,15 @@ describe('FormulaField', () => {
     expect(onChange).toHaveBeenCalledWith('Дано и $y$');
   });
 
+  it('при сохранении блокирует текст и правку формул, оставляя предпросмотр', () => {
+    render(<FormulaField value="Дано $x$" onChange={vi.fn()} disabled ariaLabel="Текст вопроса" />);
+    expect(screen.getByLabelText('Текст вопроса')).toBeDisabled();
+    expect(screen.queryByText('Формула')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Изменить формулу')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Удалить формулу')).not.toBeInTheDocument();
+    expect(screen.getByText('Так увидит ученик')).toBeInTheDocument();
+  });
+
   it('без формул предпросмотр не показывается', () => {
     render(<FormulaField value="Столица Казахстана?" onChange={vi.fn()} />);
     expect(screen.queryByText('Так увидит ученик')).toBeNull();

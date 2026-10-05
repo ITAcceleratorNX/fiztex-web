@@ -94,7 +94,7 @@ function phaseLabel(job: ProgressJob): string {
 }
 
 const PHASE_LABELS: Record<string, string> = {
-  READING_MATERIALS: 'Читаю материалы урока',
+  READING_MATERIALS: 'Читаю материалы',
   CALLING_MODEL: 'Составляю',
   APPLYING: 'Почти готово',
 };

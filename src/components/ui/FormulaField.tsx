@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { Sigma, Trash2 } from 'lucide-react';
 import { cx } from '@/lib/format';
-import { Formula } from './MathText';
+import { Formula, MathText } from './MathText';
+import { useFieldControlProps } from './fieldContext';
 import { FormulaEditorModal } from './FormulaEditorModal';
 import {
   insertFormulaAt,
@@ -33,6 +34,7 @@ export function FormulaField({
   rows = 3,
   multiline = true,
   invalid = false,
+  disabled = false,
   ariaLabel,
 }: {
   value: string;
@@ -41,8 +43,10 @@ export function FormulaField({
   rows?: number;
   multiline?: boolean;
   invalid?: boolean;
+  disabled?: boolean;
   ariaLabel?: string;
 }) {
+  const fieldProps = useFieldControlProps({ ariaLabel, ariaInvalid: invalid || undefined });
   const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
   /** `null` — в поле ещё не ставили курсор: формула тогда уходит в конец, а не в начало. */
   const cursorRef = useRef<number | null>(null);
@@ -63,7 +67,7 @@ export function FormulaField({
   }
 
   function handleSave(latex: string, display: boolean) {
-    if (!editing) return;
+    if (!editing || disabled) return;
     if (editing.index < 0) {
       const result = insertFormulaAt(value, cursorRef.current ?? value.length, latex, display);
       onChange(result.text);
@@ -75,7 +79,9 @@ export function FormulaField({
   }
 
   const inputProps = {
+    ...fieldProps,
     value,
+    disabled,
     placeholder,
     'aria-label': ariaLabel,
     onChange: (event: { target: { value: string } }) => onChange(event.target.value),
@@ -108,7 +114,7 @@ export function FormulaField({
         />
       )}
 
-      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+      {!disabled && <div className="mt-1.5 flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={() => {
@@ -125,24 +131,24 @@ export function FormulaField({
             Щёлкните по формуле в предпросмотре, чтобы изменить её
           </span>
         )}
-      </div>
+      </div>}
 
       {formulaCount > 0 && (
         <div className="mt-2 rounded-xl bg-slate-50 px-3 py-2">
           <p className="text-11 font-semibold uppercase tracking-wide text-slate-400">
             Так увидит ученик
           </p>
-          <div className="mt-1 text-[15px] leading-relaxed text-slate-800">
-            <EditableFormulaPreview
+          <div className="mt-1 text-15 leading-relaxed text-slate-800">
+            {disabled ? <MathText text={value} /> : <EditableFormulaPreview
               value={value}
               onEdit={(index, latex, display) => setEditing({ index, latex, display })}
               onRemove={(index) => onChange(removeFormulaAt(value, index))}
-            />
+            />}
           </div>
         </div>
       )}
 
-      {editing && (
+      {editing && !disabled && (
         <FormulaEditorModal
           open
           initialLatex={editing.latex}

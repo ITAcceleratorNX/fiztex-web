@@ -47,8 +47,8 @@ export function QuestionCard({
     <div
       className={
         invalid
-          ? 'rounded-xl border border-red-300 bg-red-50/40 p-4'
-          : 'rounded-xl border border-slate-200 bg-white p-4'
+          ? 'min-w-0 rounded-2xl border border-red-300 bg-red-50/40 p-4 sm:p-6'
+          : 'min-w-0 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6'
       }
     >
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
@@ -63,7 +63,7 @@ export function QuestionCard({
               onClick={() => onMove(-1)}
               disabled={index === 0}
               aria-label="Выше"
-              className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 disabled:opacity-30"
+              className="rounded-lg p-2.5 text-slate-500 transition hover:bg-slate-100 disabled:opacity-30"
             >
               <ArrowUp className="size-4" />
             </button>
@@ -72,7 +72,7 @@ export function QuestionCard({
               onClick={() => onMove(1)}
               disabled={index === total - 1}
               aria-label="Ниже"
-              className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 disabled:opacity-30"
+              className="rounded-lg p-2.5 text-slate-500 transition hover:bg-slate-100 disabled:opacity-30"
             >
               <ArrowDown className="size-4" />
             </button>
@@ -84,7 +84,7 @@ export function QuestionCard({
               disabled={regenerating != null}
               aria-label="Заменить вопрос"
               title="Заменить вопрос другим"
-              className="rounded-lg p-1.5 text-slate-400 transition hover:bg-brand-50 hover:text-brand-600 disabled:opacity-30"
+              className="rounded-lg p-2.5 text-slate-500 transition hover:bg-brand-50 hover:text-brand-600 disabled:opacity-30"
             >
               <RefreshCw className="size-4" />
             </button></>}
@@ -92,7 +92,7 @@ export function QuestionCard({
               type="button"
               onClick={onRemove}
               aria-label="Удалить вопрос"
-              className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+              className="rounded-lg p-2.5 text-slate-500 transition hover:bg-red-50 hover:text-red-500"
             >
               <Trash2 className="size-4" />
             </button>
@@ -102,8 +102,8 @@ export function QuestionCard({
 
       {regenerating && <AiJobProgress job={regenerating} className="mb-4" />}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Тип вопроса">
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Field label="Тип вопроса" className="sm:col-span-2">
           <Select
             value={question.type}
             disabled={readOnly}
@@ -131,6 +131,7 @@ export function QuestionCard({
       <div className="mt-4">
         <Field label="Текст вопроса" required>
           <FormulaField
+            disabled={readOnly}
             value={question.text}
             onChange={(text) => onChange({ ...question, text })}
             placeholder="Сформулируйте вопрос"
@@ -141,13 +142,14 @@ export function QuestionCard({
 
       {isChoiceType(question.type) && (
         <div className="mt-4 space-y-2">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm font-medium text-slate-700">Варианты ответа</p>
             {!readOnly && (
               <Button
                 type="button"
                 variant="secondary"
                 size="sm"
+                icon={<Plus className="size-4" />}
                 disabled={question.options.length >= 10}
                 onClick={() =>
                   onChange({
@@ -159,11 +161,11 @@ export function QuestionCard({
                   })
                 }
               >
-                <Plus className="size-3.5" aria-hidden />
-                Вариант
+                Добавить вариант
               </Button>
             )}
           </div>
+          <p className="text-13 text-muted">{question.type === 'SINGLE_CHOICE' ? 'Отметьте один правильный ответ.' : 'Отметьте все правильные ответы.'}</p>
           {question.options.map((option, optionIndex) => (
             <div key={option.localId} className="flex items-start gap-2">
               <input
@@ -171,11 +173,12 @@ export function QuestionCard({
                 checked={option.correct}
                 disabled={readOnly}
                 onChange={() => onChange(withCorrect(question, optionIndex))}
-                className="mt-3 size-4 shrink-0 accent-brand-500"
+                className="mt-3 size-5 shrink-0 accent-brand-500"
                 aria-label={`Вариант ${optionIndex + 1} правильный`}
               />
-              <div className="flex-1">
+              <div className="min-w-0 flex-1">
                 <FormulaField
+                  disabled={readOnly}
                   multiline={false}
                   value={option.text}
                   onChange={(text) =>
@@ -201,7 +204,7 @@ export function QuestionCard({
                   }
                   disabled={question.options.length <= 2}
                   aria-label={`Удалить вариант ${optionIndex + 1}`}
-                  className="mt-1 rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-500 disabled:opacity-30"
+                  className="mt-1 rounded-lg p-2.5 text-slate-500 transition hover:bg-red-50 hover:text-red-500 disabled:opacity-30"
                 >
                   <Trash2 className="size-4" />
                 </button>
@@ -215,6 +218,7 @@ export function QuestionCard({
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Эталонный ответ" hint="Ученику не показывается">
             <FormulaField
+              disabled={readOnly}
               value={question.referenceAnswer}
               onChange={(referenceAnswer) => onChange({ ...question, referenceAnswer })}
               placeholder="По нему вы будете проверять работу"
@@ -223,6 +227,7 @@ export function QuestionCard({
           </Field>
           <Field label="Критерии оценки" hint="Их использует подсказка ИИ">
             <FormulaField
+              disabled={readOnly}
               value={question.gradingCriteria}
               onChange={(gradingCriteria) => onChange({ ...question, gradingCriteria })}
               placeholder="За что снижать балл"
