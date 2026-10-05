@@ -9,6 +9,17 @@ export type LessonGradeEntry = Schema<'LessonGradeEntryView'>;
 
 export type GradeType = NonNullable<Grade['gradeType']>;
 export type GradeWriteState = NonNullable<LessonGradeSheet['writeState']>;
+export type GradeValueMode = NonNullable<LessonGradeSheet['valueMode']>;
+export type SheetWorkType = Schema<'SheetWorkTypeView'>;
+export type GradeValueModeInfo = Schema<'GradeValueModeView'>;
+
+/**
+ * Значение оценки — ровно одна из двух форм (GRADES-003). Какую слать, решает период:
+ * лист урока и `value-mode` задания называют её в `valueMode`.
+ */
+export type GradeValueInput =
+  | { scaleCode: string; score?: never; maxScore?: never }
+  | { scaleCode?: never; score: number; maxScore?: number | null };
 
 /** Коды отказов, на которые у экрана оценок есть свой ответ (grades-read-contract §9). */
 export const GRADE_ERRORS = {
@@ -23,6 +34,10 @@ export const GRADE_ERRORS = {
   substituteNotPermitted: 'GRADE_SUBSTITUTE_NOT_PERMITTED',
   substituteWindowNotOpen: 'GRADE_SUBSTITUTE_WINDOW_NOT_OPEN',
   substituteWindowClosed: 'GRADE_SUBSTITUTE_WINDOW_CLOSED',
+  valueFormMismatch: 'GRADE_VALUE_FORM_MISMATCH',
+  scoreOutOfRange: 'GRADE_SCORE_OUT_OF_RANGE',
+  maxScoreInvalid: 'GRADE_MAX_SCORE_INVALID',
+  workTypeNotInPolicy: 'GRADE_WORK_TYPE_NOT_IN_POLICY',
 } as const;
 
 /**
@@ -33,8 +48,9 @@ export const GRADE_ERRORS = {
  * из четырёх запросов и выводить права на клиенте нельзя — правила окна замещающего
  * живут на сервере и меняются там же.
  *
- * <p>Значение оценки — всегда `scaleCode` («4+»), а не число: числовое представление
- * приходит рядом только для показа. Шкала — справочник с сервера, не константа клиента.
+ * <p>Значение оценки — `scaleCode` («4+») по старой шкале или `score`/`maxScore` в периоде,
+ * который считается по политике оценивания (GRADES-003). Шкала и типы работ — справочники
+ * с сервера, не константы клиента.
  */
 export const gradesApi = {
   scale(signal?: AbortSignal): Promise<GradeScaleValue[]> {
@@ -45,13 +61,14 @@ export const gradesApi = {
     return request<LessonGradeSheet>(`/lessons/${lessonId}/grades/sheet`, { signal });
   },
 
-  create(body: {
-    studentProfileId: number;
-    sourceType: 'LESSON' | 'HOMEWORK';
-    sourceId: number;
-    scaleCode: string;
-    gradeType?: GradeType | null;
-  }): Promise<Grade> {
+  create(
+    body: {
+      studentProfileId: number;
+      sourceType: 'LESSON' | 'HOMEWORK';
+      sourceId: number;
+      gradeType?: GradeType | null;
+    } & GradeValueInput,
+  ): Promise<Grade> {
     return request<Grade>('/grades', { method: 'POST', body });
   },
 
@@ -59,8 +76,13 @@ export const gradesApi = {
    * Правка описывает **полное** состояние обоих полей: не переданный `gradeType`
    * означает «типа нет», а не «оставить прежний» (контракт §6).
    */
-  update(gradeId: number, body: { scaleCode: string; gradeType?: GradeType | null }): Promise<Grade> {
+  update(gradeId: number, body: { gradeType?: GradeType | null } & GradeValueInput): Promise<Grade> {
     return request<Grade>(`/grades/${gradeId}`, { method: 'PATCH', body });
+  },
+
+  /** Как ставить оценку за задание: шкалой или баллом (GRADES-003). */
+  homeworkValueMode(homeworkId: number, signal?: AbortSignal): Promise<GradeValueModeInfo> {
+    return request<GradeValueModeInfo>(`/homework/${homeworkId}/grades/value-mode`, { signal });
   },
 
   /** Мягкое удаление: ответ — состояние оценки после снятия, повтор идемпотентен. */

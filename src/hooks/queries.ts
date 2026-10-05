@@ -28,7 +28,8 @@ import {
   type TeacherJournalQuery,
 } from '@/lib/attendanceApi';
 import { attendanceQrApi, type AttendanceQrSession } from '@/lib/attendanceQrApi';
-import { gradesApi, type GradeType } from '@/lib/gradesApi';
+import { gradesApi, type GradeType, type GradeValueInput } from '@/lib/gradesApi';
+import { breakdownApi, gradingPolicyApi, type GradingPolicyContent } from '@/lib/gradingApi';
 import { profileApi } from '@/lib/profileApi';
 import {
   finalGradesApi,
@@ -1231,12 +1232,12 @@ function useGradeCommand<TVars>(lessonId: number, mutationFn: (vars: TVars) => P
 export function useCreateGrade(lessonId: number) {
   return useGradeCommand(
     lessonId,
-    (vars: { studentProfileId: number; scaleCode: string; gradeType?: GradeType | null }) =>
+    (vars: { studentProfileId: number; gradeType?: GradeType | null } & GradeValueInput) =>
       gradesApi.create({
+        ...valueOf(vars),
         studentProfileId: vars.studentProfileId,
         sourceType: 'LESSON',
         sourceId: lessonId,
-        scaleCode: vars.scaleCode,
         gradeType: vars.gradeType ?? null,
       }),
   );
@@ -1275,22 +1276,18 @@ export function useSetHomeworkGrade(homeworkId: number) {
     homeworkId,
     (vars: {
       studentProfileId: number;
-      scaleCode: string;
       gradeType?: GradeType | null;
       gradeId?: number | null;
-    }) =>
+    } & GradeValueInput) =>
       // Вторая оценка за задание отклоняется (GRADE_HOMEWORK_ALREADY_GRADED):
       // исправляют существующую, а не создают ещё одну.
       vars.gradeId
-        ? gradesApi.update(vars.gradeId, {
-            scaleCode: vars.scaleCode,
-            gradeType: vars.gradeType ?? null,
-          })
+        ? gradesApi.update(vars.gradeId, { ...valueOf(vars), gradeType: vars.gradeType ?? null })
         : gradesApi.create({
+            ...valueOf(vars),
             studentProfileId: vars.studentProfileId,
             sourceType: 'HOMEWORK',
             sourceId: homeworkId,
-            scaleCode: vars.scaleCode,
             gradeType: vars.gradeType ?? null,
           }),
   );
@@ -1304,13 +1301,34 @@ export function useRemoveHomeworkGrade(homeworkId: number) {
 export function useUpdateGrade(lessonId: number) {
   return useGradeCommand(
     lessonId,
-    (vars: { gradeId: number; scaleCode: string; gradeType?: GradeType | null }) =>
-      gradesApi.update(vars.gradeId, { scaleCode: vars.scaleCode, gradeType: vars.gradeType ?? null }),
+    (vars: { gradeId: number; gradeType?: GradeType | null } & GradeValueInput) =>
+      gradesApi.update(vars.gradeId, { ...valueOf(vars), gradeType: vars.gradeType ?? null }),
   );
 }
 
 export function useDeleteGrade(lessonId: number) {
   return useGradeCommand(lessonId, (vars: { gradeId: number }) => gradesApi.remove(vars.gradeId));
+}
+
+/**
+ * Значение оценки из переменных команды — ровно одна форма (GRADES-003). Лишние поля
+ * (`studentProfileId`, `gradeId`) в тело не попадают: сервер отклоняет `scaleCode` рядом с
+ * баллом, и «забытое» поле превратилось бы в 400.
+ */
+function valueOf(vars: GradeValueInput): GradeValueInput {
+  return vars.scaleCode != null
+    ? { scaleCode: vars.scaleCode }
+    : { score: vars.score as number, maxScore: vars.maxScore ?? null };
+}
+
+/** Форма оценки за задание: шкала или баллы (GRADES-003). Меняется только активацией политики. */
+export function useHomeworkValueMode(homeworkId: number | null) {
+  return useQuery({
+    queryKey: ['homework', homeworkId ?? 0, 'grades', 'value-mode'],
+    queryFn: ({ signal }) => gradesApi.homeworkValueMode(homeworkId as number, signal),
+    enabled: homeworkId != null,
+    staleTime: 5 * 60 * 1000,
+  });
 }
 
 // ---- Журнал и итоги четверти (GRADEBOOK-001, GRADEBOOK-002) ----
@@ -1407,6 +1425,88 @@ export function usePublishClassFinals() {
       subgroupId?: number | null;
     }) => finalGradesApi.publishClass(vars),
   );
+}
+
+// ---- Критериальное оценивание (GRADES-003) ----
+
+/**
+ * Расшифровка процента периода. Ключ под деревом `gradebook`: правка оценки и выставление
+ * итога сбрасывают его вместе с журналом — расшифровка обязана совпадать со строкой.
+ */
+export function usePeriodBreakdown(
+  query: { studentProfileId: number; subjectId: number; academicPeriodId: number } | null,
+) {
+  return useQuery({
+    queryKey: ['gradebook', 'breakdown', query?.studentProfileId ?? 0, query?.subjectId ?? 0, query?.academicPeriodId ?? 0],
+    queryFn: ({ signal }) => breakdownApi.forStudent(query!, signal),
+    enabled: query != null,
+  });
+}
+
+export function useActiveGradingPolicy(academicYearId: number | null) {
+  return useQuery({
+    queryKey: ['grading-policy', 'active', academicYearId ?? 0],
+    queryFn: ({ signal }) => gradingPolicyApi.active(academicYearId as number, signal),
+    enabled: academicYearId != null,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useGradingPolicies(academicYearId: number | null) {
+  return useQuery({
+    queryKey: ['grading-policy', 'list', academicYearId ?? 0],
+    queryFn: ({ signal }) => gradingPolicyApi.list(academicYearId as number, signal),
+    enabled: academicYearId != null,
+  });
+}
+
+export function useGradingPolicyTemplates() {
+  return useQuery({
+    queryKey: ['grading-policy', 'templates'],
+    queryFn: ({ signal }) => gradingPolicyApi.templates(signal),
+    staleTime: Infinity,
+  });
+}
+
+export function useGradingPolicyHistory(policyId: number | null) {
+  return useQuery({
+    queryKey: ['grading-policy', 'history', policyId ?? 0],
+    queryFn: ({ signal }) => gradingPolicyApi.history(policyId as number, signal),
+    enabled: policyId != null,
+  });
+}
+
+/**
+ * Команды политики. Активация меняет расчёт всего года — сбрасывается и журнал: строки,
+ * которые были средним, становятся процентом.
+ */
+function useGradingPolicyCommand<TVars, TResult>(mutationFn: (vars: TVars) => Promise<TResult>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['grading-policy'] });
+      qc.invalidateQueries({ queryKey: ['gradebook'] });
+      qc.invalidateQueries({ queryKey: ['lessons'] });
+    },
+  });
+}
+
+export function useCreateGradingPolicy() {
+  return useGradingPolicyCommand(gradingPolicyApi.create);
+}
+
+export function useUpdateGradingPolicy() {
+  return useGradingPolicyCommand((vars: { policyId: number; content: GradingPolicyContent }) =>
+    gradingPolicyApi.update(vars.policyId, vars.content));
+}
+
+export function useDeleteGradingPolicy() {
+  return useGradingPolicyCommand((policyId: number) => gradingPolicyApi.remove(policyId));
+}
+
+export function useActivateGradingPolicy() {
+  return useGradingPolicyCommand((policyId: number) => gradingPolicyApi.activate(policyId));
 }
 
 // ---- Анонсы вступительных тестов ----

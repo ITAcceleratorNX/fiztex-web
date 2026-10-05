@@ -3,15 +3,18 @@ import { Award } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { GradeChip } from '@/components/ui/GradeChip';
 import { GradePicker } from '@/components/ui/GradePicker';
+import { PointsPicker } from '@/components/ui/PointsPicker';
 import { useToast } from '@/context/ToastContext';
 import {
   useGradeScale,
   useHomeworkGrades,
+  useHomeworkValueMode,
   useRemoveHomeworkGrade,
   useSetHomeworkGrade,
 } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import type { GradeType } from '@/lib/gradesApi';
+import { gradeValueLabel } from '@/lib/gradesModel';
 
 /**
  * Оценка за домашнее задание.
@@ -23,6 +26,10 @@ import type { GradeType } from '@/lib/gradesApi';
  *
  * Тип оценки не спрашиваем: у источника `HOMEWORK` пустое значение сервер сохраняет
  * как `HOMEWORK`, и выбор из десяти типов здесь был бы выбором без разницы.
+ *
+ * <p>В четверти, которая считается по политике оценивания (GRADES-003), оценка ставится
+ * баллом: форму называет сервер (`value-mode`), и тогда вместо шкалы — выбор балла с
+ * видом работы «Домашнее задание» по умолчанию.
  */
 export function SubmissionGradeBlock({
   homeworkId,
@@ -37,6 +44,8 @@ export function SubmissionGradeBlock({
   const [picking, setPicking] = useState(false);
 
   const scaleQuery = useGradeScale();
+  const modeQuery = useHomeworkValueMode(homeworkId);
+  const pointsMode = modeQuery.data?.valueMode === 'POINTS';
   const gradesQuery = useHomeworkGrades(homeworkId);
   const setGrade = useSetHomeworkGrade(homeworkId);
   const removeGrade = useRemoveHomeworkGrade(homeworkId);
@@ -60,7 +69,7 @@ export function SubmissionGradeBlock({
         <div className="flex items-center gap-3">
           {grade ? (
             <>
-              <GradeChip value={grade.scaleCode ?? ''} />
+              <GradeChip value={gradeValueLabel(grade) ?? ''} />
               <span className="text-13 text-muted">Выставлена</span>
             </>
           ) : (
@@ -75,13 +84,52 @@ export function SubmissionGradeBlock({
             <Button
               size="sm"
               variant={grade ? 'secondary' : 'primary'}
-              disabled={busy || scaleQuery.isPending}
+              disabled={busy || scaleQuery.isPending || modeQuery.isPending}
               onClick={() => setPicking((open) => !open)}
             >
               {grade ? 'Изменить' : 'Поставить оценку'}
             </Button>
 
-            {picking && (
+            {picking && pointsMode && (
+              <div className="absolute right-0 top-full z-20 mt-2">
+                <PointsPicker
+                  workTypes={modeQuery.data?.workTypes ?? []}
+                  value={grade ?? null}
+                  defaultType={(modeQuery.data?.defaultWorkType ?? 'HOMEWORK') as GradeType}
+                  busy={busy}
+                  canRemove={Boolean(grade)}
+                  onSubmit={(value) =>
+                    setGrade.mutate(
+                      {
+                        studentProfileId,
+                        score: value.score,
+                        maxScore: value.maxScore,
+                        gradeType: value.gradeType,
+                        gradeId: grade?.id ?? null,
+                      },
+                      {
+                        onSuccess: () => setPicking(false),
+                        onError: (error) => fail(error, 'Не удалось выставить оценку'),
+                      },
+                    )
+                  }
+                  onRemove={() =>
+                    grade?.id != null
+                      ? removeGrade.mutate(
+                          { gradeId: grade.id },
+                          {
+                            onSuccess: () => setPicking(false),
+                            onError: (error) => fail(error, 'Не удалось снять оценку'),
+                          },
+                        )
+                      : undefined
+                  }
+                  onClose={() => setPicking(false)}
+                />
+              </div>
+            )}
+
+            {picking && !pointsMode && (
               <div className="absolute right-0 top-full z-20 mt-2">
                 <GradePicker
                   scale={scaleQuery.data ?? []}

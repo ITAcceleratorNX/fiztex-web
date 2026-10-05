@@ -38,7 +38,8 @@ export const GradeChip = forwardRef<
       aria-label={filled ? `Оценка ${value}` : 'Поставить оценку'}
       className={cx(
         'flex shrink-0 items-center justify-center rounded-lg font-bold transition',
-        size === 'md' ? 'size-8 text-sm' : 'size-[26px] text-13',
+        // Ширина от содержимого: «15/20» у СОР не помещается в квадрат «4+» (GRADES-003).
+        size === 'md' ? 'h-8 min-w-8 px-1 text-sm' : 'h-[26px] min-w-[26px] px-1 text-13',
         filled
           ? 'bg-navy-700 text-white'
           : 'border border-slate-300 text-slate-400',

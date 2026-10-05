@@ -16,6 +16,7 @@ vi.mock('@/hooks/queries', () => ({
   useClassFinals: (...args: unknown[]) => useClassFinals(...args),
   useSetFinalGrade: () => ({ mutateAsync: setFinal, isPending: false }),
   usePublishClassFinals: () => ({ mutateAsync: publishFinals, isPending: false }),
+  usePeriodBreakdown: () => ({ isPending: true, data: undefined }),
 }));
 
 function context() {
@@ -201,5 +202,90 @@ describe('JournalPage', () => {
     expect(
       screen.queryByRole('button', { name: 'Опубликовать итоги четверти' }),
     ).not.toBeInTheDocument();
+  });
+
+  /** GRADES-003: четверть по политике — проценты компонентов и итог вместо среднего. */
+  it('по политике оценивания показывает проценты компонентов и балл из максимума', () => {
+    const policy = {
+      policyId: 1,
+      name: 'Kundelik',
+      components: [
+        { code: 'FORMATIVE', title: 'ФО', weightPercent: 25 },
+        { code: 'SOR', title: 'СОР', weightPercent: 25 },
+        { code: 'SOCH', title: 'СОЧ', weightPercent: 50 },
+      ],
+      bands: [{ minPercent: 65, value: 4, label: 'Хорошо' }],
+    };
+    const base = journal();
+    useJournal.mockReturnValue({
+      data: {
+        ...base,
+        gradingPolicy: policy,
+        rows: [
+          {
+            ...base.rows[0],
+            cells: [{ columnKey: 'LESSON:449', grades: [{ id: 1, score: 15, maxScore: 20, gradeType: 'SUMMATIVE_SECTION' }] }],
+            result: {
+              status: 'CALCULATED',
+              percent: 84.2,
+              roundedPercent: 84,
+              recommendedValue: 4,
+              components: [
+                { code: 'FORMATIVE', workCount: 7, percent: 84.29, contribution: 21.07 },
+                { code: 'SOR', workCount: 2, percent: 72.5, contribution: 18.13 },
+                { code: 'SOCH', workCount: 1, percent: 90, contribution: 45 },
+              ],
+              missingComponents: [],
+            },
+          },
+        ],
+      },
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+
+    renderPage();
+
+    expect(screen.getByRole('button', { name: 'Оценка 15/20' })).toBeInTheDocument();
+    expect(screen.getByText('ФО %')).toBeInTheDocument();
+    expect(screen.getByText('84,29%')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /84%/ })).toBeInTheDocument();
+    expect(screen.queryByText('Ср. балл')).not.toBeInTheDocument();
+    expect(screen.getByText(/ФО 25 · СОР 25 · СОЧ 50/)).toBeInTheDocument();
+  });
+
+  it('итоги по политике предлагают значения, которые прислал сервер', () => {
+    useClassFinals.mockReturnValue({
+      data: finals({ gradingPolicy: { components: [], bands: [] }, allowedValues: [3, 4, 5] }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+
+    renderPage('?tab=finals');
+
+    expect(screen.getByText('Процент за четверть')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '2' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '5' })).toBeInTheDocument();
+  });
+
+  /** Публикация — только после окончания четверти; выставлять итоги можно заранее. */
+  it('до окончания четверти кнопка публикации выключена и называет дату', () => {
+    useClassFinals.mockReturnValue({
+      data: finals({
+        publicationOpen: false,
+        publishableFrom: '2026-10-26',
+        rows: [{ ...finals().rows[0], finalGrade: { id: 3, value: 4, status: 'DRAFT' } }],
+      }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+
+    renderPage('?tab=finals');
+
+    expect(screen.getByRole('button', { name: 'Опубликовать итоги четверти' })).toBeDisabled();
+    expect(screen.getByText(/опубликовать — после окончания четверти, с 26\.10/)).toBeInTheDocument();
   });
 });

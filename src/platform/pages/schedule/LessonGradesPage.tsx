@@ -4,6 +4,7 @@ import { AlertTriangle, ArrowLeft, EyeOff, Info, LockKeyhole, Users } from 'luci
 import { Button } from '@/components/ui/Button';
 import { GradeChip } from '@/components/ui/GradeChip';
 import { GradePicker } from '@/components/ui/GradePicker';
+import { PointsPicker, type PointsValue } from '@/components/ui/PointsPicker';
 import { NoticeBar } from '@/components/ui/NoticeBar';
 import {
   useCreateGrade,
@@ -20,8 +21,9 @@ import type {
   GradeType,
   LessonGradeEntry,
   LessonGradeRow,
+  SheetWorkType,
 } from '@/lib/gradesApi';
-import { GRADE_TYPE_LABELS, writeStateNotice } from '@/lib/gradesModel';
+import { GRADE_TYPE_LABELS, gradeValueLabel, writeStateNotice } from '@/lib/gradesModel';
 import type { Lesson } from '@/lib/lessonsApi';
 import { LessonDatePicker } from './LessonDatePicker';
 import { hhmm } from './lessonHistory';
@@ -39,8 +41,12 @@ import { hhmm } from './lessonHistory';
  * открывается только на чтение, и об этом говорит строка сверху, а не пустые клетки.
  *
  * <p>Пустых мест ровно столько, сколько разрешено оценок за урок
- * (`maxGradesPerStudent`, сегодня три). Число приходит с сервера: свой лимит на
+ * (`maxGradesPerStudent`, сейчас одно — решение школы от 02.10.2026). Число приходит с сервера: свой лимит на
  * клиенте разошёлся бы с тем, что принимает бэкенд.
+ *
+ * <p><b>Шкала или баллы — тоже решает сервер</b> (GRADES-003): в периоде, который считается
+ * по политике оценивания, лист приходит с `valueMode: POINTS` и типами работ, и вместо
+ * сетки «2…5±» открывается выбор вида работы и балла.
  */
 export function LessonGradesPage() {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -94,7 +100,24 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
   }
 
   const rows = sheet.students ?? [];
-  const maxGrades = sheet.maxGradesPerStudent ?? 3;
+  const maxGrades = sheet.maxGradesPerStudent ?? 1;
+  const pointsMode = sheet.valueMode === 'POINTS';
+  const workTypes = sheet.workTypes ?? [];
+  const defaultWorkType = (sheet.defaultWorkType ?? 'FORMATIVE') as GradeType;
+  /**
+   * Максимум СОР/СОЧ общий для всего класса — строка «Максимальные баллы» в форме журнала.
+   * Поэтому новый ввод подставляет последний максимум такой работы на этом уроке, а не
+   * заставляет набирать «20» тридцать раз.
+   */
+  const suggestedMax = (type: GradeType): number | null => {
+    let found: number | null = null;
+    for (const row of rows) {
+      for (const grade of row.grades ?? []) {
+        if (grade.gradeType === type && grade.maxScore != null) found = Number(grade.maxScore);
+      }
+    }
+    return found;
+  };
   const canManage = Boolean(sheet.canManageGrades);
   const notice = writeStateNotice(sheet.writeState);
   const cancelled = lesson.status === 'CANCELLED';
@@ -114,6 +137,31 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
    * Ошибка остаётся в поповере, а не всплывает баннером наверху: она относится к
    * конкретной клетке, и учителю нужно видеть, какой именно.
    */
+  /** Баллы (GRADES-003): тип уходит вместе со значением — смена типа может сменить шкалу. */
+  async function pickPoints(row: LessonGradeRow, grade: LessonGradeEntry | null, value: PointsValue) {
+    setCellError(null);
+    try {
+      if (grade?.id != null) {
+        await updateGrade.mutateAsync({
+          gradeId: grade.id,
+          score: value.score,
+          maxScore: value.maxScore,
+          gradeType: value.gradeType,
+        });
+      } else {
+        await createGrade.mutateAsync({
+          studentProfileId: row.studentProfileId as number,
+          score: value.score,
+          maxScore: value.maxScore,
+          gradeType: value.gradeType,
+        });
+      }
+      closeCell();
+    } catch (error) {
+      setCellError(error instanceof ApiError ? error.message : 'Не удалось сохранить оценку');
+    }
+  }
+
   async function pickValue(row: LessonGradeRow, grade: LessonGradeEntry | null, scaleCode: string) {
     setCellError(null);
     try {
@@ -216,6 +264,13 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
           <span className="text-sm text-slate-600">{target || 'Класс не указан'}</span>
         </div>
 
+        {pointsMode && canManage && (
+          <p className="-mt-3 text-13 text-slate-500">
+            Четверть считается по политике оценивания: формативные работы — от 1 до 10, СОР и
+            СОЧ — балл из максимума.
+          </p>
+        )}
+
         {rows.length === 0 ? (
           <EmptyRoster />
         ) : (
@@ -226,7 +281,9 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
               <span className="text-11 font-bold uppercase text-slate-400">ФИО Ученика</span>
               {canManage && (
                 <span className="text-11 font-bold uppercase text-slate-400">
-                  до {maxGrades} {pluralRu(maxGrades, ['оценки', 'оценок', 'оценок'])} за урок
+                  {maxGrades === 1
+                    ? 'одна оценка за урок'
+                    : `до ${maxGrades} ${pluralRu(maxGrades, ['оценки', 'оценок', 'оценок'])} за урок`}
                 </span>
               )}
             </div>
@@ -239,6 +296,10 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
                 canManage={canManage}
                 busy={busy}
                 scale={scaleQuery.data ?? []}
+                pointsMode={pointsMode}
+                workTypes={workTypes}
+                defaultWorkType={defaultWorkType}
+                suggestedMax={suggestedMax}
                 openSlot={
                   openCell != null && openCell.studentProfileId === row.studentProfileId
                     ? openCell.slot
@@ -253,6 +314,7 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
                 }}
                 onClose={closeCell}
                 onPickValue={(grade, scaleCode) => void pickValue(row, grade, scaleCode)}
+                onPickPoints={(grade, value) => void pickPoints(row, grade, value)}
                 onPickType={(grade, type) => void pickType(grade, type)}
                 onRemove={(grade) => void removeGrade(grade)}
               />
@@ -277,12 +339,17 @@ function StudentRow({
   canManage,
   busy,
   scale,
+  pointsMode,
+  workTypes,
+  defaultWorkType,
+  suggestedMax,
   openSlot,
   draftType,
   error,
   onOpen,
   onClose,
   onPickValue,
+  onPickPoints,
   onPickType,
   onRemove,
 }: {
@@ -291,12 +358,17 @@ function StudentRow({
   canManage: boolean;
   busy: boolean;
   scale: GradeScaleValue[];
+  pointsMode: boolean;
+  workTypes: SheetWorkType[];
+  defaultWorkType: GradeType;
+  suggestedMax: (type: GradeType) => number | null;
   openSlot: number | null;
   draftType: GradeType | null;
   error: string | null;
   onOpen: (slot: number) => void;
   onClose: () => void;
   onPickValue: (grade: LessonGradeEntry | null, scaleCode: string) => void;
+  onPickPoints: (grade: LessonGradeEntry | null, value: PointsValue) => void;
   onPickType: (grade: LessonGradeEntry | null, type: GradeType | null) => void;
   onRemove: (grade: LessonGradeEntry) => void;
 }) {
@@ -335,13 +407,28 @@ function StudentRow({
         {grades.map((grade, index) => (
           <div key={grade.id} className="relative">
             <GradeChip
-              value={grade.scaleCode}
+              value={gradeValueLabel(grade)}
               active={openSlot === index}
               disabled={!grade.canEdit}
               title={gradeTitle(grade)}
               onClick={grade.canEdit ? () => onOpen(index) : undefined}
             />
-            {openSlot === index && (
+            {openSlot === index && pointsMode && (
+              <PointsPicker
+                workTypes={workTypes}
+                value={grade}
+                defaultType={defaultWorkType}
+                suggestedMax={suggestedMax}
+                studentName={row.fullName}
+                busy={busy}
+                error={error}
+                canRemove
+                onSubmit={(value) => onPickPoints(grade, value)}
+                onRemove={() => onRemove(grade)}
+                onClose={onClose}
+              />
+            )}
+            {openSlot === index && !pointsMode && (
               <GradePicker
                 scale={scale}
                 studentName={row.fullName}
@@ -364,7 +451,19 @@ function StudentRow({
           return (
             <div key={`empty-${slot}`} className="relative">
               <GradeChip active={openSlot === slot} onClick={() => onOpen(slot)} />
-              {openSlot === slot && (
+              {openSlot === slot && pointsMode && (
+                <PointsPicker
+                  workTypes={workTypes}
+                  defaultType={defaultWorkType}
+                  suggestedMax={suggestedMax}
+                  studentName={row.fullName}
+                  busy={busy}
+                  error={error}
+                  onSubmit={(value) => onPickPoints(null, value)}
+                  onClose={onClose}
+                />
+              )}
+              {openSlot === slot && !pointsMode && (
                 <GradePicker
                   scale={scale}
                   studentName={row.fullName}
