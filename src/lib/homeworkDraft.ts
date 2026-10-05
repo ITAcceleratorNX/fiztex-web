@@ -1,5 +1,6 @@
 import type { AnswerFormat, DueType, Homework, HomeworkGroup, RecipientType } from './homeworkApi';
 import type { WorkspaceSearchItem } from './teacherWorkspaceApi';
+import { withHomeworkReturnTo } from './homeworkListNavigation';
 
 export interface HomeworkFormValues {
   title: string;
@@ -78,7 +79,9 @@ export function homeworkFormReturnTo(raw: string | null): string | null {
   try {
     const url = new URL(raw, 'https://fiztex.invalid');
     if (url.origin !== 'https://fiztex.invalid') return null;
-    if (/^\/homework\/[1-9]\d*\/edit$/.test(url.pathname)) return url.pathname;
+    if (/^\/homework\/[1-9]\d*\/edit$/.test(url.pathname)) {
+      return withHomeworkReturnTo(url.pathname, url.search);
+    }
     if (url.pathname !== '/homework/new') return null;
     const lessonValue = url.searchParams.get('lessonId');
     if (lessonValue != null) {

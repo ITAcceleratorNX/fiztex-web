@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Paperclip, Sparkles } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { HomeworkStatusChip } from '@/components/ui/HomeworkStatusChip';
 import { AiGeneratedBadge } from '@/components/ui/AiGeneratedBadge';
@@ -25,7 +26,8 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock
 import { useToast } from '@/context/ToastContext';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
-import { homeworkListReturnTo } from '@/lib/homeworkListNavigation';
+import { homeworkCardReturnTo, withHomeworkReturnTo } from '@/lib/homeworkListNavigation';
+import { ROUTES } from '@/lib/routes';
 import { cx, formatDateTime } from '@/lib/format';
 import { homeworkApi, type Homework, type RosterEntry } from '@/lib/homeworkApi';
 import {
@@ -42,9 +44,9 @@ import {
 /**
  * Карточка домашнего задания учителя (ТЗ FE-Teacher-002 §5–7, Figma 863:929…1483).
  *
- * Одна и та же карточка открывается из урока и из списка HOMEWORK-005.1 — это одно
+ * Одна и та же карточка открывается из урока, списка и рабочего пространства — это одно
  * задание и один экран (§5), поэтому маршрут адресует Homework, а не путь, которым сюда
- * пришли. Откуда пришёл пользователь, влияет только на кнопку «назад».
+ * пришли. Источник сохраняется для навигационной цепочки и возврата назад.
  *
  * Получатели живут здесь же, а не на отдельной вкладке: в макете это один экран, и для
  * учителя «задание» и «кто что сдал» — один вопрос, а не два.
@@ -53,7 +55,12 @@ export function HomeworkCardPage() {
   const { homeworkId } = useParams<{ homeworkId: string }>();
   const id = Number(homeworkId);
   const navigate = useNavigate();
-  const backTo = homeworkListReturnTo(useLocation().search);
+  const location = useLocation();
+  const backTo = homeworkCardReturnTo(location.search);
+  const fromWorkspace = backTo.startsWith(ROUTES.workspace);
+  const sourceLabel = backTo.startsWith('/workspace/sections/HOMEWORK') ? 'Домашние задания'
+    : backTo.startsWith('/workspace/folders/') ? 'Личная папка' : 'Результаты поиска';
+  const backLabel = fromWorkspace ? `К разделу «${sourceLabel}»` : 'К списку заданий';
   const queryClient = useQueryClient();
   const toast = useToast();
 
@@ -177,7 +184,7 @@ export function HomeworkCardPage() {
           description="Оно удалено или относится к урокам другого учителя."
           action={
             <Link to={backTo} className={buttonClassName({ variant: 'secondary', size: 'sm' })}>
-              К списку заданий
+              {backLabel}
             </Link>
           }
         />
@@ -215,17 +222,26 @@ export function HomeworkCardPage() {
 
   return (
     <div className="flex flex-col gap-5">
+      <Breadcrumbs items={fromWorkspace ? [
+        { label: 'Рабочее пространство', to: ROUTES.workspace },
+        { label: sourceLabel, to: backTo },
+        { label: homework.title ?? 'Домашнее задание' },
+      ] : [
+        { label: 'Домашние задания', to: backTo },
+        { label: homework.title ?? 'Домашнее задание' },
+      ]} />
       <HomeworkHeader
         backTo={backTo}
+        backLabel={backLabel}
         homework={homework}
         materials={materialsQuery.data ?? []}
         busy={busy}
         onPublish={() => mutate.mutate('publish')}
-        onEdit={() => navigate(`/homework/${id}/edit`)}
+        onEdit={() => navigate(withHomeworkReturnTo(`/homework/${id}/edit`, location.search))}
         onAsk={setConfirm}
         aiGenerated={homework.creationMode != null && homework.creationMode !== 'MANUAL'}
         onGenerate={askGenerate}
-        onOpenQuestions={() => navigate(`/homework/${id}/questions`)}
+        onOpenQuestions={() => navigate(withHomeworkReturnTo(`/homework/${id}/questions`, location.search))}
       />
 
       <HomeworkAiStatus
@@ -274,7 +290,7 @@ export function HomeworkCardPage() {
             error={rosterQuery.isError}
             onRetry={() => void rosterQuery.refetch()}
             canOpen={actions.canReview}
-            onOpen={(student) => navigate(`/homework/${id}/students/${student.studentProfileId}`)}
+            onOpen={(student) => navigate(withHomeworkReturnTo(`/homework/${id}/students/${student.studentProfileId}`, location.search))}
           />
         </>
       )}
@@ -285,7 +301,7 @@ export function HomeworkCardPage() {
         homeworkId={id}
         lessonId={homework.lesson?.id ?? null}
         kind={generateKind ?? 'MATERIAL'}
-        onWriteManually={() => navigate(`/homework/${id}/edit`)}
+        onWriteManually={() => navigate(withHomeworkReturnTo(`/homework/${id}/edit`, location.search))}
         onAwaitingDecision={() => {
           setGenerateKind(null);
           setCompareOpen(true);
@@ -432,6 +448,7 @@ function HomeworkAiStatus({
 
 function HomeworkHeader({
   backTo,
+  backLabel,
   homework,
   materials,
   busy,
@@ -443,6 +460,7 @@ function HomeworkHeader({
   onOpenQuestions,
 }: {
   backTo: string;
+  backLabel: string;
   homework: Homework;
   materials: Array<{ id?: number; fileName?: string; url?: string }>;
   busy: boolean;
@@ -463,7 +481,7 @@ function HomeworkHeader({
         <div className="flex min-w-0 items-center gap-3">
           <Link
             to={backTo}
-            aria-label="К списку заданий"
+            aria-label={backLabel}
             className="text-subtle transition hover:text-ink"
           >
             <ArrowLeft className="size-5" />

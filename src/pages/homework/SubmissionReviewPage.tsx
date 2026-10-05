@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, ChevronDown, X } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -8,6 +8,7 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock
 import { useToast } from '@/context/ToastContext';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
+import { withHomeworkReturnTo } from '@/lib/homeworkListNavigation';
 import { cx, formatDateTime } from '@/lib/format';
 import { homeworkApi, type Attempt, type ReviewDecision } from '@/lib/homeworkApi';
 import { AttachmentChip, AttachmentThumb } from './AttachmentLink';
@@ -38,6 +39,8 @@ export function SubmissionReviewPage() {
   const id = Number(homeworkId);
   const studentId = Number(studentProfileId);
   const navigate = useNavigate();
+  const locationSearch = useLocation().search;
+  const cardUrl = withHomeworkReturnTo(`/homework/${id}`, locationSearch);
   const queryClient = useQueryClient();
   const toast = useToast();
 
@@ -144,7 +147,7 @@ export function SubmissionReviewPage() {
           title="Работа недоступна"
           description="Задание отменено, удалено или относится к другому учителю."
           action={
-            <Link to={`/homework/${id}`} className={buttonClassName({ variant: 'secondary', size: 'sm' })}>
+            <Link to={cardUrl} className={buttonClassName({ variant: 'secondary', size: 'sm' })}>
               К заданию
             </Link>
           }
@@ -184,7 +187,7 @@ export function SubmissionReviewPage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <Link to={`/homework/${id}`} aria-label="К заданию" className="text-subtle transition hover:text-ink">
+          <Link to={cardUrl} aria-label="К заданию" className="text-subtle transition hover:text-ink">
             <ArrowLeft className="size-5" />
           </Link>
           <h1 className="truncate text-xl font-bold text-ink">
@@ -201,7 +204,7 @@ export function SubmissionReviewPage() {
             variant="secondary"
             size="sm"
             disabled={!neighbours.prev}
-            onClick={() => navigate(`/homework/${id}/students/${neighbours.prev?.studentProfileId}`)}
+            onClick={() => navigate(withHomeworkReturnTo(`/homework/${id}/students/${neighbours.prev?.studentProfileId}`, locationSearch))}
           >
             <ArrowLeft className="size-4" aria-hidden /> Пред.
           </Button>
@@ -209,7 +212,7 @@ export function SubmissionReviewPage() {
             variant="secondary"
             size="sm"
             disabled={!neighbours.next}
-            onClick={() => navigate(`/homework/${id}/students/${neighbours.next?.studentProfileId}`)}
+            onClick={() => navigate(withHomeworkReturnTo(`/homework/${id}/students/${neighbours.next?.studentProfileId}`, locationSearch))}
           >
             След. <ArrowRight className="size-4" aria-hidden />
           </Button>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Award, BookOpen, BookText, CalendarCheck2, ChevronRight, FileText, Folder,
   ListChecks, NotebookPen, Plus, Search,
@@ -15,6 +15,7 @@ import { useTeacherWorkspaceHome, useTeacherWorkspaceSearch } from '@/hooks/quer
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useToast } from '@/context/ToastContext';
 import { ApiError } from '@/lib/api';
+import { homeworkCardFromWorkspace } from '@/lib/homeworkListNavigation';
 import { ROUTES } from '@/lib/routes';
 import { openWorkspaceDocument } from '@/lib/teacherWorkspaceOpen';
 import type { WorkspaceMaterialType, WorkspaceSearchItem, WorkspaceFileType } from '@/lib/teacherWorkspaceApi';
@@ -117,6 +118,7 @@ function Results({ items, total, page, onPage, onOpen }: {
 export function WorkspaceHomePage() {
   useDocumentTitle('Рабочее пространство');
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
   const [params, setParams] = useSearchParams();
   const q = params.get('q') ?? '';
@@ -158,7 +160,7 @@ export function WorkspaceHomePage() {
 
   async function open(item: WorkspaceSearchItem) {
     if (item.sourceKind === 'teacher-homework' && item.sourceId) {
-      navigate(`/homework/${item.sourceId}`);
+      navigate(homeworkCardFromWorkspace(item.sourceId, location));
       return;
     }
     if (item.sourceKind === 'teacher-textbook') {

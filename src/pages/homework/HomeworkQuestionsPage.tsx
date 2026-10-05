@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowDown, ArrowLeft, ArrowUp, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/Button';
@@ -19,6 +19,7 @@ import {
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useToast } from '@/context/ToastContext';
 import { ApiError } from '@/lib/api';
+import { withHomeworkReturnTo } from '@/lib/homeworkListNavigation';
 import { homeworkApi } from '@/lib/homeworkApi';
 import { checkFormulas } from '@/lib/formulaChecks';
 import { TestTemplateActions } from './TestTemplateActions';
@@ -53,6 +54,7 @@ export function HomeworkQuestionsPage() {
   const id = Number(homeworkId);
   const valid = Number.isFinite(id) && id > 0;
   const navigate = useNavigate();
+  const cardUrl = withHomeworkReturnTo(`/homework/${id}`, useLocation().search);
   const toast = useToast();
 
   useDocumentTitle('Вопросы задания');
@@ -139,7 +141,7 @@ export function HomeworkQuestionsPage() {
       setLeaving(true);
       return;
     }
-    navigate(`/homework/${id}`);
+    navigate(cardUrl);
   }
 
   return (
@@ -245,7 +247,7 @@ export function HomeworkQuestionsPage() {
       <ConfirmDialog
         open={leaving}
         onClose={() => setLeaving(false)}
-        onConfirm={() => navigate(`/homework/${id}`)}
+        onConfirm={() => navigate(cardUrl)}
         title="Уйти без сохранения?"
         confirmLabel="Уйти"
         danger

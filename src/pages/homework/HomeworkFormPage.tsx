@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type SetStateAction } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, FolderOpen, Paperclip, X } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { Field, focusFirstInvalidField, Select, TextArea, TextInput } from '@/components/ui/Field';
@@ -17,6 +17,7 @@ import { keys, useLesson } from '@/hooks/queries';
 import { lessonsApi, type Lesson } from '@/lib/lessonsApi';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
+import { withHomeworkReturnTo } from '@/lib/homeworkListNavigation';
 import { teacherWorkspaceApi } from '@/lib/teacherWorkspaceApi';
 import { cx, formatWeekdayDayMonth } from '@/lib/format';
 import {
@@ -125,6 +126,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
   const setWorkspaceItems = setField('workspaceItems');
 
   const navigate = useNavigate();
+  const locationSearch = useLocation().search;
   const queryClient = useQueryClient();
   const toast = useToast();
 
@@ -432,7 +434,9 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
       // Возврат туда, откуда пришли (§4.1): из урока — в урок, иначе — в карточку задания.
       if (!mounted.current) return;
       if (mode === 'create' && lessonId) navigate(`/lesson-schedule/lessons/${lessonId}`);
-      else navigate(`/homework/${result.id}`);
+      else navigate(mode === 'edit'
+        ? withHomeworkReturnTo(`/homework/${result.id}`, locationSearch)
+        : `/homework/${result.id}`);
     },
     onError: (err) => {
       setDraft((current) => ({ ...current, saving: false, error: err instanceof ApiError ? err.message : 'Не удалось сохранить задание' }));
@@ -485,7 +489,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
           title="Задание нельзя редактировать"
           description="Завершённые и отменённые задания доступны только для просмотра."
           action={
-            <Link to={`/homework/${editId}`} className={buttonClassName({ variant: 'secondary', size: 'sm' })}>
+            <Link to={withHomeworkReturnTo(`/homework/${editId}`, locationSearch)} className={buttonClassName({ variant: 'secondary', size: 'sm' })}>
               К заданию
             </Link>
           }
@@ -495,8 +499,8 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
   }
 
   const busy = save.isPending || draft.saving;
-  const backTo = mode === 'edit' ? `/homework/${editId}` : lessonId ? `/lesson-schedule/lessons/${lessonId}` : '/homework';
-  const formUrl = mode === 'edit' ? `/homework/${editId}/edit` : `/homework/new${contextSearch ? `?${contextSearch}` : ''}`;
+  const backTo = mode === 'edit' ? withHomeworkReturnTo(`/homework/${editId}`, locationSearch) : lessonId ? `/lesson-schedule/lessons/${lessonId}` : '/homework';
+  const formUrl = mode === 'edit' ? withHomeworkReturnTo(`/homework/${editId}/edit`, locationSearch) : `/homework/new${contextSearch ? `?${contextSearch}` : ''}`;
 
   return (
     <div ref={formRef} className="flex max-w-4xl flex-col gap-5">

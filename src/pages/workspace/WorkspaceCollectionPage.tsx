@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, FileText, Folder, Plus } from 'lucide-react';
 import { ActionMenu } from '@/components/ui/ActionMenu';
 import { Badge } from '@/components/ui/Badge';
@@ -17,6 +17,7 @@ import {
 } from '@/hooks/queries';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
+import { homeworkCardFromWorkspace } from '@/lib/homeworkListNavigation';
 import { openWorkspaceDocument } from '@/lib/teacherWorkspaceOpen';
 import { ROUTES } from '@/lib/routes';
 import type { WorkspaceMaterialType, WorkspaceSearchItem } from '@/lib/teacherWorkspaceApi';
@@ -83,6 +84,7 @@ function WorkspaceRow({ item, folderId, onOpen, onAddToFolder, onRemove, onRenam
 export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }) {
   const { sectionCode, folderId: folderIdParam } = useParams();
   const [params, setParams] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
   const folderId = Number(folderIdParam);
@@ -139,7 +141,7 @@ export function WorkspaceCollectionPage({ kind }: { kind: 'section' | 'folder' }
       return;
     }
     if (item.sourceKind === 'teacher-homework' && item.sourceId) {
-      navigate(`/homework/${item.sourceId}`);
+      navigate(homeworkCardFromWorkspace(item.sourceId, location));
       return;
     }
     if (item.sourceKind === 'teacher-textbook') {

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { homeworkListReturnTo, readHomeworkListState, writeHomeworkListState } from './homeworkListNavigation';
+import {
+  homeworkCardFromWorkspace, homeworkCardReturnTo, homeworkListReturnTo,
+  readHomeworkListState, withHomeworkReturnTo, writeHomeworkListState,
+} from './homeworkListNavigation';
 
 describe('URL списка домашних заданий', () => {
   it('восстанавливает все фильтры и номер страницы после перезагрузки', () => {
@@ -28,5 +31,28 @@ describe('URL списка домашних заданий', () => {
   it('возвращает только разрешённые параметры списка', () => {
     expect(homeworkListReturnTo(`?${new URLSearchParams({ returnTo: '/homework?page=2&classId=7&redirect=https://example.com' })}`))
       .toBe('/homework?page=2&classId=7');
+  });
+
+  it.each([
+    '/workspace/sections/HOMEWORK?page=2',
+    '/workspace/folders/17?page=3',
+    '/workspace?type=HOMEWORK&q=проверочная&page=1',
+  ])('сохраняет возврат в рабочее пространство: %s', (source) => {
+    const location = new URL(source, 'https://fiztex.local');
+    const returnTo = location.pathname + location.search;
+    const cardUrl = homeworkCardFromWorkspace(42, location);
+    const search = new URL(cardUrl, 'https://fiztex.local').search;
+    expect(homeworkCardReturnTo(search)).toBe(returnTo);
+    expect(withHomeworkReturnTo('/homework/42/edit', search)).toBe(`/homework/42/edit?${new URLSearchParams({ returnTo })}`);
+    expect(withHomeworkReturnTo('/homework/42', search)).toBe(cardUrl);
+  });
+
+  it.each([
+    'https://example.com/workspace', '//example.com/workspace', '/workspace\\evil',
+    '/workspace/sections/TEXTBOOKS', '/workspace/folders/0', '/workspace/folders/999999999999999999999',
+    '/workspace#other', '/admin',
+  ])('не принимает произвольный источник карточки %s', (source) => {
+    const search = `?${new URLSearchParams({ returnTo: source })}`;
+    expect(homeworkCardReturnTo(search)).toBe('/homework');
   });
 });
