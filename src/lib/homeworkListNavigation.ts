@@ -1,4 +1,5 @@
 import { SCOPE_STATUSES, type HomeworkScope, type HomeworkStatus } from './homeworkApi';
+import { workspaceSectionLabel } from './workspaceSections';
 
 export interface HomeworkFilterValues {
   classId?: number;
@@ -62,4 +63,39 @@ export function homeworkListReturnTo(search: string): string {
   if (!target || (target !== '/homework' && !target.startsWith('/homework?'))) return '/homework';
   const query = writeHomeworkListState(readHomeworkListState(new URLSearchParams(target.split('?')[1])));
   return `/homework${query.size ? `?${query}` : ''}`;
+}
+
+function workspaceReturnTo(target: string | null): string | null {
+  if (!target || !target.startsWith('/') || target.startsWith('//') || target.includes('\\') || target.includes('#')) {
+    return null;
+  }
+
+  try {
+    const url = new URL(target, 'https://fiztex.local');
+    const folder = /^\/workspace\/folders\/([1-9]\d*)$/.exec(url.pathname);
+    const workspacePath = url.pathname === '/workspace' || workspaceSectionLabel(url.pathname) != null
+      || (folder != null && Number.isSafeInteger(Number(folder[1])));
+    if (url.origin === 'https://fiztex.local' && workspacePath) return `${url.pathname}${url.search}`;
+  } catch {
+    // Повреждённый адрес не должен уводить учителя со страницы ДЗ.
+  }
+  return null;
+}
+
+/** Ссылка на ДЗ запоминает исходный раздел и его страницу или фильтры. */
+export function homeworkCardFromWorkspace(id: number | string, location: { pathname: string; search: string }): string {
+  const returnTo = workspaceReturnTo(location.pathname + location.search) ?? '/workspace';
+  return `/homework/${encodeURIComponent(String(id))}?${new URLSearchParams({ returnTo })}`;
+}
+
+/** Карточка ДЗ может быть открыта и из рабочего пространства. Возвращаем только на его экраны. */
+export function homeworkCardReturnTo(search: string): string {
+  return workspaceReturnTo(new URLSearchParams(search).get('returnTo')) ?? homeworkListReturnTo(search);
+}
+
+/** Сохраняет источник карточки при переходе к редактированию, вопросам и работам учеников. */
+export function withHomeworkReturnTo(path: string, search: string): string {
+  if (!new URLSearchParams(search).has('returnTo')) return path;
+  const separator = path.includes('?') ? '&' : '?';
+  return `${path}${separator}${new URLSearchParams({ returnTo: homeworkCardReturnTo(search) })}`;
 }

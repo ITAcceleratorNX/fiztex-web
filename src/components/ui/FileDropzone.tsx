@@ -19,6 +19,7 @@ export function FileDropzone({
   disabled = false,
   error = false,
   id,
+  size = 'md',
 }: {
   file: File | null;
   onChange: (file: File | null) => void;
@@ -28,6 +29,7 @@ export function FileDropzone({
   disabled?: boolean;
   error?: boolean;
   id?: string;
+  size?: 'md' | 'lg';
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -99,6 +101,7 @@ export function FileDropzone({
         onDrop={onDrop}
         className={cx(
           'flex w-full flex-col items-center gap-1.5 rounded-xl border border-dashed px-4 py-4 transition',
+          size === 'lg' && 'min-h-52 justify-center gap-3',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50',
           'disabled:cursor-not-allowed disabled:opacity-60',
           dragging
@@ -108,8 +111,8 @@ export function FileDropzone({
               : 'border-slate-300 bg-slate-50 hover:border-slate-400',
         )}
       >
-        <UploadCloud className="size-5 text-slate-400" aria-hidden />
-        <span className="text-13 text-slate-400">Перетащите файл или нажмите для загрузки</span>
+        <UploadCloud className={cx('text-slate-400', size === 'lg' ? 'size-8' : 'size-5')} aria-hidden />
+        <span className={cx('text-slate-500', size === 'lg' ? 'text-sm font-semibold' : 'text-13')}>{size === 'lg' ? 'Перетащите файл сюда или нажмите, чтобы выбрать' : 'Перетащите файл или нажмите для загрузки'}</span>
         {formatsLabel && <span className="text-xs text-slate-300">{formatsLabel}</span>}
       </button>
     </>

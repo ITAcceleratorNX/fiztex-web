@@ -44,6 +44,9 @@ import { CurrentLessonPage } from '@/pages/schedule/CurrentLessonPage';
 import { HomeworkGroupsPage } from '@/pages/homework/HomeworkGroupsPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { ProfilePage } from '@/pages/ProfilePage';
+import { WorkspaceHomePage } from '@/pages/workspace/WorkspaceHomePage';
+import { WorkspaceCollectionPage } from '@/pages/workspace/WorkspaceCollectionPage';
+import { WorkspaceTestEditorPage } from '@/pages/workspace/WorkspaceTestEditorPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import { NotFoundRoute } from '@/pages/NotFoundPage';
 import {
@@ -218,6 +221,11 @@ export function App() {
         {/* Политика оценивания (GRADES-003): веса ФО/СОР/СОЧ, пороги, вес экзамена. */}
         <Route path={ROUTES.gradingPolicy} element={<GradingPolicyPage />} />
         <Route path={ROUTES.textbooks} element={<TextbooksPage />} />
+        <Route path={ROUTES.workspace} element={<WorkspaceHomePage />} />
+        <Route path={ROUTES.workspaceTestNew} element={<WorkspaceTestEditorPage mode="create" />} />
+        <Route path="/workspace/tests/:templateId/edit" element={<WorkspaceTestEditorPage mode="edit" />} />
+        <Route path="/workspace/sections/:sectionCode" element={<WorkspaceCollectionPage kind="section" />} />
+        <Route path="/workspace/folders/:folderId" element={<WorkspaceCollectionPage kind="folder" />} />
         {/* Ежемесячная обратная связь учителя (MONTHLY-FEEDBACK-001): история — тот же экран
             с прошлым месяцем в фильтре, отдельной страницы у неё нет. */}
         <Route path={ROUTES.feedback} element={<FeedbackPage />} />

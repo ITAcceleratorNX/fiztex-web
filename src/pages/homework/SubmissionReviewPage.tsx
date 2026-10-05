@@ -1,6 +1,7 @@
+import { PageHeader } from '@/components/ui/PageHeader';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, ChevronDown, X } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -8,6 +9,7 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock
 import { useToast } from '@/context/ToastContext';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
+import { withHomeworkReturnTo } from '@/lib/homeworkListNavigation';
 import { cx, formatDateTime } from '@/lib/format';
 import { homeworkApi, type Attempt, type ReviewDecision } from '@/lib/homeworkApi';
 import { AttachmentChip, AttachmentThumb } from './AttachmentLink';
@@ -38,6 +40,8 @@ export function SubmissionReviewPage() {
   const id = Number(homeworkId);
   const studentId = Number(studentProfileId);
   const navigate = useNavigate();
+  const locationSearch = useLocation().search;
+  const cardUrl = withHomeworkReturnTo(`/homework/${id}`, locationSearch);
   const queryClient = useQueryClient();
   const toast = useToast();
 
@@ -139,12 +143,12 @@ export function SubmissionReviewPage() {
 
   if (submissionQuery.error instanceof ApiError && [403, 404].includes(submissionQuery.error.status)) {
     return (
-      <div className="card">
+      <div className="card px-4 sm:px-6">
         <EmptyBlock
           title="Работа недоступна"
           description="Задание отменено, удалено или относится к другому учителю."
           action={
-            <Link to={`/homework/${id}`} className={buttonClassName({ variant: 'secondary', size: 'sm' })}>
+            <Link to={cardUrl} className={buttonClassName({ variant: 'secondary', size: 'sm' })}>
               К заданию
             </Link>
           }
@@ -154,7 +158,7 @@ export function SubmissionReviewPage() {
   }
   if (submissionQuery.isError || !submission) {
     return (
-      <div className="card">
+      <div className="card px-4 sm:px-6">
         <ErrorBlock message="Не удалось загрузить работу" onRetry={() => void submissionQuery.refetch()} />
       </div>
     );
@@ -181,48 +185,25 @@ export function SubmissionReviewPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <Link to={`/homework/${id}`} aria-label="К заданию" className="text-subtle transition hover:text-ink">
-            <ArrowLeft className="size-5" />
-          </Link>
-          <h1 className="truncate text-xl font-bold text-ink">
-            <span className="text-muted">Ответ: </span>
-            {submission.studentFullName}
-          </h1>
-          <span className={cx('inline-flex items-center rounded px-2 py-0.5 text-11 font-medium', SUBMISSION_STATUS_TONES[status])}>
-            {status === 'SUBMITTED' ? 'На проверке' : SUBMISSION_STATUS_LABELS[status]}
-          </span>
-        </div>
-
-        <div className="flex shrink-0 gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={!neighbours.prev}
-            onClick={() => navigate(`/homework/${id}/students/${neighbours.prev?.studentProfileId}`)}
-          >
-            <ArrowLeft className="size-4" aria-hidden /> Пред.
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={!neighbours.next}
-            onClick={() => navigate(`/homework/${id}/students/${neighbours.next?.studentProfileId}`)}
-          >
-            След. <ArrowRight className="size-4" aria-hidden />
-          </Button>
-        </div>
-      </div>
+    <div className="page-stack">
+      <PageHeader title={`Ответ: ${submission.studentFullName}`} back={{ to: cardUrl, label: 'К заданию' }}
+        meta={<span className={cx('inline-flex items-center rounded-lg px-2.5 py-1 text-13 font-medium', SUBMISSION_STATUS_TONES[status])}>
+          {status === 'SUBMITTED' ? 'На проверке' : SUBMISSION_STATUS_LABELS[status]}
+        </span>}
+        actions={<>
+          <Button variant="secondary" size="sm" disabled={!neighbours.prev} icon={<ArrowLeft className="size-4" />}
+            onClick={() => navigate(withHomeworkReturnTo(`/homework/${id}/students/${neighbours.prev?.studentProfileId}`, locationSearch))}>Предыдущий ученик</Button>
+          <Button variant="secondary" size="sm" disabled={!neighbours.next} icon={<ArrowRight className="size-4" />}
+            onClick={() => navigate(withHomeworkReturnTo(`/homework/${id}/students/${neighbours.next?.studentProfileId}`, locationSearch))}>Следующий ученик</Button>
+        </>} />
 
       {current ? (
         testAnswersQuery.isPending ? (
-          <section className="card">
+          <section className="card px-4 sm:px-6">
             <LoadingBlock label="Загрузка ответов ученика…" />
           </section>
         ) : testAnswersQuery.isError ? (
-          <section className="card">
+          <section className="card px-4 sm:px-6">
             <ErrorBlock
               message="Не удалось загрузить ответы ученика"
               onRetry={() => void testAnswersQuery.refetch()}
@@ -256,7 +237,7 @@ export function SubmissionReviewPage() {
           </>
         )
       ) : (
-        <div className="card">
+        <div className="card px-4 sm:px-6">
           <EmptyBlock title="Ученик ещё не отправил работу" />
         </div>
       )}

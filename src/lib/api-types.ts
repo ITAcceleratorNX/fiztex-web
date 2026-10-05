@@ -17,7 +17,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_21"];
+        patch: operations["update_22"];
         trace?: never;
     };
     "/api/admin/academic-periods/{id}/archive": {
@@ -59,9 +59,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_22"];
+        get: operations["list_24"];
         put?: never;
-        post: operations["create_20"];
+        post: operations["create_22"];
         delete?: never;
         options?: never;
         head?: never;
@@ -81,7 +81,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_20"];
+        patch: operations["update_21"];
         trace?: never;
     };
     "/api/admin/academic-years/{id}/activate": {
@@ -139,9 +139,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_21"];
+        get: operations["list_23"];
         put?: never;
-        post: operations["create_19"];
+        post: operations["create_21"];
         delete?: never;
         options?: never;
         head?: never;
@@ -251,9 +251,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_20"];
+        get: operations["list_22"];
         put?: never;
-        post: operations["create_18"];
+        post: operations["create_20"];
         delete?: never;
         options?: never;
         head?: never;
@@ -427,9 +427,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_19"];
+        get: operations["list_21"];
         put?: never;
-        post: operations["create_17"];
+        post: operations["create_19"];
         delete?: never;
         options?: never;
         head?: never;
@@ -491,9 +491,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_18"];
+        get: operations["list_20"];
         put?: never;
-        post: operations["create_16"];
+        post: operations["create_18"];
         delete?: never;
         options?: never;
         head?: never;
@@ -513,7 +513,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_19"];
+        patch: operations["update_20"];
         trace?: never;
     };
     "/api/admin/bell-templates/{id}/activate": {
@@ -651,9 +651,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_17"];
+        get: operations["list_19"];
         put?: never;
-        post: operations["create_15"];
+        post: operations["create_17"];
         delete?: never;
         options?: never;
         head?: never;
@@ -670,10 +670,10 @@ export interface paths {
         get: operations["getById_7"];
         put?: never;
         post?: never;
-        delete: operations["delete_6"];
+        delete: operations["delete_8"];
         options?: never;
         head?: never;
-        patch: operations["update_18"];
+        patch: operations["update_19"];
         trace?: never;
     };
     "/api/admin/calendar-events/{id}/activate": {
@@ -715,9 +715,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_16"];
+        get: operations["list_18"];
         put?: never;
-        post: operations["create_14"];
+        post: operations["create_16"];
         delete?: never;
         options?: never;
         head?: never;
@@ -753,7 +753,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_17"];
+        patch: operations["update_18"];
         trace?: never;
     };
     "/api/admin/classes/{id}/archive": {
@@ -891,9 +891,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_15"];
+        get: operations["list_17"];
         put?: never;
-        post: operations["create_13"];
+        post: operations["create_15"];
         delete?: never;
         options?: never;
         head?: never;
@@ -913,7 +913,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_16"];
+        patch: operations["update_17"];
         trace?: never;
     };
     "/api/admin/group-sets/{id}/archive": {
@@ -1121,7 +1121,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_15"];
+        patch: operations["update_16"];
         trace?: never;
     };
     "/api/admin/lessons/{lessonId}/cancel": {
@@ -1133,7 +1133,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel_2"];
+        post: operations["cancel_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1211,9 +1211,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_14"];
+        get: operations["list_16"];
         put?: never;
-        post: operations["create_12"];
+        post: operations["create_14"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1249,7 +1249,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_14"];
+        patch: operations["update_15"];
         trace?: never;
     };
     "/api/admin/parents/{id}/archive": {
@@ -1371,7 +1371,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_13"];
+        get: operations["get_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1435,7 +1435,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_9"];
+        get: operations["history_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1467,9 +1467,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_13"];
+        get: operations["list_15"];
         put?: never;
-        post: operations["create_11"];
+        post: operations["create_13"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1499,7 +1499,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["current_1"];
+        get: operations["current_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1643,7 +1643,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_8"];
+        get: operations["history_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1707,9 +1707,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_12"];
+        get: operations["list_14"];
         put?: never;
-        post: operations["create_10"];
+        post: operations["create_12"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1729,7 +1729,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_13"];
+        patch: operations["update_14"];
         trace?: never;
     };
     "/api/admin/school-subjects/{id}/archive": {
@@ -1787,9 +1787,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_11"];
+        get: operations["list_13"];
         put?: never;
-        post: operations["create_9"];
+        post: operations["create_11"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1825,7 +1825,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_12"];
+        patch: operations["update_13"];
         trace?: never;
     };
     "/api/admin/students/{id}/archive": {
@@ -1899,9 +1899,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_10"];
+        get: operations["list_12"];
         put?: never;
-        post: operations["create_8"];
+        post: operations["create_10"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1921,7 +1921,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_11"];
+        patch: operations["update_12"];
         trace?: never;
     };
     "/api/admin/subgroups/{id}/archive": {
@@ -1995,9 +1995,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_9"];
+        get: operations["list_11"];
         put?: never;
-        post: operations["create_7"];
+        post: operations["create_9"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2171,9 +2171,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_8"];
+        get: operations["list_10"];
         put?: never;
-        post: operations["create_6"];
+        post: operations["create_8"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2219,7 +2219,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_28"];
+        get: operations["list_31"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2235,7 +2235,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_12"];
+        get: operations["get_14"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2257,7 +2257,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_10"];
+        patch: operations["update_11"];
         trace?: never;
     };
     "/api/admin/teacher-working-time/{id}/archive": {
@@ -2283,9 +2283,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_7"];
+        get: operations["list_9"];
         put?: never;
-        post: operations["create_5"];
+        post: operations["create_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2321,7 +2321,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_9"];
+        patch: operations["update_10"];
         trace?: never;
     };
     "/api/admin/teachers/{id}/archive": {
@@ -2443,9 +2443,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_6"];
+        get: operations["list_8"];
         put?: never;
-        post: operations["create_4"];
+        post: operations["create_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2539,7 +2539,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_27"];
+        get: operations["list_30"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2587,7 +2587,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["content_2"];
+        get: operations["content_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2619,7 +2619,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_26"];
+        get: operations["list_29"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2651,7 +2651,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_11"];
+        get: operations["get_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3245,7 +3245,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["create_3"];
+        post: operations["create_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3291,7 +3291,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["my_4"];
+        get: operations["my_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3371,7 +3371,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_7"];
+        get: operations["history_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3404,6 +3404,86 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getJob"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grade-corrections/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["my_4"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grade-corrections/{correctionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_9"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["update_9"];
+        trace?: never;
+    };
+    "/api/grade-corrections/{correctionId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancel_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grade-corrections/{correctionId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["complete_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grade-corrections/{correctionId}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3485,7 +3565,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["create_2"];
+        post: operations["create_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3582,7 +3662,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["delete_5"];
+        delete: operations["delete_7"];
         options?: never;
         head?: never;
         patch: operations["update_8"];
@@ -3627,9 +3707,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_4"];
+        get: operations["list_6"];
         put?: never;
-        post: operations["create_1"];
+        post: operations["create_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3803,7 +3883,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_10"];
+        get: operations["get_12"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3867,7 +3947,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_5"];
+        get: operations["list_7"];
         put?: never;
         post: operations["start_1"];
         delete?: never;
@@ -4030,7 +4110,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["delete_8"];
+        delete: operations["delete_10"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4356,6 +4436,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/homework/{homeworkId}/test-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTestTemplateTargetState"];
+        put?: never;
+        post: operations["applyTestTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/homework/{id}": {
         parameters: {
             query?: never;
@@ -4420,6 +4516,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/homework/{id}/copy-to-lesson": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["copyToLesson"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/homework/{id}/history": {
         parameters: {
             query?: never;
@@ -4478,6 +4590,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["addLink_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{id}/materials/workspace-items/{workspaceItemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["attachWorkspaceItem"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4747,7 +4875,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_23"];
+        get: operations["list_26"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4763,7 +4891,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["current"];
+        get: operations["current_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4932,6 +5060,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/grade-corrections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_5"];
+        put?: never;
+        post: operations["create_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/grades": {
         parameters: {
             query?: never;
@@ -5035,7 +5179,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_25"];
+        get: operations["list_28"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5076,6 +5220,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/materials/workspace-items/{workspaceItemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["addWorkspaceItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/materials/{materialId}": {
         parameters: {
             query?: never;
@@ -5086,7 +5246,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["delete_4"];
+        delete: operations["delete_6"];
         options?: never;
         head?: never;
         patch: operations["setVisibility"];
@@ -5101,6 +5261,22 @@ export interface paths {
         };
         get: operations["download_1"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/preparation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getLessonPreparationTargetState"];
+        put: operations["applyLessonPreparation"];
         post?: never;
         delete?: never;
         options?: never;
@@ -5179,7 +5355,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["job"];
+        get: operations["job_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5252,6 +5428,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/textbook/workspace-items/{workspaceItemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["selectWorkspaceItem"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/textbooks": {
         parameters: {
             query?: never;
@@ -5259,7 +5451,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_24"];
+        get: operations["list_27"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5275,7 +5467,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["content_1"];
+        get: operations["content_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5307,7 +5499,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_3"];
+        get: operations["list_4"];
         put?: never;
         post: operations["upload_1"];
         delete?: never;
@@ -5323,10 +5515,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_7"];
+        get: operations["get_8"];
         put?: never;
         post?: never;
-        delete: operations["delete_3"];
+        delete: operations["delete_5"];
         options?: never;
         head?: never;
         patch: operations["update_7"];
@@ -5771,7 +5963,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_9"];
+        get: operations["get_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5979,7 +6171,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_8"];
+        get: operations["get_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5999,6 +6191,150 @@ export interface paths {
         put: operations["submit"];
         post?: never;
         delete: operations["withdraw"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/lesson-preparations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_3"];
+        put?: never;
+        post: operations["create_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/lesson-preparations/ai-generations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["startAiGeneration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/lesson-preparations/ai-generations/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["aiOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/lesson-preparations/ai-generations/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["aiJob"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/lesson-preparations/ai-source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["aiSource"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/lesson-preparations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["current"];
+        put?: never;
+        post?: never;
+        delete: operations["delete_4"];
+        options?: never;
+        head?: never;
+        patch: operations["rename_1"];
+        trace?: never;
+    };
+    "/api/teacher/lesson-preparations/{id}/dependencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["dependencies_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/lesson-preparations/{id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["addVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/lesson-preparations/{id}/versions/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["version"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -6046,7 +6382,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["delete_7"];
+        delete: operations["delete_9"];
         options?: never;
         head?: never;
         patch?: never;
@@ -6126,7 +6462,7 @@ export interface paths {
         get: operations["card"];
         put?: never;
         post?: never;
-        delete: operations["delete_2"];
+        delete: operations["delete_3"];
         options?: never;
         head?: never;
         patch: operations["update_6"];
@@ -6155,7 +6491,391 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        get: operations["content_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/textbooks/{id}/dependencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["dependencies_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getWorkspace"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/folders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listFolders"];
+        put?: never;
+        post: operations["createFolder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/folders/{folderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteFolder"];
+        options?: never;
+        head?: never;
+        patch: operations["renameFolder"];
+        trace?: never;
+    };
+    "/api/teacher/workspace/folders/{folderId}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getFolderItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/folders/{folderId}/items/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["attachItem"];
+        post?: never;
+        delete: operations["detachItem"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/materials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_25"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/materials/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["uploadFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/materials/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/materials/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_7"];
+        put?: never;
+        post?: never;
+        delete: operations["delete_2"];
+        options?: never;
+        head?: never;
+        patch: operations["rename"];
+        trace?: never;
+    };
+    "/api/teacher/workspace/materials/{id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         get: operations["content"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/materials/{id}/dependencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["dependencies"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/sections/{sectionCode}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getSectionItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/tests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listTestTemplates"];
+        put?: never;
+        post: operations["createTestTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/tests/ai-generations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["generate_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/tests/ai-generations/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/tests/ai-generations/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["job"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/tests/from-questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createFromQuestions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/tests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCurrentTestTemplate"];
+        put?: never;
+        post?: never;
+        delete: operations["deleteTestTemplate"];
+        options?: never;
+        head?: never;
+        patch: operations["renameTestTemplate"];
+        trace?: never;
+    };
+    "/api/teacher/workspace/tests/{id}/dependencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTestTemplateDependencies"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/tests/{id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createTestTemplateVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/tests/{id}/versions/from-questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createVersionFromQuestions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/tests/{id}/versions/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTestTemplateVersion"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7314,6 +8034,15 @@ export interface components {
         CopyBellTemplateRequest: {
             name?: string;
         };
+        CopyHomeworkToLessonRequest: {
+            confirmRecipients: boolean;
+            /** Format: date-time */
+            dueAt?: string;
+            /** @enum {string} */
+            dueType: "EXACT" | "NEXT_LESSON" | "NONE";
+            /** Format: int64 */
+            lessonId: number;
+        };
         CopyScheduleRequest: {
             /** Format: int64 */
             bellTemplateId?: number;
@@ -7411,6 +8140,16 @@ export interface components {
             subjectId: number;
             /** Format: int32 */
             value: number;
+        };
+        CreateGradeCorrectionRequest: {
+            comment?: string;
+            /** Format: date */
+            deadline: string;
+            /** Format: int64 */
+            homeworkId?: number;
+            /** Format: int64 */
+            studentProfileId: number;
+            temporaryGrade?: components["schemas"]["GradeValueInput"];
         };
         CreateGradeRequest: {
             /** @enum {string} */
@@ -7608,6 +8347,11 @@ export interface components {
             startTime: string;
             /** @enum {string} */
             type?: "AVAILABLE" | "UNAVAILABLE";
+        };
+        CreateTeacherWorkspaceLinkRequest: {
+            comment?: string;
+            title: string;
+            url: string;
         };
         CreateTextbookBindingsRequest: {
             academicPeriodIds?: number[];
@@ -7969,6 +8713,52 @@ export interface components {
             /** Format: int64 */
             count?: number;
         };
+        GradeCorrectionHistoryView: {
+            /** @enum {string} */
+            action?: "CREATED" | "COMMENT_CHANGED" | "DEADLINE_CHANGED" | "TEMPORARY_GRADE_CHANGED" | "COMPLETED" | "CANCELLED";
+            /** @enum {string} */
+            actorAs?: "MAIN_TEACHER" | "SUBSTITUTE_TEACHER";
+            /** Format: int64 */
+            actorId?: number;
+            actorName?: string;
+            /** @enum {string} */
+            actorRole?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
+            after?: components["schemas"]["JsonNode"];
+            before?: components["schemas"]["JsonNode"];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+        };
+        GradeCorrectionView: {
+            /** Format: date-time */
+            closedAt?: string;
+            comment?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            createdBy?: number;
+            /** Format: date */
+            deadline?: string;
+            /** Format: int64 */
+            finalGradeId?: number;
+            /** Format: int64 */
+            homeworkId?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            lessonId?: number;
+            overdue?: boolean;
+            /** @enum {string} */
+            status?: "REQUIRED" | "OVERDUE" | "COMPLETED" | "CANCELLED";
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            temporaryGrade?: components["schemas"]["TemporaryGradeView"];
+            /** Format: date-time */
+            updatedAt?: string;
+        };
         GradeHistoryView: {
             /** @enum {string} */
             action?: "CREATE" | "UPDATE" | "DELETE";
@@ -7987,6 +8777,13 @@ export interface components {
             numericValue?: number;
             /** Format: int32 */
             sortOrder?: number;
+        };
+        GradeValueInput: {
+            /** @enum {string} */
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            maxScore?: number;
+            scaleCode?: string;
+            score?: number;
         };
         GradeValueModeView: {
             /** @enum {string} */
@@ -8298,7 +9095,7 @@ export interface components {
         };
         HomeworkHistoryEntryView: {
             /** @enum {string} */
-            action?: "CREATED" | "UPDATED" | "MATERIALS_CHANGED" | "PUBLISHED" | "COMPLETED" | "REOPENED" | "CANCELLED" | "DELETED" | "COPIED" | "RECIPIENTS_CHANGED" | "RECIPIENTS_DISTRIBUTED" | "RECIPIENTS_SNAPSHOT" | "RECIPIENTS_LOCKED" | "RECIPIENT_DEACTIVATED" | "SUBMITTED" | "RESUBMITTED" | "SUBMISSION_FAILED" | "REVIEW_DONE" | "REVIEW_RETURNED" | "GROUP_CREATED" | "GROUP_RENAMED" | "GROUP_ARCHIVED" | "GROUP_DELETED" | "GROUP_STUDENTS_CHANGED" | "GROUP_SET_CREATED" | "GROUP_SET_RENAMED" | "GROUP_SET_ARCHIVED";
+            action?: "CREATED" | "UPDATED" | "MATERIALS_CHANGED" | "TEST_TEMPLATE_APPLIED" | "PUBLISHED" | "COMPLETED" | "REOPENED" | "CANCELLED" | "DELETED" | "COPIED" | "RECIPIENTS_CHANGED" | "RECIPIENTS_DISTRIBUTED" | "RECIPIENTS_SNAPSHOT" | "RECIPIENTS_LOCKED" | "RECIPIENT_DEACTIVATED" | "SUBMITTED" | "RESUBMITTED" | "SUBMISSION_FAILED" | "REVIEW_DONE" | "REVIEW_RETURNED" | "GROUP_CREATED" | "GROUP_RENAMED" | "GROUP_ARCHIVED" | "GROUP_DELETED" | "GROUP_STUDENTS_CHANGED" | "GROUP_SET_CREATED" | "GROUP_SET_RENAMED" | "GROUP_SET_ARCHIVED";
             /** Format: int64 */
             actorAccountId?: number;
             /** Format: date-time */
@@ -8321,9 +9118,11 @@ export interface components {
             /** Format: int64 */
             id?: number;
             /** @enum {string} */
-            kind?: "FILE" | "PHOTO" | "LINK";
+            kind?: "FILE" | "PHOTO" | "LINK" | "TEXTBOOK";
             /** Format: int64 */
             sizeBytes?: number;
+            /** Format: int64 */
+            textbookId?: number;
             url?: string;
         };
         HomeworkOptionView: {
@@ -8379,6 +9178,167 @@ export interface components {
             fullName?: string;
             /** Format: int64 */
             studentProfileId?: number;
+        };
+        HomeworkTestAiGenerateRequest: {
+            audience?: string;
+            language?: string;
+            /** Format: int32 */
+            openQuestionCount: number;
+            /** Format: int32 */
+            pageFrom?: number;
+            /** Format: int32 */
+            pageTo?: number;
+            /** Format: int32 */
+            questionCount: number;
+            /** @enum {string} */
+            sourceType?: "TEXTBOOK" | "DOCUMENT";
+            teacherPrompt?: string;
+            topic?: string;
+            /** Format: int64 */
+            workspaceItemId?: number;
+        };
+        HomeworkTestAiJobView: {
+            /** Format: date-time */
+            createdAt?: string;
+            errorMessage?: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            /** Format: int64 */
+            id?: number;
+            phase?: string;
+            /** Format: int32 */
+            progressDone?: number;
+            /** Format: int32 */
+            progressTotal?: number;
+            request?: components["schemas"]["HomeworkTestAiGenerateRequest"];
+            result?: components["schemas"]["HomeworkTestTemplateDefinition"];
+            sourceName?: string;
+            /** @enum {string} */
+            status?: "PENDING" | "RUNNING" | "DONE" | "FAILED";
+            warningMessage?: string;
+        };
+        HomeworkTestAiOverview: {
+            aiEnabled?: boolean;
+            latestJob?: components["schemas"]["HomeworkTestAiJobView"];
+            /** Format: int64 */
+            remainingCalls?: number;
+        };
+        HomeworkTestTemplateApplicationView: {
+            /** Format: date-time */
+            appliedAt?: string;
+            /** Format: int64 */
+            homeworkId?: number;
+            /** Format: int32 */
+            questionCount?: number;
+            questionRevision?: string;
+            /** Format: int64 */
+            templateId?: number;
+            /** Format: int32 */
+            version?: number;
+        };
+        HomeworkTestTemplateApplyRequest: {
+            confirmReplace?: boolean;
+            expectedQuestionRevision: string;
+            /** Format: int32 */
+            version: number;
+            /** Format: int64 */
+            workspaceItemId: number;
+        };
+        HomeworkTestTemplateCreateFromQuestionsRequest: {
+            /** Format: int64 */
+            aiJobId?: number;
+            questions: components["schemas"]["QuestionRequest"][];
+            title?: string;
+        };
+        HomeworkTestTemplateDefinition: {
+            questions?: components["schemas"]["HomeworkTestTemplateQuestion"][];
+            /** Format: int32 */
+            schemaVersion?: number;
+        };
+        HomeworkTestTemplateDependencyPreview: {
+            /** Format: int32 */
+            activeApplications?: number;
+            homeworkIds?: number[];
+            revision?: string;
+            /** Format: int64 */
+            templateId?: number;
+        };
+        HomeworkTestTemplateNewVersionRequest: {
+            /** Format: int64 */
+            sourceHomeworkId: number;
+        };
+        HomeworkTestTemplateOption: {
+            correct?: boolean;
+            text?: string;
+        };
+        HomeworkTestTemplateQuestion: {
+            aiGenerated?: boolean;
+            allowPhoto?: boolean;
+            gradingCriteria?: string;
+            /** Format: int32 */
+            maxPhotos?: number;
+            maxScore?: number;
+            options?: components["schemas"]["HomeworkTestTemplateOption"][];
+            referenceAnswer?: string;
+            text?: string;
+            /** @enum {string} */
+            type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT";
+        };
+        HomeworkTestTemplateRenameRequest: {
+            title: string;
+        };
+        HomeworkTestTemplateSaveRequest: {
+            /** Format: int64 */
+            sourceHomeworkId: number;
+            title: string;
+        };
+        HomeworkTestTemplateSummaryView: {
+            author?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int32 */
+            currentVersion?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int32 */
+            questionCount?: number;
+            title?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        HomeworkTestTemplateTargetState: {
+            answerFormat?: string;
+            changedSinceApply?: boolean;
+            /** Format: int64 */
+            homeworkId?: number;
+            /** Format: int32 */
+            questionCount?: number;
+            questionRevision?: string;
+            /** Format: int64 */
+            templateId?: number;
+            /** Format: int32 */
+            templateVersion?: number;
+        };
+        HomeworkTestTemplateVersionFromQuestionsRequest: {
+            /** Format: int64 */
+            aiJobId?: number;
+            /** Format: int32 */
+            expectedVersion: number;
+            questions: components["schemas"]["QuestionRequest"][];
+            title?: string;
+        };
+        HomeworkTestTemplateVersionView: {
+            author?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            definition?: components["schemas"]["HomeworkTestTemplateDefinition"];
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            sourceHomeworkId?: number;
+            title?: string;
+            /** Format: int32 */
+            version?: number;
         };
         HomeworkView: {
             /** @enum {string} */
@@ -8807,7 +9767,7 @@ export interface components {
         };
         LessonHistoryView: {
             /** @enum {string} */
-            actionType?: "CREATED" | "SUPERSEDED" | "CANCELLED" | "RESTORED" | "ADMIN_UPDATED" | "SUBSTITUTE_ASSIGNED" | "SUBSTITUTE_REVOKED" | "GRADE_PERMISSION_GRANTED" | "GRADE_PERMISSION_REVOKED" | "COMMENT_CREATED" | "COMMENT_UPDATED" | "COMMENT_DELETED" | "TOPIC_UPDATED" | "HOMEWORK_CREATED" | "HOMEWORK_UPDATED" | "HOMEWORK_DELETED" | "HOMEWORK_ASSIGNMENT_DRAFTED" | "HOMEWORK_ASSIGNMENT_PUBLISHED" | "HOMEWORK_ASSIGNMENT_UPDATED" | "HOMEWORK_MARKED_NOT_ASSIGNED" | "HOMEWORK_NOT_ASSIGNED_CLEARED" | "TEXTBOOK_SELECTED" | "TEXTBOOK_CLEARED" | "MATERIAL_ADDED" | "MATERIAL_UPDATED" | "MATERIAL_REMOVED";
+            actionType?: "CREATED" | "SUPERSEDED" | "CANCELLED" | "RESTORED" | "ADMIN_UPDATED" | "SUBSTITUTE_ASSIGNED" | "SUBSTITUTE_REVOKED" | "GRADE_PERMISSION_GRANTED" | "GRADE_PERMISSION_REVOKED" | "COMMENT_CREATED" | "COMMENT_UPDATED" | "COMMENT_DELETED" | "TOPIC_UPDATED" | "PREPARATION_APPLIED" | "HOMEWORK_CREATED" | "HOMEWORK_UPDATED" | "HOMEWORK_DELETED" | "HOMEWORK_ASSIGNMENT_DRAFTED" | "HOMEWORK_ASSIGNMENT_PUBLISHED" | "HOMEWORK_ASSIGNMENT_UPDATED" | "HOMEWORK_MARKED_NOT_ASSIGNED" | "HOMEWORK_NOT_ASSIGNED_CLEARED" | "TEXTBOOK_SELECTED" | "TEXTBOOK_CLEARED" | "MATERIAL_ADDED" | "MATERIAL_UPDATED" | "MATERIAL_REMOVED";
             /** Format: int64 */
             actorId?: number;
             actorName?: string;
@@ -8894,6 +9854,180 @@ export interface components {
             startTime?: string;
             /** Format: date-time */
             updatedAt?: string;
+        };
+        LessonPreparationAiGenerateRequest: {
+            /** @enum {string} */
+            companionKind: "RETELLING" | "PLAN";
+            language?: string;
+            /** Format: int32 */
+            pageFrom?: number;
+            /** Format: int32 */
+            pageTo?: number;
+            /** @enum {string} */
+            sourceType: "DOCUMENT" | "TEXTBOOK";
+            teacherPrompt?: string;
+            /** Format: int64 */
+            workspaceItemId: number;
+        };
+        LessonPreparationAiJobView: {
+            /** Format: date-time */
+            createdAt?: string;
+            errorMessage?: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            /** Format: int64 */
+            id?: number;
+            phase?: string;
+            /** Format: int32 */
+            progressDone?: number;
+            /** Format: int32 */
+            progressTotal?: number;
+            request?: components["schemas"]["LessonPreparationAiGenerateRequest"];
+            result?: components["schemas"]["LessonSummaryContent"];
+            sourceName?: string;
+            /** @enum {string} */
+            status?: "PENDING" | "RUNNING" | "DONE" | "FAILED";
+            warningMessage?: string;
+        };
+        LessonPreparationAiOverview: {
+            aiEnabled?: boolean;
+            latestJob?: components["schemas"]["LessonPreparationAiJobView"];
+            /** Format: int32 */
+            remainingCalls?: number;
+        };
+        LessonPreparationAiSourceView: {
+            format?: string;
+            /** Format: int32 */
+            maxPages?: number;
+            /** Format: int32 */
+            pageCount?: number;
+            pageNavigation?: boolean;
+            /** @enum {string} */
+            sourceType?: "DOCUMENT" | "TEXTBOOK";
+            title?: string;
+            /** Format: int64 */
+            workspaceItemId?: number;
+        };
+        LessonPreparationApplicationView: {
+            /** Format: int32 */
+            addedDocuments?: number;
+            /** Format: date-time */
+            appliedAt?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int64 */
+            preparationId?: number;
+            targetRevision?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        LessonPreparationApplyRequest: {
+            confirmReplace?: boolean;
+            expectedTargetRevision: string;
+            /** Format: int32 */
+            version: number;
+            /** Format: int64 */
+            workspaceItemId: number;
+        };
+        LessonPreparationCreateRequest: {
+            documentWorkspaceItemIds?: number[];
+            summary: components["schemas"]["LessonSummaryContent"];
+            textbook?: components["schemas"]["LessonPreparationTextbookRequest"];
+            title?: string;
+            topic?: string;
+        };
+        LessonPreparationDependencyPreview: {
+            /** Format: int32 */
+            activeApplications?: number;
+            lessonIds?: number[];
+            /** Format: int64 */
+            preparationId?: number;
+            revision?: string;
+        };
+        LessonPreparationDocumentView: {
+            available?: boolean;
+            /** Format: int64 */
+            sourceId?: number;
+            title?: string;
+            /** Format: int64 */
+            workspaceItemId?: number;
+        };
+        LessonPreparationNewVersionRequest: {
+            documentWorkspaceItemIds?: number[];
+            /** Format: int32 */
+            expectedVersion: number;
+            summary: components["schemas"]["LessonSummaryContent"];
+            textbook?: components["schemas"]["LessonPreparationTextbookRequest"];
+            topic?: string;
+        };
+        LessonPreparationRenameRequest: {
+            title?: string;
+        };
+        LessonPreparationSummaryView: {
+            author?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int32 */
+            currentVersion?: number;
+            /** Format: int64 */
+            id?: number;
+            title?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        LessonPreparationTargetState: {
+            canApply?: boolean;
+            changedSinceApply?: boolean;
+            draftSummary?: components["schemas"]["LessonSummaryContent"];
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int32 */
+            materialCount?: number;
+            /** Format: int64 */
+            preparationId?: number;
+            /** Format: int32 */
+            preparationVersion?: number;
+            publishedSummary?: components["schemas"]["LessonSummaryContent"];
+            /** Format: int64 */
+            selectedTextbookId?: number;
+            /** Format: int64 */
+            summaryRevision?: number;
+            targetRevision?: string;
+            topic?: string;
+        };
+        LessonPreparationTextbookRequest: {
+            /** Format: int32 */
+            pageFrom?: number;
+            /** Format: int32 */
+            pageTo?: number;
+            /** Format: int64 */
+            workspaceItemId: number;
+        };
+        LessonPreparationTextbookView: {
+            available?: boolean;
+            /** Format: int32 */
+            pageFrom?: number;
+            /** Format: int32 */
+            pageTo?: number;
+            /** Format: int64 */
+            sourceId?: number;
+            title?: string;
+            /** Format: int64 */
+            workspaceItemId?: number;
+        };
+        LessonPreparationVersionView: {
+            author?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            documents?: components["schemas"]["LessonPreparationDocumentView"][];
+            /** Format: int64 */
+            id?: number;
+            summary?: components["schemas"]["LessonSummaryContent"];
+            textbook?: components["schemas"]["LessonPreparationTextbookView"];
+            title?: string;
+            topic?: string;
+            /** Format: int32 */
+            version?: number;
         };
         LessonSummaryContent: {
             /** @enum {string} */
@@ -9190,6 +10324,26 @@ export interface components {
             /** Format: int64 */
             studentProfileId?: number;
             subjects?: components["schemas"]["MySubjectFinalsView"][];
+        };
+        MyGradeCorrectionView: {
+            comment?: string;
+            /** Format: date */
+            deadline?: string;
+            /** Format: int64 */
+            homeworkId?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            overdue?: boolean;
+            /** @enum {string} */
+            status?: "REQUIRED" | "OVERDUE" | "COMPLETED" | "CANCELLED";
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            temporaryGrade?: components["schemas"]["TemporaryGradeView"];
         };
         MyKeyView: {
             /** Format: int64 */
@@ -9490,6 +10644,24 @@ export interface components {
             /** Format: int32 */
             totalPages?: number;
         };
+        PageHomeworkTestTemplateSummaryView: {
+            content?: components["schemas"]["HomeworkTestTemplateSummaryView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
         PageHomeworkView: {
             content?: components["schemas"]["HomeworkView"][];
             empty?: boolean;
@@ -9600,6 +10772,24 @@ export interface components {
         };
         PageLessonHistoryView: {
             content?: components["schemas"]["LessonHistoryView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        PageLessonPreparationSummaryView: {
+            content?: components["schemas"]["LessonPreparationSummaryView"][];
             empty?: boolean;
             first?: boolean;
             last?: boolean;
@@ -9976,6 +11166,24 @@ export interface components {
             /** Format: int32 */
             totalPages?: number;
         };
+        PageTeacherWorkspaceMaterialView: {
+            content?: components["schemas"]["TeacherWorkspaceMaterialView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
         PageTextbookView: {
             content?: components["schemas"]["TextbookView"][];
             empty?: boolean;
@@ -9996,6 +11204,60 @@ export interface components {
         };
         PageUnfilledLessonView: {
             content?: components["schemas"]["UnfilledLessonView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        PageWorkspaceFolderView: {
+            content?: components["schemas"]["WorkspaceFolderView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        PageWorkspaceItemView: {
+            content?: components["schemas"]["WorkspaceItemView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        PageWorkspaceSearchItemView: {
+            content?: components["schemas"]["WorkspaceSearchItemView"][];
             empty?: boolean;
             first?: boolean;
             last?: boolean;
@@ -10392,6 +11654,9 @@ export interface components {
         };
         RenameRequest: {
             name: string;
+        };
+        RenameTeacherWorkspaceMaterialRequest: {
+            title: string;
         };
         ReplaceTextbookRequest: {
             /** Format: date */
@@ -10805,6 +12070,12 @@ export interface components {
         SelectLessonTextbookRequest: {
             /** Format: int64 */
             bindingId: number;
+            /** Format: int32 */
+            pageFrom?: number;
+            /** Format: int32 */
+            pageTo?: number;
+        };
+        SelectWorkspaceLessonTextbookRequest: {
             /** Format: int32 */
             pageFrom?: number;
             /** Format: int32 */
@@ -11768,6 +13039,44 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        TeacherWorkspaceDependenciesView: {
+            dependencies?: components["schemas"]["TeacherWorkspaceDependencyView"][];
+            /** Format: int64 */
+            materialId?: number;
+            revision?: string;
+        };
+        TeacherWorkspaceDependencyView: {
+            className?: string;
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int32 */
+            lessonNumber?: number;
+            status?: string;
+            subjectName?: string;
+            /** Format: int64 */
+            targetId?: number;
+            title?: string;
+            /** @enum {string} */
+            type?: "HOMEWORK" | "LESSON" | "PREPARATION";
+        };
+        TeacherWorkspaceMaterialView: {
+            comment?: string;
+            contentType?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            externalUrl?: string;
+            fileExtension?: string;
+            fileName?: string;
+            /** Format: int64 */
+            id?: number;
+            /** @enum {string} */
+            kind?: "FILE" | "EXTERNAL_LINK";
+            /** Format: int64 */
+            sizeBytes?: number;
+            title?: string;
+            /** Format: int64 */
+            workspaceItemId?: number;
+        };
         TeachingAssignment: {
             /** Format: int64 */
             classId?: number;
@@ -11784,6 +13093,14 @@ export interface components {
             draftSchedules?: number;
             /** Format: int64 */
             publishedSchedules?: number;
+        };
+        TemporaryGradeView: {
+            /** @enum {string} */
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            maxScore?: number;
+            numericValue?: number;
+            scaleCode?: string;
+            score?: number;
         };
         TerminateBindingRequest: {
             /** Format: date */
@@ -11941,6 +13258,20 @@ export interface components {
             textbook?: components["schemas"]["TextbookView"];
             usage?: components["schemas"]["TextbookUsageView"][];
         };
+        TextbookDependenciesView: {
+            canDelete?: boolean;
+            deleteBlockReason?: string;
+            /** Format: int64 */
+            historicalClassBindings?: number;
+            homeworkIds?: number[];
+            /** Format: int64 */
+            homeworkMaterials?: number;
+            preparationIds?: number[];
+            /** Format: int64 */
+            preparationReferences?: number;
+            requiresDetachConfirmation?: boolean;
+            revision?: string;
+        };
         TextbookUsageView: {
             /** Format: int64 */
             academicYearId?: number;
@@ -12058,6 +13389,14 @@ export interface components {
             inventoryNumber?: string;
             note?: string;
             serialNumber?: string;
+        };
+        UpdateGradeCorrectionRequest: {
+            comment?: string;
+            /** Format: date */
+            deadline?: string;
+            empty?: boolean;
+            removeTemporaryGrade?: boolean;
+            temporaryGrade?: components["schemas"]["GradeValueInput"];
         };
         UpdateGradePermissionRequest: {
             canManageGrades: boolean;
@@ -12271,6 +13610,77 @@ export interface components {
             /** Format: int64 */
             version?: number;
         };
+        WorkspaceFolderContentView: {
+            folder?: components["schemas"]["WorkspaceFolderView"];
+            items?: components["schemas"]["PageWorkspaceItemView"];
+        };
+        WorkspaceFolderRequest: {
+            name: string;
+        };
+        WorkspaceFolderView: {
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            itemCount?: number;
+            name?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        WorkspaceItemView: {
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+            sourceId?: string;
+            sourceKind?: string;
+            title?: string;
+            /** @enum {string} */
+            type?: "TEXTBOOK" | "CURRICULUM_PLAN" | "PREPARED_LESSON" | "TEST" | "HOMEWORK" | "DOCUMENT";
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        WorkspaceSearchFolderView: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
+        WorkspaceSearchItemView: {
+            /** Format: date-time */
+            addedAt?: string;
+            author?: string;
+            fileExtension?: string;
+            folders?: components["schemas"]["WorkspaceSearchFolderView"][];
+            /** Format: int64 */
+            id?: number;
+            sectionCode?: string;
+            selectable?: boolean;
+            sourceId?: string;
+            sourceKind?: string;
+            supportedActions?: ("ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "ATTACH_TEXTBOOK_TO_HOMEWORK" | "SELECT_TEXTBOOK_FOR_LESSON" | "APPLY_TEST_TO_HOMEWORK" | "APPLY_PREPARATION_TO_LESSON")[];
+            title?: string;
+            /** @enum {string} */
+            type?: "TEXTBOOK" | "CURRICULUM_PLAN" | "PREPARED_LESSON" | "TEST" | "HOMEWORK" | "DOCUMENT";
+        };
+        WorkspaceSearchView: {
+            items?: components["schemas"]["PageWorkspaceSearchItemView"];
+        };
+        WorkspaceSectionContentView: {
+            items?: components["schemas"]["PageWorkspaceItemView"];
+            section?: components["schemas"]["WorkspaceSectionView"];
+        };
+        WorkspaceSectionView: {
+            code?: string;
+            mutable?: boolean;
+            /** Format: int32 */
+            order?: number;
+            title?: string;
+        };
+        WorkspaceView: {
+            folders?: components["schemas"]["PageWorkspaceFolderView"];
+            sections?: components["schemas"]["WorkspaceSectionView"][];
+        };
         WriteOffEquipmentRequest: {
             comment?: string;
             confirmIssued?: boolean;
@@ -12300,7 +13710,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    update_21: {
+    update_22: {
         parameters: {
             query?: never;
             header?: never;
@@ -12366,7 +13776,7 @@ export interface operations {
             };
         };
     };
-    list_22: {
+    list_24: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -12388,7 +13798,7 @@ export interface operations {
             };
         };
     };
-    create_20: {
+    create_22: {
         parameters: {
             query?: never;
             header?: never;
@@ -12434,7 +13844,7 @@ export interface operations {
             };
         };
     };
-    update_20: {
+    update_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -12550,7 +13960,7 @@ export interface operations {
             };
         };
     };
-    list_21: {
+    list_23: {
         parameters: {
             query: {
                 role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
@@ -12575,7 +13985,7 @@ export interface operations {
             };
         };
     };
-    create_19: {
+    create_21: {
         parameters: {
             query?: {
                 force?: boolean;
@@ -12729,7 +14139,7 @@ export interface operations {
             };
         };
     };
-    list_20: {
+    list_22: {
         parameters: {
             query: {
                 status?: "DRAFT" | "PUBLISHED" | "HIDDEN";
@@ -12753,7 +14163,7 @@ export interface operations {
             };
         };
     };
-    create_18: {
+    create_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -13017,7 +14427,7 @@ export interface operations {
             };
         };
     };
-    list_19: {
+    list_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -13037,7 +14447,7 @@ export interface operations {
             };
         };
     };
-    create_17: {
+    create_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -13162,7 +14572,7 @@ export interface operations {
             };
         };
     };
-    list_18: {
+    list_20: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -13186,7 +14596,7 @@ export interface operations {
             };
         };
     };
-    create_16: {
+    create_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -13232,7 +14642,7 @@ export interface operations {
             };
         };
     };
-    update_19: {
+    update_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -13491,7 +14901,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_19: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -13521,7 +14931,7 @@ export interface operations {
             };
         };
     };
-    create_15: {
+    create_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -13567,7 +14977,7 @@ export interface operations {
             };
         };
     };
-    delete_6: {
+    delete_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -13587,7 +14997,7 @@ export interface operations {
             };
         };
     };
-    update_18: {
+    update_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -13657,7 +15067,7 @@ export interface operations {
             };
         };
     };
-    list_16: {
+    list_18: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -13682,7 +15092,7 @@ export interface operations {
             };
         };
     };
-    create_14: {
+    create_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -13752,7 +15162,7 @@ export interface operations {
             };
         };
     };
-    update_17: {
+    update_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -14020,7 +15430,7 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    list_17: {
         parameters: {
             query: {
                 classId: number;
@@ -14045,7 +15455,7 @@ export interface operations {
             };
         };
     };
-    create_13: {
+    create_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -14091,7 +15501,7 @@ export interface operations {
             };
         };
     };
-    update_16: {
+    update_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -14466,7 +15876,7 @@ export interface operations {
             };
         };
     };
-    update_15: {
+    update_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -14492,7 +15902,7 @@ export interface operations {
             };
         };
     };
-    cancel_2: {
+    cancel_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -14635,7 +16045,7 @@ export interface operations {
             };
         };
     };
-    list_14: {
+    list_16: {
         parameters: {
             query: {
                 phone?: string;
@@ -14659,7 +16069,7 @@ export interface operations {
             };
         };
     };
-    create_12: {
+    create_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -14727,7 +16137,7 @@ export interface operations {
             };
         };
     };
-    update_14: {
+    update_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -14942,7 +16352,7 @@ export interface operations {
             };
         };
     };
-    get_13: {
+    get_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -15039,7 +16449,7 @@ export interface operations {
             };
         };
     };
-    history_9: {
+    history_10: {
         parameters: {
             query: {
                 entityType: "BELL_TEMPLATE" | "WORKING_DAYS" | "CALENDAR_EVENT" | "TEACHER_AVAILABILITY" | "GROUP_SET" | "SUBGROUP" | "LESSON_GENERATION";
@@ -15109,7 +16519,7 @@ export interface operations {
             };
         };
     };
-    list_13: {
+    list_15: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -15135,7 +16545,7 @@ export interface operations {
             };
         };
     };
-    create_11: {
+    create_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -15183,7 +16593,7 @@ export interface operations {
             };
         };
     };
-    current_1: {
+    current_2: {
         parameters: {
             query: {
                 classId: number;
@@ -15391,7 +16801,7 @@ export interface operations {
             };
         };
     };
-    history_8: {
+    history_9: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -15537,7 +16947,7 @@ export interface operations {
             };
         };
     };
-    list_12: {
+    list_14: {
         parameters: {
             query: {
                 name?: string;
@@ -15561,7 +16971,7 @@ export interface operations {
             };
         };
     };
-    create_10: {
+    create_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -15607,7 +17017,7 @@ export interface operations {
             };
         };
     };
-    update_13: {
+    update_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -15710,7 +17120,7 @@ export interface operations {
             };
         };
     };
-    list_11: {
+    list_13: {
         parameters: {
             query: {
                 classId?: number;
@@ -15736,7 +17146,7 @@ export interface operations {
             };
         };
     };
-    create_9: {
+    create_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -15804,7 +17214,7 @@ export interface operations {
             };
         };
     };
-    update_12: {
+    update_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -15921,7 +17331,7 @@ export interface operations {
             };
         };
     };
-    list_10: {
+    list_12: {
         parameters: {
             query?: {
                 classId?: number;
@@ -15945,7 +17355,7 @@ export interface operations {
             };
         };
     };
-    create_8: {
+    create_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -15991,7 +17401,7 @@ export interface operations {
             };
         };
     };
-    update_11: {
+    update_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -16135,7 +17545,7 @@ export interface operations {
             };
         };
     };
-    list_9: {
+    list_11: {
         parameters: {
             query: {
                 status?: "DRAFT" | "ACTIVE" | "COMPLETED";
@@ -16158,7 +17568,7 @@ export interface operations {
             };
         };
     };
-    create_7: {
+    create_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -16491,7 +17901,7 @@ export interface operations {
             };
         };
     };
-    list_8: {
+    list_10: {
         parameters: {
             query: {
                 teacherProfileId?: number;
@@ -16518,7 +17928,7 @@ export interface operations {
             };
         };
     };
-    create_6: {
+    create_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -16584,7 +17994,7 @@ export interface operations {
             };
         };
     };
-    list_28: {
+    list_31: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -16610,7 +18020,7 @@ export interface operations {
             };
         };
     };
-    get_12: {
+    get_14: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -16634,7 +18044,7 @@ export interface operations {
             };
         };
     };
-    update_10: {
+    update_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -16680,7 +18090,7 @@ export interface operations {
             };
         };
     };
-    list_7: {
+    list_9: {
         parameters: {
             query: {
                 phone?: string;
@@ -16704,7 +18114,7 @@ export interface operations {
             };
         };
     };
-    create_5: {
+    create_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -16772,7 +18182,7 @@ export interface operations {
             };
         };
     };
-    update_9: {
+    update_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -17006,7 +18416,7 @@ export interface operations {
             };
         };
     };
-    list_6: {
+    list_8: {
         parameters: {
             query?: {
                 useAiGeneration?: boolean;
@@ -17029,7 +18439,7 @@ export interface operations {
             };
         };
     };
-    create_4: {
+    create_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -17222,7 +18632,7 @@ export interface operations {
             };
         };
     };
-    list_27: {
+    list_30: {
         parameters: {
             query: {
                 teacherProfileId?: number;
@@ -17314,7 +18724,7 @@ export interface operations {
             };
         };
     };
-    content_2: {
+    content_3: {
         parameters: {
             query?: never;
             header?: {
@@ -17363,7 +18773,7 @@ export interface operations {
             };
         };
     };
-    list_26: {
+    list_29: {
         parameters: {
             query?: {
                 grade?: string;
@@ -17405,7 +18815,7 @@ export interface operations {
             };
         };
     };
-    get_11: {
+    get_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -18382,7 +19792,7 @@ export interface operations {
             };
         };
     };
-    create_3: {
+    create_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -18455,7 +19865,7 @@ export interface operations {
             };
         };
     };
-    my_4: {
+    my_5: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -18578,7 +19988,7 @@ export interface operations {
             };
         };
     };
-    history_7: {
+    history_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -18640,6 +20050,147 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GenerationJobResponse"];
+                };
+            };
+        };
+    };
+    my_4: {
+        parameters: {
+            query?: {
+                childStudentProfileId?: number;
+                lessonId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyGradeCorrectionView"][];
+                };
+            };
+        };
+    };
+    get_9: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                correctionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeCorrectionView"];
+                };
+            };
+        };
+    };
+    update_9: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                correctionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGradeCorrectionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeCorrectionView"];
+                };
+            };
+        };
+    };
+    cancel_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                correctionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeCorrectionView"];
+                };
+            };
+        };
+    };
+    complete_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                correctionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GradeValueInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeCorrectionView"];
+                };
+            };
+        };
+    };
+    history_7: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                correctionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeCorrectionHistoryView"][];
                 };
             };
         };
@@ -18740,7 +20291,7 @@ export interface operations {
             };
         };
     };
-    create_2: {
+    create_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -18879,7 +20430,7 @@ export interface operations {
             };
         };
     };
-    delete_5: {
+    delete_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -18971,7 +20522,7 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_6: {
         parameters: {
             query: {
                 scope?: "ACTUAL" | "HISTORY";
@@ -19003,7 +20554,7 @@ export interface operations {
             };
         };
     };
-    create_1: {
+    create_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -19339,7 +20890,7 @@ export interface operations {
             };
         };
     };
-    get_10: {
+    get_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -19431,7 +20982,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -19718,7 +21269,7 @@ export interface operations {
             };
         };
     };
-    delete_8: {
+    delete_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -20307,6 +21858,56 @@ export interface operations {
             };
         };
     };
+    getTestTemplateTargetState: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateTargetState"];
+                };
+            };
+        };
+    };
+    applyTestTemplate: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HomeworkTestTemplateApplyRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateApplicationView"];
+                };
+            };
+        };
+    };
     get_1: {
         parameters: {
             query?: never;
@@ -20463,6 +22064,34 @@ export interface operations {
             };
         };
     };
+    copyToLesson: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CopyHomeworkToLessonRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkView"];
+                };
+            };
+        };
+    };
     history_4: {
         parameters: {
             query: {
@@ -20564,6 +22193,38 @@ export interface operations {
             };
         };
     };
+    attachWorkspaceItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                workspaceItemId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Материал уже был добавлен; возвращена существующая связь */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkMaterialView"];
+                };
+            };
+            /** @description Материал добавлен к домашнему заданию */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkMaterialView"];
+                };
+            };
+        };
+    };
     deleteMaterial: {
         parameters: {
             query?: never;
@@ -20588,7 +22249,10 @@ export interface operations {
     download_2: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                Range?: string;
+                "If-None-Match"?: string;
+            };
             path: {
                 id: number;
                 materialId: number;
@@ -21027,7 +22691,7 @@ export interface operations {
             };
         };
     };
-    list_23: {
+    list_26: {
         parameters: {
             query: {
                 dateFrom?: string;
@@ -21056,7 +22720,7 @@ export interface operations {
             };
         };
     };
-    current: {
+    current_1: {
         parameters: {
             query?: {
                 childId?: number;
@@ -21362,6 +23026,56 @@ export interface operations {
             };
         };
     };
+    list_5: {
+        parameters: {
+            query?: {
+                includeClosed?: boolean;
+            };
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeCorrectionView"][];
+                };
+            };
+        };
+    };
+    create_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGradeCorrectionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeCorrectionView"];
+                };
+            };
+        };
+    };
     grades: {
         parameters: {
             query?: never;
@@ -21565,7 +23279,7 @@ export interface operations {
             };
         };
     };
-    list_25: {
+    list_28: {
         parameters: {
             query?: {
                 childId?: number;
@@ -21646,7 +23360,41 @@ export interface operations {
             };
         };
     };
-    delete_4: {
+    addWorkspaceItem: {
+        parameters: {
+            query?: {
+                visibleToStudents?: boolean;
+            };
+            header?: never;
+            path: {
+                lessonId: number;
+                workspaceItemId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Материал уже был прикреплён */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonMaterialView"];
+                };
+            };
+            /** @description Материал прикреплён */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonMaterialView"];
+                };
+            };
+        };
+    };
+    delete_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -21715,6 +23463,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+        };
+    };
+    getLessonPreparationTargetState: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationTargetState"];
+                };
+            };
+        };
+    };
+    applyLessonPreparation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonPreparationApplyRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationApplicationView"];
                 };
             };
         };
@@ -21869,7 +23665,7 @@ export interface operations {
             };
         };
     };
-    job: {
+    job_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -22017,7 +23813,34 @@ export interface operations {
             };
         };
     };
-    list_24: {
+    selectWorkspaceItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+                workspaceItemId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelectWorkspaceLessonTextbookRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonTextbooksView"];
+                };
+            };
+        };
+    };
+    list_27: {
         parameters: {
             query?: {
                 childId?: number;
@@ -22041,7 +23864,7 @@ export interface operations {
             };
         };
     };
-    content_1: {
+    content_2: {
         parameters: {
             query?: {
                 childId?: number;
@@ -22117,7 +23940,7 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_4: {
         parameters: {
             query: {
                 subjectId: number;
@@ -22172,7 +23995,7 @@ export interface operations {
             };
         };
     };
-    get_7: {
+    get_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -22194,7 +24017,7 @@ export interface operations {
             };
         };
     };
-    delete_3: {
+    delete_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -22917,7 +24740,7 @@ export interface operations {
             };
         };
     };
-    get_9: {
+    get_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -23229,7 +25052,7 @@ export interface operations {
             };
         };
     };
-    get_8: {
+    get_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -23289,6 +25112,285 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MyTeacherAvailabilityView"];
+                };
+            };
+        };
+    };
+    list_3: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageLessonPreparationSummaryView"];
+                };
+            };
+        };
+    };
+    create_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonPreparationCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationVersionView"];
+                };
+            };
+        };
+    };
+    startAiGeneration: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonPreparationAiGenerateRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationAiJobView"];
+                };
+            };
+        };
+    };
+    aiOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationAiOverview"];
+                };
+            };
+        };
+    };
+    aiJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationAiJobView"];
+                };
+            };
+        };
+    };
+    aiSource: {
+        parameters: {
+            query: {
+                sourceType: "DOCUMENT" | "TEXTBOOK";
+                workspaceItemId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationAiSourceView"];
+                };
+            };
+        };
+    };
+    current: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationVersionView"];
+                };
+            };
+        };
+    };
+    delete_4: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    rename_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonPreparationRenameRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationSummaryView"];
+                };
+            };
+        };
+    };
+    dependencies_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationDependencyPreview"];
+                };
+            };
+        };
+    };
+    addVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonPreparationNewVersionRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationVersionView"];
+                };
+            };
+        };
+    };
+    version: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationVersionView"];
                 };
             };
         };
@@ -23365,7 +25467,7 @@ export interface operations {
             };
         };
     };
-    delete_7: {
+    delete_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -23539,10 +25641,14 @@ export interface operations {
             };
         };
     };
-    delete_2: {
+    delete_3: {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                confirmDetach?: boolean;
+            };
+            header?: {
+                "If-Match"?: string;
+            };
             path: {
                 id: number;
             };
@@ -23629,7 +25735,7 @@ export interface operations {
             };
         };
     };
-    content: {
+    content_1: {
         parameters: {
             query?: never;
             header?: {
@@ -23650,6 +25756,795 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+        };
+    };
+    dependencies_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextbookDependenciesView"];
+                };
+            };
+        };
+    };
+    getWorkspace: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceView"];
+                };
+            };
+        };
+    };
+    listFolders: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageWorkspaceFolderView"];
+                };
+            };
+        };
+    };
+    createFolder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkspaceFolderRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceFolderView"];
+                };
+            };
+        };
+    };
+    deleteFolder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                folderId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    renameFolder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                folderId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkspaceFolderRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceFolderView"];
+                };
+            };
+        };
+    };
+    getFolderItems: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                folderId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceFolderContentView"];
+                };
+            };
+        };
+    };
+    attachItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                folderId: number;
+                itemId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    detachItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                folderId: number;
+                itemId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_25: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageTeacherWorkspaceMaterialView"];
+                };
+            };
+        };
+    };
+    uploadFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherWorkspaceMaterialView"];
+                };
+            };
+        };
+    };
+    createLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTeacherWorkspaceLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherWorkspaceMaterialView"];
+                };
+            };
+        };
+    };
+    get_7: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherWorkspaceMaterialView"];
+                };
+            };
+        };
+    };
+    delete_2: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Материал удалён */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Зависимости изменились; обновите preview */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    rename: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RenameTeacherWorkspaceMaterialRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherWorkspaceMaterialView"];
+                };
+            };
+        };
+    };
+    content: {
+        parameters: {
+            query?: never;
+            header?: {
+                Range?: string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Файл целиком */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Часть файла по Range */
+            206: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Диапазон выходит за размер файла */
+            416: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    dependencies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherWorkspaceDependenciesView"];
+                };
+            };
+        };
+    };
+    search: {
+        parameters: {
+            query?: {
+                q?: string;
+                type?: "TEXTBOOK" | "CURRICULUM_PLAN" | "PREPARED_LESSON" | "TEST" | "HOMEWORK" | "DOCUMENT";
+                fileType?: "PDF" | "WORD" | "SPREADSHEET" | "PRESENTATION" | "IMAGE";
+                usage?: "ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "ATTACH_TEXTBOOK_TO_HOMEWORK" | "SELECT_TEXTBOOK_FOR_LESSON" | "APPLY_TEST_TO_HOMEWORK" | "APPLY_PREPARATION_TO_LESSON";
+                folderId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceSearchView"];
+                };
+            };
+        };
+    };
+    getSectionItems: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                sectionCode: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceSectionContentView"];
+                };
+            };
+        };
+    };
+    listTestTemplates: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageHomeworkTestTemplateSummaryView"];
+                };
+            };
+        };
+    };
+    createTestTemplate: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HomeworkTestTemplateSaveRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateVersionView"];
+                };
+            };
+        };
+    };
+    generate_1: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HomeworkTestAiGenerateRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestAiJobView"];
+                };
+            };
+        };
+    };
+    overview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestAiOverview"];
+                };
+            };
+        };
+    };
+    job: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestAiJobView"];
+                };
+            };
+        };
+    };
+    createFromQuestions: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HomeworkTestTemplateCreateFromQuestionsRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateVersionView"];
+                };
+            };
+        };
+    };
+    getCurrentTestTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateVersionView"];
+                };
+            };
+        };
+    };
+    deleteTestTemplate: {
+        parameters: {
+            query?: {
+                confirmDetach?: boolean;
+            };
+            header?: {
+                "If-Match"?: string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    renameTestTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HomeworkTestTemplateRenameRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateSummaryView"];
+                };
+            };
+        };
+    };
+    getTestTemplateDependencies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateDependencyPreview"];
+                };
+            };
+        };
+    };
+    createTestTemplateVersion: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HomeworkTestTemplateNewVersionRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateVersionView"];
+                };
+            };
+        };
+    };
+    createVersionFromQuestions: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HomeworkTestTemplateVersionFromQuestionsRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateVersionView"];
+                };
+            };
+        };
+    };
+    getTestTemplateVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkTestTemplateVersionView"];
                 };
             };
         };

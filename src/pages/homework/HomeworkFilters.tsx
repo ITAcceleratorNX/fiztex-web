@@ -1,3 +1,4 @@
+import { Select } from '@/components/ui/Select';
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { cx } from '@/lib/format';
@@ -101,7 +102,7 @@ function countExtra(values: HomeworkFilterValues): number {
 }
 
 const TRIGGER_CLASS = cx(
-  'inline-flex h-9 items-center gap-1.5 rounded-lg border border-line bg-surface px-3',
+  'inline-flex h-11 items-center gap-1.5 rounded-lg border border-line bg-surface px-3',
   'text-13 font-medium text-ink transition hover:border-navy-400',
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50',
 );
@@ -122,85 +123,16 @@ function FilterDropdown({
   onSelect: (value: string) => void;
   onOpen?: () => void;
 }) {
-  const { open, setOpen, rootRef } = useDismissable();
-
-  return (
-    <div ref={rootRef} className="relative">
-      <button
-        type="button"
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        onClick={() => {
-          if (!open) onOpen?.();
-          setOpen(!open);
-        }}
-        className={cx(TRIGGER_CLASS, selectedLabel && 'border-navy-400 text-navy-700')}
-      >
-        {selectedLabel ?? label}
-        <ChevronDown className={cx('size-4 text-subtle transition', open && 'rotate-180')} aria-hidden />
-      </button>
-
-      {open && (
-        <ul
-          role="listbox"
-          aria-label={label}
-          className="absolute right-0 z-30 mt-1 max-h-64 min-w-48 overflow-y-auto rounded-xl bg-surface py-1 shadow-popover ring-1 ring-line"
-        >
-          <FilterOptionRow
-            label={`Все · ${label.toLowerCase()}`}
-            selected={value === ''}
-            muted
-            onClick={() => {
-              onSelect('');
-              setOpen(false);
-            }}
-          />
-          {options.map((option) => (
-            <FilterOptionRow
-              key={option.value}
-              label={option.label}
-              selected={option.value === value}
-              onClick={() => {
-                onSelect(option.value);
-                setOpen(false);
-              }}
-            />
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-function FilterOptionRow({
-  label,
-  selected,
-  muted = false,
-  onClick,
-}: {
-  label: string;
-  selected: boolean;
-  muted?: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <li>
-      <button
-        type="button"
-        role="option"
-        aria-selected={selected}
-        onClick={onClick}
-        className={cx(
-          'w-full px-3.5 py-2 text-left text-13 transition hover:bg-neutral-bg',
-          selected && 'font-semibold text-navy-700',
-          !selected && muted && 'text-muted',
-          !selected && !muted && 'text-ink',
-        )}
-      >
-        {label}
-      </button>
-    </li>
-  );
+  return <div className="min-w-40" onFocusCapture={onOpen}>
+    <Select aria-label={selectedLabel ? `${label}: ${selectedLabel}` : label}
+      value={value} onChange={(event) => onSelect(event.target.value)}
+      className="h-11" placeholder={label}>
+      <option value="">{label}: все</option>
+      {value && !options.some((option) => option.value === value) &&
+        <option value={value}>{selectedLabel ?? label}</option>}
+      {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+    </Select>
+  </div>;
 }
 
 /** Период по сроку сдачи и «есть работы на проверку» — редкие фильтры под одной кнопкой. */
@@ -216,7 +148,7 @@ function ExtraFiltersDropdown({
   const { open, setOpen, rootRef } = useDismissable();
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="relative basis-full sm:basis-auto">
       <button
         type="button"
         aria-haspopup="dialog"
@@ -238,7 +170,7 @@ function ExtraFiltersDropdown({
         <div
           role="dialog"
           aria-label="Дополнительные фильтры"
-          className="absolute right-0 z-30 mt-1 w-80 rounded-xl bg-surface p-4 shadow-popover ring-1 ring-line"
+          className="absolute left-0 z-30 mt-1 w-80 sm:left-auto sm:right-0 max-w-[calc(100vw-4rem)] rounded-xl bg-surface p-4 shadow-popover ring-1 ring-line"
         >
           <p className="label-base">Срок сдачи</p>
           {/* `min-w-0` обязателен: у нативного `input[type=date]` своя минимальная ширина
@@ -263,7 +195,7 @@ function ExtraFiltersDropdown({
             />
           </div>
           {/* Задание без срока в период не попадает: у него нет даты, по которой его туда отнести. */}
-          <p className="mt-1.5 text-11 text-subtle">
+          <p className="mt-1.5 text-13 text-muted">
             Задания без срока в выбранный период не попадают
           </p>
 

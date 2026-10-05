@@ -11,6 +11,7 @@ const publish = vi.fn();
 const unpublish = vi.fn();
 vi.mock('@/context/ToastContext', () => ({ useToast: () => ({ success: vi.fn() }) }));
 vi.mock('./LessonSummaryGenerateModal', () => ({ LessonSummaryGenerateModal: () => null }));
+vi.mock('./LessonPreparationActions', () => ({ LessonPreparationActions: () => null }));
 vi.mock('@/hooks/queries', () => ({
   useLesson: () => ({ data: { id: 1, topic: 'Плотность', subjectName: 'Физика' } }),
   useLessonSummary: () => query(),

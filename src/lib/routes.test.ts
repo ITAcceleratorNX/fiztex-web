@@ -153,6 +153,7 @@ describe('маршрутизация по роли', () => {
       // (ATTENDANCE-TEACHER-001); админский журнал школы `/attendance` учителю закрыт.
       '/my-attendance',
       '/textbooks',
+      '/workspace',
       '/feedback',
       '/service',
     ]);

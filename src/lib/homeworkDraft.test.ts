@@ -15,4 +15,10 @@ describe('homework group return target', () => {
       .toBe('/homework/new?classId=7&subjectId=3');
     expect(homeworkFormReturnTo('/homework/new?classId=-1&subjectId=3')).toBe('/homework/new?subjectId=3');
   });
+
+  it('после настройки группы возвращает в форму с источником рабочего пространства', () => {
+    const returnTo = '/workspace/sections/HOMEWORK?page=2';
+    const form = `/homework/8/edit?${new URLSearchParams({ returnTo })}`;
+    expect(homeworkFormReturnTo(form)).toBe(form);
+  });
 });

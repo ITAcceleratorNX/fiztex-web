@@ -1,5 +1,5 @@
+import { PageHeader } from '@/components/ui/PageHeader';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useLesson, useLessonHomework } from '@/hooks/queries';
@@ -37,42 +37,22 @@ export function LessonHomeworkPage() {
   const canManage = lesson?.capabilities?.includes('EDIT_TEACHING_PART') ?? false;
 
   return (
-    <div className="flex max-w-4xl flex-col gap-5">
-      <div className="flex items-center gap-3">
-        <Link
-          to={`/lesson-schedule/lessons/${id}`}
-          aria-label="К уроку"
-          className="text-subtle transition hover:text-ink"
-        >
-          <ArrowLeft className="size-5" />
-        </Link>
-        <div className="min-w-0">
-          <h1 className="text-28 font-bold text-ink">Домашние задания</h1>
-          {lesson && (
-            <p className="text-13 text-muted">
-              {[
-                lesson.subjectName,
-                lesson.subgroupName ? `${lesson.className} · ${lesson.subgroupName}` : lesson.className,
-                lesson.date ? formatWeekdayDayMonth(lesson.date) : undefined,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </p>
-          )}
-        </div>
-      </div>
+    <div className="page-stack max-w-4xl">
+      <PageHeader title="Домашние задания" back={{ to: `/lesson-schedule/lessons/${id}`, label: 'К уроку' }}
+        description={lesson && [lesson.subjectName, lesson.subgroupName ? `${lesson.className} · ${lesson.subgroupName}` : lesson.className,
+          lesson.date ? formatWeekdayDayMonth(lesson.date) : undefined].filter(Boolean).join(' · ')} />
 
       {listQuery.isPending ? (
-        <div className="card"><LoadingBlock label="Загрузка заданий…" /></div>
+        <div className="card px-4 sm:px-6"><LoadingBlock label="Загрузка заданий…" /></div>
       ) : listQuery.isError ? (
-        <div className="card">
+        <div className="card px-4 sm:px-6">
           <ErrorBlock
             message="Не удалось загрузить задания урока"
             onRetry={() => void listQuery.refetch()}
           />
         </div>
       ) : rows.length === 0 ? (
-        <div className="card">
+        <div className="card px-4 sm:px-6">
           <EmptyBlock
             title="К этому уроку заданий нет"
             description={

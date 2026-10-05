@@ -312,4 +312,3 @@ const FINAL_WIDTH_PX = 96;
 function componentOffset(index: number, count: number): number {
   return FINAL_WIDTH_PX * 2 + COMPONENT_WIDTH_PX * (count - 1 - index);
 }
-

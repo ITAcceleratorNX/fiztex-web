@@ -1,10 +1,17 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LessonMaterialsPage } from './LessonMaterialsPage';
 
 const useLesson = vi.fn();
 const useLessonMaterials = vi.fn();
+const attachWorkspace = vi.fn();
+
+vi.mock('@/components/workspace/WorkspaceMaterialPickerModal', () => ({
+  WorkspaceMaterialPickerModal: ({ onConfirm }: { onConfirm: (items: { id: number; title: string }[]) => Promise<void> }) =>
+    <button onClick={() => void onConfirm([{ id: 12, title: 'Конспект урока' }])}>Выбрать Конспект урока</button>,
+}));
 
 vi.mock('@/context/ToastContext', () => ({
   useToast: () => ({ push: vi.fn(), success: vi.fn(), error: vi.fn(), info: vi.fn() }),
@@ -22,6 +29,7 @@ vi.mock('@/hooks/queries', () => ({
   useLessonMaterials: (...args: unknown[]) => useLessonMaterials(...args),
   useAddLessonMaterialFile: () => idleMutation(),
   useAddLessonMaterialLink: () => idleMutation(),
+  useAttachWorkspaceDocumentToLesson: () => ({ ...idleMutation(), mutateAsync: attachWorkspace }),
   useSetLessonMaterialVisibility: () => idleMutation(),
   useDeleteLessonMaterial: () => idleMutation(),
 }));
@@ -65,6 +73,7 @@ describe('LessonMaterialsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useLessonMaterials.mockReturnValue({ data: [], isPending: false, isError: false });
+    attachWorkspace.mockResolvedValue({ id: 13 });
   });
 
   /**
@@ -78,7 +87,16 @@ describe('LessonMaterialsPage', () => {
 
     expect(screen.getByRole('button', { name: /Загрузить файл/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Добавить ссылку/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Выбрать из рабочего пространства/ })).toBeInTheDocument();
     expect(screen.getByText(/Приложите конспект/)).toBeInTheDocument();
+  });
+
+  it('прикрепляет выбранный материал к уроку с видимостью для учеников', async () => {
+    useLesson.mockReturnValue({ data: lesson(['EDIT_TEACHING_PART']) });
+    renderPage();
+    await userEvent.click(screen.getByRole('button', { name: /Выбрать из рабочего пространства/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Выбрать Конспект урока' }));
+    await waitFor(() => expect(attachWorkspace).toHaveBeenCalledWith({ lessonId: 1, itemId: 12, visibleToStudents: true }));
   });
 
   it('без права на учебную часть кнопок нет, а пустое состояние другое', () => {

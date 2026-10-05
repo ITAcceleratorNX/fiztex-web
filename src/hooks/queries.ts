@@ -77,6 +77,9 @@ import {
   type EquipmentHistoryFilters,
 } from '@/lib/equipmentApi';
 import type { Schema } from '@/lib/apiSchemas';
+import { teacherWorkspaceApi, type WorkspaceSearchQuery } from '@/lib/teacherWorkspaceApi';
+import { testTemplateApi, type TestAiOverview, type TestAiRequest } from '@/lib/testTemplateApi';
+import { lessonPreparationApi, type PreparationAiOverview, type PreparationAiRequest } from '@/lib/lessonPreparationApi';
 import type {
   ApplicantRequest,
   GenerateTestRequest,
@@ -86,6 +89,24 @@ import type {
 } from '@/lib/types';
 
 export const keys = {
+  teacherWorkspace: ['teacher-workspace'] as const,
+  teacherWorkspaceHome: (page: number) => ['teacher-workspace', 'home', page] as const,
+  teacherWorkspaceFolders: (page: number) => ['teacher-workspace', 'folders', page] as const,
+  teacherWorkspaceFolder: (id: number, page: number) => ['teacher-workspace', 'folder', id, page] as const,
+  teacherWorkspaceSection: (code: string, page: number) => ['teacher-workspace', 'section', code, page] as const,
+  teacherWorkspaceSearch: (query: WorkspaceSearchQuery) =>
+    ['teacher-workspace', 'search', query] as const,
+  teacherWorkspaceMaterials: (page: number) => ['teacher-workspace', 'materials', page] as const,
+  teacherWorkspaceMaterial: (id: number) => ['teacher-workspace', 'material', id] as const,
+  teacherWorkspaceDependencies: (id: number) => ['teacher-workspace', 'dependencies', id] as const,
+  testTemplate: (id: number) => ['teacher-workspace', 'test-template', id] as const,
+  testAiOverview: ['teacher-workspace', 'test-ai-overview'] as const,
+  testTemplateDependencies: (id: number) => ['teacher-workspace', 'test-template', id, 'dependencies'] as const,
+  testTemplateTarget: (homeworkId: number) => ['homework', homeworkId, 'test-template-target'] as const,
+  lessonPreparation: (id: number) => ['teacher-workspace', 'lesson-preparation', id] as const,
+  lessonPreparationTarget: (lessonId: number) => ['lessons', lessonId, 'preparation-target'] as const,
+  preparationAiOverview: ['teacher-workspace', 'preparation-ai', 'overview'] as const,
+  preparationAiSource: (type: string, id: number) => ['teacher-workspace', 'preparation-ai', 'source', type, id] as const,
   lessonSummary: (id: number, childId?: number) => ['lessons', id, 'summary', childId] as const,
   summarySource: (id: number, type: string, sourceId: number) => ['lessons', id, 'summary-source', type, sourceId] as const,
   summaryLibrary: (subjectId: number, query: string) => ['summary-library', subjectId, query] as const,
@@ -125,6 +146,8 @@ export const keys = {
   monitoringAttempts: (status?: string) => ['admissions', 'attempts', status ?? 'ALL'] as const,
   attemptLogs: (attemptId: number) => ['admissions', 'attempts', attemptId, 'logs'] as const,
   lesson: (lessonId: number) => ['lessons', lessonId] as const,
+  workspaceLessonTargets: (dateFrom: string, dateTo: string, page: number) =>
+    ['lessons', 'workspace-targets', dateFrom, dateTo, page] as const,
   currentLesson: ['lessons', 'current'] as const,
   lessonHistory: (lessonId: number) => ['lessons', lessonId, 'history'] as const,
   lessonGradePermission: (lessonId: number) =>
@@ -135,6 +158,7 @@ export const keys = {
   // весь раздел одним `invalidateQueries(['homework'])`, и список урока обязан
   // обновляться вместе с ним, а не жить своей жизнью под ключом урока.
   homeworkFilterOptions: ['homework', 'filter-options'] as const,
+  homeworkCard: (id: number) => ['homework', 'card', id] as const,
   homeworkList: (params: HomeworkListParams) => ['homework', 'list', params] as const,
   lessonHomework: (lessonId: number) => ['homework', 'lesson', lessonId, 'all'] as const,
   attendanceHistory: (lessonId: number) => ['lessons', lessonId, 'attendance', 'history'] as const,
@@ -221,6 +245,7 @@ export const keys = {
   // Учебники: назначения живут в пространстве 'textbooks', учебники урока — под уроком.
   // Любое изменение назначений сбрасывает оба: у класса меняется и таблица, и выбор на уроке.
   textbookBindingOptions: ['textbooks', 'binding-options'] as const,
+  teacherTextbookCard: (id: number) => ['textbooks', 'card', id] as const,
   textbookBindings: (filters: BindingFilters | null) => ['textbooks', 'bindings', filters] as const,
   lessonTextbooks: (lessonId: number) => ['lessons', lessonId, 'textbooks'] as const,
   // Ежемесячная обратная связь учителя (monthly-feedback-contract §7). Листы месяца лежат под
@@ -232,6 +257,316 @@ export const keys = {
   monthlyFeedbackSheet: (key: FeedbackSheetKey) =>
     ['monthly-feedback', 'teacher', 'sheet', key.month, key.classId, key.subjectId] as const,
 };
+
+export function useTeacherWorkspaceHome(page = 0) {
+  return useQuery({
+    queryKey: keys.teacherWorkspaceHome(page),
+    queryFn: ({ signal }) => teacherWorkspaceApi.home(page, signal),
+  });
+}
+
+export function useTeacherWorkspaceFolders(page = 0, enabled = true) {
+  return useQuery({
+    queryKey: keys.teacherWorkspaceFolders(page),
+    queryFn: ({ signal }) => teacherWorkspaceApi.folders(page, signal),
+    enabled,
+  });
+}
+
+export function useTeacherWorkspaceFolder(id: number, page = 0, enabled = true) {
+  return useQuery({
+    queryKey: keys.teacherWorkspaceFolder(id, page),
+    queryFn: ({ signal }) => teacherWorkspaceApi.folder(id, page, signal),
+    enabled,
+  });
+}
+
+export function useTeacherWorkspaceSection(code: string, page = 0, enabled = true) {
+  return useQuery({
+    queryKey: keys.teacherWorkspaceSection(code, page),
+    queryFn: ({ signal }) => teacherWorkspaceApi.section(code, page, signal),
+    enabled,
+  });
+}
+
+export function useTeacherWorkspaceSearch(query: WorkspaceSearchQuery, enabled = true) {
+  return useQuery({
+    queryKey: keys.teacherWorkspaceSearch(query),
+    queryFn: ({ signal }) => teacherWorkspaceApi.search(query, signal),
+    enabled,
+  });
+}
+
+export function useTeacherWorkspaceMaterials(page = 0) {
+  return useQuery({
+    queryKey: keys.teacherWorkspaceMaterials(page),
+    queryFn: ({ signal }) => teacherWorkspaceApi.materials(page, signal),
+  });
+}
+
+export function useTeacherWorkspaceMaterial(id: number | null) {
+  return useQuery({
+    queryKey: keys.teacherWorkspaceMaterial(id ?? 0),
+    queryFn: ({ signal }) => teacherWorkspaceApi.material(id!, signal),
+    enabled: id != null,
+  });
+}
+
+export function useTeacherWorkspaceDependencies(id: number | null) {
+  return useQuery({
+    queryKey: keys.teacherWorkspaceDependencies(id ?? 0),
+    queryFn: ({ signal }) => teacherWorkspaceApi.materialDependencies(id!, signal),
+    enabled: id != null,
+  });
+}
+
+function useWorkspaceMutation<T, V>(mutationFn: (variables: V) => Promise<T>) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
+  });
+}
+
+export function useCreateWorkspaceFolder() {
+  return useWorkspaceMutation(teacherWorkspaceApi.createFolder);
+}
+
+export function useRenameWorkspaceFolder() {
+  return useWorkspaceMutation(({ id, name }: { id: number; name: string }) =>
+    teacherWorkspaceApi.renameFolder(id, name));
+}
+
+export function useDeleteWorkspaceFolder() {
+  return useWorkspaceMutation(teacherWorkspaceApi.deleteFolder);
+}
+
+export function useAttachWorkspaceFolderItem() {
+  return useWorkspaceMutation(({ folderId, itemId }: { folderId: number; itemId: number }) =>
+    teacherWorkspaceApi.attachToFolder(folderId, itemId));
+}
+
+export function useDetachWorkspaceFolderItem() {
+  return useWorkspaceMutation(({ folderId, itemId }: { folderId: number; itemId: number }) =>
+    teacherWorkspaceApi.detachFromFolder(folderId, itemId));
+}
+
+export function useUploadWorkspaceFile() {
+  return useWorkspaceMutation(teacherWorkspaceApi.uploadFile);
+}
+
+export function useCreateWorkspaceLink() {
+  return useWorkspaceMutation(teacherWorkspaceApi.createLink);
+}
+
+export function useRenameWorkspaceMaterial() {
+  return useWorkspaceMutation(({ id, title }: { id: number; title: string }) =>
+    teacherWorkspaceApi.renameMaterial(id, { title }));
+}
+
+export function useDeleteWorkspaceMaterial() {
+  return useWorkspaceMutation(({ id, revision }: { id: number; revision: string }) =>
+    teacherWorkspaceApi.deleteMaterial(id, revision));
+}
+
+export function useAttachWorkspaceDocumentToHomework() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ homeworkId, itemId }: { homeworkId: number; itemId: number }) =>
+      teacherWorkspaceApi.attachDocumentToHomework(homeworkId, itemId),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ['homework'] });
+      void client.invalidateQueries({ queryKey: keys.teacherWorkspace });
+    },
+  });
+}
+
+export function useAttachWorkspaceDocumentToLesson() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ lessonId, itemId, visibleToStudents }: {
+      lessonId: number;
+      itemId: number;
+      visibleToStudents: boolean;
+    }) => teacherWorkspaceApi.attachDocumentToLesson(lessonId, itemId, visibleToStudents),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ['lessons'] });
+      void client.invalidateQueries({ queryKey: keys.teacherWorkspace });
+    },
+  });
+}
+
+export function useTestAiOverview() {
+  return useQuery({
+    queryKey: keys.testAiOverview,
+    queryFn: ({ signal }) => testTemplateApi.aiOverview(signal),
+    refetchInterval: (query) => {
+      const status = query.state.data?.latestJob?.status;
+      return status === 'PENDING' || status === 'RUNNING' ? 2000 : false;
+    },
+    refetchIntervalInBackground: true,
+  });
+}
+
+export function useStartTestAiGeneration() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ body, key }: { body: TestAiRequest; key: string }) => testTemplateApi.startAi(body, key),
+    onSuccess: (job) => {
+      client.setQueryData<TestAiOverview>(keys.testAiOverview,
+        (old) => old ? { ...old, latestJob: job } : old);
+      void client.invalidateQueries({ queryKey: keys.testAiOverview });
+      void client.invalidateQueries({ queryKey: keys.homeworkAiQuota });
+    },
+  });
+}
+
+export function useTestTemplate(id: number | null) {
+  return useQuery({
+    queryKey: keys.testTemplate(id ?? 0),
+    queryFn: ({ signal }) => testTemplateApi.current(id!, signal),
+    enabled: id != null,
+  });
+}
+
+export function useTestTemplateTarget(homeworkId: number | null) {
+  return useQuery({
+    queryKey: keys.testTemplateTarget(homeworkId ?? 0),
+    queryFn: ({ signal }) => testTemplateApi.target(homeworkId!, signal),
+    enabled: homeworkId != null,
+  });
+}
+
+export function useCreateTestTemplate() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ body, key }: { body: Schema<'HomeworkTestTemplateSaveRequest'>; key: string }) =>
+      testTemplateApi.create(body, key),
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
+  });
+}
+
+export function useCreateTestTemplateFromQuestions() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ body, key }: { body: Schema<'HomeworkTestTemplateCreateFromQuestionsRequest'>; key: string }) =>
+      testTemplateApi.createFromQuestions(body, key),
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
+  });
+}
+
+export function useVersionTestTemplateFromQuestions(id: number) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ body, key }: { body: Schema<'HomeworkTestTemplateVersionFromQuestionsRequest'>; key: string }) =>
+      testTemplateApi.versionFromQuestions(id, body, key),
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
+  });
+}
+
+export function useRenameTestTemplate() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, title }: { id: number; title: string }) => testTemplateApi.rename(id, { title }),
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
+  });
+}
+
+export function useTestTemplateDependencies(id: number | null) {
+  return useQuery({
+    queryKey: keys.testTemplateDependencies(id ?? 0),
+    queryFn: ({ signal }) => testTemplateApi.dependencies(id!, signal),
+    enabled: id != null,
+  });
+}
+
+export function useDeleteTestTemplate() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, dependencies }: { id: number; dependencies: Awaited<ReturnType<typeof testTemplateApi.dependencies>> }) =>
+      testTemplateApi.delete(id, dependencies),
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
+  });
+}
+
+export function useApplyTestTemplate(homeworkId: number) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ body, key }: { body: Schema<'HomeworkTestTemplateApplyRequest'>; key: string }) =>
+      testTemplateApi.apply(homeworkId, body, key),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['homework'] }),
+  });
+}
+
+export function useLessonPreparation(id: number | null) {
+  return useQuery({
+    queryKey: keys.lessonPreparation(id ?? 0),
+    queryFn: ({ signal }) => lessonPreparationApi.current(id!, signal),
+    enabled: id != null,
+  });
+}
+
+export function useLessonPreparationTarget(lessonId: number | null) {
+  return useQuery({
+    queryKey: keys.lessonPreparationTarget(lessonId ?? 0),
+    queryFn: ({ signal }) => lessonPreparationApi.target(lessonId!, signal),
+    enabled: lessonId != null,
+  });
+}
+
+export function useCreateLessonPreparation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: lessonPreparationApi.create,
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
+  });
+}
+
+export function usePreparationAiOverview(enabled = true) {
+  return useQuery({
+    queryKey: keys.preparationAiOverview,
+    queryFn: ({ signal }) => lessonPreparationApi.aiOverview(signal),
+    enabled,
+    refetchInterval: (query) => {
+      const status = query.state.data?.latestJob?.status;
+      return status === 'PENDING' || status === 'RUNNING' ? 2000 : false;
+    },
+    refetchIntervalInBackground: true,
+  });
+}
+
+export function usePreparationAiSource(type: NonNullable<PreparationAiRequest['sourceType']>, id: number | null) {
+  return useQuery({
+    queryKey: keys.preparationAiSource(type, id ?? 0),
+    queryFn: ({ signal }) => lessonPreparationApi.aiSource(type, id!, signal),
+    enabled: id != null,
+    retry: false,
+    staleTime: 60_000,
+  });
+}
+
+export function useStartPreparationAiGeneration() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ body, key }: { body: PreparationAiRequest; key: string }) => lessonPreparationApi.startAi(body, key),
+    onSuccess: (job) => {
+      client.setQueryData<PreparationAiOverview>(keys.preparationAiOverview,
+        (old) => old ? { ...old, latestJob: job } : old);
+      void client.invalidateQueries({ queryKey: keys.preparationAiOverview });
+    },
+  });
+}
+
+export function useApplyLessonPreparation(lessonId: number) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schema<'LessonPreparationApplyRequest'>) => lessonPreparationApi.apply(lessonId, body),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ['lessons'] });
+      void client.invalidateQueries({ queryKey: keys.teacherWorkspace });
+    },
+  });
+}
 
 // ---- Техника и инвентарь: раздел Super Admin (ТЗ «Техника и инвентарь») ----
 
@@ -768,6 +1103,13 @@ export function useLesson(lessonId: number | null) {
   });
 }
 
+export function useWorkspaceLessonTargets(dateFrom: string, dateTo: string, page: number) {
+  return useQuery({
+    queryKey: keys.workspaceLessonTargets(dateFrom, dateTo, page),
+    queryFn: ({ signal }) => lessonsApi.list({ dateFrom, dateTo, status: 'ACTIVE', page, size: 20 }, signal),
+  });
+}
+
 /**
  * Урок для пункта «Текущий урок».
  *
@@ -779,13 +1121,14 @@ export function useLesson(lessonId: number | null) {
  * Открытую карточку это не трогает: она живёт своим `useLesson(id)` и по времени не
  * переключается — начавшийся следующий урок не должен выдёргивать учителя из работы.
  */
-export function useCurrentLesson() {
+export function useCurrentLesson(enabled = true) {
   return useQuery({
     queryKey: keys.currentLesson,
     queryFn: ({ signal }) => lessonsApi.current(undefined, signal),
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: 'always',
+    enabled,
   });
 }
 
@@ -2148,6 +2491,14 @@ export function useSetAnswerScores(homeworkId: number, studentProfileId: number)
 
 // ---- Textbooks (LIBRARY-BE-001, docs/textbook-library-contract.md) ----
 
+export function useTeacherTextbookCard(id: number | null) {
+  return useQuery({
+    queryKey: keys.teacherTextbookCard(id ?? 0),
+    queryFn: ({ signal }) => teacherTextbooksApi.card(id as number, signal),
+    enabled: id != null,
+  });
+}
+
 export function useTextbookBindingOptions(enabled = true) {
   return useQuery({
     queryKey: keys.textbookBindingOptions,
@@ -2336,11 +2687,34 @@ export function useCloseFeedbackMonth() {
   });
 }
 
+export function useHomeworkCard(id: number | null) {
+  return useQuery({
+    queryKey: keys.homeworkCard(id ?? 0),
+    queryFn: ({ signal }) => homeworkApi.card(id!, signal),
+    enabled: id != null && Number.isSafeInteger(id) && id > 0,
+  });
+}
+
+export function useCopyHomeworkToLesson(sourceId: number) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ body, key }: { body: Schema<'CopyHomeworkToLessonRequest'>; key: string }) =>
+      homeworkApi.copyToLesson(sourceId, body, key),
+    onSuccess: (copy) => {
+      if (copy.id != null) client.setQueryData(keys.homeworkCard(copy.id), copy);
+      void client.invalidateQueries({ queryKey: ['homework'] });
+      void client.invalidateQueries({ queryKey: ['lessons'] });
+      void client.invalidateQueries({ queryKey: keys.teacherWorkspace });
+    },
+  });
+}
+
 /** Все фильтры и страница входят в ключ; соседние страницы не подменяют друг друга. */
-export function useHomeworkList(params: HomeworkListParams) {
+export function useHomeworkList(params: HomeworkListParams, enabled = true) {
   return useQuery({
     queryKey: keys.homeworkList(params),
     queryFn: ({ signal }) => homeworkApi.list(params, signal),
+    enabled,
   });
 }
 

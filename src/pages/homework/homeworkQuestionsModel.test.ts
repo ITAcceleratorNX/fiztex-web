@@ -62,6 +62,15 @@ describe('validateQuestions', () => {
     expect(problems.get(0)).toContain('Нужно минимум два варианта ответа');
   });
 
+  it('не отправляет пустой дополнительный вариант', () => {
+    const problems = validateQuestions([draft({ options: [
+      { localId: '1', text: 'Да', correct: true },
+      { localId: '2', text: 'Нет', correct: false },
+      { localId: '3', text: '', correct: false },
+    ] })]);
+    expect(problems.get(0)).toContain('Заполните каждый вариант ответа');
+  });
+
   /** У открытого вопроса вариантов нет — и правила о них к нему не применяются. */
   it('открытый вопрос без вариантов валиден', () => {
     const problems = validateQuestions([draft({ type: 'OPEN_TEXT', options: [] })]);
@@ -72,7 +81,7 @@ describe('validateQuestions', () => {
     const problems = validateQuestions([
       draft({ maxScore: 0, options: options(true, false) }),
     ]);
-    expect(problems.get(0)).toContain('Балл за вопрос должен быть больше нуля');
+    expect(problems.get(0)).toContain('Балл за вопрос должен быть не меньше 0,5');
   });
 });
 

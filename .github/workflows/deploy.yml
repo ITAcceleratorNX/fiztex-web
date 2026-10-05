@@ -1,11 +1,20 @@
 name: Deploy frontend
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  deploy:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,11 +25,31 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 20.20.2
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm test
       - run: pnpm run build
+
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          name: web-dist
+          path: dist/
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy:
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: dist/
 
       - name: Upload dist to server
         env:
