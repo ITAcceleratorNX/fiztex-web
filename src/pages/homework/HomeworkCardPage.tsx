@@ -304,7 +304,8 @@ export function HomeworkCardPage() {
       {copyOpen && <CopyHomeworkToLessonModal sourceId={id} onClose={() => setCopyOpen(false)}
         onCopied={(copyId) => {
           setCopyOpen(false);
-          navigate(withHomeworkReturnTo(`/homework/${copyId}`, location.search));
+          // Копию сразу открываем в обычной форме: правят её до публикации (ТЗ «Копирование ДЗ и тестов»).
+          navigate(withHomeworkReturnTo(`/homework/${copyId}/edit`, location.search));
         }} />}
 
       <HomeworkAiGenerateModal

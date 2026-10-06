@@ -26,10 +26,12 @@ function readableDate(value: string) {
   return new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long' }).format(new Date(`${value}T12:00:00`));
 }
 
-export function LessonDestinationPicker({ selectedId, onSelect, subjectId, excludeLessonId }: {
+export function LessonDestinationPicker({ selectedId, onSelect, subjectId, excludeLessonId, excludeLabel = 'Урок исходного ДЗ' }: {
   selectedId: number | null;
   subjectId?: number;
   excludeLessonId?: number;
+  /** Почему исключённый урок недоступен — зависит от того, что переносят. */
+  excludeLabel?: string;
   onSelect: (lesson: Lesson | null) => void;
 }) {
   const [date, setDate] = useState(() => localDate(new Date()));
@@ -47,7 +49,7 @@ export function LessonDestinationPicker({ selectedId, onSelect, subjectId, exclu
 
   function unavailable(lesson: Lesson) {
     if (!lesson.capabilities?.includes('EDIT_TEACHING_PART') || lesson.academicPeriodStatus !== 'ACTIVE') return 'Недоступен для изменения';
-    if (lesson.id === excludeLessonId) return 'Урок исходного ДЗ';
+    if (lesson.id === excludeLessonId) return excludeLabel;
     if (subjectId != null && lesson.subjectId !== subjectId) return 'Другой предмет';
     return undefined;
   }

@@ -106,6 +106,9 @@ export const keys = {
   testTemplateTarget: (homeworkId: number) => ['homework', homeworkId, 'test-template-target'] as const,
   lessonPreparation: (id: number) => ['teacher-workspace', 'lesson-preparation', id] as const,
   lessonPreparationTarget: (lessonId: number) => ['lessons', lessonId, 'preparation-target'] as const,
+  nextTaughtLesson: (lessonId: number) => ['lessons', lessonId, 'next-taught'] as const,
+  lessonPreparationCopyPreview: (lessonId: number, targetId: number) =>
+    ['lessons', lessonId, 'preparation-copy', targetId] as const,
   preparationAiOverview: ['teacher-workspace', 'preparation-ai', 'overview'] as const,
   preparationAiSource: (type: string, id: number) => ['teacher-workspace', 'preparation-ai', 'source', type, id] as const,
   lessonSummary: (id: number, childId?: number) => ['lessons', id, 'summary', childId] as const,
@@ -518,6 +521,38 @@ export function useLessonPreparationTarget(lessonId: number | null) {
     queryKey: keys.lessonPreparationTarget(lessonId ?? 0),
     queryFn: ({ signal }) => lessonPreparationApi.target(lessonId!, signal),
     enabled: lessonId != null,
+  });
+}
+
+/** «Следующий урок этого класса» для «Использовать повторно»: без кэша — расписание идёт. */
+export function useNextTaughtLesson(lessonId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: keys.nextTaughtLesson(lessonId ?? 0),
+    queryFn: ({ signal }) => lessonsApi.nextTaught(lessonId!, signal),
+    enabled: enabled && lessonId != null,
+    staleTime: 0,
+  });
+}
+
+/**
+ * Перенос подготовки урока. Предпросмотр без кэша: по нему подтверждают замену чужого
+ * состояния цели, и его ревизия обязана быть свежей — иначе сохранение ответит 409.
+ */
+export function useLessonPreparationCopyPreview(sourceLessonId: number, targetLessonId: number | null) {
+  return useQuery({
+    queryKey: keys.lessonPreparationCopyPreview(sourceLessonId, targetLessonId ?? 0),
+    queryFn: ({ signal }) => lessonPreparationApi.copyPreview(sourceLessonId, targetLessonId!, signal),
+    enabled: targetLessonId != null,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+}
+
+export function useCopyLessonPreparation(sourceLessonId: number) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schema<'LessonPreparationCopyRequest'>) => lessonPreparationApi.copy(sourceLessonId, body),
+    onSuccess: () => void client.invalidateQueries({ queryKey: ['lessons'] }),
   });
 }
 

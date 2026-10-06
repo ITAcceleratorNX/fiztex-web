@@ -7,6 +7,9 @@ export type PreparationAiRequest = Schema<'LessonPreparationAiGenerateRequest'>;
 export type PreparationAiSource = Schema<'LessonPreparationAiSourceView'>;
 export type PreparationAiJob = Schema<'LessonPreparationAiJobView'>;
 export type PreparationAiOverview = Schema<'LessonPreparationAiOverview'>;
+export type PreparationCopyPreview = Schema<'LessonPreparationCopyPreview'>;
+export type PreparationCopyContent = Schema<'LessonPreparationCopyContent'>;
+export type PreparationCopyResult = Schema<'LessonPreparationCopyResult'>;
 
 const root = '/teacher/lesson-preparations';
 
@@ -19,6 +22,11 @@ export const lessonPreparationApi = {
     request<LessonPreparationTarget>(`/lessons/${lessonId}/preparation`, { signal }),
   apply: (lessonId: number, body: Schema<'LessonPreparationApplyRequest'>) =>
     request<Schema<'LessonPreparationApplicationView'>>(`/lessons/${lessonId}/preparation`, { method: 'PUT', body }),
+  /** Перенос подготовки урок → урок; адреса — от исходного урока. */
+  copyPreview: (sourceLessonId: number, targetLessonId: number, signal?: AbortSignal) =>
+    request<PreparationCopyPreview>(`/lessons/${sourceLessonId}/preparation/copy${pageQuery({ targetLessonId })}`, { signal }),
+  copy: (sourceLessonId: number, body: Schema<'LessonPreparationCopyRequest'>) =>
+    request<PreparationCopyResult>(`/lessons/${sourceLessonId}/preparation/copy`, { method: 'POST', body }),
   aiOverview: (signal?: AbortSignal) =>
     request<PreparationAiOverview>(`${root}/ai-generations/overview`, { signal }),
   aiSource: (sourceType: NonNullable<PreparationAiRequest['sourceType']>, workspaceItemId: number,

@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   BookOpen,
   Clock,
+  Copy,
   DoorOpen,
   LockKeyhole,
   Lock,
@@ -49,10 +50,12 @@ import {
   homeworkStateTone,
 } from '@/lib/lessonHomeworkState';
 import { LessonHomeworkRows } from '@/pages/homework/LessonHomeworkRows';
+import { CopyHomeworkToLessonModal } from '@/pages/workspace/CopyHomeworkToLessonModal';
 import { LessonManagementCard, SubstituteGradeAccessCard } from './LessonManagementCard';
 import { describeHistoryActor, describeHistoryEntry, hhmm } from './lessonHistory';
 import { LessonTextbookField } from './LessonTextbookField';
 import { LessonSummaryEntry } from './LessonSummaryEntry';
+import { CopyLessonPreparationModal } from './CopyLessonPreparationModal';
 
 /**
  * Куда возвращает «К расписанию». У учителя это его собственный экран: админский
@@ -83,6 +86,7 @@ export function LessonCardPage() {
   const saveTopic = useSaveLessonTopic(id);
   const saveComment = useSaveLessonComment(id);
   const schedulePath = schedulePathFor(admin?.role, searchParams.get('week'));
+  const [copyOpen, setCopyOpen] = useState(false);
 
   const lesson = lessonQuery.data;
   const canSeeHistory = hasAny(lesson, ['VIEW_ADMIN_HISTORY', 'VIEW_TEACHER_HISTORY']);
@@ -129,7 +133,24 @@ export function LessonCardPage() {
 
       <LessonHero lesson={lesson} changed={changed} />
 
+      {copyOpen && <CopyLessonPreparationModal lesson={lesson} onClose={() => setCopyOpen(false)} />}
+
       <section className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-8 shadow-soft">
+        {/*
+          Перенос подготовки на другой урок. Закрытый период источника не мешает: переносить
+          прошлую подготовку на новый урок и есть основной случай, а запрет на цель проверит
+          сервер. Права — то же EDIT_TEACHING_PART, что у карандашей: админу кнопки нет.
+        */}
+        {canEditTeaching && (
+          <div className="-mb-1 flex items-center justify-between gap-4">
+            <p className="text-sm font-bold text-slate-900">Подготовка к уроку</p>
+            <Button variant="secondary" size="sm" className="shrink-0 whitespace-nowrap"
+              icon={<Copy className="size-4" />} onClick={() => setCopyOpen(true)}>
+              Использовать повторно
+            </Button>
+          </div>
+        )}
+
         <TeachingField
           label="Тема урока"
           editable={canEditTeaching && !periodClosed}
@@ -492,6 +513,8 @@ function LessonHomeworkCard({
 }) {
   const canRead = hasAny(lesson, ['VIEW_STUDENTS']);
   const query = useLessonHomework(lesson.id ?? null, canRead);
+  const navigate = useNavigate();
+  const [reuseId, setReuseId] = useState<number | null>(null);
   const rows = query.data ?? [];
   const lessonPath = `/lesson-schedule/lessons/${lesson.id}`;
   const state = lesson.homeworkState;
@@ -549,8 +572,22 @@ function LessonHomeworkCard({
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-line">
-          <LessonHomeworkRows rows={rows} lessonId={lesson.id} canOpen={canManage} />
+          <LessonHomeworkRows rows={rows} lessonId={lesson.id} canOpen={canManage}
+            onReuse={canManage ? (row) => setReuseId(row.id ?? null) : undefined} />
         </div>
+      )}
+
+      {/* «Использовать повторно» у ДЗ и теста: копия-черновик в другой урок сразу
+          открывается в обычной форме задания — там её правят и публикуют. */}
+      {reuseId != null && (
+        <CopyHomeworkToLessonModal
+          sourceId={reuseId}
+          onClose={() => setReuseId(null)}
+          onCopied={(copyId) => {
+            setReuseId(null);
+            navigate(`/homework/${copyId}/edit`);
+          }}
+        />
       )}
     </section>
   );

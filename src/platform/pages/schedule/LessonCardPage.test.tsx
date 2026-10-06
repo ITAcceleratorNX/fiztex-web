@@ -32,6 +32,14 @@ vi.mock('@/platform/hooks/useTeacherAvailability', () => ({
   useTeachersList: () => ({ data: { content: [] }, isPending: false, isError: false }),
 }));
 
+// Окна «Использовать повторно» проверяются своими тестами; здесь — только кто и откуда их открывает.
+vi.mock('@/pages/workspace/CopyHomeworkToLessonModal', () => ({
+  CopyHomeworkToLessonModal: ({ sourceId }: { sourceId: number }) => <p>Копия задания {sourceId}</p>,
+}));
+vi.mock('./CopyLessonPreparationModal', () => ({
+  CopyLessonPreparationModal: () => <p>Перенос подготовки</p>,
+}));
+
 /** Команды урока в карточке не вызываются — она их только показывает. */
 const idleMutation = () => ({
   mutate: vi.fn(),
@@ -347,6 +355,37 @@ describe('LessonCardPage', () => {
 
     // Карточку задания бэкенд отдаёт только учителю урока: у админа строка не ведёт никуда.
     expect(screen.getByRole('button', { name: /Параграф 12/ })).toBeDisabled();
+  });
+
+  it('учитель урока использует повторно и подготовку, и каждое задание', async () => {
+    session.role = 'TEACHER';
+    useLesson.mockReturnValue({ data: lesson({ capabilities: TEACHING }), isPending: false, isError: false, error: null });
+    useLessonHomework.mockReturnValue({
+      data: [{ id: 12, title: 'Тест по дробям', status: 'PUBLISHED', answerFormat: 'TEST',
+        dueType: 'NONE', dueAt: null, lesson: { id: 6 }, progress: { submitted: 3, total: 25 } }],
+      isPending: false,
+      isError: false,
+    });
+    renderCard();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Использовать повторно: Тест по дробям' }));
+    expect(screen.getByText('Копия задания 12')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Использовать повторно' }));
+    expect(screen.getByText('Перенос подготовки')).toBeInTheDocument();
+  });
+
+  it('администратору повторное использование не предлагают', () => {
+    useLesson.mockReturnValue({
+      data: lesson({ capabilities: ['VIEW_CARD', 'VIEW_STUDENTS', 'MANAGE_STRUCTURE'] }),
+      isPending: false, isError: false, error: null,
+    });
+    useLessonHomework.mockReturnValue({
+      data: [{ id: 12, title: 'Тест по дробям', status: 'PUBLISHED', dueType: 'NONE', dueAt: null, lesson: { id: 6 } }],
+      isPending: false,
+      isError: false,
+    });
+    renderCard();
+    expect(screen.queryByRole('button', { name: /Использовать повторно/ })).not.toBeInTheDocument();
   });
 
   it('урок без заданий говорит об этом, а не молчит', () => {

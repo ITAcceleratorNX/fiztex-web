@@ -1,19 +1,29 @@
 import { useRef, useState } from 'react';
-import { Copy } from 'lucide-react';
+import { CalendarArrowUp, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { ChoiceRow } from '@/components/ui/ChoiceRow';
 import { Field, Select, TextInput } from '@/components/ui/Field';
 import { Modal } from '@/components/ui/Modal';
 import { NoticeBar } from '@/components/ui/NoticeBar';
 import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
-import { useCopyHomeworkToLesson, useHomeworkCard } from '@/hooks/queries';
+import { useCopyHomeworkToLesson, useHomeworkCard, useNextTaughtLesson } from '@/hooks/queries';
 import { useToast } from '@/context/ToastContext';
 import { ApiError } from '@/lib/api';
 import type { Schema } from '@/lib/apiSchemas';
 import type { Lesson } from '@/lib/lessonsApi';
+import { lessonAudience, lessonWhen } from '@/lib/preparationCopyModel';
 import { LessonDestinationPicker } from './LessonDestinationPicker';
 
 type CopyRequest = Schema<'CopyHomeworkToLessonRequest'>;
 
+/**
+ * «Использовать повторно» для ДЗ и теста (тест — то же задание с `answerFormat: TEST`).
+ *
+ * Куда — следующий урок этого класса или любой свой урок по предмету: первый вариант
+ * приходит с сервера (`/lessons/{id}/next-taught`) и есть только у задания, выданного из
+ * урока. Копия — черновик со своими вопросами и материалами, без работ, ответов и оценок
+ * исходного; дальше её правят и публикуют обычной формой задания.
+ */
 export function CopyHomeworkToLessonModal({ sourceId, onClose, onCopied }: {
   sourceId: number;
   onClose: () => void;
@@ -29,6 +39,9 @@ export function CopyHomeworkToLessonModal({ sourceId, onClose, onCopied }: {
   const [error, setError] = useState('');
   const attempt = useRef<{ body: string; key: string }>();
   const originalLessonId = source.data?.lessonId ?? source.data?.lesson?.id;
+  const next = useNextTaughtLesson(originalLessonId ?? null);
+  const isTest = source.data?.answerFormat === 'TEST';
+  const nextLesson = next.data?.lesson ?? null;
   const available = lesson?.id != null && lesson.capabilities?.includes('EDIT_TEACHING_PART')
     && lesson.academicPeriodStatus === 'ACTIVE' && lesson.subjectId === source.data?.subjectId
     && lesson.id !== originalLessonId;
@@ -47,14 +60,14 @@ export function CopyHomeworkToLessonModal({ sourceId, onClose, onCopied }: {
     try {
       const result = await copy.mutateAsync({ body, key: attempt.current.key });
       if (result.id == null) throw new Error('Missing copy id');
-      toast.success('Копия ДЗ создана — проверьте черновик перед публикацией');
+      toast.success(`Копия ${isTest ? 'теста' : 'ДЗ'} создана — проверьте черновик перед публикацией`);
       onCopied(result.id);
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : 'Не удалось скопировать ДЗ. Повторите попытку.');
     }
   }
 
-  return <Modal open onClose={() => { if (!copy.isPending) onClose(); }} title="Скопировать ДЗ в другой урок" size="lg"
+  return <Modal open onClose={() => { if (!copy.isPending) onClose(); }} title={isTest ? 'Скопировать тест в другой урок' : 'Скопировать ДЗ в другой урок'} size="lg"
     subtitle="Выберите урок по тому же предмету. Копия станет отдельным черновиком с собственными ответами и оценками."
     footer={<>
       <Button variant="secondary" onClick={onClose} disabled={copy.isPending}>Отмена</Button>
@@ -62,14 +75,33 @@ export function CopyHomeworkToLessonModal({ sourceId, onClose, onCopied }: {
     </>}>
     {source.isPending ? <LoadingBlock /> : source.isError ? <ErrorBlock message="Не удалось загрузить данные" onRetry={() => void source.refetch()} /> : <div className="space-y-5">
       <div className="rounded-xl bg-neutral-bg p-4">
-        <p className="text-13 text-muted">Исходное домашнее задание</p>
+        <p className="text-13 text-muted">{isTest ? 'Исходный тест' : 'Исходное домашнее задание'}</p>
         <p className="mt-1 break-words font-semibold text-ink">{source.data?.title}</p>
         <p className="mt-1 text-sm text-muted">{source.data?.subjectName} · {source.data?.className}</p>
       </div>
       <fieldset disabled={copy.isPending} className="min-w-0 space-y-5">
+        {originalLessonId != null && <section className="space-y-2">
+          <p className="text-11 font-bold uppercase text-slate-400">Следующий урок этого класса</p>
+          {next.isPending ? <LoadingBlock /> : next.isError
+            ? <ErrorBlock message="Не удалось найти следующий урок" onRetry={() => void next.refetch()} />
+            : nextLesson ? <ChoiceRow
+              icon={<CalendarArrowUp className="size-5" />}
+              title={`${nextLesson.subjectName ?? 'Урок'} · ${lessonAudience(nextLesson)}`}
+              description={lessonWhen(nextLesson)}
+              selected={lesson?.id === nextLesson.id}
+              disabled={!nextLesson.capabilities?.includes('EDIT_TEACHING_PART') || nextLesson.academicPeriodStatus !== 'ACTIVE'}
+              onClick={() => { setLesson(nextLesson); setConfirmed(false); setError(''); }}
+            /> : <p className="text-sm text-muted">В расписании больше нет ваших уроков по этому предмету у этого класса</p>}
+        </section>}
+        {originalLessonId != null && <p className="text-11 font-bold uppercase text-slate-400">Другой урок или класс</p>}
         <LessonDestinationPicker selectedId={lesson?.id ?? null} subjectId={source.data?.subjectId} excludeLessonId={originalLessonId}
           onSelect={(next) => { setLesson(next); setConfirmed(false); setError(''); }} />
         {available && <>
+          <div className="rounded-xl border border-line bg-neutral-bg p-4">
+            <p className="text-11 font-bold uppercase text-slate-400">Куда</p>
+            <p className="mt-1 font-semibold text-ink">{lesson.subjectName} · {lessonAudience(lesson)}</p>
+            <p className="mt-0.5 text-sm text-muted">{lessonWhen(lesson)}</p>
+          </div>
           <NoticeBar tone="soft">Получатели нового ДЗ: {lesson.className}{lesson.subgroupName ? `, подгруппа «${lesson.subgroupName}»` : ', весь класс'}.</NoticeBar>
           <Field label="Срок сдачи копии" required>
             <Select value={dueType} disabled={copy.isPending} onChange={(event) => { setDueType(event.target.value as typeof dueType); setError(''); }}>

@@ -36,6 +36,14 @@ export const lessonsApi = {
   },
 
   /**
+   * Следующий урок того же класса, предмета и подгруппы, который ведёт этот учитель, —
+   * вариант «куда» у «Использовать повторно» (подготовка, ДЗ, тест). Только учителю.
+   */
+  nextTaught(lessonId: number, signal?: AbortSignal): Promise<Schema<'NextTaughtLessonView'>> {
+    return request<Schema<'NextTaughtLessonView'>>(`/lessons/${lessonId}/next-taught`, { signal });
+  },
+
+  /**
    * Своя неделя — единственный источник «какие классы и предметы у меня есть», доступный
    * учителю. Справочники `/api/admin/*` ему отвечают 401, а общий `request()` считает это
    * концом сессии, поэтому спрашивать их с учительского экрана нельзя (см. `routes.ts`).
