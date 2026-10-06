@@ -5870,6 +5870,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Опубликованные отметки класса за период */
+        get: operations["getMyClassAttendance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/students": {
         parameters: {
             query?: never;
@@ -5882,6 +5899,23 @@ export interface paths {
          * @description Состав текущий и не зависит от выбранной четверти; сортировка по ФИО и ID ученика.
          */
         get: operations["getMyClassStudents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Сводка класса за выбранный период */
+        get: operations["getMyClassSummary"];
         put?: never;
         post?: never;
         delete?: never;
@@ -10503,6 +10537,57 @@ export interface components {
             studentProfileId?: number;
             subjectName?: string;
         };
+        MyClassAttendanceItemView: {
+            /** Format: int64 */
+            attendanceEntryId?: number;
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** @enum {string|null} */
+            mark?: "LATE" | "EXCUSED" | null;
+            /** Format: int64 */
+            sourceClassId?: number;
+            sourceClassName?: string;
+            /** @example 14:30:00 */
+            startTime?: string;
+            /** @enum {string} */
+            status?: "PRESENT" | "ABSENT";
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subgroupId?: number | null;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+        };
+        MyClassAttendancePageView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            /** @enum {string} */
+            dataState?: "NO_PUBLISHED_MARKS" | "PUBLISHED_MARKS";
+            /** Format: date */
+            dateFrom?: string;
+            /** Format: date */
+            dateTo?: string;
+            hasMore?: boolean;
+            items?: components["schemas"]["MyClassAttendanceItemView"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            studentProfileId?: number | null;
+            /** Format: int64 */
+            totalItems?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
         MyClassContextClassView: {
             /** Format: int64 */
             homeroomAssignmentId?: number;
@@ -10584,6 +10669,24 @@ export interface components {
             middleName?: string | null;
             /** Format: int64 */
             studentProfileId?: number;
+        };
+        MyClassSummaryView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            /** @enum {string} */
+            dataState?: "NO_PUBLISHED_MARKS" | "PUBLISHED_MARKS";
+            /** Format: int64 */
+            excusedCount?: number;
+            /** Format: int64 */
+            lateCount?: number;
+            /** Format: int64 */
+            missedCount?: number;
+            /** Format: int64 */
+            studentCount?: number;
         };
         MyEquipmentView: {
             inventoryNumber?: string;
@@ -25052,6 +25155,71 @@ export interface operations {
             };
         };
     };
+    getMyClassAttendance: {
+        parameters: {
+            query?: {
+                periodId?: number;
+                studentProfileId?: number;
+                from?: string;
+                to?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница опубликованных отметок */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyClassAttendancePageView"];
+                };
+            };
+            /** @description Неверный период, диапазон или страница */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс или ученик недоступен текущему Teacher */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Неоднозначный текущий период */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     getMyClassStudents: {
         parameters: {
             query?: {
@@ -25095,6 +25263,66 @@ export interface operations {
             };
             /** @description Класс недоступен текущему Teacher */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getMyClassSummary: {
+        parameters: {
+            query?: {
+                periodId?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Численность и три счётчика посещаемости */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyClassSummaryView"];
+                };
+            };
+            /** @description Период не выбран или не принадлежит текущему году */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс недоступен текущему Teacher */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Неоднозначный текущий период */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
