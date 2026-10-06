@@ -5870,6 +5870,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Актуальный состав класса
+         * @description Состав текущий и не зависит от выбранной четверти; сортировка по ФИО и ID ученика.
+         */
+        get: operations["getMyClassStudents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/context": {
         parameters: {
             query?: never;
@@ -10540,6 +10560,30 @@ export interface components {
              * @description Начало активного года или null
              */
             yearStartDate?: string | null;
+        };
+        MyClassRosterView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            hasMore?: boolean;
+            items?: components["schemas"]["MyClassStudentView"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalItems?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        MyClassStudentView: {
+            displayName?: string;
+            firstName?: string;
+            lastName?: string;
+            middleName?: string | null;
+            /** Format: int64 */
+            studentProfileId?: number;
         };
         MyEquipmentView: {
             inventoryNumber?: string;
@@ -25004,6 +25048,58 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeacherFeedbackMonthView"];
+                };
+            };
+        };
+    };
+    getMyClassStudents: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница действующих учеников */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyClassRosterView"];
+                };
+            };
+            /** @description Недопустимая страница или размер */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс недоступен текущему Teacher */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
