@@ -5921,6 +5921,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Фактические уроки класса и отдельно опубликованный недельный план */
+        get: operations["getMyClassSchedule"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/students": {
         parameters: {
             query?: never;
@@ -10787,6 +10804,67 @@ export interface components {
             /** Format: int32 */
             totalPages?: number;
         };
+        MyClassScheduleFactView: {
+            /** @enum {string} */
+            cancellationReason?: "CALENDAR_NO_LESSONS" | "SCHEDULE_SLOT_REMOVED" | "MANUAL";
+            /** Format: date */
+            date?: string;
+            /** @example 14:30:00 */
+            endTime?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int32 */
+            lessonNumber?: number;
+            manuallyModified?: boolean;
+            room?: string;
+            /** Format: int64 */
+            sourceScheduleId?: number;
+            /** @enum {string} */
+            sourceType?: "SCHEDULE" | "MANUAL";
+            /** @example 14:30:00 */
+            startTime?: string;
+            /** @enum {string} */
+            status?: "ACTIVE" | "CANCELLED";
+            /** Format: int64 */
+            subgroupId?: number;
+            subgroupName?: string;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            /** Format: int64 */
+            substituteTeacherId?: number;
+            substituteTeacherName?: string;
+            /** @enum {string} */
+            targetType?: "CLASS" | "SUBGROUP";
+            /** Format: int64 */
+            teacherId?: number;
+            teacherName?: string;
+        };
+        MyClassSchedulePlanView: {
+            /** Format: int64 */
+            revision?: number;
+            /** Format: int64 */
+            scheduleId?: number;
+            slots?: components["schemas"]["PublishedLessonSlot"][];
+        };
+        MyClassScheduleView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            /** @enum {string} */
+            factState?: "NO_FACTS_AVAILABLE" | "FACTS_AVAILABLE_COVERAGE_UNKNOWN";
+            facts?: components["schemas"]["MyClassScheduleFactView"][];
+            /** Format: date */
+            from?: string;
+            plan?: components["schemas"]["MyClassSchedulePlanView"];
+            /** @enum {string} */
+            planState?: "PUBLISHED" | "NOT_PUBLISHED";
+            /** Format: date */
+            to?: string;
+        };
         MyClassStudentView: {
             displayName?: string;
             firstName?: string;
@@ -12024,6 +12102,32 @@ export interface components {
             confirmedWarningCodes: string[];
             /** Format: int64 */
             expectedRevision: number;
+        };
+        PublishedLessonSlot: {
+            /** @example 14:30:00 */
+            endTime?: string;
+            /** Format: int32 */
+            lessonNumber?: number;
+            /** Format: int64 */
+            lessonPeriodId?: number;
+            room?: string;
+            /** Format: int64 */
+            scheduleLessonId?: number;
+            /** @example 14:30:00 */
+            startTime?: string;
+            /** Format: int64 */
+            subgroupId?: number;
+            subgroupName?: string;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            /** @enum {string} */
+            targetType?: "CLASS" | "SUBGROUP";
+            /** Format: int64 */
+            teacherId?: number;
+            teacherName?: string;
+            /** @enum {string} */
+            weekday?: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
         };
         PushDeliveryDiagnosticsView: {
             /** Format: date-time */
@@ -25454,6 +25558,68 @@ export interface operations {
                 };
             };
             /** @description Класс или ученик недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Неоднозначный текущий период */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getMyClassSchedule: {
+        parameters: {
+            query: {
+                periodId?: number;
+                from: string;
+                to: string;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Снимок расписания класса */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyClassScheduleView"];
+                };
+            };
+            /** @description Неверный период или диапазон */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс недоступен */
             403: {
                 headers: {
                     [name: string]: unknown;
