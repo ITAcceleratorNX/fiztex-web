@@ -89,6 +89,9 @@ import type {
 } from '@/lib/types';
 
 export const keys = {
+  myClassContext: ['my-class', 'context'] as const,
+  myClassRoster: (classId: number) => ['my-class', 'classes', classId, 'students'] as const,
+  myClassSummary: (classId: number, periodId: number) => ['my-class', 'classes', classId, 'summary', periodId] as const,
   adminClasses: ['admin', 'classes'] as const,
   adminHomeroomTeachers: ['admin', 'teachers', 'homeroom-options'] as const,
   teacherWorkspace: ['teacher-workspace'] as const,
@@ -2787,5 +2790,44 @@ export function useHomeworkFilterOptions(enabled: boolean) {
         subjects: [...subjects].map(([id, name]) => ({ id, name })),
       };
     },
+  });
+}
+
+export function useMyClassContext() {
+  return useQuery({
+    queryKey: keys.myClassContext,
+    queryFn: ({ signal }) => request<Schema<'MyClassContextView'>>('/my-class/context', { signal }),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useMyClassRoster(classId: number | null) {
+  return useInfiniteQuery({
+    queryKey: classId == null ? ['my-class', 'classes', 'none', 'students'] : keys.myClassRoster(classId),
+    enabled: classId != null,
+    initialPageParam: 0,
+    queryFn: ({ pageParam, signal }) => request<Schema<'MyClassRosterView'>>(
+      `/my-class/classes/${classId}/students?page=${pageParam}&size=24`,
+      { signal },
+    ),
+    getNextPageParam: (lastPage) => lastPage.hasMore ? (lastPage.page ?? 0) + 1 : undefined,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useMyClassSummary(classId: number | null, periodId: number | null) {
+  return useQuery({
+    queryKey: classId == null || periodId == null
+      ? ['my-class', 'summary', 'none']
+      : keys.myClassSummary(classId, periodId),
+    enabled: classId != null && periodId != null,
+    queryFn: ({ signal }) => request<Schema<'MyClassSummaryView'>>(
+      `/my-class/classes/${classId}/summary?periodId=${periodId}`,
+      { signal },
+    ),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 }

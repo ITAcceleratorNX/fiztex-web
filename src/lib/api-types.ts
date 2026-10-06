@@ -10880,6 +10880,10 @@ export interface components {
             academicPeriodId?: number;
             /** Format: int64 */
             academicYearId?: number;
+            /** Format: date */
+            attendanceMonthStart?: string;
+            /** @description Средний балл шкальных оценок; null, если оценок нет */
+            averageGrade?: number;
             /** Format: int64 */
             classId?: number;
             /** @enum {string} */
@@ -10890,6 +10894,12 @@ export interface components {
             lateCount?: number;
             /** Format: int64 */
             missedCount?: number;
+            /** @description Доля присутствия в текущем месяце; null без опубликованных отметок */
+            monthlyAttendancePercent?: number;
+            /** Format: int64 */
+            monthlyPublishedMarkCount?: number;
+            /** Format: int64 */
+            scaleGradeCount?: number;
             /** Format: int64 */
             studentCount?: number;
         };
@@ -25706,7 +25716,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Численность и три счётчика посещаемости */
+            /** @description Численность, оценки и посещаемость класса */
             200: {
                 headers: {
                     [name: string]: unknown;

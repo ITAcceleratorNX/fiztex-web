@@ -43,6 +43,8 @@ export const ROUTES = {
   feedback: '/feedback',
   /** Своё расписание учителя — ролевой экран поверх `/api/schedule/me/week`. */
   mySchedule: '/my-schedule',
+  /** Классы, где учитель сейчас назначен классным руководителем. */
+  myClass: '/my-class',
   /**
    * Пункт «Текущий урок»: адрес-переход, а не экран. Спрашивает
    * `GET /api/lessons/current` и уводит на карточку найденного урока.
@@ -203,6 +205,7 @@ export function isRouteAllowedForRole(path: string, role: string | undefined): b
   // Профиль общий: он не читает ни одного административного адреса, и роли,
   // которым панель показывает три раздела, тоже должны знать, под кем вошли.
   if (matchesRoutePrefix(path, ROUTES.profile)) return true;
+  if (matchesRoutePrefix(path, ROUTES.myClass)) return role === 'TEACHER';
   if (SUPER_ADMIN_ROUTE_PREFIXES.some((prefix) => matchesRoutePrefix(path, prefix))) {
     return role === 'SUPER_ADMIN';
   }
@@ -248,6 +251,7 @@ const TEACHER_ROUTE_PREFIXES = [
   ROUTES.textbooks,
   ROUTES.feedback,
   ROUTES.mySchedule,
+  ROUTES.myClass,
   ROUTES.currentLesson,
   ROUTES.myAvailability,
   ROUTES.journal,
