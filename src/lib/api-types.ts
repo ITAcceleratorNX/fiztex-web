@@ -740,6 +740,64 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/classes/{classId}/homeroom-teacher": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Текущий классный руководитель и версия для изменения */
+        get: operations["current"];
+        /**
+         * Назначить или заменить классного руководителя
+         * @description expectedCurrentAssignmentId обязателен: null — свободный класс, ID — увиденное назначение. Несовпадение даёт 409 HOMEROOM_ASSIGNMENT_CHANGED.
+         */
+        put: operations["put_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/classes/{classId}/homeroom-teacher/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** История классных руководителей, включая архивный класс */
+        get: operations["history_12"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/classes/{classId}/homeroom-teacher/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Снять классного руководителя
+         * @description expectedCurrentAssignmentId обязателен: null — свободный класс, ID — увиденное назначение.
+         */
+        post: operations["remove"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/classes/{id}": {
         parameters: {
             query?: never;
@@ -1435,7 +1493,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_10"];
+        get: operations["history_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1499,7 +1557,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["current_2"];
+        get: operations["current_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1643,7 +1701,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_9"];
+        get: operations["history_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3371,7 +3429,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_8"];
+        get: operations["history_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3483,7 +3541,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_7"];
+        get: operations["history_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3547,7 +3605,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_6"];
+        get: operations["history_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3675,7 +3733,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_5"];
+        get: operations["history_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4539,7 +4597,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_4"];
+        get: operations["history_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4747,7 +4805,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_3"];
+        get: operations["history_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4891,7 +4949,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["current_1"];
+        get: operations["current_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4955,7 +5013,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_2"];
+        get: operations["history_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5070,6 +5128,38 @@ export interface paths {
         get: operations["list_5"];
         put?: never;
         post: operations["create_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/grade-corrections/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/grade-corrections/next-lesson": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["nextLesson"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6283,7 +6373,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["current"];
+        get: operations["current_1"];
         put?: never;
         post?: never;
         delete: operations["delete_4"];
@@ -7243,6 +7333,17 @@ export interface components {
             enabled?: boolean;
             /** Format: int32 */
             violationCount?: number;
+        };
+        ApiErrorResponse: {
+            code?: string;
+            details?: Record<string, never>;
+            error?: string;
+            message?: string;
+            path?: string;
+            /** Format: int32 */
+            status?: number;
+            /** Format: date-time */
+            timestamp?: string;
         };
         ApplicantRequest: {
             childFullName?: string;
@@ -8715,7 +8816,7 @@ export interface components {
         };
         GradeCorrectionHistoryView: {
             /** @enum {string} */
-            action?: "CREATED" | "COMMENT_CHANGED" | "DEADLINE_CHANGED" | "TEMPORARY_GRADE_CHANGED" | "COMPLETED" | "CANCELLED";
+            action?: "CREATED" | "COMMENT_CHANGED" | "DEADLINE_CHANGED" | "TEMPORARY_GRADE_CHANGED" | "COMPLETED" | "CANCELLED" | "EXPIRED";
             /** @enum {string} */
             actorAs?: "MAIN_TEACHER" | "SUBSTITUTE_TEACHER";
             /** Format: int64 */
@@ -8725,10 +8826,15 @@ export interface components {
             actorRole?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
             after?: components["schemas"]["JsonNode"];
             before?: components["schemas"]["JsonNode"];
+            /** Format: int64 */
+            correctionId?: number;
             /** Format: date-time */
             createdAt?: string;
             /** Format: int64 */
             id?: number;
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
         };
         GradeCorrectionView: {
             /** Format: date-time */
@@ -9001,6 +9107,62 @@ export interface components {
             name?: string;
             /** Format: int64 */
             subjectId?: number;
+        };
+        HomeroomAssignmentView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            /** Format: int64 */
+            createdByAccountId?: number;
+            /** @enum {string} */
+            endReason?: "REPLACED" | "REMOVED" | "TEACHER_BLOCKED" | "TEACHER_ARCHIVED" | "CLASS_ARCHIVED" | "YEAR_ARCHIVED" | "YEAR_ENDED";
+            /** Format: date-time */
+            endedAt?: string;
+            /** Format: int64 */
+            endedByAccountId?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: date-time */
+            startedAt?: string;
+            teacherName?: string;
+            /** Format: int64 */
+            teacherProfileId?: number;
+        };
+        HomeroomCurrentView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            /** @enum {string} */
+            academicYearStatus?: "DRAFT" | "ACTIVE" | "ARCHIVED";
+            /** @enum {string} */
+            accessState?: "ACTIVE" | "NO_ASSIGNMENT" | "CLASS_ARCHIVED" | "YEAR_NOT_ACTIVE" | "YEAR_NOT_STARTED" | "YEAR_ENDED" | "TEACHER_NOT_ACTIVE";
+            assignment?: components["schemas"]["HomeroomAssignmentView"];
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            /** @enum {string} */
+            classStatus?: "ACTIVE" | "ARCHIVED";
+            /**
+             * Format: int64
+             * @description Версия для команды; null, когда слот пуст
+             */
+            expectedCurrentAssignmentId?: number | null;
+            /** Format: date */
+            yearEndDate?: string;
+            /** Format: date */
+            yearStartDate?: string;
+        };
+        HomeroomHistoryPageView: {
+            hasMore?: boolean;
+            items?: components["schemas"]["HomeroomAssignmentView"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalItems?: number;
+            /** Format: int32 */
+            totalPages?: number;
         };
         HomeworkAiJobView: {
             applied?: boolean;
@@ -10445,6 +10607,12 @@ export interface components {
             canSubmit?: boolean;
             lastDecision?: components["schemas"]["TeacherAvailabilityProposalView"];
         };
+        NextLessonView: {
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+        };
         NotificationAccountDiagnosticsView: {
             /** Format: int64 */
             accountId?: number;
@@ -11552,6 +11720,15 @@ export interface components {
             /** @enum {string} */
             type: "AVAILABLE" | "UNAVAILABLE";
         };
+        PutHomeroomTeacherRequest: {
+            /**
+             * Format: int64
+             * @description ID текущего назначения из GET; явный null, если назначения нет
+             */
+            expectedCurrentAssignmentId: number | null;
+            /** Format: int64 */
+            teacherProfileId: number;
+        };
         PutTeacherAvailabilityRequest: {
             intervals: components["schemas"]["PutAvailabilityIntervalRequest"][];
             /** @enum {string} */
@@ -11651,6 +11828,13 @@ export interface components {
         };
         RejectAvailabilityProposalRequest: {
             comment?: string;
+        };
+        RemoveHomeroomTeacherRequest: {
+            /**
+             * Format: int64
+             * @description ID текущего назначения из GET; явный null, если назначения нет
+             */
+            expectedCurrentAssignmentId: number | null;
         };
         RenameRequest: {
             name: string;
@@ -15140,6 +15324,258 @@ export interface operations {
             };
         };
     };
+    current: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Текущее назначение или пустой слот */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeroomCurrentView"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Недостаточно прав структуры школы */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    put_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutHomeroomTeacherRequest"];
+            };
+        };
+        responses: {
+            /** @description Актуальное назначение и версия */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeroomCurrentView"];
+                };
+            };
+            /** @description Отсутствует или неверно задано предусловие */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Недостаточно прав структуры школы */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Устаревшая форма или недоступный класс/учитель */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    history_12: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница истории */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeroomHistoryPageView"];
+                };
+            };
+            /** @description Неверная страница или размер */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Недостаточно прав структуры школы */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RemoveHomeroomTeacherRequest"];
+            };
+        };
+        responses: {
+            /** @description Пустой слот и новая версия */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeroomCurrentView"];
+                };
+            };
+            /** @description Отсутствует или неверно задано предусловие */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Недостаточно прав структуры школы */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Устаревшая форма или недоступный класс */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     getById_6: {
         parameters: {
             query?: never;
@@ -16449,7 +16885,7 @@ export interface operations {
             };
         };
     };
-    history_10: {
+    history_11: {
         parameters: {
             query: {
                 entityType: "BELL_TEMPLATE" | "WORKING_DAYS" | "CALENDAR_EVENT" | "TEACHER_AVAILABILITY" | "GROUP_SET" | "SUBGROUP" | "LESSON_GENERATION";
@@ -16593,7 +17029,7 @@ export interface operations {
             };
         };
     };
-    current_2: {
+    current_3: {
         parameters: {
             query: {
                 classId: number;
@@ -16801,7 +17237,7 @@ export interface operations {
             };
         };
     };
-    history_9: {
+    history_10: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -19988,7 +20424,7 @@ export interface operations {
             };
         };
     };
-    history_8: {
+    history_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -20173,7 +20609,7 @@ export interface operations {
             };
         };
     };
-    history_7: {
+    history_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -20266,7 +20702,7 @@ export interface operations {
             };
         };
     };
-    history_6: {
+    history_7: {
         parameters: {
             query: {
                 subjectId: number;
@@ -20478,7 +20914,7 @@ export interface operations {
             };
         };
     };
-    history_5: {
+    history_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -22092,7 +22528,7 @@ export interface operations {
             };
         };
     };
-    history_4: {
+    history_5: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -22445,7 +22881,7 @@ export interface operations {
             };
         };
     };
-    history_3: {
+    history_4: {
         parameters: {
             query: {
                 unitId?: number;
@@ -22720,7 +23156,7 @@ export interface operations {
             };
         };
     };
-    current_1: {
+    current_2: {
         parameters: {
             query?: {
                 childId?: number;
@@ -22814,7 +23250,7 @@ export interface operations {
             };
         };
     };
-    history_2: {
+    history_3: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -23072,6 +23508,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GradeCorrectionView"];
+                };
+            };
+        };
+    };
+    history_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeCorrectionHistoryView"][];
+                };
+            };
+        };
+    };
+    nextLesson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NextLessonView"];
                 };
             };
         };
@@ -25254,7 +25734,7 @@ export interface operations {
             };
         };
     };
-    current: {
+    current_1: {
         parameters: {
             query?: never;
             header?: never;
