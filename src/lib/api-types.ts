@@ -5887,6 +5887,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/final-grades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Опубликованные итоги периода учеников класса */
+        get: operations["getMyClassFinalGrades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/grades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Действующие оценки учеников класса за период */
+        get: operations["getMyClassGrades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/students": {
         parameters: {
             query?: never;
@@ -10645,6 +10679,97 @@ export interface components {
              * @description Начало активного года или null
              */
             yearStartDate?: string | null;
+        };
+        MyClassFinalGradeItemView: {
+            /** Format: int64 */
+            finalGradeId?: number;
+            /** Format: date-time */
+            publishedAt?: string;
+            /** Format: int64 */
+            sourceClassId?: number;
+            sourceClassName?: string;
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subgroupId?: number | null;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            /** Format: int32 */
+            value?: number;
+        };
+        MyClassFinalGradesPageView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            hasMore?: boolean;
+            items?: components["schemas"]["MyClassFinalGradeItemView"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            studentProfileId?: number | null;
+            /** Format: int64 */
+            subjectId?: number | null;
+            /** Format: int64 */
+            totalItems?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        MyClassGradeItemView: {
+            /** Format: int64 */
+            gradeId?: number;
+            /** @enum {string|null} */
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | null;
+            maxScore?: number | null;
+            numericValue?: number | null;
+            /** Format: date-time */
+            publishedAt?: string;
+            scaleCode?: string | null;
+            score?: number | null;
+            /** Format: int64 */
+            sourceClassId?: number;
+            sourceClassName?: string;
+            /** Format: date */
+            sourceDate?: string;
+            /** Format: int64 */
+            sourceId?: number;
+            /** @enum {string} */
+            sourceType?: "LESSON" | "HOMEWORK";
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            weight?: number;
+        };
+        MyClassGradesPageView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            hasMore?: boolean;
+            items?: components["schemas"]["MyClassGradeItemView"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            studentProfileId?: number | null;
+            /** Format: int64 */
+            subjectId?: number | null;
+            /** Format: int64 */
+            totalItems?: number;
+            /** Format: int32 */
+            totalPages?: number;
         };
         MyClassRosterView: {
             /** Format: int64 */
@@ -25201,6 +25326,134 @@ export interface operations {
                 };
             };
             /** @description Класс или ученик недоступен текущему Teacher */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Неоднозначный текущий период */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getMyClassFinalGrades: {
+        parameters: {
+            query?: {
+                periodId?: number;
+                studentProfileId?: number;
+                subjectId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница опубликованных итогов */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyClassFinalGradesPageView"];
+                };
+            };
+            /** @description Неверный период или страница */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс или ученик недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Неоднозначный текущий период */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getMyClassGrades: {
+        parameters: {
+            query?: {
+                periodId?: number;
+                studentProfileId?: number;
+                subjectId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница сохранённых оценок */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyClassGradesPageView"];
+                };
+            };
+            /** @description Неверный период или страница */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс или ученик недоступен */
             403: {
                 headers: {
                     [name: string]: unknown;
