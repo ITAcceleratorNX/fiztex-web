@@ -2,7 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import {
   lessonSummaryApi, summaryRunning, type LessonSummary, type SummaryGeneration, type SummarySave,
 } from '@/lib/lessonSummaryApi';
-import { ApiError, api, type CopyTestRequest } from '@/lib/api';
+import { ApiError, api, pageQuery, request, type CopyTestRequest } from '@/lib/api';
 import {
   lessonAdminApi,
   lessonTeachingApi,
@@ -89,6 +89,8 @@ import type {
 } from '@/lib/types';
 
 export const keys = {
+  adminClasses: ['admin', 'classes'] as const,
+  adminHomeroomTeachers: ['admin', 'teachers', 'homeroom-options'] as const,
   teacherWorkspace: ['teacher-workspace'] as const,
   teacherWorkspaceHome: (page: number) => ['teacher-workspace', 'home', page] as const,
   teacherWorkspaceFolders: (page: number) => ['teacher-workspace', 'folders', page] as const,
@@ -257,6 +259,47 @@ export const keys = {
   monthlyFeedbackSheet: (key: FeedbackSheetKey) =>
     ['monthly-feedback', 'teacher', 'sheet', key.month, key.classId, key.subjectId] as const,
 };
+
+/** Load every teacher page: a class teacher must not disappear after the first page. */
+export function useAdminHomeroomTeachers(enabled: boolean) {
+  return useQuery({
+    queryKey: keys.adminHomeroomTeachers,
+    enabled,
+    staleTime: 60_000,
+    queryFn: async ({ signal }) => {
+      const teachers: Schema<'TeacherProfileView'>[] = [];
+      for (let page = 0; ; page++) {
+        signal.throwIfAborted();
+        const result = await request<Schema<'PageTeacherProfileView'>>(
+          `/admin/teachers${pageQuery({ page, size: 100 })}`,
+          { signal },
+        );
+        teachers.push(...(result.content ?? []));
+        if (result.last === true
+          || (result.totalPages != null && page + 1 >= result.totalPages)
+          || (result.totalPages == null && (result.content?.length ?? 0) < 100)) break;
+      }
+      return teachers
+        .filter((teacher) => teacher.id != null
+          && teacher.status === 'ACTIVE'
+          && (teacher.accountStatus === 'ACTIVE' || teacher.accountStatus === 'NOT_ACTIVATED'))
+        .sort((a, b) => `${a.lastName ?? ''} ${a.firstName ?? ''}`.localeCompare(
+          `${b.lastName ?? ''} ${b.firstName ?? ''}`, 'ru', { sensitivity: 'base' },
+        ));
+    },
+  });
+}
+
+export function useCreateSchoolClass() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schema<'CreateSchoolClassRequest'>) =>
+      request<Schema<'SchoolClassView'>>('/admin/classes', { method: 'POST', body }),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: keys.adminClasses });
+    },
+  });
+}
 
 export function useTeacherWorkspaceHome(page = 0) {
   return useQuery({

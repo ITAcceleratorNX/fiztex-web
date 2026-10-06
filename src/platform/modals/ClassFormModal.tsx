@@ -2,8 +2,10 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput, Select } from '@/components/ui/Field';
+import { useAdminHomeroomTeachers, useCreateSchoolClass } from '@/hooks/queries';
+import { ApiError } from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
-import { createClass, updateClass } from '../services';
+import { updateClass } from '../services';
 import type { AcademicYear, SchoolClass } from '../types';
 import { platformErrorMessage } from '../platformErrorMessage';
 
@@ -36,10 +38,15 @@ export function ClassFormModal({
   const toast = useToast();
   const [displayName, setDisplayName] = useState('');
   const [academicYearId, setAcademicYearId] = useState('');
+  const [homeroomTeacherId, setHomeroomTeacherId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   const isEdit = Boolean(editing);
+  const teachers = useAdminHomeroomTeachers(open && !isEdit);
+  const createClass = useCreateSchoolClass();
+  const selectedYear = years.find((year) => year.id === academicYearId);
+  const canAssignTeacher = selectedYear?.status === 'ACTIVE';
 
   useEffect(() => {
     if (!open) return;
@@ -51,6 +58,7 @@ export function ClassFormModal({
       setAcademicYearId(editing.academicYearId);
     } else {
       setDisplayName('');
+      setHomeroomTeacherId('');
       setAcademicYearId(
         defaultYearId || years.find((y) => y.status === 'ACTIVE')?.id || years[0]?.id || '',
       );
@@ -82,18 +90,26 @@ export function ClassFormModal({
           setPending(false);
           return;
         }
-        await createClass({
+        const teacherId = canAssignTeacher && homeroomTeacherId
+          ? Number(homeroomTeacherId)
+          : undefined;
+        await createClass.mutateAsync({
           name,
-          academicYearId,
+          academicYearId: Number(academicYearId),
           grade: parsed.grade,
           letter: parsed.letter,
+          homeroomTeacherProfileId: teacherId,
         });
-        toast.success(`Класс ${parsed.grade} «${parsed.letter}» создан`);
+        toast.success(teacherId
+          ? `Класс ${parsed.grade} «${parsed.letter}» создан, руководитель назначен`
+          : `Класс ${parsed.grade} «${parsed.letter}» создан`);
       }
       onSaved();
       onClose();
     } catch (err) {
-      setError(platformErrorMessage(err, 'Не удалось сохранить класс. Проверьте данные и попробуйте ещё раз.'));
+      setError(err instanceof ApiError && err.code === 'HOMEROOM_ASSIGNMENT_CONFLICT'
+        ? 'Не удалось назначить выбранного учителя. Класс не создан. Выберите другого учителя или создайте класс без руководителя.'
+        : platformErrorMessage(err, 'Не удалось сохранить класс. Проверьте данные и попробуйте ещё раз.'));
     } finally {
       setPending(false);
     }
@@ -127,7 +143,10 @@ export function ClassFormModal({
         </Field>
         {!isEdit && (
           <Field label="Учебный год" required>
-            <Select value={academicYearId} onChange={(e) => setAcademicYearId(e.target.value)}>
+            <Select value={academicYearId} onChange={(e) => {
+              setAcademicYearId(e.target.value);
+              setHomeroomTeacherId('');
+            }}>
               {years.map((year) => (
                 <option key={year.id} value={year.id}>
                   {year.name}
@@ -136,12 +155,49 @@ export function ClassFormModal({
             </Select>
           </Field>
         )}
+        {!isEdit && (
+          <Field label="Классный руководитель" hint="Необязательно — можно назначить позже">
+            <div className="space-y-2">
+              <Select
+                value={homeroomTeacherId}
+                onChange={(e) => setHomeroomTeacherId(e.target.value)}
+                disabled={!canAssignTeacher || teachers.isPending || teachers.isError
+                  || teachers.data?.length === 0 || pending}
+                placeholder="Выберите учителя"
+              >
+                <option value="">Выберите учителя</option>
+                {(teachers.data ?? []).map((teacher) => (
+                  <option key={teacher.id} value={teacher.id}>
+                    {[teacher.lastName, teacher.firstName, teacher.middleName].filter(Boolean).join(' ')}
+                  </option>
+                ))}
+              </Select>
+              {!canAssignTeacher && selectedYear && (
+                <p className="text-xs text-muted">Руководителя можно назначить после активации учебного года.</p>
+              )}
+              {canAssignTeacher && teachers.isPending && (
+                <p role="status" className="text-xs text-muted">Загрузка учителей…</p>
+              )}
+              {canAssignTeacher && teachers.isSuccess && teachers.data.length === 0 && (
+                <p className="text-xs text-muted">Учителя не найдены</p>
+              )}
+              {canAssignTeacher && teachers.isError && (
+                <div role="alert" className="flex items-center gap-2 text-xs text-no-lessons-fg">
+                  <span>Не удалось загрузить учителей.</span>
+                  <Button type="button" size="sm" variant="secondary" onClick={() => void teachers.refetch()}>
+                    Повторить
+                  </Button>
+                </div>
+              )}
+            </div>
+          </Field>
+        )}
         <Field label="Статус класса" required>
           <Select value="ACTIVE" onChange={() => {}} disabled>
             <option value="ACTIVE">Активен</option>
           </Select>
         </Field>
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p role="alert" className="text-sm text-no-lessons-fg">{error}</p>}
       </form>
     </Modal>
   );

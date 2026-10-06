@@ -8507,6 +8507,8 @@ export interface components {
             /** Format: int64 */
             academicYearId: number;
             grade?: string;
+            /** Format: int64 */
+            homeroomTeacherProfileId?: number;
             letter?: string;
             name?: string;
         };
