@@ -5870,6 +5870,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Классы классного руководителя и периоды текущего учебного года */
+        get: operations["getMyClassContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications/devices/{installationId}": {
         parameters: {
             query?: never;
@@ -10465,6 +10482,64 @@ export interface components {
             /** Format: int64 */
             studentProfileId?: number;
             subjectName?: string;
+        };
+        MyClassContextClassView: {
+            /** Format: int64 */
+            homeroomAssignmentId?: number;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
+        MyClassContextPeriodView: {
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: int32 */
+            sortOrder?: number;
+            /** Format: date */
+            startDate?: string;
+            /** @enum {string} */
+            status?: "ACTIVE" | "DISABLED" | "ARCHIVED";
+            /** @enum {string} */
+            type?: "QUARTER" | "TRIMESTER" | "SEMESTER" | "CUSTOM";
+        };
+        MyClassContextView: {
+            /**
+             * Format: int64
+             * @description ID активного года или null
+             */
+            academicYearId?: number | null;
+            classes?: components["schemas"]["MyClassContextClassView"][];
+            /**
+             * Format: int64
+             * @description Начальный выбор класса или null
+             */
+            defaultClassId?: number | null;
+            /**
+             * Format: int64
+             * @description Единственный текущий ACTIVE-период или null
+             */
+            defaultPeriodId?: number | null;
+            periods?: components["schemas"]["MyClassContextPeriodView"][];
+            /**
+             * Format: date
+             * @description Дата школы в настроенном часовом поясе
+             */
+            schoolDate?: string;
+            /** @enum {string} */
+            state?: "NO_ACTIVE_YEAR" | "YEAR_NOT_STARTED" | "YEAR_ENDED" | "NO_CLASSES" | "NO_PERIODS" | "NO_CURRENT_PERIOD" | "AMBIGUOUS_PERIOD" | "READY";
+            /**
+             * Format: date
+             * @description Конец активного года или null
+             */
+            yearEndDate?: string | null;
+            /**
+             * Format: date
+             * @description Начало активного года или null
+             */
+            yearStartDate?: string | null;
         };
         MyEquipmentView: {
             inventoryNumber?: string;
@@ -24929,6 +25004,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeacherFeedbackMonthView"];
+                };
+            };
+        };
+    };
+    getMyClassContext: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Контекст, включая явные пустые состояния */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyClassContextView"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет активного профиля Teacher */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
