@@ -92,6 +92,9 @@ export const keys = {
   myClassContext: ['my-class', 'context'] as const,
   myClassRoster: (classId: number) => ['my-class', 'classes', classId, 'students'] as const,
   myClassSummary: (classId: number, periodId: number) => ['my-class', 'classes', classId, 'summary', periodId] as const,
+  myClassSubjects: (classId: number, periodId: number) => ['my-class', 'classes', classId, 'subjects', periodId] as const,
+  myClassSubjectJournal: (classId: number, periodId: number, subjectId: number) =>
+    ['my-class', 'classes', classId, 'journal', periodId, subjectId] as const,
   adminClasses: ['admin', 'classes'] as const,
   adminHomeroomTeachers: ['admin', 'teachers', 'homeroom-options'] as const,
   teacherWorkspace: ['teacher-workspace'] as const,
@@ -2812,6 +2815,70 @@ export function useMyClassRoster(classId: number | null) {
       { signal },
     ),
     getNextPageParam: (lastPage) => lastPage.hasMore ? (lastPage.page ?? 0) + 1 : undefined,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useMyClassSubjects(classId: number | null, periodId: number | null) {
+  return useQuery({
+    queryKey: classId == null || periodId == null
+      ? ['my-class', 'subjects', 'none']
+      : keys.myClassSubjects(classId, periodId),
+    enabled: classId != null && periodId != null,
+    queryFn: ({ signal }) => request<Schema<'MyClassSubjectsView'>>(
+      `/my-class/classes/${classId}/subjects?periodId=${periodId}`,
+      { signal },
+    ),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+}
+
+/** Every page of a MyClass list: the journal grid is wrong with only its first page. */
+async function allMyClassPages<T>(
+  path: string,
+  signal: AbortSignal,
+): Promise<T[]> {
+  const items: T[] = [];
+  const separator = path.includes('?') ? '&' : '?';
+  for (let page = 0; ; page++) {
+    signal.throwIfAborted();
+    const result = await request<{ items?: T[]; hasMore?: boolean }>(
+      `${path}${separator}page=${page}&size=100`,
+      { signal },
+    );
+    items.push(...(result.items ?? []));
+    if (!result.hasMore) return items;
+  }
+}
+
+/**
+ * Журнал вкладки «Оценки» одним снимком: состав, оценки, опубликованные итоги и средние по
+ * предмету. Четыре ответа складываются в одну таблицу, поэтому и грузятся, и падают вместе —
+ * сетка из оценок одного момента и средних другого разошлась бы на глазах.
+ */
+export function useMyClassSubjectJournal(
+  classId: number | null,
+  periodId: number | null,
+  subjectId: number | null,
+) {
+  return useQuery({
+    queryKey: classId == null || periodId == null || subjectId == null
+      ? ['my-class', 'journal', 'none']
+      : keys.myClassSubjectJournal(classId, periodId, subjectId),
+    enabled: classId != null && periodId != null && subjectId != null,
+    queryFn: async ({ signal }) => {
+      const root = `/my-class/classes/${classId}`;
+      const scope = `periodId=${periodId}&subjectId=${subjectId}`;
+      const [students, grades, finals, results] = await Promise.all([
+        allMyClassPages<Schema<'MyClassStudentView'>>(`${root}/students`, signal),
+        allMyClassPages<Schema<'MyClassGradeItemView'>>(`${root}/grades?${scope}`, signal),
+        allMyClassPages<Schema<'MyClassFinalGradeItemView'>>(`${root}/final-grades?${scope}`, signal),
+        request<Schema<'MyClassGradeResultsView'>>(`${root}/grade-results?${scope}`, { signal }),
+      ]);
+      return { students, grades, finals, results };
+    },
     staleTime: 0,
     refetchOnWindowFocus: true,
   });

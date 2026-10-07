@@ -5904,6 +5904,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/grade-results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Средний балл или процент по политике у каждого ученика по предмету за период */
+        get: operations["getMyClassGradeResults"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/grades": {
         parameters: {
             query?: never;
@@ -5950,6 +5967,23 @@ export interface paths {
          * @description Состав текущий и не зависит от выбранной четверти; сортировка по ФИО и ID ученика.
          */
         get: operations["getMyClassStudents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/subjects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Предметы класса за период: по назначениям учителей и по выставленным оценкам */
+        get: operations["getMyClassSubjects"];
         put?: never;
         post?: never;
         delete?: never;
@@ -10768,6 +10802,29 @@ export interface components {
             subjectName?: string;
             weight?: number;
         };
+        MyClassGradeResultView: {
+            /** @description Средний шкальных оценок по предмету за период; null, если оценок нет */
+            averageGrade?: number;
+            /** @description Процент периода по политике оценивания без рекомендации; null без политики */
+            result?: components["schemas"]["PeriodResultSummaryView"];
+            /** Format: int64 */
+            scaleGradeCount?: number;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
+        MyClassGradeResultsView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            items?: components["schemas"]["MyClassGradeResultView"][];
+            /** @description Политика оценивания периода; null — период считается средним шкальных оценок */
+            policy?: components["schemas"]["PolicySummaryView"];
+            /** Format: int64 */
+            subjectId?: number;
+        };
         MyClassGradesPageView: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -10874,6 +10931,25 @@ export interface components {
             middleName?: string | null;
             /** Format: int64 */
             studentProfileId?: number;
+        };
+        MyClassSubjectView: {
+            /**
+             * Format: int64
+             * @description Действующие оценки текущего состава за период; 0 — предмет есть, оценок нет
+             */
+            gradeCount?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+        };
+        MyClassSubjectsView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            items?: components["schemas"]["MyClassSubjectView"][];
         };
         MyClassSummaryView: {
             /** Format: int64 */
@@ -25525,6 +25601,67 @@ export interface operations {
             };
         };
     };
+    getMyClassGradeResults: {
+        parameters: {
+            query: {
+                periodId?: number;
+                subjectId: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Показатели текущего состава */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyClassGradeResultsView"];
+                };
+            };
+            /** @description Неверный период или нет предмета */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Неоднозначный текущий период */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     getMyClassGrades: {
         parameters: {
             query?: {
@@ -25694,6 +25831,66 @@ export interface operations {
             };
             /** @description Класс недоступен текущему Teacher */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getMyClassSubjects: {
+        parameters: {
+            query?: {
+                periodId?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Предметы с числом действующих оценок */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyClassSubjectsView"];
+                };
+            };
+            /** @description Неверный период */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Неоднозначный текущий период */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

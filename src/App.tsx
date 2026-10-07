@@ -40,7 +40,7 @@ import { LessonQrPage } from '@/pages/attendance/LessonQrPage';
 import { TeacherAttendancePage } from '@/pages/attendance/TeacherAttendancePage';
 import { MyAvailabilityPage } from '@/pages/schedule/MyAvailabilityPage';
 import { MySchedulePage } from '@/pages/schedule/MySchedulePage';
-import { MyClassStudentsPage } from '@/pages/my-class/MyClassStudentsPage';
+import { MyClassPage } from '@/pages/my-class/MyClassPage';
 import { CurrentLessonPage } from '@/pages/schedule/CurrentLessonPage';
 import { HomeworkGroupsPage } from '@/pages/homework/HomeworkGroupsPage';
 import { DashboardPage } from '@/pages/DashboardPage';
@@ -160,7 +160,7 @@ export function App() {
         <Route path="/schedule" element={<Navigate to="/lesson-schedule" replace />} />
         {/* Своё расписание учителя: ролевой экран, из него открывается урок. */}
         <Route path={ROUTES.mySchedule} element={<MySchedulePage />} />
-        <Route path={ROUTES.myClass} element={<MyClassStudentsPage />} />
+        <Route path={ROUTES.myClass} element={<MyClassPage />} />
         {/* Не экран, а переход: резолвит актуальный урок и уводит на его карточку. */}
         <Route path={ROUTES.currentLesson} element={<CurrentLessonPage />} />
         <Route path={ROUTES.myAvailability} element={<MyAvailabilityPage />} />

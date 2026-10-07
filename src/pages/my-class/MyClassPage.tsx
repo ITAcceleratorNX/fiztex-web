@@ -1,16 +1,17 @@
 import { CalendarCheck2, ChartNoAxesColumnIncreasing, School, UsersRound } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { StatCard } from '@/components/ui/StatCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { keys, useMyClassContext, useMyClassRoster, useMyClassSummary } from '@/hooks/queries';
+import { useMyClassContext, useMyClassRoster, useMyClassSummary } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import type { Schema } from '@/lib/apiSchemas';
+import { MyClassGradesTab } from './MyClassGradesTab';
+import { MyClassStudentsTab } from './MyClassStudentsTab';
 
 function academicYearLabel(context: Schema<'MyClassContextView'>): string {
   const start = context.yearStartDate?.slice(0, 4);
@@ -33,29 +34,32 @@ function noClassTitle(state: Schema<'MyClassContextView'>['state']): string {
   }
 }
 
-function studentCountLabel(count: number): string {
-  const plural = new Intl.PluralRules('ru-RU').select(count);
-  return `${count} ${plural === 'one' ? 'ученик' : plural === 'few' ? 'ученика' : 'учеников'}`;
+const TABS = ['students', 'grades'] as const;
+type Tab = (typeof TABS)[number];
+
+function tabOf(value: string | null): Tab {
+  return TABS.find((tab) => tab === value) ?? 'students';
 }
 
 const oneDecimal = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const upToOneDecimal = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 1 });
 
-function StudentCell({ student }: { student: Schema<'MyClassStudentView'> }) {
-  const name = student.displayName?.trim()
-    || [student.lastName, student.firstName, student.middleName].filter(Boolean).join(' ');
-  return (
-    <li className="flex min-h-11 min-w-0 items-center gap-3 border-b border-line px-6 py-1.5">
-      <Avatar name={name} size="sm" variant="navy" />
-      <span className="truncate text-sm font-bold text-slate-900" title={name}>{name}</span>
-    </li>
-  );
-}
-
-export function MyClassStudentsPage() {
+/**
+ * «Мой класс» классного руководителя: шапка класса, карточки сводки и вкладки.
+ *
+ * <p>Класс, период и вкладка живут в адресе, поэтому переход между вкладками сохраняет
+ * выбор, а ссылка открывает тот же вид. Значения из адреса применяются, только если они
+ * есть в `/context`; иначе берутся серверные значения по умолчанию.
+ *
+ * <p>Отзыв назначения ловится на любой вкладке: `403` любого запроса класса прячет его
+ * данные, перечитывает контекст и, если класса больше нет, удаляет всё, что о нём
+ * закэшировано.
+ */
+export function MyClassPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const refreshedRevokedClass = useRef<number | null>(null);
+  const [forbiddenClassId, setForbiddenClassId] = useState<number | null>(null);
   const context = useMyClassContext();
   const classes = context.data?.classes ?? [];
   const requestedClassId = Number(searchParams.get('classId'));
@@ -68,6 +72,7 @@ export function MyClassStudentsPage() {
   const selectedPeriod = periods.find((item) => item.id === requestedPeriodId)
     ?? periods.find((item) => item.id === context.data?.defaultPeriodId);
   const periodId = selectedPeriod?.id ?? null;
+  const tab = tabOf(searchParams.get('tab'));
 
   useEffect(() => {
     if (!context.data) return;
@@ -80,16 +85,17 @@ export function MyClassStudentsPage() {
       if (periodId == null) next.delete('periodId');
       else if (requestedPeriodId !== periodId) next.set('periodId', String(periodId));
     }
+    if (next.has('tab') && next.get('tab') !== tab) next.delete('tab');
     if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
-  }, [classId, context.data, periodId, requestedClassId, requestedPeriodId, searchParams, setSearchParams]);
+  }, [classId, context.data, periodId, requestedClassId, requestedPeriodId, searchParams, setSearchParams, tab]);
 
   const roster = useMyClassRoster(classId);
   const summary = useMyClassSummary(classId, periodId);
-  const accessRevoked = [roster.error, summary.error].some(
+  const accessRevoked = (classId != null && forbiddenClassId === classId) || [roster.error, summary.error].some(
     (error) => error instanceof ApiError && error.status === 403,
   );
-  const students = roster.data?.pages.flatMap((page) => page.items ?? []) ?? [];
-  const totalStudents = roster.data?.pages[0]?.totalItems ?? students.length;
+  const totalStudents = roster.data?.pages[0]?.totalItems
+    ?? roster.data?.pages.flatMap((page) => page.items ?? []).length ?? 0;
 
   useEffect(() => {
     if (!accessRevoked) {
@@ -100,26 +106,23 @@ export function MyClassStudentsPage() {
     refreshedRevokedClass.current = classId;
     void context.refetch().then((result) => {
       if (!result.data?.classes?.some((item) => item.id === classId)) {
-        queryClient.removeQueries({ queryKey: keys.myClassRoster(classId) });
-        queryClient.removeQueries({ queryKey: ['my-class', 'classes', classId, 'summary'] });
+        queryClient.removeQueries({ queryKey: ['my-class', 'classes', classId] });
       }
     });
   }, [accessRevoked, classId, context, queryClient]);
 
-  function selectClass(nextId: string) {
-    const next = new URLSearchParams(searchParams);
-    next.set('classId', nextId);
-    setSearchParams(next);
-  }
+  const reportForbidden = useCallback(() => setForbiddenClassId(classId), [classId]);
 
-  function selectPeriod(nextId: string) {
+  function updateParam(name: string, value: string | null) {
     const next = new URLSearchParams(searchParams);
-    next.set('periodId', nextId);
+    if (value == null) next.delete(name);
+    else next.set(name, value);
     setSearchParams(next);
   }
 
   async function retryAccess() {
     const result = await context.refetch();
+    setForbiddenClassId(null);
     if (result.data?.classes?.some((item) => item.id === classId)) {
       await Promise.all([roster.refetch(), ...(periodId == null ? [] : [summary.refetch()])]);
     }
@@ -133,7 +136,7 @@ export function MyClassStudentsPage() {
         <ErrorBlock message="Не удалось загрузить данные класса." onRetry={() => void context.refetch()} />
       ) : accessRevoked ? (
         <ErrorBlock message="Доступ к классу изменился. Обновите список классов." onRetry={retryAccess} />
-      ) : !selectedClass ? (
+      ) : !selectedClass || classId == null ? (
         <EmptyBlock
           icon={<School className="h-7 w-7" />}
           title={noClassTitle(context.data.state)}
@@ -147,15 +150,16 @@ export function MyClassStudentsPage() {
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {classes.length > 1 && (
-                <Select aria-label="Выберите класс" value={String(classId)} onChange={(event) => selectClass(event.target.value)}>
+                <Select aria-label="Выберите класс" value={String(classId)} onChange={(event) => updateParam('classId', event.target.value)}>
                   {classes.filter((item) => item.id != null).map((item) => (
                     <option key={item.id} value={item.id}>{classLabel(item.name ?? '')}</option>
                   ))}
                 </Select>
               )}
-              {(periods.length > 1 || (periods.length > 0 && periodId == null)) && (
+              {/* На «Оценках» период выбирается в строке фильтров, как в макете. */}
+              {tab === 'students' && (periods.length > 1 || (periods.length > 0 && periodId == null)) && (
                 <Select aria-label="Выберите учебный период" value={periodId == null ? '' : String(periodId)}
-                  placeholder="Выберите период" onChange={(event) => selectPeriod(event.target.value)}>
+                  placeholder="Выберите период" onChange={(event) => updateParam('periodId', event.target.value)}>
                   {periods.filter((item) => item.id != null).map((item) => (
                     <option key={item.id} value={item.id}>{item.name ?? `Период ${item.id}`}</option>
                   ))}
@@ -195,36 +199,24 @@ export function MyClassStudentsPage() {
             </p>
           ) : null}
 
-          <Tabs value="students" variant="pills">
+          <Tabs value={tab} variant="pills" onValueChange={(value) => updateParam('tab', value === 'students' ? null : value)}>
             <TabsList>
               <TabsTrigger value="students">Ученики</TabsTrigger>
-              <TabsTrigger value="grades" disabled>Оценки</TabsTrigger>
+              <TabsTrigger value="grades">Оценки</TabsTrigger>
               <TabsTrigger value="attendance" disabled>Посещаемость</TabsTrigger>
               <TabsTrigger value="schedule" disabled>Расписание</TabsTrigger>
             </TabsList>
             <TabsContent value="students" className="mt-4">
-              <section aria-label="Ученики класса" className="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
-                <div className="h-10 border-b border-line bg-canvas" aria-hidden="true" />
-                {roster.isPending ? <LoadingBlock label="Загрузка учеников…" /> : roster.isError ? (
-                  <ErrorBlock message="Не удалось загрузить данные класса." onRetry={() => void roster.refetch()} />
-                ) : students.length === 0 ? (
-                  <EmptyBlock title="В классе пока нет учеников" />
-                ) : (
-                  <>
-                    <ul className="grid grid-cols-1 sm:grid-cols-2">
-                      {students.map((student) => <StudentCell key={student.studentProfileId} student={student} />)}
-                    </ul>
-                    <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
-                      <p className="text-sm text-muted">Всего: {studentCountLabel(totalStudents)}</p>
-                      {roster.hasNextPage && (
-                        <Button variant="secondary" size="sm" loading={roster.isFetchingNextPage} onClick={() => void roster.fetchNextPage()}>
-                          Показать ещё
-                        </Button>
-                      )}
-                    </div>
-                  </>
-                )}
-              </section>
+              <MyClassStudentsTab classId={classId} />
+            </TabsContent>
+            <TabsContent value="grades" className="mt-4">
+              <MyClassGradesTab
+                classId={classId}
+                periods={periods}
+                periodId={periodId}
+                onSelectPeriod={(value) => updateParam('periodId', value)}
+                onForbidden={reportForbidden}
+              />
             </TabsContent>
           </Tabs>
         </>
