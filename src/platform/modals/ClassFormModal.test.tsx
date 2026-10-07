@@ -37,6 +37,21 @@ beforeEach(() => {
 });
 
 describe('ClassFormModal', () => {
+  it('clears an invalid-name error when the name is corrected', async () => {
+    hooks.teachers.mockReturnValue({ isPending: false, isError: false, isSuccess: true, data: [] });
+    const user = userEvent.setup();
+    show();
+
+    const name = screen.getByRole('textbox', { name: /Название класса/ });
+    await user.type(name, 'abc');
+    await user.click(screen.getByRole('button', { name: 'Создать', exact: true }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Укажите класс в формате 5 «А»');
+
+    await user.clear(name);
+    await user.type(name, '10Қ');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('allows creation without a teacher when the directory is empty', async () => {
     hooks.teachers.mockReturnValue({ isPending: false, isError: false, isSuccess: true, data: [] });
     hooks.create.mockResolvedValue({ id: 1 });

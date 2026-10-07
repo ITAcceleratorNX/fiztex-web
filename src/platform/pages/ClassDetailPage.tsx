@@ -45,6 +45,8 @@ export function ClassDetailPage() {
   const [years, setYears] = useState<AcademicYear[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [yearsError, setYearsError] = useState(false);
+  const [studentsError, setStudentsError] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
 
   const numericClassId = Number(classId);
@@ -54,21 +56,31 @@ export function ClassDetailPage() {
     if (!validId) return;
     setLoading(true);
     setError(null);
+    setYearsError(false);
+    setStudentsError(false);
     try {
-      const [cls, yearList, roster] = await Promise.all([
+      const [classResult, yearsResult, rosterResult] = await Promise.allSettled([
         getClass(classId),
         listAcademicYears(),
         listStudents({ classId: numericClassId, status: 'ACTIVE' }),
       ]);
+      if (classResult.status === 'rejected') throw classResult.reason;
+      const cls = classResult.value;
       if (!cls) {
         setSchoolClass(null);
         setStudents([]);
         setError('Класс не найден');
         return;
       }
-      setSchoolClass(cls);
+      const yearList = yearsResult.status === 'fulfilled' ? yearsResult.value : [];
       setYears(yearList);
-      setStudents(roster);
+      setYearsError(yearsResult.status === 'rejected');
+      setSchoolClass({
+        ...cls,
+        academicYearName: yearList.find((year) => year.id === cls.academicYearId)?.name ?? '',
+      });
+      setStudents(rosterResult.status === 'fulfilled' ? rosterResult.value : []);
+      setStudentsError(rosterResult.status === 'rejected');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось загрузить класс');
     } finally {
@@ -161,6 +173,12 @@ export function ClassDetailPage() {
               <p className="mt-2 text-lg font-bold text-[#1a1f36]">
                 {schoolClass.academicYearName || '—'}
               </p>
+              {yearsError && (
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+                  <span>Не удалось загрузить учебный год.</span>
+                  <Button variant="secondary" size="sm" onClick={() => void reload()}>Повторить</Button>
+                </div>
+              )}
             </ProfileCard>
             <ProfileCard>
               <p className="text-[10px] font-bold uppercase tracking-[0.5px] text-[#9ca3af]">
@@ -189,12 +207,14 @@ export function ClassDetailPage() {
             <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">
               <ProfileCardTitle>Список учеников</ProfileCardTitle>
               <span className="text-13 text-slate-500">
-                {sortedStudents.length}{' '}
-                {pluralRu(sortedStudents.length, ['ученик', 'ученика', 'учеников'])}
+                {schoolClass.studentCount}{' '}
+                {pluralRu(schoolClass.studentCount, ['ученик', 'ученика', 'учеников'])}
               </span>
             </div>
 
-            {sortedStudents.length === 0 ? (
+            {studentsError ? (
+              <ErrorBlock message="Не удалось загрузить данные класса." onRetry={() => void reload()} />
+            ) : sortedStudents.length === 0 ? (
               <div className="p-6">
                 <EmptyBlock
                   title="В классе пока нет учеников"

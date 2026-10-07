@@ -120,7 +120,7 @@ export function ClassFormModal({
       open={open}
       onClose={onClose}
       title={isEdit ? 'Редактировать класс' : 'Создать класс'}
-      subtitle="Добавьте новый класс в выбранный учебный год."
+      subtitle={isEdit ? 'Измените название класса.' : 'Добавьте новый класс в выбранный учебный год.'}
       footer={
         <div className="flex w-full items-center justify-between gap-3">
           <Button variant="secondary" onClick={onClose} disabled={pending}>
@@ -136,7 +136,10 @@ export function ClassFormModal({
         <Field label="Название класса" required hint="Например: 5 «А» или 7 «Ә»">
           <TextInput
             value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
+            onChange={(e) => {
+              setDisplayName(e.target.value);
+              setError(null);
+            }}
             placeholder="5 «А»"
             required
           />
@@ -146,6 +149,7 @@ export function ClassFormModal({
             <Select value={academicYearId} onChange={(e) => {
               setAcademicYearId(e.target.value);
               setHomeroomTeacherId('');
+              setError(null);
             }}>
               {years.map((year) => (
                 <option key={year.id} value={year.id}>
@@ -160,7 +164,10 @@ export function ClassFormModal({
             <div className="space-y-2">
               <Select
                 value={homeroomTeacherId}
-                onChange={(e) => setHomeroomTeacherId(e.target.value)}
+                onChange={(e) => {
+                  setHomeroomTeacherId(e.target.value);
+                  setError(null);
+                }}
                 disabled={!canAssignTeacher || teachers.isPending || teachers.isError
                   || teachers.data?.length === 0 || pending}
                 placeholder="Выберите учителя"
