@@ -25,6 +25,7 @@ const refetch = vi.fn(() => Promise.resolve({ data: context() }));
 function context() {
   return {
     state: 'READY',
+    schoolDate: '2026-10-07',
     yearStartDate: '2026-08-01',
     yearEndDate: '2027-05-25',
     defaultClassId: 18,
@@ -43,6 +44,7 @@ function journal(overrides: Record<string, unknown> = {}) {
     grades: [
       { gradeId: 1, studentProfileId: 10, sourceType: 'LESSON', sourceId: 100, sourceDate: '2026-09-02', scaleCode: '9', gradeType: 'FORMATIVE' },
       { gradeId: 2, studentProfileId: 10, sourceType: 'LESSON', sourceId: 101, sourceDate: '2026-09-26', score: 15, maxScore: 20, gradeType: 'SUMMATIVE_SECTION' },
+      { gradeId: 3, studentProfileId: 11, sourceType: 'LESSON', sourceId: 102, sourceDate: '2026-10-03', scaleCode: '7', gradeType: 'FORMATIVE' },
     ],
     finals: [{ finalGradeId: 5, studentProfileId: 10, value: 5 }],
     results: {
@@ -98,7 +100,7 @@ describe('MyClassPage — вкладка «Оценки»', () => {
     expect(useMyClassSubjectJournal).toHaveBeenLastCalledWith(18, 7, 3);
     expect(screen.getByLabelText('Предмет')).toHaveTextContent('Английский язык');
     expect(screen.getByLabelText('Период')).toHaveTextContent('1 четверть (01.09 – 27.10)');
-    expect(screen.getByRole('radio', { name: 'Месяц' })).toBeDisabled();
+    expect(screen.getByRole('radio', { name: 'Месяц' })).toHaveAttribute('aria-checked', 'false');
     expect(screen.getByRole('radio', { name: 'Четверть' })).toHaveAttribute('aria-checked', 'true');
 
     const table = screen.getByRole('table');
@@ -111,6 +113,7 @@ describe('MyClassPage — вкладка «Оценки»', () => {
     expect(within(first).getByRole('button', { name: 'Оценка 5' })).toBeInTheDocument();
     const second = within(table).getByRole('row', { name: /Белов А\./ });
     expect(within(second).getAllByText('—')).toHaveLength(4);
+    expect(within(second).getByRole('button', { name: 'Оценка 7' })).toBeInTheDocument();
   });
 
   it('keeps the chosen subject in the address', async () => {
@@ -200,5 +203,50 @@ describe('MyClassPage — вкладка «Оценки»', () => {
 
     expect(screen.getByRole('columnheader', { name: 'Итог, %' })).toBeInTheDocument();
     expect(within(screen.getByRole('row', { name: /Александров/ })).getByText('84%')).toBeInTheDocument();
+  });
+
+  it('opens the month of the address with its lessons, the period average and no final column', () => {
+    renderPage('/my-class?tab=grades&view=month&month=2026-09');
+
+    expect(screen.getByRole('radio', { name: 'Месяц' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByLabelText('Период')).toHaveTextContent('Сентябрь 2026');
+    const table = screen.getByRole('table');
+    expect(within(table).getAllByRole('columnheader').map((cell) => cell.textContent)).toEqual([
+      'ФИО ученика', '02.09Урок', '26.09СОР', 'Ср. баллза четверть',
+    ]);
+    expect(within(table).queryByText('Итог за четверть')).not.toBeInTheDocument();
+    expect(within(table).getByRole('row', { name: /Александров/ })).toHaveTextContent('8.8');
+  });
+
+  it('switches to the current school month and back to the period', async () => {
+    renderPage();
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Месяц' }));
+    expect(screen.getByTestId('location')).toHaveTextContent('view=month');
+    expect(screen.getByTestId('location')).toHaveTextContent('month=2026-10');
+    expect(screen.getByLabelText('Период')).toHaveTextContent('Октябрь 2026');
+    expect(within(screen.getByRole('table')).getByRole('columnheader', { name: /03\.10/ })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByLabelText('Период'));
+    await userEvent.click(screen.getByRole('option', { name: 'Сентябрь 2026' }));
+    expect(screen.getByTestId('location')).toHaveTextContent('month=2026-09');
+    expect(screen.getByTestId('location')).toHaveTextContent('periodId=7');
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Четверть' }));
+    expect(screen.getByTestId('location')).not.toHaveTextContent('month=');
+    expect(screen.getByTestId('location')).not.toHaveTextContent('view=');
+    expect(screen.getByRole('columnheader', { name: 'Итог за четверть' })).toBeInTheDocument();
+  });
+
+  it('says so when the month has no grades and repairs a month outside the period', () => {
+    useMyClassSubjectJournal.mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: journal({ grades: [] }),
+    });
+    renderPage('/my-class?tab=grades&view=month&month=2027-01');
+
+    expect(screen.getByText('По предмету пока нет оценок за этот месяц')).toBeInTheDocument();
+    expect(screen.getByTestId('location')).toHaveTextContent('month=2026-10');
   });
 });

@@ -2,7 +2,7 @@ import type { Schema } from '@/lib/apiSchemas';
 import { shortNames } from '@/lib/attendanceJournalModel';
 import { GRADE_TYPE_LABELS } from '@/lib/gradesModel';
 import type { GradeType } from '@/lib/gradesApi';
-import { shortDate } from '@/lib/journalModel';
+import { monthOptionsOf, shortDate, type MonthOption } from '@/lib/journalModel';
 
 type Student = Schema<'MyClassStudentView'>;
 type Grade = Schema<'MyClassGradeItemView'>;
@@ -87,14 +87,18 @@ export function buildMyClassJournal({
   grades,
   finals,
   results,
+  window,
 }: {
   students: Student[];
   grades: Grade[];
   finals: FinalGrade[];
   results: GradeResult[];
+  /** Месяц внутри периода: оценки вне окна в сетку не попадают, средние и итоги — как есть. */
+  window?: { from: string; to: string } | null;
 }): MyClassJournal {
   const studentIds = new Set(students.map((student) => student.studentProfileId));
-  const current = grades.filter((grade) => studentIds.has(grade.studentProfileId));
+  const current = grades.filter((grade) => studentIds.has(grade.studentProfileId)
+    && (!window || ((grade.sourceDate ?? '') >= window.from && (grade.sourceDate ?? '') <= window.to)));
 
   const bySource = new Map<string, Grade[]>();
   for (const grade of current) {
@@ -181,4 +185,40 @@ export function periodLabel(period: Period): string {
  */
 export function defaultSubjectId(subjects: Subject[]): number | null {
   return (subjects.find((subject) => (subject.gradeCount ?? 0) > 0) ?? subjects[0])?.subjectId ?? null;
+}
+
+export interface MyClassMonth extends MonthOption {
+  /** `2026-09` — так месяц живёт в адресе рядом с `periodId`. */
+  month: string;
+}
+
+/**
+ * Месяцы года для режима «Месяц». Месяц — окно внутри периода, а не отдельный период,
+ * как в журнале предметника (`monthOptionsOf`): выбор месяца задаёт и период, и даты.
+ * Месяц на стыке двух периодов встречается дважды — такие подписи уточняются датами окна:
+ * имя периода бывает голым номером («3»), а «Март 2027 (3)» ничего не объясняет.
+ */
+export function myClassMonths(periods: Period[]): MyClassMonth[] {
+  const options = monthOptionsOf(periods).map((option) => ({ ...option, month: option.dateFrom.slice(0, 7) }));
+  const labels = new Map<string, number>();
+  options.forEach((option) => labels.set(option.label, (labels.get(option.label) ?? 0) + 1));
+  return options.map((option) => ((labels.get(option.label) ?? 0) > 1
+    ? { ...option, label: `${option.label} (${shortDate(option.dateFrom)} – ${shortDate(option.dateTo)})` }
+    : option));
+}
+
+/**
+ * Месяц, с которого открывается режим: текущий, если сегодня внутри периода; у прошедшего
+ * периода — последний, у будущего — первый. Сегодня — дата школы из `/context`.
+ */
+export function defaultMonth(
+  months: MyClassMonth[],
+  periodId: number | null,
+  today: string | undefined,
+): MyClassMonth | null {
+  const own = months.filter((month) => month.academicPeriodId === periodId);
+  if (own.length === 0) return null;
+  if (!today) return own[0];
+  return own.find((month) => month.dateFrom <= today && today <= month.dateTo)
+    ?? (today > own[own.length - 1].dateTo ? own[own.length - 1] : own[0]);
 }

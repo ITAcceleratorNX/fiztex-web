@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
 import { FilterSelect } from '@/components/ui/FilterSelect';
@@ -16,40 +16,52 @@ import {
   buildMyClassJournal,
   capitalize,
   columnEvent,
+  defaultMonth,
   defaultSubjectId,
   gradeTitle,
   isSummative,
+  myClassMonths,
   periodLabel,
   periodNoun,
   type JournalColumn,
   type JournalRow,
+  type MyClassMonth,
 } from '@/lib/myClassGradesModel';
 
 type Period = Schema<'MyClassContextPeriodView'>;
 type GradeResults = Schema<'MyClassGradeResultsView'>;
+type View = 'MONTH' | 'PERIOD';
 
 function isForbidden(error: unknown): boolean {
   return error instanceof ApiError && error.status === 403;
 }
 
 /**
- * Вкладка «Оценки» в режиме периода (Figma 2200:3502).
+ * Вкладка «Оценки»: режим периода (Figma 2200:3502) и месяца (Figma 2200:4340).
  *
  * <p>Только чтение: классный руководитель видит оценки и опубликованные итоги своего
  * класса, но ставить их права не получает (my-class-contract), поэтому клетки здесь не
  * ведут в урок, как в журнале предметника. Средний и процент приходят с сервера той же
  * формулой, что у предметника; клиент их только показывает.
+ *
+ * <p>Месяц — окно внутри периода, а не отдельная выборка: сетка режется по дате урока из
+ * тех же оценок периода, поэтому переключение месяцев не ходит на сервер. «Ср. балл» в
+ * месяце — за весь период (решение 2026-10-07): так же считает журнал предметника, а
+ * месячного среднего сервер не отдаёт. Итога периода в месяце нет, как в макете.
  */
 export function MyClassGradesTab({
   classId,
   periods,
   periodId,
+  schoolDate,
   onSelectPeriod,
   onForbidden,
 }: {
   classId: number;
   periods: Period[];
   periodId: number | null;
+  /** Сегодня по часам школы — с него открывается режим месяца. */
+  schoolDate: string | undefined;
   onSelectPeriod: (periodId: string) => void;
   onForbidden: () => void;
 }) {
@@ -62,20 +74,31 @@ export function MyClassGradesTab({
   const journalQuery = useMyClassSubjectJournal(classId, periodId, subjectId);
   const period = periods.find((item) => item.id === periodId);
   const noun = periodNoun(period);
+  const view: View = searchParams.get('view') === 'month' ? 'MONTH' : 'PERIOD';
+  const months = useMemo(() => myClassMonths(periods), [periods]);
+  const requestedMonth = searchParams.get('month');
+  const month = view === 'MONTH'
+    ? months.find((item) => item.academicPeriodId === periodId && item.month === requestedMonth)
+      ?? defaultMonth(months, periodId, schoolDate)
+    : null;
 
   useEffect(() => {
     if (isForbidden(subjectsQuery.error) || isForbidden(journalQuery.error)) onForbidden();
   }, [journalQuery.error, onForbidden, subjectsQuery.error]);
 
-  // Предмет из адреса, которого у класса нет за этот период, не должен молча жить в ссылке.
+  // Предмет, режим и месяц из адреса, которых у класса за этот период нет, не должны молча
+  // жить в ссылке. Одна правка на всё: два отдельных replace подряд затирали бы друг друга.
   useEffect(() => {
-    if (!subjectsQuery.data || !searchParams.has('subjectId')) return;
-    if (requestedSubjectId === subjectId) return;
     const next = new URLSearchParams(searchParams);
-    if (subjectId == null) next.delete('subjectId');
-    else next.set('subjectId', String(subjectId));
-    setSearchParams(next, { replace: true });
-  }, [requestedSubjectId, searchParams, setSearchParams, subjectId, subjectsQuery.data]);
+    if (subjectsQuery.data && next.has('subjectId') && requestedSubjectId !== subjectId) {
+      if (subjectId == null) next.delete('subjectId');
+      else next.set('subjectId', String(subjectId));
+    }
+    if (next.has('view') && next.get('view') !== 'month') next.delete('view');
+    if (month == null) next.delete('month');
+    else if (requestedMonth !== month.month) next.set('month', month.month);
+    if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
+  }, [month, requestedMonth, requestedSubjectId, searchParams, setSearchParams, subjectId, subjectsQuery.data]);
 
   // После сбоя связи упали оба запроса; одна кнопка должна поднять оба, а не по очереди.
   function retry() {
@@ -86,6 +109,29 @@ export function MyClassGradesTab({
   function selectSubject(nextId: string) {
     const next = new URLSearchParams(searchParams);
     next.set('subjectId', nextId);
+    setSearchParams(next);
+  }
+
+  function selectView(nextView: View) {
+    const next = new URLSearchParams(searchParams);
+    if (nextView === 'MONTH') {
+      next.set('view', 'month');
+      const initial = defaultMonth(months, periodId, schoolDate);
+      if (initial) next.set('month', initial.month);
+    } else {
+      next.delete('view');
+      next.delete('month');
+    }
+    setSearchParams(next);
+  }
+
+  /** Месяц знает свой период: выбор задаёт обе координаты сразу. */
+  function selectMonth(key: string) {
+    const option = months.find((item) => item.key === key);
+    if (!option) return;
+    const next = new URLSearchParams(searchParams);
+    next.set('periodId', String(option.academicPeriodId));
+    next.set('month', option.month);
     setSearchParams(next);
   }
 
@@ -103,23 +149,37 @@ export function MyClassGradesTab({
             <option key={subject.subjectId} value={subject.subjectId}>{subject.subjectName}</option>
           ))}
         </FilterSelect>
-        <FilterSelect
-          label="Период"
-          className="w-60"
-          value={periodId == null ? '' : String(periodId)}
-          disabled={periods.length === 0}
-          onChange={onSelectPeriod}
-        >
-          {periods.filter((item) => item.id != null).map((item) => (
-            <option key={item.id} value={item.id}>{periodLabel(item)}</option>
-          ))}
-        </FilterSelect>
+        {view === 'MONTH' ? (
+          <FilterSelect
+            label="Период"
+            className="w-60"
+            value={month?.key ?? ''}
+            disabled={months.length === 0}
+            onChange={selectMonth}
+          >
+            {months.map((item) => (
+              <option key={item.key} value={item.key}>{item.label}</option>
+            ))}
+          </FilterSelect>
+        ) : (
+          <FilterSelect
+            label="Период"
+            className="w-60"
+            value={periodId == null ? '' : String(periodId)}
+            disabled={periods.length === 0}
+            onChange={onSelectPeriod}
+          >
+            {periods.filter((item) => item.id != null).map((item) => (
+              <option key={item.id} value={item.id}>{periodLabel(item)}</option>
+            ))}
+          </FilterSelect>
+        )}
         <SegmentedTabs
-          value="PERIOD"
+          value={view}
           ariaLabel="Окно оценок"
-          onChange={() => undefined}
+          onChange={selectView}
           options={[
-            { value: 'MONTH', label: 'Месяц', disabled: true },
+            { value: 'MONTH', label: 'Месяц' },
             { value: 'PERIOD', label: capitalize(noun) },
           ]}
         />
@@ -137,7 +197,7 @@ export function MyClassGradesTab({
         ) : journalQuery.isPending ? <LoadingBlock label="Загрузка оценок…" /> : journalQuery.isError ? (
           <ErrorBlock message="Не удалось загрузить оценки." onRetry={retry} />
         ) : (
-          <JournalBody classId={classId} noun={noun} data={journalQuery.data} />
+          <JournalBody classId={classId} noun={noun} month={month} data={journalQuery.data} />
         )}
       </section>
     </div>
@@ -147,10 +207,13 @@ export function MyClassGradesTab({
 function JournalBody({
   classId,
   noun,
+  month,
   data,
 }: {
   classId: number;
   noun: string;
+  /** Окно режима «Месяц»; `null` — весь период. */
+  month: MyClassMonth | null;
   data: NonNullable<ReturnType<typeof useMyClassSubjectJournal>['data']>;
 }) {
   const journal = buildMyClassJournal({
@@ -158,12 +221,25 @@ function JournalBody({
     grades: data.grades,
     finals: data.finals,
     results: data.results.items ?? [],
+    window: month ? { from: month.dateFrom, to: month.dateTo } : null,
   });
   if (journal.rows.length === 0) return <EmptyBlock title="В классе пока нет учеников" />;
+  if (month && journal.columns.length === 0) {
+    return <EmptyBlock icon={<BookOpen className="h-7 w-7" />} title="По предмету пока нет оценок за этот месяц" />;
+  }
   if (journal.columns.length === 0 && journal.rows.every((row) => row.finals.length === 0)) {
     return <EmptyBlock icon={<BookOpen className="h-7 w-7" />} title="По предмету пока нет оценок за этот период" />;
   }
-  return <JournalTable classId={classId} noun={noun} columns={journal.columns} rows={journal.rows} policy={data.results.policy} />;
+  return (
+    <JournalTable
+      classId={classId}
+      noun={noun}
+      columns={journal.columns}
+      rows={journal.rows}
+      policy={data.results.policy}
+      showFinals={month == null}
+    />
+  );
 }
 
 /**
@@ -179,14 +255,18 @@ function JournalTable({
   columns,
   rows,
   policy,
+  showFinals,
 }: {
   classId: number;
   noun: string;
   columns: JournalColumn[];
   rows: JournalRow[];
   policy: GradeResults['policy'] | undefined;
+  /** В месяце итога периода нет, а средний — за весь период и подписан так. */
+  showFinals: boolean;
 }) {
   const byPercent = policy != null;
+  const resultEdge = showFinals ? 'right-60 border-x' : 'right-0 border-l';
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-max border-collapse text-sm">
@@ -210,14 +290,17 @@ function JournalTable({
             ))}
             <th
               scope="col"
-              title={byPercent ? weightsTitle(policy) : 'Средний балл шкальных оценок за период'}
-              className={cx(STICKY, HEAD, 'right-60 w-20 min-w-20 border-x px-2 py-3 text-center text-ink')}
+              title={byPercent ? weightsTitle(policy) : `Средний балл шкальных оценок за ${noun}`}
+              className={cx(STICKY, HEAD, resultEdge, 'w-20 min-w-20 px-2 py-3 text-center text-ink')}
             >
-              {byPercent ? 'Итог, %' : 'Ср. балл'}
+              <span className="block">{byPercent ? 'Итог, %' : 'Ср. балл'}</span>
+              {!showFinals && <span className="block font-normal normal-case text-slate-500">за {noun}</span>}
             </th>
-            <th scope="col" className={cx(STICKY, HEAD, 'right-0 w-60 min-w-60 px-2 py-3 text-center text-ink')}>
-              Итог за {noun}
-            </th>
+            {showFinals && (
+              <th scope="col" className={cx(STICKY, HEAD, 'right-0 w-60 min-w-60 px-2 py-3 text-center text-ink')}>
+                Итог за {noun}
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -257,29 +340,31 @@ function JournalTable({
                   </td>
                 );
               })}
-              <td className={cx(STICKY, 'right-60 w-20 min-w-20 border-x border-line px-2 py-2 text-center text-13 font-bold text-ink')}>
+              <td className={cx(STICKY, resultEdge, 'w-20 min-w-20 border-line px-2 py-2 text-center text-13 font-bold text-ink')}>
                 {byPercent ? <PercentCell row={row} /> : (
                   <span title={averageTitle(row)} className={cx(row.result?.averageGrade == null && 'font-normal text-slate-400')}>
                     {formatAverage(row.result?.averageGrade)}
                   </span>
                 )}
               </td>
-              <td className={cx(STICKY, 'right-0 w-60 min-w-60 px-2 py-2 text-center')}>
-                {row.finals.length > 0 ? (
-                  <span className="flex items-center justify-center gap-1">
-                    {row.finals.map((final) => (
-                      <GradeChip
-                        key={final.finalGradeId}
-                        size="sm"
-                        value={final.value == null ? null : String(final.value)}
-                        title={final.publishedAt ? `Опубликован ${shortDate(final.publishedAt.slice(0, 10))}` : undefined}
-                      />
-                    ))}
-                  </span>
-                ) : (
-                  <span className="text-slate-400" title="Итог не опубликован">—</span>
-                )}
-              </td>
+              {showFinals && (
+                <td className={cx(STICKY, 'right-0 w-60 min-w-60 px-2 py-2 text-center')}>
+                  {row.finals.length > 0 ? (
+                    <span className="flex items-center justify-center gap-1">
+                      {row.finals.map((final) => (
+                        <GradeChip
+                          key={final.finalGradeId}
+                          size="sm"
+                          value={final.value == null ? null : String(final.value)}
+                          title={final.publishedAt ? `Опубликован ${shortDate(final.publishedAt.slice(0, 10))}` : undefined}
+                        />
+                      ))}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400" title="Итог не опубликован">—</span>
+                  )}
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

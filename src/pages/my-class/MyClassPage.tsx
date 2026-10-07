@@ -214,6 +214,7 @@ export function MyClassPage() {
                 classId={classId}
                 periods={periods}
                 periodId={periodId}
+                schoolDate={context.data.schoolDate}
                 onSelectPeriod={(value) => updateParam('periodId', value)}
                 onForbidden={reportForbidden}
               />
