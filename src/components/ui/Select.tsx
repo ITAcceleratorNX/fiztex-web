@@ -33,6 +33,7 @@ function parseOptions(children: ReactNode): OptionItem[] {
 
 export function Select({
   className,
+  variant = 'default',
   children,
   value,
   defaultValue,
@@ -50,6 +51,8 @@ export function Select({
   'aria-required': ariaRequired,
   placeholder = 'Выберите…',
 }: SelectHTMLAttributes<HTMLSelectElement> & {
+  /** Крупный переключатель класса в заголовке раздела «Мой класс». */
+  variant?: 'default' | 'classSwitcher';
   /**
    * Подпись пустого поля. Пункт-заглушка `<option value="">` для этого не годится там, где
    * «ничего» выбрать нельзя: он попадает в список отмеченным пунктом.
@@ -234,7 +237,9 @@ export function Select({
           else openMenu();
         }}
         className={cx(
-          'input-base flex items-center justify-between gap-2 text-left',
+          variant === 'classSwitcher'
+            ? 'flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-4 text-left text-2xl font-semibold text-slate-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-400/30'
+            : 'input-base flex items-center justify-between gap-2 text-left',
           'cursor-pointer disabled:cursor-not-allowed disabled:opacity-60',
           className,
         )}
@@ -255,7 +260,9 @@ export function Select({
           aria-labelledby={fieldProps['aria-labelledby'] ?? listboxId}
           style={menuWidth ? { minWidth: menuWidth } : undefined}
           className={cx(
-            'absolute z-30 mt-1 max-h-60 overflow-y-auto rounded-xl bg-white py-1 shadow-pop ring-1 ring-slate-200/80 animate-scale-in',
+            variant === 'classSwitcher'
+              ? 'absolute z-30 mt-1 max-h-60 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-soft animate-scale-in'
+              : 'absolute z-30 mt-1 max-h-60 overflow-y-auto rounded-xl bg-white py-1 shadow-pop ring-1 ring-slate-200/80 animate-scale-in',
             className?.includes('w-auto') ? 'left-0' : 'inset-x-0 w-full',
           )}
         >
@@ -277,15 +284,18 @@ export function Select({
                   if (!option.disabled) setActiveValue(option.value);
                 }}
                 className={cx(
-                  'flex w-full items-center justify-between gap-2 px-3.5 py-2.5 text-left text-sm transition',
+                  'flex w-full items-center justify-between gap-2 text-left text-sm transition',
+                  variant === 'classSwitcher' ? 'px-3 py-2.5' : 'px-3.5 py-2.5',
                   option.disabled && 'cursor-not-allowed opacity-45',
                   !option.disabled && 'hover:bg-slate-50',
-                  isSelected ? 'bg-brand-50 font-medium text-brand-700' : 'text-slate-700',
+                  variant === 'classSwitcher'
+                    ? isSelected ? 'bg-slate-50 font-semibold text-slate-900' : 'text-slate-900'
+                    : isSelected ? 'bg-brand-50 font-medium text-brand-700' : 'text-slate-700',
                   isActive && !option.disabled && 'outline-none ring-2 ring-inset ring-brand-400',
                 )}
               >
                 <span className="truncate">{option.label}</span>
-                {isSelected && <Check className="h-4 w-4 shrink-0 text-brand-500" aria-hidden />}
+                {isSelected && <Check className={cx('h-4 w-4 shrink-0', variant === 'classSwitcher' ? 'text-brand-navy' : 'text-brand-500')} aria-hidden />}
               </li>
             );
           })}
