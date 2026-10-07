@@ -1,33 +1,6 @@
+import { AttendanceDot } from '@/components/ui/AttendanceDot';
 import { cx } from '@/lib/format';
-import { LEGEND, type DayMark, type JournalRow, type MonthDay } from '@/lib/attendanceJournalModel';
-
-/**
- * Цвет точки. Палитра — стандартная Tailwind, ровно те значения, что в макете
- * (Figma `legend-row`, клетки 2170:2609): green-600, red-500, orange-400, blue-500,
- * slate-400. Отменённый урок — пустое кольцо того же серого.
- */
-const DOT_TONE: Record<DayMark, string> = {
-  present: 'bg-green-600',
-  late: 'bg-orange-400',
-  absent: 'bg-red-500',
-  excused: 'bg-blue-500',
-  unpublished: 'bg-slate-400',
-  cancelled: 'border border-slate-400',
-};
-
-/** Figma `legend-row`: шесть значений точки. */
-export function AttendanceLegend() {
-  return (
-    <ul className="flex flex-wrap items-center gap-x-5 gap-y-2">
-      {LEGEND.map((item) => (
-        <li key={item.mark} className="flex items-center gap-2 text-xs font-medium text-slate-600">
-          <span className={cx('size-2 rounded-full', DOT_TONE[item.mark])} aria-hidden />
-          {item.label}
-        </li>
-      ))}
-    </ul>
-  );
-}
+import type { JournalRow, MonthDay } from '@/lib/attendanceJournalModel';
 
 /**
  * Таблица «ученики × дни месяца» (Figma 2170:2360).
@@ -93,7 +66,7 @@ export function AttendanceMonthTable({ days, rows }: { days: MonthDay[]; rows: J
                       <>
                         <span className="inline-flex items-center justify-center gap-1" aria-hidden>
                           {cell.marks.slice(0, 3).map((mark, index) => (
-                            <span key={index} className={cx('size-2.5 rounded-full', DOT_TONE[mark])} />
+                            <AttendanceDot key={index} mark={mark} />
                           ))}
                         </span>
                         <span className="sr-only">{cell.title}</span>

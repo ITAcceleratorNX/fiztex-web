@@ -2,7 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import {
   lessonSummaryApi, summaryRunning, type LessonSummary, type SummaryGeneration, type SummarySave,
 } from '@/lib/lessonSummaryApi';
-import { ApiError, api, type CopyTestRequest } from '@/lib/api';
+import { ApiError, api, pageQuery, request, type CopyTestRequest } from '@/lib/api';
 import {
   lessonAdminApi,
   lessonTeachingApi,
@@ -90,6 +90,20 @@ import type {
 } from '@/lib/types';
 
 export const keys = {
+  myClassContext: ['my-class', 'context'] as const,
+  myClassRoster: (classId: number) => ['my-class', 'classes', classId, 'students'] as const,
+  myClassSummary: (classId: number, periodId: number) => ['my-class', 'classes', classId, 'summary', periodId] as const,
+  myClassSubjects: (classId: number, periodId: number) => ['my-class', 'classes', classId, 'subjects', periodId] as const,
+  myClassSubjectJournal: (classId: number, periodId: number, subjectId: number) =>
+    ['my-class', 'classes', classId, 'journal', periodId, subjectId] as const,
+  myClassAttendanceJournal: (classId: number, periodId: number, subjectId: number) =>
+    ['my-class', 'classes', classId, 'attendance-journal', periodId, subjectId] as const,
+  myClassWeekSchedule: (classId: number, weekStart: string) =>
+    ['my-class', 'classes', classId, 'schedule', weekStart] as const,
+  adminClasses: ['admin', 'classes'] as const,
+  adminHomeroomTeachers: ['admin', 'teachers', 'homeroom-options'] as const,
+  adminHomeroomCurrent: (classId: number) => ['admin', 'classes', classId, 'homeroom'] as const,
+  adminHomeroomHistory: (classId: number) => ['admin', 'classes', classId, 'homeroom', 'history'] as const,
   teacherWorkspace: ['teacher-workspace'] as const,
   teacherWorkspaceHome: (page: number) => ['teacher-workspace', 'home', page] as const,
   teacherWorkspaceFolders: (page: number) => ['teacher-workspace', 'folders', page] as const,
@@ -267,6 +281,104 @@ export const keys = {
   monthlyFeedbackSheet: (key: FeedbackSheetKey) =>
     ['monthly-feedback', 'teacher', 'sheet', key.month, key.classId, key.subjectId] as const,
 };
+
+/** Load every teacher page: a class teacher must not disappear after the first page. */
+export function useAdminHomeroomTeachers(enabled: boolean) {
+  return useQuery({
+    queryKey: keys.adminHomeroomTeachers,
+    enabled,
+    staleTime: 60_000,
+    queryFn: async ({ signal }) => {
+      const teachers: Schema<'TeacherProfileView'>[] = [];
+      for (let page = 0; ; page++) {
+        signal.throwIfAborted();
+        const result = await request<Schema<'PageTeacherProfileView'>>(
+          `/admin/teachers${pageQuery({ page, size: 100 })}`,
+          { signal },
+        );
+        teachers.push(...(result.content ?? []));
+        if (result.last === true
+          || (result.totalPages != null && page + 1 >= result.totalPages)
+          || (result.totalPages == null && (result.content?.length ?? 0) < 100)) break;
+      }
+      return teachers
+        .filter((teacher) => teacher.id != null
+          && teacher.status === 'ACTIVE'
+          && (teacher.accountStatus === 'ACTIVE' || teacher.accountStatus === 'NOT_ACTIVATED'))
+        .sort((a, b) => `${a.lastName ?? ''} ${a.firstName ?? ''}`.localeCompare(
+          `${b.lastName ?? ''} ${b.firstName ?? ''}`, 'ru', { sensitivity: 'base' },
+        ));
+    },
+  });
+}
+
+export function useCreateSchoolClass() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schema<'CreateSchoolClassRequest'>) =>
+      request<Schema<'SchoolClassView'>>('/admin/classes', { method: 'POST', body }),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: keys.adminClasses });
+    },
+  });
+}
+
+export function useAdminHomeroomCurrent(classId: number) {
+  return useQuery({
+    queryKey: keys.adminHomeroomCurrent(classId),
+    enabled: Number.isSafeInteger(classId) && classId > 0,
+    queryFn: ({ signal }) => request<Schema<'HomeroomCurrentView'>>(
+      `/admin/classes/${classId}/homeroom-teacher`, { signal },
+    ),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useAdminHomeroomHistory(classId: number) {
+  return useInfiniteQuery({
+    queryKey: keys.adminHomeroomHistory(classId),
+    enabled: Number.isSafeInteger(classId) && classId > 0,
+    initialPageParam: 0,
+    queryFn: ({ pageParam, signal }) => request<Schema<'HomeroomHistoryPageView'>>(
+      `/admin/classes/${classId}/homeroom-teacher/history${pageQuery({ page: pageParam, size: 20 })}`,
+      { signal },
+    ),
+    getNextPageParam: (lastPage, _pages, lastPageParam) => lastPage.hasMore ? lastPageParam + 1 : undefined,
+  });
+}
+
+export function usePutAdminHomeroom(classId: number) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schema<'PutHomeroomTeacherRequest'>) =>
+      request<Schema<'HomeroomCurrentView'>>(`/admin/classes/${classId}/homeroom-teacher`, {
+        method: 'PUT', body,
+      }),
+    onSuccess: (current) => {
+      client.setQueryData(keys.adminHomeroomCurrent(classId), current);
+      void client.invalidateQueries({ queryKey: keys.adminHomeroomHistory(classId) });
+      void client.invalidateQueries({ queryKey: keys.adminClasses });
+      void client.invalidateQueries({ queryKey: keys.myClassContext });
+    },
+  });
+}
+
+export function useRemoveAdminHomeroom(classId: number) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schema<'RemoveHomeroomTeacherRequest'>) =>
+      request<Schema<'HomeroomCurrentView'>>(`/admin/classes/${classId}/homeroom-teacher/remove`, {
+        method: 'POST', body,
+      }),
+    onSuccess: (current) => {
+      client.setQueryData(keys.adminHomeroomCurrent(classId), current);
+      void client.invalidateQueries({ queryKey: keys.adminHomeroomHistory(classId) });
+      void client.invalidateQueries({ queryKey: keys.adminClasses });
+      void client.invalidateQueries({ queryKey: keys.myClassContext });
+    },
+  });
+}
 
 export function useTeacherWorkspaceHome(page = 0) {
   return useQuery({
@@ -2870,5 +2982,151 @@ export function useHomeworkFilterOptions(enabled: boolean) {
         subjects: [...subjects].map(([id, name]) => ({ id, name })),
       };
     },
+  });
+}
+
+export function useMyClassContext() {
+  return useQuery({
+    queryKey: keys.myClassContext,
+    queryFn: ({ signal }) => request<Schema<'MyClassContextView'>>('/my-class/context', { signal }),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useMyClassRoster(classId: number | null) {
+  return useInfiniteQuery({
+    queryKey: classId == null ? ['my-class', 'classes', 'none', 'students'] : keys.myClassRoster(classId),
+    enabled: classId != null,
+    initialPageParam: 0,
+    queryFn: ({ pageParam, signal }) => request<Schema<'MyClassRosterView'>>(
+      `/my-class/classes/${classId}/students?page=${pageParam}&size=24`,
+      { signal },
+    ),
+    getNextPageParam: (lastPage) => lastPage.hasMore ? (lastPage.page ?? 0) + 1 : undefined,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useMyClassSubjects(classId: number | null, periodId: number | null) {
+  return useQuery({
+    queryKey: classId == null || periodId == null
+      ? ['my-class', 'subjects', 'none']
+      : keys.myClassSubjects(classId, periodId),
+    enabled: classId != null && periodId != null,
+    queryFn: ({ signal }) => request<Schema<'MyClassSubjectsView'>>(
+      `/my-class/classes/${classId}/subjects?periodId=${periodId}`,
+      { signal },
+    ),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+}
+
+/** Every page of a MyClass list: the journal grid is wrong with only its first page. */
+async function allMyClassPages<T>(
+  path: string,
+  signal: AbortSignal,
+): Promise<T[]> {
+  const items: T[] = [];
+  const separator = path.includes('?') ? '&' : '?';
+  for (let page = 0; ; page++) {
+    signal.throwIfAborted();
+    const result = await request<{ items?: T[]; hasMore?: boolean }>(
+      `${path}${separator}page=${page}&size=100`,
+      { signal },
+    );
+    items.push(...(result.items ?? []));
+    if (!result.hasMore) return items;
+  }
+}
+
+/**
+ * Журнал вкладки «Оценки» одним снимком: состав, оценки, опубликованные итоги и средние по
+ * предмету. Четыре ответа складываются в одну таблицу, поэтому и грузятся, и падают вместе —
+ * сетка из оценок одного момента и средних другого разошлась бы на глазах.
+ */
+export function useMyClassSubjectJournal(
+  classId: number | null,
+  periodId: number | null,
+  subjectId: number | null,
+) {
+  return useQuery({
+    queryKey: classId == null || periodId == null || subjectId == null
+      ? ['my-class', 'journal', 'none']
+      : keys.myClassSubjectJournal(classId, periodId, subjectId),
+    enabled: classId != null && periodId != null && subjectId != null,
+    queryFn: async ({ signal }) => {
+      const root = `/my-class/classes/${classId}`;
+      const scope = `periodId=${periodId}&subjectId=${subjectId}`;
+      const [students, grades, finals, results] = await Promise.all([
+        allMyClassPages<Schema<'MyClassStudentView'>>(`${root}/students`, signal),
+        allMyClassPages<Schema<'MyClassGradeItemView'>>(`${root}/grades?${scope}`, signal),
+        allMyClassPages<Schema<'MyClassFinalGradeItemView'>>(`${root}/final-grades?${scope}`, signal),
+        request<Schema<'MyClassGradeResultsView'>>(`${root}/grade-results?${scope}`, { signal }),
+      ]);
+      return { students, grades, finals, results };
+    },
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+}
+
+/** Журнал посещаемости предмета: клетки считает сервер, черновики он не раскрывает. */
+export function useMyClassAttendanceJournal(
+  classId: number | null,
+  periodId: number | null,
+  subjectId: number | null,
+) {
+  return useQuery({
+    queryKey: classId == null || periodId == null || subjectId == null
+      ? ['my-class', 'attendance-journal', 'none']
+      : keys.myClassAttendanceJournal(classId, periodId, subjectId),
+    enabled: classId != null && periodId != null && subjectId != null,
+    queryFn: ({ signal }) => request<Schema<'MyClassAttendanceJournalView'>>(
+      `/my-class/classes/${classId}/attendance-journal?periodId=${periodId}&subjectId=${subjectId}`,
+      { signal },
+    ),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+}
+
+/**
+ * Неделя расписания класса. `/schedule` принимает даты одного периода, поэтому неделя на
+ * стыке четвертей — это несколько запросов, и они грузятся и падают вместе.
+ */
+export function useMyClassWeekSchedule(
+  classId: number | null,
+  weekStart: string | null,
+  parts: ReadonlyArray<{ periodId: number; from: string; to: string }>,
+) {
+  return useQuery({
+    queryKey: classId == null || weekStart == null
+      ? ['my-class', 'schedule', 'none']
+      : [...keys.myClassWeekSchedule(classId, weekStart), parts.map((part) => part.periodId).join(',')],
+    enabled: classId != null && weekStart != null,
+    queryFn: ({ signal }) => Promise.all(parts.map((part) => request<Schema<'MyClassScheduleView'>>(
+      `/my-class/classes/${classId}/schedule?periodId=${part.periodId}&from=${part.from}&to=${part.to}`,
+      { signal },
+    ))),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useMyClassSummary(classId: number | null, periodId: number | null) {
+  return useQuery({
+    queryKey: classId == null || periodId == null
+      ? ['my-class', 'summary', 'none']
+      : keys.myClassSummary(classId, periodId),
+    enabled: classId != null && periodId != null,
+    queryFn: ({ signal }) => request<Schema<'MyClassSummaryView'>>(
+      `/my-class/classes/${classId}/summary?periodId=${periodId}`,
+      { signal },
+    ),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 }

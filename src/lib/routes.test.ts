@@ -19,6 +19,8 @@ describe('маршрутизация по роли', () => {
   it('учителю доступен только раздел ДЗ', () => {
     expect(isRouteAllowedForRole('/homework', 'TEACHER')).toBe(true);
     expect(isRouteAllowedForRole('/homework/12', 'TEACHER')).toBe(true);
+    expect(isRouteAllowedForRole('/my-class', 'TEACHER')).toBe(true);
+    expect(isRouteAllowedForRole('/my-class', 'ADMIN')).toBe(false);
     expect(isRouteAllowedForRole('/dashboard', 'TEACHER')).toBe(false);
     expect(isRouteAllowedForRole('/admin/classes', 'TEACHER')).toBe(false);
     // Конкретный урок — ролевой экран: карточка, посещаемость и ДЗ урока учителю нужны,
@@ -146,6 +148,7 @@ describe('маршрутизация по роли', () => {
       // доступ §1), и её позиция в списке такая же часть решения, как её наличие.
       '/current-lesson',
       '/my-schedule',
+      '/my-class',
       '/my-availability',
       '/grades',
       '/homework',
@@ -164,6 +167,7 @@ describe('маршрутизация по роли', () => {
     // Учительские адреса отзывов админу отвечают 403 (monthly-feedback-contract §1).
     expect(admin).not.toContain('/feedback');
     expect(admin).not.toContain('/my-schedule');
+    expect(admin).not.toContain('/my-class');
     expect(admin).toContain('/dashboard');
   });
 
