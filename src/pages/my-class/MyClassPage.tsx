@@ -147,17 +147,25 @@ export function MyClassPage() {
         <>
           <div className="flex flex-wrap items-end justify-between gap-4 pb-1">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">{classLabel(selectedClass.name ?? '')}</h2>
+              {classes.length > 1 ? (
+                <div className="w-class-switcher max-w-full">
+                  <Select
+                    variant="classSwitcher"
+                    aria-label="Выберите класс"
+                    value={String(classId)}
+                    onChange={(event) => updateParam('classId', event.target.value)}
+                  >
+                    {classes.filter((item) => item.id != null).map((item) => (
+                      <option key={item.id} value={item.id}>{classLabel(item.name ?? '')}</option>
+                    ))}
+                  </Select>
+                </div>
+              ) : (
+                <h2 className="text-2xl font-bold text-slate-900">{classLabel(selectedClass.name ?? '')}</h2>
+              )}
               <p className="mt-1 text-sm text-slate-500">{academicYearLabel(context.data)}</p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              {classes.length > 1 && (
-                <Select aria-label="Выберите класс" value={String(classId)} onChange={(event) => updateParam('classId', event.target.value)}>
-                  {classes.filter((item) => item.id != null).map((item) => (
-                    <option key={item.id} value={item.id}>{classLabel(item.name ?? '')}</option>
-                  ))}
-                </Select>
-              )}
               {/* На «Оценках» и «Посещаемости» период выбирается в строке фильтров, как в макете. */}
               {tab === 'students' && (periods.length > 1 || (periods.length > 0 && periodId == null)) && (
                 <Select aria-label="Выберите учебный период" value={periodId == null ? '' : String(periodId)}

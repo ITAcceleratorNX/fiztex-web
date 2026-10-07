@@ -417,3 +417,123 @@ describe('MyClassPage — вкладка «Расписание»', () => {
     expect(retry).toHaveBeenCalled();
   });
 });
+
+describe('MyClassPage — несколько классов', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useMyClassContext.mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: { ...context(), classes: [
+        { id: 18, name: '8А', homeroomAssignmentId: 1 },
+        { id: 19, name: '10Б', homeroomAssignmentId: 2 },
+      ] },
+      refetch,
+    });
+    useMyClassRoster.mockImplementation((classId: number) => ({
+      isPending: false,
+      isError: false,
+      data: { pages: [{ totalItems: classId === 18 ? 2 : 1, items: [
+        { studentProfileId: classId, displayName: classId === 18 ? 'Александрова София' : 'Петров Максим' },
+      ] }] },
+      refetch,
+    }));
+    useMyClassSummary.mockImplementation((classId: number) => ({
+      isPending: false,
+      isError: false,
+      data: { averageGrade: classId === 18 ? 8.1 : 7.2, monthlyAttendancePercent: classId === 18 ? 94 : 80 },
+      refetch,
+    }));
+    useMyClassSubjects.mockImplementation((classId: number) => ({
+      isPending: false,
+      isError: false,
+      data: { items: [classId === 18
+        ? { subjectId: 2, subjectName: 'Алгебра', gradeCount: 1 }
+        : { subjectId: 9, subjectName: 'Физика', gradeCount: 1 }] },
+    }));
+    useMyClassSubjectJournal.mockImplementation((classId: number) => ({
+      isPending: false,
+      isError: false,
+      data: journal({
+        students: [{ studentProfileId: classId, displayName: classId === 18 ? 'Александрова София' : 'Петров Максим' }],
+        grades: [{ gradeId: classId, studentProfileId: classId, sourceType: 'LESSON', sourceId: 100,
+          sourceDate: '2026-10-07', scaleCode: classId === 18 ? '9' : '7', gradeType: 'FORMATIVE' }],
+        finals: [],
+        results: { policy: null, items: [] },
+      }),
+    }));
+    useMyClassAttendanceJournal.mockImplementation((classId: number) => ({
+      isPending: false,
+      isError: false,
+      data: {
+        lessons: [{ lessonId: classId, date: '2026-10-07', startTime: '09:00:00', status: 'ACTIVE' }],
+        rows: [{ studentProfileId: classId, studentName: classId === 18 ? 'Александрова София' : 'Петров Максим',
+          cells: [{ lessonId: classId, state: 'PRESENT' }] }],
+      },
+    }));
+    useMyClassWeekSchedule.mockImplementation((classId: number) => ({
+      isPending: false,
+      isError: false,
+      data: [{ from: '2026-10-05', to: '2026-10-11', factState: 'FACTS_AVAILABLE_COVERAGE_UNKNOWN',
+        planState: 'PUBLISHED', facts: [{ lessonId: classId, date: '2026-10-07', startTime: '08:00:00',
+          endTime: '08:45:00', lessonNumber: 1, status: 'ACTIVE',
+          subjectName: classId === 18 ? 'Алгебра' : 'Физика', teacherName: 'Учитель', canOpen: false }] }],
+    }));
+  });
+
+  it.each(['students', 'grades', 'attendance', 'schedule'] as const)(
+    'switches class in the %s tab without showing data from the previous class', async (tab) => {
+      renderPage(`/my-class?tab=${tab}&classId=18&periodId=7&subjectId=2`);
+
+      const switcher = screen.getByRole('button', { name: 'Выберите класс' });
+      expect(switcher).toHaveTextContent('8А класс');
+      await userEvent.click(switcher);
+      expect(screen.getByRole('option', { name: '8А класс' })).toHaveAttribute('aria-selected', 'true');
+      await userEvent.click(screen.getByRole('option', { name: '10Б класс' }));
+
+      expect(screen.getByRole('button', { name: 'Выберите класс' })).toHaveTextContent('10Б класс');
+      expect(screen.getByTestId('location')).toHaveTextContent('classId=19');
+      expect(screen.getByTestId('location')).toHaveTextContent('periodId=7');
+      expect(screen.getByRole('tab', { name: {
+        students: 'Ученики', grades: 'Оценки', attendance: 'Посещаемость', schedule: 'Расписание',
+      }[tab] })).toHaveAttribute('aria-selected', 'true');
+      expect(useMyClassRoster).toHaveBeenLastCalledWith(19);
+      expect(useMyClassSummary).toHaveBeenLastCalledWith(19, 7);
+      expect(screen.getByText('7,2')).toBeInTheDocument();
+      expect(screen.queryByText('8,1')).not.toBeInTheDocument();
+
+      if (tab === 'students') {
+        expect(screen.getByText('Петров Максим')).toBeInTheDocument();
+        expect(screen.queryByText('Александрова София')).not.toBeInTheDocument();
+      } else if (tab === 'grades') {
+        expect(useMyClassSubjects).toHaveBeenLastCalledWith(19, 7);
+        expect(useMyClassSubjectJournal).toHaveBeenLastCalledWith(19, 7, 9);
+        expect(screen.getByTestId('location')).toHaveTextContent('subjectId=9');
+        expect(screen.getByLabelText('Предмет')).toHaveTextContent('Физика');
+        expect(screen.getByRole('row', { name: /Петров М\./ })).toBeInTheDocument();
+        expect(screen.queryByRole('row', { name: /Александрова С\./ })).not.toBeInTheDocument();
+      } else if (tab === 'attendance') {
+        expect(useMyClassSubjects).toHaveBeenLastCalledWith(19, 7);
+        expect(useMyClassAttendanceJournal).toHaveBeenLastCalledWith(19, 7, 9);
+        expect(screen.getByTestId('location')).toHaveTextContent('subjectId=9');
+        expect(screen.getByLabelText('Предмет')).toHaveTextContent('Физика');
+        expect(screen.getByRole('row', { name: /Петров М\./ })).toBeInTheDocument();
+        expect(screen.queryByRole('row', { name: /Александрова С\./ })).not.toBeInTheDocument();
+      } else {
+        expect(useMyClassWeekSchedule).toHaveBeenLastCalledWith(19, '2026-10-05',
+          [{ periodId: 7, from: '2026-10-05', to: '2026-10-11' }]);
+        expect(screen.getByText('Физика')).toBeInTheDocument();
+        expect(screen.queryByText('Алгебра')).not.toBeInTheDocument();
+      }
+    },
+  );
+
+  it('replaces an inaccessible class ID in the address with the server default', () => {
+    renderPage('/my-class?classId=999&periodId=7');
+
+    expect(screen.getByRole('button', { name: 'Выберите класс' })).toHaveTextContent('8А класс');
+    expect(screen.getByTestId('location')).toHaveTextContent('classId=18');
+    expect(useMyClassRoster).toHaveBeenLastCalledWith(18);
+    expect(useMyClassSummary).toHaveBeenLastCalledWith(18, 7);
+  });
+});
