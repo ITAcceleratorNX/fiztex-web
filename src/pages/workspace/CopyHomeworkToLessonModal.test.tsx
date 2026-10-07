@@ -7,11 +7,13 @@ const copy = vi.fn();
 const source = vi.fn();
 const lessons = vi.fn();
 const refetch = vi.fn();
+const next = vi.fn();
 
 vi.mock('@/context/ToastContext', () => ({ useToast: () => ({ success: vi.fn() }) }));
 vi.mock('@/hooks/queries', () => ({
   useHomeworkCard: () => source(),
   useWorkspaceLessonTargets: (...args: unknown[]) => lessons(...args),
+  useNextTaughtLesson: (id: number | null) => next(id),
   useCopyHomeworkToLesson: (id: number) => ({ mutateAsync: (args: unknown) => copy(id, args), isPending: false }),
 }));
 
@@ -23,6 +25,7 @@ beforeEach(() => {
   source.mockReturnValue({ data: { id: 42, title: 'Законы Ньютона', subjectId: 3, lessonId: 5 }, isPending: false, isError: false, refetch });
   lessons.mockReturnValue({ data: { content: [lesson], totalPages: 1 }, isPending: false, isError: false, refetch });
   copy.mockResolvedValue({ id: 99 });
+  next.mockReturnValue({ data: { lesson: null }, isPending: false, isError: false, refetch });
 });
 
 async function chooseDue(name: string) {
@@ -37,6 +40,35 @@ async function chooseTargetAndDue(due = 'Без срока') {
 }
 
 describe('Копирование ДЗ в выбранный урок', () => {
+  it('предлагает следующий урок этого класса и показывает, куда уйдёт копия', async () => {
+    next.mockReturnValue({ data: { lesson: { id: 6, subjectId: 3, subjectName: 'Физика', className: '7А',
+      date: '2026-10-12', lessonNumber: 2, startTime: '09:00:00', endTime: '09:45:00',
+      academicPeriodStatus: 'ACTIVE', capabilities: ['EDIT_TEACHING_PART'] } }, isPending: false, isError: false, refetch });
+    source.mockReturnValue({ data: { id: 42, title: 'Тест по механике', subjectId: 3, lessonId: 5, answerFormat: 'TEST' },
+      isPending: false, isError: false, refetch });
+    const onCopied = vi.fn();
+    render(<CopyHomeworkToLessonModal sourceId={42} onClose={vi.fn()} onCopied={onCopied} />);
+    expect(screen.getByRole('heading', { name: 'Скопировать тест в другой урок' })).toBeInTheDocument();
+    expect(next).toHaveBeenCalledWith(5);
+    await userEvent.click(screen.getByRole('button', { name: /Физика · 7А.*2-й урок/ }));
+    // В варианте выбора и в блоке «Куда».
+    expect(screen.getAllByText('Понедельник, 12 октября · 2-й урок · 09:00–09:45')).toHaveLength(2);
+    expect(screen.getByText('Куда')).toBeInTheDocument();
+    await chooseDue('До следующего урока');
+    await userEvent.click(screen.getByRole('checkbox'));
+    await userEvent.click(screen.getByRole('button', { name: 'Создать черновик' }));
+    await waitFor(() => expect(copy).toHaveBeenCalledWith(42, expect.objectContaining({
+      body: { lessonId: 6, dueType: 'NEXT_LESSON', confirmRecipients: true } })));
+    expect(onCopied).toHaveBeenCalledWith(99);
+  });
+
+  it('без урока у задания не ищет следующий урок', () => {
+    source.mockReturnValue({ data: { id: 42, title: 'Вне урока', subjectId: 3 }, isPending: false, isError: false, refetch });
+    render(<CopyHomeworkToLessonModal sourceId={42} onClose={vi.fn()} onCopied={vi.fn()} />);
+    expect(next).toHaveBeenCalledWith(null);
+    expect(screen.queryByText('Следующий урок этого класса')).not.toBeInTheDocument();
+  });
+
   it('требует выбрать срок и подтвердить новых получателей, затем открывает копию', async () => {
     const onCopied = vi.fn();
     render(<CopyHomeworkToLessonModal sourceId={42} onClose={vi.fn()} onCopied={onCopied} />);

@@ -5358,6 +5358,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/next-taught": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["nextTaught"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/preparation": {
         parameters: {
             query?: never;
@@ -5368,6 +5384,22 @@ export interface paths {
         get: operations["getLessonPreparationTargetState"];
         put: operations["applyLessonPreparation"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/preparation/copy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["previewLessonPreparationCopy"];
+        put?: never;
+        post: operations["copyLessonPreparation"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10104,7 +10136,7 @@ export interface components {
         };
         LessonHistoryView: {
             /** @enum {string} */
-            actionType?: "CREATED" | "SUPERSEDED" | "CANCELLED" | "RESTORED" | "ADMIN_UPDATED" | "SUBSTITUTE_ASSIGNED" | "SUBSTITUTE_REVOKED" | "GRADE_PERMISSION_GRANTED" | "GRADE_PERMISSION_REVOKED" | "COMMENT_CREATED" | "COMMENT_UPDATED" | "COMMENT_DELETED" | "TOPIC_UPDATED" | "PREPARATION_APPLIED" | "HOMEWORK_CREATED" | "HOMEWORK_UPDATED" | "HOMEWORK_DELETED" | "HOMEWORK_ASSIGNMENT_DRAFTED" | "HOMEWORK_ASSIGNMENT_PUBLISHED" | "HOMEWORK_ASSIGNMENT_UPDATED" | "HOMEWORK_MARKED_NOT_ASSIGNED" | "HOMEWORK_NOT_ASSIGNED_CLEARED" | "TEXTBOOK_SELECTED" | "TEXTBOOK_CLEARED" | "MATERIAL_ADDED" | "MATERIAL_UPDATED" | "MATERIAL_REMOVED";
+            actionType?: "CREATED" | "SUPERSEDED" | "CANCELLED" | "RESTORED" | "ADMIN_UPDATED" | "SUBSTITUTE_ASSIGNED" | "SUBSTITUTE_REVOKED" | "GRADE_PERMISSION_GRANTED" | "GRADE_PERMISSION_REVOKED" | "COMMENT_CREATED" | "COMMENT_UPDATED" | "COMMENT_DELETED" | "TOPIC_UPDATED" | "PREPARATION_APPLIED" | "PREPARATION_COPIED" | "HOMEWORK_CREATED" | "HOMEWORK_UPDATED" | "HOMEWORK_DELETED" | "HOMEWORK_ASSIGNMENT_DRAFTED" | "HOMEWORK_ASSIGNMENT_PUBLISHED" | "HOMEWORK_ASSIGNMENT_UPDATED" | "HOMEWORK_MARKED_NOT_ASSIGNED" | "HOMEWORK_NOT_ASSIGNED_CLEARED" | "TEXTBOOK_SELECTED" | "TEXTBOOK_CLEARED" | "MATERIAL_ADDED" | "MATERIAL_UPDATED" | "MATERIAL_REMOVED";
             /** Format: int64 */
             actorId?: number;
             actorName?: string;
@@ -10265,6 +10297,53 @@ export interface components {
             version: number;
             /** Format: int64 */
             workspaceItemId: number;
+        };
+        LessonPreparationCopyContent: {
+            hasComment?: boolean;
+            hasSummary?: boolean;
+            /** Format: int32 */
+            materialCount?: number;
+            /** Format: int32 */
+            pageFrom?: number;
+            /** Format: int32 */
+            pageTo?: number;
+            summaryTitle?: string;
+            /** Format: int64 */
+            textbookId?: number;
+            textbookTitle?: string;
+            topic?: string;
+        };
+        LessonPreparationCopyPreview: {
+            /** @enum {string} */
+            blockedReason?: "SAME_LESSON" | "NOTHING_TO_COPY" | "TARGET_LOCKED";
+            canCopy?: boolean;
+            existing?: components["schemas"]["LessonPreparationCopyContent"];
+            source?: components["schemas"]["LessonPreparationCopyContent"];
+            /** Format: int64 */
+            sourceLessonId?: number;
+            target?: components["schemas"]["LessonView"];
+            targetHasContent?: boolean;
+            targetRevision?: string;
+            textbookTransferable?: boolean;
+        };
+        LessonPreparationCopyRequest: {
+            confirmReplace?: boolean;
+            expectedTargetRevision: string;
+            /** Format: int64 */
+            targetLessonId: number;
+        };
+        LessonPreparationCopyResult: {
+            /** Format: int32 */
+            addedMaterials?: number;
+            commentCopied?: boolean;
+            /** Format: int64 */
+            sourceLessonId?: number;
+            summaryCopied?: boolean;
+            /** Format: int64 */
+            targetLessonId?: number;
+            textbookCopied?: boolean;
+            textbookSkipped?: boolean;
+            topicCopied?: boolean;
         };
         LessonPreparationCreateRequest: {
             documentWorkspaceItemIds?: number[];
@@ -11189,6 +11268,9 @@ export interface components {
             lessonDate?: string;
             /** Format: int64 */
             lessonId?: number;
+        };
+        NextTaughtLessonView: {
+            lesson?: components["schemas"]["LessonView"];
         };
         NotificationAccountDiagnosticsView: {
             /** Format: int64 */
@@ -24550,6 +24632,28 @@ export interface operations {
             };
         };
     };
+    nextTaught: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NextTaughtLessonView"];
+                };
+            };
+        };
+    };
     getLessonPreparationTargetState: {
         parameters: {
             query?: never;
@@ -24594,6 +24698,56 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonPreparationApplicationView"];
+                };
+            };
+        };
+    };
+    previewLessonPreparationCopy: {
+        parameters: {
+            query: {
+                targetLessonId: number;
+            };
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationCopyPreview"];
+                };
+            };
+        };
+    };
+    copyLessonPreparation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonPreparationCopyRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPreparationCopyResult"];
                 };
             };
         };

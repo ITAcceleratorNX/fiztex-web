@@ -54,6 +54,7 @@ function renderCard(returnTo: string) {
         <CurrentUrl />
         <Routes>
           <Route path="/homework/:homeworkId" element={<HomeworkCardPage />} />
+          <Route path="/homework/:homeworkId/edit" element={<p>Форма задания</p>} />
           <Route path="/workspace/sections/HOMEWORK" element={<p>Раздел рабочего пространства</p>} />
         </Routes>
       </MemoryRouter>
@@ -90,7 +91,7 @@ describe('Карточка ДЗ из рабочего пространства',
     expect(screen.getByText('Раздел рабочего пространства')).toBeInTheDocument();
   });
 
-  it('после копирования сохраняет возврат из новой карточки в исходный раздел', async () => {
+  it('после копирования открывает копию в форме и сохраняет возврат в исходный раздел', async () => {
     renderCard('/workspace/sections/HOMEWORK?page=2');
     await userEvent.click(await screen.findByRole('button', { name: 'Скопировать в другой урок' }));
     await userEvent.click(await screen.findByRole('button', { name: /Физика · 7Б/ }));
@@ -98,11 +99,9 @@ describe('Карточка ДЗ из рабочего пространства',
     await userEvent.click(screen.getByRole('option', { name: 'Без срока' }));
     await userEvent.click(screen.getByRole('checkbox'));
     await userEvent.click(screen.getByRole('button', { name: 'Создать черновик' }));
-    await screen.findByRole('heading', { name: 'Копия контрольной' });
+    await screen.findByText('Форма задания');
     expect(homeworkApi.copyToLesson).toHaveBeenCalledWith(42, { lessonId: 8, dueType: 'NONE', confirmRecipients: true }, expect.any(String));
-    expect(screen.getByTestId('url')).toHaveTextContent(`/homework/99?${new URLSearchParams({ returnTo: '/workspace/sections/HOMEWORK?page=2' })}`);
-    await userEvent.click(screen.getByRole('link', { name: 'К разделу «Домашние задания»' }));
-    expect(screen.getByTestId('url')).toHaveTextContent('/workspace/sections/HOMEWORK?page=2');
+    expect(screen.getByTestId('url')).toHaveTextContent(`/homework/99/edit?${new URLSearchParams({ returnTo: '/workspace/sections/HOMEWORK?page=2' })}`);
   });
 
   it.each(['/workspace/sections/HOMEWORK?page=2', '/workspace/folders/7?page=1'])('копирует из меню материала и сохраняет путь %s', async (path) => {

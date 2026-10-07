@@ -32,6 +32,9 @@ interface HistoryPayload {
   /** Страницы выбранного учебника (LIBRARY-BE-001 §6). */
   pageFrom?: number | null;
   pageTo?: number | null;
+  /** Откуда перенесена подготовка (PREPARATION_COPIED). */
+  sourceLessonDate?: string | null;
+  sourceClassName?: string | null;
 }
 
 const CANCELLATION_REASONS: Record<string, string> = {
@@ -146,6 +149,10 @@ export function describeHistoryEntry(entry: LessonHistoryEntry): string {
       return 'Удалён комментарий для учеников';
     case 'TOPIC_UPDATED':
       return describeTopicUpdate(payload);
+    case 'PREPARATION_APPLIED':
+      return 'Применена заготовка урока';
+    case 'PREPARATION_COPIED':
+      return describePreparationCopy(payload);
     case 'HOMEWORK_CREATED':
       return 'Выдано домашнее задание урока';
     case 'HOMEWORK_UPDATED':
@@ -175,6 +182,16 @@ export function describeHistoryEntry(entry: LessonHistoryEntry): string {
     default:
       return 'Изменение урока';
   }
+}
+
+/** «Подготовка перенесена с урока 7А, 12 октября». */
+function describePreparationCopy(payload: HistoryPayload): string {
+  const date = payload.sourceLessonDate && /^\d{4}-\d{2}-\d{2}$/.test(payload.sourceLessonDate)
+    ? new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long' })
+      .format(new Date(`${payload.sourceLessonDate}T12:00:00`))
+    : null;
+  const from = [payload.sourceClassName, date].filter(Boolean).join(', ');
+  return from ? `Подготовка перенесена с урока ${from}` : 'Подготовка перенесена с другого урока';
 }
 
 /** «Администратор (Омаров Е.Л.)» или «Система» — Figma 2067:10310, 2067:10334. */
