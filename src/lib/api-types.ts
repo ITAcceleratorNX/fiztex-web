@@ -5887,6 +5887,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/attendance-journal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Журнал посещаемости предмета: начавшиеся уроки периода и клетка каждого ученика */
+        get: operations["getMyClassAttendanceJournal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/final-grades": {
         parameters: {
             query?: never;
@@ -10624,6 +10641,12 @@ export interface components {
             studentProfileId?: number;
             subjectName?: string;
         };
+        MyClassAttendanceCellView: {
+            /** Format: int64 */
+            lessonId?: number;
+            /** @enum {string} */
+            state?: "PRESENT" | "LATE" | "ABSENT" | "EXCUSED" | "NOT_PUBLISHED" | "CANCELLED";
+        };
         MyClassAttendanceItemView: {
             /** Format: int64 */
             attendanceEntryId?: number;
@@ -10648,6 +10671,45 @@ export interface components {
             /** Format: int64 */
             subjectId?: number;
             subjectName?: string;
+        };
+        MyClassAttendanceJournalRowView: {
+            /** @description Только уроки, где ученик в составе; нет клетки — урок не его (чужая подгруппа, до зачисления) */
+            cells?: components["schemas"]["MyClassAttendanceCellView"][];
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
+        MyClassAttendanceJournalView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            /** Format: date */
+            dateFrom?: string;
+            /** Format: date */
+            dateTo?: string;
+            lessons?: components["schemas"]["MyClassAttendanceLessonView"][];
+            rows?: components["schemas"]["MyClassAttendanceJournalRowView"][];
+            /** Format: int64 */
+            subjectId?: number;
+        };
+        MyClassAttendanceLessonView: {
+            /** Format: date */
+            date?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** @example 14:30:00 */
+            startTime?: string;
+            /**
+             * @description ACTIVE или CANCELLED; замещённые уроки в журнал не попадают
+             * @enum {string}
+             */
+            status?: "ACTIVE" | "CANCELLED" | "SUPERSEDED";
+            /** Format: int64 */
+            subgroupId?: number | null;
+            subgroupName?: string | null;
         };
         MyClassAttendancePageView: {
             /** Format: int64 */
@@ -25518,6 +25580,67 @@ export interface operations {
                 };
             };
             /** @description Класс или ученик недоступен текущему Teacher */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Неоднозначный текущий период */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getMyClassAttendanceJournal: {
+        parameters: {
+            query: {
+                periodId?: number;
+                subjectId: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Уроки предмета и состояния клеток текущего состава */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyClassAttendanceJournalView"];
+                };
+            };
+            /** @description Неверный период или нет предмета */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс недоступен текущему Teacher */
             403: {
                 headers: {
                     [name: string]: unknown;

@@ -5,7 +5,7 @@ import { FilterSelect } from '@/components/ui/FilterSelect';
 import { GradeChip } from '@/components/ui/GradeChip';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
-import { useMyClassSubjectJournal, useMyClassSubjects } from '@/hooks/queries';
+import { useMyClassSubjectJournal } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import type { Schema } from '@/lib/apiSchemas';
 import { cx } from '@/lib/format';
@@ -17,16 +17,15 @@ import {
   capitalize,
   columnEvent,
   defaultMonth,
-  defaultSubjectId,
   gradeTitle,
   isSummative,
   myClassMonths,
-  periodLabel,
   periodNoun,
   type JournalColumn,
   type JournalRow,
   type MyClassMonth,
 } from '@/lib/myClassGradesModel';
+import { PeriodFilter, SubjectFilter, useMyClassSubject } from './myClassFilters';
 
 type Period = Schema<'MyClassContextPeriodView'>;
 type GradeResults = Schema<'MyClassGradeResultsView'>;
@@ -66,11 +65,7 @@ export function MyClassGradesTab({
   onForbidden: () => void;
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const subjectsQuery = useMyClassSubjects(classId, periodId);
-  const subjects = subjectsQuery.data?.items ?? [];
-  const requestedSubjectId = Number(searchParams.get('subjectId'));
-  const subjectId = subjects.find((subject) => subject.subjectId === requestedSubjectId)?.subjectId
-    ?? defaultSubjectId(subjects);
+  const { query: subjectsQuery, subjects, subjectId, selectSubject, correctSubject } = useMyClassSubject(classId, periodId);
   const journalQuery = useMyClassSubjectJournal(classId, periodId, subjectId);
   const period = periods.find((item) => item.id === periodId);
   const noun = periodNoun(period);
@@ -90,26 +85,17 @@ export function MyClassGradesTab({
   // жить в ссылке. Одна правка на всё: два отдельных replace подряд затирали бы друг друга.
   useEffect(() => {
     const next = new URLSearchParams(searchParams);
-    if (subjectsQuery.data && next.has('subjectId') && requestedSubjectId !== subjectId) {
-      if (subjectId == null) next.delete('subjectId');
-      else next.set('subjectId', String(subjectId));
-    }
+    correctSubject(next);
     if (next.has('view') && next.get('view') !== 'month') next.delete('view');
     if (month == null) next.delete('month');
     else if (requestedMonth !== month.month) next.set('month', month.month);
     if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
-  }, [month, requestedMonth, requestedSubjectId, searchParams, setSearchParams, subjectId, subjectsQuery.data]);
+  }, [correctSubject, month, requestedMonth, searchParams, setSearchParams]);
 
   // После сбоя связи упали оба запроса; одна кнопка должна поднять оба, а не по очереди.
   function retry() {
     if (subjectsQuery.isError) void subjectsQuery.refetch();
     if (journalQuery.isError) void journalQuery.refetch();
-  }
-
-  function selectSubject(nextId: string) {
-    const next = new URLSearchParams(searchParams);
-    next.set('subjectId', nextId);
-    setSearchParams(next);
   }
 
   function selectView(nextView: View) {
@@ -138,17 +124,7 @@ export function MyClassGradesTab({
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end gap-3">
-        <FilterSelect
-          label="Предмет"
-          className="w-60"
-          value={subjectId == null ? '' : String(subjectId)}
-          disabled={subjects.length === 0}
-          onChange={selectSubject}
-        >
-          {subjects.map((subject) => (
-            <option key={subject.subjectId} value={subject.subjectId}>{subject.subjectName}</option>
-          ))}
-        </FilterSelect>
+        <SubjectFilter subjects={subjects} subjectId={subjectId} onChange={selectSubject} />
         {view === 'MONTH' ? (
           <FilterSelect
             label="Период"
@@ -162,17 +138,7 @@ export function MyClassGradesTab({
             ))}
           </FilterSelect>
         ) : (
-          <FilterSelect
-            label="Период"
-            className="w-60"
-            value={periodId == null ? '' : String(periodId)}
-            disabled={periods.length === 0}
-            onChange={onSelectPeriod}
-          >
-            {periods.filter((item) => item.id != null).map((item) => (
-              <option key={item.id} value={item.id}>{periodLabel(item)}</option>
-            ))}
-          </FilterSelect>
+          <PeriodFilter periods={periods} periodId={periodId} onChange={onSelectPeriod} />
         )}
         <SegmentedTabs
           value={view}

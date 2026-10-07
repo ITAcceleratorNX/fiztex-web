@@ -11,6 +11,7 @@ const useMyClassRoster = vi.fn();
 const useMyClassSummary = vi.fn();
 const useMyClassSubjects = vi.fn();
 const useMyClassSubjectJournal = vi.fn();
+const useMyClassAttendanceJournal = vi.fn();
 
 vi.mock('@/hooks/queries', () => ({
   useMyClassContext: (...args: unknown[]) => useMyClassContext(...args),
@@ -18,6 +19,7 @@ vi.mock('@/hooks/queries', () => ({
   useMyClassSummary: (...args: unknown[]) => useMyClassSummary(...args),
   useMyClassSubjects: (...args: unknown[]) => useMyClassSubjects(...args),
   useMyClassSubjectJournal: (...args: unknown[]) => useMyClassSubjectJournal(...args),
+  useMyClassAttendanceJournal: (...args: unknown[]) => useMyClassAttendanceJournal(...args),
 }));
 
 const refetch = vi.fn(() => Promise.resolve({ data: context() }));
@@ -96,7 +98,7 @@ describe('MyClassPage — вкладка «Оценки»', () => {
     renderPage();
 
     expect(screen.getByRole('tab', { name: 'Оценки' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('tab', { name: 'Посещаемость' })).toBeDisabled();
+    expect(screen.getByRole('tab', { name: 'Расписание' })).toBeDisabled();
     expect(useMyClassSubjectJournal).toHaveBeenLastCalledWith(18, 7, 3);
     expect(screen.getByLabelText('Предмет')).toHaveTextContent('Английский язык');
     expect(screen.getByLabelText('Период')).toHaveTextContent('1 четверть (01.09 – 27.10)');
@@ -248,5 +250,94 @@ describe('MyClassPage — вкладка «Оценки»', () => {
 
     expect(screen.getByText('По предмету пока нет оценок за этот месяц')).toBeInTheDocument();
     expect(screen.getByTestId('location')).toHaveTextContent('month=2026-10');
+  });
+});
+
+describe('MyClassPage — вкладка «Посещаемость»', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useMyClassContext.mockReturnValue({ isPending: false, isError: false, data: context(), refetch });
+    useMyClassRoster.mockReturnValue({ isPending: false, data: { pages: [{ totalItems: 2, items: [] }] }, refetch });
+    useMyClassSummary.mockReturnValue({ isPending: false, data: { averageGrade: 8.1, monthlyAttendancePercent: 94 }, refetch });
+    useMyClassSubjects.mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: { items: [
+        { subjectId: 2, subjectName: 'Алгебра', gradeCount: 0 },
+        { subjectId: 3, subjectName: 'Английский язык', gradeCount: 2 },
+      ] },
+    });
+    useMyClassAttendanceJournal.mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: {
+        lessons: [
+          { lessonId: 1, date: '2026-09-02', startTime: '09:00:00', status: 'ACTIVE' },
+          { lessonId: 2, date: '2026-09-05', startTime: '09:00:00', status: 'ACTIVE', subgroupId: 7, subgroupName: 'Группа 1' },
+          { lessonId: 3, date: '2026-09-09', startTime: '09:00:00', status: 'CANCELLED' },
+        ],
+        rows: [
+          { studentProfileId: 10, studentName: 'Александрова Светлана', cells: [
+            { lessonId: 1, state: 'PRESENT' }, { lessonId: 2, state: 'NOT_PUBLISHED' }, { lessonId: 3, state: 'CANCELLED' },
+          ] },
+          { studentProfileId: 11, studentName: 'Белов Арман', cells: [
+            { lessonId: 1, state: 'ABSENT' }, { lessonId: 3, state: 'CANCELLED' },
+          ] },
+        ],
+      },
+    });
+  });
+
+  it('shows the legend and a dot per lesson the student belongs to, keeping the subject from the grades tab', () => {
+    renderPage('/my-class?tab=attendance&subjectId=2');
+
+    expect(screen.getByRole('tab', { name: 'Посещаемость' })).toHaveAttribute('aria-selected', 'true');
+    expect(useMyClassAttendanceJournal).toHaveBeenLastCalledWith(18, 7, 2);
+    expect(screen.getByLabelText('Предмет')).toHaveTextContent('Алгебра');
+    expect(screen.getByLabelText('Период')).toHaveTextContent('1 четверть (01.09 – 27.10)');
+    for (const label of ['Без замечаний', 'Пропуски', 'Опоздания', 'Освобождение', 'Не опубликовано', 'Нет урока / отменён']) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
+    const table = screen.getByRole('table');
+    expect(within(table).getAllByRole('columnheader').map((cell) => cell.textContent)).toEqual([
+      'ФИО ученика', '02.09Урок', '05.09Группа 1', '09.09Отменён',
+    ]);
+    const first = within(table).getByRole('row', { name: /Александрова С\./ });
+    expect(within(first).getByText('02.09 · 09:00 — Присутствовал')).toBeInTheDocument();
+    expect(within(first).getByText('05.09 · 09:00 · Группа 1 — Не опубликовано')).toBeInTheDocument();
+    const second = within(table).getByRole('row', { name: /Белов А\./ });
+    expect(within(second).getByText('02.09 · 09:00 — Пропустил')).toBeInTheDocument();
+    expect(within(second).queryByText(/Группа 1/)).not.toBeInTheDocument();
+  });
+
+  it('says so when the subject has no lessons yet and offers a retry on failure', async () => {
+    useMyClassAttendanceJournal.mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: { lessons: [], rows: [{ studentProfileId: 10, studentName: 'Белов Арман', cells: [] }] },
+    });
+    const { unmount } = renderPage('/my-class?tab=attendance');
+    expect(screen.getByText('По предмету пока нет уроков за этот период')).toBeInTheDocument();
+    unmount();
+
+    const retry = vi.fn();
+    useMyClassAttendanceJournal.mockReturnValue({ isPending: false, isError: true, error: new Error('offline'), refetch: retry });
+    renderPage('/my-class?tab=attendance');
+    expect(screen.getByRole('alert')).toHaveTextContent('Не удалось загрузить посещаемость.');
+    await userEvent.click(screen.getByRole('button', { name: 'Повторить' }));
+    expect(retry).toHaveBeenCalled();
+  });
+
+  it('hides the class after 403 from the attendance journal', async () => {
+    useMyClassAttendanceJournal.mockReturnValue({
+      isPending: false,
+      isError: true,
+      error: new ApiError(403, 'Класс недоступен', 'MY_CLASS_NOT_ACCESSIBLE'),
+      refetch,
+    });
+    renderPage('/my-class?tab=attendance');
+
+    expect(await screen.findByText('Доступ к классу изменился. Обновите список классов.')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 });

@@ -95,6 +95,8 @@ export const keys = {
   myClassSubjects: (classId: number, periodId: number) => ['my-class', 'classes', classId, 'subjects', periodId] as const,
   myClassSubjectJournal: (classId: number, periodId: number, subjectId: number) =>
     ['my-class', 'classes', classId, 'journal', periodId, subjectId] as const,
+  myClassAttendanceJournal: (classId: number, periodId: number, subjectId: number) =>
+    ['my-class', 'classes', classId, 'attendance-journal', periodId, subjectId] as const,
   adminClasses: ['admin', 'classes'] as const,
   adminHomeroomTeachers: ['admin', 'teachers', 'homeroom-options'] as const,
   teacherWorkspace: ['teacher-workspace'] as const,
@@ -2879,6 +2881,26 @@ export function useMyClassSubjectJournal(
       ]);
       return { students, grades, finals, results };
     },
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+}
+
+/** Журнал посещаемости предмета: клетки считает сервер, черновики он не раскрывает. */
+export function useMyClassAttendanceJournal(
+  classId: number | null,
+  periodId: number | null,
+  subjectId: number | null,
+) {
+  return useQuery({
+    queryKey: classId == null || periodId == null || subjectId == null
+      ? ['my-class', 'attendance-journal', 'none']
+      : keys.myClassAttendanceJournal(classId, periodId, subjectId),
+    enabled: classId != null && periodId != null && subjectId != null,
+    queryFn: ({ signal }) => request<Schema<'MyClassAttendanceJournalView'>>(
+      `/my-class/classes/${classId}/attendance-journal?periodId=${periodId}&subjectId=${subjectId}`,
+      { signal },
+    ),
     staleTime: 0,
     refetchOnWindowFocus: true,
   });

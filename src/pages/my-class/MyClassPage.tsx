@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useMyClassContext, useMyClassRoster, useMyClassSummary } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import type { Schema } from '@/lib/apiSchemas';
+import { MyClassAttendanceTab } from './MyClassAttendanceTab';
 import { MyClassGradesTab } from './MyClassGradesTab';
 import { MyClassStudentsTab } from './MyClassStudentsTab';
 
@@ -34,7 +35,7 @@ function noClassTitle(state: Schema<'MyClassContextView'>['state']): string {
   }
 }
 
-const TABS = ['students', 'grades'] as const;
+const TABS = ['students', 'grades', 'attendance'] as const;
 type Tab = (typeof TABS)[number];
 
 function tabOf(value: string | null): Tab {
@@ -156,7 +157,7 @@ export function MyClassPage() {
                   ))}
                 </Select>
               )}
-              {/* На «Оценках» период выбирается в строке фильтров, как в макете. */}
+              {/* На «Оценках» и «Посещаемости» период выбирается в строке фильтров, как в макете. */}
               {tab === 'students' && (periods.length > 1 || (periods.length > 0 && periodId == null)) && (
                 <Select aria-label="Выберите учебный период" value={periodId == null ? '' : String(periodId)}
                   placeholder="Выберите период" onChange={(event) => updateParam('periodId', event.target.value)}>
@@ -203,7 +204,7 @@ export function MyClassPage() {
             <TabsList>
               <TabsTrigger value="students">Ученики</TabsTrigger>
               <TabsTrigger value="grades">Оценки</TabsTrigger>
-              <TabsTrigger value="attendance" disabled>Посещаемость</TabsTrigger>
+              <TabsTrigger value="attendance">Посещаемость</TabsTrigger>
               <TabsTrigger value="schedule" disabled>Расписание</TabsTrigger>
             </TabsList>
             <TabsContent value="students" className="mt-4">
@@ -215,6 +216,15 @@ export function MyClassPage() {
                 periods={periods}
                 periodId={periodId}
                 schoolDate={context.data.schoolDate}
+                onSelectPeriod={(value) => updateParam('periodId', value)}
+                onForbidden={reportForbidden}
+              />
+            </TabsContent>
+            <TabsContent value="attendance" className="mt-4">
+              <MyClassAttendanceTab
+                classId={classId}
+                periods={periods}
+                periodId={periodId}
                 onSelectPeriod={(value) => updateParam('periodId', value)}
                 onForbidden={reportForbidden}
               />
