@@ -13,6 +13,7 @@ import {
   ProfileStatusBadge,
 } from '../components/ProfileChrome';
 import { ClassFormModal } from '../modals/ClassFormModal';
+import { HomeroomAssignmentCard } from '../components/HomeroomAssignmentCard';
 import { archiveClass, getClass, listAcademicYears, listStudents } from '../services';
 import type { AcademicYear, SchoolClass, StudentProfile } from '../types';
 import { formatPersonName } from '../types';
@@ -47,7 +48,7 @@ export function ClassDetailPage() {
   const [formOpen, setFormOpen] = useState(false);
 
   const numericClassId = Number(classId);
-  const validId = Boolean(classId) && Number.isFinite(numericClassId);
+  const validId = Boolean(classId) && Number.isSafeInteger(numericClassId) && numericClassId > 0;
 
   const reload = useCallback(async () => {
     if (!validId) return;
@@ -181,6 +182,8 @@ export function ClassDetailPage() {
               </p>
             </ProfileCard>
           </div>
+
+          <HomeroomAssignmentCard classId={numericClassId} />
 
           <ProfileCard className="p-0 overflow-hidden">
             <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-4">

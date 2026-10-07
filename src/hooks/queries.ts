@@ -101,6 +101,8 @@ export const keys = {
     ['my-class', 'classes', classId, 'schedule', weekStart] as const,
   adminClasses: ['admin', 'classes'] as const,
   adminHomeroomTeachers: ['admin', 'teachers', 'homeroom-options'] as const,
+  adminHomeroomCurrent: (classId: number) => ['admin', 'classes', classId, 'homeroom'] as const,
+  adminHomeroomHistory: (classId: number) => ['admin', 'classes', classId, 'homeroom', 'history'] as const,
   teacherWorkspace: ['teacher-workspace'] as const,
   teacherWorkspaceHome: (page: number) => ['teacher-workspace', 'home', page] as const,
   teacherWorkspaceFolders: (page: number) => ['teacher-workspace', 'folders', page] as const,
@@ -307,6 +309,63 @@ export function useCreateSchoolClass() {
       request<Schema<'SchoolClassView'>>('/admin/classes', { method: 'POST', body }),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: keys.adminClasses });
+    },
+  });
+}
+
+export function useAdminHomeroomCurrent(classId: number) {
+  return useQuery({
+    queryKey: keys.adminHomeroomCurrent(classId),
+    enabled: Number.isSafeInteger(classId) && classId > 0,
+    queryFn: ({ signal }) => request<Schema<'HomeroomCurrentView'>>(
+      `/admin/classes/${classId}/homeroom-teacher`, { signal },
+    ),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useAdminHomeroomHistory(classId: number) {
+  return useInfiniteQuery({
+    queryKey: keys.adminHomeroomHistory(classId),
+    enabled: Number.isSafeInteger(classId) && classId > 0,
+    initialPageParam: 0,
+    queryFn: ({ pageParam, signal }) => request<Schema<'HomeroomHistoryPageView'>>(
+      `/admin/classes/${classId}/homeroom-teacher/history${pageQuery({ page: pageParam, size: 20 })}`,
+      { signal },
+    ),
+    getNextPageParam: (lastPage, _pages, lastPageParam) => lastPage.hasMore ? lastPageParam + 1 : undefined,
+  });
+}
+
+export function usePutAdminHomeroom(classId: number) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schema<'PutHomeroomTeacherRequest'>) =>
+      request<Schema<'HomeroomCurrentView'>>(`/admin/classes/${classId}/homeroom-teacher`, {
+        method: 'PUT', body,
+      }),
+    onSuccess: (current) => {
+      client.setQueryData(keys.adminHomeroomCurrent(classId), current);
+      void client.invalidateQueries({ queryKey: keys.adminHomeroomHistory(classId) });
+      void client.invalidateQueries({ queryKey: keys.adminClasses });
+      void client.invalidateQueries({ queryKey: keys.myClassContext });
+    },
+  });
+}
+
+export function useRemoveAdminHomeroom(classId: number) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schema<'RemoveHomeroomTeacherRequest'>) =>
+      request<Schema<'HomeroomCurrentView'>>(`/admin/classes/${classId}/homeroom-teacher/remove`, {
+        method: 'POST', body,
+      }),
+    onSuccess: (current) => {
+      client.setQueryData(keys.adminHomeroomCurrent(classId), current);
+      void client.invalidateQueries({ queryKey: keys.adminHomeroomHistory(classId) });
+      void client.invalidateQueries({ queryKey: keys.adminClasses });
+      void client.invalidateQueries({ queryKey: keys.myClassContext });
     },
   });
 }
