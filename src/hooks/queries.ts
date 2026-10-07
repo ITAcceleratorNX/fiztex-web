@@ -97,6 +97,8 @@ export const keys = {
     ['my-class', 'classes', classId, 'journal', periodId, subjectId] as const,
   myClassAttendanceJournal: (classId: number, periodId: number, subjectId: number) =>
     ['my-class', 'classes', classId, 'attendance-journal', periodId, subjectId] as const,
+  myClassWeekSchedule: (classId: number, weekStart: string) =>
+    ['my-class', 'classes', classId, 'schedule', weekStart] as const,
   adminClasses: ['admin', 'classes'] as const,
   adminHomeroomTeachers: ['admin', 'teachers', 'homeroom-options'] as const,
   teacherWorkspace: ['teacher-workspace'] as const,
@@ -2901,6 +2903,29 @@ export function useMyClassAttendanceJournal(
       `/my-class/classes/${classId}/attendance-journal?periodId=${periodId}&subjectId=${subjectId}`,
       { signal },
     ),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+}
+
+/**
+ * Неделя расписания класса. `/schedule` принимает даты одного периода, поэтому неделя на
+ * стыке четвертей — это несколько запросов, и они грузятся и падают вместе.
+ */
+export function useMyClassWeekSchedule(
+  classId: number | null,
+  weekStart: string | null,
+  parts: ReadonlyArray<{ periodId: number; from: string; to: string }>,
+) {
+  return useQuery({
+    queryKey: classId == null || weekStart == null
+      ? ['my-class', 'schedule', 'none']
+      : [...keys.myClassWeekSchedule(classId, weekStart), parts.map((part) => part.periodId).join(',')],
+    enabled: classId != null && weekStart != null,
+    queryFn: ({ signal }) => Promise.all(parts.map((part) => request<Schema<'MyClassScheduleView'>>(
+      `/my-class/classes/${classId}/schedule?periodId=${part.periodId}&from=${part.from}&to=${part.to}`,
+      { signal },
+    ))),
     staleTime: 0,
     refetchOnWindowFocus: true,
   });

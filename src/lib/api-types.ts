@@ -10926,6 +10926,8 @@ export interface components {
             totalPages?: number;
         };
         MyClassScheduleFactView: {
+            /** @description Карточка урока доступна этому учителю — тот же предикат, что у GET /api/lessons/{id} */
+            canOpen?: boolean;
             /** @enum {string} */
             cancellationReason?: "CALENDAR_NO_LESSONS" | "SCHEDULE_SLOT_REMOVED" | "MANUAL";
             /** Format: date */

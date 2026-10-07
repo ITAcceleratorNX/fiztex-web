@@ -12,6 +12,7 @@ const useMyClassSummary = vi.fn();
 const useMyClassSubjects = vi.fn();
 const useMyClassSubjectJournal = vi.fn();
 const useMyClassAttendanceJournal = vi.fn();
+const useMyClassWeekSchedule = vi.fn();
 
 vi.mock('@/hooks/queries', () => ({
   useMyClassContext: (...args: unknown[]) => useMyClassContext(...args),
@@ -20,6 +21,7 @@ vi.mock('@/hooks/queries', () => ({
   useMyClassSubjects: (...args: unknown[]) => useMyClassSubjects(...args),
   useMyClassSubjectJournal: (...args: unknown[]) => useMyClassSubjectJournal(...args),
   useMyClassAttendanceJournal: (...args: unknown[]) => useMyClassAttendanceJournal(...args),
+  useMyClassWeekSchedule: (...args: unknown[]) => useMyClassWeekSchedule(...args),
 }));
 
 const refetch = vi.fn(() => Promise.resolve({ data: context() }));
@@ -98,7 +100,7 @@ describe('MyClassPage — вкладка «Оценки»', () => {
     renderPage();
 
     expect(screen.getByRole('tab', { name: 'Оценки' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('tab', { name: 'Расписание' })).toBeDisabled();
+    expect(screen.getByRole('tab', { name: 'Расписание' })).not.toBeDisabled();
     expect(useMyClassSubjectJournal).toHaveBeenLastCalledWith(18, 7, 3);
     expect(screen.getByLabelText('Предмет')).toHaveTextContent('Английский язык');
     expect(screen.getByLabelText('Период')).toHaveTextContent('1 четверть (01.09 – 27.10)');
@@ -339,5 +341,79 @@ describe('MyClassPage — вкладка «Посещаемость»', () => {
 
     expect(await screen.findByText('Доступ к классу изменился. Обновите список классов.')).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+});
+
+describe('MyClassPage — вкладка «Расписание»', () => {
+  const fact = {
+    lessonId: 10, date: '2026-10-07', startTime: '08:00:00', endTime: '08:45:00', lessonNumber: 1,
+    status: 'ACTIVE', subjectName: 'Физика', teacherName: 'Сидоров Сергей Сергеевич', room: '101', canOpen: true,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useMyClassContext.mockReturnValue({ isPending: false, isError: false, data: context(), refetch });
+    useMyClassRoster.mockReturnValue({ isPending: false, data: { pages: [{ totalItems: 2, items: [] }] }, refetch });
+    useMyClassSummary.mockReturnValue({ isPending: false, data: { averageGrade: 8.1, monthlyAttendancePercent: 94 }, refetch });
+    useMyClassWeekSchedule.mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: [{
+        from: '2026-10-05', to: '2026-10-11', factState: 'FACTS_AVAILABLE_COVERAGE_UNKNOWN', planState: 'PUBLISHED',
+        facts: [
+          fact,
+          { ...fact, lessonId: 11, date: '2026-10-08', subjectName: 'Химия', canOpen: false,
+            substituteTeacherName: 'Иванова Мария Викторовна' },
+        ],
+      }],
+    });
+  });
+
+  it('opens the school week, links only lessons the card opens and states the coverage', () => {
+    renderPage('/my-class?tab=schedule');
+
+    expect(useMyClassWeekSchedule).toHaveBeenLastCalledWith(18, '2026-10-05',
+      [{ periodId: 7, from: '2026-10-05', to: '2026-10-11' }]);
+    expect(screen.getByRole('group', { name: 'Неделя' })).toHaveTextContent('5 – 9 октября 2026');
+    expect(screen.getByText('Показаны уроки, уже сформированные в системе. Расписание может быть неполным.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Физика/ })).toHaveAttribute('href', '/lesson-schedule/lessons/10');
+    expect(screen.queryByRole('link', { name: /Химия/ })).not.toBeInTheDocument();
+    expect(screen.getByText('Замена: Иванова М.В.')).toBeInTheDocument();
+  });
+
+  it('steps weeks through the address and repairs a date that is not a Monday', async () => {
+    renderPage('/my-class?tab=schedule&week=2026-10-08');
+    expect(screen.getByTestId('location')).toHaveTextContent('week=2026-10-05');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Следующая неделя' }));
+    expect(screen.getByTestId('location')).toHaveTextContent('week=2026-10-12');
+    expect(useMyClassWeekSchedule).toHaveBeenLastCalledWith(18, '2026-10-12',
+      [{ periodId: 7, from: '2026-10-12', to: '2026-10-18' }]);
+  });
+
+  it('marks the plan as a plan and says when the week is outside periods or failed', async () => {
+    useMyClassWeekSchedule.mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: [{ from: '2026-10-19', to: '2026-10-25', factState: 'NO_FACTS_AVAILABLE', planState: 'PUBLISHED', facts: [],
+        plan: { slots: [{ scheduleLessonId: 1, weekday: 'MONDAY', lessonNumber: 1, startTime: '08:00:00', subjectName: 'Химия' }] } }],
+    });
+    const { unmount } = renderPage('/my-class?tab=schedule&week=2026-10-19');
+    expect(screen.getByText('Уроки на эту неделю ещё не сформированы — показана плановая сетка расписания.')).toBeInTheDocument();
+    expect(screen.getByText('Химия')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Химия/ })).not.toBeInTheDocument();
+    unmount();
+
+    useMyClassWeekSchedule.mockReturnValue({ isPending: false, isError: false, data: [] });
+    const outside = renderPage('/my-class?tab=schedule&week=2026-11-02');
+    expect(screen.getByText('Эта неделя вне учебных периодов')).toBeInTheDocument();
+    outside.unmount();
+
+    const retry = vi.fn();
+    useMyClassWeekSchedule.mockReturnValue({ isPending: false, isError: true, error: new Error('offline'), refetch: retry });
+    renderPage('/my-class?tab=schedule');
+    expect(screen.getByRole('alert')).toHaveTextContent('Не удалось загрузить расписание.');
+    await userEvent.click(screen.getByRole('button', { name: 'Повторить' }));
+    expect(retry).toHaveBeenCalled();
   });
 });

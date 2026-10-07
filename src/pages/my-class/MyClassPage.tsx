@@ -12,6 +12,7 @@ import { ApiError } from '@/lib/api';
 import type { Schema } from '@/lib/apiSchemas';
 import { MyClassAttendanceTab } from './MyClassAttendanceTab';
 import { MyClassGradesTab } from './MyClassGradesTab';
+import { MyClassScheduleTab } from './MyClassScheduleTab';
 import { MyClassStudentsTab } from './MyClassStudentsTab';
 
 function academicYearLabel(context: Schema<'MyClassContextView'>): string {
@@ -35,7 +36,7 @@ function noClassTitle(state: Schema<'MyClassContextView'>['state']): string {
   }
 }
 
-const TABS = ['students', 'grades', 'attendance'] as const;
+const TABS = ['students', 'grades', 'attendance', 'schedule'] as const;
 type Tab = (typeof TABS)[number];
 
 function tabOf(value: string | null): Tab {
@@ -205,7 +206,7 @@ export function MyClassPage() {
               <TabsTrigger value="students">Ученики</TabsTrigger>
               <TabsTrigger value="grades">Оценки</TabsTrigger>
               <TabsTrigger value="attendance">Посещаемость</TabsTrigger>
-              <TabsTrigger value="schedule" disabled>Расписание</TabsTrigger>
+              <TabsTrigger value="schedule">Расписание</TabsTrigger>
             </TabsList>
             <TabsContent value="students" className="mt-4">
               <MyClassStudentsTab classId={classId} />
@@ -226,6 +227,14 @@ export function MyClassPage() {
                 periods={periods}
                 periodId={periodId}
                 onSelectPeriod={(value) => updateParam('periodId', value)}
+                onForbidden={reportForbidden}
+              />
+            </TabsContent>
+            <TabsContent value="schedule" className="mt-4">
+              <MyClassScheduleTab
+                classId={classId}
+                periods={periods}
+                schoolDate={context.data.schoolDate}
                 onForbidden={reportForbidden}
               />
             </TabsContent>
