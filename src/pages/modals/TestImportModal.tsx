@@ -2,10 +2,11 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { FileUp } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
-import { Field } from '@/components/ui/Field';
+import { Field, TextArea } from '@/components/ui/Field';
+import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { Toggle } from '@/components/ui/Toggle';
 import { Spinner } from '@/components/ui/StateBlock';
-import { useImportQuestions, useGenerationJob, keys } from '@/hooks/queries';
+import { useImportQuestions, useImportQuestionText, useGenerationJob, keys } from '@/hooks/queries';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/context/ToastContext';
 import { ApiError } from '@/lib/api';
@@ -33,6 +34,9 @@ export function TestImportModal({
   const qc = useQueryClient();
   const toast = useToast();
   const importQuestions = useImportQuestions();
+  const importText = useImportQuestionText();
+  const [source, setSource] = useState('FILE');
+  const [sourceText, setSourceText] = useState('');
 
   const [file, setFile] = useState<File | null>(null);
   const [useAiReader, setUseAiReader] = useState(true);
@@ -52,6 +56,8 @@ export function TestImportModal({
   useEffect(() => {
     if (!open) return;
     setFile(null);
+    setSource('FILE');
+    setSourceText('');
     setUseAiReader(true);
     setError(null);
     setJobId(null);
@@ -84,16 +90,16 @@ export function TestImportModal({
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!file) {
-      setError('Выберите файл');
+    if (source === 'FILE' ? !file : !sourceText.trim()) {
+      setError(source === 'FILE' ? 'Выберите файл' : 'Вставьте текст теста');
       return;
     }
 
     setError(null);
     const formData = new FormData();
-    formData.append('file', file);
+    if (file) formData.append('file', file);
     try {
-      const created = await importQuestions.mutateAsync({
+      const created = source === 'TEXT' ? await importText.mutateAsync({ testId: test.id, sourceText: sourceText.trim() }) : await importQuestions.mutateAsync({
         testId: test.id,
         formData,
         useAiReader: isImage || (isPdf && useAiReader),
@@ -104,13 +110,13 @@ export function TestImportModal({
     }
   }
 
-  const pending = importQuestions.isPending || isImporting;
+  const pending = importQuestions.isPending || importText.isPending || isImporting;
 
   return (
     <Modal
       open={open}
       onClose={pending ? () => {} : onClose}
-      title="Импорт вопросов из файла"
+      title="Импорт вопросов"
       subtitle="Готовый тест из Word, PDF, скана или фотографии: вопросы переносятся дословно."
       footer={
         pending ? undefined : (
@@ -137,16 +143,20 @@ export function TestImportModal({
         </div>
       ) : (
         <form id="test-import-form" onSubmit={onSubmit} className="space-y-4">
-          <Field label="Файл теста" required hint="DOCX, DOC, RTF, ODT, PDF, TXT, PNG или JPG">
+          <SegmentedTabs value={source} onChange={setSource} ariaLabel="Источник вопросов"
+            options={[{ value: 'FILE', label: 'Файл' }, { value: 'TEXT', label: 'Вставленный текст' }]} />
+          {source === 'TEXT' ? <Field label="Текст теста" required hint="Вопросы переносятся дословно. Сохраните разметку формул, если она есть.">
+            <TextArea rows={8} maxLength={700000} value={sourceText} onChange={event => setSourceText(event.target.value)} />
+          </Field> : <Field label="Файл теста" required hint="DOCX, DOC, RTF, ODT, PDF, TXT, PNG или JPG">
             <input
               type="file"
               accept=".docx,.doc,.rtf,.odt,.pdf,.txt,.png,.jpg,.jpeg"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
             />
-          </Field>
+          </Field>}
 
-          {isPdf && (
+          {source === 'FILE' && isPdf && (
             <Toggle
               checked={useAiReader}
               onChange={setUseAiReader}
@@ -155,7 +165,7 @@ export function TestImportModal({
             />
           )}
 
-          {isImage && (
+          {source === 'FILE' && isImage && (
             <p className="text-xs text-slate-500">
               Фотографию и скан читает AI — это единственный способ достать из них текст.
             </p>

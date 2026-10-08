@@ -17,6 +17,7 @@ export type WorkspaceSearchQuery = {
   type?: WorkspaceMaterialType;
   fileType?: WorkspaceFileType;
   folderId?: number;
+  subjectId?: number;
   usage?: WorkspaceUsage;
   page?: number;
 };
@@ -43,6 +44,7 @@ export const teacherWorkspaceApi = {
     if (query.fileType) params.set('fileType', query.fileType);
     if (query.folderId) params.set('folderId', String(query.folderId));
     if (query.usage) params.set('usage', query.usage);
+    if (query.subjectId != null) params.set('subjectId', String(query.subjectId));
     return request<WorkspaceSearch>(`${root}/search?${params}`, { signal });
   },
   createFolder: (name: string) =>

@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Field, Select, TextInput } from '@/components/ui/Field';
+import type { FormulaProfile } from '@/lib/formulaProfiles';
 import { FormulaField } from '@/components/ui/FormulaField';
 import { AiGeneratedBadge } from '@/components/ui/AiGeneratedBadge';
 import { AiJobProgress } from '@/components/ui/AiJobProgress';
@@ -12,6 +13,7 @@ import {
 
 export function QuestionCard({
   question,
+  profile = 'GENERAL',
   index,
   total,
   readOnly,
@@ -23,6 +25,7 @@ export function QuestionCard({
   onRegenerate,
 }: {
   question: QuestionDraft;
+  profile?: FormulaProfile;
   index: number;
   total: number;
   readOnly: boolean;
@@ -131,6 +134,7 @@ export function QuestionCard({
       <div className="mt-4">
         <Field label="Текст вопроса" required>
           <FormulaField
+            profile={profile}
             disabled={readOnly}
             value={question.text}
             onChange={(text) => onChange({ ...question, text })}
@@ -178,6 +182,7 @@ export function QuestionCard({
               />
               <div className="min-w-0 flex-1">
                 <FormulaField
+            profile={profile}
                   disabled={readOnly}
                   multiline={false}
                   value={option.text}
@@ -218,6 +223,7 @@ export function QuestionCard({
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Эталонный ответ" hint="Ученику не показывается">
             <FormulaField
+            profile={profile}
               disabled={readOnly}
               value={question.referenceAnswer}
               onChange={(referenceAnswer) => onChange({ ...question, referenceAnswer })}
@@ -227,6 +233,7 @@ export function QuestionCard({
           </Field>
           <Field label="Критерии оценки" hint="Их использует подсказка ИИ">
             <FormulaField
+            profile={profile}
               disabled={readOnly}
               value={question.gradingCriteria}
               onChange={(gradingCriteria) => onChange({ ...question, gradingCriteria })}

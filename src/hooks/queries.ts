@@ -1161,10 +1161,15 @@ export function useImportQuestions() {
   });
 }
 
+export function useImportQuestionText() {
+  return useMutation({ mutationFn: ({ testId, sourceText }: { testId: number; sourceText: string }) =>
+    api.importQuestionText(testId, sourceText) });
+}
+
 /** Вариант вопроса с AI. Ничего не сохраняет — результат уходит в предпросмотр. */
 export function useAiQuestionVariant() {
   return useMutation({
-    mutationFn: (question: QuestionRequest) => api.aiQuestionVariant(question),
+    mutationFn: ({ question, testId }: { question: QuestionRequest; testId?: number }) => api.aiQuestionVariant(question, testId),
   });
 }
 

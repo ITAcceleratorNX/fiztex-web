@@ -140,7 +140,7 @@ export function HomeworkQuestionsPage() {
         back={{ onClick: leave, label: 'К заданию', disabled: save.isPending }}
         actions={<>
         {homework?.answerFormat === 'TEST' && !dirty && !questionsQuery.isPending && !questionsQuery.isError &&
-          <TestTemplateActions homeworkId={id} homeworkTitle={homework.title ?? 'Тест'}
+          <TestTemplateActions homeworkId={id} subjectId={homework.subjectId} homeworkTitle={homework.title ?? 'Тест'}
             questionCount={questions.length} canApply={!readOnly}
             onApplied={() => { void questionsQuery.refetch(); }} />}
         {!readOnly && (
@@ -198,6 +198,7 @@ export function HomeworkQuestionsPage() {
             <QuestionCard
               key={question.localId}
               question={question}
+              profile={homework?.formulaProfile ?? 'GENERAL'}
               index={index}
               total={questions.length}
               readOnly={readOnly}

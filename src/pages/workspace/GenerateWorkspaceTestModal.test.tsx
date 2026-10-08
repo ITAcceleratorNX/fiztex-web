@@ -36,6 +36,19 @@ const resultJob: TestAiJob = {
 };
 
 describe('GenerateWorkspaceTestModal', () => {
+  it('отделяет исходный текст от пожеланий учителя и передаёт предмет', async () => {
+    const user = userEvent.setup();
+    renderModal('Реакции');
+    await user.click(screen.getByRole('radio', { name: 'По тексту' }));
+    expect(screen.getByRole('button', { name: 'Сгенерировать' })).toBeDisabled();
+    await user.type(screen.getByRole('textbox', { name: /Исходный текст/ }), 'Водород реагирует с кислородом.');
+    await user.type(screen.getByRole('textbox', { name: 'Пожелания к вопросам' }), 'Проверь знание коэффициентов');
+    await user.click(screen.getByRole('button', { name: 'Сгенерировать' }));
+    await waitFor(() => expect(state.start).toHaveBeenCalledWith({ body: expect.objectContaining({
+      subjectId: 1, sourceText: 'Водород реагирует с кислородом.', teacherPrompt: 'Проверь знание коэффициентов',
+    }), key: expect.any(String) }));
+  });
+
   it('отправляет тему и параметры без урока и ДЗ, не применяя результат автоматически', async () => {
     const user = userEvent.setup();
     const { onUse } = renderModal();

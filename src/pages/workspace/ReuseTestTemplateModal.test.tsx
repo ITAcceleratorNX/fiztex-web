@@ -8,7 +8,7 @@ const homework = vi.fn();
 
 vi.mock('@/context/ToastContext', () => ({ useToast: () => ({ success: vi.fn() }) }));
 vi.mock('@/hooks/queries', () => ({
-  useTestTemplate: () => ({ data: { version: 2, definition: { questions: [{ text: 'Вопрос' }] } }, isPending: false, isError: false }),
+  useTestTemplate: () => ({ data: { version: 2, subjectId: 8, definition: { questions: [{ text: 'Вопрос' }] } }, isPending: false, isError: false }),
   useHomeworkList: (...args: unknown[]) => homework(...args),
   useTestTemplateTarget: (id: number | null) => ({ data: id ? { questionRevision: 'a'.repeat(64), questionCount: 2 } : undefined,
     isPending: false, isError: false, refetch: vi.fn() }),
@@ -23,8 +23,9 @@ beforeEach(() => {
   vi.stubGlobal('crypto', { randomUUID: () => 'd4491979-e58d-4ad8-ac11-02bbf6c81e24' });
   apply.mockResolvedValue({ questionCount: 1 });
   homework.mockReturnValue({ data: { content: [
-    { id: 4, title: 'Обычное ДЗ', answerFormat: 'WRITTEN', status: 'DRAFT' },
-    { id: 5, title: 'Тестовое ДЗ', answerFormat: 'TEST', status: 'DRAFT', hasAnswers: false },
+    { id: 4, subjectId: 8, title: 'Обычное ДЗ', answerFormat: 'WRITTEN', status: 'DRAFT' },
+    { id: 5, subjectId: 8, title: 'Тестовое ДЗ', answerFormat: 'TEST', status: 'DRAFT', hasAnswers: false },
+    { id: 6, subjectId: 9, title: 'ДЗ другого предмета', answerFormat: 'TEST', status: 'DRAFT' },
   ], totalPages: 1 }, isPending: false, isError: false });
 });
 
@@ -32,6 +33,7 @@ describe('ReuseTestTemplateModal', () => {
   it('не выбирает обычное ДЗ и подтверждает замену вопросов в тестовом', async () => {
     const onClose = vi.fn();
     render(<ReuseTestTemplateModal item={item} onClose={onClose} />);
+    expect(screen.queryByText('ДЗ другого предмета')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Обычное ДЗ/ })).toBeDisabled();
     await userEvent.click(screen.getByRole('button', { name: /Тестовое ДЗ/ }));
     expect(screen.getByText(/Применение теста заменит их/)).toBeInTheDocument();

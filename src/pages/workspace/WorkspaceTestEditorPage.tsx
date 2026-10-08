@@ -210,6 +210,7 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
         description="Добавьте вопрос вручную или сгенерируйте вопросы с ИИ." /></div>
         : <div className="space-y-4">
           {questions.map((question, index) => <QuestionCard key={question.localId} question={question}
+            profile={subjects.find(s => s.id === subjectId)?.formulaProfile ?? template.data?.formulaProfile ?? 'GENERAL'}
             index={index} total={questions.length} readOnly={saving}
             messages={showProblems ? problems.get(index) ?? [] : []}
             onChange={(next) => changed(questions.map((entry, i) => i === index ? next : entry))}

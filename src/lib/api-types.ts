@@ -9547,6 +9547,7 @@ export interface components {
         HomeworkQuestionView: {
             aiGenerated?: boolean;
             allowPhoto?: boolean;
+            formulaIssues?: components["schemas"]["QuestionFormulaIssue"][];
             gradingCriteria?: string;
             /** Format: int64 */
             id?: number;
@@ -28093,6 +28094,7 @@ export interface operations {
                 fileType?: "PDF" | "WORD" | "SPREADSHEET" | "PRESENTATION" | "IMAGE";
                 usage?: "ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "ATTACH_TEXTBOOK_TO_HOMEWORK" | "SELECT_TEXTBOOK_FOR_LESSON" | "APPLY_TEST_TO_HOMEWORK" | "APPLY_PREPARATION_TO_LESSON";
                 folderId?: number;
+                subjectId?: number;
                 page?: number;
                 size?: number;
             };

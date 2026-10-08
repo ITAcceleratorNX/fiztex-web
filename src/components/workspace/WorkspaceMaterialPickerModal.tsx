@@ -20,8 +20,9 @@ const formats: { label: string; value: WorkspaceFileType | '' }[] = [
   { label: 'JPG', value: 'IMAGE' },
 ];
 
-export function WorkspaceMaterialPickerModal({ usage, type = 'DOCUMENT', singleSelect = false, onClose, onConfirm }: {
+export function WorkspaceMaterialPickerModal({ usage, subjectId, type = 'DOCUMENT', singleSelect = false, onClose, onConfirm }: {
   usage: WorkspaceUsage;
+  subjectId?: number;
   type?: WorkspaceMaterialType;
   singleSelect?: boolean;
   onClose: () => void;
@@ -37,7 +38,7 @@ export function WorkspaceMaterialPickerModal({ usage, type = 'DOCUMENT', singleS
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const folders = useTeacherWorkspaceFolders(folderPage);
-  const search = useTeacherWorkspaceSearch({ q, type, fileType: type === 'DOCUMENT' ? fileType || undefined : undefined, folderId, usage, page });
+  const search = useTeacherWorkspaceSearch({ q, type, fileType: type === 'DOCUMENT' ? fileType || undefined : undefined, folderId, subjectId, usage, page });
 
   useEffect(() => {
     if (input === q) return;
