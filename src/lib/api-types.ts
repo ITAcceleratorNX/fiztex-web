@@ -7243,6 +7243,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tests/{testId}/import-text": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["importText"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -9577,6 +9593,7 @@ export interface components {
             pageTo?: number;
             /** Format: int32 */
             questionCount: number;
+            sourceText?: string;
             /** @enum {string} */
             sourceType?: "TEXTBOOK" | "DOCUMENT";
             /** Format: int64 */
@@ -9898,6 +9915,9 @@ export interface components {
             /** Format: int32 */
             updatedCount?: number;
             uploadedBy?: components["schemas"]["ImportRunUploaderView"];
+        };
+        ImportTextRequest: {
+            sourceText?: string;
         };
         ImportTypeView: {
             fields?: components["schemas"]["ImportFieldDef"][];
@@ -17437,7 +17457,9 @@ export interface operations {
     };
     aiVariant: {
         parameters: {
-            query?: never;
+            query?: {
+                testId?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -28517,6 +28539,32 @@ export interface operations {
                     /** Format: binary */
                     file: string;
                 };
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenerationJobResponse"];
+                };
+            };
+        };
+    };
+    importText: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                testId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportTextRequest"];
             };
         };
         responses: {
