@@ -6,10 +6,10 @@ import { QuestionCard } from '@/components/homework/QuestionCard';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { Field, TextInput } from '@/components/ui/Field';
+import { Field, Select, TextInput } from '@/components/ui/Field';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
-import { useCreateTestTemplateFromQuestions, useTestTemplate, useVersionTestTemplateFromQuestions } from '@/hooks/queries';
+import { useCreateTestTemplateFromQuestions, useTestTemplate, useVersionTestTemplateFromQuestions, useTestSubjectContext } from '@/hooks/queries';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
 import { ROUTES } from '@/lib/routes';
@@ -29,6 +29,9 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
     ? location.state.returnTo : ROUTES.workspaceSection('TESTS');
   const toast = useToast();
   const template = useTestTemplate(id);
+  const subjectContext = useTestSubjectContext();
+  const [subjectId, setSubjectId] = useState<number>();
+  const subjects = subjectContext.data?.subjects ?? [];
   const create = useCreateTestTemplateFromQuestions();
   const version = useVersionTestTemplateFromQuestions(id ?? 0);
   const [title, setTitle] = useState('');
@@ -51,13 +54,21 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
     if (mode !== 'edit' || initialized || !template.data) return;
     setTitle(template.data.title ?? '');
     setBaseVersion(template.data.version);
+    setSubjectId(template.data.subjectId);
     setQuestions((template.data.definition?.questions ?? []).map(toDraft));
     setInitialized(true);
   }, [mode, initialized, template.data]);
 
+  useEffect(() => {
+    if (initialized && subjectId == null && subjectContext.data?.defaultSubjectId != null) {
+      setSubjectId(subjectContext.data.defaultSubjectId);
+    }
+  }, [initialized, subjectId, subjectContext.data?.defaultSubjectId]);
+
   const problems = useMemo(() => validateQuestions(questions), [questions]);
   const valid = title.trim().length > 0 && title.trim().length <= 300
-    && questions.length > 0 && questions.length <= 50 && problems.size === 0;
+    && questions.length > 0 && questions.length <= 50 && problems.size === 0
+    && !subjectContext.isPending && !subjectContext.isError && subjects.some(s => s.id === subjectId);
   const saving = create.isPending || version.isPending;
 
   function changed(next: QuestionDraft[]) {
@@ -82,11 +93,11 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
     setSaveError('');
     try {
       if (mode === 'create') {
-        await create.mutateAsync({ body: { title: title.trim(), questions: payload, ...(aiJobId != null ? { aiJobId } : {}) }, key: saveKey.current });
+        await create.mutateAsync({ body: { title: title.trim(), subjectId, questions: payload, ...(aiJobId != null ? { aiJobId } : {}) }, key: saveKey.current });
         toast.success('Тест создан');
       } else {
         if (id == null || baseVersion == null) return;
-        await version.mutateAsync({ body: { expectedVersion: baseVersion, title: title.trim(), questions: payload,
+        await version.mutateAsync({ body: { expectedVersion: baseVersion, title: title.trim(), subjectId, questions: payload,
           ...(aiJobId != null ? { aiJobId } : {}),
         }, key: saveKey.current });
         toast.success('Новая версия теста сохранена');
@@ -109,6 +120,7 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
     setAiJobId(undefined);
     setQuestions((latest.data.definition?.questions ?? []).map(toDraft));
     setTitle(latest.data.title ?? '');
+    setSubjectId(latest.data.subjectId);
     setDirty(false);
     setConflict(false);
     setSaveError('');
@@ -118,6 +130,10 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
 
   function useGenerated(job: TestAiJob) {
     if (job.id == null || !job.result?.questions?.length) return;
+    if (job.subjectId !== subjectId) {
+      toast.error('Предмет генерации изменился. Запустите генерацию для выбранного предмета.');
+      return;
+    }
     changed(job.result.questions.map(toDraft));
     setAiJobId(job.id);
     if (!title.trim()) changeTitle(job.request?.topic ?? '');
@@ -156,6 +172,23 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
       description="Соберите вопросы один раз и используйте тест в разных домашних заданиях." />
 
     <section className="card space-y-3 p-4 sm:p-6" aria-label="Настройки теста">
+      {subjectContext.isPending && <LoadingBlock label="Загружаем предметы…" />}
+      {subjectContext.isError && <ErrorBlock message="Не удалось загрузить предметы" onRetry={() => void subjectContext.refetch()} />}
+      {!subjectContext.isPending && !subjectContext.isError && subjects.length === 0 &&
+        <p role="status" className="text-sm text-muted">Нет доступных предметов. Для создания теста нужно действующее назначение учителя в текущем учебном году.</p>}
+      {subjects.length > 0 && <Field label="Предмет теста" required>
+        <Select value={subjectId ?? ''} disabled={saving || generating} onChange={(event) => {
+          setSubjectId(Number(event.target.value) || undefined);
+          setAiJobId(undefined); setReplacement(null); setDirty(true);
+          saveKey.current = crypto.randomUUID();
+          if (questions.length) toast.info('Предмет изменён. Проверьте существующие вопросы перед сохранением.');
+        }}>
+          <option value="">Выберите предмет</option>
+          {subjectId != null && !subjects.some(s => s.id === subjectId) && <option value={subjectId}>Предмет больше недоступен</option>}
+          {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </Select>
+      </Field>}
+      {mode === 'edit' && template.data?.subjectId == null && <p className="text-13 text-muted">У старой версии нет предмета. Выберите предмет для новой версии.</p>}
       <Field label="Название теста" required error={showProblems && !title.trim() ? 'Введите название' : undefined}>
         <TextInput value={title} maxLength={300} disabled={saving} onChange={(event) => changeTitle(event.target.value)}
           placeholder="Например, Законы Ньютона — проверка знаний" />
@@ -169,7 +202,7 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" size="sm" icon={<Plus className="size-4" />} disabled={saving || questions.length >= 50}
             onClick={() => changed([...questions, emptyQuestion()])}>Добавить вопрос</Button>
-          <Button variant="navy" size="sm" icon={<Sparkles className="size-4" />} disabled={saving}
+          <Button variant="navy" size="sm" icon={<Sparkles className="size-4" />} disabled={saving || !subjects.some(s => s.id === subjectId)}
             onClick={() => setGenerating(true)}>Сгенерировать с ИИ</Button>
         </div>
       </div>
@@ -188,7 +221,7 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
 
     <div className="sm:sticky sm:bottom-4 sm:z-10 space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
       {showProblems && !valid && <p role="alert" className="text-sm text-danger-fg">
-        {!title.trim() ? 'Укажите название теста.' : questions.length === 0 ? 'Добавьте хотя бы один вопрос.' : 'Проверьте отмеченные вопросы перед сохранением.'}
+        {!subjectId ? 'Выберите предмет теста.' : !title.trim() ? 'Укажите название теста.' : questions.length === 0 ? 'Добавьте хотя бы один вопрос.' : 'Проверьте отмеченные вопросы перед сохранением.'}
       </p>}
       {saveError && <div role="alert" className="space-y-2 text-sm text-danger-fg"><p>{saveError}</p>
         {conflict && <Button variant="secondary" size="sm" onClick={() => void reloadVersion()}>Загрузить актуальную версию</Button>}
@@ -200,11 +233,11 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" disabled={saving} onClick={leave}>Отмена</Button>
-          <Button onClick={() => void save()} loading={saving} disabled={saving || conflict || (mode === 'edit' && !dirty)}>Сохранить</Button>
+          <Button onClick={() => void save()} loading={saving} disabled={saving || conflict || subjectContext.isPending || subjectContext.isError || subjects.length === 0 || (mode === 'edit' && !dirty)}>Сохранить</Button>
         </div>
       </div>
     </div>
-    {generating && <GenerateWorkspaceTestModal initialTopic={title} onClose={() => setGenerating(false)}
+    {generating && subjectId != null && <GenerateWorkspaceTestModal initialTopic={title} subjectId={subjectId} onClose={() => setGenerating(false)}
       onUse={(job) => { if (questions.length > 0) setReplacement(job); else useGenerated(job); }} />}
     <ConfirmDialog open={replacement != null} onClose={() => setReplacement(null)} onConfirm={() => { if (replacement) useGenerated(replacement); }}
       title="Заменить вопросы теста?" message="Текущие вопросы в редакторе будут заменены результатом генерации. Изменения вступят в силу после сохранения теста."

@@ -11,6 +11,7 @@ export type TestAiOverview = Schema<'HomeworkTestAiOverview'>;
 const root = '/teacher/workspace/tests';
 
 export const testTemplateApi = {
+  subjectContext: (signal?: AbortSignal) => request<Schema<'TeacherTestSubjectContext'>>(`${root}/context`, { signal }),
   aiOverview: (signal?: AbortSignal) =>
     request<TestAiOverview>(`${root}/ai-generations/overview`, { signal }),
   startAi: (body: TestAiRequest, key: string) =>

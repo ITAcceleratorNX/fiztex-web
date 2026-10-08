@@ -7083,6 +7083,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teacher/workspace/tests/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["subjectContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teacher/workspace/tests/from-questions": {
         parameters: {
             query?: never;
@@ -8596,6 +8612,8 @@ export interface components {
             name?: string;
         };
         CreateSchoolSubjectRequest: {
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             name?: string;
         };
         CreateServiceRequestRequest: {
@@ -9561,6 +9579,8 @@ export interface components {
             questionCount: number;
             /** @enum {string} */
             sourceType?: "TEXTBOOK" | "DOCUMENT";
+            /** Format: int64 */
+            subjectId?: number;
             teacherPrompt?: string;
             topic?: string;
             /** Format: int64 */
@@ -9572,6 +9592,8 @@ export interface components {
             errorMessage?: string;
             /** Format: date-time */
             finishedAt?: string;
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             /** Format: int64 */
             id?: number;
             phase?: string;
@@ -9584,6 +9606,9 @@ export interface components {
             sourceName?: string;
             /** @enum {string} */
             status?: "PENDING" | "RUNNING" | "DONE" | "FAILED";
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
             warningMessage?: string;
         };
         HomeworkTestAiOverview: {
@@ -9617,6 +9642,8 @@ export interface components {
             /** Format: int64 */
             aiJobId?: number;
             questions: components["schemas"]["QuestionRequest"][];
+            /** Format: int64 */
+            subjectId?: number;
             title?: string;
         };
         HomeworkTestTemplateDefinition: {
@@ -9667,10 +9694,15 @@ export interface components {
             createdAt?: string;
             /** Format: int32 */
             currentVersion?: number;
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             /** Format: int64 */
             id?: number;
             /** Format: int32 */
             questionCount?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
             title?: string;
             /** Format: date-time */
             updatedAt?: string;
@@ -9694,6 +9726,8 @@ export interface components {
             /** Format: int32 */
             expectedVersion: number;
             questions: components["schemas"]["QuestionRequest"][];
+            /** Format: int64 */
+            subjectId?: number;
             title?: string;
         };
         HomeworkTestTemplateVersionView: {
@@ -9701,10 +9735,15 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             definition?: components["schemas"]["HomeworkTestTemplateDefinition"];
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             /** Format: int64 */
             id?: number;
             /** Format: int64 */
             sourceHomeworkId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
             title?: string;
             /** Format: int32 */
             version?: number;
@@ -9731,6 +9770,8 @@ export interface components {
             dueAt?: string;
             /** @enum {string} */
             dueType?: "EXACT" | "NEXT_LESSON" | "NONE";
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             hasAnswers?: boolean;
             /** Format: int64 */
             id?: number;
@@ -12928,6 +12969,8 @@ export interface components {
         SchoolSubjectView: {
             /** Format: date-time */
             createdAt?: string;
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             /** Format: int64 */
             id?: number;
             name?: string;
@@ -13871,6 +13914,18 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        TeacherTestSubject: {
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
+        TeacherTestSubjectContext: {
+            /** Format: int64 */
+            defaultSubjectId?: number;
+            subjects?: components["schemas"]["TeacherTestSubject"][];
+        };
         TeacherTodayLessonView: {
             /** Format: int64 */
             classId?: number;
@@ -14042,6 +14097,8 @@ export interface components {
             draftQuestionCount?: number;
             /** Format: int32 */
             durationMinutes?: number;
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             grade?: string;
             /** Format: int64 */
             id?: number;
@@ -14377,6 +14434,8 @@ export interface components {
             name?: string;
         };
         UpdateSchoolSubjectRequest: {
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             name?: string;
         };
         UpdateStudentRequest: {
@@ -28170,6 +28229,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HomeworkTestAiJobView"];
+                };
+            };
+        };
+    };
+    subjectContext: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherTestSubjectContext"];
                 };
             };
         };

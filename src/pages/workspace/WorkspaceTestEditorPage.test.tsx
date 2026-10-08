@@ -9,18 +9,20 @@ import { WorkspaceTestEditorPage } from './WorkspaceTestEditorPage';
 const create = vi.fn();
 const version = vi.fn();
 const template = vi.fn();
+const subjectContext = vi.fn();
 
 vi.mock('@/context/ToastContext', () => ({
-  useToast: () => ({ success: vi.fn() }),
+  useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }),
 }));
 vi.mock('./GenerateWorkspaceTestModal', () => ({
   GenerateWorkspaceTestModal: ({ onUse, onClose }: { onUse: (job: TestAiJob) => void; onClose: () => void }) =>
-    <button onClick={() => { onUse({ id: 19, request: { topic: 'Плотность', questionCount: 1, openQuestionCount: 1 }, result: { questions: [
+    <button onClick={() => { onUse({ id: 19, subjectId: 1, request: { topic: 'Плотность', questionCount: 1, openQuestionCount: 1 }, result: { questions: [
       { type: 'OPEN_TEXT', text: 'Вопрос от ИИ', maxScore: 1, referenceAnswer: 'Ответ', aiGenerated: true },
     ] } }); onClose(); }}>Использовать вопросы</button>,
 }));
 vi.mock('@/hooks/queries', () => ({
   useTestTemplate: (...args: unknown[]) => template(...args),
+  useTestSubjectContext: () => subjectContext(),
   useCreateTestTemplateFromQuestions: () => ({ mutateAsync: create, isPending: false }),
   useVersionTestTemplateFromQuestions: () => ({ mutateAsync: version, isPending: false }),
 }));
@@ -39,9 +41,30 @@ beforeEach(() => {
   create.mockResolvedValue({ id: 7, version: 1 });
   version.mockResolvedValue({ id: 7, version: 2 });
   template.mockReturnValue({ data: undefined, isPending: false, isError: false, refetch: vi.fn() });
+  subjectContext.mockReturnValue({data:{subjects:[{id:1,name:'Физика',formulaProfile:'PHYSICS'}],defaultSubjectId:1},isPending:false,isError:false});
 });
 
 describe('WorkspaceTestEditorPage', () => {
+  it('требует выбор при нескольких предметах и блокирует создание без назначений', async () => {
+    subjectContext.mockReturnValue({data:{subjects:[{id:1,name:'Физика'},{id:2,name:'Химия'}]},isPending:false,isError:false});
+    const user = userEvent.setup();
+    renderEditor('/workspace/tests/new');
+    const select = screen.getByRole('button', {name:'Предмет теста'});
+    expect(select).toHaveTextContent('Выберите предмет');
+    expect(screen.getByRole('button', {name:'Сгенерировать с ИИ'})).toBeDisabled();
+    await user.click(select);
+    await user.click(screen.getByRole('option', {name:'Химия'}));
+    expect(select).toHaveTextContent('Химия');
+    expect(screen.getByRole('button', {name:'Сгенерировать с ИИ'})).toBeEnabled();
+  });
+
+  it('объясняет отсутствие назначений и оставляет создание недоступным', () => {
+    subjectContext.mockReturnValue({data:{subjects:[]},isPending:false,isError:false});
+    renderEditor('/workspace/tests/new');
+    expect(screen.getByRole('status')).toHaveTextContent('Нет доступных предметов');
+    expect(screen.getByRole('button', {name:'Сохранить'})).toBeDisabled();
+    expect(screen.getByRole('button', {name:'Сгенерировать с ИИ'})).toBeDisabled();
+  });
   it('создаёт тест без исходного ДЗ и отправляет вопросы', async () => {
     const user = userEvent.setup();
     renderEditor('/workspace/tests/new');
@@ -53,7 +76,7 @@ describe('WorkspaceTestEditorPage', () => {
     await user.type(screen.getByRole('textbox', { name: 'Вариант 2' }), 'Неверный ответ');
     await user.click(screen.getByRole('button', { name: 'Сохранить' }));
     await waitFor(() => expect(create).toHaveBeenCalledWith({ body: {
-      title: 'Законы Ньютона', questions: [expect.objectContaining({
+      title: 'Законы Ньютона', subjectId: 1, questions: [expect.objectContaining({
         type: 'SINGLE_CHOICE', text: 'Первый закон Ньютона?', options: [
           { text: 'Верный ответ', correct: true }, { text: 'Неверный ответ', correct: false },
         ],
@@ -74,7 +97,7 @@ describe('WorkspaceTestEditorPage', () => {
     await user.type(screen.getByRole('textbox', { name: 'Текст вопроса 1' }), 'Новый вопрос');
     await user.click(screen.getByRole('button', { name: 'Сохранить' }));
     await waitFor(() => expect(version).toHaveBeenCalledWith({ body: {
-      expectedVersion: 3, title: 'Механика', questions: [expect.objectContaining({ text: 'Новый вопрос' })],
+      expectedVersion: 3, title: 'Механика', subjectId: 1, questions: [expect.objectContaining({ text: 'Новый вопрос' })],
     }, key: expect.any(String) }));
   });
 

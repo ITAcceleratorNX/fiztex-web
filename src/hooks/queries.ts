@@ -1,4 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { listSchoolSubjects, createSchoolSubject, updateSchoolSubject, archiveSchoolSubject } from '@/platform/services/schoolSubjects';
+import type { SchoolRecordStatus } from '@/platform/types';
+import type { FormulaProfile } from '@/lib/formulaProfiles';
 import {
   lessonSummaryApi, summaryRunning, type LessonSummary, type SummaryGeneration, type SummarySave,
 } from '@/lib/lessonSummaryApi';
@@ -90,6 +93,7 @@ import type {
 } from '@/lib/types';
 
 export const keys = {
+  schoolSubjects: (status: SchoolRecordStatus | 'ALL') => ['school-subjects', status] as const,
   myClassContext: ['my-class', 'context'] as const,
   myClassRoster: (classId: number) => ['my-class', 'classes', classId, 'students'] as const,
   myClassSummary: (classId: number, periodId: number) => ['my-class', 'classes', classId, 'summary', periodId] as const,
@@ -116,6 +120,7 @@ export const keys = {
   teacherWorkspaceDependencies: (id: number) => ['teacher-workspace', 'dependencies', id] as const,
   testTemplate: (id: number) => ['teacher-workspace', 'test-template', id] as const,
   testAiOverview: ['teacher-workspace', 'test-ai-overview'] as const,
+  testSubjectContext: ['teacher-workspace', 'test-subject-context'] as const,
   testTemplateDependencies: (id: number) => ['teacher-workspace', 'test-template', id, 'dependencies'] as const,
   testTemplateTarget: (homeworkId: number) => ['homework', homeworkId, 'test-template-target'] as const,
   lessonPreparation: (id: number) => ['teacher-workspace', 'lesson-preparation', id] as const,
@@ -528,6 +533,28 @@ export function useTestAiOverview() {
     },
     refetchIntervalInBackground: true,
   });
+}
+
+export function useTestSubjectContext() {
+  return useQuery({queryKey:keys.testSubjectContext,queryFn:({signal}) => testTemplateApi.subjectContext(signal)});
+}
+
+export function useSchoolSubjects(status: SchoolRecordStatus | 'ALL') {
+  return useQuery({queryKey:keys.schoolSubjects(status),queryFn:() => listSchoolSubjects({status})});
+}
+export function useSaveSchoolSubject() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({id,name,formulaProfile}:{id?:number;name:string;formulaProfile:FormulaProfile}) =>
+      id == null ? createSchoolSubject(name,formulaProfile) : updateSchoolSubject(id,name,formulaProfile),
+    onSuccess: () => { void client.invalidateQueries({queryKey:['school-subjects']}); void client.invalidateQueries({queryKey:keys.testSubjectContext}); },
+  });
+}
+export function useArchiveSchoolSubject() {
+  const client = useQueryClient();
+  return useMutation({mutationFn:archiveSchoolSubject,onSuccess:() => {
+    void client.invalidateQueries({queryKey:['school-subjects']}); void client.invalidateQueries({queryKey:keys.testSubjectContext});
+  }});
 }
 
 export function useStartTestAiGeneration() {

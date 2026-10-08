@@ -23,8 +23,9 @@ const sources = [
 ] as const;
 type SourceTab = (typeof sources)[number]['value'];
 
-export function GenerateWorkspaceTestModal({ initialTopic, onClose, onUse }: {
+export function GenerateWorkspaceTestModal({ initialTopic, subjectId, onClose, onUse }: {
   initialTopic: string;
+  subjectId: number;
   onClose: () => void;
   onUse: (job: TestAiJob) => void;
 }) {
@@ -59,7 +60,7 @@ export function GenerateWorkspaceTestModal({ initialTopic, onClose, onUse }: {
   const ready = !busy && !overview.isPending && !overview.isError && overview.data?.aiEnabled
     && (overview.data.remainingCalls ?? 0) > 0 && topic.trim() && !countError && !openCountError
     && (tab === 'TOPIC' || (source?.id != null && metadata.data && !metadata.isError && !pageError));
-  const result = job?.status === 'DONE' ? job.result?.questions : null;
+  const result = job?.status === 'DONE' && job.subjectId === subjectId ? job.result?.questions : null;
 
   function changeSource(next: SourceTab) {
     setTab(next);
@@ -73,7 +74,7 @@ export function GenerateWorkspaceTestModal({ initialTopic, onClose, onUse }: {
     if (!ready) return;
     const body: TestAiRequest = {
       topic: topic.trim(), audience: audience.trim(), language, teacherPrompt: prompt.trim(),
-      questionCount, openQuestionCount,
+      questionCount, openQuestionCount, subjectId,
       ...(tab !== 'TOPIC' && source?.id != null ? { sourceType, workspaceItemId: source.id,
         ...(metadata.data?.pageNavigation && from ? { pageFrom: Number(from), pageTo: Number(to || from) } : {}),
       } : {}),
