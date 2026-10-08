@@ -53,11 +53,65 @@ const FORBIDDEN_COMMANDS = [
   'documentclass',
 ];
 
-const FORBIDDEN_PATTERN = new RegExp(`\\\\(${FORBIDDEN_COMMANDS.join('|')})(?![a-zA-Z])`);
+export const MAX_FORMULA_LENGTH = 4096;
+export const MAX_FORMULAS_PER_FIELD = 128;
+export const MAX_FORMULA_FIELD_LENGTH = 65536;
 
 /** Есть ли в формуле команда, которую нельзя отдавать рендереру. */
 export function hasForbiddenCommand(formula: string): boolean {
-  return FORBIDDEN_PATTERN.test(formula);
+  for (let i = 0; i < formula.length; i += 1) {
+    if (formula[i] !== '\\') continue;
+    const from = ++i;
+    while (i < formula.length && /[a-zA-Z]/.test(formula[i])) i += 1;
+    if (i > from) {
+      if (FORBIDDEN_COMMANDS.includes(formula.slice(from, i))) return true;
+      i -= 1;
+    }
+  }
+  return false;
+}
+
+/** Position after a balanced mhchem argument, or -1. Never consumes the outer $. */
+export function chemicalEndAt(text: string, start: number): number {
+  if (!(text.startsWith('\\ce', start) || text.startsWith('\\pu', start))) return -1;
+  let open = start + 3;
+  if (/[a-zA-Z]/.test(text[open] ?? '')) return -1;
+  while (open < text.length && /\s/.test(text[open])) open += 1;
+  if (text[open] !== '{') return -1;
+  let depth = 1;
+  for (let i = open + 1; i < text.length; i += 1) {
+    if (text[i] === '\\') { i += 1; continue; }
+    if (text[i] === '{') depth += 1;
+    if (text[i] === '}' && --depth === 0) return i + 1;
+  }
+  return -1;
+}
+
+export function hasNestedChemicalMath(latex: string): boolean {
+  for (let i = 0; i < latex.length; i += 1) {
+    if (latex[i] !== '\\') continue;
+    const end = chemicalEndAt(latex, i);
+    if (end < 0) { i += 1; continue; }
+    for (let j = i; j < end; j += 1) {
+      if (latex[j] === '\\') { j += 1; continue; }
+      if (latex[j] === '$') return true;
+    }
+    i = end - 1;
+  }
+  return false;
+}
+
+/** Mathematical hints must not rewrite or diagnose mhchem's distinct script syntax. */
+export function outsideChemistry(latex: string): string {
+  let result = '', cursor = 0;
+  for (let i = 0; i < latex.length; i += 1) {
+    if (latex[i] !== '\\') continue;
+    const end = chemicalEndAt(latex, i);
+    if (end < 0) { i += 1; continue; }
+    result += latex.slice(cursor, i) + ' ';
+    cursor = end; i = end - 1;
+  }
+  return result + latex.slice(cursor);
 }
 
 export function hasMath(text: string | null | undefined): boolean {
@@ -119,6 +173,8 @@ export function splitMath(text: string): MathSegment[] {
 function findClosing(text: string, from: number): number {
   for (let j = from; j < text.length; j += 1) {
     if (text[j] === '\\') {
+      const end = chemicalEndAt(text, j);
+      if (end > j) { j = end - 1; continue; }
       j += 1;
       continue;
     }

@@ -54,11 +54,11 @@ describe('живая проверка формул в редакторе', () =>
     expect(problems[0].where).toBe('Вариант 1');
   });
 
-  it('нерисуемая формула — предупреждение, а не блокировка', () => {
+  it('нерисуемая формула блокирует готовность к публикации', () => {
     const problems = checkFormulas([{ where: 'Текст вопроса', text: '$\\frac{1}{2$' }]);
     expect(problems).toHaveLength(1);
-    expect(problems[0].severity).toBe('warning');
-    expect(hasBlockingProblem(problems)).toBe(false);
+    expect(problems[0].severity).toBe('error');
+    expect(hasBlockingProblem(problems)).toBe(true);
   });
 
   it('на исправном тексте молчит', () => {
