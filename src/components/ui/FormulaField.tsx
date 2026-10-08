@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Sigma, Trash2 } from 'lucide-react';
 import { cx } from '@/lib/format';
+import type { FormulaProfile } from '@/lib/formulaProfiles';
 import { Formula, MathText } from './MathText';
 import { useFieldControlProps } from './fieldContext';
 import { FormulaEditorModal } from './FormulaEditorModal';
@@ -36,6 +37,7 @@ export function FormulaField({
   invalid = false,
   disabled = false,
   ariaLabel,
+  profile = 'GENERAL',
 }: {
   value: string;
   onChange: (next: string) => void;
@@ -45,6 +47,7 @@ export function FormulaField({
   invalid?: boolean;
   disabled?: boolean;
   ariaLabel?: string;
+  profile?: FormulaProfile;
 }) {
   const fieldProps = useFieldControlProps({ ariaLabel, ariaInvalid: invalid || undefined });
   const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
@@ -151,6 +154,7 @@ export function FormulaField({
       {editing && !disabled && (
         <FormulaEditorModal
           open
+          profile={profile}
           initialLatex={editing.latex}
           initialDisplay={editing.display}
           onClose={() => setEditing(null)}

@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { Formula } from './MathText';
+import { ChemicalExpressionEditor } from './ChemicalExpressionEditor';
+import { checkFormulas, hasBlockingProblem } from '@/lib/formulaChecks';
+import { FORMULA_PROFILES, type FormulaProfile } from '@/lib/formulaProfiles';
+import catalog from '@/lib/formulaCatalog.json';
 import { hasForbiddenCommand, stripPlaceholders } from '@/lib/mathMarkup';
 
 /**
@@ -16,76 +20,21 @@ import { hasForbiddenCommand, stripPlaceholders } from '@/lib/mathMarkup';
  * рабочим — остаётся поле разметки, палитра и предпросмотр.
  */
 
-type Snippet = { label: string; latex: string; insert: string };
-
-/** Шаблоны школьной математики и физики 1–11. `#?` — место, куда MathLive ставит курсор. */
-const PALETTE: { title: string; items: Snippet[] }[] = [
-  {
-    title: 'Числа и действия',
-    items: [
-      { label: 'дробь', latex: '\\frac{a}{b}', insert: '\\frac{#?}{#?}' },
-      { label: 'степень', latex: 'a^{n}', insert: '#?^{#?}' },
-      { label: 'индекс', latex: 'a_{n}', insert: '#?_{#?}' },
-      { label: 'корень', latex: '\\sqrt{a}', insert: '\\sqrt{#?}' },
-      { label: 'корень n-й', latex: '\\sqrt[n]{a}', insert: '\\sqrt[#?]{#?}' },
-      { label: 'модуль', latex: '|a|', insert: '\\left|#?\\right|' },
-      { label: 'умножение', latex: '\\cdot', insert: '\\cdot ' },
-      { label: 'деление', latex: '\\div', insert: '\\div ' },
-      { label: 'плюс-минус', latex: '\\pm', insert: '\\pm ' },
-    ],
-  },
-  {
-    title: 'Сравнения и системы',
-    items: [
-      { label: 'меньше или равно', latex: '\\le', insert: '\\le ' },
-      { label: 'больше или равно', latex: '\\ge', insert: '\\ge ' },
-      { label: 'не равно', latex: '\\ne', insert: '\\ne ' },
-      { label: 'приблизительно', latex: '\\approx', insert: '\\approx ' },
-      { label: 'система', latex: '\\begin{cases} x \\\\ y \\end{cases}', insert: '\\begin{cases} #? \\\\ #? \\end{cases}' },
-      { label: 'матрица', latex: '\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}', insert: '\\begin{pmatrix} #? & #? \\\\ #? & #? \\end{pmatrix}' },
-    ],
-  },
-  {
-    title: 'Функции и анализ',
-    items: [
-      { label: 'логарифм', latex: '\\log_{a} b', insert: '\\log_{#?}{#?}' },
-      { label: 'натуральный логарифм', latex: '\\ln a', insert: '\\ln #?' },
-      { label: 'синус', latex: '\\sin \\alpha', insert: '\\sin #?' },
-      { label: 'косинус', latex: '\\cos \\alpha', insert: '\\cos #?' },
-      { label: 'тангенс', latex: '\\tg \\alpha', insert: '\\tg #?' },
-      { label: 'предел', latex: '\\lim_{x \\to 0}', insert: '\\lim_{#? \\to #?}' },
-      { label: 'сумма', latex: '\\sum_{i=1}^{n}', insert: '\\sum_{#?}^{#?}' },
-      { label: 'интеграл', latex: '\\int_{a}^{b}', insert: '\\int_{#?}^{#?}' },
-      { label: 'производная', latex: "f'(x)", insert: "#?'" },
-    ],
-  },
-  {
-    title: 'Физика и обозначения',
-    items: [
-      { label: 'вектор', latex: '\\vec{F}', insert: '\\vec{#?}' },
-      { label: 'градусы', latex: '20^\\circ', insert: '^\\circ ' },
-      { label: 'пи', latex: '\\pi', insert: '\\pi ' },
-      { label: 'альфа', latex: '\\alpha', insert: '\\alpha ' },
-      { label: 'бета', latex: '\\beta', insert: '\\beta ' },
-      { label: 'ро', latex: '\\rho', insert: '\\rho ' },
-      { label: 'мю', latex: '\\mu', insert: '\\mu ' },
-      { label: 'дельта', latex: '\\Delta', insert: '\\Delta ' },
-      { label: 'омега', latex: '\\Omega', insert: '\\Omega ' },
-      { label: 'текст в формуле', latex: '\\text{кг}', insert: '\\text{#?}' },
-    ],
-  },
-];
+export type Snippet = { label: string; latex: string; insert: string };
+export type PaletteGroup = { title: string; items: Snippet[] };
 
 export function FormulaEditorModal({
   open,
   initialLatex = '',
   initialDisplay = false,
+  profile = 'GENERAL',
   onClose,
   onSave,
 }: {
   open: boolean;
   initialLatex?: string;
   initialDisplay?: boolean;
+  profile?: FormulaProfile;
   onClose: () => void;
   /** Возвращает разметку формулы без разделителей — их ставит вызывающая сторона. */
   onSave: (latex: string, display: boolean) => void;
@@ -108,6 +57,7 @@ export function FormulaEditorModal({
     if (!open) return;
     let cancelled = false;
     let field: MathfieldLike | null = null;
+    let previousLayouts: typeof window.mathVirtualKeyboard.layouts | undefined;
 
     void (async () => {
       try {
@@ -119,10 +69,17 @@ export function FormulaEditorModal({
         mathlive.MathfieldElement.soundsDirectory = null;
 
         field = new mathlive.MathfieldElement() as unknown as MathfieldLike;
+        previousLayouts = window.mathVirtualKeyboard.layouts;
+        window.mathVirtualKeyboard.layouts = ['numeric', 'symbols', 'alphabetic',
+          ...(profile === 'PHYSICS' || profile === 'CHEMISTRY' ? [{
+            label: FORMULA_PROFILES[profile], rows: catalog[profile].flatMap(group => {
+              const keys = group.items.map(item => ({ latex: item.latex, insert: item.insert, tooltip: item.label }));
+              return [keys.slice(0, 5), keys.slice(5)].filter(row => row.length > 0);
+            }),
+          }] : [])];
+        field.mathVirtualKeyboardPolicy = 'manual';
         field.value = initialLatex;
-        field.style.width = '100%';
-        field.style.minHeight = '64px';
-        field.style.fontSize = '20px';
+        field.className = 'w-full min-h-16 text-xl';
         field.addEventListener('input', () => {
           const value = field?.value ?? '';
           fromFieldRef.current = value;
@@ -140,11 +97,12 @@ export function FormulaEditorModal({
 
     return () => {
       cancelled = true;
+      if (previousLayouts) window.mathVirtualKeyboard.layouts = previousLayouts;
       fieldRef.current = null;
       setVisualReady(false);
       (field as unknown as HTMLElement | null)?.remove();
     };
-  }, [open, initialLatex]);
+  }, [open, initialLatex, profile]);
 
   // Правка разметки руками должна доехать до визуального поля — но не наоборот.
   useEffect(() => {
@@ -169,20 +127,23 @@ export function FormulaEditorModal({
   // текст вопроса: KaTeX команды \placeholder не знает.
   const trimmed = stripPlaceholders(latex).trim();
   const forbidden = hasForbiddenCommand(trimmed);
+  const problems = checkFormulas([{ where: 'Формула', text: `${display ? '$$' : '$'}${trimmed}${display ? '$$' : '$'}` }]);
+  const invalid = forbidden || hasBlockingProblem(problems);
+  const palette: PaletteGroup[] = [...catalog.common, ...(profile === 'GENERAL' ? [] : catalog[profile])];
 
   return (
     <Modal
       open={open}
       onClose={onClose}
       size="lg"
-      title="Формула"
+      title={`Формула · ${FORMULA_PROFILES[profile]}`}
       subtitle="Соберите формулу мышью или наберите с клавиатуры — знание LaTeX не нужно"
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
             Отмена
           </Button>
-          <Button disabled={!trimmed || forbidden} onClick={() => onSave(trimmed, display)}>
+          <Button disabled={!trimmed || invalid} onClick={() => onSave(trimmed, display)}>
             Вставить формулу
           </Button>
         </>
@@ -207,8 +168,10 @@ export function FormulaEditorModal({
           )}
         </div>
 
+        <ChemicalExpressionEditor latex={latex} onChange={value => { fromFieldRef.current = null; setLatex(value); }} />
+
         <div className="space-y-3">
-          {PALETTE.map((group) => (
+          {palette.map((group) => (
             <div key={group.title}>
               <p className="mb-1.5 text-11 font-semibold uppercase tracking-wide text-slate-400">
                 {group.title}
@@ -244,7 +207,7 @@ export function FormulaEditorModal({
           <p className="text-11 font-semibold uppercase tracking-wide text-slate-400">
             Так увидит ученик
           </p>
-          <div className="mt-2 text-[17px] text-slate-800">
+          <div className="mt-2 min-w-0 text-base text-ink">
             {trimmed ? <Formula latex={trimmed} display={display} /> : <span className="text-slate-400">—</span>}
           </div>
         </div>
@@ -265,6 +228,8 @@ export function FormulaEditorModal({
           </div>
         )}
 
+        {!forbidden && trimmed && problems.length > 0 && <p role="alert" className="text-sm text-danger-fg">{problems.map(problem => problem.message).join('; ')}</p>}
+
         {forbidden && (
           <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-100">
             В формуле есть команда, которую нельзя показывать ученику (макросы и загрузка
@@ -283,5 +248,6 @@ export function FormulaEditorModal({
  */
 interface MathfieldLike extends HTMLElement {
   value: string;
+  mathVirtualKeyboardPolicy: 'manual';
   insert(latex: string, options?: { focus?: boolean }): void;
 }

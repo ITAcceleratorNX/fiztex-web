@@ -10,6 +10,7 @@ import { FormulaField } from './FormulaField';
  * и события.
  */
 vi.mock('mathlive', () => {
+  Object.assign(window, { mathVirtualKeyboard: { layouts: [] } });
   class FakeMathfield {
     static fontsDirectory: string | null = '';
     static soundsDirectory: string | null = '';
@@ -113,4 +114,30 @@ describe('FormulaField', () => {
 
     expect(button('Вставить формулу')).toBeDisabled();
   });
+  it('правит выбранный химический блок, сохраняя соседнюю формулу и окружающий LaTeX', async () => {
+    const user = userEvent.setup(); const onChange = vi.fn();
+    render(<FormulaField profile="CHEMISTRY" value={'Дано $x+\\ce{H2O}+\\ce{Fe^{2+}}$'} onChange={onChange} />);
+    await user.click(screen.getByTitle('Изменить формулу'));
+    await waitFor(() => latexInput());
+    await user.click(screen.getByLabelText('Химический блок'));
+    await user.click(screen.getByRole('option', { name: '2. Fe^{2+}' }));
+    const argument = screen.getByLabelText('Вещество или реакция');
+    await user.clear(argument); await user.paste('Fe^{3+}');
+    await user.click(button('Применить к блоку'));
+    await user.click(button('Вставить формулу'));
+    expect(onChange).toHaveBeenCalledWith('Дано $x+\\ce{H2O}+\\ce{Fe^{3+}}$');
+  });
+
+  it('отмена химической правки и закрытие окна сохраняют исходный текст', async () => {
+    const user = userEvent.setup(); const onChange = vi.fn();
+    render(<FormulaField profile="CHEMISTRY" value={'$\\ce{H2O}$'} onChange={onChange} />);
+    await user.click(screen.getByTitle('Изменить формулу'));
+    await user.clear(screen.getByLabelText('Вещество или реакция'));
+    await user.paste('CO2');
+    await user.click(button('Отменить правку блока'));
+    expect(screen.getByLabelText('Вещество или реакция')).toHaveValue('H2O');
+    await user.click(button('Отмена'));
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
 });
