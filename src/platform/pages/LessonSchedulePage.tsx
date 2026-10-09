@@ -12,6 +12,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Bell,
   CalendarDays,
+  CalendarPlus,
   Check,
   Copy,
   FileSpreadsheet,
@@ -45,6 +46,7 @@ import {
 } from './schedule/ScheduleLessonFormModal';
 import { ScheduleLegendBar, ScheduleWeeklyGrid } from './schedule/ScheduleWeeklyGrid';
 import { LessonHorizonCard } from './schedule/LessonHorizonCard';
+import { useScheduleOneTimeEvents } from './schedule/useScheduleOneTimeEvents';
 import {
   archiveSchedule,
   checkSchedule,
@@ -1052,6 +1054,12 @@ export function LessonSchedulePage() {
   }
 
   const isDraft = currentSchedule?.status === 'DRAFT';
+  const oneTimeEvents = useScheduleOneTimeEvents({
+    yearId: yearId ? Number(yearId) : null,
+    classId: currentSchedule ? currentSchedule.classId : null,
+    // Даты есть только у действующей публикации: черновик — шаблон недели без привязки к числам.
+    showOnGrid: currentSchedule?.status === 'PUBLISHED' && currentSchedule.current === true && !editing,
+  });
   const periodsForForm = currentGrid?.periods ?? currentContext?.bellTemplate?.periods ?? [];
   const canPublish =
     isDraft &&
@@ -1302,6 +1310,15 @@ export function LessonSchedulePage() {
 
           {/* Просмотр — одна кнопка (2015:5852). Редактирование — четыре (2015:4953). */}
           <div className="flex flex-wrap items-center justify-end gap-2">
+            {yearId && !editing && (
+              <PanelButton
+                tone="muted"
+                icon={<CalendarPlus className="size-3 shrink-0" />}
+                onClick={oneTimeEvents.openCreate}
+              >
+                Разовое событие
+              </PanelButton>
+            )}
             {!currentSchedule && scheduleListCurrent && periodId && classFilter && (
               <PanelButton
                 tone="accent"
@@ -1423,6 +1440,7 @@ export function LessonSchedulePage() {
           />
 
           <ScheduleLegendBar />
+          {currentGrid && currentGrid.periods.length > 0 && oneTimeEvents.weekBar}
 
           {checkPending ? (
             <CheckingCard />
@@ -1487,6 +1505,7 @@ export function LessonSchedulePage() {
               }
               onEditLesson={openEditLesson}
               onOpenLesson={openActualLesson}
+              {...oneTimeEvents.gridProps}
             />
           )}
 
@@ -1616,6 +1635,8 @@ export function LessonSchedulePage() {
         // при наличии предупреждений их нужно подтвердить заново чекбоксом.
         onRetry={() => setPublishStage('confirm')}
       />
+
+      {oneTimeEvents.modals}
     </div>
   );
 }
