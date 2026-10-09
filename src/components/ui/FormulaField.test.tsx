@@ -10,12 +10,15 @@ import { FormulaField } from './FormulaField';
  * и события.
  */
 vi.mock('mathlive', () => {
-  const keyboard = Object.assign(new EventTarget(), {
-    layouts: [], container: null as HTMLElement | null, visible: false,
-    boundingRect: { height: 0 },
-    show() { this.visible = true; this.boundingRect.height = 200; this.dispatchEvent(new Event('geometrychange')); },
-    hide() { this.visible = false; this.boundingRect.height = 0; this.dispatchEvent(new Event('geometrychange')); },
-  });
+  class FakeKeyboard extends EventTarget {
+    layouts = [];
+    container: HTMLElement | null = null;
+    visible = false;
+    boundingRect = { height: 0 };
+    show() { this.visible = true; this.boundingRect.height = 200; this.dispatchEvent(new Event('geometrychange')); }
+    hide() { this.visible = false; this.boundingRect.height = 0; this.dispatchEvent(new Event('geometrychange')); }
+  }
+  const keyboard = new FakeKeyboard();
   Object.assign(window, { mathVirtualKeyboard: keyboard });
   class FakeMathfield {
     static fontsDirectory: string | null = '';

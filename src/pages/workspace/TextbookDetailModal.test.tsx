@@ -35,7 +35,7 @@ describe('TextbookDetailModal', () => {
     const { load } = openFile.mock.calls[0][0];
     load();
     expect(content).toHaveBeenCalledWith(17);
-    await userEvent.click(screen.getByRole('button', { name: 'Закрыть', exact: true }));
+    await userEvent.click(screen.getByRole('button', { name: 'Закрыть' }));
     expect(onClose).toHaveBeenCalledOnce();
   });
 

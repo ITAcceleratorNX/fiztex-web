@@ -39,15 +39,15 @@ describe('TestFormModal', () => {
     toast.error.mockReset();
     vi.mocked(useSubjects).mockReturnValue({
       data: [{ id: 1, name: 'Math', status: 'ACTIVE' }],
-    } as ReturnType<typeof useSubjects>);
+    } as unknown as ReturnType<typeof useSubjects>);
     vi.mocked(useCreateTest).mockReturnValue({
       isPending: false,
       mutateAsync: vi.fn(),
-    } as ReturnType<typeof useCreateTest>);
+    } as unknown as ReturnType<typeof useCreateTest>);
     vi.mocked(useUpdateTest).mockReturnValue({
       isPending: false,
       mutateAsync: vi.fn(),
-    } as ReturnType<typeof useUpdateTest>);
+    } as unknown as ReturnType<typeof useUpdateTest>);
   });
 
   it('renders activation violation list from 422 response', async () => {
@@ -61,7 +61,7 @@ describe('TestFormModal', () => {
     vi.mocked(useUpdateTest).mockReturnValue({
       isPending: false,
       mutateAsync,
-    } as ReturnType<typeof useUpdateTest>);
+    } as unknown as ReturnType<typeof useUpdateTest>);
 
     render(
       <TestFormModal
@@ -157,7 +157,7 @@ describe('TestFormModal', () => {
     vi.mocked(useCreateTest).mockReturnValue({
       isPending: false,
       mutateAsync,
-    } as ReturnType<typeof useCreateTest>);
+    } as unknown as ReturnType<typeof useCreateTest>);
 
     render(<TestFormModal open onClose={() => {}} test={null} aiTest={false} />);
 

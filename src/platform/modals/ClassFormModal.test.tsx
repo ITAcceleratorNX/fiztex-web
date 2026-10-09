@@ -44,7 +44,7 @@ describe('ClassFormModal', () => {
 
     const name = screen.getByRole('textbox', { name: /Название класса/ });
     await user.type(name, 'abc');
-    await user.click(screen.getByRole('button', { name: 'Создать', exact: true }));
+    await user.click(screen.getByRole('button', { name: 'Создать' }));
     expect(screen.getByRole('alert')).toHaveTextContent('Укажите класс в формате 5 «А»');
 
     await user.clear(name);
@@ -61,7 +61,7 @@ describe('ClassFormModal', () => {
     expect(screen.getByText('Учителя не найдены')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Классный руководитель' })).toBeDisabled();
     await user.type(screen.getByRole('textbox', { name: /Название класса/ }), '5А');
-    await user.click(screen.getByRole('button', { name: 'Создать', exact: true }));
+    await user.click(screen.getByRole('button', { name: 'Создать' }));
 
     await waitFor(() => expect(hooks.create).toHaveBeenCalledWith(expect.objectContaining({
       academicYearId: 1, name: '5А', homeroomTeacherProfileId: undefined,
@@ -80,7 +80,7 @@ describe('ClassFormModal', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent('Не удалось загрузить учителей.');
     expect(screen.getByRole('button', { name: 'Классный руководитель' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Создать', exact: true })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Создать' })).toBeEnabled();
     await user.click(screen.getByRole('button', { name: 'Повторить' }));
     expect(hooks.retry).toHaveBeenCalledOnce();
   });
@@ -97,7 +97,7 @@ describe('ClassFormModal', () => {
     await user.type(screen.getByRole('textbox', { name: /Название класса/ }), '7Ә');
     await user.click(screen.getByRole('button', { name: 'Классный руководитель' }));
     await user.click(screen.getByRole('option', { name: 'Асанова Айжан' }));
-    await user.click(screen.getByRole('button', { name: 'Создать', exact: true }));
+    await user.click(screen.getByRole('button', { name: 'Создать' }));
 
     await waitFor(() => expect(hooks.create).toHaveBeenCalledWith(expect.objectContaining({
       academicYearId: 1, name: '7Ә', homeroomTeacherProfileId: 7,

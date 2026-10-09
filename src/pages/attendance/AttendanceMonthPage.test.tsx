@@ -17,8 +17,8 @@ vi.mock('@/hooks/queries', () => ({
   useTeacherJournal: (...args: unknown[]) => journalHook(...args),
 }));
 
-const options = liveOptions as TeacherJournalOptions;
-const journal = liveJournal as TeacherJournal;
+const options = liveOptions as unknown as TeacherJournalOptions;
+const journal = liveJournal as unknown as TeacherJournal;
 
 function renderAt(url: string) {
   return render(

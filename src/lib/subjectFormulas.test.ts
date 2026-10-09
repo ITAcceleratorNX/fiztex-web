@@ -55,7 +55,7 @@ describe('автономный мобильный bundle', () => {
 
   it.each(fixtures)('$id: bundle действительно содержит mhchem и те же настройки', (fixture) => {
     for (const display of [false, true]) {
-      (window as OfflineWindow).fxRender({
+      (window as unknown as OfflineWindow).fxRender({
         segments:[{kind:'math',value:fixture.latex,display,forbidden:mobile.hasForbiddenCommand(fixture.latex)}],
         fontSize:16,lineHeight:1.35,color:'#172033',fallback:fixture.latex,
       });
@@ -66,7 +66,7 @@ describe('автономный мобильный bundle', () => {
         expect(root.querySelector('math')).not.toBeNull();
         // render() builds DOM directly and merges text nodes; renderToString() preserves
         // wrappers. Compare the same API while also exercising the actual WebView bridge.
-        expect((window as OfflineWindow).katex.renderToString(fixture.latex, {
+        expect((window as unknown as OfflineWindow).katex.renderToString(fixture.latex, {
           displayMode:display,throwOnError:true,strict:'ignore',trust:false,maxExpand:1000,maxSize:20,
         })).toBe(web.html);
       } else expect(root.textContent).toContain(fixture.latex);

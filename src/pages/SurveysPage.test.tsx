@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -10,7 +10,7 @@ const list = vi.spyOn(surveyApi, 'list');
 afterEach(() => list.mockReset());
 
 function entry(id: number, status: SurveyStatus) {
-  return { id, title: `Опрос ${id}`, status, mode: 'NAMED', respondedCount: 2, recipientsTotal: 5 };
+  return { id, title: `Опрос ${id}`, status, mode: 'NAMED' as const, respondedCount: 2, recipientsTotal: 5 };
 }
 function page(content: ReturnType<typeof entry>[], totalElements: number, number = 0): SurveyPage {
   return { content, totalElements, totalPages: Math.ceil(totalElements / 20), number, size: 20, last: (number + 1) * 20 >= totalElements };
@@ -84,8 +84,8 @@ describe('SurveysPage pagination and server filters (UX-05)', () => {
     });
     renderPage('/surveys?status=ACTIVE&page=2');
     await screen.findByText('Опрос 1');
-    await userEvent.click(screen.getByRole('button', { name: 'Активен', exact: true }));
-    await userEvent.click(screen.getByRole('option', { name: 'Завершён', exact: true }));
+    await userEvent.click(screen.getByRole('button', { name: 'Активен' }));
+    await userEvent.click(screen.getByRole('option', { name: 'Завершён' }));
     expect(await screen.findByText('Опрос 77')).toBeInTheDocument();
     expect(list).toHaveBeenCalledWith('COMPLETED', { page: 0, size: 20 }, expect.anything());
     expect(screen.getByTestId('url')).toHaveTextContent('/surveys?status=COMPLETED');

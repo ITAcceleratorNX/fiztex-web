@@ -57,7 +57,7 @@ describe('WorkspaceTestEditorPage', () => {
     const file = new File(['png'], 'figure.png', { type: 'image/png' });
     await user.upload(screen.getByLabelText('Файл рисунка к вопросу'), file);
     await waitFor(() => expect(screen.getByAltText('Рисунок к вопросу')).toHaveAttribute('src', 'http://localhost/figure.png'));
-    await user.click(screen.getByRole('button', { name: 'Сохранить', exact: true }));
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }));
     expect(version).toHaveBeenCalledWith(expect.objectContaining({ body: expect.objectContaining({
       expectedVersion: 1, questions: [expect.objectContaining({ imageId: 'image-1' })],
     }) }));
@@ -75,7 +75,7 @@ describe('WorkspaceTestEditorPage', () => {
     await screen.findByRole('alert');
     expect(screen.getByAltText('Рисунок к вопросу')).toHaveAttribute('src', 'http://localhost/old.png');
     await user.click(screen.getByRole('button', { name: 'Удалить рисунок' }));
-    await user.click(screen.getByRole('button', { name: 'Сохранить', exact: true }));
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }));
     expect(version.mock.calls[0][0].body.questions[0]).not.toHaveProperty('imageId');
   });
 

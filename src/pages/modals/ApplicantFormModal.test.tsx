@@ -28,11 +28,11 @@ describe('ApplicantFormModal phone validation', () => {
     vi.mocked(useCreateApplicant).mockReturnValue({
       isPending: false,
       mutateAsync: vi.fn(),
-    } as ReturnType<typeof useCreateApplicant>);
+    } as unknown as ReturnType<typeof useCreateApplicant>);
     vi.mocked(useUpdateApplicant).mockReturnValue({
       isPending: false,
       mutateAsync: vi.fn(),
-    } as ReturnType<typeof useUpdateApplicant>);
+    } as unknown as ReturnType<typeof useUpdateApplicant>);
   });
 
   it('shows blur validation error for invalid phone', async () => {
@@ -52,7 +52,7 @@ describe('ApplicantFormModal phone validation', () => {
     vi.mocked(useCreateApplicant).mockReturnValue({
       isPending: false,
       mutateAsync,
-    } as ReturnType<typeof useCreateApplicant>);
+    } as unknown as ReturnType<typeof useCreateApplicant>);
 
     render(<ApplicantFormModal open onClose={() => {}} applicant={null} />);
 
@@ -75,7 +75,7 @@ describe('ApplicantFormModal phone validation', () => {
     vi.mocked(useCreateApplicant).mockReturnValue({
       isPending: false,
       mutateAsync: vi.fn().mockRejectedValue(err),
-    } as ReturnType<typeof useCreateApplicant>);
+    } as unknown as ReturnType<typeof useCreateApplicant>);
 
     render(<ApplicantFormModal open onClose={() => {}} applicant={null} />);
 
