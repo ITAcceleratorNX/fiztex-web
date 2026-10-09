@@ -122,12 +122,12 @@ describe('FormulaField', () => {
     expect(screen.queryByText('Формула')).not.toBeInTheDocument();
     expect(screen.queryByTitle('Изменить формулу')).not.toBeInTheDocument();
     expect(screen.queryByTitle('Удалить формулу')).not.toBeInTheDocument();
-    expect(screen.getByText('Так увидит ученик')).toBeInTheDocument();
+    expect(screen.getByText('Предпросмотр')).toBeInTheDocument();
   });
 
   it('без формул предпросмотр не показывается', () => {
     render(<FormulaField value="Столица Казахстана?" onChange={vi.fn()} />);
-    expect(screen.queryByText('Так увидит ученик')).toBeNull();
+    expect(screen.queryByText('Предпросмотр')).toBeNull();
   });
 
   it('не даёт вставить формулу с запрещённой командой', async () => {

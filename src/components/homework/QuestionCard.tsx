@@ -232,7 +232,7 @@ export function QuestionCard({
 
       {question.type === 'OPEN_TEXT' && (
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <Field label="Эталонный ответ" hint="Ученику не показывается">
+          <Field label="Эталонный ответ" hint="Ученику не показывается" className="min-w-0">
             <FormulaField
             profile={profile}
               disabled={readOnly}
@@ -242,7 +242,7 @@ export function QuestionCard({
               ariaLabel="Эталонный ответ"
             />
           </Field>
-          <Field label="Критерии оценки" hint="Их использует подсказка ИИ">
+          <Field label="Критерии оценки" hint="Их использует подсказка ИИ" className="min-w-0">
             <FormulaField
             profile={profile}
               disabled={readOnly}

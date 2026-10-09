@@ -42,14 +42,19 @@ export function MathText({
   );
 }
 
-/** Одна формула. `display` — та, что записана как `$$…$$`: система, матрица, длинная выкладка. */
-export function Formula({ latex, display = false }: { latex: string; display?: boolean }) {
+/**
+ * Одна формула. `display` — запись `$$…$$`: система, матрица, длинная выкладка.
+ * В редактируемом предпросмотре прокрутку обеспечивает кнопка: фокус и стрелки
+ * клавиатуры должны работать на том же элементе, который прокручивает формулу.
+ */
+export function Formula({ latex, display = false, scrollable = true }: { latex: string; display?: boolean; scrollable?: boolean }) {
   const rendered = useMemo(() => renderFormula(latex, display), [latex, display]);
 
   if (!rendered.ok) {
     return (
       <code
-        className="mx-0.5 inline-block max-w-full overflow-x-auto whitespace-pre rounded bg-red-50 px-1 py-0.5 align-middle font-mono text-[0.9em] text-red-600 ring-1 ring-red-200"
+        className={cx('mx-0.5 inline-block whitespace-pre rounded bg-red-50 px-1 py-0.5 align-middle font-mono text-[0.9em] text-red-600 ring-1 ring-red-200',
+          scrollable && 'max-w-full overflow-x-auto')}
         title={`Формула не отображается: ${rendered.error}`}
       >
         {display ? `$$${latex}$$` : `$${latex}$`}
@@ -62,7 +67,7 @@ export function Formula({ latex, display = false }: { latex: string; display?: b
   return (
     <span
       className={cx(
-        'max-w-full overflow-x-auto overflow-y-hidden',
+        scrollable && 'max-w-full overflow-x-auto overflow-y-hidden',
         display ? 'my-2 block' : 'inline-block align-middle',
       )}
       dangerouslySetInnerHTML={{ __html: rendered.html }}
