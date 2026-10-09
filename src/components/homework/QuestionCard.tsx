@@ -4,6 +4,8 @@ import { Field, Select, TextInput } from '@/components/ui/Field';
 import type { FormulaProfile } from '@/lib/formulaProfiles';
 import { FormulaField } from '@/components/ui/FormulaField';
 import { AiGeneratedBadge } from '@/components/ui/AiGeneratedBadge';
+import { QuestionImagePicker, type QuestionImage } from '@/components/ui/QuestionImagePicker';
+import { QuestionFigure } from '@/components/ui/QuestionFigure';
 import { AiJobProgress } from '@/components/ui/AiJobProgress';
 import { checkFormulas } from '@/lib/formulaChecks';
 import {
@@ -23,6 +25,8 @@ export function QuestionCard({
   onRemove,
   onMove,
   onRegenerate,
+  onUploadImage,
+  onImageBusyChange,
 }: {
   question: QuestionDraft;
   profile?: FormulaProfile;
@@ -35,6 +39,8 @@ export function QuestionCard({
   onRemove: () => void;
   onMove: (delta: -1 | 1) => void;
   onRegenerate?: () => void;
+  onUploadImage?: (file: File) => Promise<QuestionImage>;
+  onImageBusyChange?: (busy: boolean) => void;
 }) {
   const invalid = messages.length > 0;
   const formulaProblems = checkFormulas([
@@ -143,6 +149,11 @@ export function QuestionCard({
           />
         </Field>
       </div>
+
+      {onUploadImage ? <QuestionImagePicker imageUrl={question.imageUrl} disabled={readOnly}
+        onUpload={onUploadImage} onBusyChange={onImageBusyChange}
+        onChange={image => onChange({ ...question, imageId: image.imageId, imageUrl: image.imageUrl })} />
+        : <QuestionFigure imageUrl={question.imageUrl} />}
 
       {isChoiceType(question.type) && (
         <div className="mt-4 space-y-2">

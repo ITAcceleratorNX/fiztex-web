@@ -9,7 +9,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Field, Select, TextInput } from '@/components/ui/Field';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
-import { useCreateTestTemplateFromQuestions, useTestTemplate, useVersionTestTemplateFromQuestions, useTestSubjectContext } from '@/hooks/queries';
+import { useCreateTestTemplateFromQuestions, useTestTemplate, useVersionTestTemplateFromQuestions, useTestSubjectContext, useUploadHomeworkQuestionImage } from '@/hooks/queries';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
 import { ROUTES } from '@/lib/routes';
@@ -33,6 +33,8 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
   const [subjectId, setSubjectId] = useState<number>();
   const subjects = subjectContext.data?.subjects ?? [];
   const create = useCreateTestTemplateFromQuestions();
+  const imageUpload = useUploadHomeworkQuestionImage();
+  const [uploadingImages, setUploadingImages] = useState(0);
   const version = useVersionTestTemplateFromQuestions(id ?? 0);
   const [title, setTitle] = useState('');
   const [baseVersion, setBaseVersion] = useState<number>();
@@ -69,7 +71,7 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
   const valid = title.trim().length > 0 && title.trim().length <= 300
     && questions.length > 0 && questions.length <= 50 && problems.size === 0
     && !subjectContext.isPending && !subjectContext.isError && subjects.some(s => s.id === subjectId);
-  const saving = create.isPending || version.isPending;
+  const saving = create.isPending || version.isPending || uploadingImages > 0;
 
   function changed(next: QuestionDraft[]) {
     setQuestions(next);
@@ -212,6 +214,8 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
           {questions.map((question, index) => <QuestionCard key={question.localId} question={question}
             profile={subjects.find(s => s.id === subjectId)?.formulaProfile ?? template.data?.formulaProfile ?? 'GENERAL'}
             index={index} total={questions.length} readOnly={saving}
+            onUploadImage={file => imageUpload.mutateAsync(file)}
+            onImageBusyChange={busy => setUploadingImages(count => Math.max(0, count + (busy ? 1 : -1)))}
             messages={showProblems ? problems.get(index) ?? [] : []}
             onChange={(next) => changed(questions.map((entry, i) => i === index ? next : entry))}
             onRemove={() => changed(questions.filter((_, i) => i !== index))}

@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/lib/api';
 import { WorkspaceTestEditorPage } from './WorkspaceTestEditorPage';
 
+const uploadImage = vi.fn();
 const create = vi.fn();
 const version = vi.fn();
 const template = vi.fn();
@@ -21,6 +22,7 @@ vi.mock('./GenerateWorkspaceTestModal', () => ({
     ] } }); onClose(); }}>Использовать вопросы</button>,
 }));
 vi.mock('@/hooks/queries', () => ({
+  useUploadHomeworkQuestionImage: () => ({ mutateAsync: uploadImage, isPending: false }),
   useTestTemplate: (...args: unknown[]) => template(...args),
   useTestSubjectContext: () => subjectContext(),
   useCreateTestTemplateFromQuestions: () => ({ mutateAsync: create, isPending: false }),
@@ -38,6 +40,7 @@ function renderEditor(path: string) {
 beforeEach(() => {
   vi.clearAllMocks();
   vi.stubGlobal('crypto', { randomUUID: () => 'd4491979-e58d-4ad8-ac11-02bbf6c81e24' });
+  uploadImage.mockResolvedValue({ imageId: 'image-1', imageUrl: 'http://localhost/figure.png' });
   create.mockResolvedValue({ id: 7, version: 1 });
   version.mockResolvedValue({ id: 7, version: 2 });
   template.mockReturnValue({ data: undefined, isPending: false, isError: false, refetch: vi.fn() });
@@ -45,6 +48,37 @@ beforeEach(() => {
 });
 
 describe('WorkspaceTestEditorPage', () => {
+  it('сохраняет загруженный рисунок в новой версии без временного URL', async () => {
+    const user = userEvent.setup();
+    template.mockReturnValue({ data: { id: 7, title: 'Схемы', version: 1, subjectId: 1, definition: { questions: [
+      { type: 'OPEN_TEXT', text: 'Рассмотрите схему', maxScore: 1, imageId: 'old', imageUrl: 'http://localhost/old.png' },
+    ] } }, isPending: false, isError: false });
+    renderEditor('/workspace/tests/7/edit');
+    const file = new File(['png'], 'figure.png', { type: 'image/png' });
+    await user.upload(screen.getByLabelText('Файл рисунка к вопросу'), file);
+    await waitFor(() => expect(screen.getByAltText('Рисунок к вопросу')).toHaveAttribute('src', 'http://localhost/figure.png'));
+    await user.click(screen.getByRole('button', { name: 'Сохранить', exact: true }));
+    expect(version).toHaveBeenCalledWith(expect.objectContaining({ body: expect.objectContaining({
+      expectedVersion: 1, questions: [expect.objectContaining({ imageId: 'image-1' })],
+    }) }));
+    expect(JSON.stringify(version.mock.calls[0])).not.toContain('imageUrl');
+  });
+
+  it('снятый рисунок исчезает из запроса, ошибка загрузки оставляет прежний', async () => {
+    const user = userEvent.setup();
+    template.mockReturnValue({ data: { id: 7, title: 'Схемы', version: 1, subjectId: 1, definition: { questions: [
+      { type: 'OPEN_TEXT', text: 'Рассмотрите схему', maxScore: 1, imageId: 'old', imageUrl: 'http://localhost/old.png' },
+    ] } }, isPending: false, isError: false });
+    uploadImage.mockRejectedValue(new Error('network'));
+    renderEditor('/workspace/tests/7/edit');
+    await user.upload(screen.getByLabelText('Файл рисунка к вопросу'), new File(['png'], 'figure.png', { type: 'image/png' }));
+    await screen.findByRole('alert');
+    expect(screen.getByAltText('Рисунок к вопросу')).toHaveAttribute('src', 'http://localhost/old.png');
+    await user.click(screen.getByRole('button', { name: 'Удалить рисунок' }));
+    await user.click(screen.getByRole('button', { name: 'Сохранить', exact: true }));
+    expect(version.mock.calls[0][0].body.questions[0]).not.toHaveProperty('imageId');
+  });
+
   it('требует выбор при нескольких предметах и блокирует создание без назначений', async () => {
     subjectContext.mockReturnValue({data:{subjects:[{id:1,name:'Физика'},{id:2,name:'Химия'}]},isPending:false,isError:false});
     const user = userEvent.setup();

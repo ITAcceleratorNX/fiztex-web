@@ -13,6 +13,8 @@ export interface QuestionDraft {
   id?: number;
   type: HomeworkQuestionType;
   text: string;
+  imageId?: string;
+  imageUrl?: string;
   maxScore: number;
   referenceAnswer: string;
   gradingCriteria: string;
@@ -75,6 +77,8 @@ export function toDraft(question: HomeworkQuestion): QuestionDraft {
   return {
     localId: newLocalId(),
     id: question.id,
+    imageId: question.imageId,
+    imageUrl: question.imageUrl,
     type: (question.type ?? 'SINGLE_CHOICE') as HomeworkQuestionType,
     text: question.text ?? '',
     maxScore: Number(question.maxScore ?? 1),
@@ -102,6 +106,7 @@ export function toRequest(questions: QuestionDraft[]): SaveQuestionsRequest {
       return {
         type: question.type,
         text: question.text.trim(),
+        ...(question.imageId ? { imageId: question.imageId } : {}),
         maxScore: question.maxScore,
         referenceAnswer: question.referenceAnswer.trim() || undefined,
         gradingCriteria: question.gradingCriteria.trim() || undefined,

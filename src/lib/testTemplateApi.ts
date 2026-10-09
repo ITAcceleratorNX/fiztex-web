@@ -1,4 +1,4 @@
-import { request } from './api';
+import { request, requestMultipart } from './api';
 import type { Schema } from './apiSchemas';
 
 export type TestTemplateVersion = Schema<'HomeworkTestTemplateVersionView'>;
@@ -11,6 +11,11 @@ export type TestAiOverview = Schema<'HomeworkTestAiOverview'>;
 const root = '/teacher/workspace/tests';
 
 export const testTemplateApi = {
+  uploadImage: (file: File) => {
+    const body = new FormData();
+    body.append('file', file);
+    return requestMultipart<Schema<'HomeworkQuestionImageView'>>(`${root}/question-images`, body);
+  },
   subjectContext: (signal?: AbortSignal) => request<Schema<'TeacherTestSubjectContext'>>(`${root}/context`, { signal }),
   aiOverview: (signal?: AbortSignal) =>
     request<TestAiOverview>(`${root}/ai-generations/overview`, { signal }),

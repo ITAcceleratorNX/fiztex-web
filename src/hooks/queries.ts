@@ -570,6 +570,10 @@ export function useStartTestAiGeneration() {
   });
 }
 
+export function useUploadHomeworkQuestionImage() {
+  return useMutation({ mutationFn: testTemplateApi.uploadImage });
+}
+
 export function useTestTemplate(id: number | null) {
   return useQuery({
     queryKey: keys.testTemplate(id ?? 0),
