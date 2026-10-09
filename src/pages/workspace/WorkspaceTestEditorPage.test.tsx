@@ -142,7 +142,7 @@ describe('WorkspaceTestEditorPage', () => {
       definition: { questions: [{ ...oldQuestion, text: 'Правка другого учителя' }] } } });
     template.mockReturnValue({ data: { title: 'Механика', version: 3, definition: { questions: [oldQuestion] } },
       isPending: false, isError: false, refetch });
-    version.mockRejectedValue(new ApiError(409, 'У теста уже есть новая версия'));
+    version.mockRejectedValue(new ApiError(409, 'У теста уже есть новая версия', 'HOMEWORK_TEST_VERSION_CHANGED'));
     const user = userEvent.setup();
     renderEditor('/workspace/tests/7/edit');
     await user.clear(await screen.findByRole('textbox', { name: 'Текст вопроса 1' }));
@@ -152,6 +152,44 @@ describe('WorkspaceTestEditorPage', () => {
     expect(screen.getByRole('button', { name: 'Сохранить' })).toBeDisabled();
     await user.click(screen.getByRole('button', { name: 'Загрузить актуальную версию' }));
     expect(await screen.findByRole('textbox', { name: 'Текст вопроса 1' })).toHaveValue('Правка другого учителя');
+  });
+
+  it.each(['create', 'edit'] as const)('позволяет исправить химическую запись после отказа сервера (%s)', async (mode) => {
+    const chemicalText = 'Сравните $\\ce{CO}$ и $\\ce{Co}$';
+    const question = { type: 'OPEN_TEXT', text: chemicalText, maxScore: 1, imageId: 'old', imageUrl: 'http://localhost/old.png' };
+    template.mockReturnValue({ data: { title: 'Химия', version: 3, subjectId: 1, definition: { questions: [question] } },
+      isPending: false, isError: false, refetch: vi.fn() });
+    const save = mode === 'create' ? create : version;
+    save.mockRejectedValueOnce(new ApiError(409, 'Запись химических формул пока отключена', 'CHEMISTRY_AUTHORING_DISABLED'));
+    const user = userEvent.setup();
+    renderEditor(mode === 'create' ? '/workspace/tests/new' : '/workspace/tests/7/edit');
+    if (mode === 'create') {
+      await user.type(screen.getByRole('textbox', { name: 'Название теста' }), 'Химия');
+      await user.click(screen.getByRole('button', { name: 'Добавить вопрос' }));
+      await user.click(screen.getByRole('textbox', { name: 'Текст вопроса 1' }));
+      await user.paste(chemicalText);
+      await user.type(screen.getByRole('textbox', { name: 'Вариант 1' }), 'CO');
+      await user.type(screen.getByRole('textbox', { name: 'Вариант 2' }), 'Co');
+    } else {
+      await user.type(screen.getByRole('textbox', { name: 'Название теста' }), ' — правка');
+    }
+    // KaTeX MathML trips jsdom's accessible-name calculation for formula buttons.
+    // Find the save control by its text; rendering is verified in MathText tests and the browser.
+    const saveButton = screen.getByText('Сохранить', { exact: true }).closest('button')!;
+    await user.click(saveButton);
+    expect(await screen.findByRole('alert')).toHaveTextContent('Запись химических формул пока отключена');
+    expect(screen.queryByText('Загрузить актуальную версию')).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Текст вопроса 1' })).toHaveValue(chemicalText);
+    expect(saveButton).toBeEnabled();
+    if (mode === 'edit') expect(screen.getByAltText('Рисунок к вопросу')).toHaveAttribute('src', question.imageUrl);
+    await user.clear(screen.getByRole('textbox', { name: 'Текст вопроса 1' }));
+    await user.type(screen.getByRole('textbox', { name: 'Текст вопроса 1' }), 'Вычислите $2+2$');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    await user.click(saveButton);
+    expect(await screen.findByText('Раздел тестов')).toBeInTheDocument();
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(save.mock.calls[1][0].body.questions[0].text).toBe('Вычислите $2+2$');
+    if (mode === 'edit') expect(save.mock.calls[1][0].body.questions[0].imageId).toBe('old');
   });
 
   it('переносит вопросы ИИ в черновик и сохраняет происхождение при явном сохранении', async () => {

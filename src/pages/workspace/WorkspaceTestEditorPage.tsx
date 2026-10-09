@@ -108,7 +108,8 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
       navigate(returnTo);
     } catch (caught) {
       setSaveError(caught instanceof ApiError ? caught.message : 'Не удалось сохранить тест');
-      if (caught instanceof ApiError && caught.status === 409) setConflict(true);
+      if (mode === 'edit' && caught instanceof ApiError && caught.status === 409
+        && caught.code === 'HOMEWORK_TEST_VERSION_CHANGED') setConflict(true);
     }
   }
 
