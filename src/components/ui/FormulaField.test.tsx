@@ -10,7 +10,13 @@ import { FormulaField } from './FormulaField';
  * и события.
  */
 vi.mock('mathlive', () => {
-  Object.assign(window, { mathVirtualKeyboard: { layouts: [] } });
+  const keyboard = Object.assign(new EventTarget(), {
+    layouts: [], container: null as HTMLElement | null, visible: false,
+    boundingRect: { height: 0 },
+    show() { this.visible = true; this.boundingRect.height = 200; this.dispatchEvent(new Event('geometrychange')); },
+    hide() { this.visible = false; this.boundingRect.height = 0; this.dispatchEvent(new Event('geometrychange')); },
+  });
+  Object.assign(window, { mathVirtualKeyboard: keyboard });
   class FakeMathfield {
     static fontsDirectory: string | null = '';
     static soundsDirectory: string | null = '';
@@ -49,6 +55,27 @@ function latexInput(): HTMLInputElement | HTMLTextAreaElement {
 }
 
 describe('FormulaField', () => {
+  it('размещает клавиатуру внутри диалога, скрывает по кнопке и при закрытии без потери формулы', async () => {
+    const user = userEvent.setup();
+    render(<FormulaField value="Дано $x^2$" onChange={vi.fn()} />);
+    await user.click(screen.getByTitle('Изменить формулу'));
+    await waitFor(() => expect(button('Показать клавиатуру')).toBeInTheDocument());
+    expect(window.mathVirtualKeyboard.container).toBe(document.querySelector('[data-formula-keyboard]'));
+    expect(document.querySelector('[role="dialog"]')).toContainElement(window.mathVirtualKeyboard.container);
+    await user.click(button('Показать клавиатуру'));
+    expect(button('Скрыть клавиатуру')).toHaveAttribute('aria-expanded', 'true');
+    await user.click(button('Скрыть клавиатуру'));
+    expect(window.mathVirtualKeyboard.visible).toBe(false);
+    expect(latexInput()).toHaveValue('x^2');
+    await user.click(button('Показать клавиатуру'));
+    await user.click(button('Отмена'));
+    expect(window.mathVirtualKeyboard.visible).toBe(false);
+    expect(window.mathVirtualKeyboard.container).toBeNull();
+    await user.click(screen.getByTitle('Изменить формулу'));
+    await waitFor(() => expect(button('Показать клавиатуру')).toBeInTheDocument());
+    expect(latexInput()).toHaveValue('x^2');
+  });
+
   it('вставляет собранную формулу на позицию курсора', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();

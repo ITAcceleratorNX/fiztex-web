@@ -42,8 +42,12 @@ export function FormulaEditorModal({
   const [latex, setLatex] = useState(initialLatex);
   const [display, setDisplay] = useState(initialDisplay);
   const [visualReady, setVisualReady] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const hostRef = useRef<HTMLDivElement>(null);
+  const keyboardHostRef = useRef<HTMLDivElement>(null);
   const fieldRef = useRef<MathfieldLike | null>(null);
+  const keyboardRef = useRef<typeof window.mathVirtualKeyboard | null>(null);
   // Значение, которое пришло из самого поля: не пишем его обратно и не сбиваем курсор.
   const fromFieldRef = useRef<string | null>(null);
 
@@ -57,7 +61,13 @@ export function FormulaEditorModal({
     if (!open) return;
     let cancelled = false;
     let field: MathfieldLike | null = null;
+    let keyboard: typeof window.mathVirtualKeyboard | null = null;
     let previousLayouts: typeof window.mathVirtualKeyboard.layouts | undefined;
+    let previousContainer: HTMLElement | null | undefined;
+    const syncKeyboard = () => {
+      setKeyboardVisible(keyboard?.visible ?? false);
+      setKeyboardHeight(keyboard?.visible ? keyboard.boundingRect.height : 0);
+    };
 
     void (async () => {
       try {
@@ -69,8 +79,18 @@ export function FormulaEditorModal({
         mathlive.MathfieldElement.soundsDirectory = null;
 
         field = new mathlive.MathfieldElement() as unknown as MathfieldLike;
-        previousLayouts = window.mathVirtualKeyboard.layouts;
-        window.mathVirtualKeyboard.layouts = ['numeric', 'symbols', 'alphabetic',
+        keyboard = window.mathVirtualKeyboard;
+        previousLayouts = keyboard.layouts;
+        previousContainer = keyboard.container;
+        keyboard.hide({ animate: false });
+        // Modal makes everything outside its dialog inert, including MathLive's
+        // default body-level keyboard. The fixed host stays inside the dialog but
+        // anchors the keys to the viewport even when the palette is taller than it.
+        keyboard.container = keyboardHostRef.current;
+        keyboard.addEventListener('geometrychange', syncKeyboard);
+        keyboardRef.current = keyboard;
+        syncKeyboard();
+        keyboard.layouts = ['numeric', 'symbols', 'alphabetic',
           ...(profile === 'PHYSICS' || profile === 'CHEMISTRY' ? [{
             label: FORMULA_PROFILES[profile], rows: catalog[profile].flatMap(group => {
               const keys = group.items.map(item => ({ latex: item.latex, insert: item.insert, tooltip: item.label }));
@@ -97,7 +117,15 @@ export function FormulaEditorModal({
 
     return () => {
       cancelled = true;
-      if (previousLayouts) window.mathVirtualKeyboard.layouts = previousLayouts;
+      if (keyboard) {
+        keyboard.removeEventListener('geometrychange', syncKeyboard);
+        keyboard.hide({ animate: false });
+        keyboard.container = previousContainer ?? null;
+        if (previousLayouts) keyboard.layouts = previousLayouts;
+      }
+      keyboardRef.current = null;
+      setKeyboardVisible(false);
+      setKeyboardHeight(0);
       fieldRef.current = null;
       setVisualReady(false);
       (field as unknown as HTMLElement | null)?.remove();
@@ -111,6 +139,17 @@ export function FormulaEditorModal({
     if (fromFieldRef.current === latex) return;
     if (field.value !== latex) field.value = latex;
   }, [latex]);
+
+  function toggleKeyboard() {
+    const keyboard = keyboardRef.current;
+    if (!keyboard) return;
+    if (keyboard.visible) keyboard.hide();
+    else {
+      fieldRef.current?.focus();
+      keyboard.show();
+    }
+    setKeyboardVisible(keyboard.visible);
+  }
 
   function insert(snippet: Snippet) {
     const field = fieldRef.current;
@@ -149,9 +188,17 @@ export function FormulaEditorModal({
         </>
       }
     >
-      <div className="space-y-4">
+      <div ref={keyboardHostRef} data-formula-keyboard className="fixed inset-x-0 bottom-0 z-50"
+        style={{ height: keyboardHeight }} />
+      <div className="space-y-4" style={{ paddingBottom: keyboardHeight || undefined }}>
         <div>
-          <label className="label-base">Формула</label>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <label className="label-base">Формула</label>
+            {visualReady && <Button type="button" variant="secondary" size="sm" aria-expanded={keyboardVisible}
+              onClick={toggleKeyboard}>
+              {keyboardVisible ? 'Скрыть клавиатуру' : 'Показать клавиатуру'}
+            </Button>}
+          </div>
           <div
             ref={hostRef}
             className="rounded-xl border border-slate-200 bg-white px-3 py-2 focus-within:border-brand-300"
