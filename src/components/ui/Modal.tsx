@@ -16,6 +16,10 @@ interface ModalProps {
   children: ReactNode;
   footer?: ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Keep the header/footer visible and scroll only the contents of a long editor. */
+  scrollable?: boolean;
+  /** Reserve viewport space for a virtual keyboard. */
+  bottomInset?: number;
 }
 
 type ModalEntry = {
@@ -239,7 +243,7 @@ function registerModal(entry: ModalEntry) {
   };
 }
 
-export function Modal({ open, onClose, title, subtitle, children, footer, size = 'md' }: ModalProps) {
+export function Modal({ open, onClose, title, subtitle, children, footer, size = 'md', scrollable = false, bottomInset = 0 }: ModalProps) {
   const titleId = useId();
   const subtitleId = useId();
   const layerRef = useRef<HTMLDivElement>(null);
@@ -282,7 +286,8 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
       ref={layerRef}
       data-modal-layer
       onKeyDown={(event) => onDialogKeyDown(entryRef.current, event)}
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-8"
+      style={bottomInset ? { bottom: bottomInset } : undefined}
+      className={cx('fixed inset-0 z-50 flex justify-center p-4 sm:p-8', scrollable ? 'items-center overflow-hidden' : 'items-start overflow-y-auto')}
     >
       <div
         className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
@@ -298,10 +303,11 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
         tabIndex={-1}
         className={cx(
           'relative my-auto w-full rounded-2xl bg-white shadow-pop animate-scale-in',
+          scrollable && 'flex max-h-full flex-col overflow-hidden',
           sizes[size],
         )}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-line px-4 py-5 sm:px-6">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-line px-4 py-5 sm:px-6">
           <div className="min-w-0 flex-1">
             <h2 id={titleId} className="break-words text-lg font-bold text-ink">{title}</h2>
             {subtitle && <p id={subtitleId} className="mt-1 break-words text-sm leading-relaxed text-muted">{subtitle}</p>}
@@ -316,9 +322,9 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <div className="min-w-0 px-4 py-5 sm:px-6">{children}</div>
+        <div className={cx('min-w-0 px-4 py-5 sm:px-6', scrollable && 'min-h-0 overflow-y-auto overscroll-contain')}>{children}</div>
         {footer && (
-          <div className="flex flex-wrap items-center justify-end gap-3 border-t border-line px-4 py-4 sm:px-6">
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-line px-4 py-4 sm:px-6">
             {footer}
           </div>
         )}

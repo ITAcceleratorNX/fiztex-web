@@ -103,7 +103,7 @@ export function TabsTrigger({
     }
   };
 
-  // Only the selected panel is mounted, so inactive tabs must not reference missing IDs.
+  // Inactive panels may be unmounted, so their tabs must not reference missing IDs.
   return (
     <button
       type="button"
@@ -137,19 +137,23 @@ export function TabsContent({
   value,
   children,
   className,
+  forceMount = false,
 }: {
   value: string;
   children: ReactNode;
   className?: string;
+  /** Preserve editor drafts and DOM integrations while hiding an inactive panel. */
+  forceMount?: boolean;
 }) {
   const { value: active, baseId } = useTabsContext('TabsContent');
-  if (active !== value) return null;
+  if (active !== value && !forceMount) return null;
 
   return (
     <div
       role="tabpanel"
       id={`${baseId}-panel-${value}`}
       aria-labelledby={`${baseId}-tab-${value}`}
+      hidden={active !== value}
       tabIndex={0}
       className={className}
     >
