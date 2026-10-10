@@ -329,14 +329,15 @@ export function HomeworkCardPage() {
         currentText={homework.description}
         currentQuestionCount={homework.questionCount ?? 0}
         busy={applyAi.isPending || discardAi.isPending}
-        onApply={() => {
+        applyingMode={applyAi.isPending ? applyAi.variables?.mode : undefined}
+        onApply={(mode) => {
           if (awaitingAiJob?.id == null) return;
-          applyAi.mutate(awaitingAiJob.id, {
+          applyAi.mutate({ jobId: awaitingAiJob.id, mode }, {
             onSuccess: () => {
               setCompareOpen(false);
-              toast.success('Новый вариант в задании');
+              toast.success(mode === 'APPEND' ? 'Новые вопросы добавлены к текущему тесту' : 'Новый вариант в задании');
             },
-            onError: () => toast.error('Не удалось применить результат'),
+            onError: (error) => toast.error(error instanceof ApiError ? error.message : 'Не удалось применить результат'),
           });
         }}
         onDiscard={() => {
@@ -344,7 +345,7 @@ export function HomeworkCardPage() {
           discardAi.mutate(awaitingAiJob.id, {
             onSuccess: () => {
               setCompareOpen(false);
-              toast.success('Оставили ваш текст');
+              toast.success(awaitingAiJob.kind === 'TEST' ? 'Текущий тест сохранён' : 'Оставили ваш текст');
             },
             onError: () => toast.error('Не удалось отклонить вариант'),
           });
@@ -366,7 +367,7 @@ export function HomeworkCardPage() {
         confirmLabel="Сгенерировать"
         message={
           confirmRegenerate === 'TEST'
-            ? 'В задании уже есть вопросы. Ваши правки не пропадут: новый набор не заменит их сам — вы сравните варианты и решите, какой оставить.'
+            ? 'В задании уже есть вопросы. После генерации вы сможете добавить новые вопросы к текущим, заменить весь набор или оставить текущий тест.'
             : 'В задании уже есть текст. Ваши правки не пропадут: новый вариант не заменит их сам — вы сравните варианты и решите, какой оставить.'
         }
       />

@@ -211,7 +211,7 @@ describe('WorkspaceTestEditorPage', () => {
     await user.type(screen.getByRole('textbox', { name: 'Текст вопроса 1' }), 'Мой вопрос');
     await user.click(screen.getByRole('button', { name: 'Сгенерировать с ИИ' }));
     await user.click(screen.getByRole('button', { name: 'Использовать вопросы' }));
-    expect(screen.getByText('Заменить вопросы теста?')).toBeInTheDocument();
+    expect(screen.getByText('Как использовать вопросы ИИ?')).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Текст вопроса 1', hidden: true })).toHaveValue('Мой вопрос');
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Отмена' }));
     expect(screen.getByRole('textbox', { name: 'Текст вопроса 1' })).toHaveValue('Мой вопрос');
@@ -219,6 +219,60 @@ describe('WorkspaceTestEditorPage', () => {
     await user.click(screen.getByRole('button', { name: 'Использовать вопросы' }));
     await user.click(screen.getByRole('button', { name: 'Заменить вопросы' }));
     expect(screen.getByRole('textbox', { name: 'Текст вопроса 1' })).toHaveValue('Вопрос от ИИ');
+  });
+
+  it('добавляет вопросы ИИ к ручному черновику без потери названия, вариантов и рисунка', async () => {
+    const user = userEvent.setup();
+    renderEditor('/workspace/tests/new');
+    await user.type(screen.getByRole('textbox', { name: 'Название теста' }), 'Мой тест');
+    await user.click(screen.getByRole('button', { name: 'Добавить вопрос' }));
+    await user.type(screen.getByRole('textbox', { name: 'Текст вопроса 1' }), 'Мой вопрос');
+    await user.type(screen.getByRole('textbox', { name: 'Вариант 1' }), 'Да');
+    await user.type(screen.getByRole('textbox', { name: 'Вариант 2' }), 'Нет');
+    await user.upload(screen.getByLabelText('Файл рисунка к вопросу'), new File(['png'], 'figure.png', { type: 'image/png' }));
+    await screen.findByAltText('Рисунок к вопросу');
+    await user.click(screen.getByRole('button', { name: 'Сгенерировать с ИИ' }));
+    await user.click(screen.getByRole('button', { name: 'Использовать вопросы' }));
+    await user.click(screen.getByRole('button', { name: 'Добавить к текущим' }));
+    expect(screen.getByRole('textbox', { name: 'Текст вопроса 1' })).toHaveValue('Мой вопрос');
+    expect(screen.getByRole('textbox', { name: 'Текст вопроса 2' })).toHaveValue('Вопрос от ИИ');
+    expect(screen.getByAltText('Рисунок к вопросу')).toHaveAttribute('src', 'http://localhost/figure.png');
+    expect(create).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }));
+    await waitFor(() => expect(create).toHaveBeenCalledWith({ body: {
+      title: 'Мой тест', subjectId: 1, aiJobId: 19, questions: [
+        expect.objectContaining({ text: 'Мой вопрос', imageId: 'image-1', options: [
+          { text: 'Да', correct: true }, { text: 'Нет', correct: false },
+        ] }),
+        expect.objectContaining({ text: 'Вопрос от ИИ', referenceAnswer: 'Ответ' }),
+      ],
+    }, key: expect.any(String) }));
+    expect(JSON.stringify(create.mock.calls[0])).not.toContain('imageUrl');
+  });
+
+  it('добавляет вопросы в новую версию, сохраняя несохранённые правки и настройки старых', async () => {
+    template.mockReturnValue({ data: { id: 7, title: 'Схемы', version: 3, subjectId: 1, definition: { questions: [{
+      type: 'OPEN_TEXT', text: 'Рассмотрите схему', maxScore: 3.5, referenceAnswer: 'Эталон', gradingCriteria: 'Объясните',
+      imageId: 'old', imageUrl: 'http://localhost/old.png', allowPhoto: true, maxPhotos: 3, aiGenerated: true,
+    }] } }, isPending: false, isError: false });
+    const user = userEvent.setup();
+    renderEditor('/workspace/tests/7/edit');
+    await user.type(await screen.findByRole('textbox', { name: 'Текст вопроса 1' }), ' и объясните');
+    await user.click(screen.getByRole('button', { name: 'Сгенерировать с ИИ' }));
+    await user.click(screen.getByRole('button', { name: 'Использовать вопросы' }));
+    await user.click(screen.getByRole('button', { name: 'Добавить к текущим' }));
+    expect(screen.getByRole('textbox', { name: 'Текст вопроса 1' })).toHaveValue('Рассмотрите схему и объясните');
+    expect(screen.getByRole('textbox', { name: 'Текст вопроса 2' })).toHaveValue('Вопрос от ИИ');
+    expect(screen.getByAltText('Рисунок к вопросу')).toHaveAttribute('src', 'http://localhost/old.png');
+    expect(version).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }));
+    await waitFor(() => expect(version).toHaveBeenCalledWith({ body: {
+      expectedVersion: 3, title: 'Схемы', subjectId: 1, aiJobId: 19, questions: [
+        expect.objectContaining({ text: 'Рассмотрите схему и объясните', maxScore: 3.5, imageId: 'old',
+          referenceAnswer: 'Эталон', gradingCriteria: 'Объясните', allowPhoto: true, maxPhotos: 3 }),
+        expect.objectContaining({ text: 'Вопрос от ИИ' }),
+      ],
+    }, key: expect.any(String) }));
   });
 
   it('не подменяет базовую версию черновика после фонового обновления', async () => {

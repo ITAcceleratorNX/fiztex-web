@@ -2594,7 +2594,7 @@ export function useStartHomeworkAiGeneration(homeworkId: number) {
 }
 
 /** Применение и возврат меняют содержимое задания — сбрасываем и его, и вопросы. */
-function useHomeworkAiResultCommand(mutationFn: (jobId: number) => Promise<unknown>) {
+function useHomeworkAiResultCommand<TVariables>(mutationFn: (variables: TVariables) => Promise<unknown>) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn,
@@ -2608,7 +2608,9 @@ function useHomeworkAiResultCommand(mutationFn: (jobId: number) => Promise<unkno
 }
 
 export function useApplyHomeworkAiResult(homeworkId: number) {
-  return useHomeworkAiResultCommand((jobId: number) => homeworkAiApi.apply(homeworkId, jobId));
+  return useHomeworkAiResultCommand((input: {
+    jobId: number; mode?: import('@/lib/homeworkAiApi').HomeworkAiApplyMode;
+  }) => homeworkAiApi.apply(homeworkId, input.jobId, input.mode));
 }
 
 /**

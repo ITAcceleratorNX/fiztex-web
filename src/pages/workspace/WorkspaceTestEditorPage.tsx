@@ -15,6 +15,7 @@ import { ApiError } from '@/lib/api';
 import { ROUTES } from '@/lib/routes';
 import type { TestAiJob } from '@/lib/testTemplateApi';
 import { GenerateWorkspaceTestModal } from './GenerateWorkspaceTestModal';
+import { WorkspaceAiApplyModal } from './WorkspaceAiApplyModal';
 import {
   emptyQuestion, move, toDraft, toRequest, validateQuestions, type QuestionDraft,
 } from '@/pages/homework/homeworkQuestionsModel';
@@ -40,7 +41,7 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
   const [baseVersion, setBaseVersion] = useState<number>();
   const [aiJobId, setAiJobId] = useState<number>();
   const [generating, setGenerating] = useState(false);
-  const [replacement, setReplacement] = useState<TestAiJob | null>(null);
+  const [generatedResult, setGeneratedResult] = useState<TestAiJob | null>(null);
   const [questions, setQuestions] = useState<QuestionDraft[]>([]);
   const [initialized, setInitialized] = useState(mode === 'create');
   const [dirty, setDirty] = useState(false);
@@ -131,16 +132,22 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
     saveKey.current = crypto.randomUUID();
   }
 
-  function useGenerated(job: TestAiJob) {
-    if (job.id == null || !job.result?.questions?.length) return;
+  function useGenerated(job: TestAiJob, mode: 'REPLACE' | 'APPEND' = 'REPLACE') {
+    if (saving || job.id == null || !job.result?.questions?.length) return;
     if (job.subjectId !== subjectId) {
       toast.error('Предмет генерации изменился. Запустите генерацию для выбранного предмета.');
       return;
     }
-    changed(job.result.questions.map(toDraft));
+    const incoming = job.result.questions.map(toDraft);
+    const next = mode === 'APPEND' ? [...questions, ...incoming] : incoming;
+    if (next.length > 50) {
+      toast.error('В одном тесте может быть до 50 вопросов. Уменьшите число вопросов или замените текущие.');
+      return;
+    }
+    changed(next);
     setAiJobId(job.id);
     if (!title.trim()) changeTitle(job.request?.topic ?? '');
-    setReplacement(null);
+    setGeneratedResult(null);
     setShowProblems(false);
   }
 
@@ -182,7 +189,7 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
       {subjects.length > 0 && <Field label="Предмет теста" required>
         <Select value={subjectId ?? ''} disabled={saving || generating} onChange={(event) => {
           setSubjectId(Number(event.target.value) || undefined);
-          setAiJobId(undefined); setReplacement(null); setDirty(true);
+          setAiJobId(undefined); setGeneratedResult(null); setDirty(true);
           saveKey.current = crypto.randomUUID();
           if (questions.length) toast.info('Предмет изменён. Проверьте существующие вопросы перед сохранением.');
         }}>
@@ -244,10 +251,10 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
       </div>
     </div>
     {generating && subjectId != null && <GenerateWorkspaceTestModal initialTopic={title} subjectId={subjectId} onClose={() => setGenerating(false)}
-      onUse={(job) => { if (questions.length > 0) setReplacement(job); else useGenerated(job); }} />}
-    <ConfirmDialog open={replacement != null} onClose={() => setReplacement(null)} onConfirm={() => { if (replacement) useGenerated(replacement); }}
-      title="Заменить вопросы теста?" message="Текущие вопросы в редакторе будут заменены результатом генерации. Изменения вступят в силу после сохранения теста."
-      confirmLabel="Заменить вопросы" />
+      onUse={(job) => { if (questions.length > 0) setGeneratedResult(job); else useGenerated(job); }} />}
+    <WorkspaceAiApplyModal job={generatedResult} currentQuestionCount={questions.length} busy={saving}
+      onClose={() => setGeneratedResult(null)}
+      onApply={(mode) => { if (generatedResult) useGenerated(generatedResult, mode); }} />
     <ConfirmDialog open={leaving != null} onClose={() => setLeaving(null)} onConfirm={() => navigate(leaving ?? returnTo)}
       title="Уйти без сохранения?" message="Изменения теста не сохранены и будут потеряны."
       confirmLabel="Уйти" danger />

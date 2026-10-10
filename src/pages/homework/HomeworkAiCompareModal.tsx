@@ -1,10 +1,11 @@
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { MathText } from '@/components/ui/MathText';
+import { NoticeBar } from '@/components/ui/NoticeBar';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useHomeworkAiResult } from '@/hooks/queries';
 import { pluralRu } from '@/lib/format';
-import type { HomeworkAiJob, HomeworkAiResult } from '@/lib/homeworkAiApi';
+import type { HomeworkAiApplyMode, HomeworkAiJob, HomeworkAiResult } from '@/lib/homeworkAiApi';
 
 /**
  * Свой вариант против машинного — рядом, до решения.
@@ -28,6 +29,7 @@ export function HomeworkAiCompareModal({
   currentText,
   currentQuestionCount,
   busy,
+  applyingMode,
   onApply,
   onDiscard,
 }: {
@@ -40,12 +42,18 @@ export function HomeworkAiCompareModal({
   /** Что сейчас в задании: число вопросов для теста. */
   currentQuestionCount: number;
   busy: boolean;
-  onApply: () => void;
+  applyingMode?: HomeworkAiApplyMode;
+  onApply: (mode: HomeworkAiApplyMode) => void;
   onDiscard: () => void;
 }) {
   const jobId = open && job?.id != null ? job.id : null;
   const query = useHomeworkAiResult(homeworkId, jobId);
   const isTest = job?.kind === 'TEST';
+  const newQuestionCount = query.data?.questions?.length ?? 0;
+  const canAppend = isTest && currentQuestionCount > 0;
+  const exceedsLimit = currentQuestionCount + newQuestionCount > 50;
+  const hasContent = isTest ? newQuestionCount > 0 : Boolean(query.data?.text?.trim());
+  const applyDisabled = busy || query.isPending || query.isError || !hasContent;
 
   return (
     <Modal
@@ -85,13 +93,28 @@ export function HomeworkAiCompareModal({
           </div>
         )}
 
+        {canAppend && hasContent && !query.isPending && !query.isError ? (
+          <NoticeBar tone="soft">
+            {exceedsLimit
+              ? `При добавлении получится ${currentQuestionCount + newQuestionCount} вопросов. В тесте может быть не более 50 вопросов. Уменьшите новый набор или замените текущий.`
+              : `Новые вопросы будут добавлены в конец теста. Всего получится ${currentQuestionCount + newQuestionCount} ${pluralRu(currentQuestionCount + newQuestionCount, ['вопрос', 'вопроса', 'вопросов'])}.`}
+          </NoticeBar>
+        ) : null}
+
         <div className="flex flex-wrap justify-end gap-2">
           <Button variant="secondary" onClick={onDiscard} disabled={busy || query.isPending}>
-            Оставить мой
+            {isTest ? 'Оставить текущий тест' : 'Оставить мой'}
           </Button>
-          <Button onClick={onApply} loading={busy} disabled={query.isPending || query.isError}>
-            {isTest ? 'Взять машинные вопросы' : 'Взять машинный текст'}
+          <Button variant={canAppend ? 'secondary' : 'primary'} onClick={() => onApply('REPLACE')}
+            loading={busy && applyingMode === 'REPLACE'} disabled={applyDisabled}>
+            {isTest ? (canAppend ? 'Заменить текущие вопросы' : 'Добавить вопросы') : 'Взять машинный текст'}
           </Button>
+          {canAppend ? (
+            <Button onClick={() => onApply('APPEND')} loading={busy && applyingMode === 'APPEND'}
+              disabled={applyDisabled || exceedsLimit}>
+              Добавить к текущим
+            </Button>
+          ) : null}
         </div>
       </div>
     </Modal>
