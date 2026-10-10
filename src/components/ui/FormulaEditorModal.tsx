@@ -41,6 +41,7 @@ export function FormulaEditorModal({
 }) {
   const [latex, setLatex] = useState(initialLatex);
   const [display, setDisplay] = useState(initialDisplay);
+  const [mathEditorVisible, setMathEditorVisible] = useState(profile !== 'CHEMISTRY');
   const [visualReady, setVisualReady] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -55,7 +56,8 @@ export function FormulaEditorModal({
     if (!open) return;
     setLatex(initialLatex);
     setDisplay(initialDisplay);
-  }, [open, initialLatex, initialDisplay]);
+    setMathEditorVisible(profile !== 'CHEMISTRY');
+  }, [open, initialLatex, initialDisplay, profile]);
 
   useEffect(() => {
     if (!open) return;
@@ -108,7 +110,7 @@ export function FormulaEditorModal({
         hostRef.current?.replaceChildren(field as unknown as Node);
         fieldRef.current = field;
         setVisualReady(true);
-        field.focus();
+        if (profile !== 'CHEMISTRY') field.focus();
       } catch {
         // Остаётся путь через поле разметки и палитру — окно не должно ломаться целиком.
         setVisualReady(false);
@@ -174,7 +176,7 @@ export function FormulaEditorModal({
     <Modal
       open={open}
       onClose={onClose}
-      size="lg"
+      size={profile === 'CHEMISTRY' ? '2xl' : 'lg'}
       title={`Формула · ${FORMULA_PROFILES[profile]}`}
       subtitle="Соберите формулу мышью или наберите с клавиатуры — знание LaTeX не нужно"
       footer={
@@ -191,7 +193,14 @@ export function FormulaEditorModal({
       <div ref={keyboardHostRef} data-formula-keyboard className="fixed inset-x-0 bottom-0 z-50"
         style={{ height: keyboardHeight }} />
       <div className="space-y-4" style={{ paddingBottom: keyboardHeight || undefined }}>
-        <div>
+        {profile === 'CHEMISTRY' && <>
+          <ChemicalExpressionEditor allowCreate latex={latex} onChange={value => { fromFieldRef.current = null; setLatex(value); }} />
+          <Button type="button" variant="secondary" aria-expanded={mathEditorVisible}
+            onClick={() => { setMathEditorVisible(value => !value); keyboardRef.current?.hide(); }}>
+            {mathEditorVisible ? 'Скрыть математический редактор' : 'Математические обозначения'}
+          </Button>
+        </>}
+        <div hidden={!mathEditorVisible}>
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <label className="label-base">Формула</label>
             {visualReady && <Button type="button" variant="secondary" size="sm" aria-expanded={keyboardVisible}
@@ -215,9 +224,9 @@ export function FormulaEditorModal({
           )}
         </div>
 
-        <ChemicalExpressionEditor latex={latex} onChange={value => { fromFieldRef.current = null; setLatex(value); }} />
+        {profile !== 'CHEMISTRY' && <ChemicalExpressionEditor latex={latex} onChange={value => { fromFieldRef.current = null; setLatex(value); }} />}
 
-        <div className="space-y-3">
+        <div className="space-y-3" hidden={!mathEditorVisible}>
           {palette.map((group) => (
             <div key={group.title}>
               <p className="mb-1.5 text-11 font-semibold uppercase tracking-wide text-slate-400">
@@ -247,7 +256,7 @@ export function FormulaEditorModal({
             onChange={(e) => setDisplay(e.target.checked)}
             className="h-4 w-4 accent-brand-500"
           />
-          Отдельным блоком (для системы уравнений или матрицы)
+          {profile === 'CHEMISTRY' ? 'Отдельным блоком (для длинной реакции)' : 'Отдельным блоком (для системы уравнений или матрицы)'}
         </label>
 
         <div className="rounded-xl bg-slate-50 px-4 py-3">
@@ -260,7 +269,7 @@ export function FormulaEditorModal({
         </div>
 
         {visualReady && (
-          <div>
+          <div hidden={!mathEditorVisible}>
             <label className="label-base">Разметка (для тех, кто знает LaTeX)</label>
             <input
               value={latex}

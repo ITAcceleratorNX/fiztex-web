@@ -29,3 +29,20 @@ export function speciesExpression(species: string, charge: string, mass: string,
 export function reactionExpression(left: string, right: string, arrow: string, condition: string): string {
   return `${left} ${arrow}${condition ? `[${condition}]` : ''} ${right}`;
 }
+
+/** Plain mhchem input keeps its case and surroundings; groups wrap a selection. */
+export function insertChemicalText(value: string, start: number, end: number, token: string): { value: string; caret: number } {
+  const from = Math.max(0, Math.min(start, value.length));
+  const to = Math.max(from, Math.min(end, value.length));
+  const group = token === '()' || token === '[]';
+  const insertion = group ? token[0] + value.slice(from, to) + token[1] : token;
+  return { value: value.slice(0, from) + insertion + value.slice(to),
+    caret: from + (group && from === to ? 1 : insertion.length) };
+}
+
+export function eraseChemicalText(value: string, start: number, end: number): { value: string; caret: number } {
+  const from = Math.max(0, Math.min(start, value.length));
+  const to = Math.max(from, Math.min(end, value.length));
+  const deleteFrom = from === to ? Math.max(0, from - 1) : from;
+  return { value: value.slice(0, deleteFrom) + value.slice(to), caret: deleteFrom };
+}
