@@ -41,6 +41,10 @@ const originalInert = new Map<HTMLElement, boolean>();
 let originalBodyOverflow: string | null = null;
 let modalObserver: MutationObserver | null = null;
 
+function notificationRegions(): HTMLElement[] {
+  return Array.from(document.body.querySelectorAll<HTMLElement>('[data-modal-notifications]'));
+}
+
 function setElementInert(element: HTMLElement, inert: boolean) {
   element.inert = inert;
   if (inert) element.setAttribute('inert', '');
@@ -93,6 +97,7 @@ function getFocusFallback(): HTMLElement | null {
 function syncModalEnvironment() {
   const top = modalStack.at(-1);
   if (!top) {
+    notificationRegions().forEach(region => { region.style.zIndex = ''; });
     modalObserver?.disconnect();
     modalObserver = null;
     for (const [element, wasInert] of originalInert) setElementInert(element, wasInert);
@@ -107,7 +112,8 @@ function syncModalEnvironment() {
   if (originalBodyOverflow === null) originalBodyOverflow = document.body.style.overflow;
   document.body.style.overflow = 'hidden';
 
-  // Keep only the active dialog and its ancestor path interactive. This also covers
+  // Keep the active dialog and the explicitly marked global toast portal interactive.
+  // All other page content and lower dialogs remain inert. This also covers
   // sibling page content when a modal is rendered deep inside the application tree.
   const activeBranch = new Set<HTMLElement>();
   for (
@@ -118,6 +124,11 @@ function syncModalEnvironment() {
     activeBranch.add(element);
   }
   top.layer.querySelectorAll<HTMLElement>('*').forEach((element) => activeBranch.add(element));
+  notificationRegions().forEach((region) => {
+    activeBranch.add(region);
+    region.querySelectorAll<HTMLElement>('*').forEach((element) => activeBranch.add(element));
+    region.style.zIndex = String(100 + modalStack.length * 10);
+  });
 
   document.body.querySelectorAll<HTMLElement>('*').forEach((element) => {
     if (!originalInert.has(element)) {
@@ -135,7 +146,7 @@ function syncModalEnvironment() {
 function onDocumentKeyDown(event: KeyboardEvent) {
   const top = modalStack.at(-1);
   if (!top || event.key !== 'Tab') return;
-  const focusable = getFocusableElements(top.dialog);
+  const focusable = [...getFocusableElements(top.dialog), ...notificationRegions().flatMap(getFocusableElements)];
   if (focusable.length === 0) {
     event.preventDefault();
     focusElement(top.dialog);
@@ -145,10 +156,11 @@ function onDocumentKeyDown(event: KeyboardEvent) {
   const first = focusable[0];
   const last = focusable[focusable.length - 1];
   const active = document.activeElement;
-  if (event.shiftKey && (active === first || !top.dialog.contains(active))) {
+  const inside = focusable.includes(active as HTMLElement);
+  if (event.shiftKey && (active === first || !inside)) {
     event.preventDefault();
     focusElement(last);
-  } else if (!event.shiftKey && (active === last || !top.dialog.contains(active))) {
+  } else if (!event.shiftKey && (active === last || !inside)) {
     event.preventDefault();
     focusElement(first);
   }
@@ -158,6 +170,7 @@ function onDialogKeyDown(entry: ModalEntry | null, event: ReactKeyboardEvent<HTM
   if (!entry || modalStack.at(-1) !== entry || event.key !== 'Escape' || event.defaultPrevented) return;
 
   const target = event.target instanceof HTMLElement ? event.target : null;
+  if (target?.closest('[data-modal-notifications]')) return;
   // Select and MultiSelect stop propagation after closing their listbox, so Escape
   // reaches this handler on the next press and closes the dialog.
   if (
@@ -172,7 +185,8 @@ function onDialogKeyDown(entry: ModalEntry | null, event: ReactKeyboardEvent<HTM
 
 function onDocumentFocusIn(event: FocusEvent) {
   const top = modalStack.at(-1);
-  if (!top || top.dialog.contains(event.target as Node)) return;
+  if (!top || top.dialog.contains(event.target as Node)
+    || notificationRegions().some(region => region.contains(event.target as Node))) return;
   focusFirstIn(top.dialog);
 }
 
