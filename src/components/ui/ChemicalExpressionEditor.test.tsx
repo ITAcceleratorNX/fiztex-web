@@ -47,7 +47,9 @@ describe('ChemicalExpressionEditor', () => {
     renderEditor('\\ce{NH4}');
     const argument = screen.getByLabelText('Вещество или реакция') as HTMLInputElement;
     argument.focus(); argument.setSelectionRange(0, 3); fireEvent.select(argument);
-    await user.click(button('( ) Группа')); await user.click(digit(2));
+    await user.click(button('Знаки и связи'));
+    await user.click(button('( ) Группа'));
+    await user.click(button('Элементы и цифры')); await user.click(digit(2));
     await user.click(element('S')); await user.click(element('O')); await user.click(digit(4));
     expect(source()).toBe('\\ce{(NH4)2SO4}');
     await user.click(button('Отменить правку блока'));
@@ -64,6 +66,24 @@ describe('ChemicalExpressionEditor', () => {
     await user.type(argument, '+}');
     expect(argument).toHaveValue('Fe^{2+}');
     expect(source()).toBe('x+\\ce{Fe^{2+}}');
+  });
+
+  it('сохраняет поиск элемента и выделение при переключении между инструментами', async () => {
+    const user = userEvent.setup();
+    renderEditor('\\ce{NaCl}');
+    const argument = screen.getByLabelText('Вещество или реакция') as HTMLInputElement;
+    argument.focus(); argument.setSelectionRange(0, 2); fireEvent.select(argument);
+    await user.click(button('Таблица Менделеева'));
+    await user.type(screen.getByLabelText('Найти элемент'), 'Co');
+    await user.click(button('Знаки и связи'));
+    expect(screen.getByLabelText('Найти элемент')).not.toBeVisible();
+    await user.click(button('Элементы и цифры'));
+    expect(screen.getByLabelText('Найти элемент')).toHaveValue('Co');
+    await user.click(element('Co'));
+    expect(source()).toBe('\\ce{CoCl}');
+    expect(argument.selectionStart).toBe(2);
+    await user.click(button('Отменить действие'));
+    expect(source()).toBe('\\ce{NaCl}');
   });
 
   it('добавляет отдельную химическую запись после существующей, сохраняя её', async () => {
@@ -85,6 +105,7 @@ describe('ChemicalExpressionEditor', () => {
     await user.type(screen.getByLabelText('Массовое число'), '14');
     await user.click(button('Собрать ион или изотоп'));
     expect(source()).toBe('\\ce{^{14}_{6}C}');
+    await user.click(button('Знаки и связи'));
     await user.click(button('2+'));
     expect(source()).toBe('\\ce{^{14}_{6}C^{2+}}');
   });
@@ -116,13 +137,17 @@ describe('ChemicalExpressionEditor', () => {
     renderEditor();
     await user.click(button('Реакция с условиями'));
     await user.click(screen.getByLabelText('Реагенты'));
-    await user.click(element('Zn')); await user.click(button('+ Сложение веществ'));
+    await user.click(element('Zn'));
+    await user.click(button('Знаки и связи')); await user.click(button('+ Сложение веществ'));
+    await user.click(button('Элементы и цифры'));
     await user.click(digit(2)); await user.click(element('H')); await user.click(element('Cl'));
     await user.click(screen.getByLabelText('Продукты'));
     await user.click(element('Zn')); await user.click(element('Cl')); await user.click(digit(2));
-    await user.click(button('+ Сложение веществ')); await user.click(element('H')); await user.click(digit(2));
+    await user.click(button('Знаки и связи')); await user.click(button('+ Сложение веществ'));
+    await user.click(button('Элементы и цифры')); await user.click(element('H')); await user.click(digit(2));
     await user.click(button('Δ Нагревание'));
-    await user.click(button('Собрать реакцию')); await user.click(button('↑ Газ'));
+    await user.click(button('Собрать реакцию'));
+    await user.click(button('Знаки и связи')); await user.click(button('↑ Газ'));
     expect(source()).toBe('\\ce{Zn + 2HCl ->[\\Delta] ZnCl2 + H2 ^}');
     expect(screen.getByLabelText('Вещество или реакция')).toHaveFocus();
   });

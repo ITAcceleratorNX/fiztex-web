@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Modal } from './Modal';
-import { Button } from './Button';
+import { Button, buttonClassName } from './Button';
 import { Formula } from './MathText';
 import { ChemicalExpressionEditor } from './ChemicalExpressionEditor';
+import { CollapsibleCard } from './CollapsibleCard';
+import { SegmentedTabs } from './SegmentedTabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs';
 import { checkFormulas, hasBlockingProblem } from '@/lib/formulaChecks';
 import { FORMULA_PROFILES, type FormulaProfile } from '@/lib/formulaProfiles';
 import catalog from '@/lib/formulaCatalog.json';
@@ -102,6 +105,7 @@ export function FormulaEditorModal({
         field.mathVirtualKeyboardPolicy = 'manual';
         field.value = initialLatex;
         field.className = 'w-full min-h-16 text-xl';
+        field.setAttribute('aria-label', 'Визуальный редактор формулы');
         field.addEventListener('input', () => {
           const value = field?.value ?? '';
           fromFieldRef.current = value;
@@ -140,7 +144,7 @@ export function FormulaEditorModal({
     if (!field) return;
     if (fromFieldRef.current === latex) return;
     if (field.value !== latex) field.value = latex;
-  }, [latex]);
+  }, [latex, visualReady]);
 
   function toggleKeyboard() {
     const keyboard = keyboardRef.current;
@@ -172,13 +176,72 @@ export function FormulaEditorModal({
   const invalid = forbidden || hasBlockingProblem(problems);
   const palette: PaletteGroup[] = [...catalog.common, ...(profile === 'GENERAL' ? [] : catalog[profile])];
 
+  const mathEditor = (
+    <div className="space-y-4">
+      <section className="space-y-3 rounded-xl border border-line bg-white p-4" aria-label="Ввод формулы">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-base font-semibold text-ink">Запись формулы</p>
+          {visualReady && <Button type="button" variant="secondary" size="sm" aria-expanded={keyboardVisible}
+            className="min-h-11" onClick={toggleKeyboard}>
+            {keyboardVisible ? 'Скрыть клавиатуру' : 'Показать клавиатуру'}
+          </Button>}
+        </div>
+        <div
+          ref={hostRef}
+          className="rounded-xl border border-line bg-white px-3 py-2 focus-within:border-brand-300"
+        />
+        {!visualReady && (
+          <textarea
+            value={latex}
+            onChange={(e) => setLatex(e.target.value)}
+            rows={2}
+            className="input-base mt-2 font-mono text-13"
+            placeholder="\frac{m}{V}"
+            aria-label="Разметка формулы"
+          />
+        )}
+        <p className="text-13 text-muted">Наберите формулу в поле или выберите шаблон ниже. Для ввода мышью откройте клавиатуру.</p>
+      </section>
+
+      {profile !== 'CHEMISTRY' && <ChemicalExpressionEditor showPreview={false} latex={latex} onChange={value => { fromFieldRef.current = null; setLatex(value); }} />}
+
+      <section className="space-y-3 rounded-xl border border-line bg-white p-4" aria-label="Шаблоны формул">
+        <p className="text-base font-semibold text-ink">Шаблоны и знаки</p>
+        <Tabs key={profile} defaultValue="group-0" className="space-y-3">
+          <TabsList className="flex-wrap">{palette.map((group, index) => <TabsTrigger key={group.title} className="min-h-11" value={`group-${index}`}>{group.title}</TabsTrigger>)}</TabsList>
+          {palette.map((group, index) => (
+            <TabsContent key={group.title} value={`group-${index}`}>
+              <div className="grid grid-cols-2 gap-2">
+                {group.items.map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    title={item.label}
+                    aria-label={item.label}
+                    onClick={() => insert(item)}
+                    className={buttonClassName({ variant: 'secondary', className: 'h-auto min-h-16 min-w-0 flex-col gap-2 px-3 py-3' })}
+                  >
+                    <Formula latex={item.latex} />
+                    <span className="text-13 font-medium">{item.label}</span>
+                  </button>
+              ))}
+            </div>
+          </TabsContent>
+          ))}
+        </Tabs>
+      </section>
+    </div>
+  );
+
   return (
     <Modal
       open={open}
       onClose={onClose}
       size={profile === 'CHEMISTRY' ? '2xl' : 'lg'}
+      scrollable
+      bottomInset={keyboardHeight}
       title={`Формула · ${FORMULA_PROFILES[profile]}`}
-      subtitle="Соберите формулу мышью или наберите с клавиатуры — знание LaTeX не нужно"
+      subtitle="Создайте запись, проверьте результат и вставьте в задание"
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
@@ -192,106 +255,58 @@ export function FormulaEditorModal({
     >
       <div ref={keyboardHostRef} data-formula-keyboard className="fixed inset-x-0 bottom-0 z-50"
         style={{ height: keyboardHeight }} />
-      <div className="space-y-4" style={{ paddingBottom: keyboardHeight || undefined }}>
-        {profile === 'CHEMISTRY' && <>
-          <ChemicalExpressionEditor allowCreate latex={latex} onChange={value => { fromFieldRef.current = null; setLatex(value); }} />
-          <Button type="button" variant="secondary" aria-expanded={mathEditorVisible}
-            onClick={() => { setMathEditorVisible(value => !value); keyboardRef.current?.hide(); }}>
-            {mathEditorVisible ? 'Скрыть математический редактор' : 'Математические обозначения'}
-          </Button>
-        </>}
-        <div hidden={!mathEditorVisible}>
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <label className="label-base">Формула</label>
-            {visualReady && <Button type="button" variant="secondary" size="sm" aria-expanded={keyboardVisible}
-              onClick={toggleKeyboard}>
-              {keyboardVisible ? 'Скрыть клавиатуру' : 'Показать клавиатуру'}
-            </Button>}
-          </div>
-          <div
-            ref={hostRef}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 focus-within:border-brand-300"
-          />
-          {!visualReady && (
-            <textarea
-              value={latex}
-              onChange={(e) => setLatex(e.target.value)}
-              rows={2}
-              className="input-base mt-2 font-mono text-13"
-              placeholder="\frac{m}{V}"
-              aria-label="Разметка формулы"
-            />
+      <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className="min-w-0 space-y-4">
+          {profile === 'CHEMISTRY' ? (
+            <Tabs value={mathEditorVisible ? 'math' : 'chemistry'} onValueChange={value => {
+              setMathEditorVisible(value === 'math');
+              keyboardRef.current?.hide();
+            }} className="space-y-4">
+              <TabsList className="flex-wrap">
+                <TabsTrigger className="min-h-11" value="chemistry">Химическая запись</TabsTrigger>
+                <TabsTrigger className="min-h-11" value="math">Математические обозначения</TabsTrigger>
+              </TabsList>
+              <TabsContent value="chemistry" forceMount>
+                <ChemicalExpressionEditor allowCreate showPreview={false} latex={latex} onChange={value => { fromFieldRef.current = null; setLatex(value); }} />
+              </TabsContent>
+              <TabsContent value="math" forceMount>{mathEditor}</TabsContent>
+            </Tabs>
+          ) : mathEditor}
+
+          {visualReady && (
+            <CollapsibleCard title="Разметка LaTeX" className="p-4 shadow-none">
+              <label className="label-base">Разметка (для тех, кто знает LaTeX)</label>
+              <input
+                value={latex}
+                onChange={(e) => {
+                  fromFieldRef.current = null;
+                  setLatex(e.target.value);
+                }}
+                className="input-base font-mono text-13"
+                spellCheck={false}
+                aria-label="Разметка формулы"
+              />
+            </CollapsibleCard>
           )}
         </div>
 
-        {profile !== 'CHEMISTRY' && <ChemicalExpressionEditor latex={latex} onChange={value => { fromFieldRef.current = null; setLatex(value); }} />}
-
-        <div className="space-y-3" hidden={!mathEditorVisible}>
-          {palette.map((group) => (
-            <div key={group.title}>
-              <p className="mb-1.5 text-11 font-semibold uppercase tracking-wide text-slate-400">
-                {group.title}
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {group.items.map((item) => (
-                  <button
-                    key={item.label}
-                    type="button"
-                    title={item.label}
-                    onClick={() => insert(item)}
-                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700 transition hover:border-brand-300 hover:bg-brand-50"
-                  >
-                    <Formula latex={item.latex} />
-                  </button>
-                ))}
-              </div>
+        <aside className="min-w-0 space-y-4 self-start rounded-xl border border-line bg-canvas p-4 lg:sticky lg:top-0" aria-label="Предпросмотр формулы">
+          <div className="space-y-3">
+            <p className="text-base font-semibold text-ink">Так увидит ученик</p>
+            <div className="min-h-20 min-w-0 rounded-xl bg-white p-3 text-base text-ink">
+              {trimmed ? <Formula latex={trimmed} display={display} /> : <span className="text-sm text-muted">Здесь появится формула. Начните с ввода или выбора элемента.</span>}
             </div>
-          ))}
-        </div>
-
-        <label className="flex items-center gap-2 text-sm text-slate-600">
-          <input
-            type="checkbox"
-            checked={display}
-            onChange={(e) => setDisplay(e.target.checked)}
-            className="h-4 w-4 accent-brand-500"
-          />
-          {profile === 'CHEMISTRY' ? 'Отдельным блоком (для длинной реакции)' : 'Отдельным блоком (для системы уравнений или матрицы)'}
-        </label>
-
-        <div className="rounded-xl bg-slate-50 px-4 py-3">
-          <p className="text-11 font-semibold uppercase tracking-wide text-slate-400">
-            Так увидит ученик
-          </p>
-          <div className="mt-2 min-w-0 text-base text-ink">
-            {trimmed ? <Formula latex={trimmed} display={display} /> : <span className="text-slate-400">—</span>}
           </div>
-        </div>
-
-        {visualReady && (
-          <div hidden={!mathEditorVisible}>
-            <label className="label-base">Разметка (для тех, кто знает LaTeX)</label>
-            <input
-              value={latex}
-              onChange={(e) => {
-                fromFieldRef.current = null;
-                setLatex(e.target.value);
-              }}
-              className="input-base font-mono text-13"
-              spellCheck={false}
-              aria-label="Разметка формулы"
-            />
+          <div className="space-y-2 border-t border-line pt-4">
+            <p className="text-sm font-semibold text-ink">Размещение в задании</p>
+            <SegmentedTabs value={display ? 'block' : 'inline'} onChange={value => setDisplay(value === 'block')}
+              ariaLabel="Размещение формулы" options={[{ value: 'inline', label: 'В строке' }, { value: 'block', label: 'Отдельно' }]} />
+            <p className="text-13 text-muted">{display ? 'На отдельной строке — удобно для длинной реакции, системы или матрицы.' : 'Внутри текста задания, рядом с обычными словами.'}</p>
           </div>
-        )}
-
-        {!forbidden && trimmed && problems.length > 0 && <p role="alert" className="text-sm text-danger-fg">{problems.map(problem => problem.message).join('; ')}</p>}
-
-        {forbidden && (
-          <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-100">
-            В формуле есть команда, которую нельзя показывать ученику (макросы и загрузка
-            внешних файлов). Уберите её.
-          </p>
-        )}
+          {!forbidden && trimmed && problems.length > 0 && <p role="alert" className="text-sm text-red-700">{problems.map(problem => problem.message).join('; ')}</p>}
+          {forbidden && <p role="alert" className="rounded-xl bg-danger-bg p-3 text-sm text-red-700">В формуле есть команда, которую нельзя показывать ученику (макросы и загрузка внешних файлов). Уберите её.</p>}
+          {trimmed && !invalid && <p className="text-sm text-muted">Формула готова. Нажмите «Вставить формулу».</p>}
+        </aside>
       </div>
     </Modal>
   );
