@@ -1,0 +1,272 @@
+[
+  {
+    "id": "math-fraction",
+    "latex": "\\frac{3}{4} + \\frac{1}{6}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "math-nested-fraction",
+    "latex": "\\frac{\\frac{1}{2}+\\frac{1}{3}}{\\frac{3}{4}-\\frac{1}{4}}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "math-root",
+    "latex": "\\sqrt[3]{a^2+b^2}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "math-system",
+    "latex": "\\begin{cases}x+y=5\\\\x-y=1\\end{cases}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "math-log",
+    "latex": "\\log_{2}{8}=3",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "math-integral",
+    "latex": "\\int_0^1 x^2\\,dx=\\frac{1}{3}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "physics-force",
+    "latex": "\\vec{F}=m\\vec{a}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "physics-density",
+    "latex": "\\rho=\\frac{m}{V}=800\\ \\text{кг/м}^3",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "physics-charge",
+    "latex": "q=1{,}6\\cdot10^{-19}\\ \\text{Кл}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "physics-temperature",
+    "latex": "t=-5^{\\circ}\\text{C}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "physics-ohm",
+    "latex": "I=\\frac{U}{R},\\quad R=10\\ \\Omega",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "physics-wave",
+    "latex": "v=\\lambda\\nu,\\quad\\Delta E=h\\nu",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-water",
+    "latex": "\\ce{H2O}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-acid",
+    "latex": "\\ce{H2SO4}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-carbon-monoxide",
+    "latex": "\\ce{CO}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-cobalt",
+    "latex": "\\ce{Co}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-iron-two",
+    "latex": "\\ce{Fe^{2+}}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-iron-three",
+    "latex": "\\ce{Fe^{3+}}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-sulfate",
+    "latex": "\\ce{SO4^{2-}}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-complex",
+    "latex": "\\ce{[Cu(NH3)4]^{2+}}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-reaction",
+    "latex": "\\ce{2H2 + O2 -> 2H2O}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-equilibrium",
+    "latex": "\\ce{N2 + 3H2 <=> 2NH3}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-conditions",
+    "latex": "\\ce{2H2O2 ->[MnO2] 2H2O + O2}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-states",
+    "latex": "\\ce{NaCl(s) -> Na+(aq) + Cl-(aq)}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-gas-precipitate",
+    "latex": "\\ce{CaCO3 + 2HCl -> CaCl2 + CO2 ^ + H2O}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-precipitate",
+    "latex": "\\ce{Ag+ + Cl- -> AgCl v}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-isotope",
+    "latex": "\\ce{^{14}_{6}C}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-heavy-isotope",
+    "latex": "\\ce{^{227}_{90}Th+}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-hydrate",
+    "latex": "\\ce{CuSO4 * 5H2O}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-bonds",
+    "latex": "\\ce{CH3-CH2-OH}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-unit",
+    "latex": "\\pu{1.2e3 kJ}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "legacy-chem",
+    "latex": "\\mathrm{H}_2\\mathrm{O}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "invalid-command",
+    "latex": "\\notARealCommand{x}",
+    "renderable": false,
+    "publishable": false
+  },
+  {
+    "id": "invalid-fraction",
+    "latex": "\\frac{1}{",
+    "renderable": false,
+    "publishable": false
+  },
+  {
+    "id": "invalid-chem-brace",
+    "latex": "\\ce{H2O",
+    "renderable": false,
+    "publishable": false
+  },
+  {
+    "id": "invalid-left",
+    "latex": "\\left(x+1",
+    "renderable": false,
+    "publishable": false
+  },
+  {
+    "id": "invalid-chem-command",
+    "latex": "\\ce{H2O \\notARealCommand{x}}",
+    "renderable": false,
+    "publishable": false
+  },
+  {
+    "id": "edge-uncertain",
+    "latex": "\\ce{H_{[?]}O}",
+    "renderable": true,
+    "publishable": false
+  },
+  {
+    "id": "edge-nested-dollar",
+    "latex": "\\ce{$n$ H2O}",
+    "renderable": false,
+    "publishable": false
+  },
+  {
+    "id": "edge-significant-spaces",
+    "latex": "\\ce{H 2 O}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "chem-unbraced-isotope",
+    "latex": "\\ce{^227_90Th+}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "math-row-followed-by-name",
+    "latex": "\\begin{cases}x=1\\\\x=2\\end{cases}",
+    "renderable": true,
+    "publishable": true
+  },
+  {
+    "id": "forbidden-definition",
+    "latex": "\\def\\x{1}x",
+    "renderable": false,
+    "publishable": false
+  },
+  {
+    "id": "empty-fraction-part",
+    "latex": "\\frac{}{3}",
+    "renderable": true,
+    "publishable": false
+  },
+  {
+    "id": "rare-renderable-command",
+    "latex": "\\underleftrightarrow{x}",
+    "renderable": true,
+    "publishable": true
+  }
+]
