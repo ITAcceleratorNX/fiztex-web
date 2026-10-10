@@ -13437,6 +13437,7 @@ export interface components {
             studentFullName?: string;
             /** Format: int64 */
             studentProfileId?: number;
+            testResult?: components["schemas"]["TestResultView"];
         };
         SubmitAnswersRequest: {
             answers: components["schemas"]["AnswerRequest"][];
@@ -14178,6 +14179,10 @@ export interface components {
             updatedAt?: string;
             useAiGeneration?: boolean;
             versions?: components["schemas"]["TestVersionSummary"][];
+        };
+        TestResultView: {
+            maxScore?: number;
+            score?: number;
         };
         TestVersionSummary: {
             /** Format: date-time */
