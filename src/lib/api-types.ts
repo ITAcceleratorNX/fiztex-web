@@ -7469,7 +7469,7 @@ export interface components {
             scope?: components["schemas"]["ReportScopeView"];
         };
         AcademicReportFinalGradeView: {
-            academicPeriod?: components["schemas"]["ReportReferenceView"];
+            academicPeriod?: components["schemas"]["ReportReferenceView"] | null;
             /** Format: int64 */
             academicYearId?: number;
             /** Format: int64 */
@@ -7481,7 +7481,7 @@ export interface components {
             sourceClass?: components["schemas"]["ReportReferenceView"];
             student?: components["schemas"]["ReportReferenceView"];
             /** Format: int64 */
-            subgroupId?: number;
+            subgroupId?: number | null;
             subject?: components["schemas"]["ReportReferenceView"];
             teacher?: components["schemas"]["ReportReferenceView"];
             /** Format: int32 */
@@ -7502,14 +7502,13 @@ export interface components {
             author?: components["schemas"]["ReportGradeAuthorView"];
             /** Format: int64 */
             gradeId?: number;
-            /** @enum {string} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
-            maxScore?: number;
-            numericValue?: number;
+            gradeType?: ("FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER") | null;
+            maxScore?: number | null;
+            numericValue?: number | null;
             /** Format: date-time */
             publishedAt?: string;
-            scaleCode?: string;
-            score?: number;
+            scaleCode?: string | null;
+            score?: number | null;
             sourceClass?: components["schemas"]["ReportReferenceView"];
             /** Format: date */
             sourceDate?: string;
@@ -7519,7 +7518,7 @@ export interface components {
             sourceType?: "LESSON" | "HOMEWORK";
             student?: components["schemas"]["ReportReferenceView"];
             subject?: components["schemas"]["ReportReferenceView"];
-            teacher?: components["schemas"]["ReportReferenceView"];
+            teacher?: components["schemas"]["ReportReferenceView"] | null;
             weight?: number;
         };
         AcademicReportSummaryView: {
@@ -8488,10 +8487,10 @@ export interface components {
         ComponentSummaryView: {
             /** @enum {string} */
             code?: "FORMATIVE" | "SOR" | "SOCH";
-            contribution?: number;
+            contribution?: number | null;
             effectiveWeightPercent?: number;
             maxSum?: number;
-            percent?: number;
+            percent?: number | null;
             scoreSum?: number;
             title?: string;
             weightPercent?: number;
@@ -12558,16 +12557,16 @@ export interface components {
             startDate?: string;
         };
         PeriodResultSummaryView: {
-            bandLabel?: string;
+            bandLabel?: string | null;
             components?: components["schemas"]["ComponentSummaryView"][];
             missingComponents?: ("FORMATIVE" | "SOR" | "SOCH")[];
-            percent?: number;
+            percent?: number | null;
             /** Format: int64 */
             policyId?: number;
             /** Format: int32 */
-            recommendedValue?: number;
+            recommendedValue?: number | null;
             /** Format: int32 */
-            roundedPercent?: number;
+            roundedPercent?: number | null;
             /** @enum {string} */
             status?: "CALCULATED" | "NO_WORKS" | "INCOMPLETE";
         };
@@ -12872,11 +12871,10 @@ export interface components {
             metrics?: components["schemas"]["ReportMetricsView"];
         };
         ReportDecimalMetric: {
-            /** @enum {string} */
-            reason?: "NO_SCALE_GRADES" | "NO_PUBLISHED_ATTENDANCE" | "ACADEMIC_PERFORMANCE_NOT_IMPLEMENTED" | "SINGLE_STUDENT_SUBJECT_PERIOD_REQUIRED" | "TEACHER_FILTER" | "INCOMPLETE_CLASS_INPUT" | "PARTICIPANT_SNAPSHOT_MISSING";
+            reason?: ("NO_SCALE_GRADES" | "NO_PUBLISHED_ATTENDANCE" | "ACADEMIC_PERFORMANCE_NOT_IMPLEMENTED" | "SINGLE_STUDENT_SUBJECT_PERIOD_REQUIRED" | "TEACHER_FILTER" | "INCOMPLETE_CLASS_INPUT" | "PARTICIPANT_SNAPSHOT_MISSING") | null;
             /** @enum {string} */
             state?: "AVAILABLE" | "NO_DATA" | "DEPENDENCY_MISSING" | "SCOPE_NOT_SUPPORTED";
-            value?: number;
+            value?: number | null;
         };
         ReportFinalGradeMetrics: {
             /** Format: int64 */
@@ -12893,8 +12891,7 @@ export interface components {
         ReportGradeAuthorView: {
             /** Format: int64 */
             accountId?: number;
-            /** @enum {string} */
-            capacity?: "MAIN_TEACHER" | "SUBSTITUTE_TEACHER";
+            capacity?: ("MAIN_TEACHER" | "SUBSTITUTE_TEACHER") | null;
             name?: string;
             /** @enum {string} */
             role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
@@ -12910,17 +12907,16 @@ export interface components {
             scaleCount?: number;
         };
         ReportLessonMetrics: {
-            completedDurationMinutes?: number;
+            completedDurationMinutes?: number | null;
             /** Format: int64 */
-            completedLessonCount?: number;
+            completedLessonCount?: number | null;
             /** @enum {string} */
             durationUnit?: "MINUTES";
-            knownParticipantDurationMinutes?: number;
+            knownParticipantDurationMinutes?: number | null;
             /** Format: int64 */
-            knownParticipantLessonCount?: number;
+            knownParticipantLessonCount?: number | null;
             participantSnapshotCoverage?: components["schemas"]["ReportParticipantSnapshotCoverage"];
-            /** @enum {string} */
-            reason?: "NO_SCALE_GRADES" | "NO_PUBLISHED_ATTENDANCE" | "ACADEMIC_PERFORMANCE_NOT_IMPLEMENTED" | "SINGLE_STUDENT_SUBJECT_PERIOD_REQUIRED" | "TEACHER_FILTER" | "INCOMPLETE_CLASS_INPUT" | "PARTICIPANT_SNAPSHOT_MISSING";
+            reason?: ("NO_SCALE_GRADES" | "NO_PUBLISHED_ATTENDANCE" | "ACADEMIC_PERFORMANCE_NOT_IMPLEMENTED" | "SINGLE_STUDENT_SUBJECT_PERIOD_REQUIRED" | "TEACHER_FILTER" | "INCOMPLETE_CLASS_INPUT" | "PARTICIPANT_SNAPSHOT_MISSING") | null;
             /** @enum {string} */
             state?: "AVAILABLE" | "NO_DATA" | "DEPENDENCY_MISSING" | "SCOPE_NOT_SUPPORTED";
         };
@@ -12949,11 +12945,9 @@ export interface components {
             completedLessonsWithoutSnapshot?: number;
         };
         ReportPeriodResultView: {
-            /** @enum {string} */
-            mode?: "SCALE" | "POINTS";
-            /** @enum {string} */
-            reason?: "NO_SCALE_GRADES" | "NO_PUBLISHED_ATTENDANCE" | "ACADEMIC_PERFORMANCE_NOT_IMPLEMENTED" | "SINGLE_STUDENT_SUBJECT_PERIOD_REQUIRED" | "TEACHER_FILTER" | "INCOMPLETE_CLASS_INPUT" | "PARTICIPANT_SNAPSHOT_MISSING";
-            result?: components["schemas"]["PeriodResultSummaryView"];
+            mode?: ("SCALE" | "POINTS") | null;
+            reason?: ("NO_SCALE_GRADES" | "NO_PUBLISHED_ATTENDANCE" | "ACADEMIC_PERFORMANCE_NOT_IMPLEMENTED" | "SINGLE_STUDENT_SUBJECT_PERIOD_REQUIRED" | "TEACHER_FILTER" | "INCOMPLETE_CLASS_INPUT" | "PARTICIPANT_SNAPSHOT_MISSING") | null;
+            result?: components["schemas"]["PeriodResultSummaryView"] | null;
             /** @enum {string} */
             state?: "AVAILABLE" | "NO_DATA" | "DEPENDENCY_MISSING" | "SCOPE_NOT_SUPPORTED";
         };
@@ -12976,21 +12970,21 @@ export interface components {
             name?: string;
         };
         ReportScopeView: {
-            academicPeriod?: components["schemas"]["ReportPeriodView"];
+            academicPeriod?: components["schemas"]["ReportPeriodView"] | null;
             academicYear?: components["schemas"]["ReportYearView"];
             calendarIssues?: "PERIOD_OUTSIDE_YEAR"[];
             /** Format: int64 */
-            classId?: number;
+            classId?: number | null;
             /** @enum {string} */
             finalGradeTeacherAttribution?: "CURRENT_LESSON_TEACHER_OR_HOMEWORK_OWNER" | "SAVED_FINAL_GRADE_TEACHER";
             /** @enum {string} */
             sourceTeacherAttribution?: "CURRENT_LESSON_TEACHER_OR_HOMEWORK_OWNER" | "SAVED_FINAL_GRADE_TEACHER";
             /** Format: int64 */
-            studentProfileId?: number;
+            studentProfileId?: number | null;
             /** Format: int64 */
-            subjectId?: number;
+            subjectId?: number | null;
             /** Format: int64 */
-            teacherProfileId?: number;
+            teacherProfileId?: number | null;
             /** @enum {string} */
             visibility?: "SCHOOL" | "SELECTED_CLASS" | "HOMEROOM_CLASS";
         };
@@ -26477,7 +26471,7 @@ export interface operations {
                 academicPeriodId?: number;
                 subjectId?: number;
                 studentProfileId?: number;
-                dimension: "CLASS" | "SUBJECT" | "TEACHER" | "STUDENT";
+                dimension: "SUBJECT" | "STUDENT";
                 page?: number;
                 size?: number;
             };
