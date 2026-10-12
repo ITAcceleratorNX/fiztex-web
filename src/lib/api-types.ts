@@ -52,6 +52,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/academic-reports/breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Разрез учебной отчётности */
+        get: operations["getAdminAcademicReportBreakdown"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/academic-reports/final-grades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Опубликованные итоги учебной отчётности */
+        get: operations["getAdminAcademicReportFinalGrades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/academic-reports/grades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Исходные оценки учебной отчётности */
+        get: operations["getAdminAcademicReportGrades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/academic-reports/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Сводка учебной отчётности */
+        get: operations["getAdminAcademicReportSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/academic-years": {
         parameters: {
             query?: never;
@@ -5918,6 +5986,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/academic-reports/breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Разрез учебной отчётности */
+        get: operations["getHomeroomAcademicReportBreakdown"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/academic-reports/final-grades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Опубликованные итоги учебной отчётности */
+        get: operations["getHomeroomAcademicReportFinalGrades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/academic-reports/grades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Исходные оценки учебной отчётности */
+        get: operations["getHomeroomAcademicReportGrades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/academic-reports/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Сводка учебной отчётности */
+        get: operations["getHomeroomAcademicReportSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/attendance": {
         parameters: {
             query?: never;
@@ -7315,6 +7451,82 @@ export interface components {
             type?: "QUARTER" | "TRIMESTER" | "SEMESTER" | "CUSTOM";
             /** Format: date-time */
             updatedAt?: string;
+        };
+        AcademicReportBreakdownView: {
+            /** Format: date-time */
+            asOf?: string;
+            /** @enum {string} */
+            dimension?: "CLASS" | "SUBJECT" | "TEACHER" | "STUDENT";
+            items?: components["schemas"]["ReportBreakdownRow"][];
+            paging?: components["schemas"]["ReportPageInfo"];
+            scope?: components["schemas"]["ReportScopeView"];
+        };
+        AcademicReportFinalGradePageView: {
+            /** Format: date-time */
+            asOf?: string;
+            items?: components["schemas"]["AcademicReportFinalGradeView"][];
+            paging?: components["schemas"]["ReportPageInfo"];
+            scope?: components["schemas"]["ReportScopeView"];
+        };
+        AcademicReportFinalGradeView: {
+            academicPeriod?: components["schemas"]["ReportReferenceView"];
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            finalGradeId?: number;
+            /** @enum {string} */
+            finalScope?: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
+            /** Format: date-time */
+            publishedAt?: string;
+            sourceClass?: components["schemas"]["ReportReferenceView"];
+            student?: components["schemas"]["ReportReferenceView"];
+            /** Format: int64 */
+            subgroupId?: number;
+            subject?: components["schemas"]["ReportReferenceView"];
+            teacher?: components["schemas"]["ReportReferenceView"];
+            /** Format: int32 */
+            value?: number;
+        };
+        AcademicReportGradePageView: {
+            /** Format: date-time */
+            asOf?: string;
+            items?: components["schemas"]["AcademicReportGradeView"][];
+            paging?: components["schemas"]["ReportPageInfo"];
+            scope?: components["schemas"]["ReportScopeView"];
+        };
+        AcademicReportGradeView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            academicYearId?: number;
+            author?: components["schemas"]["ReportGradeAuthorView"];
+            /** Format: int64 */
+            gradeId?: number;
+            /** @enum {string} */
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            maxScore?: number;
+            numericValue?: number;
+            /** Format: date-time */
+            publishedAt?: string;
+            scaleCode?: string;
+            score?: number;
+            sourceClass?: components["schemas"]["ReportReferenceView"];
+            /** Format: date */
+            sourceDate?: string;
+            /** Format: int64 */
+            sourceId?: number;
+            /** @enum {string} */
+            sourceType?: "LESSON" | "HOMEWORK";
+            student?: components["schemas"]["ReportReferenceView"];
+            subject?: components["schemas"]["ReportReferenceView"];
+            teacher?: components["schemas"]["ReportReferenceView"];
+            weight?: number;
+        };
+        AcademicReportSummaryView: {
+            /** Format: date-time */
+            asOf?: string;
+            metrics?: components["schemas"]["ReportMetricsView"];
+            scope?: components["schemas"]["ReportScopeView"];
         };
         AcademicYearView: {
             /** Format: date-time */
@@ -12640,6 +12852,159 @@ export interface components {
             /** Format: int64 */
             newTextbookId: number;
         };
+        ReportAttendanceMetrics: {
+            /** Format: int64 */
+            excusedCount?: number;
+            /** Format: int64 */
+            lateCount?: number;
+            /** Format: int64 */
+            missedCount?: number;
+            /** @enum {string} */
+            percentageDenominator?: "PUBLISHED_MARKS";
+            presencePercent?: components["schemas"]["ReportDecimalMetric"];
+            /** Format: int64 */
+            presentCount?: number;
+            /** Format: int64 */
+            publishedMarkCount?: number;
+        };
+        ReportBreakdownRow: {
+            key?: components["schemas"]["ReportReferenceView"];
+            metrics?: components["schemas"]["ReportMetricsView"];
+        };
+        ReportDecimalMetric: {
+            /** @enum {string} */
+            reason?: "NO_SCALE_GRADES" | "NO_PUBLISHED_ATTENDANCE" | "ACADEMIC_PERFORMANCE_NOT_IMPLEMENTED" | "SINGLE_STUDENT_SUBJECT_PERIOD_REQUIRED" | "TEACHER_FILTER" | "INCOMPLETE_CLASS_INPUT" | "PARTICIPANT_SNAPSHOT_MISSING";
+            /** @enum {string} */
+            state?: "AVAILABLE" | "NO_DATA" | "DEPENDENCY_MISSING" | "SCOPE_NOT_SUPPORTED";
+            value?: number;
+        };
+        ReportFinalGradeMetrics: {
+            /** Format: int64 */
+            examCount?: number;
+            /** Format: int64 */
+            finalCount?: number;
+            /** Format: int64 */
+            periodCount?: number;
+            /** Format: int64 */
+            publishedCount?: number;
+            /** Format: int64 */
+            yearCount?: number;
+        };
+        ReportGradeAuthorView: {
+            /** Format: int64 */
+            accountId?: number;
+            /** @enum {string} */
+            capacity?: "MAIN_TEACHER" | "SUBSTITUTE_TEACHER";
+            name?: string;
+            /** @enum {string} */
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
+        };
+        ReportGradeMetrics: {
+            /** Format: int64 */
+            gradeCount?: number;
+            periodResult?: components["schemas"]["ReportPeriodResultView"];
+            /** Format: int64 */
+            pointsCount?: number;
+            scaleAverage?: components["schemas"]["ReportDecimalMetric"];
+            /** Format: int64 */
+            scaleCount?: number;
+        };
+        ReportLessonMetrics: {
+            completedDurationMinutes?: number;
+            /** Format: int64 */
+            completedLessonCount?: number;
+            /** @enum {string} */
+            durationUnit?: "MINUTES";
+            knownParticipantDurationMinutes?: number;
+            /** Format: int64 */
+            knownParticipantLessonCount?: number;
+            participantSnapshotCoverage?: components["schemas"]["ReportParticipantSnapshotCoverage"];
+            /** @enum {string} */
+            reason?: "NO_SCALE_GRADES" | "NO_PUBLISHED_ATTENDANCE" | "ACADEMIC_PERFORMANCE_NOT_IMPLEMENTED" | "SINGLE_STUDENT_SUBJECT_PERIOD_REQUIRED" | "TEACHER_FILTER" | "INCOMPLETE_CLASS_INPUT" | "PARTICIPANT_SNAPSHOT_MISSING";
+            /** @enum {string} */
+            state?: "AVAILABLE" | "NO_DATA" | "DEPENDENCY_MISSING" | "SCOPE_NOT_SUPPORTED";
+        };
+        ReportMetricsView: {
+            academicPerformance?: components["schemas"]["ReportDecimalMetric"];
+            attendance?: components["schemas"]["ReportAttendanceMetrics"];
+            finalGrades?: components["schemas"]["ReportFinalGradeMetrics"];
+            grades?: components["schemas"]["ReportGradeMetrics"];
+            lessons?: components["schemas"]["ReportLessonMetrics"];
+        };
+        ReportPageInfo: {
+            hasNext?: boolean;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        ReportParticipantSnapshotCoverage: {
+            /** Format: int64 */
+            completedLessonsWithSnapshot?: number;
+            /** Format: int64 */
+            completedLessonsWithoutSnapshot?: number;
+        };
+        ReportPeriodResultView: {
+            /** @enum {string} */
+            mode?: "SCALE" | "POINTS";
+            /** @enum {string} */
+            reason?: "NO_SCALE_GRADES" | "NO_PUBLISHED_ATTENDANCE" | "ACADEMIC_PERFORMANCE_NOT_IMPLEMENTED" | "SINGLE_STUDENT_SUBJECT_PERIOD_REQUIRED" | "TEACHER_FILTER" | "INCOMPLETE_CLASS_INPUT" | "PARTICIPANT_SNAPSHOT_MISSING";
+            result?: components["schemas"]["PeriodResultSummaryView"];
+            /** @enum {string} */
+            state?: "AVAILABLE" | "NO_DATA" | "DEPENDENCY_MISSING" | "SCOPE_NOT_SUPPORTED";
+        };
+        ReportPeriodView: {
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+            /** @enum {string} */
+            status?: "ACTIVE" | "DISABLED" | "ARCHIVED";
+            /** @enum {string} */
+            type?: "QUARTER" | "TRIMESTER" | "SEMESTER" | "CUSTOM";
+        };
+        ReportReferenceView: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
+        ReportScopeView: {
+            academicPeriod?: components["schemas"]["ReportPeriodView"];
+            academicYear?: components["schemas"]["ReportYearView"];
+            calendarIssues?: "PERIOD_OUTSIDE_YEAR"[];
+            /** Format: int64 */
+            classId?: number;
+            /** @enum {string} */
+            finalGradeTeacherAttribution?: "CURRENT_LESSON_TEACHER_OR_HOMEWORK_OWNER" | "SAVED_FINAL_GRADE_TEACHER";
+            /** @enum {string} */
+            sourceTeacherAttribution?: "CURRENT_LESSON_TEACHER_OR_HOMEWORK_OWNER" | "SAVED_FINAL_GRADE_TEACHER";
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            /** Format: int64 */
+            teacherProfileId?: number;
+            /** @enum {string} */
+            visibility?: "SCHOOL" | "SELECTED_CLASS" | "HOMEROOM_CLASS";
+        };
+        ReportYearView: {
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "ACTIVE" | "ARCHIVED";
+        };
         ResolveDraftRequest: {
             /** Format: int64 */
             academicPeriodId: number;
@@ -14773,6 +15138,265 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    getAdminAcademicReportBreakdown: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId?: number;
+                teacherProfileId?: number;
+                studentProfileId?: number;
+                dimension: "CLASS" | "SUBJECT" | "TEACHER" | "STUDENT";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница объединённого разреза */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportBreakdownView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getAdminAcademicReportFinalGrades: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId?: number;
+                teacherProfileId?: number;
+                studentProfileId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница опубликованных сохранённых итогов */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportFinalGradePageView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getAdminAcademicReportGrades: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId?: number;
+                teacherProfileId?: number;
+                studentProfileId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница неудалённых исходных оценок */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportGradePageView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getAdminAcademicReportSummary: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId?: number;
+                teacherProfileId?: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Сводка разрешённой области */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportSummaryView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
             };
         };
     };
@@ -25842,6 +26466,265 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeacherFeedbackMonthView"];
+                };
+            };
+        };
+    };
+    getHomeroomAcademicReportBreakdown: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                subjectId?: number;
+                studentProfileId?: number;
+                dimension: "CLASS" | "SUBJECT" | "TEACHER" | "STUDENT";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница объединённого разреза */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportBreakdownView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getHomeroomAcademicReportFinalGrades: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                subjectId?: number;
+                studentProfileId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница опубликованных сохранённых итогов */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportFinalGradePageView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getHomeroomAcademicReportGrades: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                subjectId?: number;
+                studentProfileId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница неудалённых исходных оценок */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportGradePageView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getHomeroomAcademicReportSummary: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                subjectId?: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Сводка разрешённой области */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportSummaryView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
