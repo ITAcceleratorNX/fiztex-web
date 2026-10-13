@@ -6,6 +6,8 @@ import type {
   ScheduleLesson,
 } from '@/platform/services/schedules';
 import { cx } from '@/lib/format';
+import { eventsOn, overlapsOf, shortDate, timeRange, type LessonOverlap } from '@/lib/oneTimeEventModel';
+import type { OneTimeEventOnSchedule } from '@/lib/oneTimeEventsApi';
 
 /**
  * Недельная сетка расписания. Свёрстана по Figma 2015:5786 «Расписание — Просмотр»:
@@ -42,6 +44,9 @@ export function ScheduleWeeklyGrid({
   onAddSlot,
   onEditLesson,
   onOpenLesson,
+  dates,
+  oneTimeEvents = [],
+  onOpenEvent,
 }: {
   grid: ScheduleGridView;
   readOnly?: boolean;
@@ -55,6 +60,14 @@ export function ScheduleWeeklyGrid({
    * урок на ближайшую дату; в режиме правки клик по-прежнему редактирует слот.
    */
   onOpenLesson?: (lesson: ScheduleLesson) => void;
+  /**
+   * Даты дней выбранной недели — только у действующего опубликованного расписания: шаблон
+   * черновика ни к какой неделе не привязан, и разовые события на нём не показываются.
+   */
+  dates?: Partial<Record<Weekday, string>>;
+  /** Разовые события недели с перекрытиями, посчитанными сервером по слотам этой сетки. */
+  oneTimeEvents?: OneTimeEventOnSchedule[];
+  onOpenEvent?: (eventId: number) => void;
 }) {
   const weekdays =
     grid.weekdays.length > 0
@@ -83,9 +96,24 @@ export function ScheduleWeeklyGrid({
             {weekdays.map((day) => (
               <th
                 key={day}
-                className="border border-line text-center text-13 font-semibold text-navy-700"
+                className="border border-line px-1 py-1.5 text-center align-top text-13 font-semibold text-navy-700"
               >
                 {WEEKDAY_LABELS[day] ?? day}
+                {dates?.[day] && (
+                  <span className="ml-1 text-11 font-medium text-gray-400">{shortDate(dates[day]!)}</span>
+                )}
+                {dates?.[day] && eventsOn(oneTimeEvents, dates[day]!).map((event) => (
+                  <button
+                    key={event.id}
+                    type="button"
+                    onClick={() => event.id != null && onOpenEvent?.(event.id)}
+                    title={event.title}
+                    className="mt-1 flex w-full items-center gap-1 rounded-md bg-violet-100 px-1.5 py-0.5 text-left text-11 font-semibold normal-case text-violet-700 transition hover:bg-violet-200"
+                  >
+                    <span className="shrink-0">{timeRange(event)}</span>
+                    <span className="truncate">{event.title}</span>
+                  </button>
+                ))}
               </th>
             ))}
           </tr>
@@ -144,7 +172,7 @@ export function ScheduleWeeklyGrid({
                       // Figma 2015:5889 — filled-slot: rounded-8, p-10, gap-4, тень 0 1px 1px
                       <div
                         className={cx(
-                          'flex h-[72px] gap-1 rounded-lg border p-1 shadow-slot',
+                          'flex min-h-[72px] gap-1 rounded-lg border p-1 shadow-slot',
                           hasCritical && 'border-red-500 bg-red-50',
                           hasWarning && 'border-brand-500 bg-brand-50',
                           !hasCritical && !hasWarning && isSubgroup && 'border-navy-700 bg-info-bg',
@@ -153,9 +181,22 @@ export function ScheduleWeeklyGrid({
                       >
                         {cellLessons.map((lesson) => {
                           const opensLesson = readOnly && onOpenLesson != null;
+                          const date = dates?.[day];
+                          const overlaps = date ? overlapsOf(oneTimeEvents, lesson.id, date) : [];
+                          const full = overlaps.find((o) => o.coverage === 'FULL');
+                          if (full) {
+                            return (
+                              <EventInsteadOfLesson
+                                key={lesson.id}
+                                overlap={full}
+                                subjectName={lesson.subjectName}
+                                onOpenEvent={onOpenEvent}
+                              />
+                            );
+                          }
                           return (
+                          <div key={lesson.id} className="flex min-w-0 flex-1 flex-col gap-0.5">
                           <button
-                            key={lesson.id}
                             type="button"
                             disabled={readOnly && !opensLesson}
                             title={opensLesson ? 'Открыть урок на ближайшую дату' : undefined}
@@ -181,12 +222,25 @@ export function ScheduleWeeklyGrid({
                             <span className="truncate text-11 text-muted">
                               {shortTeacherName(lesson.teacherFullName)}
                             </span>
-                            {lesson.room ? (
+                            {lesson.room && overlaps.length === 0 ? (
                               <span className="truncate text-10 text-gray-400">
                                 Каб. {lesson.room}
                               </span>
                             ) : null}
                           </button>
+                          {overlaps.map((overlap) => (
+                            <button
+                              key={overlap.event.id}
+                              type="button"
+                              onClick={() => overlap.event.id != null && onOpenEvent?.(overlap.event.id)}
+                              title={`${overlap.event.title} · ${overlap.overlapStart}–${overlap.overlapEnd}`}
+                              className="flex items-center gap-1 rounded bg-violet-100 px-1 text-10 font-semibold text-violet-700 transition hover:bg-violet-200"
+                            >
+                              <span className="shrink-0">{overlap.overlapStart}–{overlap.overlapEnd}</span>
+                              <span className="truncate">{overlap.event.title}</span>
+                            </button>
+                          ))}
+                          </div>
                           );
                         })}
 
@@ -213,6 +267,32 @@ export function ScheduleWeeklyGrid({
   );
 }
 
+/**
+ * Урок, целиком закрытый разовым событием: на это время показывается событие, а урок — только
+ * подписью. Сам урок не меняется — после отмены события сетка вернётся без правок.
+ */
+function EventInsteadOfLesson({
+  overlap,
+  subjectName,
+  onOpenEvent,
+}: {
+  overlap: LessonOverlap;
+  subjectName: string;
+  onOpenEvent?: (eventId: number) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => overlap.event.id != null && onOpenEvent?.(overlap.event.id)}
+      className="flex min-w-0 flex-1 flex-col gap-0.5 rounded-md bg-violet-100 px-1.5 py-1 text-left transition hover:bg-violet-200"
+    >
+      <span className="truncate text-xs font-bold text-violet-800">{overlap.event.title}</span>
+      <span className="truncate text-11 text-violet-700">{timeRange(overlap.event)}</span>
+      <span className="truncate text-10 text-violet-600/80 line-through">{subjectName}</span>
+    </button>
+  );
+}
+
 /** Figma 2015:5854 — legend-bar: gap 16, образец 14×14 с радиусом 3. */
 export function ScheduleLegendBar() {
   const items = [
@@ -221,6 +301,7 @@ export function ScheduleLegendBar() {
     { label: 'Критичный конфликт', className: 'border-red-500 bg-red-50' },
     { label: 'Предупреждение', className: 'border-brand-500 bg-brand-50' },
     { label: 'Пустой слот', className: 'border-dashed border-gray-300' },
+    { label: 'Разовое событие', className: 'border-violet-300 bg-violet-100' },
   ];
   return (
     <div className="flex flex-wrap items-center gap-4 pl-1">

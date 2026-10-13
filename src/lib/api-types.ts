@@ -17,7 +17,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_22"];
+        patch: operations["update_23"];
         trace?: never;
     };
     "/api/admin/academic-periods/{id}/archive": {
@@ -127,9 +127,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_24"];
+        get: operations["list_25"];
         put?: never;
-        post: operations["create_22"];
+        post: operations["create_23"];
         delete?: never;
         options?: never;
         head?: never;
@@ -149,7 +149,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_21"];
+        patch: operations["update_22"];
         trace?: never;
     };
     "/api/admin/academic-years/{id}/activate": {
@@ -207,9 +207,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_23"];
+        get: operations["list_24"];
         put?: never;
-        post: operations["create_21"];
+        post: operations["create_22"];
         delete?: never;
         options?: never;
         head?: never;
@@ -319,9 +319,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_22"];
+        get: operations["list_23"];
         put?: never;
-        post: operations["create_20"];
+        post: operations["create_21"];
         delete?: never;
         options?: never;
         head?: never;
@@ -335,8 +335,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_6"];
-        put: operations["update_5"];
+        get: operations["get_7"];
+        put: operations["update_6"];
         post?: never;
         delete?: never;
         options?: never;
@@ -495,9 +495,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_21"];
+        get: operations["list_22"];
         put?: never;
-        post: operations["create_19"];
+        post: operations["create_20"];
         delete?: never;
         options?: never;
         head?: never;
@@ -511,8 +511,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_5"];
-        put: operations["update_4"];
+        get: operations["get_6"];
+        put: operations["update_5"];
         post?: never;
         delete?: never;
         options?: never;
@@ -559,9 +559,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_20"];
+        get: operations["list_21"];
         put?: never;
-        post: operations["create_18"];
+        post: operations["create_19"];
         delete?: never;
         options?: never;
         head?: never;
@@ -581,7 +581,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_20"];
+        patch: operations["update_21"];
         trace?: never;
     };
     "/api/admin/bell-templates/{id}/activate": {
@@ -719,9 +719,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_19"];
+        get: operations["list_20"];
         put?: never;
-        post: operations["create_17"];
+        post: operations["create_18"];
         delete?: never;
         options?: never;
         head?: never;
@@ -741,7 +741,7 @@ export interface paths {
         delete: operations["delete_8"];
         options?: never;
         head?: never;
-        patch: operations["update_19"];
+        patch: operations["update_20"];
         trace?: never;
     };
     "/api/admin/calendar-events/{id}/activate": {
@@ -783,9 +783,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_18"];
+        get: operations["list_19"];
         put?: never;
-        post: operations["create_16"];
+        post: operations["create_17"];
         delete?: never;
         options?: never;
         head?: never;
@@ -879,7 +879,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_18"];
+        patch: operations["update_19"];
         trace?: never;
     };
     "/api/admin/classes/{id}/archive": {
@@ -1017,9 +1017,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_17"];
+        get: operations["list_18"];
         put?: never;
-        post: operations["create_15"];
+        post: operations["create_16"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1039,7 +1039,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_17"];
+        patch: operations["update_18"];
         trace?: never;
     };
     "/api/admin/group-sets/{id}/archive": {
@@ -1247,7 +1247,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_16"];
+        patch: operations["update_17"];
         trace?: never;
     };
     "/api/admin/lessons/{lessonId}/cancel": {
@@ -1259,7 +1259,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel_3"];
+        post: operations["cancel_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1330,6 +1330,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/one-time-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_17"];
+        put?: never;
+        post: operations["create_15"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/one-time-events/class-schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["classSchedule"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/one-time-events/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_5"];
+        put: operations["update_4"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/one-time-events/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancel_3"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/parents": {
         parameters: {
             query?: never;
@@ -1375,7 +1439,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_15"];
+        patch: operations["update_16"];
         trace?: never;
     };
     "/api/admin/parents/{id}/archive": {
@@ -1497,7 +1561,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_15"];
+        get: operations["get_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1855,7 +1919,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_14"];
+        patch: operations["update_15"];
         trace?: never;
     };
     "/api/admin/school-subjects/{id}/archive": {
@@ -1951,7 +2015,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_13"];
+        patch: operations["update_14"];
         trace?: never;
     };
     "/api/admin/students/{id}/archive": {
@@ -2047,7 +2111,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_12"];
+        patch: operations["update_13"];
         trace?: never;
     };
     "/api/admin/subgroups/{id}/archive": {
@@ -2345,7 +2409,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_31"];
+        get: operations["list_32"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2361,7 +2425,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_14"];
+        get: operations["get_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2383,7 +2447,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_11"];
+        patch: operations["update_12"];
         trace?: never;
     };
     "/api/admin/teacher-working-time/{id}/archive": {
@@ -2447,7 +2511,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_10"];
+        patch: operations["update_11"];
         trace?: never;
     };
     "/api/admin/teachers/{id}/archive": {
@@ -2665,7 +2729,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_30"];
+        get: operations["list_31"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2745,7 +2809,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_29"];
+        get: operations["list_30"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2777,7 +2841,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_13"];
+        get: operations["get_14"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3561,13 +3625,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_9"];
+        get: operations["get_10"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_9"];
+        patch: operations["update_10"];
         trace?: never;
     };
     "/api/grade-corrections/{correctionId}/cancel": {
@@ -3825,7 +3889,7 @@ export interface paths {
         delete: operations["delete_7"];
         options?: never;
         head?: never;
-        patch: operations["update_8"];
+        patch: operations["update_9"];
         trace?: never;
     };
     "/api/grades/{gradeId}/history": {
@@ -4043,7 +4107,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_12"];
+        get: operations["get_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5051,7 +5115,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_26"];
+        get: operations["list_27"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5387,7 +5451,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_28"];
+        get: operations["list_29"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5739,7 +5803,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_27"];
+        get: operations["list_28"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5803,13 +5867,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_8"];
+        get: operations["get_9"];
         put?: never;
         post?: never;
         delete: operations["delete_5"];
         options?: never;
         head?: never;
-        patch: operations["update_7"];
+        patch: operations["update_8"];
         trace?: never;
     };
     "/api/materials/{id}/download": {
@@ -6575,7 +6639,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_11"];
+        get: operations["get_12"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6783,7 +6847,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_10"];
+        get: operations["get_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7077,7 +7141,7 @@ export interface paths {
         delete: operations["delete_3"];
         options?: never;
         head?: never;
-        patch: operations["update_6"];
+        patch: operations["update_7"];
         trace?: never;
     };
     "/api/teacher/textbooks/{id}/archival": {
@@ -7215,7 +7279,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_25"];
+        get: operations["list_26"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7263,7 +7327,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_7"];
+        get: operations["get_8"];
         put?: never;
         post?: never;
         delete: operations["delete_2"];
@@ -9004,6 +9068,23 @@ export interface components {
             sortOrder?: number;
             /** @example 14:30:00 */
             startTime: string;
+        };
+        CreateOneTimeEventRequest: {
+            /** Format: int64 */
+            academicYearId: number;
+            /** @enum {string} */
+            audience: "SCHOOL" | "GRADE" | "CLASSES";
+            classIds?: number[];
+            comment?: string;
+            /** Format: date */
+            date: string;
+            /** @example 14:30:00 */
+            endTime: string;
+            grade?: string;
+            /** @example 14:30:00 */
+            startTime: string;
+            timeRangeValid?: boolean;
+            title?: string;
         };
         CreateParentRequest: {
             /** Format: int64 */
@@ -11885,6 +11966,89 @@ export interface components {
             /** @enum {string} */
             type?: "APP_BACKGROUND" | "TAB_SWITCH" | "WINDOW_BLUR" | "PAGE_CLOSE" | "RE_ENTRY" | "SCREENSHOT_ATTEMPT" | "STARTED" | "FOCUS_LOST" | "FOCUS_RETURNED" | "PAGE_CLOSED" | "RESUMED" | "TIME_EXPIRED" | "SUBMITTED" | "CONNECTION_ISSUE";
         };
+        OneTimeEventClassView: {
+            grade?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
+        OneTimeEventImpactView: {
+            classes?: components["schemas"]["OneTimeEventClassView"][];
+            lessons?: components["schemas"]["OneTimeEventLessonView"][];
+            /** Format: int32 */
+            parentCount?: number;
+            /** Format: int32 */
+            studentCount?: number;
+            teachers?: components["schemas"]["OneTimeEventTeacherView"][];
+        };
+        OneTimeEventLessonView: {
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            /** @enum {string} */
+            coverage?: "FULL" | "PARTIAL";
+            /** @example 14:30:00 */
+            endTime?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int64 */
+            lessonInstanceId?: number;
+            /** Format: int32 */
+            lessonNumber?: number;
+            /** @example 14:30:00 */
+            overlapEnd?: string;
+            /** @example 14:30:00 */
+            overlapStart?: string;
+            /** @example 14:30:00 */
+            startTime?: string;
+            /** Format: int64 */
+            subgroupId?: number;
+            subgroupName?: string;
+            subjectName?: string;
+            teacherFullName?: string;
+            /** Format: int64 */
+            teacherProfileId?: number;
+        };
+        OneTimeEventTeacherView: {
+            fullName?: string;
+            /** Format: int64 */
+            teacherProfileId?: number;
+        };
+        OneTimeEventView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            /** @enum {string} */
+            audience?: "SCHOOL" | "GRADE" | "CLASSES";
+            /** Format: date-time */
+            cancelledAt?: string;
+            /** Format: int64 */
+            cancelledBy?: number;
+            classes?: components["schemas"]["OneTimeEventClassView"][];
+            comment?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            createdBy?: number;
+            /** Format: date */
+            date?: string;
+            /** @example 14:30:00 */
+            endTime?: string;
+            grade?: string;
+            /** Format: int64 */
+            id?: number;
+            impact?: components["schemas"]["OneTimeEventImpactView"];
+            /** @example 14:30:00 */
+            startTime?: string;
+            /** @enum {string} */
+            status?: "ACTIVE" | "CANCELLED";
+            title?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int64 */
+            updatedBy?: number;
+            /** Format: int64 */
+            version?: number;
+        };
         OptionRequest: {
             correct?: boolean;
             text?: string;
@@ -12242,6 +12406,24 @@ export interface components {
         };
         PageNotificationItem: {
             content?: components["schemas"]["NotificationItem"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        PageOneTimeEventView: {
+            content?: components["schemas"]["OneTimeEventView"][];
             empty?: boolean;
             first?: boolean;
             last?: boolean;
@@ -13419,6 +13601,18 @@ export interface components {
             /** Format: int64 */
             teacherProfileId?: number;
         };
+        RoleScheduleEventOverlapView: {
+            /** @enum {string} */
+            coverage?: "FULL" | "PARTIAL";
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int64 */
+            lessonInstanceId?: number;
+            /** @example 14:30:00 */
+            overlapEnd?: string;
+            /** @example 14:30:00 */
+            overlapStart?: string;
+        };
         RoleScheduleEventView: {
             /** Format: date */
             dateFrom?: string;
@@ -13469,6 +13663,19 @@ export interface components {
             /** @enum {string} */
             weekday?: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
         };
+        RoleScheduleOneTimeEventView: {
+            comment?: string;
+            /** Format: date */
+            date?: string;
+            /** @example 14:30:00 */
+            endTime?: string;
+            /** Format: int64 */
+            id?: number;
+            overlaps?: components["schemas"]["RoleScheduleEventOverlapView"][];
+            /** @example 14:30:00 */
+            startTime?: string;
+            title?: string;
+        };
         RoleScheduleView: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -13482,6 +13689,7 @@ export interface components {
             events?: components["schemas"]["RoleScheduleEventView"][];
             lessons?: components["schemas"]["RoleScheduleLessonView"][];
             message?: string;
+            oneTimeEvents?: components["schemas"]["RoleScheduleOneTimeEventView"][];
             /** @enum {string} */
             status?: "ok" | "schedule_not_published" | "no_lessons" | "non_working_day" | "calendar_no_lessons" | "no_active_period" | "no_active_class" | "no_assigned_lessons";
             /** Format: date */
@@ -15164,6 +15372,21 @@ export interface components {
         UpdateLessonTopicRequest: {
             topic?: string;
         };
+        UpdateOneTimeEventRequest: {
+            /** @enum {string} */
+            audience: "SCHOOL" | "GRADE" | "CLASSES";
+            classIds?: number[];
+            comment?: string;
+            /** Format: date */
+            date: string;
+            /** @example 14:30:00 */
+            endTime: string;
+            grade?: string;
+            /** @example 14:30:00 */
+            startTime: string;
+            timeRangeValid?: boolean;
+            title?: string;
+        };
         UpdateParentRequest: {
             firstName?: string;
             lastName?: string;
@@ -15410,7 +15633,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    update_22: {
+    update_23: {
         parameters: {
             query?: never;
             header?: never;
@@ -15735,7 +15958,7 @@ export interface operations {
             };
         };
     };
-    list_24: {
+    list_25: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -15757,7 +15980,7 @@ export interface operations {
             };
         };
     };
-    create_22: {
+    create_23: {
         parameters: {
             query?: never;
             header?: never;
@@ -15803,7 +16026,7 @@ export interface operations {
             };
         };
     };
-    update_21: {
+    update_22: {
         parameters: {
             query?: never;
             header?: never;
@@ -15919,7 +16142,7 @@ export interface operations {
             };
         };
     };
-    list_23: {
+    list_24: {
         parameters: {
             query: {
                 role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
@@ -15944,7 +16167,7 @@ export interface operations {
             };
         };
     };
-    create_21: {
+    create_22: {
         parameters: {
             query?: {
                 force?: boolean;
@@ -16098,7 +16321,7 @@ export interface operations {
             };
         };
     };
-    list_22: {
+    list_23: {
         parameters: {
             query: {
                 status?: "DRAFT" | "PUBLISHED" | "HIDDEN";
@@ -16122,7 +16345,7 @@ export interface operations {
             };
         };
     };
-    create_20: {
+    create_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -16146,7 +16369,7 @@ export interface operations {
             };
         };
     };
-    get_6: {
+    get_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -16168,7 +16391,7 @@ export interface operations {
             };
         };
     };
-    update_5: {
+    update_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -16386,7 +16609,7 @@ export interface operations {
             };
         };
     };
-    list_21: {
+    list_22: {
         parameters: {
             query?: never;
             header?: never;
@@ -16406,7 +16629,7 @@ export interface operations {
             };
         };
     };
-    create_19: {
+    create_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -16430,7 +16653,7 @@ export interface operations {
             };
         };
     };
-    get_5: {
+    get_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -16452,7 +16675,7 @@ export interface operations {
             };
         };
     };
-    update_4: {
+    update_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -16531,7 +16754,7 @@ export interface operations {
             };
         };
     };
-    list_20: {
+    list_21: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -16555,7 +16778,7 @@ export interface operations {
             };
         };
     };
-    create_18: {
+    create_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -16601,7 +16824,7 @@ export interface operations {
             };
         };
     };
-    update_20: {
+    update_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -16860,7 +17083,7 @@ export interface operations {
             };
         };
     };
-    list_19: {
+    list_20: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -16890,7 +17113,7 @@ export interface operations {
             };
         };
     };
-    create_17: {
+    create_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -16956,7 +17179,7 @@ export interface operations {
             };
         };
     };
-    update_19: {
+    update_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -17026,7 +17249,7 @@ export interface operations {
             };
         };
     };
-    list_18: {
+    list_19: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -17051,7 +17274,7 @@ export interface operations {
             };
         };
     };
-    create_16: {
+    create_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -17373,7 +17596,7 @@ export interface operations {
             };
         };
     };
-    update_18: {
+    update_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -17641,7 +17864,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_18: {
         parameters: {
             query: {
                 classId: number;
@@ -17666,7 +17889,7 @@ export interface operations {
             };
         };
     };
-    create_15: {
+    create_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -17712,7 +17935,7 @@ export interface operations {
             };
         };
     };
-    update_17: {
+    update_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -18087,7 +18310,7 @@ export interface operations {
             };
         };
     };
-    update_16: {
+    update_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -18113,7 +18336,7 @@ export interface operations {
             };
         };
     };
-    cancel_3: {
+    cancel_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -18256,6 +18479,151 @@ export interface operations {
             };
         };
     };
+    list_17: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                dateFrom?: string;
+                dateTo?: string;
+                status?: "ACTIVE" | "CANCELLED";
+                classId?: number;
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageOneTimeEventView"];
+                };
+            };
+        };
+    };
+    create_15: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOneTimeEventRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OneTimeEventView"];
+                };
+            };
+        };
+    };
+    classSchedule: {
+        parameters: {
+            query: {
+                classId: number;
+                dateFrom: string;
+                dateTo: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleScheduleOneTimeEventView"][];
+                };
+            };
+        };
+    };
+    get_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OneTimeEventView"];
+                };
+            };
+        };
+    };
+    update_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateOneTimeEventRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OneTimeEventView"];
+                };
+            };
+        };
+    };
+    cancel_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OneTimeEventView"];
+                };
+            };
+        };
+    };
     list_16: {
         parameters: {
             query: {
@@ -18348,7 +18716,7 @@ export interface operations {
             };
         };
     };
-    update_15: {
+    update_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -18565,7 +18933,7 @@ export interface operations {
             };
         };
     };
-    get_15: {
+    get_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -19230,7 +19598,7 @@ export interface operations {
             };
         };
     };
-    update_14: {
+    update_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -19427,7 +19795,7 @@ export interface operations {
             };
         };
     };
-    update_13: {
+    update_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -19614,7 +19982,7 @@ export interface operations {
             };
         };
     };
-    update_12: {
+    update_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -20207,7 +20575,7 @@ export interface operations {
             };
         };
     };
-    list_31: {
+    list_32: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -20233,7 +20601,7 @@ export interface operations {
             };
         };
     };
-    get_14: {
+    get_15: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -20257,7 +20625,7 @@ export interface operations {
             };
         };
     };
-    update_11: {
+    update_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -20395,7 +20763,7 @@ export interface operations {
             };
         };
     };
-    update_10: {
+    update_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -20845,7 +21213,7 @@ export interface operations {
             };
         };
     };
-    list_30: {
+    list_31: {
         parameters: {
             query: {
                 teacherProfileId?: number;
@@ -20986,7 +21354,7 @@ export interface operations {
             };
         };
     };
-    list_29: {
+    list_30: {
         parameters: {
             query?: {
                 grade?: string;
@@ -21028,7 +21396,7 @@ export interface operations {
             };
         };
     };
-    get_13: {
+    get_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -22290,7 +22658,7 @@ export interface operations {
             };
         };
     };
-    get_9: {
+    get_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -22312,7 +22680,7 @@ export interface operations {
             };
         };
     };
-    update_9: {
+    update_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -22720,7 +23088,7 @@ export interface operations {
             };
         };
     };
-    update_8: {
+    update_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -23158,7 +23526,7 @@ export interface operations {
             };
         };
     };
-    get_12: {
+    get_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -24982,7 +25350,7 @@ export interface operations {
             };
         };
     };
-    list_26: {
+    list_27: {
         parameters: {
             query: {
                 dateFrom?: string;
@@ -25614,7 +25982,7 @@ export interface operations {
             };
         };
     };
-    list_28: {
+    list_29: {
         parameters: {
             query?: {
                 childId?: number;
@@ -26323,7 +26691,7 @@ export interface operations {
             };
         };
     };
-    list_27: {
+    list_28: {
         parameters: {
             query?: {
                 childId?: number;
@@ -26478,7 +26846,7 @@ export interface operations {
             };
         };
     };
-    get_8: {
+    get_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -26520,7 +26888,7 @@ export interface operations {
             };
         };
     };
-    update_7: {
+    update_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -28230,7 +28598,7 @@ export interface operations {
             };
         };
     };
-    get_11: {
+    get_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -28542,7 +28910,7 @@ export interface operations {
             };
         };
     };
-    get_10: {
+    get_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -29155,7 +29523,7 @@ export interface operations {
             };
         };
     };
-    update_6: {
+    update_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -29455,7 +29823,7 @@ export interface operations {
             };
         };
     };
-    list_25: {
+    list_26: {
         parameters: {
             query?: {
                 page?: number;
@@ -29529,7 +29897,7 @@ export interface operations {
             };
         };
     };
-    get_7: {
+    get_8: {
         parameters: {
             query?: never;
             header?: never;
