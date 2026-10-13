@@ -26,23 +26,36 @@ beforeEach(() => {
 function renderModal(initialTopic = 'Механика') {
   const onUse = vi.fn();
   const onClose = vi.fn();
-  render(<GenerateWorkspaceTestModal initialTopic={initialTopic} onUse={onUse} onClose={onClose} />);
+  render(<GenerateWorkspaceTestModal initialTopic={initialTopic} subjectId={1} onUse={onUse} onClose={onClose} />);
   return { onUse, onClose };
 }
 
 const resultJob: TestAiJob = {
-  id: 5, status: 'DONE', request: { topic: 'Механика', questionCount: 1, openQuestionCount: 1 },
+  id: 5, status: 'DONE', subjectId: 1, request: { topic: 'Механика', questionCount: 1, openQuestionCount: 1 },
   result: { questions: [{ type: 'OPEN_TEXT', text: 'Что такое инерция?', referenceAnswer: 'Сохранение скорости.', maxScore: 1, aiGenerated: true }] },
 };
 
 describe('GenerateWorkspaceTestModal', () => {
+  it('отделяет исходный текст от пожеланий учителя и передаёт предмет', async () => {
+    const user = userEvent.setup();
+    renderModal('Реакции');
+    await user.click(screen.getByRole('radio', { name: 'По тексту' }));
+    expect(screen.getByRole('button', { name: 'Сгенерировать' })).toBeDisabled();
+    await user.type(screen.getByRole('textbox', { name: /Исходный текст/ }), 'Водород реагирует с кислородом.');
+    await user.type(screen.getByRole('textbox', { name: 'Пожелания к вопросам' }), 'Проверь знание коэффициентов');
+    await user.click(screen.getByRole('button', { name: 'Сгенерировать' }));
+    await waitFor(() => expect(state.start).toHaveBeenCalledWith({ body: expect.objectContaining({
+      subjectId: 1, sourceText: 'Водород реагирует с кислородом.', teacherPrompt: 'Проверь знание коэффициентов',
+    }), key: expect.any(String) }));
+  });
+
   it('отправляет тему и параметры без урока и ДЗ, не применяя результат автоматически', async () => {
     const user = userEvent.setup();
     const { onUse } = renderModal();
     await user.type(screen.getByRole('textbox', { name: 'Для кого' }), '7 класс');
     await user.click(screen.getByRole('button', { name: 'Сгенерировать' }));
     await waitFor(() => expect(state.start).toHaveBeenCalledWith({ body: {
-      topic: 'Механика', audience: '7 класс', language: 'ru', teacherPrompt: '', questionCount: 10, openQuestionCount: 2,
+      topic: 'Механика', audience: '7 класс', language: 'ru', teacherPrompt: '', questionCount: 10, openQuestionCount: 2, subjectId:1,
     }, key: expect.any(String) }));
     expect(onUse).not.toHaveBeenCalled();
   });

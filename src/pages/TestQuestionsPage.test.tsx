@@ -118,11 +118,11 @@ describe('TestQuestionsPage activation errors', () => {
       isLoading: false,
       isError: false,
       refetch: vi.fn(),
-    } as ReturnType<typeof useTest>);
+    } as unknown as ReturnType<typeof useTest>);
     vi.mocked(useUpdateTest).mockReturnValue({
       isPending: false,
       mutateAsync: vi.fn(),
-    } as ReturnType<typeof useUpdateTest>);
+    } as unknown as ReturnType<typeof useUpdateTest>);
   });
 
   it('highlights invalid question card from 422 violations', async () => {
@@ -141,7 +141,7 @@ describe('TestQuestionsPage activation errors', () => {
           },
         ]),
       ),
-    } as ReturnType<typeof useUpdateTest>);
+    } as unknown as ReturnType<typeof useUpdateTest>);
 
     renderAtRoute(10);
 

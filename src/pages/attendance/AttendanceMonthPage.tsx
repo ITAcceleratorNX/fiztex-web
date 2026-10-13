@@ -19,7 +19,8 @@ import { formatWeekdayDayMonth } from '@/lib/format';
 import { monthLabel } from '@/lib/monthlyFeedbackModel';
 import { ROUTES } from '@/lib/routes';
 import { localDate } from '@/pages/schedule/myWeek';
-import { AttendanceLegend, AttendanceMonthTable } from './AttendanceMonthTable';
+import { AttendanceLegend } from '@/components/ui/AttendanceDot';
+import { AttendanceMonthTable } from './AttendanceMonthTable';
 
 /**
  * Посещаемость за месяц (Figma 2170:3823 — пусто, 2170:2360 — таблица).

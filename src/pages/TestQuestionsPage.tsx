@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, GripVertical, Sparkles, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput, Select } from '@/components/ui/Field';
+import type { FormulaProfile } from '@/lib/formulaProfiles';
 import { FormulaField } from '@/components/ui/FormulaField';
 import { FormulaProblems } from '@/components/ui/FormulaProblems';
 import { QuestionImageField } from '@/components/ui/QuestionImageField';
@@ -45,6 +46,7 @@ function QuestionEditor({
   index,
   total,
   testId,
+  profile = 'GENERAL',
   onChange,
   onRemove,
   onMoveUp,
@@ -58,6 +60,7 @@ function QuestionEditor({
   total: number;
   /** Нужен рисунку вопроса: он грузится своим эндпоинтом и инвалидирует карточку теста. */
   testId: number;
+  profile?: FormulaProfile;
   onChange: (next: QuestionDraft) => void;
   onRemove: () => void;
   onMoveUp: () => void;
@@ -201,6 +204,7 @@ function QuestionEditor({
       <div className="mt-4">
         <Field label="Текст вопроса" required>
           <FormulaField
+            profile={profile}
             value={question.text}
             onChange={(text) => onChange({ ...question, text })}
             placeholder="Сформулируйте вопрос для поступающего"
@@ -250,6 +254,7 @@ function QuestionEditor({
               />
               <div className="flex-1">
                 <FormulaField
+            profile={profile}
                   multiline={false}
                   value={opt.text}
                   onChange={(text) => {
@@ -285,6 +290,7 @@ function QuestionEditor({
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Эталонный ответ">
             <FormulaField
+            profile={profile}
               value={question.referenceAnswer}
               onChange={(referenceAnswer) => onChange({ ...question, referenceAnswer })}
               placeholder="Для проверки администратором или AI"
@@ -293,6 +299,7 @@ function QuestionEditor({
           </Field>
           <Field label="Критерии оценки">
             <FormulaField
+            profile={profile}
               value={question.gradingCriteria}
               onChange={(gradingCriteria) => onChange({ ...question, gradingCriteria })}
               placeholder="По каким правилам выставлять балл"
@@ -548,6 +555,7 @@ export function TestQuestionsPage() {
                       index={index}
                       total={questions.length}
                       testId={test.id}
+                      profile={test.formulaProfile ?? 'GENERAL'}
                       showDraftUi={showDraftUi}
                       invalidMessages={(invalidByIndex.get(index) ?? []).map((v) => v.message)}
                       onChange={(next) =>
@@ -616,6 +624,7 @@ export function TestQuestionsPage() {
         key={variantSourceIndex}
         open
         onClose={() => setVariantSourceIndex(null)}
+        testId={test?.id}
         original={questions[variantSourceIndex] ?? null}
         onAdd={(variant) => {
           const insertAt = variantSourceIndex;

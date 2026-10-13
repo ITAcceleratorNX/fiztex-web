@@ -1,4 +1,4 @@
-import type { RoleSchedule, RoleScheduleLesson } from '@/lib/lessonsApi';
+import type { RoleSchedule } from '@/lib/lessonsApi';
 
 /**
  * Модель недели «моего расписания»: ответ `/api/schedule/me/week` → колонки, строки, ячейки.
@@ -24,6 +24,12 @@ export interface WeekColumn {
   label: string;
   dayNumber: number;
   isToday: boolean;
+}
+
+/** Всё, что нужно раскладке по строкам: сетка «Моего класса» кладёт сюда свои уроки и слоты. */
+export interface RowLesson {
+  lessonNumber?: number | null;
+  startTime?: string;
 }
 
 export interface WeekRow {
@@ -70,7 +76,7 @@ export function weekColumns(
 }
 
 /** Ключ строки: номер урока, а у заведённого вручную урока без номера — время начала. */
-export function rowKeyOf(lesson: RoleScheduleLesson): string {
+export function rowKeyOf(lesson: RowLesson): string {
   return lesson.lessonNumber != null ? `n${lesson.lessonNumber}` : `t${hhmm(lesson.startTime) || '?'}`;
 }
 
@@ -85,7 +91,7 @@ export function hhmm(time: string | undefined): string {
  * Время строки — самое раннее среди её уроков: у классов учителя бывают разные звонки, и
  * показать одно из них можно только как ориентир. Точное время урока остаётся в ячейке.
  */
-export function weekRows(lessons: readonly RoleScheduleLesson[]): WeekRow[] {
+export function weekRows(lessons: readonly RowLesson[]): WeekRow[] {
   const byKey = new Map<string, WeekRow>();
   for (const lesson of lessons) {
     const key = rowKeyOf(lesson);
@@ -109,11 +115,11 @@ function compareRows(a: WeekRow, b: WeekRow): number {
   return a.number - b.number;
 }
 
-export function lessonsAt(
-  lessons: readonly RoleScheduleLesson[],
+export function lessonsAt<T extends RowLesson & { date?: string }>(
+  lessons: readonly T[],
   rowKey: string,
   date: string,
-): RoleScheduleLesson[] {
+): T[] {
   return lessons.filter((lesson) => lesson.date === date && rowKeyOf(lesson) === rowKey);
 }
 

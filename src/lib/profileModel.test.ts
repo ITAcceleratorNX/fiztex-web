@@ -62,7 +62,7 @@ describe('profileFacts', () => {
 
 describe('contactRows', () => {
   it('показывает только заполненное', () => {
-    expect(contactRows({ phone: '+77001000000', email: null } as MyProfile)).toEqual([
+    expect(contactRows({ phone: '+77001000000', email: null } as unknown as MyProfile)).toEqual([
       { label: 'Телефон', value: '+77001000000' },
     ]);
     expect(contactRows({} as MyProfile)).toEqual([]);

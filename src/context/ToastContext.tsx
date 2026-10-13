@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { cx } from '@/lib/format';
 
 type ToastKind = 'success' | 'error' | 'info';
@@ -49,11 +50,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed bottom-6 right-6 z-[100] flex max-h-[calc(100vh-3rem)] w-[min(34rem,calc(100vw-3rem))] flex-col gap-2.5 overflow-y-auto overscroll-contain">
+      {createPortal(<div data-modal-notifications className="pointer-events-none fixed bottom-6 right-6 z-[100] flex max-h-[calc(100vh-3rem)] w-[min(34rem,calc(100vw-3rem))] flex-col gap-2.5 overflow-y-auto overscroll-contain">
         {toasts.map((t) => (
           <ToastItem key={t.id} toast={t} onClose={remove} />
         ))}
-      </div>
+      </div>, document.body)}
     </ToastContext.Provider>
   );
 }
@@ -91,10 +92,9 @@ const TOAST_STYLES = {
   },
 } as const;
 
-function autoDismissDelay(toast: Toast): number | null {
-  if (toast.kind === 'error') return null;
+function autoDismissDelay(toast: Toast): number {
   const wordCount = toast.message.trim().split(/\s+/).filter(Boolean).length;
-  return Math.min(30_000, Math.max(10_000, wordCount * 350));
+  return Math.min(30_000, Math.max(toast.kind === 'error' ? 15_000 : 10_000, wordCount * 350));
 }
 
 function ToastItem({ toast, onClose }: { toast: Toast; onClose: (id: number) => void }) {
@@ -103,18 +103,21 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: (id: number) => 
   const dismissDelay = autoDismissDelay(toast);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dueAtRef = useRef<number | null>(null);
-  const remainingRef = useRef(dismissDelay ?? 0);
-  const pausedRef = useRef(false);
+  const remainingRef = useRef(dismissDelay);
+  const pausesRef = useRef(new Set<'hover' | 'focus'>());
 
   const startTimer = useCallback(() => {
-    if (dismissDelay == null || timeoutRef.current != null || pausedRef.current) return;
+    if (timeoutRef.current != null || pausesRef.current.size > 0) return;
     const delay = remainingRef.current;
     dueAtRef.current = Date.now() + delay;
-    timeoutRef.current = setTimeout(() => onClose(toast.id), delay);
-  }, [dismissDelay, onClose, toast.id]);
+    timeoutRef.current = setTimeout(() => {
+      timeoutRef.current = null;
+      onClose(toast.id);
+    }, delay);
+  }, [onClose, toast.id]);
 
-  const pauseTimer = useCallback(() => {
-    pausedRef.current = true;
+  const pauseTimer = useCallback((reason: 'hover' | 'focus') => {
+    pausesRef.current.add(reason);
     if (timeoutRef.current == null || dueAtRef.current == null) return;
     clearTimeout(timeoutRef.current);
     remainingRef.current = Math.max(0, dueAtRef.current - Date.now());
@@ -122,16 +125,21 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: (id: number) => 
     dueAtRef.current = null;
   }, []);
 
-  const resumeTimer = useCallback(() => {
-    if (!pausedRef.current) return;
-    pausedRef.current = false;
+  const resumeTimer = useCallback((reason: 'hover' | 'focus') => {
+    pausesRef.current.delete(reason);
     startTimer();
   }, [startTimer]);
 
   useEffect(() => {
     startTimer();
     return () => {
-      if (timeoutRef.current != null) clearTimeout(timeoutRef.current);
+      if (timeoutRef.current != null) {
+        clearTimeout(timeoutRef.current);
+        remainingRef.current = Math.max(0, (dueAtRef.current ?? Date.now()) - Date.now());
+      }
+      // StrictMode replays this effect: a cleared timer must be available to restart.
+      timeoutRef.current = null;
+      dueAtRef.current = null;
     };
   }, [startTimer]);
 
@@ -141,11 +149,11 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: (id: number) => 
         'pointer-events-auto flex items-start gap-2 rounded-lg border py-2 pl-4 pr-2 animate-slide-in',
         config.box,
       )}
-      onMouseEnter={pauseTimer}
-      onMouseLeave={resumeTimer}
-      onFocus={pauseTimer}
+      onMouseEnter={() => pauseTimer('hover')}
+      onMouseLeave={() => resumeTimer('hover')}
+      onFocus={() => pauseTimer('focus')}
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) resumeTimer();
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) resumeTimer('focus');
       }}
     >
       <div
@@ -161,7 +169,7 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: (id: number) => 
       </div>
       <button
         type="button"
-        onClick={() => onClose(toast.id)}
+        onClick={(event) => { event.stopPropagation(); onClose(toast.id); }}
         aria-label={toast.kind === 'error' ? 'Закрыть сообщение об ошибке' : 'Закрыть уведомление'}
         className={cx(
           'flex size-11 shrink-0 items-center justify-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-navy-700',

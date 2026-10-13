@@ -13,6 +13,8 @@ export type LessonMaterial = Schema<'LessonMaterialView'>;
 export type HomeworkAiJob = Schema<'HomeworkAiJobView'>;
 export type HomeworkAiQuota = Schema<'HomeworkAiQuotaView'>;
 export type HomeworkAiResult = Schema<'HomeworkAiResultView'>;
+/** UI choice selects an explicit API command rather than a request body. */
+export type HomeworkAiApplyMode = 'REPLACE' | 'APPEND';
 export type HomeworkQuestion = Schema<'HomeworkQuestionView'>;
 export type StudentQuestion = Schema<'StudentQuestionView'>;
 export type TeacherAnswer = Schema<'TeacherAnswerView'>;
@@ -84,9 +86,9 @@ export const homeworkAiApi = {
   jobs: (homeworkId: number, signal?: AbortSignal) =>
     request<HomeworkAiJob[]>(`/homework/${homeworkId}/ai-generations`, { signal }),
 
-  /** Применить результат к заданию — когда он не применился сам из-за правок учителя. */
-  apply: (homeworkId: number, jobId: number) =>
-    request<HomeworkAiJob>(`/homework/${homeworkId}/ai-generations/${jobId}/apply`, {
+  /** Add generated questions or explicitly replace the current content. */
+  apply: (homeworkId: number, jobId: number, mode: HomeworkAiApplyMode = 'REPLACE') =>
+    request<HomeworkAiJob>(`/homework/${homeworkId}/ai-generations/${jobId}/${mode === 'APPEND' ? 'append' : 'apply'}`, {
       method: 'POST',
     }),
 

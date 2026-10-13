@@ -49,6 +49,13 @@ function mockHook(mutateAsync: () => Promise<AiQuestionVariantResponse>) {
 }
 
 describe('AiVariantModal', () => {
+  it('передаёт контекст текущего теста в генерацию варианта', async () => {
+    const generate = vi.fn().mockResolvedValue(response);
+    mockHook(generate);
+    render(<AiVariantModal open testId={42} onClose={vi.fn()} original={original} onAdd={vi.fn()} />);
+    await waitFor(() => expect(generate).toHaveBeenCalledWith({ testId: 42, question: expect.objectContaining({ text: original.text }) }));
+  });
+
   beforeEach(() => vi.clearAllMocks());
   afterEach(cleanup);
 

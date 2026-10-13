@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Sigma, Trash2 } from 'lucide-react';
 import { cx } from '@/lib/format';
+import type { FormulaProfile } from '@/lib/formulaProfiles';
 import { Formula, MathText } from './MathText';
 import { useFieldControlProps } from './fieldContext';
 import { FormulaEditorModal } from './FormulaEditorModal';
@@ -36,6 +37,7 @@ export function FormulaField({
   invalid = false,
   disabled = false,
   ariaLabel,
+  profile = 'GENERAL',
 }: {
   value: string;
   onChange: (next: string) => void;
@@ -45,6 +47,7 @@ export function FormulaField({
   invalid?: boolean;
   disabled?: boolean;
   ariaLabel?: string;
+  profile?: FormulaProfile;
 }) {
   const fieldProps = useFieldControlProps({ ariaLabel, ariaInvalid: invalid || undefined });
   const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
@@ -96,7 +99,7 @@ export function FormulaField({
   };
 
   return (
-    <div>
+    <div className="w-full min-w-0">
       {multiline ? (
         <textarea
           {...inputProps}
@@ -127,18 +130,18 @@ export function FormulaField({
           Формула
         </button>
         {formulaCount > 0 && (
-          <span className="text-11 text-slate-400">
-            Щёлкните по формуле в предпросмотре, чтобы изменить её
+          <span className="text-11 text-muted">
+            Щёлкните по формуле, чтобы изменить её. Длинную формулу можно прокрутить вбок.
           </span>
         )}
       </div>}
 
       {formulaCount > 0 && (
-        <div className="mt-2 rounded-xl bg-slate-50 px-3 py-2">
-          <p className="text-11 font-semibold uppercase tracking-wide text-slate-400">
-            Так увидит ученик
+        <div className="mt-2 min-w-0 rounded-xl bg-neutral-bg px-3 py-2">
+          <p className="text-11 font-semibold uppercase tracking-wide text-muted">
+            Предпросмотр
           </p>
-          <div className="mt-1 text-15 leading-relaxed text-slate-800">
+          <div className="mt-1 min-w-0 text-15 leading-relaxed text-ink">
             {disabled ? <MathText text={value} /> : <EditableFormulaPreview
               value={value}
               onEdit={(index, latex, display) => setEditing({ index, latex, display })}
@@ -151,6 +154,7 @@ export function FormulaField({
       {editing && !disabled && (
         <FormulaEditorModal
           open
+          profile={profile}
           initialLatex={editing.latex}
           initialDisplay={editing.display}
           onClose={() => setEditing(null)}
@@ -173,7 +177,7 @@ function EditableFormulaPreview({
 }) {
   let mathIndex = -1;
   return (
-    <span className="whitespace-pre-wrap">
+    <span className="whitespace-pre-wrap break-words">
       {splitMath(value).map((segment, key) => {
         if (segment.kind === 'text') {
           return <span key={key}>{unescapeText(segment.value)}</span>;
@@ -181,20 +185,20 @@ function EditableFormulaPreview({
         mathIndex += 1;
         const index = mathIndex;
         return (
-          <span key={key} className="group relative inline-flex items-center">
+          <span key={key} className="group relative inline-flex max-w-full items-center align-middle">
             <button
               type="button"
               title="Изменить формулу"
               onClick={() => onEdit(index, segment.value, segment.display)}
-              className="rounded px-0.5 transition hover:bg-brand-100/70"
+              className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded px-0.5 text-left transition hover:bg-brand-100/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
             >
-              <Formula latex={segment.value} display={segment.display} />
+              <Formula latex={segment.value} display={segment.display} scrollable={false} />
             </button>
             <button
               type="button"
               title="Удалить формулу"
               onClick={() => onRemove(index)}
-              className="ml-0.5 hidden rounded p-0.5 text-slate-400 transition hover:bg-red-50 hover:text-red-500 group-hover:inline-flex"
+              className="ml-0.5 inline-flex shrink-0 rounded p-0.5 text-muted opacity-0 transition hover:bg-danger-bg hover:text-danger-fg focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 group-hover:opacity-100 group-focus-within:opacity-100"
             >
               <Trash2 className="h-3 w-3" />
             </button>

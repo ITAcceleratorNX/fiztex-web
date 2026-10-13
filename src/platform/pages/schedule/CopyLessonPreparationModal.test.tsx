@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/lib/api';
+import type { Lesson } from '@/lib/lessonsApi';
 import { CopyLessonPreparationModal } from './CopyLessonPreparationModal';
 
 const copy = vi.fn();
@@ -18,11 +19,11 @@ vi.mock('@/hooks/queries', () => ({
   useCopyLessonPreparation: (source: number) => ({ mutateAsync: (body: unknown) => copy(source, body), isPending: false }),
 }));
 
-const source = { id: 5, subjectName: 'Физика', className: '7А', date: '2026-10-06',
+const source: Lesson = { id: 5, subjectName: 'Физика', className: '7А', date: '2026-10-06',
   academicPeriodStatus: 'ACTIVE', capabilities: ['EDIT_TEACHING_PART'] };
-const nextLesson = { id: 6, subjectName: 'Физика', className: '7А', date: '2026-10-08', lessonNumber: 2,
+const nextLesson: Lesson = { id: 6, subjectName: 'Физика', className: '7А', date: '2026-10-08', lessonNumber: 2,
   startTime: '09:00:00', endTime: '09:45:00', academicPeriodStatus: 'ACTIVE', capabilities: ['EDIT_TEACHING_PART'] };
-const otherClass = { id: 9, subjectName: 'Физика', className: '8Б', date: '2026-10-07',
+const otherClass: Lesson = { id: 9, subjectName: 'Физика', className: '8Б', date: '2026-10-07',
   academicPeriodStatus: 'ACTIVE', capabilities: ['EDIT_TEACHING_PART'] };
 
 function previewOf(target: object, extra: object = {}) {

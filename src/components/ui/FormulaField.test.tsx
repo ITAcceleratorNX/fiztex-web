@@ -10,6 +10,16 @@ import { FormulaField } from './FormulaField';
  * и события.
  */
 vi.mock('mathlive', () => {
+  class FakeKeyboard extends EventTarget {
+    layouts = [];
+    container: HTMLElement | null = null;
+    visible = false;
+    boundingRect = { height: 0 };
+    show() { this.visible = true; this.boundingRect.height = 200; this.dispatchEvent(new Event('geometrychange')); }
+    hide() { this.visible = false; this.boundingRect.height = 0; this.dispatchEvent(new Event('geometrychange')); }
+  }
+  const keyboard = new FakeKeyboard();
+  Object.assign(window, { mathVirtualKeyboard: keyboard });
   class FakeMathfield {
     static fontsDirectory: string | null = '';
     static soundsDirectory: string | null = '';
@@ -41,13 +51,138 @@ function button(label: string): HTMLButtonElement {
 
 function latexInput(): HTMLInputElement | HTMLTextAreaElement {
   const element = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(
-    '[aria-label="Разметка формулы"]',
+    '[aria-label="Визуальный редактор формулы"], [aria-label="Разметка формулы"]',
   );
   if (!element) throw new Error('поле разметки формулы не найдено');
   return element;
 }
 
 describe('FormulaField', () => {
+  it('открывает химический конструктор с пустого поля и вставляет выбранное вещество без промежуточного применения', async () => {
+    const user = userEvent.setup(); const onChange = vi.fn();
+    render(<FormulaField profile="CHEMISTRY" value="" onChange={onChange} />);
+    await user.click(button('Формула'));
+    expect(screen.getByLabelText('Вещество или реакция')).toHaveValue('');
+    expect(button('Математические обозначения')).toHaveAttribute('aria-selected', 'false');
+    await user.click(screen.getByLabelText('Водород, H, атомный номер 1'));
+    await user.click(screen.getByLabelText('Цифра 2'));
+    await user.click(screen.getByLabelText('Кислород, O, атомный номер 8'));
+    expect(onChange).not.toHaveBeenCalled();
+    await user.click(button('Вставить формулу'));
+    expect(onChange).toHaveBeenCalledWith('$\\ce{H2O}$');
+  });
+
+  it('не сохраняет собранную химическую запись после отмены общего окна', async () => {
+    const user = userEvent.setup(); const onChange = vi.fn();
+    render(<FormulaField profile="CHEMISTRY" value="" onChange={onChange} />);
+    await user.click(button('Формула'));
+    await user.click(screen.getByLabelText('Кальций, Ca, атомный номер 20'));
+    await user.click(button('Знаки и связи'));
+    await user.click(button('2+'));
+    await user.click(button('Отмена'));
+    expect(onChange).not.toHaveBeenCalled();
+    await user.click(button('Формула'));
+    expect(screen.getByLabelText('Вещество или реакция')).toHaveValue('');
+  });
+
+  it('блокирует вставку незаконченной химической записи и сохраняет исправленную', async () => {
+    const user = userEvent.setup(); const onChange = vi.fn();
+    render(<FormulaField profile="CHEMISTRY" value={'$\\ce{Fe}$'} onChange={onChange} />);
+    await user.click(screen.getByTitle('Изменить формулу'));
+    const argument = screen.getByLabelText('Вещество или реакция');
+    await user.clear(argument); await user.paste('Fe^{2');
+    expect(button('Вставить формулу')).toBeDisabled();
+    await user.type(argument, '+}');
+    expect(button('Вставить формулу')).toBeEnabled();
+    await user.click(button('Вставить формулу'));
+    expect(onChange).toHaveBeenCalledWith('$\\ce{Fe^{2+}}$');
+  });
+
+  it('сохраняет химическую запись при открытии математического редактора и скрывает его клавиатуру', async () => {
+    const user = userEvent.setup(); const onChange = vi.fn();
+    render(<FormulaField profile="CHEMISTRY" value={'$\\ce{H2O}$'} onChange={onChange} />);
+    await user.click(screen.getByTitle('Изменить формулу'));
+    await user.click(button('Математические обозначения'));
+    await waitFor(() => expect(button('Показать клавиатуру')).toBeInTheDocument());
+    await user.click(button('Показать клавиатуру'));
+    await user.click(button('Химическая запись'));
+    expect(window.mathVirtualKeyboard.visible).toBe(false);
+    expect(screen.getByLabelText('Вещество или реакция')).toHaveValue('H2O');
+    await user.click(button('Вставить формулу'));
+    expect(onChange).toHaveBeenCalledWith('$\\ce{H2O}$');
+  });
+
+  it('сохраняет незаконченный химический ввод при смене режима и позволяет его дописать', async () => {
+    const user = userEvent.setup(); const onChange = vi.fn();
+    render(<FormulaField profile="CHEMISTRY" value={'$\\ce{Fe}$'} onChange={onChange} />);
+    await user.click(screen.getByTitle('Изменить формулу'));
+    const argument = screen.getByLabelText('Вещество или реакция');
+    await user.clear(argument); await user.paste('Fe^{2');
+    await user.click(button('Математические обозначения'));
+    expect(argument).not.toBeVisible();
+    expect(button('Вставить формулу')).toBeDisabled();
+    await user.click(button('Химическая запись'));
+    expect(argument).toHaveValue('Fe^{2');
+    await user.type(argument, '+}');
+    await user.click(button('Вставить формулу'));
+    expect(onChange).toHaveBeenCalledWith('$\\ce{Fe^{2+}}$');
+  });
+
+  it('сохраняет черновик изотопа между режимами и вставляет его отдельным блоком', async () => {
+    const user = userEvent.setup(); const onChange = vi.fn();
+    render(<FormulaField profile="CHEMISTRY" value="" onChange={onChange} />);
+    await user.click(button('Формула'));
+    await user.click(button('Ионы и изотопы'));
+    await user.click(screen.getByLabelText('Элемент или группа'));
+    await user.click(screen.getByLabelText('Углерод, C, атомный номер 6'));
+    await user.type(screen.getByLabelText('Массовое число'), '14');
+    await user.click(button('Математические обозначения'));
+    await user.click(button('Химическая запись'));
+    expect(screen.getByLabelText('Элемент или группа')).toHaveValue('C');
+    expect(screen.getByLabelText('Массовое число')).toHaveValue('14');
+    await user.click(button('Собрать ион или изотоп'));
+    await user.click(button('Отдельно'));
+    await user.click(button('Вставить формулу'));
+    expect(onChange).toHaveBeenCalledWith('$$\\ce{^{14}_{6}C}$$');
+  });
+
+  it('правка в дополнительном разделе LaTeX обновляет редактор и сохраняется после сворачивания', async () => {
+    const user = userEvent.setup(); const onChange = vi.fn();
+    render(<FormulaField value="$x$" onChange={onChange} />);
+    await user.click(screen.getByTitle('Изменить формулу'));
+    await waitFor(() => expect(button('Разметка LaTeX')).toBeInTheDocument());
+    expect(document.querySelector('[aria-label="Разметка формулы"]')).toBeNull();
+    await user.click(button('Разметка LaTeX'));
+    const raw = document.querySelector<HTMLInputElement>('[aria-label="Разметка формулы"]')!;
+    await user.clear(raw); await user.paste('\\sqrt{y}');
+    expect(latexInput()).toHaveValue('\\sqrt{y}');
+    await user.click(button('Разметка LaTeX'));
+    expect(document.querySelector('[aria-label="Разметка формулы"]')).toBeNull();
+    await user.click(button('Вставить формулу'));
+    expect(onChange).toHaveBeenCalledWith('$\\sqrt{y}$');
+  });
+
+  it('размещает клавиатуру внутри диалога, скрывает по кнопке и при закрытии без потери формулы', async () => {
+    const user = userEvent.setup();
+    render(<FormulaField value="Дано $x^2$" onChange={vi.fn()} />);
+    await user.click(screen.getByTitle('Изменить формулу'));
+    await waitFor(() => expect(button('Показать клавиатуру')).toBeInTheDocument());
+    expect(window.mathVirtualKeyboard.container).toBe(document.querySelector('[data-formula-keyboard]'));
+    expect(document.querySelector('[role="dialog"]')).toContainElement(window.mathVirtualKeyboard.container);
+    await user.click(button('Показать клавиатуру'));
+    expect(button('Скрыть клавиатуру')).toHaveAttribute('aria-expanded', 'true');
+    await user.click(button('Скрыть клавиатуру'));
+    expect(window.mathVirtualKeyboard.visible).toBe(false);
+    expect(latexInput()).toHaveValue('x^2');
+    await user.click(button('Показать клавиатуру'));
+    await user.click(button('Отмена'));
+    expect(window.mathVirtualKeyboard.visible).toBe(false);
+    expect(window.mathVirtualKeyboard.container).toBeNull();
+    await user.click(screen.getByTitle('Изменить формулу'));
+    await waitFor(() => expect(button('Показать клавиатуру')).toBeInTheDocument());
+    expect(latexInput()).toHaveValue('x^2');
+  });
+
   it('вставляет собранную формулу на позицию курсора', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
@@ -94,12 +229,12 @@ describe('FormulaField', () => {
     expect(screen.queryByText('Формула')).not.toBeInTheDocument();
     expect(screen.queryByTitle('Изменить формулу')).not.toBeInTheDocument();
     expect(screen.queryByTitle('Удалить формулу')).not.toBeInTheDocument();
-    expect(screen.getByText('Так увидит ученик')).toBeInTheDocument();
+    expect(screen.getByText('Предпросмотр')).toBeInTheDocument();
   });
 
   it('без формул предпросмотр не показывается', () => {
     render(<FormulaField value="Столица Казахстана?" onChange={vi.fn()} />);
-    expect(screen.queryByText('Так увидит ученик')).toBeNull();
+    expect(screen.queryByText('Предпросмотр')).toBeNull();
   });
 
   it('не даёт вставить формулу с запрещённой командой', async () => {
@@ -113,4 +248,32 @@ describe('FormulaField', () => {
 
     expect(button('Вставить формулу')).toBeDisabled();
   });
+  it('правит выбранный химический блок, сохраняя соседнюю формулу и окружающий LaTeX', async () => {
+    const user = userEvent.setup(); const onChange = vi.fn();
+    render(<FormulaField profile="CHEMISTRY" value={'Дано $x+\\ce{H2O}+\\ce{Fe^{2+}}$'} onChange={onChange} />);
+    await user.click(screen.getByTitle('Изменить формулу'));
+    await waitFor(() => latexInput());
+    await user.click(screen.getByLabelText('Химический блок'));
+    await user.click(screen.getByRole('option', { name: '2. Fe^{2+}' }));
+    const argument = screen.getByLabelText('Вещество или реакция');
+    await user.clear(argument); await user.paste('Fe^{3+}');
+    const preview = document.querySelector('[aria-label="Предпросмотр формулы"]')!;
+    expect(preview.querySelector('annotation[encoding="application/x-tex"]')).toHaveTextContent('x+\\ce{H2O}+\\ce{Fe^{3+}}');
+    expect(screen.queryByText('Получается такая запись')).not.toBeInTheDocument();
+    await user.click(button('Вставить формулу'));
+    expect(onChange).toHaveBeenCalledWith('Дано $x+\\ce{H2O}+\\ce{Fe^{3+}}$');
+  });
+
+  it('отмена химической правки и закрытие окна сохраняют исходный текст', async () => {
+    const user = userEvent.setup(); const onChange = vi.fn();
+    render(<FormulaField profile="CHEMISTRY" value={'$\\ce{H2O}$'} onChange={onChange} />);
+    await user.click(screen.getByTitle('Изменить формулу'));
+    await user.clear(screen.getByLabelText('Вещество или реакция'));
+    await user.paste('CO2');
+    await user.click(button('Отменить правку блока'));
+    expect(screen.getByLabelText('Вещество или реакция')).toHaveValue('H2O');
+    await user.click(button('Отмена'));
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
 });

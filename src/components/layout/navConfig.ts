@@ -127,6 +127,7 @@ export const TEACHER_NAV_SECTIONS: NavSection[] = [
       // искать её среди разделов учителю пришлось бы каждый урок.
       { to: ROUTES.currentLesson, label: 'Текущий урок', icon: Clock3, accent: true },
       { to: ROUTES.mySchedule, label: 'Расписание', icon: Calendar },
+      { to: ROUTES.myClass, label: 'Мой класс', icon: School },
       { to: ROUTES.myAvailability, label: 'Моё рабочее время', icon: Clock },
       { to: ROUTES.journal, label: 'Журнал оценок', icon: BookOpen },
       { to: ROUTES.homework, label: 'Домашние задания', icon: BookOpenCheck },

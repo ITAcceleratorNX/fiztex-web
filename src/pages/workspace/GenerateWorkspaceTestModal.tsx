@@ -20,11 +20,13 @@ const sources = [
   { value: 'TOPIC', label: 'По теме' },
   { value: 'TEXTBOOK', label: 'По учебнику' },
   { value: 'DOCUMENT', label: 'По документу' },
+  { value: 'TEXT', label: 'По тексту' },
 ] as const;
 type SourceTab = (typeof sources)[number]['value'];
 
-export function GenerateWorkspaceTestModal({ initialTopic, onClose, onUse }: {
+export function GenerateWorkspaceTestModal({ initialTopic, subjectId, onClose, onUse }: {
   initialTopic: string;
+  subjectId: number;
   onClose: () => void;
   onUse: (job: TestAiJob) => void;
 }) {
@@ -39,6 +41,7 @@ export function GenerateWorkspaceTestModal({ initialTopic, onClose, onUse }: {
   const [openCount, setOpenCount] = useState('2');
   const [language, setLanguage] = useState('ru');
   const [prompt, setPrompt] = useState('');
+  const [sourceText, setSourceText] = useState('');
   const [error, setError] = useState('');
   const attempt = useRef<{ body: string; key: string }>();
   const overview = useTestAiOverview();
@@ -58,8 +61,8 @@ export function GenerateWorkspaceTestModal({ initialTopic, onClose, onUse }: {
     ? validatePages(from, to, metadata.data.pageCount ?? 0, metadata.data.maxPages ?? 30) : '';
   const ready = !busy && !overview.isPending && !overview.isError && overview.data?.aiEnabled
     && (overview.data.remainingCalls ?? 0) > 0 && topic.trim() && !countError && !openCountError
-    && (tab === 'TOPIC' || (source?.id != null && metadata.data && !metadata.isError && !pageError));
-  const result = job?.status === 'DONE' ? job.result?.questions : null;
+    && (tab === 'TOPIC' || (tab === 'TEXT' && !!sourceText.trim()) || (tab !== 'TEXT' && source?.id != null && metadata.data && !metadata.isError && !pageError));
+  const result = job?.status === 'DONE' && job.subjectId === subjectId ? job.result?.questions : null;
 
   function changeSource(next: SourceTab) {
     setTab(next);
@@ -73,8 +76,9 @@ export function GenerateWorkspaceTestModal({ initialTopic, onClose, onUse }: {
     if (!ready) return;
     const body: TestAiRequest = {
       topic: topic.trim(), audience: audience.trim(), language, teacherPrompt: prompt.trim(),
-      questionCount, openQuestionCount,
-      ...(tab !== 'TOPIC' && source?.id != null ? { sourceType, workspaceItemId: source.id,
+      questionCount, openQuestionCount, subjectId,
+      ...(tab === 'TEXT' ? { sourceText: sourceText.trim() } : {}),
+      ...(tab !== 'TOPIC' && tab !== 'TEXT' && source?.id != null ? { sourceType, workspaceItemId: source.id,
         ...(metadata.data?.pageNavigation && from ? { pageFrom: Number(from), pageTo: Number(to || from) } : {}),
       } : {}),
     };
@@ -119,7 +123,8 @@ export function GenerateWorkspaceTestModal({ initialTopic, onClose, onUse }: {
             <div className="space-y-3">
               <p className="text-sm font-semibold text-ink">На чём основывать вопросы</p>
               <SegmentedTabs value={tab} options={sources} onChange={changeSource} ariaLabel="Источник для теста" className="flex-wrap" />
-              {tab !== 'TOPIC' && <div className="space-y-3 rounded-xl border border-slate-200 p-4">
+              {tab === 'TEXT' && <Field label="Исходный текст" required hint="Вставьте учебный материал. Пожелания к вопросам указываются отдельно ниже."><TextArea rows={7} maxLength={700000} value={sourceText} onChange={event => setSourceText(event.target.value)} /></Field>}
+              {tab !== 'TOPIC' && tab !== 'TEXT' && <div className="space-y-3 rounded-xl border border-slate-200 p-4">
                 <div className="flex flex-wrap items-center gap-3">
                   <Button variant="secondary" size="sm" onClick={() => setPicker(true)}>
                     {source ? 'Заменить источник' : 'Выбрать из рабочего пространства'}

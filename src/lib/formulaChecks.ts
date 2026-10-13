@@ -1,5 +1,5 @@
 import { renderFormula } from './katexRender';
-import { splitMath } from './mathMarkup';
+import { splitMath, outsideChemistry, MAX_FORMULAS_PER_FIELD, MAX_FORMULA_FIELD_LENGTH } from './mathMarkup';
 
 export type FormulaProblem = {
   severity: 'error' | 'warning';
@@ -28,6 +28,10 @@ export function checkFormulas(fields: { where: string; text: string }[]): Formul
   for (const field of fields) {
     const text = field.text ?? '';
     if (!text.trim()) continue;
+    if (text.length > MAX_FORMULA_FIELD_LENGTH) {
+      problems.push({severity:'error', where:field.where, message:'поле длиннее 65536 символов'});
+      continue;
+    }
 
     if (text.includes(UNCERTAIN_MARKER)) {
       problems.push({
@@ -38,6 +42,10 @@ export function checkFormulas(fields: { where: string; text: string }[]): Formul
     }
 
     const segments = splitMath(text);
+    if (segments.filter(segment => segment.kind === 'math').length > MAX_FORMULAS_PER_FIELD) {
+      problems.push({severity:'error', where:field.where, message:'в одном поле больше 128 формул'});
+      continue;
+    }
     const tail = segments[segments.length - 1];
     if (tail?.kind === 'text' && hasUnpairedDollar(tail.value)) {
       problems.push({
@@ -55,7 +63,11 @@ export function checkFormulas(fields: { where: string; text: string }[]): Formul
       // поднимает наверх один символ. Сохранение исправит и то, и другое (бэк нормализует
       // разметку), но в предпросмотре до сохранения учитель видит «пропавший» текст — и должен
       // понимать, почему.
-      if (/(?<!\\)%/.test(segment.value)) {
+      const mathematics = outsideChemistry(segment.value);
+      if (/\\[dt]?frac\s*(?:\{\s*}|\{[^{}]*}\s*\{\s*})/.test(mathematics)) {
+        problems.push({severity:'error', where:field.where, message:'у дроби пустой числитель или знаменатель'});
+      }
+      if (/(?<!\\)%/.test(mathematics)) {
         problems.push({
           severity: 'warning',
           where: field.where,
@@ -63,7 +75,7 @@ export function checkFormulas(fields: { where: string; text: string }[]): Formul
             + ' сохранение исправит это само',
         });
       }
-      if (/[_^]\s*[+-]?\d\d/.test(segment.value)) {
+      if (/[_^]\s*[+-]?\d\d/.test(mathematics)) {
         problems.push({
           severity: 'warning',
           where: field.where,
@@ -75,7 +87,7 @@ export function checkFormulas(fields: { where: string; text: string }[]): Formul
       const rendered = renderFormula(segment.value, segment.display);
       if (!rendered.ok) {
         problems.push({
-          severity: 'warning',
+          severity: 'error',
           where: field.where,
           message: `формула «${short(segment.value)}» не отображается (${rendered.error})`,
         });

@@ -1,5 +1,6 @@
 import katex from 'katex';
-import { hasForbiddenCommand } from './mathMarkup';
+import 'katex/contrib/mhchem';
+import { hasForbiddenCommand, hasNestedChemicalMath, MAX_FORMULA_LENGTH } from './mathMarkup';
 
 export type RenderResult = { ok: true; html: string } | { ok: false; error: string };
 
@@ -21,6 +22,8 @@ export function renderFormula(latex: string, display = false): RenderResult {
   if (hasForbiddenCommand(latex)) {
     return { ok: false, error: 'недопустимая команда' };
   }
+  if (hasNestedChemicalMath(latex)) return { ok: false, error: 'внутренние $ в химической записи не поддерживаются' };
+  if (latex.length > MAX_FORMULA_LENGTH) return { ok: false, error: 'формула длиннее 4096 символов' };
   try {
     return {
       ok: true,
@@ -29,6 +32,8 @@ export function renderFormula(latex: string, display = false): RenderResult {
         throwOnError: true,
         strict: 'ignore',
         trust: false,
+        maxExpand: 1000,
+        maxSize: 20,
       }),
     };
   } catch (error) {

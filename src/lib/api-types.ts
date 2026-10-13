@@ -52,6 +52,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/academic-reports/breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Разрез учебной отчётности */
+        get: operations["getAdminAcademicReportBreakdown"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/academic-reports/final-grades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Опубликованные итоги учебной отчётности */
+        get: operations["getAdminAcademicReportFinalGrades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/academic-reports/grades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Исходные оценки учебной отчётности */
+        get: operations["getAdminAcademicReportGrades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/academic-reports/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Сводка учебной отчётности */
+        get: operations["getAdminAcademicReportSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/academic-years": {
         parameters: {
             query?: never;
@@ -301,7 +369,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_6"];
+        post: operations["publish_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1815,7 +1883,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_5"];
+        post: operations["publish_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2215,7 +2283,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_4"];
+        post: operations["publish_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3511,7 +3579,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_3"];
+        post: operations["publish_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3718,6 +3786,40 @@ export interface paths {
             cookie?: never;
         };
         get: operations["myAverage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/my/dynamics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Динамика оценок ребёнка за неделю, месяц, четверть или год: показатель, сравнение, предметы и график */
+        get: operations["getMyGradeDynamics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/my/dynamics/subjects/{subjectId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Динамика ребёнка по одному предмету: показатель, сравнение, расшифровка и график */
+        get: operations["getMySubjectGradeDynamics"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4072,6 +4174,22 @@ export interface paths {
         get: operations["list_7"];
         put?: never;
         post: operations["start_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/ai-generations/{jobId}/append": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["append"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4775,7 +4893,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_2"];
+        post: operations["publish_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5045,7 +5163,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["sheet_1"];
+        get: operations["sheet_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5127,7 +5245,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_1"];
+        post: operations["publish_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5253,7 +5371,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["sheet"];
+        get: operations["sheet_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5438,6 +5556,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/parent-comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sheet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/parent-comments/students/{studentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["publish"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/parent-comments/students/{studentId}/improvement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["improve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/preparation": {
         parameters: {
             query?: never;
@@ -5559,7 +5725,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish"];
+        post: operations["publish_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5966,6 +6132,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/academic-reports/breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Разрез учебной отчётности */
+        get: operations["getHomeroomAcademicReportBreakdown"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/academic-reports/final-grades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Опубликованные итоги учебной отчётности */
+        get: operations["getHomeroomAcademicReportFinalGrades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/academic-reports/grades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Исходные оценки учебной отчётности */
+        get: operations["getHomeroomAcademicReportGrades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/academic-reports/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Сводка учебной отчётности */
+        get: operations["getHomeroomAcademicReportSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/attendance": {
         parameters: {
             query?: never;
@@ -6009,6 +6243,23 @@ export interface paths {
         };
         /** Опубликованные итоги периода учеников класса */
         get: operations["getMyClassFinalGrades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/grade-dynamics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Сводка динамики класса: средний показатель и ученики с изменением и предметами со снижением */
+        get: operations["getMyClassGradeDynamics"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6088,6 +6339,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/students/{studentProfileId}/grade-dynamics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Динамика ученика класса: показатель, сравнение, предметы и график */
+        get: operations["getMyClassStudentGradeDynamics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/students/{studentProfileId}/grade-dynamics/subjects/{subjectId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Динамика ученика класса по одному предмету: показатель, сравнение, расшифровка и график */
+        get: operations["getMyClassStudentSubjectGradeDynamics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/subjects": {
         parameters: {
             query?: never;
@@ -6150,6 +6435,38 @@ export interface paths {
         put: operations["register"];
         post?: never;
         delete: operations["unregister"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/parent-comments/children/{childId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["feed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/parent-comments/children/{childId}/comments/{commentId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["read"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -7147,6 +7464,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teacher/workspace/tests/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["subjectContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teacher/workspace/tests/from-questions": {
         parameters: {
             query?: never;
@@ -7157,6 +7490,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["createFromQuestions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/workspace/tests/question-images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["uploadHomeworkQuestionImage"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7291,6 +7640,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tests/{testId}/import-text": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["importText"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -7315,6 +7680,81 @@ export interface components {
             type?: "QUARTER" | "TRIMESTER" | "SEMESTER" | "CUSTOM";
             /** Format: date-time */
             updatedAt?: string;
+        };
+        AcademicReportBreakdownView: {
+            /** Format: date-time */
+            asOf?: string;
+            /** @enum {string} */
+            dimension?: "CLASS" | "SUBJECT" | "TEACHER" | "STUDENT";
+            items?: components["schemas"]["ReportBreakdownRow"][];
+            paging?: components["schemas"]["ReportPageInfo"];
+            scope?: components["schemas"]["ReportScopeView"];
+        };
+        AcademicReportFinalGradePageView: {
+            /** Format: date-time */
+            asOf?: string;
+            items?: components["schemas"]["AcademicReportFinalGradeView"][];
+            paging?: components["schemas"]["ReportPageInfo"];
+            scope?: components["schemas"]["ReportScopeView"];
+        };
+        AcademicReportFinalGradeView: {
+            academicPeriod?: components["schemas"]["ReportReferenceView"] | null;
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            finalGradeId?: number;
+            /** @enum {string} */
+            finalScope?: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
+            /** Format: date-time */
+            publishedAt?: string;
+            sourceClass?: components["schemas"]["ReportReferenceView"];
+            student?: components["schemas"]["ReportReferenceView"];
+            /** Format: int64 */
+            subgroupId?: number | null;
+            subject?: components["schemas"]["ReportReferenceView"];
+            teacher?: components["schemas"]["ReportReferenceView"];
+            /** Format: int32 */
+            value?: number;
+        };
+        AcademicReportGradePageView: {
+            /** Format: date-time */
+            asOf?: string;
+            items?: components["schemas"]["AcademicReportGradeView"][];
+            paging?: components["schemas"]["ReportPageInfo"];
+            scope?: components["schemas"]["ReportScopeView"];
+        };
+        AcademicReportGradeView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            academicYearId?: number;
+            author?: components["schemas"]["ReportGradeAuthorView"];
+            /** Format: int64 */
+            gradeId?: number;
+            gradeType?: ("FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER") | null;
+            maxScore?: number | null;
+            numericValue?: number | null;
+            /** Format: date-time */
+            publishedAt?: string;
+            scaleCode?: string | null;
+            score?: number | null;
+            sourceClass?: components["schemas"]["ReportReferenceView"];
+            /** Format: date */
+            sourceDate?: string;
+            /** Format: int64 */
+            sourceId?: number;
+            /** @enum {string} */
+            sourceType?: "LESSON" | "HOMEWORK";
+            student?: components["schemas"]["ReportReferenceView"];
+            subject?: components["schemas"]["ReportReferenceView"];
+            teacher?: components["schemas"]["ReportReferenceView"] | null;
+            weight?: number;
+        };
+        AcademicReportSummaryView: {
+            /** Format: date-time */
+            asOf?: string;
+            metrics?: components["schemas"]["ReportMetricsView"];
+            scope?: components["schemas"]["ReportScopeView"];
         };
         AcademicYearView: {
             /** Format: date-time */
@@ -8166,6 +8606,15 @@ export interface components {
             /** Format: int64 */
             subjectId?: number;
         };
+        ClassGradeDynamicsView: {
+            classAverage?: components["schemas"]["DynamicsMetricView"];
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            previousWindow?: components["schemas"]["DynamicsWindowView"];
+            students?: components["schemas"]["ClassStudentDynamicsView"][];
+            window?: components["schemas"]["DynamicsWindowView"];
+        };
         ClassGroupSetAggregateView: {
             duplicates?: components["schemas"]["DuplicateStudentView"][];
             groupSet?: components["schemas"]["ClassGroupSetView"];
@@ -8243,6 +8692,16 @@ export interface components {
             /** Format: int64 */
             version?: number;
         };
+        ClassStudentDynamicsView: {
+            declinedSubjects?: components["schemas"]["DeclinedSubjectView"][];
+            displayName?: string;
+            firstName?: string;
+            lastName?: string;
+            middleName?: string | null;
+            overall?: components["schemas"]["DynamicsMetricView"];
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
         ClassSubgroupStudentView: {
             firstName?: string;
             /** Format: int64 */
@@ -8276,10 +8735,10 @@ export interface components {
         ComponentSummaryView: {
             /** @enum {string} */
             code?: "FORMATIVE" | "SOR" | "SOCH";
-            contribution?: number;
+            contribution?: number | null;
             effectiveWeightPercent?: number;
             maxSum?: number;
-            percent?: number;
+            percent?: number | null;
             scoreSum?: number;
             title?: string;
             weightPercent?: number;
@@ -8677,6 +9136,8 @@ export interface components {
             name?: string;
         };
         CreateSchoolSubjectRequest: {
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             name?: string;
         };
         CreateServiceRequestRequest: {
@@ -8770,6 +9231,12 @@ export interface components {
             /** Format: int64 */
             totalApplicants?: number;
         };
+        DeclinedSubjectView: {
+            change?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+        };
         DiaryEntryView: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -8806,6 +9273,52 @@ export interface components {
             /** Format: int64 */
             studentId?: number;
             subgroupIds?: number[];
+        };
+        DynamicsMetricView: {
+            change?: number | null;
+            /** @enum {string|null} */
+            comparisonUnavailableReason?: "NO_CURRENT_RESULT" | "NO_PREVIOUS_RESULT" | "DIFFERENT_MODE" | null;
+            current?: components["schemas"]["IndicatorView"];
+            previous?: components["schemas"]["IndicatorView"];
+            /** @enum {string} */
+            trend?: "GROWTH" | "DECLINE" | "STABLE" | "INSUFFICIENT_DATA";
+        };
+        DynamicsPointView: {
+            /** @enum {string|null} */
+            component?: "FORMATIVE" | "SOR" | "SOCH" | null;
+            /** Format: date */
+            date?: string;
+            /** Format: int64 */
+            gradeId?: number;
+            /** @enum {string|null} */
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | null;
+            maxScore?: number | null;
+            numericValue?: number | null;
+            /** Format: date-time */
+            publishedAt?: string;
+            scaleCode?: string | null;
+            score?: number | null;
+            /** Format: int64 */
+            sourceId?: number;
+            /** @enum {string} */
+            sourceType?: "LESSON" | "HOMEWORK";
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+        };
+        DynamicsWindowView: {
+            /** Format: int64 */
+            academicPeriodId?: number | null;
+            academicPeriodName?: string | null;
+            /** Format: int64 */
+            academicYearId?: number | null;
+            academicYearName?: string | null;
+            /** Format: date */
+            from?: string;
+            /** Format: date */
+            to?: string;
+            /** @enum {string} */
+            type?: "WEEK" | "MONTH" | "QUARTER" | "YEAR";
         };
         EquipmentActorView: {
             /** Format: int64 */
@@ -9591,12 +10104,21 @@ export interface components {
             /** Format: int32 */
             total?: number;
         };
+        HomeworkQuestionImageView: {
+            /** Format: uuid */
+            imageId?: string;
+            imageUrl?: string;
+        };
         HomeworkQuestionView: {
             aiGenerated?: boolean;
             allowPhoto?: boolean;
+            formulaIssues?: components["schemas"]["QuestionFormulaIssue"][];
             gradingCriteria?: string;
             /** Format: int64 */
             id?: number;
+            /** Format: uuid */
+            imageId?: string;
+            imageUrl?: string;
             /** Format: int32 */
             maxPhotos?: number;
             maxScore?: number;
@@ -9640,8 +10162,11 @@ export interface components {
             pageTo?: number;
             /** Format: int32 */
             questionCount: number;
+            sourceText?: string;
             /** @enum {string} */
             sourceType?: "TEXTBOOK" | "DOCUMENT";
+            /** Format: int64 */
+            subjectId?: number;
             teacherPrompt?: string;
             topic?: string;
             /** Format: int64 */
@@ -9653,6 +10178,8 @@ export interface components {
             errorMessage?: string;
             /** Format: date-time */
             finishedAt?: string;
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             /** Format: int64 */
             id?: number;
             phase?: string;
@@ -9665,6 +10192,9 @@ export interface components {
             sourceName?: string;
             /** @enum {string} */
             status?: "PENDING" | "RUNNING" | "DONE" | "FAILED";
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
             warningMessage?: string;
         };
         HomeworkTestAiOverview: {
@@ -9698,6 +10228,8 @@ export interface components {
             /** Format: int64 */
             aiJobId?: number;
             questions: components["schemas"]["QuestionRequest"][];
+            /** Format: int64 */
+            subjectId?: number;
             title?: string;
         };
         HomeworkTestTemplateDefinition: {
@@ -9725,6 +10257,9 @@ export interface components {
             aiGenerated?: boolean;
             allowPhoto?: boolean;
             gradingCriteria?: string;
+            /** Format: uuid */
+            imageId?: string;
+            imageUrl?: string;
             /** Format: int32 */
             maxPhotos?: number;
             maxScore?: number;
@@ -9748,10 +10283,15 @@ export interface components {
             createdAt?: string;
             /** Format: int32 */
             currentVersion?: number;
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             /** Format: int64 */
             id?: number;
             /** Format: int32 */
             questionCount?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
             title?: string;
             /** Format: date-time */
             updatedAt?: string;
@@ -9775,6 +10315,8 @@ export interface components {
             /** Format: int32 */
             expectedVersion: number;
             questions: components["schemas"]["QuestionRequest"][];
+            /** Format: int64 */
+            subjectId?: number;
             title?: string;
         };
         HomeworkTestTemplateVersionView: {
@@ -9782,10 +10324,15 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             definition?: components["schemas"]["HomeworkTestTemplateDefinition"];
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             /** Format: int64 */
             id?: number;
             /** Format: int64 */
             sourceHomeworkId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
             title?: string;
             /** Format: int32 */
             version?: number;
@@ -9812,6 +10359,8 @@ export interface components {
             dueAt?: string;
             /** @enum {string} */
             dueType?: "EXACT" | "NEXT_LESSON" | "NONE";
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             hasAnswers?: boolean;
             /** Format: int64 */
             id?: number;
@@ -9939,11 +10488,26 @@ export interface components {
             updatedCount?: number;
             uploadedBy?: components["schemas"]["ImportRunUploaderView"];
         };
+        ImportTextRequest: {
+            sourceText?: string;
+        };
         ImportTypeView: {
             fields?: components["schemas"]["ImportFieldDef"][];
             label?: string;
             /** @enum {string} */
             type?: "CLASSES" | "STUDENTS" | "STUDENTS_WITH_PARENTS" | "PARENTS" | "TEACHERS";
+        };
+        ImproveParentCommentRequest: {
+            text?: string;
+        };
+        IndicatorView: {
+            /** Format: int32 */
+            gradeCount?: number;
+            /** @enum {string|null} */
+            mode?: "SCALE_AVERAGE" | "POLICY_PERCENT" | null;
+            /** @enum {string} */
+            state?: "AVAILABLE" | "NO_DATA" | "NO_COUNTED_WORKS" | "POLICY_INCOMPLETE" | "NO_POLICY" | "MIXED_MODES";
+            value?: number | null;
         };
         IssueEquipmentRequest: {
             comment?: string;
@@ -10281,6 +10845,13 @@ export interface components {
             sizeBytes?: number;
             url?: string;
             visibleToStudents?: boolean;
+        };
+        LessonParentCommentSheetView: {
+            /** Format: int64 */
+            lessonId?: number;
+            students?: components["schemas"]["ParentCommentStudentRow"][];
+            /** @enum {string} */
+            writeState?: "ALLOWED" | "NOT_TEACHING" | "LESSON_CANCELLED" | "LESSON_SUPERSEDED" | "SUBSTITUTION_ENDED" | "SUBSTITUTE_NOT_PERMITTED" | "SUBSTITUTE_WINDOW_NOT_OPEN" | "SUBSTITUTE_WINDOW_CLOSED";
         };
         LessonParticipantView: {
             fullName?: string;
@@ -12313,6 +12884,54 @@ export interface components {
             /** Format: int64 */
             studentProfileId?: number;
         };
+        ParentCommentFeedView: {
+            comments?: components["schemas"]["ParentCommentView"][];
+            hasMore?: boolean;
+            /** Format: int32 */
+            page?: number;
+            subjects?: components["schemas"]["ParentCommentSubjectView"][];
+            /** Format: int64 */
+            unreadCount?: number;
+        };
+        ParentCommentImprovementView: {
+            text?: string;
+        };
+        ParentCommentStudentRow: {
+            canEdit?: boolean;
+            comment?: components["schemas"]["ParentCommentView"];
+            fullName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
+        ParentCommentSubjectView: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
+        ParentCommentView: {
+            /** Format: int64 */
+            id?: number;
+            lastEditorName?: string;
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: date-time */
+            publishedAt?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            teacherName?: string;
+            text?: string;
+            unread?: boolean;
+            updated?: boolean;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int64 */
+            version?: number;
+        };
         ParentProfileDetailView: {
             /** Format: int64 */
             accountId?: number;
@@ -12423,16 +13042,16 @@ export interface components {
             startDate?: string;
         };
         PeriodResultSummaryView: {
-            bandLabel?: string;
+            bandLabel?: string | null;
             components?: components["schemas"]["ComponentSummaryView"][];
             missingComponents?: ("FORMATIVE" | "SOR" | "SOCH")[];
-            percent?: number;
+            percent?: number | null;
             /** Format: int64 */
             policyId?: number;
             /** Format: int32 */
-            recommendedValue?: number;
+            recommendedValue?: number | null;
             /** Format: int32 */
-            roundedPercent?: number;
+            roundedPercent?: number | null;
             /** @enum {string} */
             status?: "CALCULATED" | "NO_WORKS" | "INCOMPLETE";
         };
@@ -12513,6 +13132,11 @@ export interface components {
             subgroupId?: number;
             /** Format: int64 */
             subjectId: number;
+        };
+        PublishParentCommentRequest: {
+            text?: string;
+            /** Format: int64 */
+            version?: number;
         };
         PublishScheduleRequest: {
             confirmedWarningCodes: string[];
@@ -12613,7 +13237,7 @@ export interface components {
         };
         QuestionFormulaIssue: {
             /** @enum {string} */
-            code?: "UNCERTAIN_FRAGMENT" | "UNBALANCED_MATH" | "UNBALANCED_BRACES" | "UNBALANCED_DELIMITERS" | "UNBALANCED_ENVIRONMENT" | "EMPTY_MATH" | "FORBIDDEN_COMMAND" | "UNKNOWN_COMMAND" | "UNKNOWN_ENVIRONMENT" | "FORMULA_TOO_LONG" | "EMPTY_FRACTION_PART" | "SLASH_FRACTION" | "MINUS_OUTSIDE_MATH";
+            code?: "UNCERTAIN_FRAGMENT" | "UNBALANCED_MATH" | "UNBALANCED_BRACES" | "UNBALANCED_DELIMITERS" | "UNBALANCED_ENVIRONMENT" | "EMPTY_MATH" | "FORBIDDEN_COMMAND" | "NESTED_CHEMISTRY_MATH" | "FORMULA_RENDER_ERROR" | "FORMULA_LIMIT_EXCEEDED" | "FORMULA_CHECK_UNAVAILABLE" | "UNKNOWN_COMMAND" | "UNKNOWN_ENVIRONMENT" | "FORMULA_TOO_LONG" | "EMPTY_FRACTION_PART" | "SLASH_FRACTION" | "MINUS_OUTSIDE_MATH";
             field?: string;
             fragment?: string;
             message?: string;
@@ -12630,6 +13254,8 @@ export interface components {
         QuestionRequest: {
             allowPhoto?: boolean;
             gradingCriteria?: string;
+            /** Format: uuid */
+            imageId?: string;
             /** Format: int32 */
             maxPhotos?: number;
             maxScore: number;
@@ -12675,6 +13301,10 @@ export interface components {
             /** @enum {string} */
             type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT";
         };
+        ReadParentCommentRequest: {
+            /** Format: int64 */
+            version: number;
+        };
         RedistributeRequest: {
             /** Format: int32 */
             groupCount: number;
@@ -12714,6 +13344,154 @@ export interface components {
             effectiveFrom?: string;
             /** Format: int64 */
             newTextbookId: number;
+        };
+        ReportAttendanceMetrics: {
+            /** Format: int64 */
+            excusedCount?: number;
+            /** Format: int64 */
+            lateCount?: number;
+            /** Format: int64 */
+            missedCount?: number;
+            /** @enum {string} */
+            percentageDenominator?: "PUBLISHED_MARKS";
+            presencePercent?: components["schemas"]["ReportDecimalMetric"];
+            /** Format: int64 */
+            presentCount?: number;
+            /** Format: int64 */
+            publishedMarkCount?: number;
+        };
+        ReportBreakdownRow: {
+            key?: components["schemas"]["ReportReferenceView"];
+            metrics?: components["schemas"]["ReportMetricsView"];
+        };
+        ReportDecimalMetric: {
+            reason?: ("NO_SCALE_GRADES" | "NO_PUBLISHED_ATTENDANCE" | "ACADEMIC_PERFORMANCE_NOT_IMPLEMENTED" | "SINGLE_STUDENT_SUBJECT_PERIOD_REQUIRED" | "TEACHER_FILTER" | "INCOMPLETE_CLASS_INPUT" | "PARTICIPANT_SNAPSHOT_MISSING") | null;
+            /** @enum {string} */
+            state?: "AVAILABLE" | "NO_DATA" | "DEPENDENCY_MISSING" | "SCOPE_NOT_SUPPORTED";
+            value?: number | null;
+        };
+        ReportFinalGradeMetrics: {
+            /** Format: int64 */
+            examCount?: number;
+            /** Format: int64 */
+            finalCount?: number;
+            /** Format: int64 */
+            periodCount?: number;
+            /** Format: int64 */
+            publishedCount?: number;
+            /** Format: int64 */
+            yearCount?: number;
+        };
+        ReportGradeAuthorView: {
+            /** Format: int64 */
+            accountId?: number;
+            capacity?: ("MAIN_TEACHER" | "SUBSTITUTE_TEACHER") | null;
+            name?: string;
+            /** @enum {string} */
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
+        };
+        ReportGradeMetrics: {
+            /** Format: int64 */
+            gradeCount?: number;
+            periodResult?: components["schemas"]["ReportPeriodResultView"];
+            /** Format: int64 */
+            pointsCount?: number;
+            scaleAverage?: components["schemas"]["ReportDecimalMetric"];
+            /** Format: int64 */
+            scaleCount?: number;
+        };
+        ReportLessonMetrics: {
+            completedDurationMinutes?: number | null;
+            /** Format: int64 */
+            completedLessonCount?: number | null;
+            /** @enum {string} */
+            durationUnit?: "MINUTES";
+            knownParticipantDurationMinutes?: number | null;
+            /** Format: int64 */
+            knownParticipantLessonCount?: number | null;
+            participantSnapshotCoverage?: components["schemas"]["ReportParticipantSnapshotCoverage"];
+            reason?: ("NO_SCALE_GRADES" | "NO_PUBLISHED_ATTENDANCE" | "ACADEMIC_PERFORMANCE_NOT_IMPLEMENTED" | "SINGLE_STUDENT_SUBJECT_PERIOD_REQUIRED" | "TEACHER_FILTER" | "INCOMPLETE_CLASS_INPUT" | "PARTICIPANT_SNAPSHOT_MISSING") | null;
+            /** @enum {string} */
+            state?: "AVAILABLE" | "NO_DATA" | "DEPENDENCY_MISSING" | "SCOPE_NOT_SUPPORTED";
+        };
+        ReportMetricsView: {
+            academicPerformance?: components["schemas"]["ReportDecimalMetric"];
+            attendance?: components["schemas"]["ReportAttendanceMetrics"];
+            finalGrades?: components["schemas"]["ReportFinalGradeMetrics"];
+            grades?: components["schemas"]["ReportGradeMetrics"];
+            lessons?: components["schemas"]["ReportLessonMetrics"];
+        };
+        ReportPageInfo: {
+            hasNext?: boolean;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        ReportParticipantSnapshotCoverage: {
+            /** Format: int64 */
+            completedLessonsWithSnapshot?: number;
+            /** Format: int64 */
+            completedLessonsWithoutSnapshot?: number;
+        };
+        ReportPeriodResultView: {
+            mode?: ("SCALE" | "POINTS") | null;
+            reason?: ("NO_SCALE_GRADES" | "NO_PUBLISHED_ATTENDANCE" | "ACADEMIC_PERFORMANCE_NOT_IMPLEMENTED" | "SINGLE_STUDENT_SUBJECT_PERIOD_REQUIRED" | "TEACHER_FILTER" | "INCOMPLETE_CLASS_INPUT" | "PARTICIPANT_SNAPSHOT_MISSING") | null;
+            result?: components["schemas"]["PeriodResultSummaryView"] | null;
+            /** @enum {string} */
+            state?: "AVAILABLE" | "NO_DATA" | "DEPENDENCY_MISSING" | "SCOPE_NOT_SUPPORTED";
+        };
+        ReportPeriodView: {
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+            /** @enum {string} */
+            status?: "ACTIVE" | "DISABLED" | "ARCHIVED";
+            /** @enum {string} */
+            type?: "QUARTER" | "TRIMESTER" | "SEMESTER" | "CUSTOM";
+        };
+        ReportReferenceView: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
+        ReportScopeView: {
+            academicPeriod?: components["schemas"]["ReportPeriodView"] | null;
+            academicYear?: components["schemas"]["ReportYearView"];
+            calendarIssues?: "PERIOD_OUTSIDE_YEAR"[];
+            /** Format: int64 */
+            classId?: number | null;
+            /** @enum {string} */
+            finalGradeTeacherAttribution?: "CURRENT_LESSON_TEACHER_OR_HOMEWORK_OWNER" | "SAVED_FINAL_GRADE_TEACHER";
+            /** @enum {string} */
+            sourceTeacherAttribution?: "CURRENT_LESSON_TEACHER_OR_HOMEWORK_OWNER" | "SAVED_FINAL_GRADE_TEACHER";
+            /** Format: int64 */
+            studentProfileId?: number | null;
+            /** Format: int64 */
+            subjectId?: number | null;
+            /** Format: int64 */
+            teacherProfileId?: number | null;
+            /** @enum {string} */
+            visibility?: "SCHOOL" | "SELECTED_CLASS" | "HOMEROOM_CLASS";
+        };
+        ReportYearView: {
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "ACTIVE" | "ARCHIVED";
         };
         ResolveDraftRequest: {
             /** Format: int64 */
@@ -13136,6 +13914,8 @@ export interface components {
         SchoolSubjectView: {
             /** Format: date-time */
             createdAt?: string;
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             /** Format: int64 */
             id?: number;
             name?: string;
@@ -13384,6 +14164,16 @@ export interface components {
             subjectId?: number;
             year?: components["schemas"]["YearFinalView"];
         };
+        StudentGradeDynamicsView: {
+            overall?: components["schemas"]["DynamicsMetricView"];
+            points?: components["schemas"]["DynamicsPointView"][];
+            previousWindow?: components["schemas"]["DynamicsWindowView"];
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            subjects?: components["schemas"]["SubjectDynamicsView"][];
+            window?: components["schemas"]["DynamicsWindowView"];
+        };
         StudentGradeEventView: {
             /** Format: int64 */
             classId?: number;
@@ -13497,6 +14287,7 @@ export interface components {
             allowPhoto?: boolean;
             /** Format: int64 */
             id?: number;
+            imageUrl?: string;
             /** Format: int32 */
             maxPhotos?: number;
             maxScore?: number;
@@ -13523,6 +14314,25 @@ export interface components {
             /** Format: int64 */
             id?: number;
             name?: string;
+        };
+        SubjectDynamicsView: {
+            metric?: components["schemas"]["DynamicsMetricView"];
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+        };
+        SubjectGradeDynamicsView: {
+            metric?: components["schemas"]["DynamicsMetricView"];
+            periodResult?: components["schemas"]["PeriodResultSummaryView"];
+            points?: components["schemas"]["DynamicsPointView"][];
+            previousWindow?: components["schemas"]["DynamicsWindowView"];
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            window?: components["schemas"]["DynamicsWindowView"];
         };
         SubmissionAttachmentView: {
             contentType?: string;
@@ -13551,6 +14361,7 @@ export interface components {
             studentFullName?: string;
             /** Format: int64 */
             studentProfileId?: number;
+            testResult?: components["schemas"]["TestResultView"];
         };
         SubmitAnswersRequest: {
             answers: components["schemas"]["AnswerRequest"][];
@@ -14079,6 +14890,18 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        TeacherTestSubject: {
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
+        TeacherTestSubjectContext: {
+            /** Format: int64 */
+            defaultSubjectId?: number;
+            subjects?: components["schemas"]["TeacherTestSubject"][];
+        };
         TeacherTodayLessonView: {
             /** Format: int64 */
             classId?: number;
@@ -14250,6 +15073,8 @@ export interface components {
             draftQuestionCount?: number;
             /** Format: int32 */
             durationMinutes?: number;
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             grade?: string;
             /** Format: int64 */
             id?: number;
@@ -14278,6 +15103,10 @@ export interface components {
             updatedAt?: string;
             useAiGeneration?: boolean;
             versions?: components["schemas"]["TestVersionSummary"][];
+        };
+        TestResultView: {
+            maxScore?: number;
+            score?: number;
         };
         TestVersionSummary: {
             /** Format: date-time */
@@ -14600,6 +15429,8 @@ export interface components {
             name?: string;
         };
         UpdateSchoolSubjectRequest: {
+            /** @enum {string} */
+            formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             name?: string;
         };
         UpdateStudentRequest: {
@@ -14865,6 +15696,265 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    getAdminAcademicReportBreakdown: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId?: number;
+                teacherProfileId?: number;
+                studentProfileId?: number;
+                dimension: "CLASS" | "SUBJECT" | "TEACHER" | "STUDENT";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница объединённого разреза */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportBreakdownView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getAdminAcademicReportFinalGrades: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId?: number;
+                teacherProfileId?: number;
+                studentProfileId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница опубликованных сохранённых итогов */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportFinalGradePageView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getAdminAcademicReportGrades: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId?: number;
+                teacherProfileId?: number;
+                studentProfileId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница неудалённых исходных оценок */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportGradePageView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getAdminAcademicReportSummary: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId?: number;
+                teacherProfileId?: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Сводка разрешённой области */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportSummaryView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
             };
         };
     };
@@ -15349,7 +16439,7 @@ export interface operations {
             };
         };
     };
-    publish_6: {
+    publish_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -17746,7 +18836,9 @@ export interface operations {
     };
     aiVariant: {
         parameters: {
-            query?: never;
+            query?: {
+                testId?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -18410,7 +19502,7 @@ export interface operations {
             };
         };
     };
-    publish_5: {
+    publish_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -19249,7 +20341,7 @@ export interface operations {
             };
         };
     };
-    publish_4: {
+    publish_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -21499,7 +22591,7 @@ export interface operations {
             };
         };
     };
-    publish_3: {
+    publish_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -21848,6 +22940,61 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GradeAverageView"];
+                };
+            };
+        };
+    };
+    getMyGradeDynamics: {
+        parameters: {
+            query: {
+                period: "WEEK" | "MONTH" | "QUARTER" | "YEAR";
+                /** @description День окна для WEEK/MONTH и опорный день для QUARTER/YEAR без id; по умолчанию сегодня */
+                date?: string;
+                academicPeriodId?: number;
+                academicYearId?: number;
+                childStudentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentGradeDynamicsView"];
+                };
+            };
+        };
+    };
+    getMySubjectGradeDynamics: {
+        parameters: {
+            query: {
+                period: "WEEK" | "MONTH" | "QUARTER" | "YEAR";
+                date?: string;
+                academicPeriodId?: number;
+                academicYearId?: number;
+                childStudentProfileId?: number;
+            };
+            header?: never;
+            path: {
+                subjectId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubjectGradeDynamicsView"];
                 };
             };
         };
@@ -22512,6 +23659,29 @@ export interface operations {
         responses: {
             /** @description Accepted */
             202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkAiJobView"];
+                };
+            };
+        };
+    };
+    append: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23761,7 +24931,7 @@ export interface operations {
             };
         };
     };
-    publish_2: {
+    publish_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -24255,7 +25425,7 @@ export interface operations {
             };
         };
     };
-    sheet_1: {
+    sheet_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -24377,7 +25547,7 @@ export interface operations {
             };
         };
     };
-    publish_1: {
+    publish_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -24631,7 +25801,7 @@ export interface operations {
             };
         };
     };
-    sheet: {
+    sheet_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -25022,6 +26192,82 @@ export interface operations {
             };
         };
     };
+    sheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonParentCommentSheetView"];
+                };
+            };
+        };
+    };
+    publish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+                studentId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishParentCommentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParentCommentView"];
+                };
+            };
+        };
+    };
+    improve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+                studentId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImproveParentCommentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParentCommentImprovementView"];
+                };
+            };
+        };
+    };
     getLessonPreparationTargetState: {
         parameters: {
             query?: never;
@@ -25293,7 +26539,7 @@ export interface operations {
             };
         };
     };
-    publish: {
+    publish_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -26058,6 +27304,265 @@ export interface operations {
             };
         };
     };
+    getHomeroomAcademicReportBreakdown: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                subjectId?: number;
+                studentProfileId?: number;
+                dimension: "SUBJECT" | "STUDENT";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница объединённого разреза */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportBreakdownView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getHomeroomAcademicReportFinalGrades: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                subjectId?: number;
+                studentProfileId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница опубликованных сохранённых итогов */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportFinalGradePageView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getHomeroomAcademicReportGrades: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                subjectId?: number;
+                studentProfileId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница неудалённых исходных оценок */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportGradePageView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getHomeroomAcademicReportSummary: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                subjectId?: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Сводка разрешённой области */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportSummaryView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     getMyClassAttendance: {
         parameters: {
             query?: {
@@ -26229,6 +27734,60 @@ export interface operations {
                 };
             };
             /** @description Класс или ученик недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Неоднозначный текущий период */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getMyClassGradeDynamics: {
+        parameters: {
+            query: {
+                period: "WEEK" | "MONTH" | "QUARTER" | "YEAR";
+                date?: string;
+                academicPeriodId?: number;
+                academicYearId?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Сводка класса */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassGradeDynamicsView"];
+                };
+            };
+            /** @description Неверные параметры окна или окно вне года класса */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс недоступен */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -26487,6 +28046,63 @@ export interface operations {
             };
         };
     };
+    getMyClassStudentGradeDynamics: {
+        parameters: {
+            query: {
+                period: "WEEK" | "MONTH" | "QUARTER" | "YEAR";
+                date?: string;
+                academicPeriodId?: number;
+                academicYearId?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentGradeDynamicsView"];
+                };
+            };
+        };
+    };
+    getMyClassStudentSubjectGradeDynamics: {
+        parameters: {
+            query: {
+                period: "WEEK" | "MONTH" | "QUARTER" | "YEAR";
+                date?: string;
+                academicPeriodId?: number;
+                academicYearId?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+                studentProfileId: number;
+                subjectId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubjectGradeDynamicsView"];
+                };
+            };
+        };
+    };
     getMyClassSubjects: {
         parameters: {
             query?: {
@@ -26679,6 +28295,56 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    feed: {
+        parameters: {
+            query?: {
+                subjectId?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                childId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParentCommentFeedView"];
+                };
+            };
+        };
+    };
+    read: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                childId: number;
+                commentId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReadParentCommentRequest"];
+            };
+        };
         responses: {
             /** @description No Content */
             204: {
@@ -28380,6 +30046,7 @@ export interface operations {
                 fileType?: "PDF" | "WORD" | "SPREADSHEET" | "PRESENTATION" | "IMAGE";
                 usage?: "ATTACH_DOCUMENT_TO_HOMEWORK" | "ATTACH_DOCUMENT_TO_LESSON" | "ATTACH_TEXTBOOK_TO_HOMEWORK" | "SELECT_TEXTBOOK_FOR_LESSON" | "APPLY_TEST_TO_HOMEWORK" | "APPLY_PREPARATION_TO_LESSON";
                 folderId?: number;
+                subjectId?: number;
                 page?: number;
                 size?: number;
             };
@@ -28542,6 +30209,26 @@ export interface operations {
             };
         };
     };
+    subjectContext: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherTestSubjectContext"];
+                };
+            };
+        };
+    };
     createFromQuestions: {
         parameters: {
             query?: never;
@@ -28564,6 +30251,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HomeworkTestTemplateVersionView"];
+                };
+            };
+        };
+    };
+    uploadHomeworkQuestionImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkQuestionImageView"];
                 };
             };
         };
@@ -28806,6 +30520,32 @@ export interface operations {
                     /** Format: binary */
                     file: string;
                 };
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenerationJobResponse"];
+                };
+            };
+        };
+    };
+    importText: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                testId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportTextRequest"];
             };
         };
         responses: {

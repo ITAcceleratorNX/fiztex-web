@@ -1,6 +1,7 @@
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput, TextArea, Select } from '@/components/ui/Field';
+import { NoticeBar } from '@/components/ui/NoticeBar';
 import { Toggle } from '@/components/ui/Toggle';
 import type { Test, TestStatus } from '@/lib/types';
 import { applicantGradeOptions } from './applicantFormHelpers';
@@ -100,6 +101,10 @@ export function TestFormModal({
               </Select>
             </Field>
           </div>
+
+          {test && f.form.subjectId !== String(test.subjectId) && <NoticeBar tone="warning">
+            Предмет изменён. Существующие вопросы сохранятся — проверьте их перед публикацией. Новые действия ИИ используют выбранный предмет после сохранения.
+          </NoticeBar>}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Field label="Длительность (мин)" required>

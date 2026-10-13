@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { AiJobProgress } from '@/components/ui/AiJobProgress';
 import { MathText } from '@/components/ui/MathText';
+import { QuestionFigure } from '@/components/ui/QuestionFigure';
 import { NoticeBar } from '@/components/ui/NoticeBar';
 import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
@@ -258,6 +259,7 @@ function TestAnswerCard({
       </div>
 
       <MathText text={answer.questionText ?? question?.text} className="mt-2 block text-sm font-medium text-ink" />
+      <QuestionFigure imageUrl={question?.imageUrl} />
 
       {choice ? (
         <ChoiceAnswer answer={answer} question={question} />
@@ -404,4 +406,3 @@ function OpenTextAnswer({
     </div>
   );
 }
-

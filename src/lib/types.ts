@@ -116,6 +116,7 @@ export interface QuestionRequest {
 }
 
 export interface Test {
+  formulaProfile?: import('./formulaProfiles').FormulaProfile;
   id: number;
   title: string;
   subjectId: number;

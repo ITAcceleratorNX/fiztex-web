@@ -338,6 +338,7 @@ export interface SchoolSubject {
   id: number;
   name: string;
   status: SchoolRecordStatus;
+  formulaProfile?: import('@/lib/formulaProfiles').FormulaProfile;
 }
 
 export interface ImportFieldDef {

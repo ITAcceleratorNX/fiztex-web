@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Field, TextInput } from '@/components/ui/Field';
 import { MathText } from '@/components/ui/MathText';
+import { QuestionFigure } from '@/components/ui/QuestionFigure';
 import { Modal } from '@/components/ui/Modal';
 import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
@@ -85,6 +86,7 @@ export function TestTemplateDetailModal({ item, origin, onClose, onReuse }: {
               <Badge tone="gray">{question.maxScore ?? 1} б.</Badge>
             </div>
             <MathText text={question.text ?? ''} />
+            <QuestionFigure imageUrl={question.imageUrl} />
             {(question.options ?? []).length > 0 && <ol className="mt-3 space-y-2 pl-5 text-sm text-slate-700">
               {(question.options ?? []).map((option, optionIndex) => <li key={optionIndex} className="list-decimal">
                 <MathText text={option.text ?? ''} /> {option.correct && <Badge tone="green">Правильный</Badge>}

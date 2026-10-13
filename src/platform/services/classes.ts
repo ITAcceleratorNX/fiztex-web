@@ -1,4 +1,4 @@
-import { pageQuery, request } from '@/lib/api';
+import { ApiError, pageQuery, request } from '@/lib/api';
 import type { Page } from '@/lib/types';
 import type { CreateClassInput, ListClassesParams, SchoolClass, SchoolRecordStatus } from '../types';
 import { listAcademicYears } from './academicYears';
@@ -50,11 +50,10 @@ export async function listClasses(params: ListClassesParams = {}): Promise<Schoo
 export async function getClass(id: string): Promise<SchoolClass | null> {
   try {
     const dto = await request<SchoolClassDto>(`/admin/classes/${id}`);
-    const years = await listAcademicYears();
-    const yearName = years.find((y) => y.id === String(dto.academicYearId))?.name ?? '';
-    return mapClass(dto, yearName);
-  } catch {
-    return null;
+    return mapClass(dto);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+    throw error;
   }
 }
 
@@ -79,9 +78,7 @@ export async function createClass(input: CreateClassInput): Promise<SchoolClass>
     },
   });
 
-  const years = await listAcademicYears();
-  const yearName = years.find((y) => y.id === String(dto.academicYearId))?.name ?? '';
-  return mapClass(dto, yearName);
+  return mapClass(dto);
 }
 
 export async function updateClass(
@@ -96,9 +93,7 @@ export async function updateClass(
       letter: input.letter?.trim() || null,
     },
   });
-  const years = await listAcademicYears();
-  const yearName = years.find((y) => y.id === String(dto.academicYearId))?.name ?? '';
-  return mapClass(dto, yearName);
+  return mapClass(dto);
 }
 
 export async function archiveClass(id: string): Promise<void> {

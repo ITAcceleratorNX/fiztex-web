@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput, Select } from '@/components/ui/Field';
@@ -7,14 +7,10 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock
 import { useToast } from '@/context/ToastContext';
 import { SCHOOL_STATUS_LABELS } from '../labels';
 import { mergeSearchParams } from '@/lib/listNavigation';
-import {
-  archiveSchoolSubject,
-  createSchoolSubject,
-  listSchoolSubjects,
-  updateSchoolSubject,
-} from '../services';
+import { useSchoolSubjects, useSaveSchoolSubject, useArchiveSchoolSubject } from '@/hooks/queries';
 import type { SchoolRecordStatus, SchoolSubject } from '../types';
 import { useListSearchParams } from '@/hooks/useListNavigation';
+import { FORMULA_PROFILES, type FormulaProfile } from '@/lib/formulaProfiles';
 
 export function SchoolSubjectsPage() {
   const toast = useToast();
@@ -23,12 +19,16 @@ export function SchoolSubjectsPage() {
   const status: SchoolRecordStatus | 'ALL' = rawStatus === 'ALL' || rawStatus === 'ARCHIVED'
     ? rawStatus
     : 'ACTIVE';
-  const [items, setItems] = useState<SchoolSubject[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const query = useSchoolSubjects(status);
+  const saveSubject = useSaveSchoolSubject();
+  const archiveSubject = useArchiveSchoolSubject();
+  const items = query.data ?? [];
+  const loading = query.isPending;
+  const error = query.isError ? 'Не удалось загрузить предметы' : null;
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<SchoolSubject | null>(null);
   const [name, setName] = useState('');
+  const [formulaProfile, setFormulaProfile] = useState<FormulaProfile>('GENERAL');
   const [pending, setPending] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -37,25 +37,10 @@ export function SchoolSubjectsPage() {
     if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams, status]);
 
-  const reload = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      setItems(await listSchoolSubjects({ status }));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось загрузить предметы');
-    } finally {
-      setLoading(false);
-    }
-  }, [status]);
-
-  useEffect(() => {
-    void reload();
-  }, [reload]);
-
   function openCreate() {
     setEditing(null);
     setName('');
+    setFormulaProfile('GENERAL');
     setFormError(null);
     setFormOpen(true);
   }
@@ -63,6 +48,7 @@ export function SchoolSubjectsPage() {
   function openEdit(item: SchoolSubject) {
     setEditing(item);
     setName(item.name);
+    setFormulaProfile(item.formulaProfile ?? 'GENERAL');
     setFormError(null);
     setFormOpen(true);
   }
@@ -73,14 +59,13 @@ export function SchoolSubjectsPage() {
     setFormError(null);
     try {
       if (editing) {
-        await updateSchoolSubject(editing.id, name);
+        await saveSubject.mutateAsync({id:editing.id,name,formulaProfile});
         toast.success('Предмет обновлён');
       } else {
-        await createSchoolSubject(name);
+        await saveSubject.mutateAsync({name,formulaProfile});
         toast.success('Предмет создан');
       }
       setFormOpen(false);
-      await reload();
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Ошибка сохранения');
     } finally {
@@ -91,9 +76,8 @@ export function SchoolSubjectsPage() {
   async function handleArchive(item: SchoolSubject) {
     if (!window.confirm(`Архивировать «${item.name}»?`)) return;
     try {
-      await archiveSchoolSubject(item.id);
+      await archiveSubject.mutateAsync(item.id);
       toast.success('Предмет архивирован');
-      await reload();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Не удалось архивировать');
     }
@@ -125,7 +109,7 @@ export function SchoolSubjectsPage() {
       </div>
 
       {loading && <LoadingBlock />}
-      {error && !loading && <ErrorBlock message={error} onRetry={() => void reload()} />}
+      {error && !loading && <ErrorBlock message={error} onRetry={() => void query.refetch()} />}
       {!loading && !error && items.length === 0 && (
         <div className="card">
           <EmptyBlock
@@ -141,6 +125,7 @@ export function SchoolSubjectsPage() {
               <tr>
                 <th className="px-4 py-3 font-semibold">Название</th>
                 <th className="px-4 py-3 font-semibold">Статус</th>
+                <th className="px-4 py-3 font-semibold">Формулы</th>
                 <th className="px-4 py-3 font-semibold">Действия</th>
               </tr>
             </thead>
@@ -149,9 +134,10 @@ export function SchoolSubjectsPage() {
                 <tr key={item.id} className="border-b border-slate-50 last:border-0">
                   <td className="px-4 py-3 font-medium text-slate-900">{item.name}</td>
                   <td className="px-4 py-3 text-slate-600">{SCHOOL_STATUS_LABELS[item.status]}</td>
+                  <td className="px-4 py-3 text-muted">{FORMULA_PROFILES[item.formulaProfile ?? 'GENERAL']}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(item)}>
+                      <Button variant="ghost" size="sm" onClick={() => openEdit(item)} disabled={item.status === 'ARCHIVED'}>
                         Изменить
                       </Button>
                       {item.status === 'ACTIVE' && (
@@ -186,6 +172,11 @@ export function SchoolSubjectsPage() {
         <form onSubmit={onSubmit} className="space-y-4">
           <Field label="Название" required>
             <TextInput value={name} onChange={(e) => setName(e.target.value)} required />
+          </Field>
+          <Field label="Профиль формул">
+            <Select value={formulaProfile} onChange={(event) => setFormulaProfile(event.target.value as FormulaProfile)}>
+              {Object.entries(FORMULA_PROFILES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </Select>
           </Field>
           {formError && <p className="text-sm text-red-500">{formError}</p>}
         </form>

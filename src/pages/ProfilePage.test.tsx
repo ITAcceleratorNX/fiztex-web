@@ -27,7 +27,7 @@ const TEACHER: MyProfile = {
   role: 'TEACHER',
   fullName: 'Искаков Алишер Мақсатұлы',
   phone: '+77001000000',
-  email: null,
+  email: null as unknown as MyProfile['email'], // Raw response nullability is absent from OpenAPI.
   teacher: {
     teacherProfileId: 1,
     assignments: [

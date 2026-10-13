@@ -120,6 +120,8 @@ export default {
         'journal-row': '44px',
       },
       width: {
+        // Переключатель нескольких классов учителя (2200:4727).
+        'class-switcher': '220px',
         // Колонка «ВРЕМЯ» в сетке занятости (2015:10997) — вне 4px-шкалы.
         'slot-time-col': '100px',
         // Селектор фильтра подстраниц расписания (2015:12037).
@@ -149,6 +151,7 @@ export default {
         'textbook-table': '1120px',
       },
       minHeight: {
+        'comment-field': 'var(--size-comment-field)',
         // Две колонки экрана занятости равной высоты (2015:11068): в макете
         // 935px при артборде 1080, здесь — нижняя граница, дальше по контенту.
         'availability-columns': '36rem',
@@ -158,6 +161,7 @@ export default {
         filter: '0.5px',
       },
       maxWidth: {
+        'comment-dialog': 'var(--size-comment-dialog)',
         // Ширина текста пустых состояний: 340px при 13px (2015:11338)
         // и 400px при 14px (2015:11167). Обе вне шкалы Tailwind.
         'state-text': '340px',

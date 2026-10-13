@@ -15,7 +15,13 @@ interface ModalProps {
   subtitle?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'comment';
+  /** Compact composer layout from Figma: no separator between header and field. */
+  appearance?: 'standard' | 'composer';
+  /** Keep the header/footer visible and scroll only the contents of a long editor. */
+  scrollable?: boolean;
+  /** Reserve viewport space for a virtual keyboard. */
+  bottomInset?: number;
 }
 
 type ModalEntry = {
@@ -25,7 +31,7 @@ type ModalEntry = {
   close: () => void;
 };
 
-const sizes = { sm: 'max-w-md', md: 'max-w-xl', lg: 'max-w-3xl', xl: 'max-w-4xl', '2xl': 'max-w-5xl' };
+const sizes = { sm: 'max-w-md', md: 'max-w-xl', lg: 'max-w-3xl', xl: 'max-w-4xl', '2xl': 'max-w-5xl', comment: 'max-w-comment-dialog' };
 const focusableSelector = [
   'a[href]',
   'button',
@@ -40,6 +46,10 @@ const modalStack: ModalEntry[] = [];
 const originalInert = new Map<HTMLElement, boolean>();
 let originalBodyOverflow: string | null = null;
 let modalObserver: MutationObserver | null = null;
+
+function notificationRegions(): HTMLElement[] {
+  return Array.from(document.body.querySelectorAll<HTMLElement>('[data-modal-notifications]'));
+}
 
 function setElementInert(element: HTMLElement, inert: boolean) {
   element.inert = inert;
@@ -93,6 +103,7 @@ function getFocusFallback(): HTMLElement | null {
 function syncModalEnvironment() {
   const top = modalStack.at(-1);
   if (!top) {
+    notificationRegions().forEach(region => { region.style.zIndex = ''; });
     modalObserver?.disconnect();
     modalObserver = null;
     for (const [element, wasInert] of originalInert) setElementInert(element, wasInert);
@@ -107,7 +118,8 @@ function syncModalEnvironment() {
   if (originalBodyOverflow === null) originalBodyOverflow = document.body.style.overflow;
   document.body.style.overflow = 'hidden';
 
-  // Keep only the active dialog and its ancestor path interactive. This also covers
+  // Keep the active dialog and the explicitly marked global toast portal interactive.
+  // All other page content and lower dialogs remain inert. This also covers
   // sibling page content when a modal is rendered deep inside the application tree.
   const activeBranch = new Set<HTMLElement>();
   for (
@@ -118,6 +130,11 @@ function syncModalEnvironment() {
     activeBranch.add(element);
   }
   top.layer.querySelectorAll<HTMLElement>('*').forEach((element) => activeBranch.add(element));
+  notificationRegions().forEach((region) => {
+    activeBranch.add(region);
+    region.querySelectorAll<HTMLElement>('*').forEach((element) => activeBranch.add(element));
+    region.style.zIndex = String(100 + modalStack.length * 10);
+  });
 
   document.body.querySelectorAll<HTMLElement>('*').forEach((element) => {
     if (!originalInert.has(element)) {
@@ -135,7 +152,7 @@ function syncModalEnvironment() {
 function onDocumentKeyDown(event: KeyboardEvent) {
   const top = modalStack.at(-1);
   if (!top || event.key !== 'Tab') return;
-  const focusable = getFocusableElements(top.dialog);
+  const focusable = [...getFocusableElements(top.dialog), ...notificationRegions().flatMap(getFocusableElements)];
   if (focusable.length === 0) {
     event.preventDefault();
     focusElement(top.dialog);
@@ -145,10 +162,11 @@ function onDocumentKeyDown(event: KeyboardEvent) {
   const first = focusable[0];
   const last = focusable[focusable.length - 1];
   const active = document.activeElement;
-  if (event.shiftKey && (active === first || !top.dialog.contains(active))) {
+  const inside = focusable.includes(active as HTMLElement);
+  if (event.shiftKey && (active === first || !inside)) {
     event.preventDefault();
     focusElement(last);
-  } else if (!event.shiftKey && (active === last || !top.dialog.contains(active))) {
+  } else if (!event.shiftKey && (active === last || !inside)) {
     event.preventDefault();
     focusElement(first);
   }
@@ -158,6 +176,7 @@ function onDialogKeyDown(entry: ModalEntry | null, event: ReactKeyboardEvent<HTM
   if (!entry || modalStack.at(-1) !== entry || event.key !== 'Escape' || event.defaultPrevented) return;
 
   const target = event.target instanceof HTMLElement ? event.target : null;
+  if (target?.closest('[data-modal-notifications]')) return;
   // Select and MultiSelect stop propagation after closing their listbox, so Escape
   // reaches this handler on the next press and closes the dialog.
   if (
@@ -172,7 +191,8 @@ function onDialogKeyDown(entry: ModalEntry | null, event: ReactKeyboardEvent<HTM
 
 function onDocumentFocusIn(event: FocusEvent) {
   const top = modalStack.at(-1);
-  if (!top || top.dialog.contains(event.target as Node)) return;
+  if (!top || top.dialog.contains(event.target as Node)
+    || notificationRegions().some(region => region.contains(event.target as Node))) return;
   focusFirstIn(top.dialog);
 }
 
@@ -225,7 +245,7 @@ function registerModal(entry: ModalEntry) {
   };
 }
 
-export function Modal({ open, onClose, title, subtitle, children, footer, size = 'md' }: ModalProps) {
+export function Modal({ open, onClose, title, subtitle, children, footer, size = 'md', appearance = 'standard', scrollable = false, bottomInset = 0 }: ModalProps) {
   const titleId = useId();
   const subtitleId = useId();
   const layerRef = useRef<HTMLDivElement>(null);
@@ -268,7 +288,8 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
       ref={layerRef}
       data-modal-layer
       onKeyDown={(event) => onDialogKeyDown(entryRef.current, event)}
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-8"
+      style={bottomInset ? { bottom: bottomInset } : undefined}
+      className={cx('fixed inset-0 z-50 flex justify-center p-4 sm:p-8', scrollable ? 'items-center overflow-hidden' : 'items-start overflow-y-auto')}
     >
       <div
         className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
@@ -284,27 +305,30 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
         tabIndex={-1}
         className={cx(
           'relative my-auto w-full rounded-2xl bg-white shadow-pop animate-scale-in',
+          scrollable && 'flex max-h-full flex-col overflow-hidden',
           sizes[size],
         )}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-line px-4 py-5 sm:px-6">
+        <div className={cx('flex shrink-0 items-start justify-between gap-3 px-4 sm:px-6',
+          appearance === 'composer' ? 'pt-6 pb-5' : 'border-b border-line py-5')}>
           <div className="min-w-0 flex-1">
-            <h2 id={titleId} className="break-words text-lg font-bold text-ink">{title}</h2>
-            {subtitle && <p id={subtitleId} className="mt-1 break-words text-sm leading-relaxed text-muted">{subtitle}</p>}
+            <h2 id={titleId} className={cx('break-words text-lg font-bold text-ink', appearance === 'composer' && 'leading-snug')}>{title}</h2>
+            {subtitle && <p id={subtitleId} className={cx('mt-1 break-words text-muted', appearance === 'composer' ? 'text-xs leading-tight' : 'text-sm leading-relaxed')}>{subtitle}</p>}
           </div>
           <button
             data-modal-close
             type="button"
             aria-label="Закрыть окно"
             onClick={onClose}
-            className="flex size-10 shrink-0 items-center justify-center rounded-lg text-muted transition hover:bg-neutral-bg hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 focus-visible:ring-offset-2"
+            className={cx('flex shrink-0 items-center justify-center rounded-lg text-muted transition hover:bg-neutral-bg hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 focus-visible:ring-offset-2',
+              appearance === 'composer' ? 'size-8 border border-line bg-slate-50' : 'size-10')}
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <div className="min-w-0 px-4 py-5 sm:px-6">{children}</div>
+        <div className={cx('min-w-0 px-4 sm:px-6', appearance === 'composer' ? 'pb-6' : 'py-5', scrollable && 'min-h-0 overflow-y-auto overscroll-contain')}>{children}</div>
         {footer && (
-          <div className="flex flex-wrap items-center justify-end gap-3 border-t border-line px-4 py-4 sm:px-6">
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-line px-4 py-4 sm:px-6">
             {footer}
           </div>
         )}

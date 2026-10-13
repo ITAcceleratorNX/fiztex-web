@@ -90,7 +90,7 @@ export function AnswerScoreField({
             inputMode="decimal"
             min={0}
             max={maximum}
-            step={0.01}
+            step={0.5}
             value={score}
             disabled={disabled || saving}
             aria-invalid={issue != null}

@@ -13,6 +13,7 @@ export function CollapsibleCard({
   icon,
   defaultOpen = false,
   disabled = false,
+  onOpenChange,
   children,
   className,
 }: {
@@ -20,6 +21,7 @@ export function CollapsibleCard({
   icon?: ReactNode;
   defaultOpen?: boolean;
   disabled?: boolean;
+  onOpenChange?: (open: boolean) => void;
   children: ReactNode;
   className?: string;
 }) {
@@ -31,7 +33,7 @@ export function CollapsibleCard({
     <section className={cx('rounded-2xl border border-slate-200 bg-white p-6 shadow-raised', className)}>
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => { const next = !open; setOpen(next); onOpenChange?.(next); }}
         disabled={disabled}
         aria-expanded={expanded}
         aria-controls={contentId}

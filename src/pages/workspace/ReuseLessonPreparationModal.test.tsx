@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReuseLessonPreparationModal } from './ReuseLessonPreparationModal';
@@ -43,15 +43,23 @@ describe('ReuseLessonPreparationModal', () => {
   });
 
   it('позволяет искать урок в другой неделе и показывает пустое состояние', async () => {
-    lessons.mockImplementation((week: string) => ({ data: { content: week === '2026-10-05' ? [] : [{
-      id: 9, subjectName: 'Физика', className: '8А', date: '2026-10-12',
-      academicPeriodStatus: 'ACTIVE', capabilities: ['EDIT_TEACHING_PART'],
-    }], totalPages: 1 }, isPending: false, isError: false }));
+    const user = userEvent.setup();
+    lessons.mockImplementation((week: string) => ({ data: {
+      content: week === '2026-10-12' ? [{
+        id: 9, subjectName: 'Физика', className: '8А', date: '2026-10-12',
+        academicPeriodStatus: 'ACTIVE', capabilities: ['EDIT_TEACHING_PART'],
+      }] : [], totalPages: week === '2026-10-12' ? 1 : 0,
+    }, isPending: false, isError: false }));
     render(<ReuseLessonPreparationModal item={item} onClose={vi.fn()} />);
-    await userEvent.clear(screen.getByLabelText('Дата урока'));
-    await userEvent.type(screen.getByLabelText('Дата урока'), '2026-10-05');
+    const dateInput = screen.getByLabelText('Дата урока');
+    fireEvent.change(dateInput, { target: { value: '2026-10-05' } });
+    expect(dateInput).toHaveValue('2026-10-05');
+    expect(lessons).toHaveBeenLastCalledWith('2026-10-05', '2026-10-11', 0);
     expect(screen.getByText('Нет доступного урока')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Позже' }));
+    await user.click(screen.getByRole('button', { name: 'Позже' }));
+    expect(dateInput).toHaveValue('2026-10-12');
+    expect(lessons).toHaveBeenLastCalledWith('2026-10-12', '2026-10-18', 0);
+    expect(screen.queryByText('Нет доступного урока')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Физика · 8А/ })).toBeInTheDocument();
   });
 });

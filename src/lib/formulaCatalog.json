@@ -1,0 +1,279 @@
+{
+  "common": [
+    {
+      "title": "Числа и действия",
+      "items": [
+        {
+          "label": "дробь",
+          "latex": "\\frac{a}{b}",
+          "insert": "\\frac{#?}{#?}"
+        },
+        {
+          "label": "степень",
+          "latex": "a^{n}",
+          "insert": "#?^{#?}"
+        },
+        {
+          "label": "индекс",
+          "latex": "a_{n}",
+          "insert": "#?_{#?}"
+        },
+        {
+          "label": "корень",
+          "latex": "\\sqrt{a}",
+          "insert": "\\sqrt{#?}"
+        },
+        {
+          "label": "корень n-й",
+          "latex": "\\sqrt[n]{a}",
+          "insert": "\\sqrt[#?]{#?}"
+        },
+        {
+          "label": "модуль",
+          "latex": "|a|",
+          "insert": "\\left|#?\\right|"
+        },
+        {
+          "label": "умножение",
+          "latex": "\\cdot",
+          "insert": "\\cdot "
+        },
+        {
+          "label": "деление",
+          "latex": "\\div",
+          "insert": "\\div "
+        },
+        {
+          "label": "плюс-минус",
+          "latex": "\\pm",
+          "insert": "\\pm "
+        }
+      ]
+    },
+    {
+      "title": "Сравнения и системы",
+      "items": [
+        {
+          "label": "меньше или равно",
+          "latex": "\\le",
+          "insert": "\\le "
+        },
+        {
+          "label": "больше или равно",
+          "latex": "\\ge",
+          "insert": "\\ge "
+        },
+        {
+          "label": "не равно",
+          "latex": "\\ne",
+          "insert": "\\ne "
+        },
+        {
+          "label": "приблизительно",
+          "latex": "\\approx",
+          "insert": "\\approx "
+        },
+        {
+          "label": "система",
+          "latex": "\\begin{cases} x \\\\ y \\end{cases}",
+          "insert": "\\begin{cases} #? \\\\ #? \\end{cases}"
+        },
+        {
+          "label": "матрица",
+          "latex": "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}",
+          "insert": "\\begin{pmatrix} #? & #? \\\\ #? & #? \\end{pmatrix}"
+        }
+      ]
+    },
+    {
+      "title": "Функции и анализ",
+      "items": [
+        {
+          "label": "логарифм",
+          "latex": "\\log_{a} b",
+          "insert": "\\log_{#?}{#?}"
+        },
+        {
+          "label": "натуральный логарифм",
+          "latex": "\\ln a",
+          "insert": "\\ln #?"
+        },
+        {
+          "label": "синус",
+          "latex": "\\sin \\alpha",
+          "insert": "\\sin #?"
+        },
+        {
+          "label": "косинус",
+          "latex": "\\cos \\alpha",
+          "insert": "\\cos #?"
+        },
+        {
+          "label": "тангенс",
+          "latex": "\\tg \\alpha",
+          "insert": "\\tg #?"
+        },
+        {
+          "label": "предел",
+          "latex": "\\lim_{x \\to 0}",
+          "insert": "\\lim_{#? \\to #?}"
+        },
+        {
+          "label": "сумма",
+          "latex": "\\sum_{i=1}^{n}",
+          "insert": "\\sum_{#?}^{#?}"
+        },
+        {
+          "label": "интеграл",
+          "latex": "\\int_{a}^{b}",
+          "insert": "\\int_{#?}^{#?}"
+        },
+        {
+          "label": "производная",
+          "latex": "f'(x)",
+          "insert": "#?'"
+        }
+      ]
+    },
+    {
+      "title": "Физика и обозначения",
+      "items": [
+        {
+          "label": "вектор",
+          "latex": "\\vec{F}",
+          "insert": "\\vec{#?}"
+        },
+        {
+          "label": "градусы",
+          "latex": "20^\\circ",
+          "insert": "^\\circ "
+        },
+        {
+          "label": "пи",
+          "latex": "\\pi",
+          "insert": "\\pi "
+        },
+        {
+          "label": "альфа",
+          "latex": "\\alpha",
+          "insert": "\\alpha "
+        },
+        {
+          "label": "бета",
+          "latex": "\\beta",
+          "insert": "\\beta "
+        },
+        {
+          "label": "ро",
+          "latex": "\\rho",
+          "insert": "\\rho "
+        },
+        {
+          "label": "мю",
+          "latex": "\\mu",
+          "insert": "\\mu "
+        },
+        {
+          "label": "дельта",
+          "latex": "\\Delta",
+          "insert": "\\Delta "
+        },
+        {
+          "label": "омега",
+          "latex": "\\Omega",
+          "insert": "\\Omega "
+        },
+        {
+          "label": "текст в формуле",
+          "latex": "\\text{кг}",
+          "insert": "\\text{#?}"
+        }
+      ]
+    }
+  ],
+  "MATHEMATICS": [],
+  "PHYSICS": [
+    {
+      "title": "Величины и единицы",
+      "items": [
+        {
+          "label": "научная запись",
+          "latex": "1{,}6\\cdot10^{-19}",
+          "insert": "1{,}6\\cdot10^{-19}"
+        },
+        {
+          "label": "скорость",
+          "latex": "v=\\frac{s}{t}",
+          "insert": "v=\\frac{s}{t}"
+        },
+        {
+          "label": "плотность",
+          "latex": "\\rho=\\frac{m}{V}",
+          "insert": "\\rho=\\frac{m}{V}"
+        },
+        {
+          "label": "сила",
+          "latex": "\\vec{F}=m\\vec{a}",
+          "insert": "\\vec{F}=m\\vec{a}"
+        },
+        {
+          "label": "единицы СИ",
+          "latex": "\\text{кг}\\cdot\\text{м}/\\text{с}^{2}",
+          "insert": "\\text{кг}\\cdot\\text{м}/\\text{с}^{2}"
+        },
+        {
+          "label": "температура",
+          "latex": "-5^{\\circ}\\text{C}",
+          "insert": "-5^{\\circ}\\text{C}"
+        }
+      ]
+    }
+  ],
+  "CHEMISTRY": [
+    {
+      "title": "Вещества и реакции",
+      "items": [
+        {
+          "label": "вода",
+          "latex": "\\ce{H2O}",
+          "insert": "\\ce{H2O}"
+        },
+        {
+          "label": "группа",
+          "latex": "\\ce{(NH4)2SO4}",
+          "insert": "\\ce{(NH4)2SO4}"
+        },
+        {
+          "label": "комплекс",
+          "latex": "\\ce{[Fe(CN)6]^{3-}}",
+          "insert": "\\ce{[Fe(CN)6]^{3-}}"
+        },
+        {
+          "label": "ион",
+          "latex": "\\ce{Fe^{3+}}",
+          "insert": "\\ce{Fe^{3+}}"
+        },
+        {
+          "label": "изотоп",
+          "latex": "\\ce{^{14}_{6}C}",
+          "insert": "\\ce{^{14}_{6}C}"
+        },
+        {
+          "label": "реакция",
+          "latex": "\\ce{2H2 + O2 -> 2H2O}",
+          "insert": "\\ce{2H2 + O2 -> 2H2O}"
+        },
+        {
+          "label": "равновесие",
+          "latex": "\\ce{N2 + 3H2 <=>[T,p] 2NH3}",
+          "insert": "\\ce{N2 + 3H2 <=>[T,p] 2NH3}"
+        },
+        {
+          "label": "газ и осадок",
+          "latex": "\\ce{CO2 ^ + CaCO3 v}",
+          "insert": "\\ce{CO2 ^ + CaCO3 v}"
+        }
+      ]
+    }
+  ]
+}

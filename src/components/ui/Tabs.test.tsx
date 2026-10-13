@@ -67,6 +67,26 @@ describe('Tabs', () => {
     expect(panel).toHaveFocus();
   });
 
+  it('preserves a draft in a force-mounted panel and keeps its hidden inputs out of focus', async () => {
+    const user = userEvent.setup();
+    render(<Tabs defaultValue="editor">
+      <TabsList><TabsTrigger value="editor">Редактор</TabsTrigger><TabsTrigger value="tools">Инструменты</TabsTrigger></TabsList>
+      <TabsContent value="editor" forceMount><input aria-label="Черновик" /></TabsContent>
+      <TabsContent value="tools"><button type="button">Вставить знак</button></TabsContent>
+    </Tabs>);
+    const input = screen.getByLabelText('Черновик');
+    await user.click(input);
+    await user.paste('Fe^{2');
+    await user.click(screen.getByRole('tab', { name: 'Инструменты' }));
+    expect(input).toBeInTheDocument();
+    expect(input).not.toBeVisible();
+    await user.tab();
+    expect(screen.getByRole('tabpanel')).toHaveFocus();
+    await user.click(screen.getByRole('tab', { name: 'Редактор' }));
+    expect(input).toBeVisible();
+    expect(input).toHaveValue('Fe^{2');
+  });
+
 });
 
 describe('SegmentedTabs', () => {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { TeacherAnswer } from '@/lib/homeworkAiApi';
 import {
   isScoreDraftDirty,
   mergeScoreDrafts,
@@ -6,14 +7,14 @@ import {
   scoreFromDraft,
 } from './homeworkAnswerReviewModel';
 
-function answer(overrides: Record<string, unknown> = {}) {
+function answer(overrides: Partial<TeacherAnswer> = {}) {
   return {
     id: 10,
     maxScore: 2,
-    finalScore: null,
-    teacherComment: null,
+    finalScore: null as unknown as TeacherAnswer['finalScore'],
+    teacherComment: null as unknown as TeacherAnswer['teacherComment'],
     ...overrides,
-  };
+  } satisfies TeacherAnswer; // Raw API nulls are omitted from the generated schema.
 }
 
 describe('homeworkAnswerReviewModel', () => {

@@ -26,7 +26,7 @@ export function ReuseTestTemplateModal({ item, onClose }: { item: WorkspaceSearc
   const target = useTestTemplateTarget(homeworkId);
   const apply = useApplyTestTemplate(homeworkId ?? 0);
   const toast = useToast();
-  const choices = homework.data?.content ?? [];
+  const choices = (homework.data?.content ?? []).filter(entry => template.data?.subjectId != null && entry.subjectId === template.data.subjectId);
   const available = choices.some(canUse);
 
   async function save() {
@@ -56,6 +56,7 @@ export function ReuseTestTemplateModal({ item, onClose }: { item: WorkspaceSearc
     </Button>
   </>}>
     <div className="space-y-4">
+      {template.data && template.data.subjectId == null && <p role="status" className="text-sm text-attention-fg">У этой версии нет предмета. Откройте редактор и сохраните новую версию с предметом перед применением к ДЗ.</p>}
       {template.isPending ? <LoadingBlock /> : template.isError ? <ErrorBlock message="Не удалось загрузить данные" onRetry={() => template.refetch()} />
         : <p className="text-sm text-slate-600">{item.title} · версия {template.data?.version} · {template.data?.definition?.questions?.length ?? 0} вопросов</p>}
       {homework.isPending ? <LoadingBlock /> : homework.isError ? <ErrorBlock message="Не удалось загрузить данные" onRetry={() => homework.refetch()} />

@@ -392,9 +392,11 @@ export const api = {
       formData,
       signal,
     ),
+  importQuestionText: (testId: number, sourceText: string) =>
+    request<GenerationJobResponse>(`/tests/${testId}/import-text`, { method: 'POST', body: { sourceText } }),
   /** Вариант вопроса с AI: ничего не сохраняет, ответ показывается в предпросмотре. */
-  aiQuestionVariant: (question: QuestionRequest, signal?: AbortSignal) =>
-    request<AiQuestionVariantResponse>('/admin/questions/ai-variant', {
+  aiQuestionVariant: (question: QuestionRequest, testId?: number, signal?: AbortSignal) =>
+    request<AiQuestionVariantResponse>(`/admin/questions/ai-variant${testId != null ? `?testId=${testId}` : ''}`, {
       method: 'POST',
       body: question,
       signal,

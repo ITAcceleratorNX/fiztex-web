@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { GradeCorrection } from '@/lib/gradeCorrectionsApi';
+import type { GradeCorrection, GradeCorrectionHistoryEvent } from '@/lib/gradeCorrectionsApi';
 import {
   correctionBadge,
   describeCorrectionEvent,
@@ -11,6 +11,11 @@ import {
 
 function correction(overrides: Partial<GradeCorrection>): GradeCorrection {
   return { id: 1, studentProfileId: 5, status: 'REQUIRED', overdue: false, deadline: '2026-10-21', ...overrides };
+}
+
+// OpenAPI treats JsonNode as opaque; these fixtures exercise its actual JSON content.
+function historySnapshot(value: Record<string, unknown>): GradeCorrectionHistoryEvent['after'] {
+  return value as unknown as GradeCorrectionHistoryEvent['after'];
 }
 
 describe('gradeCorrectionModel', () => {
@@ -51,11 +56,11 @@ describe('gradeCorrectionModel', () => {
     expect(
       describeCorrectionEvent({
         action: 'DEADLINE_CHANGED',
-        before: { deadline: '2026-10-21' },
-        after: { deadline: '2026-10-28' },
+        before: historySnapshot({ deadline: '2026-10-21' }),
+        after: historySnapshot({ deadline: '2026-10-28' }),
       }),
     ).toBe('Срок продлён до 28 окт');
-    expect(describeCorrectionEvent({ action: 'TEMPORARY_GRADE_CHANGED', after: { temporaryScore: 8 } })).toBe(
+    expect(describeCorrectionEvent({ action: 'TEMPORARY_GRADE_CHANGED', after: historySnapshot({ temporaryScore: 8 }) })).toBe(
       'Выставлена временная оценка: 8',
     );
     expect(describeCorrectionEvent({ action: 'EXPIRED', after: {} })).toBe('Срок истёк');

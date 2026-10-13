@@ -1,8 +1,11 @@
 import { ArrowDown, ArrowUp, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Field, Select, TextInput } from '@/components/ui/Field';
+import type { FormulaProfile } from '@/lib/formulaProfiles';
 import { FormulaField } from '@/components/ui/FormulaField';
 import { AiGeneratedBadge } from '@/components/ui/AiGeneratedBadge';
+import { QuestionImagePicker, type QuestionImage } from '@/components/ui/QuestionImagePicker';
+import { QuestionFigure } from '@/components/ui/QuestionFigure';
 import { AiJobProgress } from '@/components/ui/AiJobProgress';
 import { checkFormulas } from '@/lib/formulaChecks';
 import {
@@ -12,6 +15,7 @@ import {
 
 export function QuestionCard({
   question,
+  profile = 'GENERAL',
   index,
   total,
   readOnly,
@@ -21,8 +25,11 @@ export function QuestionCard({
   onRemove,
   onMove,
   onRegenerate,
+  onUploadImage,
+  onImageBusyChange,
 }: {
   question: QuestionDraft;
+  profile?: FormulaProfile;
   index: number;
   total: number;
   readOnly: boolean;
@@ -32,6 +39,8 @@ export function QuestionCard({
   onRemove: () => void;
   onMove: (delta: -1 | 1) => void;
   onRegenerate?: () => void;
+  onUploadImage?: (file: File) => Promise<QuestionImage>;
+  onImageBusyChange?: (busy: boolean) => void;
 }) {
   const invalid = messages.length > 0;
   const formulaProblems = checkFormulas([
@@ -131,6 +140,7 @@ export function QuestionCard({
       <div className="mt-4">
         <Field label="Текст вопроса" required>
           <FormulaField
+            profile={profile}
             disabled={readOnly}
             value={question.text}
             onChange={(text) => onChange({ ...question, text })}
@@ -139,6 +149,11 @@ export function QuestionCard({
           />
         </Field>
       </div>
+
+      {onUploadImage ? <QuestionImagePicker imageUrl={question.imageUrl} disabled={readOnly}
+        onUpload={onUploadImage} onBusyChange={onImageBusyChange}
+        onChange={image => onChange({ ...question, imageId: image.imageId, imageUrl: image.imageUrl })} />
+        : <QuestionFigure imageUrl={question.imageUrl} />}
 
       {isChoiceType(question.type) && (
         <div className="mt-4 space-y-2">
@@ -178,6 +193,7 @@ export function QuestionCard({
               />
               <div className="min-w-0 flex-1">
                 <FormulaField
+            profile={profile}
                   disabled={readOnly}
                   multiline={false}
                   value={option.text}
@@ -216,8 +232,9 @@ export function QuestionCard({
 
       {question.type === 'OPEN_TEXT' && (
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <Field label="Эталонный ответ" hint="Ученику не показывается">
+          <Field label="Эталонный ответ" hint="Ученику не показывается" className="min-w-0">
             <FormulaField
+            profile={profile}
               disabled={readOnly}
               value={question.referenceAnswer}
               onChange={(referenceAnswer) => onChange({ ...question, referenceAnswer })}
@@ -225,8 +242,9 @@ export function QuestionCard({
               ariaLabel="Эталонный ответ"
             />
           </Field>
-          <Field label="Критерии оценки" hint="Их использует подсказка ИИ">
+          <Field label="Критерии оценки" hint="Их использует подсказка ИИ" className="min-w-0">
             <FormulaField
+            profile={profile}
               disabled={readOnly}
               value={question.gradingCriteria}
               onChange={(gradingCriteria) => onChange({ ...question, gradingCriteria })}

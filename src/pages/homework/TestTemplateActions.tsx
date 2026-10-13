@@ -9,9 +9,10 @@ import { useApplyTestTemplate, useCreateTestTemplate, useTestTemplate, useTestTe
 import { ApiError } from '@/lib/api';
 import type { WorkspaceSearchItem } from '@/lib/teacherWorkspaceApi';
 
-export function TestTemplateActions({ homeworkId, homeworkTitle, questionCount, canApply, onApplied }: {
+export function TestTemplateActions({ homeworkId, homeworkTitle, subjectId, questionCount, canApply, onApplied }: {
   homeworkId: number;
   homeworkTitle: string;
+  subjectId?: number;
   questionCount: number;
   canApply: boolean;
   onApplied: () => void;
@@ -83,7 +84,7 @@ export function TestTemplateActions({ homeworkId, homeworkTitle, questionCount, 
         {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
       </form>
     </Modal>
-    {pickerOpen && <WorkspaceMaterialPickerModal usage="APPLY_TEST_TO_HOMEWORK" type="TEST" singleSelect
+    {pickerOpen && <WorkspaceMaterialPickerModal usage="APPLY_TEST_TO_HOMEWORK" type="TEST" subjectId={subjectId} singleSelect
       onClose={() => setPickerOpen(false)} onConfirm={(items) => {
         setSelected(items[0] ?? null);
         setApplyKey(crypto.randomUUID());
@@ -93,7 +94,7 @@ export function TestTemplateActions({ homeworkId, homeworkTitle, questionCount, 
     <Modal open={selected != null} onClose={() => { if (!apply.isPending) setSelected(null); }} title="Применить готовый тест" size="md" footer={<>
       <Button variant="secondary" onClick={() => setSelected(null)} disabled={apply.isPending}>Отмена</Button>
       <Button onClick={() => void confirmApply()} loading={apply.isPending}
-        disabled={template.isPending || target.isPending || template.isError || target.isError || !target.data?.questionRevision}>
+        disabled={template.isPending || target.isPending || template.isError || target.isError || !target.data?.questionRevision || (subjectId != null && template.data?.subjectId !== subjectId)}>
         {(target.data?.questionCount ?? 0) > 0 ? 'Заменить вопросы' : 'Добавить вопросы'}
       </Button>
     </>}>
@@ -101,6 +102,7 @@ export function TestTemplateActions({ homeworkId, homeworkTitle, questionCount, 
         {template.isPending || target.isPending ? <LoadingBlock /> : template.isError || target.isError ?
           <ErrorBlock message="Не удалось загрузить данные" onRetry={() => { void template.refetch(); void target.refetch(); }} /> : <>
             <p className="text-sm font-semibold text-slate-900">{template.data?.title ?? selected?.title}</p>
+            {subjectId != null && template.data?.subjectId !== subjectId && <p role="alert" className="text-sm text-danger-fg">Предмет этой версии не совпадает с предметом ДЗ. Выберите другую версию.</p>}
             <p className="text-sm text-slate-600">Версия {template.data?.version} · {template.data?.definition?.questions?.length ?? 0} вопросов</p>
             {(target.data?.questionCount ?? 0) > 0 && <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
               В этом ДЗ уже есть вопросы. Применение заготовки заменит их. Ответы учеников не затрагиваются: после первого ответа сервер не разрешит замену.

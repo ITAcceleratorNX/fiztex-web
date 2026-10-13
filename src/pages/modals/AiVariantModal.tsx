@@ -20,11 +20,13 @@ export function AiVariantModal({
   open,
   onClose,
   original,
+  testId,
   onAdd,
 }: {
   open: boolean;
   onClose: () => void;
   original: QuestionDraft | null;
+  testId?: number;
   onAdd: (variant: QuestionRequest) => void;
 }) {
   const createVariant = useAiQuestionVariant();
@@ -46,7 +48,7 @@ export function AiVariantModal({
     setVariant(null);
     setSolution(null);
     createVariant
-      .mutateAsync(questionToRequest(original, 0))
+      .mutateAsync({ question: questionToRequest(original, 0), testId })
       .then((result) => {
         setVariant(result.question);
         setSolution(result.solution);
@@ -58,7 +60,7 @@ export function AiVariantModal({
     // createVariant — новая ссылка на каждый рендер; включать её в зависимости значит
     // перезапускать генерацию бесконечно.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [original]);
+  }, [original, testId]);
 
   useEffect(() => {
     if (!open || startedRef.current) return;
