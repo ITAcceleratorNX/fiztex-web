@@ -716,7 +716,7 @@ function LessonModules({ lesson }: { lesson: Lesson }) {
       <ModuleTile
         icon={<Award className="size-[18px]" />}
         tone="blue"
-        title="Оценки"
+        title="Оценки и комментарии"
         value={
           !canViewGrades
             ? 'Нет доступа'

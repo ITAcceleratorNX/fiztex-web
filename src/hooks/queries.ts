@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { parentCommentsApi, type PublishParentComment } from '@/lib/parentCommentsApi';
 import { listSchoolSubjects, createSchoolSubject, updateSchoolSubject, archiveSchoolSubject } from '@/platform/services/schoolSubjects';
 import type { SchoolRecordStatus } from '@/platform/types';
 import type { FormulaProfile } from '@/lib/formulaProfiles';
@@ -93,6 +94,7 @@ import type {
 } from '@/lib/types';
 
 export const keys = {
+  lessonParentComments: (lessonId: number | null) => ['lesson-parent-comments', lessonId] as const,
   schoolSubjects: (status: SchoolRecordStatus | 'ALL') => ['school-subjects', status] as const,
   myClassContext: ['my-class', 'context'] as const,
   myClassRoster: (classId: number) => ['my-class', 'classes', classId, 'students'] as const,
@@ -1742,6 +1744,25 @@ export function useLessonGradeSheet(lessonId: number | null, enabled = true) {
       !(error instanceof ApiError && (error.status === 403 || error.status === 404)) &&
       failureCount < 2,
   });
+}
+
+export function useLessonParentComments(lessonId: number, enabled = true) {
+  return useQuery({ queryKey: keys.lessonParentComments(lessonId),
+    queryFn: ({ signal }) => parentCommentsApi.sheet(lessonId, signal), enabled });
+}
+
+export function usePublishParentComment(lessonId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ studentId, ...body }: PublishParentComment & { studentId: number }) =>
+      parentCommentsApi.publish(lessonId, studentId, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.lessonParentComments(lessonId) }),
+  });
+}
+
+export function useImproveParentComment(lessonId: number) {
+  return useMutation({ mutationFn: ({ studentId, text }: { studentId: number; text: string }) =>
+    parentCommentsApi.improve(lessonId, studentId, text), retry: false });
 }
 
 /**

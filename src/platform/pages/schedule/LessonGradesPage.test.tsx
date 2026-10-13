@@ -18,6 +18,7 @@ const updateCorrection = vi.fn();
 const completeCorrection = vi.fn();
 
 vi.mock('@/hooks/queries', () => ({
+  useLessonParentComments: () => ({ data: { students: [] }, isError: false }),
   useLesson: (...args: unknown[]) => useLesson(...args),
   useLessonGradeSheet: (...args: unknown[]) => useLessonGradeSheet(...args),
   useGradeScale: (...args: unknown[]) => useGradeScale(...args),
