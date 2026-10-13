@@ -369,7 +369,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_6"];
+        post: operations["publish_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1819,7 +1819,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_5"];
+        post: operations["publish_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2219,7 +2219,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_4"];
+        post: operations["publish_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3515,7 +3515,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_3"];
+        post: operations["publish_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3722,6 +3722,40 @@ export interface paths {
             cookie?: never;
         };
         get: operations["myAverage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/my/dynamics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Динамика оценок ребёнка за неделю, месяц, четверть или год: показатель, сравнение, предметы и график */
+        get: operations["getMyGradeDynamics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/my/dynamics/subjects/{subjectId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Динамика ребёнка по одному предмету: показатель, сравнение, расшифровка и график */
+        get: operations["getMySubjectGradeDynamics"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4795,7 +4829,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_2"];
+        post: operations["publish_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5065,7 +5099,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["sheet_1"];
+        get: operations["sheet_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5147,7 +5181,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_1"];
+        post: operations["publish_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5273,7 +5307,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["sheet"];
+        get: operations["sheet_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5458,6 +5492,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/parent-comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sheet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/parent-comments/students/{studentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["publish"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/parent-comments/students/{studentId}/improvement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["improve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/preparation": {
         parameters: {
             query?: never;
@@ -5579,7 +5661,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish"];
+        post: operations["publish_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6105,6 +6187,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/grade-dynamics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Сводка динамики класса: средний показатель и ученики с изменением и предметами со снижением */
+        get: operations["getMyClassGradeDynamics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/grade-results": {
         parameters: {
             query?: never;
@@ -6176,6 +6275,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/students/{studentProfileId}/grade-dynamics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Динамика ученика класса: показатель, сравнение, предметы и график */
+        get: operations["getMyClassStudentGradeDynamics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/students/{studentProfileId}/grade-dynamics/subjects/{subjectId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Динамика ученика класса по одному предмету: показатель, сравнение, расшифровка и график */
+        get: operations["getMyClassStudentSubjectGradeDynamics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/subjects": {
         parameters: {
             query?: never;
@@ -6238,6 +6371,38 @@ export interface paths {
         put: operations["register"];
         post?: never;
         delete: operations["unregister"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/parent-comments/children/{childId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["feed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/parent-comments/children/{childId}/comments/{commentId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["read"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -8377,6 +8542,15 @@ export interface components {
             /** Format: int64 */
             subjectId?: number;
         };
+        ClassGradeDynamicsView: {
+            classAverage?: components["schemas"]["DynamicsMetricView"];
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            previousWindow?: components["schemas"]["DynamicsWindowView"];
+            students?: components["schemas"]["ClassStudentDynamicsView"][];
+            window?: components["schemas"]["DynamicsWindowView"];
+        };
         ClassGroupSetAggregateView: {
             duplicates?: components["schemas"]["DuplicateStudentView"][];
             groupSet?: components["schemas"]["ClassGroupSetView"];
@@ -8453,6 +8627,16 @@ export interface components {
             updatedBy?: number;
             /** Format: int64 */
             version?: number;
+        };
+        ClassStudentDynamicsView: {
+            declinedSubjects?: components["schemas"]["DeclinedSubjectView"][];
+            displayName?: string;
+            firstName?: string;
+            lastName?: string;
+            middleName?: string | null;
+            overall?: components["schemas"]["DynamicsMetricView"];
+            /** Format: int64 */
+            studentProfileId?: number;
         };
         ClassSubgroupStudentView: {
             firstName?: string;
@@ -8966,6 +9150,12 @@ export interface components {
             /** Format: int64 */
             totalApplicants?: number;
         };
+        DeclinedSubjectView: {
+            change?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+        };
         DiaryEntryView: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -9002,6 +9192,52 @@ export interface components {
             /** Format: int64 */
             studentId?: number;
             subgroupIds?: number[];
+        };
+        DynamicsMetricView: {
+            change?: number | null;
+            /** @enum {string|null} */
+            comparisonUnavailableReason?: "NO_CURRENT_RESULT" | "NO_PREVIOUS_RESULT" | "DIFFERENT_MODE" | null;
+            current?: components["schemas"]["IndicatorView"];
+            previous?: components["schemas"]["IndicatorView"];
+            /** @enum {string} */
+            trend?: "GROWTH" | "DECLINE" | "STABLE" | "INSUFFICIENT_DATA";
+        };
+        DynamicsPointView: {
+            /** @enum {string|null} */
+            component?: "FORMATIVE" | "SOR" | "SOCH" | null;
+            /** Format: date */
+            date?: string;
+            /** Format: int64 */
+            gradeId?: number;
+            /** @enum {string|null} */
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | null;
+            maxScore?: number | null;
+            numericValue?: number | null;
+            /** Format: date-time */
+            publishedAt?: string;
+            scaleCode?: string | null;
+            score?: number | null;
+            /** Format: int64 */
+            sourceId?: number;
+            /** @enum {string} */
+            sourceType?: "LESSON" | "HOMEWORK";
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+        };
+        DynamicsWindowView: {
+            /** Format: int64 */
+            academicPeriodId?: number | null;
+            academicPeriodName?: string | null;
+            /** Format: int64 */
+            academicYearId?: number | null;
+            academicYearName?: string | null;
+            /** Format: date */
+            from?: string;
+            /** Format: date */
+            to?: string;
+            /** @enum {string} */
+            type?: "WEEK" | "MONTH" | "QUARTER" | "YEAR";
         };
         EquipmentActorView: {
             /** Format: int64 */
@@ -10180,6 +10416,18 @@ export interface components {
             /** @enum {string} */
             type?: "CLASSES" | "STUDENTS" | "STUDENTS_WITH_PARENTS" | "PARENTS" | "TEACHERS";
         };
+        ImproveParentCommentRequest: {
+            text?: string;
+        };
+        IndicatorView: {
+            /** Format: int32 */
+            gradeCount?: number;
+            /** @enum {string|null} */
+            mode?: "SCALE_AVERAGE" | "POLICY_PERCENT" | null;
+            /** @enum {string} */
+            state?: "AVAILABLE" | "NO_DATA" | "NO_COUNTED_WORKS" | "POLICY_INCOMPLETE" | "NO_POLICY" | "MIXED_MODES";
+            value?: number | null;
+        };
         IssueEquipmentRequest: {
             comment?: string;
             /** Format: int64 */
@@ -10516,6 +10764,13 @@ export interface components {
             sizeBytes?: number;
             url?: string;
             visibleToStudents?: boolean;
+        };
+        LessonParentCommentSheetView: {
+            /** Format: int64 */
+            lessonId?: number;
+            students?: components["schemas"]["ParentCommentStudentRow"][];
+            /** @enum {string} */
+            writeState?: "ALLOWED" | "NOT_TEACHING" | "LESSON_CANCELLED" | "LESSON_SUPERSEDED" | "SUBSTITUTION_ENDED" | "SUBSTITUTE_NOT_PERMITTED" | "SUBSTITUTE_WINDOW_NOT_OPEN" | "SUBSTITUTE_WINDOW_CLOSED";
         };
         LessonParticipantView: {
             fullName?: string;
@@ -12447,6 +12702,54 @@ export interface components {
             /** Format: int64 */
             studentProfileId?: number;
         };
+        ParentCommentFeedView: {
+            comments?: components["schemas"]["ParentCommentView"][];
+            hasMore?: boolean;
+            /** Format: int32 */
+            page?: number;
+            subjects?: components["schemas"]["ParentCommentSubjectView"][];
+            /** Format: int64 */
+            unreadCount?: number;
+        };
+        ParentCommentImprovementView: {
+            text?: string;
+        };
+        ParentCommentStudentRow: {
+            canEdit?: boolean;
+            comment?: components["schemas"]["ParentCommentView"];
+            fullName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
+        ParentCommentSubjectView: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
+        ParentCommentView: {
+            /** Format: int64 */
+            id?: number;
+            lastEditorName?: string;
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: date-time */
+            publishedAt?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            teacherName?: string;
+            text?: string;
+            unread?: boolean;
+            updated?: boolean;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int64 */
+            version?: number;
+        };
         ParentProfileDetailView: {
             /** Format: int64 */
             accountId?: number;
@@ -12648,6 +12951,11 @@ export interface components {
             /** Format: int64 */
             subjectId: number;
         };
+        PublishParentCommentRequest: {
+            text?: string;
+            /** Format: int64 */
+            version?: number;
+        };
         PublishScheduleRequest: {
             confirmedWarningCodes: string[];
             /** Format: int64 */
@@ -12810,6 +13118,10 @@ export interface components {
             text?: string;
             /** @enum {string} */
             type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT";
+        };
+        ReadParentCommentRequest: {
+            /** Format: int64 */
+            version: number;
         };
         RedistributeRequest: {
             /** Format: int32 */
@@ -13644,6 +13956,16 @@ export interface components {
             subjectId?: number;
             year?: components["schemas"]["YearFinalView"];
         };
+        StudentGradeDynamicsView: {
+            overall?: components["schemas"]["DynamicsMetricView"];
+            points?: components["schemas"]["DynamicsPointView"][];
+            previousWindow?: components["schemas"]["DynamicsWindowView"];
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            subjects?: components["schemas"]["SubjectDynamicsView"][];
+            window?: components["schemas"]["DynamicsWindowView"];
+        };
         StudentGradeEventView: {
             /** Format: int64 */
             classId?: number;
@@ -13784,6 +14106,25 @@ export interface components {
             /** Format: int64 */
             id?: number;
             name?: string;
+        };
+        SubjectDynamicsView: {
+            metric?: components["schemas"]["DynamicsMetricView"];
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+        };
+        SubjectGradeDynamicsView: {
+            metric?: components["schemas"]["DynamicsMetricView"];
+            periodResult?: components["schemas"]["PeriodResultSummaryView"];
+            points?: components["schemas"]["DynamicsPointView"][];
+            previousWindow?: components["schemas"]["DynamicsWindowView"];
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            window?: components["schemas"]["DynamicsWindowView"];
         };
         SubmissionAttachmentView: {
             contentType?: string;
@@ -15875,7 +16216,7 @@ export interface operations {
             };
         };
     };
-    publish_6: {
+    publish_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -18793,7 +19134,7 @@ export interface operations {
             };
         };
     };
-    publish_5: {
+    publish_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -19632,7 +19973,7 @@ export interface operations {
             };
         };
     };
-    publish_4: {
+    publish_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -21882,7 +22223,7 @@ export interface operations {
             };
         };
     };
-    publish_3: {
+    publish_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -22231,6 +22572,61 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GradeAverageView"];
+                };
+            };
+        };
+    };
+    getMyGradeDynamics: {
+        parameters: {
+            query: {
+                period: "WEEK" | "MONTH" | "QUARTER" | "YEAR";
+                /** @description День окна для WEEK/MONTH и опорный день для QUARTER/YEAR без id; по умолчанию сегодня */
+                date?: string;
+                academicPeriodId?: number;
+                academicYearId?: number;
+                childStudentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentGradeDynamicsView"];
+                };
+            };
+        };
+    };
+    getMySubjectGradeDynamics: {
+        parameters: {
+            query: {
+                period: "WEEK" | "MONTH" | "QUARTER" | "YEAR";
+                date?: string;
+                academicPeriodId?: number;
+                academicYearId?: number;
+                childStudentProfileId?: number;
+            };
+            header?: never;
+            path: {
+                subjectId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubjectGradeDynamicsView"];
                 };
             };
         };
@@ -24167,7 +24563,7 @@ export interface operations {
             };
         };
     };
-    publish_2: {
+    publish_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -24661,7 +25057,7 @@ export interface operations {
             };
         };
     };
-    sheet_1: {
+    sheet_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -24783,7 +25179,7 @@ export interface operations {
             };
         };
     };
-    publish_1: {
+    publish_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -25037,7 +25433,7 @@ export interface operations {
             };
         };
     };
-    sheet: {
+    sheet_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -25428,6 +25824,82 @@ export interface operations {
             };
         };
     };
+    sheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonParentCommentSheetView"];
+                };
+            };
+        };
+    };
+    publish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+                studentId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishParentCommentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParentCommentView"];
+                };
+            };
+        };
+    };
+    improve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+                studentId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImproveParentCommentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParentCommentImprovementView"];
+                };
+            };
+        };
+    };
     getLessonPreparationTargetState: {
         parameters: {
             query?: never;
@@ -25699,7 +26171,7 @@ export interface operations {
             };
         };
     };
-    publish: {
+    publish_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -26913,6 +27385,60 @@ export interface operations {
             };
         };
     };
+    getMyClassGradeDynamics: {
+        parameters: {
+            query: {
+                period: "WEEK" | "MONTH" | "QUARTER" | "YEAR";
+                date?: string;
+                academicPeriodId?: number;
+                academicYearId?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Сводка класса */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassGradeDynamicsView"];
+                };
+            };
+            /** @description Неверные параметры окна или окно вне года класса */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Неоднозначный текущий период */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     getMyClassGradeResults: {
         parameters: {
             query: {
@@ -27152,6 +27678,63 @@ export interface operations {
             };
         };
     };
+    getMyClassStudentGradeDynamics: {
+        parameters: {
+            query: {
+                period: "WEEK" | "MONTH" | "QUARTER" | "YEAR";
+                date?: string;
+                academicPeriodId?: number;
+                academicYearId?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentGradeDynamicsView"];
+                };
+            };
+        };
+    };
+    getMyClassStudentSubjectGradeDynamics: {
+        parameters: {
+            query: {
+                period: "WEEK" | "MONTH" | "QUARTER" | "YEAR";
+                date?: string;
+                academicPeriodId?: number;
+                academicYearId?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+                studentProfileId: number;
+                subjectId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubjectGradeDynamicsView"];
+                };
+            };
+        };
+    };
     getMyClassSubjects: {
         parameters: {
             query?: {
@@ -27344,6 +27927,56 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    feed: {
+        parameters: {
+            query?: {
+                subjectId?: number;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                childId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParentCommentFeedView"];
+                };
+            };
+        };
+    };
+    read: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                childId: number;
+                commentId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReadParentCommentRequest"];
+            };
+        };
         responses: {
             /** @description No Content */
             204: {

@@ -18,6 +18,9 @@
  * на RGB-каналы и обернуть в rgb(var(--…) / <alpha-value>) в конфиге.
  */
 :root {
+  /* Figma parent comment composer 27:1697 / 27:1709. */
+  --size-comment-dialog: 560px;
+  --size-comment-field: 220px;
   /* Бренд — единственные две переменные, объявленные в Figma */
   --color-brand-navy: #274185; /* Figma: brandcolor */
   --color-brand-orange: #fb923c; /* Figma: 2brandcolor, = tailwind orange-400 */

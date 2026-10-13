@@ -15,7 +15,9 @@ interface ModalProps {
   subtitle?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'comment';
+  /** Compact composer layout from Figma: no separator between header and field. */
+  appearance?: 'standard' | 'composer';
   /** Keep the header/footer visible and scroll only the contents of a long editor. */
   scrollable?: boolean;
   /** Reserve viewport space for a virtual keyboard. */
@@ -29,7 +31,7 @@ type ModalEntry = {
   close: () => void;
 };
 
-const sizes = { sm: 'max-w-md', md: 'max-w-xl', lg: 'max-w-3xl', xl: 'max-w-4xl', '2xl': 'max-w-5xl' };
+const sizes = { sm: 'max-w-md', md: 'max-w-xl', lg: 'max-w-3xl', xl: 'max-w-4xl', '2xl': 'max-w-5xl', comment: 'max-w-comment-dialog' };
 const focusableSelector = [
   'a[href]',
   'button',
@@ -243,7 +245,7 @@ function registerModal(entry: ModalEntry) {
   };
 }
 
-export function Modal({ open, onClose, title, subtitle, children, footer, size = 'md', scrollable = false, bottomInset = 0 }: ModalProps) {
+export function Modal({ open, onClose, title, subtitle, children, footer, size = 'md', appearance = 'standard', scrollable = false, bottomInset = 0 }: ModalProps) {
   const titleId = useId();
   const subtitleId = useId();
   const layerRef = useRef<HTMLDivElement>(null);
@@ -307,22 +309,24 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
           sizes[size],
         )}
       >
-        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-line px-4 py-5 sm:px-6">
+        <div className={cx('flex shrink-0 items-start justify-between gap-3 px-4 sm:px-6',
+          appearance === 'composer' ? 'pt-6 pb-5' : 'border-b border-line py-5')}>
           <div className="min-w-0 flex-1">
-            <h2 id={titleId} className="break-words text-lg font-bold text-ink">{title}</h2>
-            {subtitle && <p id={subtitleId} className="mt-1 break-words text-sm leading-relaxed text-muted">{subtitle}</p>}
+            <h2 id={titleId} className={cx('break-words text-lg font-bold text-ink', appearance === 'composer' && 'leading-snug')}>{title}</h2>
+            {subtitle && <p id={subtitleId} className={cx('mt-1 break-words text-muted', appearance === 'composer' ? 'text-xs leading-tight' : 'text-sm leading-relaxed')}>{subtitle}</p>}
           </div>
           <button
             data-modal-close
             type="button"
             aria-label="Закрыть окно"
             onClick={onClose}
-            className="flex size-10 shrink-0 items-center justify-center rounded-lg text-muted transition hover:bg-neutral-bg hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 focus-visible:ring-offset-2"
+            className={cx('flex shrink-0 items-center justify-center rounded-lg text-muted transition hover:bg-neutral-bg hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 focus-visible:ring-offset-2',
+              appearance === 'composer' ? 'size-8 border border-line bg-slate-50' : 'size-10')}
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <div className={cx('min-w-0 px-4 py-5 sm:px-6', scrollable && 'min-h-0 overflow-y-auto overscroll-contain')}>{children}</div>
+        <div className={cx('min-w-0 px-4 sm:px-6', appearance === 'composer' ? 'pb-6' : 'py-5', scrollable && 'min-h-0 overflow-y-auto overscroll-contain')}>{children}</div>
         {footer && (
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-line px-4 py-4 sm:px-6">
             {footer}

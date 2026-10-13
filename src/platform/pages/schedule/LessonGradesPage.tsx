@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -18,6 +18,8 @@ import { GradeChip } from '@/components/ui/GradeChip';
 import { GradePicker } from '@/components/ui/GradePicker';
 import { PointsPicker, type PointsValue } from '@/components/ui/PointsPicker';
 import { NoticeBar } from '@/components/ui/NoticeBar';
+import { CommentButton } from '@/components/ui/CommentButton';
+import { ParentCommentDialog } from './ParentCommentDialog';
 import {
   useCompleteCorrection,
   useCreateCorrection,
@@ -28,6 +30,7 @@ import {
   useLessonCorrectionHistory,
   useLessonCorrections,
   useLessonGradeSheet,
+  useLessonParentComments,
   useUpdateCorrection,
   useUpdateGrade,
 } from '@/hooks/queries';
@@ -103,6 +106,8 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
   const navigate = useNavigate();
   const lessonQuery = useLesson(lessonId);
   const sheetQuery = useLessonGradeSheet(lessonId);
+  const commentsQuery = useLessonParentComments(lessonId, sheetQuery.isSuccess);
+  const [commentStudentId, setCommentStudentId] = useState<number | null>(null);
   const scaleQuery = useGradeScale();
 
   const createGrade = useCreateGrade(lessonId);
@@ -128,6 +133,7 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
   const [dialogError, setDialogError] = useState<string | null>(null);
 
   const lesson = lessonQuery.data;
+  const commentRow = commentsQuery.data?.students?.find(row => row.studentProfileId === commentStudentId);
   const sheet = sheetQuery.data;
   const busy =
     createGrade.isPending || updateGrade.isPending || deleteGrade.isPending || completeCorrection.isPending;
@@ -414,6 +420,11 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
           </p>
         )}
 
+        {commentsQuery.isError && <NoticeBar tone="soft" icon={<Info className="size-4" />}>
+          <span role="alert">Не удалось загрузить комментарии</span>{' '}
+          <Button variant="ghost" size="sm" onClick={() => void commentsQuery.refetch()}>Повторить</Button>
+        </NoticeBar>}
+
         {rows.length === 0 ? (
           <EmptyRoster />
         ) : (
@@ -435,6 +446,12 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
               <StudentRow
                 key={row.studentProfileId}
                 row={row}
+                trailingAction={(() => {
+                  const comment = commentsQuery.data?.students?.find(item => item.studentProfileId === row.studentProfileId);
+                  return <CommentButton published={Boolean(comment?.comment)} studentName={row.fullName ?? ''}
+                    disabled={!comment || (!comment.canEdit && !comment.comment)}
+                    onClick={() => { closeCell(); closeCorrection(); setCommentStudentId(row.studentProfileId!); }} />;
+                })()}
                 correction={rowCorrection(corrections, row.studentProfileId)}
                 onOpenCorrection={(open) => openCorrection(row, open)}
                 onShowHistory={() =>
@@ -499,6 +516,10 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
         )}
       </section>
 
+      {commentRow && <ParentCommentDialog key={commentStudentId} lessonId={lessonId} row={commentRow}
+        subjectName={lesson.subjectName ?? ''} date={lesson.date ?? ''}
+        onClose={() => setCommentStudentId(null)} onReload={() => commentsQuery.refetch()} />}
+
       {correctionDialog?.kind === 'form' && dialogRow && (
         <CorrectionFormModal
           lessonId={lessonId}
@@ -539,6 +560,7 @@ const HISTORY_ID = 'grade-corrections-history';
  */
 function StudentRow({
   row,
+  trailingAction,
   correction,
   onOpenCorrection,
   onShowHistory,
@@ -563,6 +585,7 @@ function StudentRow({
   onRemove,
 }: {
   row: LessonGradeRow;
+  trailingAction?: ReactNode;
   correction: { open: GradeCorrection | null; completed: GradeCorrection | null };
   onOpenCorrection: (open: GradeCorrection | null) => void;
   onShowHistory: () => void;
@@ -770,6 +793,7 @@ function StudentRow({
             onShowHistory={onShowHistory}
           />
         )}
+        {trailingAction}
       </div>
     </div>
   );
