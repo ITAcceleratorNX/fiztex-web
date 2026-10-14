@@ -6,6 +6,11 @@ import { Sidebar } from './Sidebar';
 
 const role = vi.fn(() => 'TEACHER');
 
+// Колокольчик ходит в API ленты — у меню своя проверка: показан ли он и кому.
+vi.mock('./NotificationCenterButton', () => ({
+  NotificationCenterButton: () => <button type="button">Уведомления</button>,
+}));
+
 vi.mock('@/context/AuthContext', () => ({
   useAuth: () => ({ admin: { role: role(), fullName: 'Искаков Алишер' }, logout: vi.fn() }),
 }));
@@ -215,5 +220,25 @@ describe('Sidebar — контраст и клавиатурный фокус', 
     const inactiveChild = within(nav()).getByRole('link', { name: 'Родители' });
     expect(inactiveChild).toHaveClass('text-navy-700', 'focus-visible:ring-2');
     expect(inactiveChild).not.toHaveClass('text-navy-700/80');
+  });
+});
+
+describe('Sidebar — лента уведомлений', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('колокольчик есть у учителя — его ТЗ и описывает ленту', () => {
+    role.mockReturnValue('TEACHER');
+    renderSidebar();
+
+    expect(screen.getByRole('button', { name: 'Уведомления' })).toBeInTheDocument();
+  });
+
+  it('у администратора колокольчика нет: своих событий в ленте у него пока нет', () => {
+    role.mockReturnValue('ADMIN');
+    renderSidebar('/dashboard');
+
+    expect(screen.queryByRole('button', { name: 'Уведомления' })).not.toBeInTheDocument();
   });
 });
