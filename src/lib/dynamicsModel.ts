@@ -75,7 +75,7 @@ export function emptyReason(metric: DynamicsMetric | null | undefined): string |
 }
 
 const shortMonth = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' });
-const monthYear = new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' });
+const MONTHS = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
 
 function date(iso: string | undefined): Date | null {
   if (!iso) return null;
@@ -106,8 +106,9 @@ export function windowLabel(window: DynamicsWindow | null | undefined): string {
     case 'QUARTER': return `${window.academicPeriodName ?? 'Период'} (${dayMonth(window.from)} – ${dayMonth(window.to)})`;
     case 'YEAR': return `${window.academicYearName ?? ''} учебный год`.trim();
     case 'MONTH': {
+      // Именительный падеж: Intl с годом даёт «октября 2026 г.» — «Данные за октября» неграмотно.
       const from = date(window.from);
-      return from ? monthYear.format(from) : '';
+      return from ? `${MONTHS[from.getMonth()]} ${from.getFullYear()}` : '';
     }
     default: return shortRange(window);
   }

@@ -66,3 +66,10 @@ describe('dynamicsModel', () => {
     expect(sortByChange(rows, 'none', (row) => row.m).map((row) => row.id)).toEqual([1, 2, 3, 4]);
   });
 });
+
+describe('dynamicsModel — месяц', () => {
+  it('names the month in the nominative case', () => {
+    expect(windowLabel({ type: 'MONTH', from: '2026-10-01', to: '2026-10-31' })).toBe('октябрь 2026');
+    expect(compareLabel({ type: 'MONTH', from: '2026-09-01', to: '2026-09-30' })).toBe('к прошлому месяцу (сентябрь 2026)');
+  });
+});

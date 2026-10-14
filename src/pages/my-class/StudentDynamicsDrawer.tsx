@@ -158,8 +158,10 @@ export function StudentDynamicsDrawer({
                         </th>
                         <td className="py-4 text-right text-15 font-bold text-ink">{formatIndicator(row.metric?.current) ?? '—'}</td>
                         <td className="py-4 pl-4">
-                          {graded ? <ChangeBadge metric={row.metric} />
-                            : <span className="text-13 text-slate-500">Оценки не выставляются</span>}
+                          {!graded ? <span className="text-13 text-slate-500">Оценки не выставляются</span>
+                            : row.metric?.current?.state !== 'AVAILABLE'
+                              ? <span className="text-13 text-slate-500">{emptyReason(row.metric)}</span>
+                              : <ChangeBadge metric={row.metric} />}
                         </td>
                         <td className="w-8 text-right text-slate-400">{graded && <ChevronRight className="ml-auto h-4 w-4" aria-hidden="true" />}</td>
                       </tr>

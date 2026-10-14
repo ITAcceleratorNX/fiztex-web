@@ -62,7 +62,9 @@ export function DynamicsChart({
   if (values.length === 0) return null;
   let min = Math.floor(Math.min(...values));
   let max = Math.ceil(Math.max(...values));
-  if (min === max) { min -= 1; max += 1; }
+  // Запас у краёв: точка, равная целому делению, не ложится на ось.
+  if (Math.min(...values) - min < 0.25) min -= 1;
+  if (max - Math.max(...values) < 0.25) max += 1;
   const step = Math.max(1, Math.ceil((max - min) / 4));
   const ticks: number[] = [];
   for (let v = min; v <= max; v += step) ticks.push(v);
