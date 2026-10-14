@@ -22,6 +22,13 @@ interface ModalProps {
   scrollable?: boolean;
   /** Reserve viewport space for a virtual keyboard. */
   bottomInset?: number;
+  /**
+   * `right` — боковая шторка во всю высоту (Figma «Шторка ученика» 2196:22570): тот же
+   * диалог с ловушкой фокуса и Esc, но прижат к правому краю.
+   */
+  placement?: 'center' | 'right';
+  /** Кнопки шапки слева от «Закрыть» — например, листание соседних записей. */
+  headerActions?: ReactNode;
 }
 
 type ModalEntry = {
@@ -245,7 +252,11 @@ function registerModal(entry: ModalEntry) {
   };
 }
 
-export function Modal({ open, onClose, title, subtitle, children, footer, size = 'md', appearance = 'standard', scrollable = false, bottomInset = 0 }: ModalProps) {
+export function Modal({
+  open, onClose, title, subtitle, children, footer, size = 'md', appearance = 'standard', scrollable = false, bottomInset = 0,
+  placement = 'center', headerActions,
+}: ModalProps) {
+  const right = placement === 'right';
   const titleId = useId();
   const subtitleId = useId();
   const layerRef = useRef<HTMLDivElement>(null);
@@ -289,7 +300,11 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
       data-modal-layer
       onKeyDown={(event) => onDialogKeyDown(entryRef.current, event)}
       style={bottomInset ? { bottom: bottomInset } : undefined}
-      className={cx('fixed inset-0 z-50 flex justify-center p-4 sm:p-8', scrollable ? 'items-center overflow-hidden' : 'items-start overflow-y-auto')}
+      className={cx(
+        'fixed inset-0 z-50 flex',
+        right ? 'justify-end overflow-hidden' : 'justify-center p-4 sm:p-8',
+        !right && (scrollable ? 'items-center overflow-hidden' : 'items-start overflow-y-auto'),
+      )}
     >
       <div
         className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
@@ -304,17 +319,20 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
         aria-describedby={subtitle ? subtitleId : undefined}
         tabIndex={-1}
         className={cx(
-          'relative my-auto w-full rounded-2xl bg-white shadow-pop animate-scale-in',
-          scrollable && 'flex max-h-full flex-col overflow-hidden',
+          right
+            ? 'relative flex h-full w-full flex-col overflow-hidden bg-white shadow-pop animate-fade-in'
+            : 'relative my-auto w-full rounded-2xl bg-white shadow-pop animate-scale-in',
+          !right && scrollable && 'flex max-h-full flex-col overflow-hidden',
           sizes[size],
         )}
       >
         <div className={cx('flex shrink-0 items-start justify-between gap-3 px-4 sm:px-6',
-          appearance === 'composer' ? 'pt-6 pb-5' : 'border-b border-line py-5')}>
+          appearance === 'composer' ? 'pt-6 pb-5' : right ? 'py-5' : 'border-b border-line py-5')}>
           <div className="min-w-0 flex-1">
             <h2 id={titleId} className={cx('break-words text-lg font-bold text-ink', appearance === 'composer' && 'leading-snug')}>{title}</h2>
             {subtitle && <p id={subtitleId} className={cx('mt-1 break-words text-muted', appearance === 'composer' ? 'text-xs leading-tight' : 'text-sm leading-relaxed')}>{subtitle}</p>}
           </div>
+          {headerActions}
           <button
             data-modal-close
             type="button"
@@ -326,7 +344,8 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <div className={cx('min-w-0 px-4 sm:px-6', appearance === 'composer' ? 'pb-6' : 'py-5', scrollable && 'min-h-0 overflow-y-auto overscroll-contain')}>{children}</div>
+        <div className={cx('min-w-0 px-4 sm:px-6', appearance === 'composer' ? 'pb-6' : right ? 'pb-5' : 'py-5',
+          (scrollable || right) && 'min-h-0 overflow-y-auto overscroll-contain', right && 'flex-1')}>{children}</div>
         {footer && (
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-line px-4 py-4 sm:px-6">
             {footer}
