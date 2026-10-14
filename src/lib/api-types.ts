@@ -463,7 +463,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["unreadCount"];
+        get: operations["unreadCount_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6424,6 +6424,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["page"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications/devices/{installationId}": {
         parameters: {
             query?: never;
@@ -6435,6 +6451,54 @@ export interface paths {
         put: operations["register"];
         post?: never;
         delete: operations["unregister"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["markAllRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["unreadCount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["markRead"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -9669,8 +9733,13 @@ export interface components {
         GradeHistoryView: {
             /** @enum {string} */
             action?: "CREATE" | "UPDATE" | "DELETE";
+            /** @enum {string} */
+            actorCapacity?: "MAIN_TEACHER" | "SUBSTITUTE_TEACHER";
             /** Format: int64 */
             actorId?: number;
+            actorName?: string;
+            /** @enum {string} */
+            actorRole?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
             after?: components["schemas"]["JsonNode"];
             before?: components["schemas"]["JsonNode"];
             /** Format: date-time */
@@ -11930,6 +11999,33 @@ export interface components {
             deliveryMode?: string;
             devices?: components["schemas"]["PushDeviceDiagnosticsView"][];
             notifications?: components["schemas"]["NotificationDiagnosticsItemView"][];
+        };
+        NotificationCenterItemView: {
+            body?: string;
+            childName?: string;
+            /** Format: int64 */
+            childProfileId?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            id?: string;
+            kind?: string;
+            params?: {
+                [key: string]: Record<string, never>;
+            };
+            read?: boolean;
+            route?: string;
+            title?: string;
+        };
+        NotificationCenterPageView: {
+            hasMore?: boolean;
+            items?: components["schemas"]["NotificationCenterItemView"][];
+            /** Format: int64 */
+            unreadCount?: number;
+        };
+        NotificationCenterUnreadView: {
+            /** Format: int64 */
+            count?: number;
         };
         NotificationDiagnosticsItemView: {
             body?: string;
@@ -16569,7 +16665,7 @@ export interface operations {
             };
         };
     };
-    unreadCount: {
+    unreadCount_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -28261,6 +28357,29 @@ export interface operations {
             };
         };
     };
+    page: {
+        parameters: {
+            query?: {
+                before?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationCenterPageView"];
+                };
+            };
+        };
+    };
     register: {
         parameters: {
             query?: never;
@@ -28291,6 +28410,66 @@ export interface operations {
             header?: never;
             path: {
                 installationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    markAllRead: {
+        parameters: {
+            query?: {
+                upTo?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    unreadCount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationCenterUnreadView"];
+                };
+            };
+        };
+    };
+    markRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
             };
             cookie?: never;
         };
