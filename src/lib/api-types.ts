@@ -7817,6 +7817,8 @@ export interface components {
         AcademicReportSummaryView: {
             /** Format: date-time */
             asOf?: string;
+            /** Format: int64 */
+            currentStudentCount?: number | null;
             metrics?: components["schemas"]["ReportMetricsView"];
             scope?: components["schemas"]["ReportScopeView"];
         };
@@ -13457,6 +13459,7 @@ export interface components {
             publishedMarkCount?: number;
         };
         ReportBreakdownRow: {
+            attributes?: components["schemas"]["ReportRowAttributesView"];
             key?: components["schemas"]["ReportReferenceView"];
             metrics?: components["schemas"]["ReportMetricsView"];
         };
@@ -13558,6 +13561,15 @@ export interface components {
             /** Format: int64 */
             id?: number;
             name?: string;
+        };
+        ReportRowAttributesView: {
+            /** Format: int64 */
+            classCount?: number | null;
+            /** Format: int64 */
+            currentStudentCount?: number | null;
+            homeroomTeacher?: components["schemas"]["ReportReferenceView"];
+            subjects?: components["schemas"]["ReportReferenceView"][] | null;
+            teachers?: components["schemas"]["ReportReferenceView"][] | null;
         };
         ReportScopeView: {
             academicPeriod?: components["schemas"]["ReportPeriodView"] | null;

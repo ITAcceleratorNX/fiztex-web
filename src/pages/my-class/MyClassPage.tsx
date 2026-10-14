@@ -12,6 +12,7 @@ import { ApiError } from '@/lib/api';
 import type { Schema } from '@/lib/apiSchemas';
 import { MyClassAttendanceTab } from './MyClassAttendanceTab';
 import { MyClassGradesTab } from './MyClassGradesTab';
+import { MyClassReportTab } from './MyClassReportTab';
 import { MyClassScheduleTab } from './MyClassScheduleTab';
 import { MyClassStudentsTab } from './MyClassStudentsTab';
 
@@ -20,6 +21,15 @@ function academicYearLabel(context: Schema<'MyClassContextView'>): string {
   const end = context.yearEndDate?.slice(0, 4);
   return start && end ? `${start}/${end} учебный год` : 'Учебный год';
 }
+
+function yearName(context: Schema<'MyClassContextView'>): string {
+  const start = context.yearStartDate?.slice(0, 4);
+  const end = context.yearEndDate?.slice(0, 4);
+  return start && end ? `${start}/${end}` : 'Текущий год';
+}
+
+/** Параметры вкладки «Отчётность»: принадлежат классу и при его смене сбрасываются. */
+const REPORT_PARAMS = ['reportView', 'reportSubject', 'reportStudent'];
 
 function classLabel(name: string): string {
   const trimmed = name.trim();
@@ -36,7 +46,7 @@ function noClassTitle(state: Schema<'MyClassContextView'>['state']): string {
   }
 }
 
-const TABS = ['students', 'grades', 'attendance', 'schedule'] as const;
+const TABS = ['students', 'grades', 'attendance', 'schedule', 'report'] as const;
 type Tab = (typeof TABS)[number];
 
 function tabOf(value: string | null): Tab {
@@ -153,7 +163,12 @@ export function MyClassPage() {
                     variant="classSwitcher"
                     aria-label="Выберите класс"
                     value={String(classId)}
-                    onChange={(event) => updateParam('classId', event.target.value)}
+                    onChange={(event) => {
+                      const next = new URLSearchParams(searchParams);
+                      next.set('classId', event.target.value);
+                      REPORT_PARAMS.forEach((name) => next.delete(name));
+                      setSearchParams(next);
+                    }}
                   >
                     {classes.filter((item) => item.id != null).map((item) => (
                       <option key={item.id} value={item.id}>{classLabel(item.name ?? '')}</option>
@@ -215,6 +230,7 @@ export function MyClassPage() {
               <TabsTrigger value="grades">Оценки</TabsTrigger>
               <TabsTrigger value="attendance">Посещаемость</TabsTrigger>
               <TabsTrigger value="schedule">Расписание</TabsTrigger>
+              <TabsTrigger value="report">Отчётность</TabsTrigger>
             </TabsList>
             <TabsContent value="students" className="mt-4">
               <MyClassStudentsTab classId={classId} />
@@ -232,6 +248,18 @@ export function MyClassPage() {
             <TabsContent value="attendance" className="mt-4">
               <MyClassAttendanceTab
                 classId={classId}
+                periods={periods}
+                periodId={periodId}
+                onSelectPeriod={(value) => updateParam('periodId', value)}
+                onForbidden={reportForbidden}
+              />
+            </TabsContent>
+            <TabsContent value="report" className="mt-4">
+              <MyClassReportTab
+                classId={classId}
+                className={selectedClass.name ?? ''}
+                academicYearId={context.data.academicYearId ?? null}
+                yearName={yearName(context.data)}
                 periods={periods}
                 periodId={periodId}
                 onSelectPeriod={(value) => updateParam('periodId', value)}
