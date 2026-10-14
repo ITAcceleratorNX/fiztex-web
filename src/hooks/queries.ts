@@ -94,6 +94,7 @@ import type {
 } from '@/lib/types';
 
 export const keys = {
+  gradeHistory: (gradeId: number) => ['grade-history', gradeId] as const,
   lessonParentComments: (lessonId: number | null) => ['lesson-parent-comments', lessonId] as const,
   schoolSubjects: (status: SchoolRecordStatus | 'ALL') => ['school-subjects', status] as const,
   myClassContext: ['my-class', 'context'] as const,
@@ -1729,6 +1730,17 @@ export function useGradeScale() {
   });
 }
 
+export function useGradeHistory(gradeId: number) {
+  return useQuery({
+    queryKey: keys.gradeHistory(gradeId),
+    queryFn: ({ signal }) => gradesApi.history(gradeId, signal),
+    enabled: gradeId > 0,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    retry: (count, error) => !(error instanceof ApiError && [403, 404].includes(error.status)) && count < 1,
+  });
+}
+
 /**
  * Лист оценок урока. Как и лист посещаемости, запрашивается только при праве на него
  * (`VIEW_GRADES`): без него бэкенд ответит 403, и ходить за гарантированной ошибкой
@@ -1777,6 +1789,7 @@ function useGradeCommand<TVars>(lessonId: number, mutationFn: (vars: TVars) => P
   return useMutation({
     mutationFn,
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['grade-history'] });
       qc.invalidateQueries({ queryKey: keys.lessonGradeSheet(lessonId) });
       qc.invalidateQueries({ queryKey: ['gradebook'] });
     },
@@ -1906,6 +1919,7 @@ function useCorrectionCommand<TVars>(lessonId: number, mutationFn: (vars: TVars)
     mutationFn,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.lessonCorrections(lessonId) });
+      qc.invalidateQueries({ queryKey: ['grade-history'] });
       qc.invalidateQueries({ queryKey: keys.lessonGradeSheet(lessonId) });
       qc.invalidateQueries({ queryKey: ['gradebook'] });
     },

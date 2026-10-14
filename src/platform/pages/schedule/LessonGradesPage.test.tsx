@@ -18,6 +18,7 @@ const updateCorrection = vi.fn();
 const completeCorrection = vi.fn();
 
 vi.mock('@/hooks/queries', () => ({
+  useGradeHistory: () => ({ data: [{ id: 1, action: 'UPDATE', before: { score: 8, maxScore: 10 }, after: { score: 10, maxScore: 10 }, actorName: 'Иванова М.В.', createdAt: '2026-10-14T10:00:00Z' }], isPending: false, isFetching: false, isError: false }),
   useLessonParentComments: () => ({ data: { students: [] }, isError: false }),
   useLesson: (...args: unknown[]) => useLesson(...args),
   useLessonGradeSheet: (...args: unknown[]) => useLessonGradeSheet(...args),
@@ -128,6 +129,17 @@ describe('LessonGradesPage', () => {
     useLessonOccurrences.mockReturnValue({ data: undefined, isPending: false });
     useLessonCorrections.mockReturnValue({ data: [] });
     useLessonCorrectionHistory.mockReturnValue({ data: [] });
+  });
+
+  it('opens grade history independently of editing permissions', async () => {
+    const user = userEvent.setup();
+    useLessonGradeSheet.mockReturnValue({ data: sheet({ canManageGrades: false, students: [
+      { studentProfileId: 1, fullName: 'Болатбек Дана', grades: [grade({ canEdit: false })] },
+    ] }), isSuccess: true });
+    renderPage();
+    await user.click(screen.getByRole('button', { name: 'История оценки 4+ — Болатбек Дана' }));
+    expect(screen.getByRole('dialog', { name: 'История оценки' })).toBeInTheDocument();
+    expect(screen.getByText('8 → 10')).toBeInTheDocument();
   });
 
   it('оставляет ученику ровно столько свободных мест, сколько разрешил сервер', () => {

@@ -3,6 +3,7 @@ import type { Schema } from '@/lib/apiSchemas';
 
 export type GradeScaleValue = Schema<'GradeScaleValueView'>;
 export type Grade = Schema<'GradeView'>;
+export type GradeHistoryEvent = Omit<Schema<'GradeHistoryView'>, 'before' | 'after'> & { before?: unknown; after?: unknown };
 export type LessonGradeSheet = Schema<'LessonGradeSheetView'>;
 export type LessonGradeRow = Schema<'LessonGradeSheetRowView'>;
 export type LessonGradeEntry = Schema<'LessonGradeEntryView'>;
@@ -53,6 +54,10 @@ export const GRADE_ERRORS = {
  * с сервера, не константы клиента.
  */
 export const gradesApi = {
+  history(gradeId: number, signal?: AbortSignal): Promise<GradeHistoryEvent[]> {
+    return request<GradeHistoryEvent[]>(`/grades/${gradeId}/history`, { signal });
+  },
+
   scale(signal?: AbortSignal): Promise<GradeScaleValue[]> {
     return request<GradeScaleValue[]>('/grades/scale', { signal });
   },
