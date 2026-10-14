@@ -20,6 +20,7 @@ import { PointsPicker, type PointsValue } from '@/components/ui/PointsPicker';
 import { NoticeBar } from '@/components/ui/NoticeBar';
 import { CommentButton } from '@/components/ui/CommentButton';
 import { ParentCommentDialog } from './ParentCommentDialog';
+import { GradeHistoryDialog } from './GradeHistoryDialog';
 import {
   useCompleteCorrection,
   useCreateCorrection,
@@ -108,6 +109,7 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
   const sheetQuery = useLessonGradeSheet(lessonId);
   const commentsQuery = useLessonParentComments(lessonId, sheetQuery.isSuccess);
   const [commentStudentId, setCommentStudentId] = useState<number | null>(null);
+  const [gradeHistory, setGradeHistory] = useState<{ gradeId: number; studentName: string } | null>(null);
   const scaleQuery = useGradeScale();
 
   const createGrade = useCreateGrade(lessonId);
@@ -485,6 +487,10 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
                 onPickValue={(grade, scaleCode) => void pickValue(row, grade, scaleCode)}
                 onPickPoints={(grade, value) => void pickPoints(row, grade, value)}
                 onPickType={(grade, type) => void pickType(grade, type)}
+                onShowGradeHistory={(grade) => {
+                  closeCell();
+                  setGradeHistory({ gradeId: grade.id as number, studentName: row.fullName ?? '' });
+                }}
                 onRemove={(grade) => void removeGrade(grade)}
               />
             ))}
@@ -515,6 +521,8 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
           </div>
         )}
       </section>
+
+      {gradeHistory && <GradeHistoryDialog key={gradeHistory.gradeId} {...gradeHistory} onClose={() => setGradeHistory(null)} />}
 
       {commentRow && <ParentCommentDialog key={commentStudentId} lessonId={lessonId} row={commentRow}
         subjectName={lesson.subjectName ?? ''} date={lesson.date ?? ''}
@@ -564,6 +572,7 @@ function StudentRow({
   correction,
   onOpenCorrection,
   onShowHistory,
+  onShowGradeHistory,
   onCompleteValue,
   onCompletePoints,
   maxGrades,
@@ -589,6 +598,7 @@ function StudentRow({
   correction: { open: GradeCorrection | null; completed: GradeCorrection | null };
   onOpenCorrection: (open: GradeCorrection | null) => void;
   onShowHistory: () => void;
+  onShowGradeHistory: (grade: LessonGradeEntry) => void;
   onCompleteValue: (open: GradeCorrection, scaleCode: string) => void;
   onCompletePoints: (open: GradeCorrection, value: PointsValue) => void;
   maxGrades: number;
@@ -674,6 +684,11 @@ function StudentRow({
               title={gradeTitle(grade)}
               onClick={grade.canEdit ? () => onOpen(index) : undefined}
             />
+            {grade.id != null && <Button variant="ghost" size="icon" className="mt-1"
+              aria-label={`История оценки ${gradeValueLabel(grade)} — ${row.fullName ?? ''}`}
+              onClick={() => onShowGradeHistory(grade)}>
+              <History className="size-4" aria-hidden="true" />
+            </Button>}
             {openSlot === index && pointsMode && (
               <PointsPicker
                 workTypes={workTypes}

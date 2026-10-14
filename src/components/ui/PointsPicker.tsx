@@ -4,6 +4,8 @@ import { cx } from '@/lib/format';
 import type { GradeType, SheetWorkType } from '@/lib/gradesApi';
 import { GRADE_TYPE_LABELS } from '@/lib/gradesModel';
 import { COMPONENT_SHORT } from '@/lib/gradingModel';
+import { validateGradePoints } from '@/lib/gradePoints';
+import { Field, TextInput } from './Field';
 
 export type PointsValue = { score: number; maxScore: number | null; gradeType: GradeType };
 
@@ -77,6 +79,7 @@ export function PointsPicker({
 
   function changeType(next: GradeType) {
     setType(next);
+    setTouched({ score: false, maxScore: false });
     const nextRule = workTypes.find((item) => item.type === next);
     if (nextRule?.scoring === 'RAW_POINTS') {
       const suggested = suggestedMax?.(next);
@@ -85,17 +88,8 @@ export function PointsPicker({
     }
   }
 
-  const rawScore = Number(score);
-  const rawMax = Number(maxScore);
-  // Подсказка, а не проверка: пределы всё равно проверяет сервер (контракт §4).
-  const rawValid =
-    score.trim() !== '' &&
-    maxScore.trim() !== '' &&
-    Number.isInteger(rawScore) &&
-    Number.isInteger(rawMax) &&
-    rawMax > 0 &&
-    rawScore >= 0 &&
-    rawScore <= rawMax;
+  const validation = validateGradePoints(score, maxScore);
+  const [touched, setTouched] = useState({ score: false, maxScore: false });
 
   return (
     <div
@@ -132,7 +126,8 @@ export function PointsPicker({
               <button
                 key={point}
                 type="button"
-                onClick={() => onSubmit({ score: point, maxScore: 10, gradeType: type })}
+                disabled={busy}
+                onClick={() => { if (!busy) onSubmit({ score: point, maxScore: 10, gradeType: type }); }}
                 className={cx(
                   'h-8 rounded-md text-13 font-semibold transition',
                   selected
@@ -147,36 +142,38 @@ export function PointsPicker({
         </div>
       ) : (
         <form
-          className="flex items-end gap-2"
+          className="flex flex-wrap items-start gap-2"
           onSubmit={(event) => {
             event.preventDefault();
-            if (rawValid) onSubmit({ score: rawScore, maxScore: rawMax, gradeType: type });
+            setTouched({ score: true, maxScore: true });
+            if (!busy && validation.valid) onSubmit({ score: validation.value, maxScore: validation.maximum, gradeType: type });
           }}
         >
-          <label className="flex w-16 flex-col gap-1">
-            <span className="text-11 font-bold uppercase text-slate-400">Балл</span>
-            <input
+          <Field label="Балл" required className="min-w-0 flex-1" error={touched.score ? validation.scoreError ?? undefined : undefined}>
+            <TextInput
               autoFocus
               inputMode="numeric"
               value={score}
-              onChange={(event) => setScore(event.target.value.replace(/[^\d]/g, ''))}
-              className="input-base h-9 px-2 py-1 text-center text-13"
+              disabled={busy}
+              onChange={(event) => setScore(event.target.value)}
+              onBlur={() => setTouched((old) => ({ ...old, score: true }))}
+              className="h-9 px-2 py-1 text-center text-13"
             />
-          </label>
-          <span className="pb-2 text-13 text-slate-400">из</span>
-          <label className="flex w-16 flex-col gap-1">
-            <span className="text-11 font-bold uppercase text-slate-400">Макс.</span>
-            <input
+          </Field>
+          <Field label="Макс." required className="min-w-0 flex-1" error={touched.maxScore ? validation.maxError ?? undefined : undefined}>
+            <TextInput
               inputMode="numeric"
               value={maxScore}
-              onChange={(event) => setMaxScore(event.target.value.replace(/[^\d]/g, ''))}
-              className="input-base h-9 px-2 py-1 text-center text-13"
+              disabled={busy}
+              onChange={(event) => setMaxScore(event.target.value)}
+              onBlur={() => setTouched((old) => ({ ...old, maxScore: true }))}
+              className="h-9 px-2 py-1 text-center text-13"
             />
-          </label>
+          </Field>
           <button
             type="submit"
-            disabled={!rawValid}
-            className="h-9 flex-1 rounded-md bg-navy-700 px-2 text-13 font-semibold text-white transition hover:bg-navy-800 disabled:bg-disabled disabled:text-slate-400"
+            disabled={busy || !validation.valid}
+            className="h-9 w-full rounded-md bg-navy-700 px-2 text-13 font-semibold text-white transition hover:bg-navy-800 disabled:bg-disabled disabled:text-slate-400"
           >
             Сохранить
           </button>
