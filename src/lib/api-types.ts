@@ -8547,6 +8547,14 @@ export interface components {
             /** Format: int32 */
             value: number;
         };
+        ChangedSubjectView: {
+            change?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            /** @enum {string} */
+            trend?: "GROWTH" | "DECLINE" | "STABLE" | "INSUFFICIENT_DATA";
+        };
         ChildFeedbackCoverageView: {
             /** Format: int32 */
             expectedSubjects?: number;
@@ -8759,6 +8767,7 @@ export interface components {
             version?: number;
         };
         ClassStudentDynamicsView: {
+            changedSubjects?: components["schemas"]["ChangedSubjectView"][];
             declinedSubjects?: components["schemas"]["DeclinedSubjectView"][];
             displayName?: string;
             firstName?: string;
@@ -9352,6 +9361,7 @@ export interface components {
         DynamicsPointView: {
             /** @enum {string|null} */
             component?: "FORMATIVE" | "SOR" | "SOCH" | null;
+            cumulativeValue?: number | null;
             /** Format: date */
             date?: string;
             /** Format: int64 */
@@ -9371,6 +9381,15 @@ export interface components {
             /** Format: int64 */
             subjectId?: number;
             subjectName?: string;
+        };
+        DynamicsSeriesPointView: {
+            /** Format: date */
+            from?: string;
+            /** @enum {string} */
+            mode?: "SCALE_AVERAGE" | "POLICY_PERCENT";
+            /** Format: date */
+            to?: string;
+            value?: number;
         };
         DynamicsWindowView: {
             /** Format: int64 */
@@ -14273,9 +14292,13 @@ export interface components {
             year?: components["schemas"]["YearFinalView"];
         };
         StudentGradeDynamicsView: {
+            classSeries?: components["schemas"]["DynamicsSeriesPointView"][];
             overall?: components["schemas"]["DynamicsMetricView"];
             points?: components["schemas"]["DynamicsPointView"][];
             previousWindow?: components["schemas"]["DynamicsWindowView"];
+            series?: components["schemas"]["DynamicsSeriesPointView"][];
+            /** @enum {string} */
+            seriesStep?: "DAY" | "WEEK" | "MONTH";
             studentName?: string;
             /** Format: int64 */
             studentProfileId?: number;
@@ -14434,6 +14457,9 @@ export interface components {
             periodResult?: components["schemas"]["PeriodResultSummaryView"];
             points?: components["schemas"]["DynamicsPointView"][];
             previousWindow?: components["schemas"]["DynamicsWindowView"];
+            series?: components["schemas"]["DynamicsSeriesPointView"][];
+            /** @enum {string} */
+            seriesStep?: "DAY" | "WEEK" | "MONTH";
             studentName?: string;
             /** Format: int64 */
             studentProfileId?: number;

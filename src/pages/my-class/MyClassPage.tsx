@@ -14,7 +14,7 @@ import { MyClassAttendanceTab } from './MyClassAttendanceTab';
 import { MyClassGradesTab } from './MyClassGradesTab';
 import { MyClassReportTab } from './MyClassReportTab';
 import { MyClassScheduleTab } from './MyClassScheduleTab';
-import { MyClassStudentsTab } from './MyClassStudentsTab';
+import { DYNAMICS_PARAMS, MyClassStudentsTab } from './MyClassStudentsTab';
 
 function academicYearLabel(context: Schema<'MyClassContextView'>): string {
   const start = context.yearStartDate?.slice(0, 4);
@@ -166,7 +166,7 @@ export function MyClassPage() {
                     onChange={(event) => {
                       const next = new URLSearchParams(searchParams);
                       next.set('classId', event.target.value);
-                      REPORT_PARAMS.forEach((name) => next.delete(name));
+                      [...REPORT_PARAMS, ...DYNAMICS_PARAMS].forEach((name) => next.delete(name));
                       setSearchParams(next);
                     }}
                   >
@@ -233,7 +233,7 @@ export function MyClassPage() {
               <TabsTrigger value="report">Отчётность</TabsTrigger>
             </TabsList>
             <TabsContent value="students" className="mt-4">
-              <MyClassStudentsTab classId={classId} />
+              <MyClassStudentsTab classId={classId} className={selectedClass.name ?? ''} onForbidden={reportForbidden} />
             </TabsContent>
             <TabsContent value="grades" className="mt-4">
               <MyClassGradesTab

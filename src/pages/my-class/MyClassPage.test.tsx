@@ -13,6 +13,35 @@ const useMyClassSubjects = vi.fn();
 const useMyClassSubjectJournal = vi.fn();
 const useMyClassAttendanceJournal = vi.fn();
 const useMyClassWeekSchedule = vi.fn();
+const useClassGradeDynamics = vi.fn();
+
+vi.mock('@/hooks/dynamicsQueries', () => ({
+  useClassGradeDynamics: (...args: unknown[]) => useClassGradeDynamics(...args),
+  useStudentGradeDynamics: () => ({ isPending: true }),
+  useStudentSubjectDynamics: () => ({ isPending: true }),
+}));
+
+/** Динамика класса: по ученику на класс, как ответ сервера для своего класса. */
+function classDynamics(classId: number) {
+  return {
+    isPending: false,
+    isError: false,
+    error: null,
+    refetch,
+    data: {
+      classId,
+      window: { type: 'QUARTER', from: '2026-09-01', to: '2026-10-27', academicPeriodName: '1 четверть' },
+      previousWindow: null,
+      classAverage: { current: { state: 'NO_DATA' }, trend: 'INSUFFICIENT_DATA' },
+      students: [{
+        studentProfileId: classId,
+        displayName: classId === 18 ? 'Александрова София' : 'Петров Максим',
+        overall: { current: { state: 'NO_DATA' }, trend: 'INSUFFICIENT_DATA' },
+        changedSubjects: [],
+      }],
+    },
+  };
+}
 
 vi.mock('@/hooks/queries', () => ({
   useMyClassContext: (...args: unknown[]) => useMyClassContext(...args),
@@ -82,6 +111,7 @@ function renderPage(url = '/my-class?tab=grades') {
 describe('MyClassPage — вкладка «Оценки»', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useClassGradeDynamics.mockImplementation((classId: number) => classDynamics(classId));
     useMyClassContext.mockReturnValue({ isPending: false, isError: false, data: context(), refetch });
     useMyClassRoster.mockReturnValue({ isPending: false, data: { pages: [{ totalItems: 2, items: [] }] }, refetch });
     useMyClassSummary.mockReturnValue({ isPending: false, data: { averageGrade: 8.1, monthlyAttendancePercent: 94 }, refetch });
