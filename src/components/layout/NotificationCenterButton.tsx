@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { Bell, CheckCheck, ChevronRight, X } from 'lucide-react';
+import { AlertTriangle, Bell, CheckCheck, ChevronRight, Info, X } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 import {
   useMarkCenterAllRead,
   useMarkCenterRead,
@@ -14,6 +15,7 @@ import type { CenterItem } from '@/lib/notificationCenterApi';
 import {
   PENDING_ACTIONS_KIND,
   centerLink,
+  centerTone,
   pendingActions,
   pendingTotal,
 } from '@/lib/notificationCenterModel';
@@ -22,7 +24,7 @@ const FOCUS_RING =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-navy-700';
 
 /**
- * Колокольчик ленты учителя (ТЗ «Внутренние уведомления — Teacher»).
+ * Колокольчик ленты учителя и администрации (ТЗ «Внутренние уведомления — Teacher» и «— Admin»).
  *
  * Живёт в подвале меню, а не над страницей: у страниц панели свои кнопки в правом верхнем углу, и плавающий значок
  * поверх них закрывал бы «Сохранить». Лента открывается рядом с меню, порталом — панель меню режет всё, что из неё
@@ -38,6 +40,7 @@ export function NotificationCenterButton({ wide }: { wide: boolean }) {
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState<{ left: number; bottom: number } | null>(null);
   const navigate = useNavigate();
+  const role = useAuth().admin?.role;
 
   const unread = useNotificationUnread(true);
   const feed = useNotificationCenter(open);
@@ -159,7 +162,7 @@ export function NotificationCenterButton({ wide }: { wide: boolean }) {
               </p>
             ) : items.length === 0 ? (
               <p className="px-4 py-8 text-center text-13 text-muted">
-                Здесь появятся изменения по урокам и дела, которые ждут завершения.
+                Новых уведомлений нет.
               </p>
             ) : (
               <ul className="divide-y divide-line">
@@ -168,7 +171,11 @@ export function NotificationCenterButton({ wide }: { wide: boolean }) {
                     {item.kind === PENDING_ACTIONS_KIND ? (
                       <PendingActionsCard item={item} onGo={(href) => go(item, href)} />
                     ) : (
-                      <FeedRow item={item} onGo={() => go(item, centerLink(item.route, item.params))} />
+                      <FeedRow
+                        item={item}
+                        href={centerLink(item.route, item.params, role)}
+                        onGo={(href) => go(item, href)}
+                      />
                     )}
                   </li>
                 ))}
@@ -191,12 +198,22 @@ function UnreadDot({ read }: { read?: boolean }) {
   );
 }
 
-function FeedRow({ item, onGo }: { item: CenterItem; onGo: () => void }) {
-  const href = centerLink(item.route, item.params);
+function ToneIcon({ kind }: { kind?: string }) {
+  const tone = centerTone(kind);
+  if (tone === 'warning') {
+    return <AlertTriangle aria-label="Предупреждение" className="mt-0.5 size-4 shrink-0 text-brand-500" />;
+  }
+  if (tone === 'info') {
+    return <Info aria-label="Информация" className="mt-0.5 size-4 shrink-0 text-link" />;
+  }
+  return null;
+}
+
+function FeedRow({ item, href, onGo }: { item: CenterItem; href: string | null; onGo: (href: string | null) => void }) {
   return (
     <button
       type="button"
-      onClick={onGo}
+      onClick={() => onGo(href)}
       className={cx(
         'flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-slate-50',
         !item.read && 'bg-info-bg',
@@ -204,6 +221,7 @@ function FeedRow({ item, onGo }: { item: CenterItem; onGo: () => void }) {
       )}
     >
       <UnreadDot read={item.read} />
+      <ToneIcon kind={item.kind} />
       <span className="min-w-0 flex-1">
         <span className="block text-13 font-semibold text-ink">{item.title}</span>
         {item.body && <span className="mt-0.5 block text-13 text-muted">{item.body}</span>}

@@ -14,6 +14,9 @@ const api = vi.hoisted(() => ({
 
 vi.mock('@/lib/notificationCenterApi', () => ({ notificationCenterApi: api }));
 
+const role = vi.hoisted(() => ({ current: 'TEACHER' }));
+vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ admin: { role: role.current } }) }));
+
 const PAGE = {
   unreadCount: 2,
   hasMore: false,
@@ -70,6 +73,7 @@ function renderButton() {
 describe('NotificationCenterButton — лента учителя', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    role.current = 'TEACHER';
     api.unread.mockResolvedValue({ count: 2 });
     api.page.mockResolvedValue(PAGE);
     api.markRead.mockResolvedValue(undefined);
@@ -116,5 +120,35 @@ describe('NotificationCenterButton — лента учителя', () => {
     await userEvent.keyboard('{Escape}');
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('администрация: Warning ведёт в расписание периода, Info — в результаты опроса', async () => {
+    role.current = 'ADMIN';
+    api.page.mockResolvedValue({
+      unreadCount: 2,
+      hasMore: false,
+      items: [
+        {
+          id: 'period', kind: 'ADMIN_SCHEDULE_UNPUBLISHED', read: false, createdAt: '2026-10-14T10:00:00Z',
+          title: 'Расписание на «2 четверть» не опубликовано', body: 'До начала периода осталось 14 дней',
+          route: 'schedule', params: { periodId: 31 },
+        },
+        {
+          id: 'survey', kind: 'ADMIN_SURVEY_CLOSED', read: false, createdAt: '2026-10-14T09:00:00Z',
+          title: 'Опрос «Обратная связь о школе» завершён', body: 'Опрос прошли: 47 пользователей.',
+          route: 'survey-results', params: { surveyId: 44 },
+        },
+      ],
+    });
+    renderButton();
+    await userEvent.click(await screen.findByRole('button', { name: /Уведомления/ }));
+    const dialog = await screen.findByRole('dialog');
+
+    expect(within(dialog).getByLabelText('Предупреждение')).toBeInTheDocument();
+    expect(within(dialog).getByLabelText('Информация')).toBeInTheDocument();
+
+    await userEvent.click(within(dialog).getByRole('button', { name: /Расписание на «2 четверть»/ }));
+    expect(screen.getByTestId('where')).toHaveTextContent('/lesson-schedule');
+    expect(api.markRead).toHaveBeenCalledWith('period');
   });
 });

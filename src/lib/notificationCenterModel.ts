@@ -1,4 +1,5 @@
 import { ROUTES } from '@/lib/routes';
+import { scheduleHref } from '@/lib/scheduleNavigation';
 import type { CenterItem } from '@/lib/notificationCenterApi';
 
 /**
@@ -20,7 +21,10 @@ function id(params: Params, key: string): number | null {
   return Number.isInteger(number) && number > 0 ? number : null;
 }
 
-export function centerLink(route: string | undefined, params: Params | undefined): string | null {
+/**
+ * @param role роль читающего: «расписание» учителю — его неделя, администрации — конструктор на нужном периоде
+ */
+export function centerLink(route: string | undefined, params: Params | undefined, role?: string): string | null {
   const p = params ?? {};
   switch (route) {
     case 'lesson': {
@@ -49,8 +53,15 @@ export function centerLink(route: string | undefined, params: Params | undefined
       const search = query.toString();
       return search ? `${ROUTES.feedback}?${search}` : ROUTES.feedback;
     }
-    case 'schedule':
-      return ROUTES.mySchedule;
+    case 'schedule': {
+      if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') return ROUTES.mySchedule;
+      const periodId = id(p, 'periodId');
+      return scheduleHref({ year: null, periodId: periodId ? String(periodId) : null, classId: null, scheduleId: null });
+    }
+    case 'survey-results': {
+      const surveyId = id(p, 'surveyId');
+      return surveyId ? `/surveys/${surveyId}?tab=results` : null;
+    }
     case 'homework':
       return '/homework';
     case 'grades':
@@ -58,6 +69,26 @@ export function centerLink(route: string | undefined, params: Params | undefined
     default:
       return null;
   }
+}
+
+/**
+ * Тип строки для значка (ТЗ Admin §6: Warning и Info). Вид — только для картинки: куда вести, решает маршрут.
+ * У остальных видов типа нет — значок им не нужен.
+ */
+export type CenterTone = 'warning' | 'info';
+
+const TONES: Record<string, CenterTone> = {
+  ADMIN_SCHEDULE_UNPUBLISHED: 'warning',
+  ADMIN_SURVEY_CLOSED: 'info',
+};
+
+export function centerTone(kind: string | undefined): CenterTone | null {
+  return (kind && TONES[kind]) || null;
+}
+
+/** Роли панели, у которых есть лента: учитель (ТЗ Teacher) и администрация (ТЗ Admin). */
+export function hasNotificationCenter(role: string | undefined): boolean {
+  return role === 'TEACHER' || role === 'ADMIN' || role === 'SUPER_ADMIN';
 }
 
 export interface PendingAction {

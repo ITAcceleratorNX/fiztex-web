@@ -235,9 +235,16 @@ describe('Sidebar — лента уведомлений', () => {
     expect(screen.getByRole('button', { name: 'Уведомления' })).toBeInTheDocument();
   });
 
-  it('у администратора колокольчика нет: своих событий в ленте у него пока нет', () => {
+  it('у администрации колокольчик тоже есть — ТЗ Admin: расписание и опросы', () => {
     role.mockReturnValue('ADMIN');
     renderSidebar('/dashboard');
+
+    expect(screen.getByRole('button', { name: 'Уведомления' })).toBeInTheDocument();
+  });
+
+  it('у психолога колокольчика нет: своих событий в ленте у него нет', () => {
+    role.mockReturnValue('PSYCHOLOGIST');
+    renderSidebar('/psychologist/tests');
 
     expect(screen.queryByRole('button', { name: 'Уведомления' })).not.toBeInTheDocument();
   });
