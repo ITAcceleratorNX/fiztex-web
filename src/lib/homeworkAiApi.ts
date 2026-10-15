@@ -128,6 +128,17 @@ export const homeworkAiApi = {
       { signal },
     ),
 
+  /** Сохраняет правки AI-черновика Teacher без выставления оценки и решения по ДЗ. */
+  confirmPhotoReview: (homeworkId: number, studentProfileId: number, input: {
+    expectedAttemptId: number;
+    recognizedText: string;
+    grade: number | null;
+    comment: string;
+  }) => request<AiRecommendation>(
+    `/homework/${homeworkId}/submissions/${studentProfileId}/ai-recommendation/confirm`,
+    { method: 'POST', body: input },
+  ),
+
   /**
    * Последняя подсказка по текущей попытке ученика — или пусто, если её не запускали.
    *

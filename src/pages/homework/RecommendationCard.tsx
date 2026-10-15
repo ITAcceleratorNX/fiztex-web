@@ -12,7 +12,10 @@ import type { AiRecommendation } from '@/lib/homeworkAiApi';
  * <p>Одна карточка на оба экрана проверки — теста и обычной работы. Второй такой блок
  * разошёлся бы с первым в формулировках ровно там, где учителю важно им верить.
  */
-export function RecommendationCard({ recommendation }: { recommendation: AiRecommendation }) {
+export function RecommendationCard({ recommendation, photoMode = false }: {
+  recommendation: AiRecommendation;
+  photoMode?: boolean;
+}) {
   const issues = recommendation.issues ?? [];
   const closedMax = Number(recommendation.closedMax ?? 0);
 
@@ -38,7 +41,13 @@ export function RecommendationCard({ recommendation }: { recommendation: AiRecom
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-3">
-        {recommendation.scaleCode ? (
+        {photoMode ? (
+          recommendation.suggestedGrade != null ? (
+            <span className="rounded-lg bg-white px-3 py-1.5 text-lg font-semibold text-ink ring-1 ring-line">
+              Предварительно: {recommendation.suggestedGrade}/10
+            </span>
+          ) : <span className="text-13 text-muted">Предварительная оценка не выведена.</span>
+        ) : recommendation.scaleCode ? (
           <span className="rounded-lg bg-white px-3 py-1.5 text-lg font-semibold text-ink ring-1 ring-line">
             {recommendation.scaleCode}
           </span>
@@ -77,4 +86,3 @@ function formatScore(value: number | undefined): string {
   if (value == null) return '0';
   return String(Number(value)).replace('.', ',');
 }
-
