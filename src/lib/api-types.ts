@@ -1561,7 +1561,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_20"];
+        get: operations["get_21"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2425,7 +2425,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_19"];
+        get: operations["get_20"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2841,7 +2841,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_18"];
+        get: operations["get_19"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4107,7 +4107,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_17"];
+        get: operations["get_18"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6703,7 +6703,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_16"];
+        get: operations["get_17"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6911,7 +6911,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_15"];
+        get: operations["get_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7000,6 +7000,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teacher/ktp/bindings/{id}/historical-link-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["historicalPreview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/historical-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["historicalLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teacher/ktp/bindings/{id}/history": {
         parameters: {
             query?: never;
@@ -7008,6 +7040,54 @@ export interface paths {
             cookie?: never;
         };
         get: operations["history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/initial-sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["synchronize"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/initial-sync-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["preview_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -11129,6 +11209,12 @@ export interface components {
             /** Format: int64 */
             versionId?: number;
         };
+        KtpBaselineChange: {
+            after?: number;
+            before?: number;
+            /** Format: int64 */
+            topicId?: number;
+        };
         KtpBindingPage: {
             items?: components["schemas"]["KtpBindingSummary"][];
             /** Format: int64 */
@@ -11273,6 +11359,35 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        KtpHistoricalLinkConfirmation: {
+            acceptBaselineAdjustment?: boolean;
+            previewFingerprint?: string;
+            request: components["schemas"]["KtpHistoricalLinkRequest"];
+        };
+        KtpHistoricalLinkPreview: {
+            baselineChanges?: components["schemas"]["KtpBaselineChange"][];
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: int64 */
+            lessonId?: number;
+            previewFingerprint?: string;
+            /** Format: int64 */
+            progressRevision?: number;
+        };
+        KtpHistoricalLinkRequest: {
+            /** Format: int64 */
+            expectedBindingRevision?: number;
+            /** Format: int64 */
+            expectedProgressRevision?: number;
+            /** Format: int64 */
+            lessonId?: number;
+            topics?: components["schemas"]["KtpHistoricalTopic"][];
+        };
+        KtpHistoricalTopic: {
+            /** Format: int64 */
+            topicId?: number;
+            units: number;
+        };
         KtpImportPage: {
             items?: components["schemas"]["KtpImportView"][];
             /** Format: int64 */
@@ -11297,6 +11412,36 @@ export interface components {
             /** Format: int64 */
             subjectId?: number;
         };
+        KtpInitialSyncPreview: {
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: int64 */
+            bindingRevision?: number;
+            /** Format: date-time */
+            cutoff?: string;
+            historyCompletenessKnown?: boolean;
+            historyFingerprint?: string;
+            /** Format: int64 */
+            physicalLessonCount?: number;
+            /** Format: int64 */
+            progressRevision?: number;
+            suggestedBaselines?: components["schemas"]["KtpTopicBaseline"][];
+            topics?: components["schemas"]["KtpTopicProgress"][];
+            /** Format: int64 */
+            unresolvedSubgroupLessonCount?: number;
+            /** Format: int64 */
+            versionId?: number;
+        };
+        KtpInitialSyncRequest: {
+            baselines?: components["schemas"]["KtpTopicBaseline"][];
+            /** Format: date-time */
+            cutoff: string;
+            /** Format: int64 */
+            expectedBindingRevision?: number;
+            /** Format: int64 */
+            expectedProgressRevision?: number;
+            historyFingerprint?: string;
+        };
         KtpIssue: {
             actual?: string;
             code?: string;
@@ -11320,6 +11465,8 @@ export interface components {
             attempt?: number;
             /** Format: date-time */
             completedAt?: string;
+            /** Format: uuid */
+            correlationId?: string;
             /** Format: date-time */
             createdAt?: string;
             /** Format: int64 */
@@ -11373,6 +11520,33 @@ export interface components {
             name?: string;
             /** Format: int32 */
             order?: number;
+        };
+        KtpProgress: {
+            /** Format: date-time */
+            asOf?: string;
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: int64 */
+            bindingRevision?: number;
+            /** Format: int64 */
+            linkedPhysicalLessonCount?: number;
+            /** Format: int64 */
+            physicalLessonCount?: number;
+            physicalMinutes?: number;
+            /** Format: int64 */
+            progressRevision?: number;
+            state?: string;
+            topics?: components["schemas"]["KtpTopicProgress"][];
+            /** Format: int64 */
+            unresolvedSubgroupLessonCount?: number;
+            /** Format: int64 */
+            versionId?: number;
+        };
+        KtpProgressReceipt: {
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: int64 */
+            progressRevision?: number;
         };
         KtpRevisionRequest: {
             /** Format: int64 */
@@ -11433,6 +11607,25 @@ export interface components {
             previousTotals?: components["schemas"]["KtpTotals"];
             /** Format: int32 */
             topicCountDelta?: number;
+        };
+        KtpTopicBaseline: {
+            additionalHours: number;
+            /** Format: int64 */
+            topicId?: number;
+        };
+        KtpTopicProgress: {
+            baselineAdditional?: number;
+            coveredHours?: number;
+            linkedCoverage?: number;
+            /** Format: int32 */
+            order?: number;
+            overageHours?: number;
+            plannedHours?: number;
+            remainingHours?: number;
+            status?: string;
+            title?: string;
+            /** Format: int64 */
+            topicId?: number;
         };
         KtpTotals: {
             declaredAnnualHours?: number;
@@ -19875,7 +20068,7 @@ export interface operations {
             };
         };
     };
-    get_20: {
+    get_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -21543,7 +21736,7 @@ export interface operations {
             };
         };
     };
-    get_19: {
+    get_20: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -22338,7 +22531,7 @@ export interface operations {
             };
         };
     };
-    get_18: {
+    get_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -24468,7 +24661,7 @@ export interface operations {
             };
         };
     };
-    get_17: {
+    get_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -29623,7 +29816,7 @@ export interface operations {
             };
         };
     };
-    get_16: {
+    get_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -29935,7 +30128,7 @@ export interface operations {
             };
         };
     };
-    get_15: {
+    get_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -30094,6 +30287,60 @@ export interface operations {
             };
         };
     };
+    historicalPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpHistoricalLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpHistoricalLinkPreview"];
+                };
+            };
+        };
+    };
+    historicalLink: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpHistoricalLinkConfirmation"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpProgressReceipt"];
+                };
+            };
+        };
+    };
     history: {
         parameters: {
             query?: {
@@ -30115,6 +30362,78 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KtpActivationPage"];
+                };
+            };
+        };
+    };
+    synchronize: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpInitialSyncRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpProgressReceipt"];
+                };
+            };
+        };
+    };
+    preview_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpInitialSyncPreview"];
+                };
+            };
+        };
+    };
+    get_15: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpProgress"];
                 };
             };
         };
