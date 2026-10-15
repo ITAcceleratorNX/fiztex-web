@@ -1561,7 +1561,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_17"];
+        get: operations["get_18"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2425,7 +2425,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_16"];
+        get: operations["get_17"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2841,7 +2841,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_15"];
+        get: operations["get_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2891,7 +2891,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["start_2"];
+        post: operations["start_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4107,7 +4107,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_14"];
+        get: operations["get_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4173,7 +4173,7 @@ export interface paths {
         };
         get: operations["list_8"];
         put?: never;
-        post: operations["start_1"];
+        post: operations["start_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5693,7 +5693,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["start"];
+        post: operations["start_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6703,7 +6703,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_13"];
+        get: operations["get_14"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6911,7 +6911,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_12"];
+        get: operations["get_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6975,9 +6975,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_11"];
+        get: operations["get_12"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/imports/{id}/processing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["start"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6992,6 +7008,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["source"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/jobs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -10817,6 +10849,7 @@ export interface components {
             classIds?: number[];
             /** Format: date-time */
             createdAt?: string;
+            currentJob?: components["schemas"]["KtpJobReference"];
             /** Format: int64 */
             draftId?: number;
             /** Format: int64 */
@@ -10827,6 +10860,49 @@ export interface components {
             status?: string;
             /** Format: int64 */
             subjectId?: number;
+        };
+        KtpJobReference: {
+            errorCode?: string;
+            /** Format: int64 */
+            id?: number;
+            kind?: string;
+            status?: string;
+        };
+        KtpJobView: {
+            /** Format: int32 */
+            attempt?: number;
+            /** Format: date-time */
+            completedAt?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            draftId?: number;
+            errorCode?: string;
+            /** Format: int32 */
+            errorCount?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            importId?: number;
+            kind?: string;
+            /** Format: date-time */
+            nextAttemptAt?: string;
+            phase?: string;
+            /** Format: date-time */
+            startedAt?: string;
+            status?: string;
+            /** Format: int32 */
+            warningCount?: number;
+        };
+        KtpParseOptions: {
+            columns?: {
+                [key: string]: number;
+            };
+            /** Format: int32 */
+            headerRowNumber?: number;
+            sheetName?: string;
+            /** Format: int32 */
+            tableNumber?: number;
         };
         KtpPeriodOption: {
             /** Format: int64 */
@@ -10846,6 +10922,11 @@ export interface components {
             originalName?: string;
             sha256?: string;
             status?: string;
+        };
+        KtpStartRequest: {
+            /** Format: int64 */
+            expectedRevision?: number;
+            options?: components["schemas"]["KtpParseOptions"];
         };
         KtpUploadContext: {
             /** Format: int64 */
@@ -19198,7 +19279,7 @@ export interface operations {
             };
         };
     };
-    get_17: {
+    get_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -20866,7 +20947,7 @@ export interface operations {
             };
         };
     };
-    get_16: {
+    get_17: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -21661,7 +21742,7 @@ export interface operations {
             };
         };
     };
-    get_15: {
+    get_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -21729,7 +21810,7 @@ export interface operations {
             };
         };
     };
-    start_2: {
+    start_3: {
         parameters: {
             query?: never;
             header: {
@@ -23791,7 +23872,7 @@ export interface operations {
             };
         };
     };
-    get_14: {
+    get_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -23905,7 +23986,7 @@ export interface operations {
             };
         };
     };
-    start_1: {
+    start_2: {
         parameters: {
             query?: never;
             header: {
@@ -26753,7 +26834,7 @@ export interface operations {
             };
         };
     };
-    start: {
+    start_1: {
         parameters: {
             query?: never;
             header: {
@@ -28946,7 +29027,7 @@ export interface operations {
             };
         };
     };
-    get_13: {
+    get_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -29258,7 +29339,7 @@ export interface operations {
             };
         };
     };
-    get_12: {
+    get_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -29395,7 +29476,7 @@ export interface operations {
             };
         };
     };
-    get_11: {
+    get_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -29413,6 +29494,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KtpImportView"];
+                };
+            };
+        };
+    };
+    start: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpStartRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpJobView"];
                 };
             };
         };
@@ -29435,6 +29544,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+        };
+    };
+    get_11: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpJobView"];
                 };
             };
         };
