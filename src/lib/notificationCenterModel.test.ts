@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { centerLink, pendingActions, pendingTotal } from './notificationCenterModel';
+import {
+  centerLink, centerTone, hasNotificationCenter, pendingActions, pendingTotal,
+} from './notificationCenterModel';
 import type { CenterItem } from './notificationCenterApi';
 
 describe('centerLink — словарь маршрутов уведомлений в адреса панели', () => {
@@ -13,6 +15,16 @@ describe('centerLink — словарь маршрутов уведомлени�
     expect(centerLink('homework-card', { homeworkId: 812 })).toBe('/homework/812');
     expect(centerLink('feedback', { month: '2026-09', classId: 31, subjectId: 7 }))
       .toBe('/feedback?month=2026-09&subject=7&class=31');
+  });
+
+  it('расписание: учителю — его неделя, администрации — конструктор на нужном периоде', () => {
+    expect(centerLink('schedule', {}, 'TEACHER')).toBe('/my-schedule');
+    expect(centerLink('schedule', { periodId: 31 }, 'ADMIN')).toBe('/lesson-schedule?periodId=31');
+    expect(centerLink('schedule', {}, 'SUPER_ADMIN')).toBe('/lesson-schedule');
+  });
+
+  it('результаты опроса — вкладка «Результаты» его карточки', () => {
+    expect(centerLink('survey-results', { surveyId: 44 }, 'ADMIN')).toBe('/surveys/44?tab=results');
   });
 
   it('незнакомый маршрут и неполные параметры — без перехода, а не «куда-нибудь»', () => {
@@ -46,5 +58,19 @@ describe('pendingActions — карточка «Незавершённые де�
   it('всего действий — по группам, а не по перечисленным', () => {
     expect(pendingTotal(card)).toBe(6);
     expect(pendingTotal({ params: {} } as CenterItem)).toBe(0);
+  });
+});
+
+describe('тип строки и роли с лентой', () => {
+  it('Warning — расписание, Info — опрос, у остальных видов значка нет', () => {
+    expect(centerTone('ADMIN_SCHEDULE_UNPUBLISHED')).toBe('warning');
+    expect(centerTone('ADMIN_SURVEY_CLOSED')).toBe('info');
+    expect(centerTone('TEACHER_LESSON_SOON')).toBeNull();
+  });
+
+  it('лента у учителя и администрации', () => {
+    expect(['TEACHER', 'ADMIN', 'SUPER_ADMIN'].every(hasNotificationCenter)).toBe(true);
+    expect(hasNotificationCenter('PSYCHOLOGIST')).toBe(false);
+    expect(hasNotificationCenter(undefined)).toBe(false);
   });
 });
