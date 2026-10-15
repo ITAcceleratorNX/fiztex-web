@@ -6968,6 +6968,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teacher/ktp/bindings/{id}/distribution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["distribution"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/distribution/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reconcile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teacher/ktp/bindings/{id}/history": {
         parameters: {
             query?: never;
@@ -11083,6 +11115,20 @@ export interface components {
             /** Format: int64 */
             subjectId?: number;
         };
+        KtpAssignmentView: {
+            actualMode?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            lessonStatus?: string;
+            /** Format: date-time */
+            startsAt?: string;
+            /** Format: int64 */
+            topicId?: number;
+            topicTitle?: string;
+            units?: number;
+            /** Format: int64 */
+            versionId?: number;
+        };
         KtpBindingPage: {
             items?: components["schemas"]["KtpBindingSummary"][];
             /** Format: int64 */
@@ -11156,6 +11202,24 @@ export interface components {
             items?: components["schemas"]["KtpDiagnostic"][];
             /** Format: int32 */
             nextCursor?: number;
+        };
+        KtpDistribution: {
+            assignments?: components["schemas"]["KtpAssignmentView"][];
+            /** Format: int32 */
+            availableSlots?: number;
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: date-time */
+            coverageThrough?: string;
+            diagnostics?: string[];
+            executionEnabled?: boolean;
+            provisional?: boolean;
+            /** Format: int64 */
+            revision?: number;
+            state?: string;
+            unassigned?: components["schemas"]["KtpUnassignedTopic"][];
+            /** Format: int64 */
+            versionId?: number;
         };
         KtpDraftPage: {
             items?: components["schemas"]["KtpDraftSummary"][];
@@ -11379,6 +11443,11 @@ export interface components {
             /** Format: int32 */
             topicCount?: number;
             totalsComplete?: boolean;
+        };
+        KtpUnassignedTopic: {
+            hours?: number;
+            /** Format: int64 */
+            topicId?: number;
         };
         KtpUploadContext: {
             /** Format: int64 */
@@ -14153,6 +14222,13 @@ export interface components {
         ReadParentCommentRequest: {
             /** Format: int64 */
             version: number;
+        };
+        ReconcileReceipt: {
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: int64 */
+            dirtyRevision?: number;
+            executionEnabled?: boolean;
         };
         RedistributeRequest: {
             /** Format: int32 */
@@ -29964,6 +30040,56 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KtpBindingView"];
+                };
+            };
+        };
+    };
+    distribution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpDistribution"];
+                };
+            };
+        };
+    };
+    reconcile: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpRevisionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReconcileReceipt"];
                 };
             };
         };
