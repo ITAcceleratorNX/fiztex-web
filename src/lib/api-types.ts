@@ -837,7 +837,7 @@ export interface paths {
             cookie?: never;
         };
         /** История классных руководителей, включая архивный класс */
-        get: operations["history_12"];
+        get: operations["history_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1561,7 +1561,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_19"];
+        get: operations["get_20"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1595,7 +1595,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["confirm"];
+        post: operations["confirm_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1625,7 +1625,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_11"];
+        get: operations["history_12"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1833,7 +1833,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_10"];
+        get: operations["history_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2409,7 +2409,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_34"];
+        get: operations["list_35"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2425,7 +2425,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_18"];
+        get: operations["get_19"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2729,7 +2729,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_33"];
+        get: operations["list_34"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2809,7 +2809,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_32"];
+        get: operations["list_33"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2841,7 +2841,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_17"];
+        get: operations["get_18"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3561,7 +3561,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_9"];
+        get: operations["history_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3673,7 +3673,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_8"];
+        get: operations["history_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3737,7 +3737,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_7"];
+        get: operations["history_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3899,7 +3899,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_6"];
+        get: operations["history_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4107,7 +4107,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_16"];
+        get: operations["get_17"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4779,7 +4779,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_5"];
+        get: operations["history_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4987,7 +4987,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_4"];
+        get: operations["history_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5115,7 +5115,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_29"];
+        get: operations["list_30"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5195,7 +5195,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_3"];
+        get: operations["history_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5323,7 +5323,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_2"];
+        get: operations["history_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5387,7 +5387,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_1"];
+        get: operations["history_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5451,7 +5451,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_31"];
+        get: operations["list_32"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5739,7 +5739,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["source_1"];
+        get: operations["source_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5803,7 +5803,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_30"];
+        get: operations["list_31"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6703,7 +6703,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_15"];
+        get: operations["get_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6767,7 +6767,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history"];
+        get: operations["history_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6911,7 +6911,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_14"];
+        get: operations["get_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6931,6 +6931,86 @@ export interface paths {
         put: operations["submit"];
         post?: never;
         delete: operations["withdraw"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_29"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_14"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/versions/{versionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["version_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/versions/{versionId}/source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["source_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -6978,6 +7058,38 @@ export interface paths {
         get: operations["get"];
         put: operations["save"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/drafts/{id}/activation-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["preview_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/drafts/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirm"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10931,6 +11043,35 @@ export interface components {
             /** @enum {string} */
             state?: "ON_POST" | "ISSUED";
         };
+        KtpActivation: {
+            /** Format: int64 */
+            bindingRevision?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            previousVersionId?: number;
+            /** Format: int64 */
+            versionId?: number;
+        };
+        KtpActivationPage: {
+            items?: components["schemas"]["KtpActivation"][];
+            /** Format: int64 */
+            nextCursor?: number;
+        };
+        KtpActivationPreview: {
+            availablePeriods?: components["schemas"]["KtpPeriodOption"][];
+            /** Format: int64 */
+            draftId?: number;
+            issues?: components["schemas"]["KtpIssue"][];
+            /** Format: int64 */
+            revision?: number;
+            suggestedPeriodMapping?: components["schemas"]["KtpPeriodMapping"][];
+            targets?: components["schemas"]["KtpTargetPreview"][];
+            totals?: components["schemas"]["KtpTotals"];
+            warningCodes?: string[];
+        };
         KtpAssignment: {
             academicYear?: string;
             /** Format: int64 */
@@ -10942,11 +11083,62 @@ export interface components {
             /** Format: int64 */
             subjectId?: number;
         };
+        KtpBindingPage: {
+            items?: components["schemas"]["KtpBindingSummary"][];
+            /** Format: int64 */
+            nextCursor?: number;
+        };
+        KtpBindingSummary: {
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            revision?: number;
+            state?: string;
+            /** Format: int64 */
+            subjectId?: number;
+            /** Format: int64 */
+            versionId?: number;
+        };
+        KtpBindingView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            content?: components["schemas"]["ParsedKtp"];
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            revision?: number;
+            state?: string;
+            /** Format: int64 */
+            subjectId?: number;
+            totals?: components["schemas"]["KtpTotals"];
+            /** Format: int64 */
+            versionId?: number;
+        };
         KtpCandidateDecision: {
             id?: string;
             ignoreReason?: string;
             /** Format: int32 */
             topicOrder?: number;
+        };
+        KtpConfirmRequest: {
+            confirmedWarningCodes?: string[];
+            /** Format: int64 */
+            expectedRevision?: number;
+            periodMapping?: components["schemas"]["KtpPeriodMapping"][];
+            targets?: components["schemas"]["KtpTargetExpectation"][];
+        };
+        KtpConfirmation: {
+            bindingIds?: number[];
+            /** Format: int64 */
+            revision?: number;
+            /** Format: int64 */
+            versionId?: number;
         };
         KtpContext: {
             assignments?: components["schemas"]["KtpAssignment"][];
@@ -10998,6 +11190,7 @@ export interface components {
             /** Format: int64 */
             expectedRevision?: number;
             sourceDecisions?: components["schemas"]["KtpSourceDecision"][];
+            targetExpectations?: components["schemas"]["KtpTargetExpectation"][];
         };
         KtpDraftView: {
             candidateDecisions?: components["schemas"]["KtpCandidateDecision"][];
@@ -11102,6 +11295,12 @@ export interface components {
             draftId?: number;
             job?: components["schemas"]["KtpJobView"];
         };
+        KtpPeriodMapping: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int32 */
+            planPeriodOrder?: number;
+        };
         KtpPeriodOption: {
             /** Format: int64 */
             academicYearId?: number;
@@ -11151,6 +11350,26 @@ export interface components {
             expectedRevision?: number;
             options?: components["schemas"]["KtpParseOptions"];
         };
+        KtpTargetExpectation: {
+            /** Format: int64 */
+            baseVersionId?: number;
+            /** Format: int64 */
+            bindingRevision?: number;
+            /** Format: int64 */
+            classId?: number;
+        };
+        KtpTargetPreview: {
+            conflict?: boolean;
+            /** Format: int64 */
+            currentRevision?: number;
+            /** Format: int64 */
+            currentVersionId?: number;
+            expected?: components["schemas"]["KtpTargetExpectation"];
+            plannedHoursDelta?: number;
+            previousTotals?: components["schemas"]["KtpTotals"];
+            /** Format: int32 */
+            topicCountDelta?: number;
+        };
         KtpTotals: {
             declaredAnnualHours?: number;
             /** Format: int32 */
@@ -11167,6 +11386,18 @@ export interface components {
             classIds?: number[];
             /** Format: int64 */
             subjectId?: number;
+        };
+        KtpVersionView: {
+            /** Format: date-time */
+            confirmedAt?: string;
+            content?: components["schemas"]["ParsedKtp"];
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            revision?: number;
+            /** Format: int64 */
+            sourceImportId?: number;
+            totals?: components["schemas"]["KtpTotals"];
         };
         LearnerHomeworkRowView: {
             /** @enum {string} */
@@ -18077,7 +18308,7 @@ export interface operations {
             };
         };
     };
-    history_12: {
+    history_13: {
         parameters: {
             query?: {
                 page?: number;
@@ -19568,7 +19799,7 @@ export interface operations {
             };
         };
     };
-    get_19: {
+    get_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -19617,7 +19848,7 @@ export interface operations {
             };
         };
     };
-    confirm: {
+    confirm_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -19665,7 +19896,7 @@ export interface operations {
             };
         };
     };
-    history_11: {
+    history_12: {
         parameters: {
             query: {
                 entityType: "BELL_TEMPLATE" | "WORKING_DAYS" | "CALENDAR_EVENT" | "TEACHER_AVAILABILITY" | "GROUP_SET" | "SUBGROUP" | "LESSON_GENERATION";
@@ -20017,7 +20248,7 @@ export interface operations {
             };
         };
     };
-    history_10: {
+    history_11: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -21210,7 +21441,7 @@ export interface operations {
             };
         };
     };
-    list_34: {
+    list_35: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -21236,7 +21467,7 @@ export interface operations {
             };
         };
     };
-    get_18: {
+    get_19: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -21848,7 +22079,7 @@ export interface operations {
             };
         };
     };
-    list_33: {
+    list_34: {
         parameters: {
             query: {
                 teacherProfileId?: number;
@@ -21989,7 +22220,7 @@ export interface operations {
             };
         };
     };
-    list_32: {
+    list_33: {
         parameters: {
             query?: {
                 grade?: string;
@@ -22031,7 +22262,7 @@ export interface operations {
             };
         };
     };
-    get_17: {
+    get_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -23204,7 +23435,7 @@ export interface operations {
             };
         };
     };
-    history_9: {
+    history_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -23389,7 +23620,7 @@ export interface operations {
             };
         };
     };
-    history_8: {
+    history_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -23482,7 +23713,7 @@ export interface operations {
             };
         };
     };
-    history_7: {
+    history_8: {
         parameters: {
             query: {
                 subjectId: number;
@@ -23749,7 +23980,7 @@ export interface operations {
             };
         };
     };
-    history_6: {
+    history_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -24161,7 +24392,7 @@ export interface operations {
             };
         };
     };
-    get_16: {
+    get_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -25386,7 +25617,7 @@ export interface operations {
             };
         };
     };
-    history_5: {
+    history_6: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -25739,7 +25970,7 @@ export interface operations {
             };
         };
     };
-    history_4: {
+    history_5: {
         parameters: {
             query: {
                 unitId?: number;
@@ -25985,7 +26216,7 @@ export interface operations {
             };
         };
     };
-    list_29: {
+    list_30: {
         parameters: {
             query: {
                 dateFrom?: string;
@@ -26108,7 +26339,7 @@ export interface operations {
             };
         };
     };
-    history_3: {
+    history_4: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -26370,7 +26601,7 @@ export interface operations {
             };
         };
     };
-    history_2: {
+    history_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -26458,7 +26689,7 @@ export interface operations {
             };
         };
     };
-    history_1: {
+    history_2: {
         parameters: {
             query: {
                 childId?: number;
@@ -26617,7 +26848,7 @@ export interface operations {
             };
         };
     };
-    list_31: {
+    list_32: {
         parameters: {
             query?: {
                 childId?: number;
@@ -27200,7 +27431,7 @@ export interface operations {
             };
         };
     };
-    source_1: {
+    source_2: {
         parameters: {
             query: {
                 sourceType: "TEXTBOOK" | "LESSON_MATERIAL";
@@ -27326,7 +27557,7 @@ export interface operations {
             };
         };
     };
-    list_30: {
+    list_31: {
         parameters: {
             query?: {
                 childId?: number;
@@ -29316,7 +29547,7 @@ export interface operations {
             };
         };
     };
-    get_15: {
+    get_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -29413,7 +29644,7 @@ export interface operations {
             };
         };
     };
-    history: {
+    history_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -29628,7 +29859,7 @@ export interface operations {
             };
         };
     };
-    get_14: {
+    get_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -29688,6 +29919,122 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MyTeacherAvailabilityView"];
+                };
+            };
+        };
+    };
+    list_29: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpBindingPage"];
+                };
+            };
+        };
+    };
+    get_14: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpBindingView"];
+                };
+            };
+        };
+    };
+    history: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpActivationPage"];
+                };
+            };
+        };
+    };
+    version_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                versionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpVersionView"];
+                };
+            };
+        };
+    };
+    source_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                versionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
                 };
             };
         };
@@ -29779,6 +30126,56 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KtpDraftView"];
+                };
+            };
+        };
+    };
+    preview_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpActivationPreview"];
+                };
+            };
+        };
+    };
+    confirm: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpConfirmation"];
                 };
             };
         };
