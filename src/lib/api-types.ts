@@ -5764,6 +5764,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/teaching-topic": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getKtpLessonTeachingTopic"];
+        put?: never;
+        post: operations["changeKtpLessonTeachingTopic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/teaching-topic/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listKtpLessonTeachingHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/teaching-topic/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["previewKtpLessonTeachingChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/textbook": {
         parameters: {
             query?: never;
@@ -5838,6 +5886,7 @@ export interface paths {
         get?: never;
         put: operations["updateTopic"];
         post?: never;
+        /** @description Снимает ручную замену и возвращает плановую тему КТП. Без КТП очищает тему. Для явного отсутствия покрытия КТП используется teaching-topic с операцией NO_KTP. */
         delete: operations["clearTopic"];
         options?: never;
         head?: never;
@@ -7088,6 +7137,70 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_15"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/topics/{topicId}/adjustments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["adjustKtpTopicProgress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/version-sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirmKtpVersionSync"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/version-sync-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["previewKtpVersionSync"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/version-transition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getKtpVersionTransition"];
         put?: never;
         post?: never;
         delete?: never;
@@ -11488,6 +11601,39 @@ export interface components {
             /** Format: int32 */
             warningCount?: number;
         };
+        KtpLessonTeachingTopic: {
+            actual?: components["schemas"]["KtpLessonTopicLink"][];
+            actualText?: string;
+            /** Format: int64 */
+            assignmentRevision?: number;
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: int64 */
+            bindingRevision?: number;
+            bindingState?: string;
+            displayTitle?: string;
+            fullText?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            mode?: string;
+            planned?: components["schemas"]["KtpLessonTopicLink"][];
+            /** Format: int64 */
+            progressRevision?: number;
+            teachingRevision?: string;
+            /** Format: int64 */
+            versionId?: number;
+        };
+        KtpLessonTopicLink: {
+            learningObjectives?: string;
+            /** Format: int32 */
+            partNumber?: number;
+            title?: string;
+            /** Format: int64 */
+            topicId?: number;
+            units?: number;
+            /** Format: int64 */
+            versionId?: number;
+        };
         KtpParseOptions: {
             columns?: {
                 [key: string]: number;
@@ -11608,15 +11754,111 @@ export interface components {
             /** Format: int32 */
             topicCountDelta?: number;
         };
+        KtpTeachingAuditEntry: {
+            action?: string;
+            /** Format: int64 */
+            actorId?: number;
+            after?: components["schemas"]["KtpTeachingAuditState"];
+            /** Format: int64 */
+            assignmentRevision?: number;
+            before?: components["schemas"]["KtpTeachingAuditState"];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+            reason?: string;
+        };
+        KtpTeachingAuditLink: {
+            /** Format: int32 */
+            partNumber?: number;
+            /** Format: int64 */
+            topicId?: number;
+            units?: number;
+            /** Format: int64 */
+            versionId?: number;
+        };
+        KtpTeachingAuditPage: {
+            items?: components["schemas"]["KtpTeachingAuditEntry"][];
+            /** Format: int64 */
+            nextCursor?: number;
+        };
+        KtpTeachingAuditState: {
+            actual?: components["schemas"]["KtpTeachingAuditLink"][];
+            actualText?: string;
+            /** Format: int64 */
+            assignmentRevision?: number;
+            mode?: string;
+            planned?: components["schemas"]["KtpTeachingAuditLink"][];
+        };
+        /** @description REPLACE заменяет фактические ссылки, MERGE добавляет к текущим, CONTINUE продолжает одну непокрытую тему. Для них topics непустой, freeText отсутствует. FREE_TEXT требует свободный текст и пустой topics; NO_KTP оставляет пустое покрытие; RESTORE_PLAN снимает override. PLANNED и остальные уроки сохраняются. */
+        KtpTeachingChange: {
+            /** Format: int64 */
+            expectedAssignmentRevision?: number;
+            /** Format: int64 */
+            expectedBindingRevision?: number;
+            /** Format: int64 */
+            expectedProgressRevision?: number;
+            freeText?: string;
+            /** @enum {string} */
+            operation: "REPLACE" | "MERGE" | "CONTINUE" | "FREE_TEXT" | "NO_KTP" | "RESTORE_PLAN";
+            reason?: string;
+            topics: components["schemas"]["KtpTeachingTopicSelection"][];
+        };
+        KtpTeachingConfirmation: {
+            acceptBaselineAdjustment?: boolean;
+            previewFingerprint?: string;
+            request: components["schemas"]["KtpTeachingChange"];
+        };
+        KtpTeachingPreview: {
+            baselineChanges?: components["schemas"]["KtpBaselineChange"][];
+            effectiveTopics?: components["schemas"]["KtpTeachingTopicSelection"][];
+            /** Format: int64 */
+            lessonId?: number;
+            previewFingerprint?: string;
+            proposedText?: string;
+        };
+        KtpTeachingReceipt: {
+            /** Format: int64 */
+            assignmentRevision?: number;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int64 */
+            progressRevision?: number;
+        };
+        KtpTeachingTopicSelection: {
+            /** Format: int64 */
+            topicId?: number;
+            units: number;
+        };
+        /** @description Ручное завершение/возврат меняют статус без создания уроков. coverageAdjustment передаётся только для ADJUST_COVERAGE: это новое знаковое значение корректировки, не прибавление к прежнему. RESET снимает ручной статус и корректировку. Все действия требуют причины и актуальной ревизии. */
+        KtpTopicAdjustmentRequest: {
+            /** @enum {string} */
+            action: "COMPLETE" | "REOPEN" | "ADJUST_COVERAGE" | "RESET";
+            coverageAdjustment?: number;
+            /** Format: int64 */
+            expectedBindingRevision?: number;
+            /** Format: int64 */
+            expectedProgressRevision?: number;
+            reason?: string;
+        };
         KtpTopicBaseline: {
             additionalHours: number;
             /** Format: int64 */
             topicId?: number;
         };
+        KtpTopicCorrespondence: {
+            /** Format: int64 */
+            fromTopicId?: number;
+            share: number;
+            /** Format: int64 */
+            toTopicId?: number;
+        };
         KtpTopicProgress: {
             baselineAdditional?: number;
             coveredHours?: number;
             linkedCoverage?: number;
+            manualAdjustment?: number;
+            manualStatus?: string;
             /** Format: int32 */
             order?: number;
             overageHours?: number;
@@ -11648,6 +11890,84 @@ export interface components {
             classIds?: number[];
             /** Format: int64 */
             subjectId?: number;
+        };
+        KtpVersionCoveragePreview: {
+            adjustment?: number;
+            baseline?: number;
+            linked?: number;
+            overage?: number;
+            planned?: number;
+            /** Format: int64 */
+            topicId?: number;
+            total?: number;
+        };
+        KtpVersionSyncConfirmation: {
+            acceptOverage?: boolean;
+            previewFingerprint?: string;
+            reason?: string;
+            request: components["schemas"]["KtpVersionSyncRequest"];
+        };
+        KtpVersionSyncPreview: {
+            /** Format: int64 */
+            bindingId?: number;
+            coverage?: components["schemas"]["KtpVersionCoveragePreview"][];
+            discardedOldTopicIds?: number[];
+            hasOverage?: boolean;
+            preservedLessonIds?: number[];
+            previewFingerprint?: string;
+            replaceableFutureLessonIds?: number[];
+        };
+        KtpVersionSyncRequest: {
+            correspondences: components["schemas"]["KtpTopicCorrespondence"][];
+            /** Format: date-time */
+            cutoff: string;
+            discardedOldTopicIds: number[];
+            /** Format: int64 */
+            expectedBindingRevision?: number;
+            /** Format: int64 */
+            expectedProgressRevision?: number;
+            /** Format: int64 */
+            fromVersionId?: number;
+            historyFingerprint?: string;
+            targetStatuses: components["schemas"]["KtpVersionTargetStatus"][];
+            /** Format: int64 */
+            toVersionId?: number;
+        };
+        KtpVersionTargetStatus: {
+            /** @enum {string} */
+            status: "NONE" | "FORCE_COMPLETED" | "FORCE_IN_PROGRESS";
+            /** Format: int64 */
+            topicId?: number;
+        };
+        KtpVersionTopic: {
+            adjustment?: number;
+            baseline?: number;
+            /** Format: int64 */
+            id?: number;
+            learningObjectives?: string;
+            linkedCoverage?: number;
+            manualStatus?: string;
+            plannedHours?: number;
+            sourceNumber?: string;
+            title?: string;
+        };
+        KtpVersionTransition: {
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: int64 */
+            bindingRevision?: number;
+            currentTopics?: components["schemas"]["KtpVersionTopic"][];
+            /** Format: date-time */
+            cutoff?: string;
+            /** Format: int64 */
+            fromVersionId?: number;
+            historyFingerprint?: string;
+            previousTopics?: components["schemas"]["KtpVersionTopic"][];
+            /** Format: int64 */
+            progressRevision?: number;
+            suggestedCorrespondences?: components["schemas"]["KtpTopicCorrespondence"][];
+            /** Format: int64 */
+            toVersionId?: number;
         };
         KtpVersionView: {
             /** Format: date-time */
@@ -12151,6 +12471,7 @@ export interface components {
             sourceName?: string;
             /** @enum {string} */
             status?: "PENDING" | "RUNNING" | "DONE" | "FAILED";
+            teachingContext?: components["schemas"]["LessonSummaryTeachingSnapshot"];
             warningMessage?: string;
         };
         LessonSummarySourceView: {
@@ -12165,6 +12486,12 @@ export interface components {
             /** @enum {string} */
             sourceType?: "TEXTBOOK" | "LESSON_MATERIAL";
             title?: string;
+        };
+        LessonSummaryTeachingSnapshot: {
+            effectiveTopics?: components["schemas"]["KtpLessonTopicLink"][];
+            promptTruncated?: boolean;
+            revision?: string;
+            topic?: string;
         };
         LessonSummaryVersionRequest: {
             /** Format: int64 */
@@ -27751,6 +28078,107 @@ export interface operations {
             };
         };
     };
+    getKtpLessonTeachingTopic: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpLessonTeachingTopic"];
+                };
+            };
+        };
+    };
+    changeKtpLessonTeachingTopic: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpTeachingConfirmation"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpTeachingReceipt"];
+                };
+            };
+        };
+    };
+    listKtpLessonTeachingHistory: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpTeachingAuditPage"];
+                };
+            };
+        };
+    };
+    previewKtpLessonTeachingChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpTeachingChange"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpTeachingPreview"];
+                };
+            };
+        };
+    };
     select: {
         parameters: {
             query?: never;
@@ -30434,6 +30862,111 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KtpProgress"];
+                };
+            };
+        };
+    };
+    adjustKtpTopicProgress: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+                topicId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpTopicAdjustmentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpProgressReceipt"];
+                };
+            };
+        };
+    };
+    confirmKtpVersionSync: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpVersionSyncConfirmation"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpProgressReceipt"];
+                };
+            };
+        };
+    };
+    previewKtpVersionSync: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpVersionSyncRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpVersionSyncPreview"];
+                };
+            };
+        };
+    };
+    getKtpVersionTransition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpVersionTransition"];
                 };
             };
         };
