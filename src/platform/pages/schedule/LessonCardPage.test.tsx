@@ -48,6 +48,9 @@ const idleMutation = () => ({
 });
 
 vi.mock('@/hooks/queries', () => ({
+  useKtpTeaching: () => ({ data: {}, isPending: false }),
+  useKtpTeachingHistory: () => ({ data: undefined, isPending: false }),
+  useKtpProgress: () => ({ data: undefined, isPending: false }),
   useLessonSummary: () => ({ data: { canEdit: true }, isPending: false }),
   useLesson: (...args: unknown[]) => useLesson(...args),
   useLessonHistory: (...args: unknown[]) => useLessonHistory(...args),

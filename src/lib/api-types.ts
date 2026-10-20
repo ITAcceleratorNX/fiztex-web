@@ -1298,6 +1298,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/lessons/{lessonId}/teaching-topic": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAdminKtpLessonTeachingTopic"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/lessons/{lessonId}/teaching-topic/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAdminKtpLessonTeachingHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/notifications/diagnostics": {
         parameters: {
             query?: never;
@@ -7001,6 +7033,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teacher/ktp/bindings/removal-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["previewKtpPlanRemoval"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive selected classes atomically and retire future automatic topics, preserving teaching history */
+        post: operations["removeKtpPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teacher/ktp/bindings/{id}": {
         parameters: {
             query?: never;
@@ -7219,6 +7284,23 @@ export interface paths {
         get: operations["version_1"];
         put?: never;
         post?: never;
+        /** Remove an unused version from version menus; historical lesson links remain readable */
+        delete: operations["removeKtpVersion"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/versions/{versionId}/removal-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["previewKtpVersionRemoval"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -7395,7 +7477,8 @@ export interface paths {
         get: operations["get_13"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Remove an upload and draft from the workspace without erasing immutable history */
+        delete: operations["removeKtpImport"];
         options?: never;
         head?: never;
         patch?: never;
@@ -7427,6 +7510,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/imports/{id}/removal-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["previewKtpImportRemoval"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -11279,6 +11378,8 @@ export interface components {
             previousVersionId?: number;
             /** Format: int64 */
             versionId?: number;
+            /** Format: int64 */
+            versionNumber?: number;
         };
         KtpActivationPage: {
             items?: components["schemas"]["KtpActivation"][];
@@ -11333,6 +11434,19 @@ export interface components {
             /** Format: int64 */
             nextCursor?: number;
         };
+        KtpBindingRemovalRequest: {
+            previewFingerprint?: string;
+            targets?: components["schemas"]["KtpBindingRemovalTarget"][];
+        };
+        KtpBindingRemovalTarget: {
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: int64 */
+            expectedRevision?: number;
+        };
+        KtpBindingRemovalTargets: {
+            targets?: components["schemas"]["KtpBindingRemovalTarget"][];
+        };
         KtpBindingSummary: {
             /** Format: int64 */
             academicYearId?: number;
@@ -11342,11 +11456,14 @@ export interface components {
             id?: number;
             /** Format: int64 */
             revision?: number;
+            sourceName?: string;
             state?: string;
             /** Format: int64 */
             subjectId?: number;
             /** Format: int64 */
             versionId?: number;
+            /** Format: int64 */
+            versionNumber?: number;
         };
         KtpBindingView: {
             /** Format: int64 */
@@ -11524,6 +11641,7 @@ export interface components {
             status?: string;
             /** Format: int64 */
             subjectId?: number;
+            versionStatus?: string;
         };
         KtpInitialSyncPreview: {
             /** Format: int64 */
@@ -11693,6 +11811,33 @@ export interface components {
             bindingId?: number;
             /** Format: int64 */
             progressRevision?: number;
+        };
+        KtpRemovalPreview: {
+            allowed?: boolean;
+            classIds?: number[];
+            /** Format: int64 */
+            futureAutomaticLessons?: number;
+            message?: string;
+            /** Format: int64 */
+            preservedLessons?: number;
+            /** Format: int64 */
+            preservedManualLessons?: number;
+            previewFingerprint?: string;
+            /** Format: int64 */
+            revision?: number;
+        };
+        KtpRemovalReceipt: {
+            bindingIds?: number[];
+            kind?: string;
+            /** Format: date-time */
+            removedAt?: string;
+            /** Format: int64 */
+            resourceId?: number;
+        };
+        KtpRemovalRequest: {
+            /** Format: int64 */
+            expectedRevision?: number;
+            previewFingerprint?: string;
         };
         KtpRevisionRequest: {
             /** Format: int64 */
@@ -19890,6 +20035,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonView"];
+                };
+            };
+        };
+    };
+    getAdminKtpLessonTeachingTopic: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpLessonTeachingTopic"];
+                };
+            };
+        };
+    };
+    listAdminKtpLessonTeachingHistory: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpTeachingAuditPage"];
                 };
             };
         };
@@ -30625,6 +30817,10 @@ export interface operations {
             query?: {
                 cursor?: number;
                 limit?: number;
+                academicYearId?: number;
+                subjectId?: number;
+                classId?: number;
+                status?: string;
             };
             header?: never;
             path?: never;
@@ -30639,6 +30835,56 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KtpBindingPage"];
+                };
+            };
+        };
+    };
+    previewKtpPlanRemoval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpBindingRemovalTargets"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpRemovalPreview"];
+                };
+            };
+        };
+    };
+    removeKtpPlan: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpBindingRemovalRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpRemovalReceipt"];
                 };
             };
         };
@@ -30994,6 +31240,58 @@ export interface operations {
             };
         };
     };
+    removeKtpVersion: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+                versionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpRemovalRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpRemovalReceipt"];
+                };
+            };
+        };
+    };
+    previewKtpVersionRemoval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                versionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpRemovalPreview"];
+                };
+            };
+        };
+    };
     source_1: {
         parameters: {
             query?: never;
@@ -31243,6 +31541,11 @@ export interface operations {
             query?: {
                 cursor?: number;
                 limit?: number;
+                academicYearId?: number;
+                subjectId?: number;
+                classId?: number;
+                status?: string;
+                unconfirmedOnly?: boolean;
             };
             header?: never;
             path?: never;
@@ -31313,6 +31616,34 @@ export interface operations {
             };
         };
     };
+    removeKtpImport: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpRemovalRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpRemovalReceipt"];
+                };
+            };
+        };
+    };
     manual: {
         parameters: {
             query?: never;
@@ -31365,6 +31696,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KtpJobView"];
+                };
+            };
+        };
+    };
+    previewKtpImportRemoval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpRemovalPreview"];
                 };
             };
         };

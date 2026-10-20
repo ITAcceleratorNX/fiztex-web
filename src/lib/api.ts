@@ -156,9 +156,9 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   return data as T;
 }
 
-export async function requestMultipart<T>(path: string, formData: FormData, signal?: AbortSignal): Promise<T> {
+export async function requestMultipart<T>(path: string, formData: FormData, signal?: AbortSignal, extraHeaders: Record<string, string> = {}): Promise<T> {
   const assertCurrentSession = guardSession();
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = { ...extraHeaders };
   if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
 
   let response: Response;

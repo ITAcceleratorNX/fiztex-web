@@ -18,12 +18,14 @@ export function SegmentedTabs<T extends string>({
   onChange,
   ariaLabel,
   className,
+  appearance = 'default',
 }: {
   value: T;
   options: ReadonlyArray<{ value: T; label: string; disabled?: boolean }>;
   onChange: (value: T) => void;
   ariaLabel: string;
   className?: string;
+  appearance?: 'default' | 'planning';
 }) {
   const selectedEnabled = options.some((option) => option.value === value && !option.disabled);
   const tabStopValue = selectedEnabled ? value : options.find((option) => !option.disabled)?.value;
@@ -39,7 +41,7 @@ export function SegmentedTabs<T extends string>({
       aria-invalid={fieldProps['aria-invalid']}
       aria-required={fieldProps['aria-required']}
       aria-orientation="horizontal"
-      className={cx('inline-flex gap-1 rounded-xl bg-neutral-bg p-1', className)}
+      className={cx('inline-flex gap-1 rounded-xl p-1', appearance === 'planning' ? 'self-start bg-planning-row-line' : 'bg-neutral-bg', className)}
     >
       {options.map((option) => {
         const selected = option.value === value;
@@ -57,9 +59,10 @@ export function SegmentedTabs<T extends string>({
             })}
             onClick={() => onChange(option.value)}
             className={cx(
-              'rounded-lg px-4 py-2 text-sm font-semibold transition',
+              'rounded-lg py-2 font-semibold transition',
+              appearance === 'planning' ? 'px-3 text-13' : 'px-4 text-sm',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50 disabled:cursor-not-allowed disabled:opacity-50',
-              selected ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink',
+              appearance === 'planning' ? selected ? 'bg-white text-navy-700 shadow-sm' : 'text-planning-muted hover:text-navy-700' : selected ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink',
             )}
           >
             {option.label}

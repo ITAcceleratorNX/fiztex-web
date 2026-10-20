@@ -1,4 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRef } from 'react';
+import { ktpApi, type KtpReadScope, type KtpListFilters, type KtpRemovalTarget } from '@/lib/ktpApi';
+import { runningKtp } from '@/lib/ktpModel';
 import { parentCommentsApi, type PublishParentComment } from '@/lib/parentCommentsApi';
 import { listSchoolSubjects, createSchoolSubject, updateSchoolSubject, archiveSchoolSubject } from '@/platform/services/schoolSubjects';
 import type { SchoolRecordStatus } from '@/platform/types';
@@ -94,6 +97,11 @@ import type {
 } from '@/lib/types';
 
 export const keys = {
+  ktp: ['ktp'] as const,
+  ktpResource: (resource: string, id?: number | null, version?: number | null) => ['ktp', resource, id, version] as const,
+  ktpList: (resource: string, filters: KtpListFilters) => ['ktp', resource, filters] as const,
+  ktpRemovalPreview: (target: KtpRemovalTarget) => ['ktp', 'removal-preview', target] as const,
+  ktpTeaching: (id: number, scope: KtpReadScope = 'teacher') => ['ktp', 'teaching', scope, id] as const,
   gradeHistory: (gradeId: number) => ['grade-history', gradeId] as const,
   lessonParentComments: (lessonId: number | null) => ['lesson-parent-comments', lessonId] as const,
   schoolSubjects: (status: SchoolRecordStatus | 'ALL') => ['school-subjects', status] as const,
@@ -3202,4 +3210,98 @@ export function useMyClassSummary(classId: number | null, periodId: number | nul
     staleTime: 0,
     refetchOnWindowFocus: true,
   });
+}
+
+// KTP commands retain their key for retries of the same payload. Revisions and
+// fingerprints are checked by the server; a conflict must be reviewed again.
+export function useKtpCommand<T, V>(action: (variables: V, key: string) => Promise<T>, invalidates = true) {
+  const client = useQueryClient();
+  const attempt = useRef<{ signature: string; file?: File; key: string }>();
+  return useMutation({
+    mutationFn: (variables: V) => {
+      const signature = JSON.stringify(variables);
+      const file = variables && typeof variables === 'object' && 'file' in variables ? variables.file as File : undefined;
+      if (!attempt.current || attempt.current.signature !== signature || attempt.current.file !== file) {
+        attempt.current = { signature, file, key: crypto.randomUUID() };
+      }
+      return action(variables, attempt.current.key);
+    },
+    retry: false,
+    onError: async (error) => {
+      if (error instanceof ApiError && error.status === 409) {
+        await Promise.all([client.invalidateQueries({ queryKey: keys.ktp, predicate: query => !['activation', 'initial-preview', 'transition', 'removal-preview'].includes(String(query.queryKey[1])) }), client.invalidateQueries({ queryKey: ['lessons'] })]);
+      }
+    },
+    onSuccess: async () => {
+      attempt.current = undefined;
+      if (!invalidates) return;
+      await Promise.all([
+        client.invalidateQueries({ queryKey: keys.ktp, predicate: query => !['activation', 'initial-preview', 'transition', 'removal-preview'].includes(String(query.queryKey[1])) }),
+        client.invalidateQueries({ queryKey: ['lessons'] }),
+        client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
+      ]);
+    },
+  });
+}
+export function useKtpContext(enabled = true) {
+  return useQuery({ queryKey: keys.ktpResource('context'), queryFn: ({ signal }) => ktpApi.context(signal), enabled });
+}
+export function useKtpImports(filters: KtpListFilters = {}) {
+  return useInfiniteQuery({ queryKey: keys.ktpList('imports', filters), initialPageParam: undefined as number | undefined,
+    queryFn: ({ pageParam, signal }) => ktpApi.imports(pageParam, signal, filters), getNextPageParam: page => page.nextCursor ?? undefined,
+    refetchInterval: query => query.state.data?.pages.some(page => page.items?.some(item => runningKtp(item.status))) ? 4000 : false });
+}
+export function useKtpBindings(enabled = true, filters: KtpListFilters = {}) {
+  return useInfiniteQuery({ queryKey: keys.ktpList('bindings', filters), initialPageParam: undefined as number | undefined,
+    queryFn: ({ pageParam, signal }) => ktpApi.bindings(pageParam, signal, filters), getNextPageParam: page => page.nextCursor ?? undefined, enabled });
+}
+export function useKtpRemovalPreview(target: KtpRemovalTarget) {
+  return useQuery({ queryKey: keys.ktpRemovalPreview(target), queryFn: ({ signal }) => ktpApi.removalPreview(target, signal), staleTime: 0, refetchOnWindowFocus: false, retry: false });
+}
+export function useKtpImport(id: number) {
+  return useQuery({ queryKey: keys.ktpResource('import', id), queryFn: ({ signal }) => ktpApi.import(id, signal), enabled: id > 0,
+    refetchInterval: query => runningKtp(query.state.data?.status) ? 3000 : false });
+}
+export function useKtpJob(id?: number) {
+  return useQuery({ queryKey: keys.ktpResource('job', id), queryFn: ({ signal }) => ktpApi.job(id!, signal), enabled: !!id,
+    refetchInterval: query => runningKtp(query.state.data?.status) ? 3000 : false });
+}
+export function useKtpDiagnostics(id?: number) {
+  return useInfiniteQuery({ queryKey: keys.ktpResource('diagnostics', id), initialPageParam: undefined as number | undefined,
+    queryFn: ({ pageParam, signal }) => ktpApi.diagnostics(id!, pageParam, signal), getNextPageParam: page => page.nextCursor ?? undefined, enabled: !!id });
+}
+export function useKtpDraft(id: number) {
+  return useQuery({ queryKey: keys.ktpResource('draft', id), queryFn: ({ signal }) => ktpApi.draft(id, signal), enabled: id > 0 });
+}
+export function useKtpActivation(id: number, enabled: boolean) {
+  return useQuery({ queryKey: keys.ktpResource('activation', id), queryFn: ({ signal }) => ktpApi.activation(id, signal), enabled: enabled && id > 0, staleTime: 0 });
+}
+export function useKtpBinding(id?: number) {
+  return useQuery({ queryKey: keys.ktpResource('binding', id), queryFn: ({ signal }) => ktpApi.binding(id!, signal), enabled: !!id });
+}
+export function useKtpProgress(id?: number) {
+  return useQuery({ queryKey: keys.ktpResource('progress', id), queryFn: ({ signal }) => ktpApi.progress(id!, signal), enabled: !!id });
+}
+export function useKtpDistribution(id?: number) {
+  return useQuery({ queryKey: keys.ktpResource('distribution', id), queryFn: ({ signal }) => ktpApi.distribution(id!, signal), enabled: !!id });
+}
+export function useKtpInitialPreview(id: number, enabled: boolean) {
+  return useQuery({ queryKey: keys.ktpResource('initial-preview', id), queryFn: ({ signal }) => ktpApi.initialPreview(id, signal), enabled, staleTime: 0, refetchOnMount: 'always' });
+}
+export function useKtpHistory(id: number) {
+  return useInfiniteQuery({ queryKey: keys.ktpResource('history', id), initialPageParam: undefined as number | undefined,
+    queryFn: ({ pageParam, signal }) => ktpApi.history(id, pageParam, signal), getNextPageParam: page => page.nextCursor ?? undefined, enabled: Number.isSafeInteger(id) && id > 0 });
+}
+export function useKtpVersion(id?: number, versionId?: number) {
+  return useQuery({ queryKey: keys.ktpResource('version', id, versionId), queryFn: ({ signal }) => ktpApi.version(id!, versionId!, signal), enabled: !!id && !!versionId });
+}
+export function useKtpTransition(id: number, enabled: boolean) {
+  return useQuery({ queryKey: keys.ktpResource('transition', id), queryFn: ({ signal }) => ktpApi.transition(id, signal), enabled, staleTime: 0, refetchOnMount: 'always' });
+}
+export function useKtpTeaching(id: number, enabled = true, scope: KtpReadScope = 'teacher') {
+  return useQuery({ queryKey: keys.ktpTeaching(id, scope), queryFn: ({ signal }) => ktpApi.teaching(id, signal, scope), enabled: enabled && id > 0 });
+}
+export function useKtpTeachingHistory(id: number, enabled: boolean, scope: KtpReadScope = 'teacher') {
+  return useInfiniteQuery({ queryKey: keys.ktpResource(`teaching-history-${scope}`, id), initialPageParam: undefined as number | undefined,
+    queryFn: ({ pageParam, signal }) => ktpApi.teachingHistory(id, pageParam, signal, scope), getNextPageParam: page => page.nextCursor ?? undefined, enabled });
 }

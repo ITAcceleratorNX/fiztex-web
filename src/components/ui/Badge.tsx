@@ -19,20 +19,23 @@ export function Badge({
   tone = 'gray',
   dot = false,
   icon,
+  appearance = 'pill',
   children,
 }: {
   tone?: Tone;
   dot?: boolean;
   /** Значок вместо точки — «Период открыт» с замком (Figma `period-open-badge` 2162:2088). */
   icon?: ReactNode;
+  appearance?: 'pill' | 'label';
   children: ReactNode;
 }) {
   const t = tones[tone];
+  const labelTones: Record<Tone, string> = { green: 'bg-planning-success text-planning-success-fg', gray: 'bg-planning-row-line text-slate-600', amber: 'bg-orange-50 text-amber-700', blue: 'bg-indigo-50 text-navy-700', red: 'bg-red-50 text-red-600', purple: 'bg-violet-50 text-violet-700', navy: 'bg-indigo-50 text-navy-700' };
   return (
     <span
       className={cx(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset',
-        t.wrap,
+        'inline-flex items-center gap-1.5 px-2.5 py-1 text-xs',
+        appearance === 'label' ? `rounded-md font-semibold ${labelTones[tone]}` : `rounded-full font-medium ring-1 ring-inset ${t.wrap}`,
       )}
     >
       {dot && <span className={cx('h-1.5 w-1.5 rounded-full', t.dot)} />}

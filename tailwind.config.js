@@ -4,6 +4,14 @@ export default {
   theme: {
     extend: {
       colors: {
+        planning: {
+          ink: 'var(--color-planning-ink)', muted: 'var(--color-planning-muted)', subtle: 'var(--color-planning-subtle)',
+          line: 'var(--color-planning-line)', 'row-line': 'var(--color-planning-row-line)', canvas: 'var(--color-planning-canvas)',
+          head: 'var(--color-planning-head)', period: 'var(--color-planning-period)',
+          success: 'var(--color-planning-success)', 'success-fg': 'var(--color-planning-success-fg)',
+          danger: 'var(--color-planning-danger)', 'danger-border': 'var(--color-planning-danger-border)',
+          warning: 'var(--color-planning-warning)', 'warning-border': 'var(--color-planning-warning-border)',
+        },
         // Brand orange (active tab, primary buttons)
         brand: {
           50: '#fff7ed',
@@ -98,6 +106,7 @@ export default {
         sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       fontSize: {
+        26: 'var(--text-26)',
         // Кегли макета, которых нет в шкале Tailwind.
         // Заменяют text-[10px] / text-[11px] / text-[13px] в вёрстке.
         10: 'var(--text-10)',
@@ -119,6 +128,8 @@ export default {
         'journal-head': '52px',
         'journal-row': '44px',
       },
+      borderRadius: { 'planning-panel': 'var(--radius-planning-panel)', 'planning-modal': 'var(--radius-planning-modal)' },
+      gridTemplateColumns: { 'planning-editor': 'var(--grid-planning-editor)' },
       width: {
         // Переключатель нескольких классов учителя (2200:4727).
         'class-switcher': '220px',
@@ -143,6 +154,7 @@ export default {
         'col-textbook-actions': '262px',
       },
       minWidth: {
+        'planning-table': 'var(--size-planning-table)',
         // Ниже этого сетка занятости уезжает в свой горизонтальный скролл,
         // чтобы дни не схлопывались в нечитаемые колонки.
         'slot-grid': '640px',
@@ -151,6 +163,7 @@ export default {
         'textbook-table': '1120px',
       },
       minHeight: {
+        'planning-state': 'var(--size-planning-state)',
         'comment-field': 'var(--size-comment-field)',
         // Две колонки экрана занятости равной высоты (2015:11068): в макете
         // 935px при артборде 1080, здесь — нижняя граница, дальше по контенту.
@@ -161,6 +174,10 @@ export default {
         filter: '0.5px',
       },
       maxWidth: {
+        'planning-dialog': 'var(--size-planning-dialog)',
+        'planning-version-upload': 'var(--size-planning-version-upload)',
+        'planning-confirm': 'var(--size-planning-confirm)',
+        'planning-topic': 'var(--size-planning-topic)',
         'comment-dialog': 'var(--size-comment-dialog)',
         // Ширина текста пустых состояний: 340px при 13px (2015:11338)
         // и 400px при 14px (2015:11167). Обе вне шкалы Tailwind.

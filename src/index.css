@@ -18,6 +18,31 @@
  * на RGB-каналы и обернуть в rgb(var(--…) / <alpha-value>) в конфиге.
  */
 :root {
+  /* КТП, Figma Iu4Vh41elvgQvMVPXJoPxc, 36:1921 / 36:3383. */
+  --color-planning-ink: #1b2333;
+  --color-planning-muted: #6b7385;
+  --color-planning-subtle: #8a93a5;
+  --color-planning-line: #e6e9f0;
+  --color-planning-row-line: #eef0f5;
+  --color-planning-canvas: #f7f8fb;
+  --color-planning-head: #fafbfd;
+  --color-planning-period: #f1f4fa;
+  --color-planning-success: #e8f6ee;
+  --color-planning-success-fg: #13804a;
+  --color-planning-danger: #fff8f8;
+  --color-planning-danger-border: #f3c2c0;
+  --color-planning-warning: #fffcf6;
+  --color-planning-warning-border: #f6d9ae;
+  --text-26: 26px;
+  --radius-planning-panel: 18px;
+  --radius-planning-modal: 20px;
+  --size-planning-dialog: 560px;
+  --size-planning-version-upload: 676px;
+  --size-planning-confirm: 576px;
+  --size-planning-topic: 850px;
+  --size-planning-state: 420px;
+  --size-planning-table: 960px;
+  --grid-planning-editor: minmax(0, 1.6fr) minmax(0, 1fr) minmax(5rem, 0.4fr) minmax(10rem, 0.6fr);
   /* Figma parent comment composer 27:1697 / 27:1709. */
   --size-comment-dialog: 560px;
   --size-comment-field: 220px;
@@ -139,6 +164,16 @@
   /* Фон задаёт AppLayout; страницы не рисуют второй прямоугольник поверх него. */
   .page-stack {
     @apply flex w-full min-w-0 flex-col gap-6;
+  }
+
+  .planning-page {
+    @apply flex min-w-0 flex-col gap-6 text-planning-ink;
+  }
+  .planning-table-head {
+    @apply bg-planning-head px-3 py-3 text-11 font-bold uppercase tracking-wide text-planning-subtle;
+  }
+  .planning-table-cell {
+    @apply border-planning-row-line px-3 py-3 text-13 leading-relaxed;
   }
 
   .form-section {
