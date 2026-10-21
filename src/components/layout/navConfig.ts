@@ -28,6 +28,7 @@ import {
   LayoutGrid,
   type LucideIcon,
   Scale,
+  ChartColumn,
 } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
 
@@ -92,6 +93,8 @@ export const NAV_SECTIONS: NavSection[] = [
       // Правила расчёта четвертной (GRADES-003) — рядом с журналом, который по ним считает.
       { to: ROUTES.gradingPolicy, label: 'Политика оценивания', icon: Scale },
       { to: ROUTES.attendance, label: 'Посещаемость', icon: QrCode },
+      // Учебная отчётность по школе; классный руководитель видит свою во вкладке «Моего класса».
+      { to: ROUTES.reporting, label: 'Отчётность', icon: ChartColumn },
       { to: '/ai-tests', label: 'AI-тесты', icon: Sparkles },
       { to: ROUTES.surveys, label: 'Опросы', icon: ListChecks },
       { to: ROUTES.serviceRequests, label: 'Сервисные заявки', icon: Briefcase },

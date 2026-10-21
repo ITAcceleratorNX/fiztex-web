@@ -91,6 +91,7 @@ import {
   type EquipmentHistoryFilters,
 } from '@/lib/equipmentApi';
 import type { Schema } from '@/lib/apiSchemas';
+import { notificationCenterApi } from '@/lib/notificationCenterApi';
 import { teacherWorkspaceApi, type WorkspaceSearchQuery } from '@/lib/teacherWorkspaceApi';
 import { testTemplateApi, type TestAiOverview, type TestAiRequest } from '@/lib/testTemplateApi';
 import { lessonPreparationApi, type PreparationAiOverview, type PreparationAiRequest } from '@/lib/lessonPreparationApi';
@@ -247,6 +248,8 @@ export const keys = {
     ['lessons', lessonId, 'materials', childId ?? 'self'] as const,
   /** Свой профиль: один ключ на экран профиля и на `accountId` в карточке заявки. */
   myProfile: ['me', 'profile'] as const,
+  notificationCenter: ['notifications', 'page'] as const,
+  notificationUnread: ['notifications', 'unread'] as const,
   // Одно пространство на весь раздел: создание, отмена и возврат меняют оба списка
   // сразу — заявка уходит из «Моих» в «Историю», — и сбрасывать их порознь значило бы
   // однажды забыть половину.
@@ -793,6 +796,54 @@ export function useMyProfile() {
     queryKey: keys.myProfile,
     queryFn: ({ signal }) => profileApi.me(signal),
     staleTime: Infinity,
+  });
+}
+
+// ---- Центр уведомлений: лента учителя (ТЗ «Внутренние уведомления — Teacher») ----
+
+/**
+ * Карточки ленты учителя живут и пропадают сами — «урок через 10 минут» к звонку, «работы на проверку» после
+ * проверки, — поэтому счётчик спрашивается раз в минуту, а не один раз за сессию.
+ */
+const CENTER_REFRESH_MS = 60_000;
+
+export function useNotificationUnread(enabled: boolean) {
+  return useQuery({
+    queryKey: keys.notificationUnread,
+    queryFn: ({ signal }) => notificationCenterApi.unread(signal),
+    enabled,
+    refetchInterval: CENTER_REFRESH_MS,
+  });
+}
+
+/** Лента читается, пока панель открыта: закрытой ей обновляться незачем. */
+export function useNotificationCenter(enabled: boolean) {
+  return useQuery({
+    queryKey: keys.notificationCenter,
+    queryFn: ({ signal }) => notificationCenterApi.page(signal),
+    enabled,
+    staleTime: 0,
+    refetchInterval: enabled ? CENTER_REFRESH_MS : false,
+  });
+}
+
+export function useMarkCenterRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => notificationCenterApi.markRead(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+}
+
+export function useMarkCenterAllRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (upTo?: string) => notificationCenterApi.markAllRead(upTo),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+    },
   });
 }
 

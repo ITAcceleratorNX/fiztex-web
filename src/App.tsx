@@ -41,6 +41,7 @@ import { TeacherAttendancePage } from '@/pages/attendance/TeacherAttendancePage'
 import { MyAvailabilityPage } from '@/pages/schedule/MyAvailabilityPage';
 import { MySchedulePage } from '@/pages/schedule/MySchedulePage';
 import { MyClassPage } from '@/pages/my-class/MyClassPage';
+import { AdminReportingPage } from '@/pages/reporting/AdminReportingPage';
 import { CurrentLessonPage } from '@/pages/schedule/CurrentLessonPage';
 import { HomeworkGroupsPage } from '@/pages/homework/HomeworkGroupsPage';
 import { DashboardPage } from '@/pages/DashboardPage';
@@ -224,6 +225,7 @@ export function App() {
         />
         {/* Журнал класса и итоги четверти (GRADES-FE-001 §5.4, §9). */}
         <Route path={ROUTES.journal} element={<JournalPage />} />
+        <Route path={ROUTES.reporting} element={<AdminReportingPage />} />
         {/* Политика оценивания (GRADES-003): веса ФО/СОР/СОЧ, пороги, вес экзамена. */}
         <Route path={ROUTES.gradingPolicy} element={<GradingPolicyPage />} />
         <Route path={ROUTES.textbooks} element={<TextbooksPage />} />

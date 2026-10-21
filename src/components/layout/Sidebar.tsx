@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronsLeft, ChevronsRight, LogOut } from 'lucide-react';
 import { Logo, PhysTechMark } from './Logo';
+import { NotificationCenterButton } from './NotificationCenterButton';
+import { hasNotificationCenter } from '@/lib/notificationCenterModel';
 import { useAuth } from '@/context/AuthContext';
 import { cx, initials } from '@/lib/format';
 import { navSectionsForRole, type NavItem, type NavSection } from './navConfig';
@@ -310,7 +312,7 @@ function SidebarFooter({
 
   return (
     <div className={cx('relative z-10 pb-6', wide ? 'px-4' : 'px-2')}>
-      <div className={cx('mb-2 flex', wide ? 'justify-start pl-1' : 'justify-center')}>
+      <div className={cx('mb-2 flex gap-2', wide ? 'justify-start pl-1' : 'flex-col items-center')}>
         <button
           type="button"
           onClick={onToggle}
@@ -324,6 +326,9 @@ function SidebarFooter({
         >
           <Icon className="size-4" />
         </button>
+        {/* Лента есть у учителя и администрации (ТЗ «Внутренние уведомления — Teacher» и «— Admin»); у остальных
+            ролей панели своих событий в ней нет, и пустой колокольчик только обещал бы их. */}
+        {hasNotificationCenter(role) && <NotificationCenterButton wide={wide} />}
       </div>
 
       {wide ? (
