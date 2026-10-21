@@ -1,4 +1,10 @@
+import { studentYearTransitionApi } from '@/lib/studentYearTransitionApi';
+import { createPeriod, updatePeriod } from '@/platform/services/periods';
+import type { CreatePeriodInput, UpdatePeriodInput } from '@/platform/types';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRef } from 'react';
+import { ktpApi, type KtpReadScope, type KtpListFilters, type KtpRemovalTarget } from '@/lib/ktpApi';
+import { runningKtp } from '@/lib/ktpModel';
 import { parentCommentsApi, type PublishParentComment } from '@/lib/parentCommentsApi';
 import { listSchoolSubjects, createSchoolSubject, updateSchoolSubject, archiveSchoolSubject } from '@/platform/services/schoolSubjects';
 import type { SchoolRecordStatus } from '@/platform/types';
@@ -35,7 +41,10 @@ import { attendanceQrApi, type AttendanceQrSession } from '@/lib/attendanceQrApi
 import { gradesApi, type GradeType, type GradeValueInput } from '@/lib/gradesApi';
 import { gradeCorrectionsApi, type CorrectionGradeValue } from '@/lib/gradeCorrectionsApi';
 import { breakdownApi, gradingPolicyApi, type GradingPolicyContent } from '@/lib/gradingApi';
+import { schoolYearLifecycleApi } from '@/lib/schoolYearLifecycleApi';
 import { profileApi } from '@/lib/profileApi';
+import { scheduleSettingsApi } from '@/lib/scheduleSettingsApi';
+import type { CalendarEvent } from '@/lib/scheduleSettingsTypes';
 import {
   finalGradesApi,
   gradebookApi,
@@ -95,6 +104,22 @@ import type {
 } from '@/lib/types';
 
 export const keys = {
+  studentYearTransition: (id: string | null) => ['student-year-transition', id] as const,
+  studentYearDecisions: (id: string | null) => ['student-year-decisions', id] as const,
+  studentYearDecisionCancellation: (id: number | null) => ['student-year-decisions', 'cancellation', id] as const,
+  myClassYearDecisions: (classId: number | null) => ['my-class', 'classes', classId, 'year-decisions'] as const,
+  classYearFinals: (query: import('@/lib/gradebookApi').YearFinalsQuery | null) => ['gradebook', 'year-finals', query] as const,
+  finalGradeHistory: (id: number | null) => ['gradebook', 'final-history', id] as const,
+  yearReadiness: (id: string | null) => ['academic-years', id, 'completion-readiness'] as const,
+  yearLifecycleHistory: (id: string | null) => ['academic-years', id, 'lifecycle-history'] as const,
+  scheduleWeekCalendar: (yearId: number | null, classId: number | null, from: string, to: string) =>
+    ['calendar-events', yearId, 'week', classId, from, to] as const,
+  ktp: ['ktp'] as const,
+  ktpResource: (resource: string, id?: number | null, version?: number | null) => ['ktp', resource, id, version] as const,
+  ktpList: (resource: string, filters: KtpListFilters) => ['ktp', resource, filters] as const,
+  ktpRemovalPreview: (target: KtpRemovalTarget) => ['ktp', 'removal-preview', target] as const,
+  ktpTeaching: (id: number, scope: KtpReadScope = 'teacher') => ['ktp', 'teaching', scope, id] as const,
+  ktpHistoricalLessons: (classId: number, subjectId: number, date: string) => ['ktp', 'historical-lessons', classId, subjectId, date] as const,
   gradeHistory: (gradeId: number) => ['grade-history', gradeId] as const,
   lessonParentComments: (lessonId: number | null) => ['lesson-parent-comments', lessonId] as const,
   schoolSubjects: (status: SchoolRecordStatus | 'ALL') => ['school-subjects', status] as const,
@@ -2042,10 +2067,10 @@ export function useHomeworkValueMode(homeworkId: number | null) {
  * Меняется не чаще, чем расписание назначений, поэтому живёт долго: перезапрашивать
  * список классов при каждом переключении четверти незачем.
  */
-export function useGradebookContext(enabled = true) {
+export function useGradebookContext(enabled = true, academicYearId?: number | null) {
   return useQuery({
-    queryKey: keys.gradebookContext,
-    queryFn: ({ signal }) => gradebookApi.context(signal),
+    queryKey: [...keys.gradebookContext, academicYearId ?? null],
+    queryFn: ({ signal }) => gradebookApi.context(signal, academicYearId),
     enabled,
     staleTime: 5 * 60 * 1000,
     retry: (failureCount, error) =>
@@ -2105,17 +2130,17 @@ export function useSetFinalGrade() {
       finalGradeId: number | null;
       studentProfileId: number;
       subjectId: number;
-      academicPeriodId: number;
-      value: number;
-    }) =>
-      vars.finalGradeId != null
-        ? finalGradesApi.changeValue(vars.finalGradeId, vars.value)
-        : finalGradesApi.create({
-            studentProfileId: vars.studentProfileId,
-            subjectId: vars.subjectId,
-            academicPeriodId: vars.academicPeriodId,
-            value: vars.value,
-          }),
+      academicPeriodId?: number;
+      academicYearId?: number;
+      scope?: import('@/lib/gradebookApi').FinalGrade['scope'];
+      value: number | null;
+      resultKind?: import('@/lib/gradebookApi').FinalGrade['resultKind'];
+      resultReason?: string;
+    }) => vars.finalGradeId != null
+      ? finalGradesApi.changeValue(vars.finalGradeId, vars.value, vars.resultKind, vars.resultReason)
+      : finalGradesApi.create({ studentProfileId: vars.studentProfileId, subjectId: vars.subjectId,
+          academicPeriodId: vars.academicPeriodId, academicYearId: vars.academicYearId, scope: vars.scope ?? 'PERIOD', value: vars.value,
+          resultKind: vars.resultKind, resultReason: vars.resultReason }),
   );
 }
 
@@ -3252,5 +3277,232 @@ export function useMyClassSummary(classId: number | null, periodId: number | nul
     ),
     staleTime: 0,
     refetchOnWindowFocus: true,
+  });
+}
+
+// KTP commands retain their key for retries of the same payload. Revisions and
+// fingerprints are checked by the server; a conflict must be reviewed again.
+export function useKtpCommand<T, V>(action: (variables: V, key: string) => Promise<T>, invalidates = true) {
+  const client = useQueryClient();
+  const attempt = useRef<{ signature: string; file?: File; key: string }>();
+  return useMutation({
+    mutationFn: (variables: V) => {
+      const signature = JSON.stringify(variables);
+      const file = variables && typeof variables === 'object' && 'file' in variables ? variables.file as File : undefined;
+      if (!attempt.current || attempt.current.signature !== signature || attempt.current.file !== file) {
+        attempt.current = { signature, file, key: crypto.randomUUID() };
+      }
+      return action(variables, attempt.current.key);
+    },
+    retry: false,
+    onError: async (error) => {
+      if (error instanceof ApiError && error.status === 409) {
+        await Promise.all([client.invalidateQueries({ queryKey: keys.ktp, predicate: query => !['activation', 'initial-preview', 'transition', 'removal-preview'].includes(String(query.queryKey[1])) }), client.invalidateQueries({ queryKey: ['lessons'] })]);
+      }
+    },
+    onSuccess: async () => {
+      attempt.current = undefined;
+      if (!invalidates) return;
+      await Promise.all([
+        client.invalidateQueries({ queryKey: keys.ktp, predicate: query => !['activation', 'initial-preview', 'transition', 'removal-preview'].includes(String(query.queryKey[1])) }),
+        client.invalidateQueries({ queryKey: ['lessons'] }),
+        client.invalidateQueries({ queryKey: keys.teacherWorkspace }),
+      ]);
+    },
+  });
+}
+export function useKtpContext(enabled = true) {
+  return useQuery({ queryKey: keys.ktpResource('context'), queryFn: ({ signal }) => ktpApi.context(signal), enabled });
+}
+export function useKtpImports(filters: KtpListFilters = {}) {
+  return useInfiniteQuery({ queryKey: keys.ktpList('imports', filters), initialPageParam: undefined as number | undefined,
+    queryFn: ({ pageParam, signal }) => ktpApi.imports(pageParam, signal, filters), getNextPageParam: page => page.nextCursor ?? undefined,
+    refetchInterval: query => query.state.data?.pages.some(page => page.items?.some(item => runningKtp(item.status))) ? 4000 : false });
+}
+export function useKtpBindings(enabled = true, filters: KtpListFilters = {}) {
+  return useInfiniteQuery({ queryKey: keys.ktpList('bindings', filters), initialPageParam: undefined as number | undefined,
+    queryFn: ({ pageParam, signal }) => ktpApi.bindings(pageParam, signal, filters), getNextPageParam: page => page.nextCursor ?? undefined, enabled });
+}
+export function useKtpRemovalPreview(target: KtpRemovalTarget) {
+  return useQuery({ queryKey: keys.ktpRemovalPreview(target), queryFn: ({ signal }) => ktpApi.removalPreview(target, signal), staleTime: 0, refetchOnWindowFocus: false, retry: false });
+}
+export function useKtpImport(id: number) {
+  return useQuery({ queryKey: keys.ktpResource('import', id), queryFn: ({ signal }) => ktpApi.import(id, signal), enabled: id > 0,
+    refetchInterval: query => runningKtp(query.state.data?.status) ? 3000 : false });
+}
+export function useKtpJob(id?: number) {
+  return useQuery({ queryKey: keys.ktpResource('job', id), queryFn: ({ signal }) => ktpApi.job(id!, signal), enabled: !!id,
+    refetchInterval: query => runningKtp(query.state.data?.status) ? 3000 : false });
+}
+export function useKtpDiagnostics(id?: number) {
+  return useInfiniteQuery({ queryKey: keys.ktpResource('diagnostics', id), initialPageParam: undefined as number | undefined,
+    queryFn: ({ pageParam, signal }) => ktpApi.diagnostics(id!, pageParam, signal), getNextPageParam: page => page.nextCursor ?? undefined, enabled: !!id });
+}
+export function useKtpDraft(id: number) {
+  return useQuery({ queryKey: keys.ktpResource('draft', id), queryFn: ({ signal }) => ktpApi.draft(id, signal), enabled: id > 0 });
+}
+export function useKtpParsePreview(id: number, jobId?: number, enabled = true) {
+  return useQuery({ queryKey: keys.ktpResource('parse-preview', id, jobId), queryFn: ({ signal }) => ktpApi.parsePreview(id, jobId!, signal), enabled: enabled && id > 0 && !!jobId, retry: false, staleTime: 0, refetchOnWindowFocus: false });
+}
+export function useKtpActivation(id: number, enabled: boolean) {
+  return useQuery({ queryKey: keys.ktpResource('activation', id), queryFn: ({ signal }) => ktpApi.activation(id, signal), enabled: enabled && id > 0, staleTime: 0 });
+}
+export function useKtpBinding(id?: number) {
+  return useQuery({ queryKey: keys.ktpResource('binding', id), queryFn: ({ signal }) => ktpApi.binding(id!, signal), enabled: !!id });
+}
+export function useKtpProgress(id?: number) {
+  return useQuery({ queryKey: keys.ktpResource('progress', id), queryFn: ({ signal }) => ktpApi.progress(id!, signal), enabled: !!id });
+}
+export function useKtpHistoricalLessons(classId: number, subjectId: number, date: string) {
+  return useInfiniteQuery({
+    queryKey: keys.ktpHistoricalLessons(classId, subjectId, date), enabled: classId > 0 && subjectId > 0 && /^\d{4}-\d{2}-\d{2}$/.test(date),
+    initialPageParam: 0,
+    queryFn: ({ pageParam, signal }) => lessonsApi.list({ classId, dateFrom: date, dateTo: date, status: 'ACTIVE', page: pageParam, size: 50 }, signal),
+    getNextPageParam: page => (page.number ?? 0) + 1 < (page.totalPages ?? 0) ? (page.number ?? 0) + 1 : undefined,
+    staleTime: 0,
+  });
+}
+export function useKtpDistribution(id?: number) {
+  return useQuery({ queryKey: keys.ktpResource('distribution', id), queryFn: ({ signal }) => ktpApi.distribution(id!, signal), enabled: !!id });
+}
+export function useKtpInitialPreview(id: number, enabled: boolean) {
+  return useQuery({ queryKey: keys.ktpResource('initial-preview', id), queryFn: ({ signal }) => ktpApi.initialPreview(id, signal), enabled, staleTime: 0, refetchOnMount: 'always' });
+}
+export function useKtpHistory(id: number) {
+  return useInfiniteQuery({ queryKey: keys.ktpResource('history', id), initialPageParam: undefined as number | undefined,
+    queryFn: ({ pageParam, signal }) => ktpApi.history(id, pageParam, signal), getNextPageParam: page => page.nextCursor ?? undefined, enabled: Number.isSafeInteger(id) && id > 0 });
+}
+export function useKtpVersion(id?: number, versionId?: number) {
+  return useQuery({ queryKey: keys.ktpResource('version', id, versionId), queryFn: ({ signal }) => ktpApi.version(id!, versionId!, signal), enabled: !!id && !!versionId });
+}
+export function useKtpTransition(id: number, enabled: boolean) {
+  return useQuery({ queryKey: keys.ktpResource('transition', id), queryFn: ({ signal }) => ktpApi.transition(id, signal), enabled, staleTime: 0, refetchOnMount: 'always' });
+}
+export function useKtpTeaching(id: number, enabled = true, scope: KtpReadScope = 'teacher') {
+  return useQuery({ queryKey: keys.ktpTeaching(id, scope), queryFn: ({ signal }) => ktpApi.teaching(id, signal, scope), enabled: enabled && id > 0 });
+}
+export function useKtpTeachingHistory(id: number, enabled: boolean, scope: KtpReadScope = 'teacher') {
+  return useInfiniteQuery({ queryKey: keys.ktpResource(`teaching-history-${scope}`, id), initialPageParam: undefined as number | undefined,
+    queryFn: ({ pageParam, signal }) => ktpApi.teachingHistory(id, pageParam, signal, scope), getNextPageParam: page => page.nextCursor ?? undefined, enabled });
+}
+
+/** Школьный календарь выбранной недели, включая все страницы событий. */
+export function useScheduleWeekCalendar(yearId: number | null, classId: number | null, from: string, to: string, enabled: boolean) {
+  return useQuery({
+    queryKey: keys.scheduleWeekCalendar(yearId, classId, from, to),
+    enabled: enabled && yearId != null && classId != null,
+    queryFn: async ({ signal }) => {
+      const result: CalendarEvent[] = [];
+      for (let page = 0; ; page += 1) {
+        const response = await scheduleSettingsApi.listCalendarEvents(yearId!, {
+          classId: classId!, dateFrom: from, dateTo: to, status: 'ACTIVE', page, size: 100,
+        }, signal);
+        result.push(...response.content);
+        if (page + 1 >= response.totalPages) return result;
+      }
+    },
+  });
+}
+
+export function useResolveScheduleLesson() {
+  return useMutation({
+    mutationFn: async ({ scheduleLessonId, date }: { scheduleLessonId: number; date: string }) =>
+      (await lessonsApi.list({ scheduleLessonId, dateFrom: date, dateTo: date, size: 1 })).content?.[0],
+  });
+}
+
+export function useAcademicYearReadiness(id: string | null) {
+  return useQuery({ queryKey: keys.yearReadiness(id), enabled: id != null,
+    queryFn: ({ signal }) => schoolYearLifecycleApi.readiness(id!, signal), staleTime: 0 });
+}
+export function useAcademicYearLifecycleHistory(id: string | null) {
+  return useQuery({ queryKey: keys.yearLifecycleHistory(id), enabled: id != null,
+    queryFn: ({ signal }) => schoolYearLifecycleApi.history(id!, signal) });
+}
+export function useAcademicYearLifecycleCommand() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { id: string; restore?: import('@/lib/apiSchemas').Schema<'RestoreAcademicYearRequest'> }) => {
+      if (vars.restore) await schoolYearLifecycleApi.restore(vars.id, vars.restore);
+      else await schoolYearLifecycleApi.complete(vars.id);
+    },
+    onSuccess: async () => { await Promise.all([
+      qc.invalidateQueries({ queryKey: ['academic-years'] }), qc.invalidateQueries({ queryKey: ['gradebook'] }),
+      qc.invalidateQueries({ queryKey: ['my-class'] }),
+    ]); },
+  });
+}
+
+export function useFinalGradeHistory(id: number | null) {
+  return useQuery({ queryKey: keys.finalGradeHistory(id), enabled: id != null,
+    queryFn: ({ signal }) => finalGradesApi.history(id!, signal) });
+}
+export function useCorrectFinalGrade() {
+  return useFinalGradeCommand((vars: { id: number; body: import('@/lib/apiSchemas').Schema<'CorrectFinalGradeRequest'> }) =>
+    finalGradesApi.correctTechnicalError(vars.id, vars.body));
+}
+
+export function useClassYearFinals(query: import('@/lib/gradebookApi').YearFinalsQuery | null) {
+  return useQuery({ queryKey: keys.classYearFinals(query), enabled: query != null,
+    queryFn: ({ signal }) => finalGradesApi.ofYearClass(query!, signal) });
+}
+export function usePublishClassYearFinals() {
+  return useFinalGradeCommand((query: import('@/lib/gradebookApi').YearFinalsQuery) => finalGradesApi.publishYearClass(query));
+}
+
+export function useStudentYearTransition(classId: string | null) {
+ return useQuery({ queryKey: keys.studentYearTransition(classId), enabled: classId != null,
+  queryFn: ({signal}) => studentYearTransitionApi.preview(classId!,signal) });
+}
+export function useStudentYearDecisions(studentId: string | null) {
+ return useQuery({ queryKey: keys.studentYearDecisions(studentId), enabled: studentId != null,
+  queryFn: ({signal}) => studentYearTransitionApi.history(studentId!,signal) });
+}
+export function useApplyStudentYearTransition() {
+ const qc=useQueryClient();
+ return useMutation({ mutationFn: (v: {classId: string; body: import('@/lib/apiSchemas').Schema<'StudentYearDecisionRequest'>}) => studentYearTransitionApi.apply(v.classId,v.body),
+  onSuccess: async () => { await Promise.all([qc.invalidateQueries({queryKey:['student-year-transition']}), qc.invalidateQueries({queryKey:['student-year-decisions']}), qc.invalidateQueries({queryKey:['my-class']}), qc.invalidateQueries({queryKey:['gradebook']}), qc.invalidateQueries({queryKey:['academic-years']})]); } });
+}
+
+export function useStudentYearDecisionCancellation(decisionId: number | null) {
+  return useQuery({ queryKey: keys.studentYearDecisionCancellation(decisionId), enabled: decisionId != null,
+    staleTime: 0, queryFn: ({ signal }) => studentYearTransitionApi.cancellationPreview(decisionId!, signal) });
+}
+
+export function useCancelStudentYearDecision() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (value: { decisionId: number; body: Schema<'StudentYearDecisionCancellationRequest'> }) =>
+      studentYearTransitionApi.cancel(value.decisionId, value.body),
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['student-year-transition'] }),
+        qc.invalidateQueries({ queryKey: ['student-year-decisions'] }),
+        qc.invalidateQueries({ queryKey: ['my-class'] }),
+        qc.invalidateQueries({ queryKey: ['gradebook'] }),
+        qc.invalidateQueries({ queryKey: ['academic-years'] }),
+      ]);
+    },
+  });
+}
+
+export function useMyClassYearDecisions(classId: number) {
+  return useQuery({ queryKey: keys.myClassYearDecisions(classId), staleTime: 0,
+    queryFn: ({ signal }) => studentYearTransitionApi.classHistory(classId, signal) });
+}
+
+export function useSaveAcademicPeriod() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (value: { periodId: string; input: UpdatePeriodInput } | { periodId?: never; input: CreatePeriodInput }) =>
+      value.periodId === undefined ? createPeriod(value.input) : updatePeriod(value.periodId, value.input),
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['academic-periods'] }),
+        qc.invalidateQueries({ queryKey: ['gradebook'] }),
+        qc.invalidateQueries({ queryKey: ['my-class'] }),
+        qc.invalidateQueries({ queryKey: ['academic-years'] }),
+      ]);
+    },
   });
 }

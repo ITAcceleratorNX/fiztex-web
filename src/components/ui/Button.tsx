@@ -2,14 +2,15 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
 import { cx } from '@/lib/format';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'navy';
-type Size = 'sm' | 'md' | 'icon';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-ghost' | 'navy' | 'success-soft' | 'warning-soft' | 'neutral-soft';
+type Size = 'sm' | 'md' | 'icon' | 'icon-sm' | 'text' | 'badge';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
   size?: Size;
   loading?: boolean;
   icon?: ReactNode;
+  endIcon?: ReactNode;
 }
 
 const variants: Record<Variant, string> = {
@@ -19,17 +20,24 @@ const variants: Record<Variant, string> = {
     'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 active:bg-slate-100 disabled:text-slate-400',
   ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 active:bg-slate-200',
   danger: 'bg-red-500 text-white hover:bg-red-600 active:bg-red-700 disabled:bg-red-300',
+  'danger-ghost': 'bg-transparent text-red-600 hover:bg-red-50 active:bg-red-100 disabled:text-slate-400',
   // Figma `btn-primary` — фирменный navy. Отдельный вариант, а не замена `primary`:
   // какая кнопка основная, оранжевая или синяя, — открытый продуктовый вопрос
   // (см. CLAUDE.md «Расхождения макета и кода»), а экранам, где макет прямо рисует
   // синюю кнопку действия («Показать QR»), она нужна уже сейчас.
   navy: 'bg-navy-700 text-white shadow-sm hover:bg-navy-800 active:bg-navy-900 disabled:bg-navy-400',
+  'success-soft': 'bg-planning-success text-planning-success-fg ring-1 ring-inset ring-emerald-200 hover:bg-emerald-100',
+  'warning-soft': 'bg-orange-50 text-amber-700 ring-1 ring-inset ring-orange-200 hover:bg-orange-100',
+  'neutral-soft': 'bg-planning-row-line text-slate-600 ring-1 ring-inset ring-planning-line hover:bg-slate-200',
 };
 
 const sizes: Record<Size, string> = {
   sm: 'h-9 px-3.5 text-sm',
   md: 'h-11 px-5 text-sm',
   icon: 'size-11 shrink-0 p-0 text-sm',
+  'icon-sm': 'size-7 shrink-0 p-0 text-13',
+  text: 'h-auto p-0 text-13',
+  badge: 'h-7 px-2.5 text-xs',
 };
 
 /**
@@ -46,7 +54,8 @@ export function buttonClassName({
   className,
 }: { variant?: Variant; size?: Size; className?: string } = {}): string {
   return cx(
-    'inline-flex items-center justify-center rounded-xl font-semibold transition',
+    'inline-flex items-center justify-center font-semibold transition',
+    size === 'badge' || size === 'icon-sm' ? 'rounded-lg' : 'rounded-xl',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50 disabled:cursor-not-allowed',
     variants[variant],
     sizes[size],
@@ -59,6 +68,7 @@ export function Button({
   size = 'md',
   loading = false,
   icon,
+  endIcon,
   disabled,
   className,
   children,
@@ -73,7 +83,7 @@ export function Button({
       <span
         className={cx(
           'inline-flex items-center',
-          (loading || (icon != null && icon !== false)) && (size === 'sm' ? 'gap-1.5' : 'gap-2'),
+          (loading || (icon != null && icon !== false) || endIcon != null) && (size === 'sm' || size === 'badge' ? 'gap-1.5' : 'gap-2'),
         )}
       >
         <span
@@ -85,6 +95,7 @@ export function Button({
           {loading ? <Loader2 className="size-4 animate-spin" /> : icon}
         </span>
         {children}
+        {endIcon}
       </span>
     </button>
   );

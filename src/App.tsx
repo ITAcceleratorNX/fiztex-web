@@ -47,6 +47,10 @@ import { HomeworkGroupsPage } from '@/pages/homework/HomeworkGroupsPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { WorkspaceHomePage } from '@/pages/workspace/WorkspaceHomePage';
+import { KtpListPage, KtpSectionRedirect } from '@/pages/ktp/KtpListPage';
+import { KtpImportPage } from '@/pages/ktp/KtpImportPage';
+import { KtpDraftPage } from '@/pages/ktp/KtpDraftPage';
+import { KtpBindingPage } from '@/pages/ktp/KtpBindingPage';
 import { WorkspaceCollectionPage } from '@/pages/workspace/WorkspaceCollectionPage';
 import { WorkspaceTestEditorPage } from '@/pages/workspace/WorkspaceTestEditorPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
@@ -226,6 +230,11 @@ export function App() {
         <Route path={ROUTES.gradingPolicy} element={<GradingPolicyPage />} />
         <Route path={ROUTES.textbooks} element={<TextbooksPage />} />
         <Route path={ROUTES.workspace} element={<WorkspaceHomePage />} />
+        <Route path="/workspace/ktp" element={<KtpListPage />} />
+        <Route path="/workspace/ktp/imports/:importId" element={<KtpImportPage />} />
+        <Route path="/workspace/ktp/drafts/:draftId" element={<KtpDraftPage />} />
+        <Route path="/workspace/ktp/bindings/:bindingId" element={<KtpBindingPage />} />
+        <Route path="/workspace/sections/CURRICULUM_PLANS" element={<KtpSectionRedirect />} />
         <Route path={ROUTES.workspaceTestNew} element={<WorkspaceTestEditorPage mode="create" />} />
         <Route path="/workspace/tests/:templateId/edit" element={<WorkspaceTestEditorPage mode="edit" />} />
         <Route path="/workspace/sections/:sectionCode" element={<WorkspaceCollectionPage kind="section" />} />

@@ -20,6 +20,7 @@ export function FileDropzone({
   error = false,
   id,
   size = 'md',
+  appearance = 'default',
 }: {
   file: File | null;
   onChange: (file: File | null) => void;
@@ -30,6 +31,7 @@ export function FileDropzone({
   error?: boolean;
   id?: string;
   size?: 'md' | 'lg';
+  appearance?: 'default' | 'planning';
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -69,17 +71,17 @@ export function FileDropzone({
       >
         {hiddenInput}
         <FileTypeBadge format={extensionOf(file.name)} variant="soft" />
-        <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700" title={file.name}>
-          {file.name}
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-700" title={file.name}>
+          {file.name}{appearance === 'planning' && <span className="mt-1 block text-xs font-normal text-muted">{Math.max(1, Math.round(file.size / 1024))} КБ</span>}
         </span>
         <button
           type="button"
-          onClick={() => onChange(null)}
+          onClick={() => appearance === 'planning' ? input.current?.click() : onChange(null)}
           disabled={disabled}
-          aria-label="Убрать файл"
+          aria-label={appearance === 'planning' ? 'Заменить файл' : 'Убрать файл'}
           className="shrink-0 text-slate-400 transition hover:text-slate-600 disabled:cursor-not-allowed"
         >
-          <XCircle className="size-4" />
+          {appearance === 'planning' ? <span className="text-sm font-semibold text-navy-700">Заменить</span> : <XCircle className="size-4" />}
         </button>
       </div>
     );
@@ -102,6 +104,7 @@ export function FileDropzone({
         className={cx(
           'flex w-full flex-col items-center gap-1.5 rounded-xl border border-dashed px-4 py-4 transition',
           size === 'lg' && 'min-h-52 justify-center gap-3',
+          appearance === 'planning' && 'min-h-24 justify-center',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50',
           'disabled:cursor-not-allowed disabled:opacity-60',
           dragging

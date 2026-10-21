@@ -24,6 +24,7 @@ interface HistoryPayload {
   before?: StructureSnapshot | string | null;
   after?: StructureSnapshot | string | null;
   reason?: string | null;
+  comment?: string | null;
   previousReason?: string | null;
   substituteTeacherName?: string;
   mainTeacherName?: string;
@@ -35,12 +36,14 @@ interface HistoryPayload {
   /** Откуда перенесена подготовка (PREPARATION_COPIED). */
   sourceLessonDate?: string | null;
   sourceClassName?: string | null;
+  fileName?: string | null;
+  visibleToStudents?: boolean;
 }
 
 const CANCELLATION_REASONS: Record<string, string> = {
-  CALENDAR_NO_LESSONS: 'по календарю занятий нет',
-  SCHEDULE_SLOT_REMOVED: 'занятие убрано из расписания',
-  MANUAL: 'отменён администратором',
+  CALENDAR_NO_LESSONS: 'Урок отменён автоматически: по календарю занятий нет',
+  SCHEDULE_SLOT_REMOVED: 'Урок отменён автоматически: занятие убрано из расписания',
+  MANUAL: 'Урок отменён администратором',
 };
 
 const ACTOR_ROLES: Record<string, string> = {
@@ -57,17 +60,40 @@ function parsePayload(raw: string | null | undefined): HistoryPayload {
   if (!raw) return {};
   try {
     const parsed: unknown = JSON.parse(raw);
-    return parsed && typeof parsed === 'object' ? (parsed as HistoryPayload) : {};
+    const payload = asObject(parsed);
+    if (!payload) return {};
+    return {
+      before: typeof payload.before === 'string' ? payload.before : asSnapshot(payload.before),
+      after: typeof payload.after === 'string' ? payload.after : asSnapshot(payload.after),
+      reason: asText(payload.reason), comment: asText(payload.comment),
+      substituteTeacherName: asText(payload.substituteTeacherName) ?? undefined,
+      mainTeacherName: asText(payload.mainTeacherName) ?? undefined,
+      title: asText(payload.title), fileName: asText(payload.fileName),
+      pageFrom: typeof payload.pageFrom === 'number' ? payload.pageFrom : null,
+      pageTo: typeof payload.pageTo === 'number' ? payload.pageTo : null,
+      sourceLessonDate: asText(payload.sourceLessonDate), sourceClassName: asText(payload.sourceClassName),
+      visibleToStudents: typeof payload.visibleToStudents === 'boolean' ? payload.visibleToStudents : undefined,
+    };
   } catch {
     return {};
   }
 }
 
-function asSnapshot(value: HistoryPayload['before']): StructureSnapshot | null {
-  return value && typeof value === 'object' ? value : null;
+function asObject(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null;
 }
 
-function asText(value: HistoryPayload['before']): string | null {
+function asSnapshot(value: unknown): StructureSnapshot | null {
+  const snapshot = asObject(value);
+  if (!snapshot) return null;
+  return {
+    startTime: asText(snapshot.startTime) ?? undefined, endTime: asText(snapshot.endTime) ?? undefined,
+    room: asText(snapshot.room), subjectName: asText(snapshot.subjectName) ?? undefined,
+    subjectId: typeof snapshot.subjectId === 'number' ? snapshot.subjectId : undefined,
+  };
+}
+
+function asText(value: unknown): string | null {
   return typeof value === 'string' && value.trim() !== '' ? value : null;
 }
 
@@ -92,9 +118,9 @@ function describeAdminUpdate(payload: HistoryPayload): string {
     parts.push(`кабинет: ${roomLabel(after.room)} (было ${roomLabel(before.room)})`);
   }
   if (before.subjectId !== after.subjectId) {
-    const now = after.subjectName ?? `#${after.subjectId}`;
-    const was = before.subjectName ?? `#${before.subjectId}`;
-    parts.push(`предмет: ${now} (было ${was})`);
+    const now = after.subjectName;
+    const was = before.subjectName;
+    parts.push(now ? `предмет: ${now}${was ? ` (было ${was})` : ''}` : 'предмет');
   }
   if (parts.length === 0) return 'Урок изменён администратором';
   return `Изменено — ${parts.join('; ')}`;
@@ -114,6 +140,17 @@ function withTitle(text: string, payload: HistoryPayload): string {
   return title ? `${text}: ${title}` : text;
 }
 
+function describeCancellation(entry: LessonHistoryEntry, payload: HistoryPayload): string {
+  // Older entries duplicated the enum in payload.reason; it is not a comment.
+  const code = entry.reason ?? payload.reason;
+  const label = code && Object.prototype.hasOwnProperty.call(CANCELLATION_REASONS, code) ? CANCELLATION_REASONS[code] : 'Урок отменён';
+  const legacyReason = payload.reason;
+  const technicalReason = legacyReason && (legacyReason === entry.reason || Object.prototype.hasOwnProperty.call(CANCELLATION_REASONS, legacyReason)
+    || /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$/.test(legacyReason));
+  const comment = payload.comment ?? (technicalReason ? null : legacyReason);
+  return label + (comment ? ` — ${comment}` : '');
+}
+
 export function describeHistoryEntry(entry: LessonHistoryEntry): string {
   const payload = parsePayload(entry.payload);
 
@@ -122,11 +159,8 @@ export function describeHistoryEntry(entry: LessonHistoryEntry): string {
       return 'Урок добавлен в расписание';
     case 'SUPERSEDED':
       return 'Урок заменён новой версией расписания';
-    case 'CANCELLED': {
-      const reason = entry.reason ? CANCELLATION_REASONS[entry.reason] : null;
-      const comment = payload.reason ?? null;
-      return `Урок отменён${reason ? `: ${reason}` : ''}${comment ? ` — ${comment}` : ''}`;
-    }
+    case 'CANCELLED':
+      return describeCancellation(entry, payload);
     case 'RESTORED':
       return 'Урок восстановлен';
     case 'ADMIN_UPDATED':
@@ -141,6 +175,10 @@ export function describeHistoryEntry(entry: LessonHistoryEntry): string {
       const substitute = payload.substituteTeacherName;
       return substitute ? `Замена снята: ${substitute}` : 'Замена снята';
     }
+    case 'GRADE_PERMISSION_GRANTED':
+      return 'Замещающему учителю разрешено выставлять и изменять оценки';
+    case 'GRADE_PERMISSION_REVOKED':
+      return 'У замещающего учителя отозвано право выставлять и изменять оценки';
     case 'COMMENT_CREATED':
       return 'Добавлен комментарий для учеников';
     case 'COMMENT_UPDATED':
@@ -179,6 +217,13 @@ export function describeHistoryEntry(entry: LessonHistoryEntry): string {
     }
     case 'TEXTBOOK_CLEARED':
       return withTitle('Снят выбор учебника', payload);
+    case 'MATERIAL_ADDED':
+      return withTitle('К уроку добавлен материал', { title: payload.fileName });
+    case 'MATERIAL_UPDATED':
+      return withTitle(payload.visibleToStudents === true ? 'Материал доступен ученикам'
+        : payload.visibleToStudents === false ? 'Материал скрыт от учеников' : 'Материал урока изменён', { title: payload.fileName });
+    case 'MATERIAL_REMOVED':
+      return withTitle('Материал убран из урока', { title: payload.fileName });
     default:
       return 'Изменение урока';
   }
@@ -187,6 +232,7 @@ export function describeHistoryEntry(entry: LessonHistoryEntry): string {
 /** «Подготовка перенесена с урока 7А, 12 октября». */
 function describePreparationCopy(payload: HistoryPayload): string {
   const date = payload.sourceLessonDate && /^\d{4}-\d{2}-\d{2}$/.test(payload.sourceLessonDate)
+    && Number.isFinite(Date.parse(`${payload.sourceLessonDate}T12:00:00`))
     ? new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long' })
       .format(new Date(`${payload.sourceLessonDate}T12:00:00`))
     : null;
@@ -197,6 +243,6 @@ function describePreparationCopy(payload: HistoryPayload): string {
 /** «Администратор (Омаров Е.Л.)» или «Система» — Figma 2067:10310, 2067:10334. */
 export function describeHistoryActor(entry: LessonHistoryEntry): string {
   if (entry.actorType === 'SYSTEM' || !entry.actorType) return 'Система';
-  const role = ACTOR_ROLES[entry.actorType] ?? 'Пользователь';
+  const role = Object.prototype.hasOwnProperty.call(ACTOR_ROLES, entry.actorType) ? ACTOR_ROLES[entry.actorType] : 'Пользователь';
   return entry.actorName ? `${role} (${entry.actorName})` : role;
 }

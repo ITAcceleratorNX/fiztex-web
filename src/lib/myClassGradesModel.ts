@@ -20,7 +20,7 @@ type Subject = Schema<'MyClassSubjectView'>;
  * которому никто ничего не получил, классному руководителю показывать нечем.
  */
 
-export type ColumnKind = 'LESSON' | 'HOMEWORK' | 'SOR' | 'SOCH';
+export type ColumnKind = 'LESSON' | 'HOMEWORK' | 'SOR' | 'SOCH' | 'INTERMEDIATE';
 
 export interface JournalColumn {
   key: string;
@@ -47,6 +47,7 @@ const COLUMN_EVENT: Record<ColumnKind, string> = {
   HOMEWORK: 'ДЗ',
   SOR: 'СОР',
   SOCH: 'СОЧ',
+  INTERMEDIATE: 'ПО',
 };
 
 /** Нижняя строка шапки колонки — «Урок», «ДЗ», «СОР» или «СОЧ». */
@@ -55,7 +56,7 @@ export function columnEvent(kind: ColumnKind): string {
 }
 
 export function isSummative(kind: ColumnKind): boolean {
-  return kind === 'SOR' || kind === 'SOCH';
+  return kind === 'SOR' || kind === 'SOCH' || kind === 'INTERMEDIATE';
 }
 
 /**
@@ -63,6 +64,7 @@ export function isSummative(kind: ColumnKind): boolean {
  * на одном уроке их не смешивают, а если смешали — главное событие урока всё-таки СОЧ.
  */
 function columnKind(grades: Grade[]): ColumnKind {
+  if (grades.some((grade) => grade.gradeType === 'INTERMEDIATE_ASSESSMENT')) return 'INTERMEDIATE';
   if (grades.some((grade) => grade.gradeType === 'SUMMATIVE_TERM')) return 'SOCH';
   if (grades.some((grade) => grade.gradeType === 'SUMMATIVE_SECTION')) return 'SOR';
   return grades[0]?.sourceType === 'HOMEWORK' ? 'HOMEWORK' : 'LESSON';

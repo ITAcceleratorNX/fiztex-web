@@ -8,14 +8,16 @@ import { EMPTY, metrics, NO_GRADES, ok, row } from './reportingTestData';
 
 const summary = vi.fn();
 const breakdown = vi.fn();
+const years = vi.fn();
+const periods = vi.fn();
+
+// TanStack keeps disabled queries pending until their dependencies are available.
+const disabledQuery = () => ({ data: undefined, isPending: true, isFetching: false, fetchStatus: 'idle', isError: false, error: null, refetch: vi.fn() });
 
 vi.mock('@/hooks/reportingQueries', () => ({
-  useReportYears: () => ok({ content: [{ id: 1, name: '2026-2027', status: 'ACTIVE', startDate: '2026-09-01', endDate: '2027-05-31' }] }),
-  useReportPeriods: () => ok([
-    { id: 11, name: '1 четверть', status: 'ACTIVE', startDate: '2026-09-01', endDate: '2026-10-31' },
-    { id: 12, name: '2 четверть', status: 'ACTIVE', startDate: '2026-11-10', endDate: '2026-12-28' },
-  ]),
-  useReportClasses: () => ok({ content: [{ id: 5, name: '8 «А»' }, { id: 6, name: '1 «А»' }] }),
+  useReportYears: () => years(),
+  useReportPeriods: (yearId: number | null) => periods(yearId),
+  useReportClasses: (yearId: number | null) => yearId == null ? disabledQuery() : ok({ content: [{ id: 5, name: '8 «А»' }, { id: 6, name: '1 «А»' }] }),
   useReportSubjects: () => ok({ content: [{ id: 7, name: 'Математика' }] }),
   useReportSummary: (_owner: unknown, filter: ReportFilter | null) => summary(filter),
   useReportBreakdown: (_owner: unknown, filter: ReportFilter | null, dimension: ReportDimension | null) => breakdown(filter, dimension),
@@ -41,8 +43,14 @@ const location = () => new URLSearchParams(screen.getByTestId('location').textCo
 
 describe('AdminReportingPage', () => {
   beforeEach(() => {
-    summary.mockReset().mockImplementation(() => ok({ metrics: metrics(), currentStudentCount: 48 }));
-    breakdown.mockReset().mockImplementation((_filter: ReportFilter | null, dimension: ReportDimension | null) => {
+    years.mockReset().mockReturnValue(ok({ content: [{ id: 1, name: '2026-2027', status: 'ACTIVE', startDate: '2026-09-01', endDate: '2027-05-31' }] }));
+    periods.mockReset().mockImplementation((yearId: number | null) => yearId == null ? disabledQuery() : ok([
+      { id: 11, name: '1 четверть', status: 'ACTIVE', startDate: '2026-09-01', endDate: '2026-10-31' },
+      { id: 12, name: '2 четверть', status: 'ACTIVE', startDate: '2026-11-10', endDate: '2026-12-28' },
+    ]));
+    summary.mockReset().mockImplementation((filter: ReportFilter | null) => filter == null ? disabledQuery() : ok({ metrics: metrics(), currentStudentCount: 48 }));
+    breakdown.mockReset().mockImplementation((filter: ReportFilter | null, dimension: ReportDimension | null) => {
+      if (filter == null || dimension == null) return disabledQuery();
       if (dimension === 'TEACHER') return ok({ rows: [row(21, 'Петров А.А.', { attributes: { subjects: [{ id: 7, name: 'Математика' }], classCount: 2 } })], total: 1 });
       if (dimension === 'CLASS') {
         return ok({ rows: [
@@ -53,6 +61,50 @@ describe('AdminReportingPage', () => {
       if (dimension === 'SUBJECT') return ok({ rows: [row(7, 'Математика', { attributes: { teachers: [{ id: 21, name: 'Петров А.А.' }] } })], total: 1 });
       return ok({ rows: [row(31, 'Белов Артём'), row(32, 'Александрова София')], total: 2 });
     });
+  });
+
+  it('shows the missing-year state when disabled dependent queries are pending on a new database', () => {
+    years.mockReturnValue(ok({ content: [] }));
+    renderPage('/reporting');
+
+    expect(screen.getByText('Учебные годы ещё не созданы')).toBeInTheDocument();
+    expect(screen.getByText('Чтобы появилась отчётность, создайте учебный год в разделе «Учебный год».')).toBeInTheDocument();
+    expect(screen.queryByText('Загрузка отчётности…')).not.toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(periods).toHaveBeenCalledWith(null);
+    expect(summary).toHaveBeenCalledWith(null);
+    expect(breakdown).toHaveBeenCalledWith(null, 'CLASS');
+    expect(screen.getByLabelText('Учебный год')).toBeDisabled();
+  });
+
+  it('shows and retries a year catalog failure without refetching disabled dependencies', async () => {
+    const retryYears = vi.fn();
+    const dependent = disabledQuery();
+    years.mockReturnValue({ ...dependent, isPending: false, isError: true, error: new Error('offline'), refetch: retryYears });
+    periods.mockReturnValue(dependent);
+    summary.mockReturnValue(dependent);
+    breakdown.mockReturnValue(dependent);
+    renderPage('/reporting');
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Не удалось загрузить учебные годы.');
+    expect(screen.queryByText('Загрузка отчётности…')).not.toBeInTheDocument();
+    expect(screen.queryByText('Учебные годы ещё не созданы')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Повторить' }));
+    expect(retryYears).toHaveBeenCalledOnce();
+    expect(dependent.refetch).not.toHaveBeenCalled();
+  });
+
+  it('shows and retries a period catalog failure while the report remains disabled', async () => {
+    const retryPeriods = vi.fn();
+    periods.mockReturnValue({ ...disabledQuery(), isPending: false, isError: true, error: new Error('offline'), refetch: retryPeriods });
+    renderPage('/reporting');
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Не удалось загрузить учебные периоды.');
+    expect(screen.queryByText('Загрузка отчётности…')).not.toBeInTheDocument();
+    expect(summary).toHaveBeenCalledWith(null);
+    expect(breakdown).toHaveBeenCalledWith(null, 'CLASS');
+    await userEvent.click(screen.getByRole('button', { name: 'Повторить' }));
+    expect(retryPeriods).toHaveBeenCalledOnce();
   });
 
   it('shows the school by classes with the server total and explains missing values', async () => {

@@ -12,6 +12,7 @@ import type { GradeType, GradeWriteState } from '@/lib/gradesApi';
  */
 export const GRADE_TYPE_LABELS: Record<GradeType, string> = {
   FORMATIVE: 'Формативная оценка',
+  INTERMEDIATE_ASSESSMENT: 'Промежуточное оценивание (ПО)',
   SUMMATIVE_SECTION: 'СОР — суммативное за раздел',
   SUMMATIVE_TERM: 'СОЧ — суммативное за четверть',
   LESSON_WORK: 'Работа на уроке',
@@ -41,6 +42,10 @@ export function writeStateNotice(state: GradeWriteState | undefined): string | n
     case undefined:
     case 'ALLOWED':
       return null;
+    case 'NO_ASSESSMENT':
+      return 'В 1 классе учебные достижения не оцениваются. Используйте комментарии и обратную связь';
+    case 'ACADEMIC_YEAR_ARCHIVED':
+      return 'Учебный год в архиве: оценки доступны только для просмотра';
     case 'NOT_TEACHING':
       return 'Оценки этого урока доступны только для просмотра';
     case 'LESSON_CANCELLED':
@@ -74,6 +79,7 @@ export function formatNumericValue(value: number | string | undefined): string {
 /** Коротко — для клетки журнала и подписи под курсором, где на тип есть одно слово. */
 export const GRADE_TYPE_SHORT: Partial<Record<GradeType, string>> = {
   FORMATIVE: 'ФО',
+  INTERMEDIATE_ASSESSMENT: 'ПО',
   SUMMATIVE_SECTION: 'СОР',
   SUMMATIVE_TERM: 'СОЧ',
   HOMEWORK: 'ДЗ',

@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { Schema } from '@/lib/apiSchemas';
 import {
   buildMyClassJournal,
+  columnEvent,
+  isSummative,
   defaultMonth,
   defaultSubjectId,
   myClassMonths,
@@ -34,6 +36,19 @@ const students = [
 ];
 
 describe('buildMyClassJournal', () => {
+  it('marks intermediate assessment as ПО in the homeroom journal', () => {
+    const journal = buildMyClassJournal({
+      students,
+      grades: [grade({ gradeType: 'INTERMEDIATE_ASSESSMENT', score: 9, maxScore: 12, scaleCode: undefined })],
+      finals: [],
+      results: [],
+    });
+    expect(journal.columns[0].kind).toBe('INTERMEDIATE');
+    expect(columnEvent(journal.columns[0].kind)).toBe('ПО');
+    expect(isSummative(journal.columns[0].kind)).toBe(true);
+    expect(gradeTitle(journal.rows[0].cells.get('LESSON:100')![0], 7)).toContain('Промежуточное оценивание');
+  });
+
   it('builds date-ordered source columns and keeps students without grades', () => {
     const journal = buildMyClassJournal({
       students,

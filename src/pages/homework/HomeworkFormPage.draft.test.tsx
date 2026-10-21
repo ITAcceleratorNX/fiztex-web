@@ -128,7 +128,7 @@ describe('homework form drafts', () => {
     expect(unload()).toBe(false);
     await fillForm();
     await userEvent.click(screen.getByRole('radio', { name: 'Вопросами теста' }));
-    await userEvent.click(screen.getByRole('button', { name: /^Следить за прохождением/ }));
+    await userEvent.click(screen.getByRole('switch', { name: /^Следить за прохождением/ }));
     await pickGroup();
     const file = new File(['tasks'], 'tasks.pdf', { type: 'application/pdf' });
     fireEvent.change(document.querySelector('input[type=file]')!, { target: { files: [file] } });

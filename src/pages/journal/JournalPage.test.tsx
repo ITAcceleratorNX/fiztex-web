@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -110,6 +110,7 @@ function renderPage(search = '') {
     <MemoryRouter initialEntries={[`/grades${search}`]}>
       <Routes>
         <Route path="/grades" element={<JournalPage />} />
+        <Route path="/lesson-schedule/lessons/:lessonId/grades" element={<p>Открыт лист оценок урока</p>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -150,6 +151,27 @@ describe('JournalPage', () => {
     expect(link).toHaveAttribute('href', '/lesson-schedule/lessons/451/grades');
   });
 
+  it('показывает сетку без единой оценки и позволяет открыть первый урок через заголовок', async () => {
+    const empty = journal();
+    useJournal.mockReturnValue({ data: { ...empty, rows: empty.rows.map(row => ({ ...row, cells: [] })) },
+      isPending: false, isError: false, error: null });
+    renderPage();
+
+    expect(screen.getByRole('status')).toHaveTextContent('Оценок пока нет');
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByRole('rowheader', { name: 'Иванов Арсен' })).toBeInTheDocument();
+    const firstLessonHeader = screen.getByRole('columnheader', { name: /09\.09\s*Урок 1/ });
+    await userEvent.click(within(firstLessonHeader).getByRole('link', { name: /09\.09\s*Урок 1/ }));
+    expect(screen.getByText('Открыт лист оценок урока')).toBeInTheDocument();
+  });
+
+  it('показывает отдельное пустое состояние только когда в журнале нет учеников', () => {
+    useJournal.mockReturnValue({ data: { ...journal(), rows: [] }, isPending: false, isError: false, error: null });
+    renderPage();
+    expect(screen.getByText('В классе нет учеников')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
   it('в режиме месяца журнал запрашивается окном дат внутри четверти', () => {
     renderPage('?window=month&month=7:2026-9');
 
@@ -184,6 +206,8 @@ describe('JournalPage', () => {
       subjectId: 2,
       academicPeriodId: 7,
       value: 5,
+      resultKind: 'NUMERIC',
+      resultReason: undefined,
     });
   });
 
@@ -287,5 +311,41 @@ describe('JournalPage', () => {
 
     expect(screen.getByRole('button', { name: 'Опубликовать итоги четверти' })).toBeDisabled();
     expect(screen.getByText(/опубликовать — после окончания четверти, с 26\.10/)).toBeInTheDocument();
+  });
+});
+
+describe('School assessment constraints', () => {
+  it('does not offer any final marks in first grade', () => {
+    useClassFinals.mockReturnValue({ data: finals({ assessmentMode: 'NO_ASSESSMENT', canManage: false }), isPending: false, isError: false });
+    renderPage('?tab=finals');
+    expect(screen.getByText('В 1 классе учебные достижения не оцениваются')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '5' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Опубликовать итоги четверти' })).not.toBeInTheDocument();
+  });
+  it('records credit as a separate result without a numeric value', async () => {
+    const user = userEvent.setup();
+    useClassFinals.mockReturnValue({ data: finals({ assessmentMode: 'PASS_FAIL', allowedResultKinds: ['PASS', 'FAIL'] }), isPending: false, isError: false });
+    renderPage('?tab=finals');
+    expect(screen.queryByRole('button', { name: '5' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^Зачёт$/ }));
+    expect(setFinal).toHaveBeenCalledWith(expect.objectContaining({ resultKind: 'PASS', value: null }));
+  });
+  it('does not offer ordinary editing for a published numeric final', () => {
+    const data = finals();
+    data.rows[0].finalGrade = { id: 3, value: 5, status: 'PUBLISHED', resultKind: 'NUMERIC' } as never;
+    useClassFinals.mockReturnValue({ data, isPending: false, isError: false });
+    renderPage('?tab=finals');
+    expect(screen.queryByRole('button', { name: /^4$/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'История итога' })).toBeInTheDocument();
+  });
+  it('keeps historical year selection available when the current year has no assignments', async () => {
+    const user = userEvent.setup();
+    useGradebookContext.mockReturnValue({ data: { ...context(), scopes: [], academicYears: [
+      { id: 5, name: '2026/2027', status: 'ACTIVE' }, { id: 4, name: '2025/2026', status: 'ARCHIVED' },
+    ] }, isPending: false, isError: false });
+    renderPage();
+    await user.click(screen.getByRole('button', { name: 'Учебный год журнала' }));
+    await user.click(screen.getByRole('option', { name: '2025/2026 · Архив' }));
+    expect(useGradebookContext).toHaveBeenLastCalledWith(true, 4);
   });
 });

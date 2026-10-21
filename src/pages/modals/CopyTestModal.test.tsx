@@ -93,7 +93,7 @@ describe('CopyTestModal', () => {
 
     render(<CopyTestModal open onClose={vi.fn()} test={aiTest()} onCopied={vi.fn()} />);
 
-    await user.click(screen.getByRole('button', { name: /Взять и черновики \(2\)/ }));
+    await user.click(screen.getByRole('switch', { name: /Взять и черновики \(2\)/ }));
     expect(screen.getByText('7 вопросов')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /Скопировать/ }));

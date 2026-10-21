@@ -15,9 +15,9 @@ interface ModalProps {
   subtitle?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'comment';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'comment' | 'planning' | 'planning-version-upload' | 'planning-confirm' | 'planning-topic';
   /** Compact composer layout from Figma: no separator between header and field. */
-  appearance?: 'standard' | 'composer';
+  appearance?: 'standard' | 'composer' | 'planning' | 'planning-wide';
   /** Keep the header/footer visible and scroll only the contents of a long editor. */
   scrollable?: boolean;
   /** Reserve viewport space for a virtual keyboard. */
@@ -38,7 +38,7 @@ type ModalEntry = {
   close: () => void;
 };
 
-const sizes = { sm: 'max-w-md', md: 'max-w-xl', lg: 'max-w-3xl', xl: 'max-w-4xl', '2xl': 'max-w-5xl', comment: 'max-w-comment-dialog' };
+const sizes = { sm: 'max-w-md', md: 'max-w-xl', lg: 'max-w-3xl', xl: 'max-w-4xl', '2xl': 'max-w-5xl', comment: 'max-w-comment-dialog', planning: 'max-w-planning-dialog', 'planning-version-upload': 'max-w-planning-version-upload', 'planning-confirm': 'max-w-planning-confirm', 'planning-topic': 'max-w-planning-topic' };
 const focusableSelector = [
   'a[href]',
   'button',
@@ -257,6 +257,8 @@ export function Modal({
   placement = 'center', headerActions,
 }: ModalProps) {
   const right = placement === 'right';
+  const planning = appearance === 'planning' || appearance === 'planning-wide';
+  const wide = appearance === 'planning-wide';
   const titleId = useId();
   const subtitleId = useId();
   const layerRef = useRef<HTMLDivElement>(null);
@@ -307,7 +309,7 @@ export function Modal({
       )}
     >
       <div
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
+        className={cx('fixed inset-0 bg-slate-900/40 animate-fade-in', !planning && 'backdrop-blur-sm')}
         onClick={onClose}
         aria-hidden="true"
       />
@@ -321,15 +323,16 @@ export function Modal({
         className={cx(
           right
             ? 'relative flex h-full w-full flex-col overflow-hidden bg-white shadow-pop animate-fade-in'
-            : 'relative my-auto w-full rounded-2xl bg-white shadow-pop animate-scale-in',
+            : 'relative my-auto w-full bg-white shadow-pop animate-scale-in',
+          !right && (wide ? 'rounded-planning-modal' : planning ? 'rounded-planning-panel' : 'rounded-2xl'),
           !right && scrollable && 'flex max-h-full flex-col overflow-hidden',
           sizes[size],
         )}
       >
-        <div className={cx('flex shrink-0 items-start justify-between gap-3 px-4 sm:px-6',
-          appearance === 'composer' ? 'pt-6 pb-5' : right ? 'py-5' : 'border-b border-line py-5')}>
+        <div className={cx('flex shrink-0 items-start justify-between gap-3', wide ? 'px-4 pt-7 sm:px-7' : 'px-4 sm:px-6',
+          wide ? '' : appearance === 'composer' ? 'pt-6 pb-5' : right ? 'py-5' : 'border-b border-line py-5')}>
           <div className="min-w-0 flex-1">
-            <h2 id={titleId} className={cx('break-words text-lg font-bold text-ink', appearance === 'composer' && 'leading-snug')}>{title}</h2>
+            <h2 id={titleId} className={cx('break-words font-bold text-ink', wide ? 'text-xl' : 'text-lg', appearance === 'composer' && 'leading-snug')}>{title}</h2>
             {subtitle && <p id={subtitleId} className={cx('mt-1 break-words text-muted', appearance === 'composer' ? 'text-xs leading-tight' : 'text-sm leading-relaxed')}>{subtitle}</p>}
           </div>
           {headerActions}
@@ -338,16 +341,16 @@ export function Modal({
             type="button"
             aria-label="Закрыть окно"
             onClick={onClose}
-            className={cx('flex shrink-0 items-center justify-center rounded-lg text-muted transition hover:bg-neutral-bg hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 focus-visible:ring-offset-2',
-              appearance === 'composer' ? 'size-8 border border-line bg-slate-50' : 'size-10')}
+            className={cx('flex shrink-0 items-center justify-center text-muted transition hover:bg-neutral-bg hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 focus-visible:ring-offset-2',
+              appearance === 'composer' ? 'size-8 rounded-lg border border-line bg-slate-50' : planning ? 'size-8 rounded-full bg-slate-100' : 'size-10 rounded-lg')}
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <div className={cx('min-w-0 px-4 sm:px-6', appearance === 'composer' ? 'pb-6' : right ? 'pb-5' : 'py-5',
+        <div className={cx('min-w-0 px-4', wide ? 'sm:px-7' : 'sm:px-6', appearance === 'composer' ? 'pb-6' : right ? 'pb-5' : 'py-5',
           (scrollable || right) && 'min-h-0 overflow-y-auto overscroll-contain', right && 'flex-1')}>{children}</div>
         {footer && (
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-line px-4 py-4 sm:px-6">
+          <div className={cx('flex shrink-0 flex-wrap items-center gap-3 px-4', wide ? 'pb-7 pt-1 sm:px-7' : 'border-t border-line py-4 sm:px-6', planning ? 'justify-between' : 'justify-end')}>
             {footer}
           </div>
         )}

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { ApiError } from '@/lib/api';
+import { useScheduleWeekCalendar } from '@/hooks/queries';
 import { todayIso } from '@/lib/gradeCorrectionModel';
 import { addDays, mondayOf, weekDates, weekLabel } from '@/lib/oneTimeEventModel';
 import { ONE_TIME_EVENTS_KEY, oneTimeEventsApi, type OneTimeEvent } from '@/lib/oneTimeEventsApi';
@@ -31,6 +32,7 @@ export function useScheduleOneTimeEvents({
 
   const enabled = showOnGrid && classId != null;
   const sunday = addDays(monday, 6);
+  const calendar = useScheduleWeekCalendar(yearId, classId, monday, sunday, enabled);
   const events = useQuery({
     queryKey: [...ONE_TIME_EVENTS_KEY, 'class', classId, monday],
     queryFn: ({ signal }) => oneTimeEventsApi.classSchedule(classId!, monday, sunday, signal),
@@ -67,7 +69,13 @@ export function useScheduleOneTimeEvents({
           Текущая неделя
         </button>
       )}
-      {events.isFetching && <Loader2 className="size-4 animate-spin text-muted" aria-label="Загружаем события" />}
+      {calendar.isError && (
+        <span role="alert" className="text-13 text-red-600">
+          Не удалось загрузить школьный календарь.
+          <button type="button" className="ml-2 font-semibold underline" onClick={() => void calendar.refetch()}>Повторить</button>
+        </span>
+      )}
+      {(events.isFetching || calendar.isFetching) && <Loader2 className="size-4 animate-spin text-muted" aria-label="Загружаем события" />}
       {events.isError && (
         <span className="flex items-center gap-2 text-13 text-red-600">
           {events.error instanceof ApiError ? events.error.message : 'Не удалось загрузить разовые события'}
@@ -80,7 +88,7 @@ export function useScheduleOneTimeEvents({
   ) : null;
 
   const gridProps = enabled
-    ? { dates, oneTimeEvents: events.data ?? [], onOpenEvent: (id: number) => setViewId(id) }
+    ? { dates, calendarEvents: calendar.data ?? [], oneTimeEvents: events.data ?? [], onOpenEvent: (id: number) => setViewId(id) }
     : {};
 
   const modals = yearId != null ? (

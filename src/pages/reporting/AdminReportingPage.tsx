@@ -121,7 +121,7 @@ export function AdminReportingPage() {
     : searchParams.get('view') === 'teachers' ? 'teachers' : 'classes';
   const classView = searchParams.get('view') === 'students' ? 'students' : 'subjects';
 
-  const filter: ReportFilter | null = yearId == null || periodsQuery.isPending ? null : {
+  const filter: ReportFilter | null = yearId == null || periodsQuery.isPending || periodsQuery.isError ? null : {
     academicYearId: yearId,
     academicPeriodId: period?.id ?? null,
     classId,
@@ -266,7 +266,14 @@ export function AdminReportingPage() {
         Данные за <span className="font-semibold text-slate-700">{periodLabel(period)}</span> · {yearText} · {scopeText}
       </p>
 
-      {loading ? <LoadingBlock label="Загрузка отчётности…" /> : failed ? (
+      {years.isPending ? <LoadingBlock label="Загрузка отчётности…" /> : years.isError ? (
+        <ErrorBlock message="Не удалось загрузить учебные годы." onRetry={() => void years.refetch()} />
+      ) : yearId == null ? (
+        <EmptyBlock icon={<CalendarDays className="h-7 w-7" />} title="Учебные годы ещё не созданы"
+          description="Чтобы появилась отчётность, создайте учебный год в разделе «Учебный год»." />
+      ) : periodsQuery.isError ? (
+        <ErrorBlock message="Не удалось загрузить учебные периоды." onRetry={() => void periodsQuery.refetch()} />
+      ) : loading ? <LoadingBlock label="Загрузка отчётности…" /> : failed ? (
         <ErrorBlock message="Не удалось загрузить отчётность." onRetry={() => {
           void years.refetch(); void periodsQuery.refetch(); void summary.refetch(); void rows.refetch();
         }} />

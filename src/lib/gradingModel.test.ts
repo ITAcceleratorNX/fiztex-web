@@ -30,6 +30,15 @@ describe('weights', () => {
     expect(weightsCaption(components)).toBe('ФО 25 · СОР 25 · СОЧ 50');
     expect(weightsSum(components)).toBe(100);
   });
+
+  it('names the primary intermediate component without calculating percentages', () => {
+    expect(weightsCaption([
+      { code: 'FORMATIVE', weightPercent: 50 },
+      { code: 'INTERMEDIATE', weightPercent: 50 },
+    ])).toBe('ФО 50 · ПО 50');
+    expect(resultStatusHint({ status: 'INCOMPLETE', missingComponents: ['INTERMEDIATE'] }))
+      .toContain('Нет работ: ПО');
+  });
 });
 
 describe('resultStatusHint', () => {

@@ -34,6 +34,7 @@ function parseOptions(children: ReactNode): OptionItem[] {
 export function Select({
   className,
   variant = 'default',
+  tone = 'neutral',
   children,
   value,
   defaultValue,
@@ -52,7 +53,8 @@ export function Select({
   placeholder = 'Выберите…',
 }: SelectHTMLAttributes<HTMLSelectElement> & {
   /** Крупный переключатель класса в заголовке раздела «Мой класс». */
-  variant?: 'default' | 'classSwitcher';
+  variant?: 'default' | 'classSwitcher' | 'status';
+  tone?: 'neutral' | 'success' | 'warning';
   /**
    * Подпись пустого поля. Пункт-заглушка `<option value="">` для этого не годится там, где
    * «ничего» выбрать нельзя: он попадает в список отмеченным пунктом.
@@ -80,6 +82,7 @@ export function Select({
   const [open, setOpen] = useState(false);
   const [activeValue, setActiveValue] = useState<string | null>(null);
   const [menuWidth, setMenuWidth] = useState<number>();
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; maxHeight: number }>();
 
   const currentValue = isControlled ? String(value ?? '') : internalValue;
   const selected = options.find((o) => o.value === currentValue);
@@ -101,8 +104,22 @@ export function Select({
   useEffect(() => {
     if (open && triggerRef.current) {
       setMenuWidth(triggerRef.current.offsetWidth);
+      if (variant === 'status') {
+        const rect = triggerRef.current.getBoundingClientRect();
+        const height = Math.min(240, options.length * 44 + 8);
+        const below = window.innerHeight - rect.bottom - 8;
+        setMenuPosition({ left: Math.max(8, Math.min(rect.left, window.innerWidth - Math.max(rect.width, 176) - 8)), top: below >= height ? rect.bottom + 4 : Math.max(8, rect.top - height - 4), maxHeight: height });
+      }
     }
-  }, [open]);
+  }, [open, variant, options.length]);
+
+  useEffect(() => {
+    if (!open || variant !== 'status') return;
+    const dismiss = (event: Event) => { if (!(event.target instanceof Node) || !rootRef.current?.contains(event.target)) setOpen(false); };
+    window.addEventListener('scroll', dismiss, true);
+    window.addEventListener('resize', dismiss);
+    return () => { window.removeEventListener('scroll', dismiss, true); window.removeEventListener('resize', dismiss); };
+  }, [open, variant]);
 
   useLayoutEffect(() => {
     if (open) activeOptionRef.current?.focus({ preventScroll: true });
@@ -214,7 +231,7 @@ export function Select({
       onBlur={(event) => {
         if (!rootRef.current?.contains(event.relatedTarget as Node | null)) closeMenu();
       }}
-      className={cx('relative', className?.includes('w-auto') ? 'inline-block' : 'w-full')}
+      className={cx('relative', variant === 'status' || className?.includes('w-auto') ? 'inline-block' : 'w-full')}
     >
       {name && <input type="hidden" name={name} value={currentValue} />}
 
@@ -237,18 +254,19 @@ export function Select({
           else openMenu();
         }}
         className={cx(
-          variant === 'classSwitcher'
+          variant === 'status' ? cx('inline-flex h-7 items-center justify-between gap-1.5 rounded-lg px-2.5 text-left text-xs font-semibold ring-1 ring-inset outline-none focus-visible:ring-2 focus-visible:ring-navy-700', tone === 'success' ? 'bg-planning-success text-planning-success-fg ring-emerald-200' : tone === 'warning' ? 'bg-orange-50 text-amber-700 ring-orange-200' : 'bg-planning-row-line text-slate-600 ring-planning-line') : variant === 'classSwitcher'
             ? 'flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-4 text-left text-2xl font-semibold text-slate-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-400/30'
             : 'input-base flex items-center justify-between gap-2 text-left',
           'cursor-pointer disabled:cursor-not-allowed disabled:opacity-60',
           className,
         )}
       >
+        {variant === 'status' && tone === 'success' && <Check className="size-3" aria-hidden />}
         <span className={cx('truncate', isEmpty && 'text-slate-400')}>
           {selected?.label ?? placeholder}
         </span>
         <ChevronDown
-          className={cx('h-4 w-4 shrink-0 text-slate-400 transition', open && 'rotate-180')}
+          className={cx('shrink-0 transition', variant === 'status' ? 'size-3' : 'size-4 text-slate-400', open && 'rotate-180')}
           aria-hidden
         />
       </button>
@@ -258,12 +276,12 @@ export function Select({
           id={`${listboxId}-listbox`}
           role="listbox"
           aria-labelledby={fieldProps['aria-labelledby'] ?? listboxId}
-          style={menuWidth ? { minWidth: menuWidth } : undefined}
+          style={variant === 'status' ? { position: 'fixed', top: menuPosition?.top, left: menuPosition?.left, minWidth: Math.max(menuWidth ?? 0, 176), maxHeight: menuPosition?.maxHeight } : menuWidth ? { minWidth: menuWidth } : undefined}
           className={cx(
             variant === 'classSwitcher'
               ? 'absolute z-30 mt-1 max-h-60 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-soft animate-scale-in'
               : 'absolute z-30 mt-1 max-h-60 overflow-y-auto rounded-xl bg-white py-1 shadow-pop ring-1 ring-slate-200/80 animate-scale-in',
-            className?.includes('w-auto') ? 'left-0' : 'inset-x-0 w-full',
+            variant === 'status' ? '' : className?.includes('w-auto') ? 'left-0' : 'inset-x-0 w-full',
           )}
         >
           {options.map((option) => {

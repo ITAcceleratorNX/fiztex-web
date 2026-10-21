@@ -2,6 +2,10 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Award, CalendarRange, Info } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { Select } from '@/components/ui/Select';
+import { Modal } from '@/components/ui/Modal';
+import { TextArea } from '@/components/ui/Field';
+import type { FinalGrade } from '@/lib/gradebookApi';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
@@ -31,9 +35,11 @@ import { weightsCaption } from '@/lib/gradingModel';
 import { JournalFilters, type JournalWindow } from './JournalFilters';
 import { JournalTable } from './JournalTable';
 import { PeriodBreakdownModal } from './PeriodBreakdownModal';
+import { YearFinalsTab } from './YearFinalsTab';
+import { FinalGradeCorrectionModal, FinalGradeHistoryModal } from './FinalGradeCorrectionModal';
 import { QuarterFinalsTable } from './QuarterFinalsTable';
 
-type JournalTab = 'JOURNAL' | 'FINALS';
+type JournalTab = 'JOURNAL' | 'FINALS' | 'YEAR_FINALS';
 
 /**
  * Журнал оценок и итоги четверти (Figma 2098:428, 2098:1324).
@@ -54,14 +60,14 @@ export function JournalPage() {
   useDocumentTitle('Журнал');
 
   const [params, setParams] = useSearchParams();
-  const contextQuery = useGradebookContext();
+  const contextQuery = useGradebookContext(true, numberParam(params.get('yearId')));
   const context = contextQuery.data;
 
   const scopes = useMemo(() => context?.scopes ?? [], [context]);
   const periods = useMemo(() => context?.periods ?? [], [context]);
   const months = useMemo(() => monthOptionsOf(periods), [periods]);
 
-  const tab = (params.get('tab') === 'finals' ? 'FINALS' : 'JOURNAL') as JournalTab;
+  const tab: JournalTab = params.get('tab') === 'year-finals' ? 'YEAR_FINALS' : params.get('tab') === 'finals' ? 'FINALS' : 'JOURNAL';
   // «Месяц» — окно внутри четверти, поэтому у итогов его нет: итог выставляют за четверть.
   const window: JournalWindow = params.get('window') === 'month' ? 'MONTH' : 'PERIOD';
 
@@ -113,7 +119,7 @@ export function JournalPage() {
 
   if (contextQuery.isError) {
     return (
-      <JournalShell tab={tab} onTab={(next) => patch({ tab: next === 'FINALS' ? 'finals' : null })}>
+      <JournalShell tab={tab} onTab={(next) => patch({ tab: next === 'FINALS' ? 'finals' : next === 'YEAR_FINALS' ? 'year-finals' : null })}>
         <div className="card">
           <ErrorBlock
             message={
@@ -128,9 +134,23 @@ export function JournalPage() {
     );
   }
 
+  const yearPicker = (context?.academicYears?.length ?? 0) > 0 ? (
+    <div className="flex flex-wrap items-center gap-3">
+      <label className="flex items-center gap-3 text-13 font-semibold text-muted">Учебный год
+        <Select aria-label="Учебный год журнала" value={String(context?.academicYear?.id ?? '')}
+          onChange={event => patch({ yearId: event.target.value, classId: null, subjectId: null, periodId: null, subgroupId: null, month: null })}>
+          {!context?.academicYear && <option value="">Выберите год</option>}
+          {context?.academicYears?.map(year => <option key={year.id} value={year.id}>{`${year.name}${year.status === 'ARCHIVED' ? ' · Архив' : ''}`}</option>)}
+        </Select>
+      </label>
+      {context?.academicYear?.status === 'ARCHIVED' && <p className="text-13 text-muted">Архивный журнал: только просмотр</p>}
+    </div>
+  ) : null;
+
   if (scopes.length === 0) {
     return (
-      <JournalShell tab={tab} onTab={(next) => patch({ tab: next === 'FINALS' ? 'finals' : null })}>
+      <JournalShell tab={tab} onTab={(next) => patch({ tab: next === 'FINALS' ? 'finals' : next === 'YEAR_FINALS' ? 'year-finals' : null })}>
+        {yearPicker}
         <div className="card">
           <EmptyBlock
             icon={<Info className="size-7" />}
@@ -147,7 +167,8 @@ export function JournalPage() {
   }
 
   return (
-    <JournalShell tab={tab} onTab={(next) => patch({ tab: next === 'FINALS' ? 'finals' : null })}>
+    <JournalShell tab={tab} onTab={(next) => patch({ tab: next === 'FINALS' ? 'finals' : next === 'YEAR_FINALS' ? 'year-finals' : null })}>
+      {yearPicker}
       <JournalFilters
         scopes={scopes}
         periods={periods}
@@ -160,6 +181,7 @@ export function JournalPage() {
         monthKey={monthKey}
         window={window}
         showWindowToggle={tab === 'JOURNAL'}
+        showPeriod={tab !== 'YEAR_FINALS'}
         onChangeClass={(next) => patch({ classId: next, subjectId: null, subgroupId: null })}
         onChangeSubgroup={(next) => patch({ subgroupId: next })}
         onChangeSubject={(next) => patch({ subjectId: next })}
@@ -170,8 +192,11 @@ export function JournalPage() {
 
       {tab === 'JOURNAL' ? (
         <JournalTab query={journalQuery} journal={journal} finals={finals} />
+      ) : tab === 'YEAR_FINALS' ? (
+        <YearFinalsTab key={`${context?.academicYear?.id}:${classId}:${subjectId}`} query={classId != null && subjectId != null && context?.academicYear?.id != null
+          ? { classId, subjectId, academicYearId: context.academicYear.id } : null} />
       ) : (
-        <FinalsTab finalsKey={finalsKey} finals={finals} />
+        <FinalsTab key={`${classId}:${subjectId}:${periodId}`} finalsKey={finalsKey} finals={finals} />
       )}
     </JournalShell>
   );
@@ -221,13 +246,13 @@ function JournalTab({
     );
   }
 
-  if (rows.every((row) => (row.cells ?? []).length === 0)) {
+  if (rows.length === 0) {
     return (
       <div className="card">
         <EmptyBlock
           icon={<Award className="size-7" />}
-          title="Оценок пока нет"
-          description="Оценки появятся здесь после того, как их выставят на уроке"
+          title="В классе нет учеников"
+          description="Проверьте состав класса и выбранную подгруппу"
         />
       </div>
     );
@@ -235,6 +260,11 @@ function JournalTab({
 
   return (
     <div className="flex flex-col gap-3">
+      {rows.every((row) => (row.cells ?? []).every((cell) => (cell.grades ?? []).length === 0)) && (
+        <p role="status" className="rounded-lg bg-info-bg p-4 text-13 text-info-fg">
+          Оценок пока нет. Откройте урок по дате в заголовке таблицы, чтобы выставить первые оценки.
+        </p>
+      )}
       <div className="card overflow-hidden p-0">
         <JournalTable
           journal={data!}
@@ -276,6 +306,10 @@ function FinalsTab({
   const [error, setError] = useState<string | null>(null);
   const [missing, setMissing] = useState<ReadonlySet<number>>(new Set());
   const [confirmPublish, setConfirmPublish] = useState(false);
+  const [reasonRow, setReasonRow] = useState<ClassFinalGradeRow | null>(null);
+  const [correctionRow, setCorrectionRow] = useState<ClassFinalGradeRow | null>(null);
+  const [historyRow, setHistoryRow] = useState<ClassFinalGradeRow | null>(null);
+  const [reason, setReason] = useState('');
   const [breakdown, setBreakdown] = useState<{ studentProfileId: number; name: string } | null>(null);
 
   if (finalsKey == null || finals.isPending) return <TableSkeleton />;
@@ -298,15 +332,16 @@ function FinalsTab({
   const data = finals.data!;
   const rows = data.rows ?? [];
   const canManage = Boolean(data.canManage);
-  const filled = rows.filter((row) => row.finalGrade?.value != null).length;
+  const filled = rows.filter((row) => row.finalGrade != null).length;
   const allFilled = rows.length > 0 && filled === rows.length;
+  const hasPublicationIssues = rows.some(row => (!row.finalGrade?.resultKind || row.finalGrade.resultKind === 'NUMERIC') && (row.publicationIssues?.length ?? 0) > 0);
   const allPublished =
     rows.length > 0 && rows.every((row) => row.finalGrade?.status === 'PUBLISHED');
   // Публиковать итоги можно только после окончания четверти — дату считает сервер.
   const publicationOpen = data.publicationOpen !== false;
   const publishableFrom = data.publishableFrom ? formatShortDate(data.publishableFrom) : null;
 
-  async function pick(row: ClassFinalGradeRow, value: number) {
+  async function pick(row: ClassFinalGradeRow, value: number | null, resultKind: FinalGrade['resultKind'] = 'NUMERIC', resultReason?: string) {
     setError(null);
     setBusyStudentId(row.studentProfileId as number);
     try {
@@ -315,7 +350,7 @@ function FinalsTab({
         studentProfileId: row.studentProfileId as number,
         subjectId: finalsKey!.subjectId,
         academicPeriodId: finalsKey!.academicPeriodId,
-        value,
+        value, resultKind, resultReason,
       });
       setMissing((current) => {
         const next = new Set(current);
@@ -355,6 +390,10 @@ function FinalsTab({
     }
   }
 
+  if (data.assessmentMode === 'NO_ASSESSMENT') {
+    return <div className="card p-6"><p className="font-semibold text-ink">В 1 классе учебные достижения не оцениваются</p><p className="mt-2 text-13 text-muted">Используйте комментарии и обратную связь. Числовые и зачётные итоги не выставляются.</p></div>;
+  }
+
   if (rows.length === 0) {
     return (
       <div className="card">
@@ -375,12 +414,31 @@ function FinalsTab({
           highlighted={missing}
           busyStudentId={busyStudentId}
           onPick={(row, value) => void pick(row, value)}
+          onCorrect={setCorrectionRow}
+          onOpenHistory={setHistoryRow}
+          onPickResult={(row, kind) => {
+            if (kind === 'NOT_STUDIED') { setReasonRow(row); setReason(''); }
+            else void pick(row, null, kind);
+          }}
           onOpenBreakdown={(row) =>
             setBreakdown({ studentProfileId: row.studentProfileId as number, name: row.studentName ?? '' })
           }
         />
       </div>
 
+      {correctionRow?.finalGrade && <FinalGradeCorrectionModal grade={correctionRow.finalGrade}
+        studentName={correctionRow.studentName ?? ''} allowedKinds={data.allowedResultKinds ?? ['NUMERIC']}
+        onClose={() => setCorrectionRow(null)} />}
+      {historyRow?.finalGrade?.id != null && <FinalGradeHistoryModal id={historyRow.finalGrade.id}
+        studentName={historyRow.studentName ?? ''} onClose={() => setHistoryRow(null)} />}
+      <Modal open={reasonRow != null} onClose={() => setReasonRow(null)} title="Предмет не изучался">
+        <p className="text-13 text-muted">Укажите основание, например перевод из школы, где этот предмет не изучался. Результат сохранится в истории.</p>
+        <label className="mt-4 block text-13 font-semibold">Основание
+          <TextArea value={reason} onChange={event => setReason(event.target.value)} maxLength={1000} />
+        </label>
+        <div className="mt-4 flex justify-end gap-3"><Button variant="secondary" onClick={() => setReasonRow(null)}>Отмена</Button>
+          <Button disabled={reason.trim().length < 5} onClick={() => { if (reasonRow) void pick(reasonRow, null, 'NOT_STUDIED', reason.trim()).then(() => setReasonRow(null)); }}>Сохранить результат</Button></div>
+      </Modal>
       <PeriodBreakdownModal
         query={
           breakdown
@@ -411,13 +469,15 @@ function FinalsTab({
               ? 'Итоги четверти опубликованы — их видят ученик и родитель'
               : !publicationOpen
                 ? `Итоги можно выставлять уже сейчас, а опубликовать — после окончания четверти${publishableFrom ? `, с ${publishableFrom}` : ''} (${filled} из ${rows.length} выставлено)`
+                : hasPublicationIssues
+                  ? 'Внесите обязательные результаты работ или выберите особый результат для ученика'
                 : allFilled
                   ? `Все итоги выставлены (${filled} из ${rows.length}) — можно публиковать`
                   : `Выставьте оценку всем ученикам, чтобы опубликовать итоги четверти (${filled} из ${rows.length} оценено)`}
           </p>
           <Button
             onClick={() => setConfirmPublish(true)}
-            disabled={!allFilled || allPublished || !publicationOpen}
+            disabled={!allFilled || allPublished || !publicationOpen || hasPublicationIssues}
             loading={publish.isPending}
           >
             Опубликовать итоги четверти
@@ -428,7 +488,7 @@ function FinalsTab({
       <ConfirmDialog
         open={confirmPublish}
         title="Опубликовать итоги четверти?"
-        message="После публикации итоговые оценки увидят ученики и родители. Изменить их можно будет до публикации годовой оценки."
+        message="После публикации итоговые оценки увидят ученики и родители. Обычная правка будет закрыта. Техническую ошибку исправляет администратор по документам и протоколу; временная неаттестация завершается после сдачи обязательных работ."
         confirmLabel="Опубликовать"
         loading={publish.isPending}
         onConfirm={() => void publishAll()}
@@ -460,6 +520,7 @@ function JournalShell({
         <TabsList>
           <TabsTrigger value="JOURNAL">Журнал</TabsTrigger>
           <TabsTrigger value="FINALS">Итоги четверти</TabsTrigger>
+          <TabsTrigger value="YEAR_FINALS">Итоги года и экзамены</TabsTrigger>
         </TabsList>
         {/* Отступ между фильтрами и таблицей: без него карточка таблицы прилипала к полям. */}
         <TabsContent value={tab} className="mt-5 flex flex-col gap-5">

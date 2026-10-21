@@ -293,7 +293,7 @@ function JournalTable({
                           <GradeChip
                             key={grade.gradeId}
                             size="sm"
-                            tone={grade.gradeType === 'SUMMATIVE_SECTION' || grade.gradeType === 'SUMMATIVE_TERM'
+                            tone={grade.gradeType === 'SUMMATIVE_SECTION' || grade.gradeType === 'SUMMATIVE_TERM' || grade.gradeType === 'INTERMEDIATE_ASSESSMENT'
                               ? 'outline' : 'soft'}
                             value={gradeValueLabel(grade)}
                             title={gradeTitle(grade, classId)}

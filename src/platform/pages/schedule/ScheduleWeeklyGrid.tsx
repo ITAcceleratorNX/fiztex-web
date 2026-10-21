@@ -1,4 +1,4 @@
-import type { Weekday } from '@/lib/scheduleSettingsTypes';
+import type { CalendarEvent, Weekday } from '@/lib/scheduleSettingsTypes';
 import { WEEKDAY_LABELS } from '@/platform/labels';
 import type {
   ConflictFinding,
@@ -46,6 +46,7 @@ export function ScheduleWeeklyGrid({
   onOpenLesson,
   dates,
   oneTimeEvents = [],
+  calendarEvents = [],
   onOpenEvent,
 }: {
   grid: ScheduleGridView;
@@ -57,9 +58,10 @@ export function ScheduleWeeklyGrid({
   /**
    * Переход к фактическому уроку этого слота. В режиме просмотра сетка показывает
    * опубликованный шаблон, и единственное осмысленное действие по клику — открыть
-   * урок на ближайшую дату; в режиме правки клик по-прежнему редактирует слот.
+   * урок выбранной даты; в режиме правки клик редактирует слот.
    */
-  onOpenLesson?: (lesson: ScheduleLesson) => void;
+  onOpenLesson?: (lesson: ScheduleLesson, date?: string) => void;
+  calendarEvents?: CalendarEvent[];
   /**
    * Даты дней выбранной недели — только у действующего опубликованного расписания: шаблон
    * черновика ни к какой неделе не привязан, и разовые события на нём не показываются.
@@ -142,6 +144,10 @@ export function ScheduleWeeklyGrid({
               </td>
 
               {weekdays.map((day) => {
+                const date = dates?.[day];
+                const closedDay = readOnly && date ? calendarEvents.find(event =>
+                  event.status === 'ACTIVE' && event.effect === 'NO_LESSONS'
+                  && event.dateFrom <= date && event.dateTo >= date) : undefined;
                 const cellLessons = lessonsInSlot(grid.lessons, day, period.lessonNumber);
                 const hasCritical = criticals.some(
                   (f) => f.weekday === day && f.lessonNumber === period.lessonNumber,
@@ -155,7 +161,12 @@ export function ScheduleWeeklyGrid({
 
                 return (
                   <td key={`${day}-${period.id}`} className="border border-line p-1 align-middle">
-                    {cellLessons.length === 0 ? (
+                    {closedDay ? (
+                      <div className="flex min-h-16 flex-col justify-center rounded-lg bg-gray-100 p-3 text-center text-13 text-muted">
+                        <span className="font-semibold">Нет занятий</span>
+                        <span>{closedDay.title}</span>
+                      </div>
+                    ) : cellLessons.length === 0 ? (
                       readOnly ? (
                         // Легенда «Пустой слот»: прозрачный, пунктир #d1d5db
                         <div className="h-[72px] rounded-lg border border-dashed border-gray-300" />
@@ -199,9 +210,9 @@ export function ScheduleWeeklyGrid({
                           <button
                             type="button"
                             disabled={readOnly && !opensLesson}
-                            title={opensLesson ? 'Открыть урок на ближайшую дату' : undefined}
+                            title={opensLesson ? `Открыть урок ${date ?? ''}` : undefined}
                             onClick={() =>
-                              opensLesson ? onOpenLesson(lesson) : onEditLesson(lesson)
+                              opensLesson ? onOpenLesson(lesson, date) : onEditLesson(lesson)
                             }
                             className={cx(
                               'flex min-w-0 flex-1 flex-col gap-1 rounded-md px-1.5 py-1 text-left transition',

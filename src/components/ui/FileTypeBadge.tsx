@@ -22,10 +22,11 @@ export function FileTypeBadge({
 }: {
   format: string | null | undefined;
   /** `solid` — в строке таблицы, `soft` — квадратом рядом с именем файла. */
-  variant?: 'solid' | 'soft';
+  variant?: 'solid' | 'soft' | 'inline';
 }) {
   const label = (format ?? '').trim().toUpperCase() || 'ФАЙЛ';
   const tone = TONES[label] ?? NEUTRAL;
+  if (variant === 'inline') return <span className={cx('inline-flex shrink-0 items-center rounded px-1 py-0.5 text-10 font-extrabold leading-none', tone.soft)}>{label}</span>;
 
   if (variant === 'soft') {
     return (

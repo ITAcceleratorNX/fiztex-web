@@ -195,7 +195,7 @@ export function MyClassPage() {
 
           <div className="grid gap-4 md:grid-cols-3">
             <StatCard variant="compact" icon={UsersRound} label="Учеников" value={roster.isPending ? '…' : totalStudents} />
-            <StatCard variant="compact" icon={ChartNoAxesColumnIncreasing} label="Средний балл" value={
+            <StatCard variant="compact" icon={ChartNoAxesColumnIncreasing} label="Средняя оценка" value={
               summary.isPending && periodId != null ? '…'
                 : summary.data?.averageGrade == null ? '—' : oneDecimal.format(summary.data.averageGrade)
             } />
@@ -217,9 +217,9 @@ export function MyClassPage() {
           ) : summary.data && (summary.data.averageGrade == null || summary.data.monthlyAttendancePercent == null) ? (
             <p className="text-sm text-muted">
               {summary.data.averageGrade == null && summary.data.monthlyAttendancePercent == null
-                ? 'За период пока нет шкальных оценок, а за месяц — опубликованных отметок посещаемости.'
+                ? 'Общая средняя оценка не рассчитана. Балльные результаты смотрите по предметам во вкладке «Оценки». За месяц пока нет опубликованных отметок посещаемости.'
                 : summary.data.averageGrade == null
-                  ? 'За период пока нет шкальных оценок.'
+                  ? 'Общая средняя оценка не рассчитана. Балльные результаты смотрите по предметам во вкладке «Оценки».'
                   : 'За месяц пока нет опубликованных отметок посещаемости.'}
             </p>
           ) : null}
@@ -233,7 +233,7 @@ export function MyClassPage() {
               <TabsTrigger value="report">Отчётность</TabsTrigger>
             </TabsList>
             <TabsContent value="students" className="mt-4">
-              <MyClassStudentsTab classId={classId} className={selectedClass.name ?? ''} onForbidden={reportForbidden} />
+              <MyClassStudentsTab key={classId} classId={classId} className={selectedClass.name ?? ''} onForbidden={reportForbidden} />
             </TabsContent>
             <TabsContent value="grades" className="mt-4">
               <MyClassGradesTab

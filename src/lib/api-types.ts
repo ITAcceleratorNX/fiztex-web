@@ -20,6 +20,22 @@ export interface paths {
         patch: operations["update_23"];
         trace?: never;
     };
+    "/api/admin/academic-periods/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["activate_3"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/academic-periods/{id}/archive": {
         parameters: {
             query?: never;
@@ -127,7 +143,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_25"];
+        get: operations["list_26"];
         put?: never;
         post: operations["create_23"];
         delete?: never;
@@ -184,6 +200,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/academic-years/{id}/completion-readiness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["readiness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/academic-years/{id}/lifecycle-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history_16"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/academic-years/{id}/periods": {
         parameters: {
             query?: never;
@@ -200,6 +248,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/academic-years/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["restore_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/accounts": {
         parameters: {
             query?: never;
@@ -207,7 +271,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_24"];
+        get: operations["list_25"];
         put?: never;
         post: operations["create_22"];
         delete?: never;
@@ -319,7 +383,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_23"];
+        get: operations["list_24"];
         put?: never;
         post: operations["create_21"];
         delete?: never;
@@ -335,7 +399,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_7"];
+        get: operations["get_8"];
         put: operations["update_6"];
         post?: never;
         delete?: never;
@@ -369,7 +433,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_7"];
+        post: operations["publish_8"];
         delete?: never;
         options?: never;
         head?: never;
@@ -495,7 +559,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_22"];
+        get: operations["list_23"];
         put?: never;
         post: operations["create_20"];
         delete?: never;
@@ -511,7 +575,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_6"];
+        get: operations["get_7"];
         put: operations["update_5"];
         post?: never;
         delete?: never;
@@ -559,7 +623,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_21"];
+        get: operations["list_22"];
         put?: never;
         post: operations["create_19"];
         delete?: never;
@@ -719,7 +783,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_20"];
+        get: operations["list_21"];
         put?: never;
         post: operations["create_18"];
         delete?: never;
@@ -783,7 +847,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_19"];
+        get: operations["list_20"];
         put?: never;
         post: operations["create_17"];
         delete?: never;
@@ -837,7 +901,7 @@ export interface paths {
             cookie?: never;
         };
         /** История классных руководителей, включая архивный класс */
-        get: operations["history_12"];
+        get: operations["history_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -860,6 +924,22 @@ export interface paths {
          * @description expectedCurrentAssignmentId обязателен: null — свободный класс, ID — увиденное назначение.
          */
         post: operations["remove"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/classes/{classId}/year-transition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["preview_1"];
+        put?: never;
+        post: operations["apply_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -924,6 +1004,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["publishSnapshots"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/final-grades/{id}/technical-corrections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["correct"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1017,7 +1113,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_18"];
+        get: operations["list_19"];
         put?: never;
         post: operations["create_16"];
         delete?: never;
@@ -1099,7 +1195,7 @@ export interface paths {
         };
         get: operations["listRuns"];
         put?: never;
-        post: operations["upload_3"];
+        post: operations["upload_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1259,7 +1355,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel_4"];
+        post: operations["cancel_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1293,6 +1389,38 @@ export interface paths {
         put?: never;
         post: operations["assignSubstitute"];
         delete: operations["revokeSubstitute"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/lessons/{lessonId}/teaching-topic": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAdminKtpLessonTeachingTopic"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/lessons/{lessonId}/teaching-topic/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAdminKtpLessonTeachingHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1337,7 +1465,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_17"];
+        get: operations["list_18"];
         put?: never;
         post: operations["create_15"];
         delete?: never;
@@ -1369,7 +1497,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_5"];
+        get: operations["get_6"];
         put: operations["update_4"];
         post?: never;
         delete?: never;
@@ -1387,7 +1515,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel_3"];
+        post: operations["cancel_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1401,7 +1529,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_16"];
+        get: operations["list_17"];
         put?: never;
         post: operations["create_14"];
         delete?: never;
@@ -1561,7 +1689,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_16"];
+        get: operations["get_21"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1595,7 +1723,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["confirm"];
+        post: operations["confirm_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1625,7 +1753,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_11"];
+        get: operations["history_14"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1657,7 +1785,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_15"];
+        get: operations["list_16"];
         put?: never;
         post: operations["create_13"];
         delete?: never;
@@ -1833,7 +1961,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_10"];
+        get: operations["history_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1883,7 +2011,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_6"];
+        post: operations["publish_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1897,7 +2025,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_14"];
+        get: operations["list_15"];
         put?: never;
         post: operations["create_12"];
         delete?: never;
@@ -1970,6 +2098,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/student-year-decisions/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancel_3"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/student-year-decisions/{id}/cancellation-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["cancellationPreview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/students": {
         parameters: {
             query?: never;
@@ -1977,7 +2137,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_13"];
+        get: operations["list_14"];
         put?: never;
         post: operations["create_11"];
         delete?: never;
@@ -2082,6 +2242,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/students/{studentId}/year-decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history_12"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/subgroups": {
         parameters: {
             query?: never;
@@ -2089,7 +2265,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_12"];
+        get: operations["list_13"];
         put?: never;
         post: operations["create_10"];
         delete?: never;
@@ -2185,7 +2361,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_11"];
+        get: operations["list_12"];
         put?: never;
         post: operations["create_9"];
         delete?: never;
@@ -2217,7 +2393,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_4"];
+        get: operations["get_5"];
         put: operations["update_3"];
         post?: never;
         delete?: never;
@@ -2283,7 +2459,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_5"];
+        post: operations["publish_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2361,7 +2537,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_10"];
+        get: operations["list_11"];
         put?: never;
         post: operations["create_8"];
         delete?: never;
@@ -2409,7 +2585,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_32"];
+        get: operations["list_35"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2425,7 +2601,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_15"];
+        get: operations["get_20"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2473,7 +2649,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_9"];
+        get: operations["list_10"];
         put?: never;
         post: operations["create_7"];
         delete?: never;
@@ -2537,7 +2713,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_3"];
+        get: operations["get_4"];
         put: operations["put"];
         post?: never;
         delete?: never;
@@ -2633,7 +2809,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_8"];
+        get: operations["list_9"];
         put?: never;
         post: operations["create_6"];
         delete?: never;
@@ -2649,7 +2825,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_2"];
+        get: operations["get_3"];
         put: operations["update_2"];
         post?: never;
         delete: operations["delete_1"];
@@ -2729,7 +2905,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_31"];
+        get: operations["list_34"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2809,7 +2985,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_30"];
+        get: operations["list_33"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2841,7 +3017,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_14"];
+        get: operations["get_19"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2891,7 +3067,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["start_2"];
+        post: operations["start_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3474,6 +3650,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/final-grades/class/year": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/final-grades/class/year-publication": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["publish_5"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/final-grades/my": {
         parameters: {
             query?: never;
@@ -3561,7 +3769,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_9"];
+        get: operations["history_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3625,7 +3833,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_10"];
+        get: operations["get_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3673,7 +3881,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_8"];
+        get: operations["history_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3689,7 +3897,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["context"];
+        get: operations["context_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3737,7 +3945,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_7"];
+        get: operations["history_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3899,7 +4107,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_6"];
+        get: operations["history_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3931,7 +4139,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_6"];
+        get: operations["list_7"];
         put?: never;
         post: operations["create_3"];
         delete?: never;
@@ -4107,7 +4315,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_13"];
+        get: operations["get_18"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4171,9 +4379,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_7"];
+        get: operations["list_8"];
         put?: never;
-        post: operations["start_1"];
+        post: operations["start_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4205,7 +4413,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["apply"];
+        post: operations["apply_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4445,7 +4653,7 @@ export interface paths {
         };
         get: operations["myDrafts"];
         put?: never;
-        post: operations["upload_2"];
+        post: operations["upload_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4699,7 +4907,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_1"];
+        get: operations["get_2"];
         put: operations["update_1"];
         post?: never;
         delete: operations["delete"];
@@ -4779,7 +4987,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_5"];
+        get: operations["history_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4987,7 +5195,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_4"];
+        get: operations["history_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5115,7 +5323,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_27"];
+        get: operations["list_30"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5195,7 +5403,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_3"];
+        get: operations["history_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5307,7 +5515,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_5"];
+        get: operations["list_6"];
         put?: never;
         post: operations["create_2"];
         delete?: never;
@@ -5323,7 +5531,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_2"];
+        get: operations["history_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5387,7 +5595,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_1"];
+        get: operations["history_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5451,7 +5659,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_29"];
+        get: operations["list_32"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5675,8 +5883,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get"];
-        put: operations["save"];
+        get: operations["get_1"];
+        put: operations["save_1"];
         post?: never;
         delete?: never;
         options?: never;
@@ -5693,7 +5901,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["start"];
+        post: operations["start_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5739,7 +5947,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["source"];
+        get: operations["source_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5758,6 +5966,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["unpublish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/teaching-topic": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getKtpLessonTeachingTopic"];
+        put?: never;
+        post: operations["changeKtpLessonTeachingTopic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/teaching-topic/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listKtpLessonTeachingHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/teaching-topic/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["previewKtpLessonTeachingChange"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5803,7 +6059,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_28"];
+        get: operations["list_31"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5838,6 +6094,7 @@ export interface paths {
         get?: never;
         put: operations["updateTopic"];
         post?: never;
+        /** @description Снимает ручную замену и возвращает плановую тему КТП. Без КТП очищает тему. Для явного отсутствия покрытия КТП используется teaching-topic с операцией NO_KTP. */
         delete: operations["clearTopic"];
         options?: never;
         head?: never;
@@ -5851,9 +6108,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_4"];
+        get: operations["list_5"];
         put?: never;
-        post: operations["upload_1"];
+        post: operations["upload_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5867,7 +6124,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_9"];
+        get: operations["get_10"];
         put?: never;
         post?: never;
         delete: operations["delete_5"];
@@ -6319,6 +6576,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/student-year-decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/students": {
         parameters: {
             query?: never;
@@ -6703,7 +6976,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_12"];
+        get: operations["get_17"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6767,7 +7040,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history"];
+        get: operations["history_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6911,7 +7184,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_11"];
+        get: operations["get_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6931,6 +7204,569 @@ export interface paths {
         put: operations["submit"];
         post?: never;
         delete: operations["withdraw"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_29"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/removal-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["previewKtpPlanRemoval"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive selected classes atomically and retire future automatic topics, preserving teaching history */
+        post: operations["removeKtpPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_14"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/distribution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["distribution"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/distribution/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reconcile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/historical-link-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["historicalPreview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/historical-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["historicalLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/initial-sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["synchronize"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/initial-sync-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["preview_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_15"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/topics/{topicId}/adjustments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["adjustKtpTopicProgress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/version-sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirmKtpVersionSync"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/version-sync-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["previewKtpVersionSync"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/version-transition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getKtpVersionTransition"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/versions/{versionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["version_1"];
+        put?: never;
+        post?: never;
+        /** Remove an unused version from version menus; historical lesson links remain readable */
+        delete: operations["removeKtpVersion"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/versions/{versionId}/removal-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["previewKtpVersionRemoval"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/versions/{versionId}/source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["source_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["context"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_28"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/drafts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get"];
+        put: operations["save"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/drafts/{id}/activation-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["preview_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/drafts/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/drafts/{id}/parse-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/drafts/{id}/parse-previews/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["previewResult"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/drafts/{id}/parse-previews/{jobId}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["apply"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_4"];
+        put?: never;
+        post: operations["upload_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/imports/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_13"];
+        put?: never;
+        post?: never;
+        /** Remove an upload and draft from the workspace without erasing immutable history */
+        delete: operations["removeKtpImport"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/imports/{id}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["manual"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/imports/{id}/processing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/imports/{id}/removal-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["previewKtpImportRemoval"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/imports/{id}/source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["source"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/jobs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_12"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/jobs/{id}/diagnostics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["diagnostics"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -7343,7 +8179,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_26"];
+        get: operations["list_27"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7391,7 +8227,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_8"];
+        get: operations["get_9"];
         put?: never;
         post?: never;
         delete: operations["delete_2"];
@@ -7795,7 +8631,7 @@ export interface components {
             author?: components["schemas"]["ReportGradeAuthorView"];
             /** Format: int64 */
             gradeId?: number;
-            gradeType?: ("FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER") | null;
+            gradeType?: ("FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT") | null;
             maxScore?: number | null;
             numericValue?: number | null;
             /** Format: date-time */
@@ -7821,6 +8657,33 @@ export interface components {
             currentStudentCount?: number | null;
             metrics?: components["schemas"]["ReportMetricsView"];
             scope?: components["schemas"]["ReportScopeView"];
+        };
+        AcademicYearLifecycleEventView: {
+            action?: string;
+            /** Format: int64 */
+            actorId?: number;
+            actorName?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            fromStatus?: string;
+            /** Format: int64 */
+            id?: number;
+            reason?: string;
+            /** Format: int64 */
+            relatedYearId?: number;
+            toStatus?: string;
+        };
+        AcademicYearReadinessView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            blockers?: string[];
+            canComplete?: boolean;
+            /** Format: int64 */
+            futureLessons?: number;
+            /** Format: int64 */
+            missingYearFinals?: number;
+            /** Format: int64 */
+            unfinishedPeriods?: number;
         };
         AcademicYearView: {
             /** Format: date-time */
@@ -8544,8 +9407,11 @@ export interface components {
             versionNumber: number;
         };
         ChangeFinalGradeValueRequest: {
+            /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultReason?: string;
             /** Format: int32 */
-            value: number;
+            value?: number;
         };
         ChangedSubjectView: {
             change?: number;
@@ -8652,6 +9518,7 @@ export interface components {
             average?: number;
             currentMember?: boolean;
             finalGrade?: components["schemas"]["FinalGradeView"];
+            publicationIssues?: string[];
             recommendationChanged?: boolean;
             /** Format: int32 */
             recommendedValue?: number;
@@ -8666,7 +9533,10 @@ export interface components {
             academicPeriodId?: number;
             /** Format: int64 */
             academicYearId?: number;
+            allowedResultKinds?: ("NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED")[];
             allowedValues?: number[];
+            assessmentMode?: string;
+            canCorrectTechnicalErrors?: boolean;
             canManage?: boolean;
             /** Format: int64 */
             classId?: number;
@@ -8724,15 +9594,22 @@ export interface components {
             /** Format: int64 */
             academicYearId?: number;
             academicYearName?: string;
+            /** @enum {string} */
+            academicYearStatus?: "DRAFT" | "ACTIVE" | "ARCHIVED";
             /** Format: int64 */
             classId?: number;
             className?: string;
             /** Format: date-time */
             createdAt?: string;
+            /** Format: date */
+            effectiveFrom?: string;
+            /** Format: date */
+            effectiveTo?: string;
             /** Format: int64 */
             id?: number;
             /** @enum {string} */
             status?: "ACTIVE" | "ARCHIVED";
+            voided?: boolean;
         };
         ClassScheduleView: {
             /** Format: int64 */
@@ -8807,9 +9684,19 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        ClassYearFinalsRequest: {
+            /** Format: int64 */
+            academicYearId: number;
+            /** Format: int64 */
+            classId: number;
+            /** @enum {string} */
+            scope: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
+            /** Format: int64 */
+            subjectId: number;
+        };
         ComponentSummaryView: {
             /** @enum {string} */
-            code?: "FORMATIVE" | "SOR" | "SOCH";
+            code?: "FORMATIVE" | "SOR" | "SOCH" | "INTERMEDIATE";
             contribution?: number | null;
             effectiveWeightPercent?: number;
             maxSum?: number;
@@ -8963,6 +9850,16 @@ export interface components {
             includeDrafts?: boolean;
             title?: string;
         };
+        CorrectFinalGradeRequest: {
+            documentReference?: string;
+            /** Format: int64 */
+            expectedVersion: number;
+            reason?: string;
+            /** @enum {string} */
+            resultKind: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            /** Format: int32 */
+            value?: number;
+        };
         CreateAcademicPeriodRequest: {
             /** Format: date */
             endDate: string;
@@ -9037,13 +9934,16 @@ export interface components {
             /** Format: int64 */
             academicYearId?: number;
             /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultReason?: string;
+            /** @enum {string} */
             scope: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
             /** Format: int64 */
             studentProfileId: number;
             /** Format: int64 */
             subjectId: number;
             /** Format: int32 */
-            value: number;
+            value?: number;
         };
         CreateGradeCorrectionRequest: {
             comment?: string;
@@ -9057,7 +9957,7 @@ export interface components {
         };
         CreateGradeRequest: {
             /** @enum {string} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             maxScore?: number;
             scaleCode?: string;
             score?: number;
@@ -9075,7 +9975,7 @@ export interface components {
             copyFromPolicyId?: number;
             name?: string;
             /** @enum {string} */
-            template?: "KUNDELIK_2020" | "JOURNAL_FORM_2026";
+            template?: "KAZAKHSTAN_2026" | "KUNDELIK_2020" | "JOURNAL_FORM_2026";
         };
         CreateGroupRequest: {
             /** Format: int64 */
@@ -9360,14 +10260,14 @@ export interface components {
         };
         DynamicsPointView: {
             /** @enum {string|null} */
-            component?: "FORMATIVE" | "SOR" | "SOCH" | null;
+            component?: "FORMATIVE" | "SOR" | "SOCH" | "INTERMEDIATE" | null;
             cumulativeValue?: number | null;
             /** Format: date */
             date?: string;
             /** Format: int64 */
             gradeId?: number;
             /** @enum {string|null} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | null;
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT" | null;
             maxScore?: number | null;
             numericValue?: number | null;
             /** Format: date-time */
@@ -9404,6 +10304,13 @@ export interface components {
             to?: string;
             /** @enum {string} */
             type?: "WEEK" | "MONTH" | "QUARTER" | "YEAR";
+        };
+        Entry: {
+            decision?: string;
+            /** Format: int64 */
+            studentProfileId: number;
+            /** Format: int64 */
+            targetClassId?: number;
         };
         EquipmentActorView: {
             /** Format: int64 */
@@ -9616,6 +10523,7 @@ export interface components {
             action?: "CREATE" | "UPDATE" | "PUBLISH";
             /** Format: int64 */
             actorId?: number;
+            actorName?: string;
             after?: components["schemas"]["JsonNode"];
             before?: components["schemas"]["JsonNode"];
             /** Format: date-time */
@@ -9639,10 +10547,14 @@ export interface components {
             academicYearId?: number;
             /** Format: int64 */
             classId?: number;
+            correctionReference?: string;
             /** Format: int64 */
             id?: number;
             /** Format: date-time */
             publishedAt?: string;
+            /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultReason?: string;
             /** @enum {string} */
             scope?: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
             /** @enum {string} */
@@ -9777,14 +10689,14 @@ export interface components {
         };
         GradeValueInput: {
             /** @enum {string} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             maxScore?: number;
             scaleCode?: string;
             score?: number;
         };
         GradeValueModeView: {
             /** @enum {string} */
-            defaultWorkType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            defaultWorkType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             /** @enum {string} */
             valueMode?: "SCALE" | "POINTS";
             workTypes?: components["schemas"]["SheetWorkTypeView"][];
@@ -9798,7 +10710,7 @@ export interface components {
             createdAt?: string;
             deleted?: boolean;
             /** @enum {string} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             /** Format: int64 */
             id?: number;
             maxScore?: number;
@@ -9855,6 +10767,7 @@ export interface components {
         };
         GradebookContextView: {
             academicYear?: components["schemas"]["GradebookYearView"];
+            academicYears?: components["schemas"]["GradebookYearView"][];
             periods?: components["schemas"]["GradebookPeriodRefView"][];
             scopes?: components["schemas"]["GradebookScopeView"][];
         };
@@ -9922,6 +10835,8 @@ export interface components {
             name?: string;
             /** Format: date */
             startDate?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "ACTIVE" | "ARCHIVED";
         };
         GradingPolicyContentRequest: {
             bands: components["schemas"]["PolicyBandDto"][];
@@ -9953,9 +10868,11 @@ export interface components {
             id?: number;
         };
         GradingPolicyTemplateView: {
+            applicability?: string;
             /** @enum {string} */
-            code?: "KUNDELIK_2020" | "JOURNAL_FORM_2026";
+            code?: "KAZAKHSTAN_2026" | "KUNDELIK_2020" | "JOURNAL_FORM_2026";
             content?: components["schemas"]["GradingPolicyContentRequest"];
+            historical?: boolean;
             title?: string;
         };
         GradingPolicyView: {
@@ -10723,6 +11640,767 @@ export interface components {
             /** @enum {string} */
             state?: "ON_POST" | "ISSUED";
         };
+        KtpActivation: {
+            /** Format: int64 */
+            bindingRevision?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            previousVersionId?: number;
+            /** Format: int64 */
+            versionId?: number;
+            /** Format: int64 */
+            versionNumber?: number;
+        };
+        KtpActivationPage: {
+            items?: components["schemas"]["KtpActivation"][];
+            /** Format: int64 */
+            nextCursor?: number;
+        };
+        KtpActivationPreview: {
+            availablePeriods?: components["schemas"]["KtpPeriodOption"][];
+            /** Format: int64 */
+            draftId?: number;
+            issues?: components["schemas"]["KtpIssue"][];
+            /** Format: int64 */
+            revision?: number;
+            suggestedPeriodMapping?: components["schemas"]["KtpPeriodMapping"][];
+            targets?: components["schemas"]["KtpTargetPreview"][];
+            totals?: components["schemas"]["KtpTotals"];
+            warningCodes?: string[];
+        };
+        KtpAssignment: {
+            academicYear?: string;
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            subject?: string;
+            /** Format: int64 */
+            subjectId?: number;
+        };
+        KtpAssignmentView: {
+            actualMode?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            lessonStatus?: string;
+            /** Format: date-time */
+            startsAt?: string;
+            /** Format: int64 */
+            topicId?: number;
+            topicTitle?: string;
+            units?: number;
+            /** Format: int64 */
+            versionId?: number;
+        };
+        KtpBaselineChange: {
+            after?: number;
+            before?: number;
+            /** Format: int64 */
+            topicId?: number;
+        };
+        KtpBindingPage: {
+            items?: components["schemas"]["KtpBindingSummary"][];
+            /** Format: int64 */
+            nextCursor?: number;
+        };
+        KtpBindingRemovalRequest: {
+            previewFingerprint?: string;
+            targets?: components["schemas"]["KtpBindingRemovalTarget"][];
+        };
+        KtpBindingRemovalTarget: {
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: int64 */
+            expectedRevision?: number;
+        };
+        KtpBindingRemovalTargets: {
+            targets?: components["schemas"]["KtpBindingRemovalTarget"][];
+        };
+        KtpBindingSummary: {
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            revision?: number;
+            sourceName?: string;
+            state?: string;
+            /** Format: int64 */
+            subjectId?: number;
+            /** Format: int64 */
+            versionId?: number;
+            /** Format: int64 */
+            versionNumber?: number;
+        };
+        KtpBindingView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            content?: components["schemas"]["ParsedKtp"];
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            revision?: number;
+            state?: string;
+            /** Format: int64 */
+            subjectId?: number;
+            totals?: components["schemas"]["KtpTotals"];
+            /** Format: int64 */
+            versionId?: number;
+        };
+        KtpCandidateDecision: {
+            id?: string;
+            ignoreReason?: string;
+            /** Format: int32 */
+            topicOrder?: number;
+        };
+        KtpConfirmRequest: {
+            confirmedWarningCodes?: string[];
+            /** Format: int64 */
+            expectedRevision?: number;
+            periodMapping?: components["schemas"]["KtpPeriodMapping"][];
+            targets?: components["schemas"]["KtpTargetExpectation"][];
+        };
+        KtpConfirmation: {
+            bindingIds?: number[];
+            /** Format: int64 */
+            revision?: number;
+            /** Format: int64 */
+            versionId?: number;
+        };
+        KtpContext: {
+            allocationEnabled?: boolean;
+            assignments?: components["schemas"]["KtpAssignment"][];
+            formats?: string[];
+            /** Format: int32 */
+            maxFileBytes?: number;
+            periods?: components["schemas"]["KtpPeriodOption"][];
+        };
+        KtpDiagnostic: {
+            candidate?: components["schemas"]["KtpRowCandidate"];
+            issue?: components["schemas"]["KtpIssue"];
+            type?: string;
+        };
+        KtpDiagnosticPage: {
+            items?: components["schemas"]["KtpDiagnostic"][];
+            /** Format: int32 */
+            nextCursor?: number;
+        };
+        KtpDistribution: {
+            assignments?: components["schemas"]["KtpAssignmentView"][];
+            /** Format: int32 */
+            availableSlots?: number;
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: date-time */
+            coverageThrough?: string;
+            diagnostics?: string[];
+            executionEnabled?: boolean;
+            provisional?: boolean;
+            /** Format: int64 */
+            revision?: number;
+            state?: string;
+            unassigned?: components["schemas"]["KtpUnassignedTopic"][];
+            /** Format: int64 */
+            versionId?: number;
+        };
+        KtpDraftPage: {
+            items?: components["schemas"]["KtpDraftSummary"][];
+            /** Format: int64 */
+            nextCursor?: number;
+        };
+        KtpDraftReceipt: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            revision?: number;
+        };
+        KtpDraftSummary: {
+            /** Format: int32 */
+            errorCount?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            importId?: number;
+            /** Format: int64 */
+            revision?: number;
+            status?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int32 */
+            warningCount?: number;
+        };
+        KtpDraftUpdate: {
+            candidateDecisions?: components["schemas"]["KtpCandidateDecision"][];
+            classIds?: number[];
+            content: components["schemas"]["ParsedKtp"];
+            /** Format: int64 */
+            expectedRevision?: number;
+            sourceDecisions?: components["schemas"]["KtpSourceDecision"][];
+            targetExpectations?: components["schemas"]["KtpTargetExpectation"][];
+        };
+        KtpDraftView: {
+            candidateDecisions?: components["schemas"]["KtpCandidateDecision"][];
+            classIds?: number[];
+            content?: components["schemas"]["ParsedKtp"];
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            importId?: number;
+            rawContent?: components["schemas"]["ParsedKtp"];
+            /** Format: int64 */
+            revision?: number;
+            sourceDecisions?: components["schemas"]["KtpSourceDecision"][];
+            status?: string;
+            totals?: components["schemas"]["KtpTotals"];
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        KtpHistoricalLinkConfirmation: {
+            acceptBaselineAdjustment?: boolean;
+            previewFingerprint?: string;
+            request: components["schemas"]["KtpHistoricalLinkRequest"];
+        };
+        KtpHistoricalLinkPreview: {
+            baselineChanges?: components["schemas"]["KtpBaselineChange"][];
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: int64 */
+            lessonId?: number;
+            previewFingerprint?: string;
+            /** Format: int64 */
+            progressRevision?: number;
+        };
+        KtpHistoricalLinkRequest: {
+            /** Format: int64 */
+            expectedBindingRevision?: number;
+            /** Format: int64 */
+            expectedProgressRevision?: number;
+            /** Format: int64 */
+            lessonId?: number;
+            reason: string;
+            topics?: components["schemas"]["KtpHistoricalTopic"][];
+        };
+        KtpHistoricalTopic: {
+            /** Format: int64 */
+            topicId?: number;
+            units: number;
+        };
+        KtpImportPage: {
+            items?: components["schemas"]["KtpImportView"][];
+            /** Format: int64 */
+            nextCursor?: number;
+        };
+        KtpImportView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            allowedActions?: string[];
+            classIds?: number[];
+            /** Format: date-time */
+            createdAt?: string;
+            currentJob?: components["schemas"]["KtpJobReference"];
+            /** Format: int64 */
+            draftId?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            revision?: number;
+            source?: components["schemas"]["KtpSource"];
+            status?: string;
+            /** Format: int64 */
+            subjectId?: number;
+            versionStatus?: string;
+        };
+        KtpInitialSyncPreview: {
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: int64 */
+            bindingRevision?: number;
+            /** Format: date-time */
+            cutoff?: string;
+            historyCompletenessKnown?: boolean;
+            historyFingerprint?: string;
+            /** Format: int64 */
+            physicalLessonCount?: number;
+            /** Format: int64 */
+            progressRevision?: number;
+            suggestedBaselines?: components["schemas"]["KtpTopicBaseline"][];
+            topics?: components["schemas"]["KtpTopicProgress"][];
+            /** Format: int64 */
+            unresolvedSubgroupLessonCount?: number;
+            /** Format: int64 */
+            versionId?: number;
+        };
+        KtpInitialSyncRequest: {
+            baselines?: components["schemas"]["KtpTopicBaseline"][];
+            /** Format: date-time */
+            cutoff: string;
+            /** Format: int64 */
+            expectedBindingRevision?: number;
+            /** Format: int64 */
+            expectedProgressRevision?: number;
+            historyFingerprint?: string;
+        };
+        KtpIssue: {
+            actual?: string;
+            code?: string;
+            difference?: number;
+            expected?: string;
+            fieldPath?: string;
+            message?: string;
+            /** @enum {string} */
+            severity?: "ERROR" | "WARNING";
+            source?: components["schemas"]["KtpSourceLocation"];
+        };
+        KtpJobReference: {
+            errorCode?: string;
+            /** Format: int64 */
+            id?: number;
+            kind?: string;
+            status?: string;
+        };
+        KtpJobView: {
+            /** Format: int32 */
+            attempt?: number;
+            /** Format: date-time */
+            completedAt?: string;
+            /** Format: uuid */
+            correlationId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            draftId?: number;
+            errorCode?: string;
+            /** Format: int32 */
+            errorCount?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            importId?: number;
+            kind?: string;
+            /** Format: date-time */
+            nextAttemptAt?: string;
+            phase?: string;
+            /** Format: date-time */
+            startedAt?: string;
+            status?: string;
+            /** Format: int32 */
+            warningCount?: number;
+        };
+        KtpLessonTeachingTopic: {
+            actual?: components["schemas"]["KtpLessonTopicLink"][];
+            actualText?: string;
+            /** Format: int64 */
+            assignmentRevision?: number;
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: int64 */
+            bindingRevision?: number;
+            bindingState?: string;
+            displayTitle?: string;
+            fullText?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            mode?: string;
+            planned?: components["schemas"]["KtpLessonTopicLink"][];
+            /** Format: int64 */
+            progressRevision?: number;
+            teachingRevision?: string;
+            /** Format: int64 */
+            versionId?: number;
+        };
+        KtpLessonTopicLink: {
+            learningObjectives?: string;
+            /** Format: int32 */
+            partNumber?: number;
+            title?: string;
+            /** Format: int64 */
+            topicId?: number;
+            units?: number;
+            /** Format: int64 */
+            versionId?: number;
+        };
+        KtpParseOptions: {
+            columns?: {
+                [key: string]: number;
+            };
+            /** Format: int32 */
+            headerRowNumber?: number;
+            sheetName?: string;
+            /** Format: int32 */
+            tableNumber?: number;
+        };
+        KtpParsePreview: {
+            /** Format: int64 */
+            baseRevision?: number;
+            content?: components["schemas"]["ParsedKtp"];
+            /** Format: int64 */
+            draftId?: number;
+            job?: components["schemas"]["KtpJobView"];
+        };
+        KtpPeriodMapping: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int32 */
+            planPeriodOrder?: number;
+        };
+        KtpPeriodOption: {
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: int32 */
+            order?: number;
+        };
+        KtpProgress: {
+            /** Format: date-time */
+            asOf?: string;
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: int64 */
+            bindingRevision?: number;
+            /** Format: int64 */
+            linkedPhysicalLessonCount?: number;
+            /** Format: int64 */
+            physicalLessonCount?: number;
+            physicalMinutes?: number;
+            /** Format: int64 */
+            progressRevision?: number;
+            state?: string;
+            topics?: components["schemas"]["KtpTopicProgress"][];
+            /** Format: int64 */
+            unresolvedSubgroupLessonCount?: number;
+            /** Format: int64 */
+            versionId?: number;
+        };
+        KtpProgressReceipt: {
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: int64 */
+            progressRevision?: number;
+        };
+        KtpRemovalPreview: {
+            allowed?: boolean;
+            classIds?: number[];
+            /** Format: int64 */
+            futureAutomaticLessons?: number;
+            message?: string;
+            /** Format: int64 */
+            preservedLessons?: number;
+            /** Format: int64 */
+            preservedManualLessons?: number;
+            previewFingerprint?: string;
+            /** Format: int64 */
+            revision?: number;
+        };
+        KtpRemovalReceipt: {
+            bindingIds?: number[];
+            kind?: string;
+            /** Format: date-time */
+            removedAt?: string;
+            /** Format: int64 */
+            resourceId?: number;
+        };
+        KtpRemovalRequest: {
+            /** Format: int64 */
+            expectedRevision?: number;
+            previewFingerprint?: string;
+        };
+        KtpRevisionRequest: {
+            /** Format: int64 */
+            expectedRevision?: number;
+        };
+        KtpRowCandidate: {
+            id?: string;
+            message?: string;
+            rawCells?: string[];
+            reasonCode?: string;
+            source?: components["schemas"]["KtpSourceLocation"];
+        };
+        KtpSource: {
+            /** Format: int64 */
+            byteSize?: number;
+            format?: string;
+            /** Format: int64 */
+            id?: number;
+            originalName?: string;
+            sha256?: string;
+            status?: string;
+        };
+        KtpSourceDecision: {
+            code?: string;
+            reason?: string;
+            source?: components["schemas"]["KtpSourceLocation"];
+        };
+        KtpSourceLocation: {
+            /** Format: int32 */
+            columnNumber?: number;
+            /** Format: int32 */
+            rowNumber?: number;
+            sheetName?: string;
+            /** Format: int32 */
+            tableNumber?: number;
+        };
+        KtpStartRequest: {
+            /** Format: int64 */
+            expectedRevision?: number;
+            options?: components["schemas"]["KtpParseOptions"];
+        };
+        KtpTargetExpectation: {
+            /** Format: int64 */
+            baseVersionId?: number;
+            /** Format: int64 */
+            bindingRevision?: number;
+            /** Format: int64 */
+            classId?: number;
+        };
+        KtpTargetPreview: {
+            conflict?: boolean;
+            /** Format: int64 */
+            currentRevision?: number;
+            /** Format: int64 */
+            currentVersionId?: number;
+            expected?: components["schemas"]["KtpTargetExpectation"];
+            plannedHoursDelta?: number;
+            previousTotals?: components["schemas"]["KtpTotals"];
+            /** Format: int32 */
+            topicCountDelta?: number;
+        };
+        KtpTeachingAuditEntry: {
+            action?: string;
+            /** Format: int64 */
+            actorId?: number;
+            after?: components["schemas"]["KtpTeachingAuditState"];
+            /** Format: int64 */
+            assignmentRevision?: number;
+            before?: components["schemas"]["KtpTeachingAuditState"];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+            reason?: string;
+        };
+        KtpTeachingAuditLink: {
+            /** Format: int32 */
+            partNumber?: number;
+            /** Format: int64 */
+            topicId?: number;
+            units?: number;
+            /** Format: int64 */
+            versionId?: number;
+        };
+        KtpTeachingAuditPage: {
+            items?: components["schemas"]["KtpTeachingAuditEntry"][];
+            /** Format: int64 */
+            nextCursor?: number;
+        };
+        KtpTeachingAuditState: {
+            actual?: components["schemas"]["KtpTeachingAuditLink"][];
+            actualText?: string;
+            /** Format: int64 */
+            assignmentRevision?: number;
+            mode?: string;
+            planned?: components["schemas"]["KtpTeachingAuditLink"][];
+        };
+        /** @description REPLACE заменяет фактические ссылки, MERGE добавляет к текущим, CONTINUE продолжает одну непокрытую тему. Для них topics непустой, freeText отсутствует. FREE_TEXT требует свободный текст и пустой topics; NO_KTP оставляет пустое покрытие; RESTORE_PLAN снимает override. PLANNED и остальные уроки сохраняются. */
+        KtpTeachingChange: {
+            /** Format: int64 */
+            expectedAssignmentRevision?: number;
+            /** Format: int64 */
+            expectedBindingRevision?: number;
+            /** Format: int64 */
+            expectedProgressRevision?: number;
+            freeText?: string;
+            /** @enum {string} */
+            operation: "REPLACE" | "MERGE" | "CONTINUE" | "FREE_TEXT" | "NO_KTP" | "RESTORE_PLAN";
+            reason?: string;
+            topics: components["schemas"]["KtpTeachingTopicSelection"][];
+        };
+        KtpTeachingConfirmation: {
+            acceptBaselineAdjustment?: boolean;
+            previewFingerprint?: string;
+            request: components["schemas"]["KtpTeachingChange"];
+        };
+        KtpTeachingPreview: {
+            baselineChanges?: components["schemas"]["KtpBaselineChange"][];
+            effectiveTopics?: components["schemas"]["KtpTeachingTopicSelection"][];
+            /** Format: int64 */
+            lessonId?: number;
+            previewFingerprint?: string;
+            proposedText?: string;
+        };
+        KtpTeachingReceipt: {
+            /** Format: int64 */
+            assignmentRevision?: number;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int64 */
+            progressRevision?: number;
+        };
+        KtpTeachingTopicSelection: {
+            /** Format: int64 */
+            topicId?: number;
+            units: number;
+        };
+        /** @description Ручное завершение/возврат меняют статус без создания уроков. coverageAdjustment передаётся только для ADJUST_COVERAGE: это новое знаковое значение корректировки, не прибавление к прежнему. RESET снимает ручной статус и корректировку. Все действия требуют причины и актуальной ревизии. */
+        KtpTopicAdjustmentRequest: {
+            /** @enum {string} */
+            action: "COMPLETE" | "REOPEN" | "ADJUST_COVERAGE" | "RESET";
+            coverageAdjustment?: number;
+            /** Format: int64 */
+            expectedBindingRevision?: number;
+            /** Format: int64 */
+            expectedProgressRevision?: number;
+            reason?: string;
+        };
+        KtpTopicBaseline: {
+            additionalHours: number;
+            /** Format: int64 */
+            topicId?: number;
+        };
+        KtpTopicCorrespondence: {
+            /** Format: int64 */
+            fromTopicId?: number;
+            share: number;
+            /** Format: int64 */
+            toTopicId?: number;
+        };
+        KtpTopicProgress: {
+            baselineAdditional?: number;
+            coveredHours?: number;
+            linkedCoverage?: number;
+            manualAdjustment?: number;
+            manualStatus?: string;
+            /** Format: int32 */
+            order?: number;
+            overageHours?: number;
+            plannedHours?: number;
+            remainingHours?: number;
+            status?: string;
+            title?: string;
+            /** Format: int64 */
+            topicId?: number;
+        };
+        KtpTotals: {
+            declaredAnnualHours?: number;
+            /** Format: int32 */
+            invalidHoursCount?: number;
+            knownAnnualHours?: number;
+            periods?: components["schemas"]["PeriodTotal"][];
+            /** Format: int32 */
+            topicCount?: number;
+            totalsComplete?: boolean;
+        };
+        KtpUnassignedTopic: {
+            hours?: number;
+            /** Format: int64 */
+            topicId?: number;
+        };
+        KtpUploadContext: {
+            /** Format: int64 */
+            academicYearId?: number;
+            classIds?: number[];
+            /** Format: int64 */
+            subjectId?: number;
+        };
+        KtpVersionCoveragePreview: {
+            adjustment?: number;
+            baseline?: number;
+            linked?: number;
+            overage?: number;
+            planned?: number;
+            /** Format: int64 */
+            topicId?: number;
+            total?: number;
+        };
+        KtpVersionSyncConfirmation: {
+            acceptOverage?: boolean;
+            previewFingerprint?: string;
+            reason?: string;
+            request: components["schemas"]["KtpVersionSyncRequest"];
+        };
+        KtpVersionSyncPreview: {
+            /** Format: int64 */
+            bindingId?: number;
+            coverage?: components["schemas"]["KtpVersionCoveragePreview"][];
+            discardedOldTopicIds?: number[];
+            hasOverage?: boolean;
+            preservedLessonIds?: number[];
+            previewFingerprint?: string;
+            replaceableFutureLessonIds?: number[];
+        };
+        KtpVersionSyncRequest: {
+            correspondences: components["schemas"]["KtpTopicCorrespondence"][];
+            /** Format: date-time */
+            cutoff: string;
+            discardedOldTopicIds: number[];
+            /** Format: int64 */
+            expectedBindingRevision?: number;
+            /** Format: int64 */
+            expectedProgressRevision?: number;
+            /** Format: int64 */
+            fromVersionId?: number;
+            historyFingerprint?: string;
+            targetStatuses: components["schemas"]["KtpVersionTargetStatus"][];
+            /** Format: int64 */
+            toVersionId?: number;
+        };
+        KtpVersionTargetStatus: {
+            /** @enum {string} */
+            status: "NONE" | "FORCE_COMPLETED" | "FORCE_IN_PROGRESS";
+            /** Format: int64 */
+            topicId?: number;
+        };
+        KtpVersionTopic: {
+            adjustment?: number;
+            baseline?: number;
+            /** Format: int64 */
+            id?: number;
+            learningObjectives?: string;
+            linkedCoverage?: number;
+            manualStatus?: string;
+            plannedHours?: number;
+            sourceNumber?: string;
+            title?: string;
+        };
+        KtpVersionTransition: {
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: int64 */
+            bindingRevision?: number;
+            currentTopics?: components["schemas"]["KtpVersionTopic"][];
+            /** Format: date-time */
+            cutoff?: string;
+            /** Format: int64 */
+            fromVersionId?: number;
+            historyFingerprint?: string;
+            previousTopics?: components["schemas"]["KtpVersionTopic"][];
+            /** Format: int64 */
+            progressRevision?: number;
+            suggestedCorrespondences?: components["schemas"]["KtpTopicCorrespondence"][];
+            /** Format: int64 */
+            toVersionId?: number;
+        };
+        KtpVersionView: {
+            /** Format: date-time */
+            confirmedAt?: string;
+            content?: components["schemas"]["ParsedKtp"];
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            revision?: number;
+            /** Format: int64 */
+            sourceImportId?: number;
+            totals?: components["schemas"]["KtpTotals"];
+        };
         LearnerHomeworkRowView: {
             /** @enum {string} */
             answerFormat?: "WRITTEN" | "TEST";
@@ -10834,7 +12512,7 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             /** @enum {string} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             /** Format: int64 */
             id?: number;
             maxScore?: number;
@@ -10857,7 +12535,7 @@ export interface components {
             /** @enum {string} */
             capacity?: "MAIN_TEACHER" | "SUBSTITUTE_TEACHER";
             /** @enum {string} */
-            defaultWorkType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            defaultWorkType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             /** Format: int64 */
             lessonId?: number;
             /** Format: int32 */
@@ -10867,7 +12545,7 @@ export interface components {
             valueMode?: "SCALE" | "POINTS";
             workTypes?: components["schemas"]["SheetWorkTypeView"][];
             /** @enum {string} */
-            writeState?: "ALLOWED" | "NOT_TEACHING" | "LESSON_CANCELLED" | "LESSON_SUPERSEDED" | "SUBSTITUTION_ENDED" | "SUBSTITUTE_NOT_PERMITTED" | "SUBSTITUTE_WINDOW_NOT_OPEN" | "SUBSTITUTE_WINDOW_CLOSED";
+            writeState?: "ALLOWED" | "NO_ASSESSMENT" | "ACADEMIC_YEAR_ARCHIVED" | "NOT_TEACHING" | "LESSON_CANCELLED" | "LESSON_SUPERSEDED" | "SUBSTITUTION_ENDED" | "SUBSTITUTE_NOT_PERMITTED" | "SUBSTITUTE_WINDOW_NOT_OPEN" | "SUBSTITUTE_WINDOW_CLOSED";
         };
         LessonHistoryView: {
             /** @enum {string} */
@@ -10941,7 +12619,7 @@ export interface components {
             lessonId?: number;
             students?: components["schemas"]["ParentCommentStudentRow"][];
             /** @enum {string} */
-            writeState?: "ALLOWED" | "NOT_TEACHING" | "LESSON_CANCELLED" | "LESSON_SUPERSEDED" | "SUBSTITUTION_ENDED" | "SUBSTITUTE_NOT_PERMITTED" | "SUBSTITUTE_WINDOW_NOT_OPEN" | "SUBSTITUTE_WINDOW_CLOSED";
+            writeState?: "ALLOWED" | "NO_ASSESSMENT" | "ACADEMIC_YEAR_ARCHIVED" | "NOT_TEACHING" | "LESSON_CANCELLED" | "LESSON_SUPERSEDED" | "SUBSTITUTION_ENDED" | "SUBSTITUTE_NOT_PERMITTED" | "SUBSTITUTE_WINDOW_NOT_OPEN" | "SUBSTITUTE_WINDOW_CLOSED";
         };
         LessonParticipantView: {
             fullName?: string;
@@ -11213,6 +12891,7 @@ export interface components {
             sourceName?: string;
             /** @enum {string} */
             status?: "PENDING" | "RUNNING" | "DONE" | "FAILED";
+            teachingContext?: components["schemas"]["LessonSummaryTeachingSnapshot"];
             warningMessage?: string;
         };
         LessonSummarySourceView: {
@@ -11227,6 +12906,12 @@ export interface components {
             /** @enum {string} */
             sourceType?: "TEXTBOOK" | "LESSON_MATERIAL";
             title?: string;
+        };
+        LessonSummaryTeachingSnapshot: {
+            effectiveTopics?: components["schemas"]["KtpLessonTopicLink"][];
+            promptTruncated?: boolean;
+            revision?: string;
+            topic?: string;
         };
         LessonSummaryVersionRequest: {
             /** Format: int64 */
@@ -11661,7 +13346,7 @@ export interface components {
             /** Format: int64 */
             gradeId?: number;
             /** @enum {string|null} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | null;
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT" | null;
             maxScore?: number | null;
             numericValue?: number | null;
             /** Format: date-time */
@@ -13089,6 +14774,55 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        ParsedKtp: {
+            candidates?: components["schemas"]["KtpRowCandidate"][];
+            header?: components["schemas"]["ParsedKtpHeader"];
+            issues?: components["schemas"]["KtpIssue"][];
+            periods?: components["schemas"]["ParsedKtpPeriod"][];
+        };
+        ParsedKtpHeader: {
+            academicYear?: string;
+            classNames?: string[];
+            declaredAnnualHours?: number;
+            declaredWeeklyHours?: number;
+            rawText?: string;
+            sourceAnnualHours?: string;
+            sourceWeeklyHours?: string;
+            subject?: string;
+            teacherName?: string;
+        };
+        ParsedKtpPeriod: {
+            declaredHours?: number;
+            /** Format: int32 */
+            order?: number;
+            sections?: components["schemas"]["ParsedKtpSection"][];
+            source?: components["schemas"]["KtpSourceLocation"];
+            sourceHours?: string;
+            title?: string;
+        };
+        ParsedKtpSection: {
+            code?: string;
+            declaredHours?: number;
+            /** Format: int32 */
+            order?: number;
+            source?: components["schemas"]["KtpSourceLocation"];
+            sourceHours?: string;
+            title?: string;
+            topics?: components["schemas"]["ParsedKtpTopic"][];
+        };
+        ParsedKtpTopic: {
+            learningObjectives?: string;
+            notes?: string;
+            /** Format: int32 */
+            order?: number;
+            plannedDates?: string;
+            plannedHours?: number;
+            recommendations?: string;
+            source?: components["schemas"]["KtpSourceLocation"];
+            sourceHours?: string;
+            sourceNumber?: string;
+            title?: string;
+        };
         PatchGroupSetRequest: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -13161,7 +14895,7 @@ export interface components {
         PeriodResultSummaryView: {
             bandLabel?: string | null;
             components?: components["schemas"]["ComponentSummaryView"][];
-            missingComponents?: ("FORMATIVE" | "SOR" | "SOCH")[];
+            missingComponents?: ("FORMATIVE" | "SOR" | "SOCH" | "INTERMEDIATE")[];
             percent?: number | null;
             /** Format: int64 */
             policyId?: number;
@@ -13172,6 +14906,13 @@ export interface components {
             /** @enum {string} */
             status?: "CALCULATED" | "NO_WORKS" | "INCOMPLETE";
         };
+        PeriodTotal: {
+            complete?: boolean;
+            declaredHours?: number;
+            knownHours?: number;
+            /** Format: int32 */
+            order?: number;
+        };
         PolicyBandDto: {
             label?: string;
             /** Format: int32 */
@@ -13181,7 +14922,7 @@ export interface components {
         };
         PolicyComponentDto: {
             /** @enum {string} */
-            code: "FORMATIVE" | "SOR" | "SOCH";
+            code: "FORMATIVE" | "SOR" | "SOCH" | "INTERMEDIATE";
             title?: string;
             weightPercent: number;
         };
@@ -13194,12 +14935,12 @@ export interface components {
         };
         PolicyWorkTypeDto: {
             /** @enum {string} */
-            component?: "FORMATIVE" | "SOR" | "SOCH";
+            component?: "FORMATIVE" | "SOR" | "SOCH" | "INTERMEDIATE";
             /** @enum {string} */
             scoring: "TEN_POINT" | "RAW_POINTS";
             weight: number;
             /** @enum {string} */
-            workType: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            workType: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
         };
         ProposalIntervalView: {
             /** @enum {string} */
@@ -13421,6 +15162,13 @@ export interface components {
         ReadParentCommentRequest: {
             /** Format: int64 */
             version: number;
+        };
+        ReconcileReceipt: {
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: int64 */
+            dirtyRevision?: number;
+            executionEnabled?: boolean;
         };
         RedistributeRequest: {
             /** Format: int32 */
@@ -13644,6 +15392,12 @@ export interface components {
             selectedOptionTexts?: string[];
             /** @enum {string} */
             type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT";
+        };
+        RestoreAcademicYearRequest: {
+            /** Format: int64 */
+            expectedActiveYearId?: number;
+            makeActive?: boolean;
+            reason?: string;
         };
         ResultDetailResponse: {
             answers?: components["schemas"]["AnswerReviewItem"][];
@@ -14206,13 +15960,13 @@ export interface components {
         };
         SheetWorkTypeView: {
             /** @enum {string} */
-            component?: "FORMATIVE" | "SOR" | "SOCH";
+            component?: "FORMATIVE" | "SOR" | "SOCH" | "INTERMEDIATE";
             /** Format: int32 */
             fixedMax?: number;
             /** @enum {string} */
             scoring?: "TEN_POINT" | "RAW_POINTS";
             /** @enum {string} */
-            type?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            type?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
         };
         Skipped: {
             /** Format: int64 */
@@ -14440,6 +16194,91 @@ export interface components {
             studentProfileId?: number;
             /** Format: int64 */
             subjectId?: number;
+        };
+        StudentYearDecision: {
+            actorName?: string;
+            basis?: string;
+            cancellation?: components["schemas"]["StudentYearDecisionCancellation"];
+            cancelled?: boolean;
+            decision?: string;
+            /** Format: date */
+            effectiveDate?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: date */
+            orderDate?: string;
+            orderNumber?: string;
+            /** Format: int64 */
+            sourceClassId?: number;
+            sourceClassName?: string;
+            /** Format: int64 */
+            sourceYearId?: number;
+            sourceYearName?: string;
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            targetClassId?: number;
+            targetClassName?: string;
+            targetYearName?: string;
+        };
+        StudentYearDecisionCancellation: {
+            actorName?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date */
+            orderDate?: string;
+            orderNumber?: string;
+            reason?: string;
+        };
+        StudentYearDecisionCancellationRequest: {
+            /** Format: int64 */
+            expectedDecisionId: number;
+            /** Format: date */
+            orderDate: string;
+            orderNumber?: string;
+            reason?: string;
+        };
+        StudentYearDecisionCancellationView: {
+            blockers?: string[];
+            canCancel?: boolean;
+            decision?: string;
+            /** Format: int64 */
+            decisionId?: number;
+            effects?: string[];
+            /** Format: int64 */
+            sourceClassId?: number;
+            sourceClassName?: string;
+            sourceYearArchived?: boolean;
+            /** Format: int64 */
+            sourceYearId?: number;
+            sourceYearName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            targetClassName?: string;
+            targetYearName?: string;
+        };
+        StudentYearDecisionRequest: {
+            basis?: string;
+            /** Format: date */
+            effectiveDate: string;
+            /** Format: date */
+            orderDate: string;
+            orderNumber?: string;
+            students?: components["schemas"]["Entry"][];
+        };
+        StudentYearTransitionView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            /** Format: date */
+            earliestDecisionDate?: string;
+            sourceGrade?: string;
+            students?: components["schemas"]["YearTransitionStudent"][];
+            targets?: components["schemas"]["YearTransitionTarget"][];
+            yearEnded?: boolean;
         };
         Subgroup: {
             /** Format: int64 */
@@ -15130,7 +16969,7 @@ export interface components {
         };
         TemporaryGradeView: {
             /** @enum {string} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             maxScore?: number;
             numericValue?: number;
             scaleCode?: string;
@@ -15443,7 +17282,7 @@ export interface components {
         };
         UpdateGradeRequest: {
             /** @enum {string} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             maxScore?: number;
             scaleCode?: string;
             score?: number;
@@ -15639,13 +17478,13 @@ export interface components {
         };
         WorkView: {
             /** @enum {string} */
-            component?: "FORMATIVE" | "SOR" | "SOCH";
+            component?: "FORMATIVE" | "SOR" | "SOCH" | "INTERMEDIATE";
             /** Format: date */
             date?: string;
             /** Format: int64 */
             gradeId?: number;
             /** @enum {string} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             maxScore?: number;
             /** Format: date-time */
             publishedAt?: string;
@@ -15758,6 +17597,24 @@ export interface components {
             /** Format: int32 */
             recommendedValue?: number;
         };
+        YearTransitionStudent: {
+            blockers?: string[];
+            decision?: components["schemas"]["StudentYearDecision"];
+            name?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
+        YearTransitionTarget: {
+            /** Format: int64 */
+            academicYearId?: number;
+            academicYearName?: string;
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            grade?: string;
+            /** Format: date */
+            startDate?: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -15790,6 +17647,26 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AcademicPeriodView"];
                 };
+            };
+        };
+    };
+    activate_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -16092,7 +17969,7 @@ export interface operations {
             };
         };
     };
-    list_25: {
+    list_26: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -16228,6 +18105,50 @@ export interface operations {
             };
         };
     };
+    readiness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicYearReadinessView"];
+                };
+            };
+        };
+    };
+    history_16: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicYearLifecycleEventView"][];
+                };
+            };
+        };
+    };
     listPeriods: {
         parameters: {
             query?: never;
@@ -16276,7 +18197,33 @@ export interface operations {
             };
         };
     };
-    list_24: {
+    restore_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreAcademicYearRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicYearView"];
+                };
+            };
+        };
+    };
+    list_25: {
         parameters: {
             query: {
                 role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
@@ -16455,7 +18402,7 @@ export interface operations {
             };
         };
     };
-    list_23: {
+    list_24: {
         parameters: {
             query: {
                 status?: "DRAFT" | "PUBLISHED" | "HIDDEN";
@@ -16503,7 +18450,7 @@ export interface operations {
             };
         };
     };
-    get_7: {
+    get_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -16573,7 +18520,7 @@ export interface operations {
             };
         };
     };
-    publish_7: {
+    publish_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -16743,7 +18690,7 @@ export interface operations {
             };
         };
     };
-    list_22: {
+    list_23: {
         parameters: {
             query?: never;
             header?: never;
@@ -16787,7 +18734,7 @@ export interface operations {
             };
         };
     };
-    get_6: {
+    get_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -16888,7 +18835,7 @@ export interface operations {
             };
         };
     };
-    list_21: {
+    list_22: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -17217,7 +19164,7 @@ export interface operations {
             };
         };
     };
-    list_20: {
+    list_21: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -17383,7 +19330,7 @@ export interface operations {
             };
         };
     };
-    list_19: {
+    list_20: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -17576,7 +19523,7 @@ export interface operations {
             };
         };
     };
-    history_12: {
+    history_15: {
         parameters: {
             query?: {
                 page?: number;
@@ -17708,6 +19655,54 @@ export interface operations {
             };
         };
     };
+    preview_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentYearTransitionView"];
+                };
+            };
+        };
+    };
+    apply_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StudentYearDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentYearTransitionView"];
+                };
+            };
+        };
+    };
     getById_6: {
         parameters: {
             query?: never;
@@ -17816,6 +19811,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EventSnapshotRunView"];
+                };
+            };
+        };
+    };
+    correct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CorrectFinalGradeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinalGradeView"];
                 };
             };
         };
@@ -17998,7 +20019,7 @@ export interface operations {
             };
         };
     };
-    list_18: {
+    list_19: {
         parameters: {
             query: {
                 classId: number;
@@ -18189,7 +20210,7 @@ export interface operations {
             };
         };
     };
-    upload_3: {
+    upload_4: {
         parameters: {
             query: {
                 importType: "CLASSES" | "STUDENTS" | "STUDENTS_WITH_PARENTS" | "PARENTS" | "TEACHERS";
@@ -18470,7 +20491,7 @@ export interface operations {
             };
         };
     };
-    cancel_4: {
+    cancel_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -18566,6 +20587,53 @@ export interface operations {
             };
         };
     };
+    getAdminKtpLessonTeachingTopic: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpLessonTeachingTopic"];
+                };
+            };
+        };
+    };
+    listAdminKtpLessonTeachingHistory: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpTeachingAuditPage"];
+                };
+            };
+        };
+    };
     account: {
         parameters: {
             query: {
@@ -18613,7 +20681,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_18: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -18688,7 +20756,7 @@ export interface operations {
             };
         };
     };
-    get_5: {
+    get_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -18736,7 +20804,7 @@ export interface operations {
             };
         };
     };
-    cancel_3: {
+    cancel_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -18758,7 +20826,7 @@ export interface operations {
             };
         };
     };
-    list_16: {
+    list_17: {
         parameters: {
             query: {
                 phone?: string;
@@ -19067,7 +21135,7 @@ export interface operations {
             };
         };
     };
-    get_16: {
+    get_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -19116,7 +21184,7 @@ export interface operations {
             };
         };
     };
-    confirm: {
+    confirm_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -19164,7 +21232,7 @@ export interface operations {
             };
         };
     };
-    history_11: {
+    history_14: {
         parameters: {
             query: {
                 entityType: "BELL_TEMPLATE" | "WORKING_DAYS" | "CALENDAR_EVENT" | "TEACHER_AVAILABILITY" | "GROUP_SET" | "SUBGROUP" | "LESSON_GENERATION";
@@ -19234,7 +21302,7 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    list_16: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -19516,7 +21584,7 @@ export interface operations {
             };
         };
     };
-    history_10: {
+    history_13: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -19636,7 +21704,7 @@ export interface operations {
             };
         };
     };
-    publish_6: {
+    publish_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -19662,7 +21730,7 @@ export interface operations {
             };
         };
     };
-    list_14: {
+    list_15: {
         parameters: {
             query: {
                 name?: string;
@@ -19835,7 +21903,55 @@ export interface operations {
             };
         };
     };
-    list_13: {
+    cancel_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StudentYearDecisionCancellationRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentYearDecisionCancellationView"];
+                };
+            };
+        };
+    };
+    cancellationPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentYearDecisionCancellationView"];
+                };
+            };
+        };
+    };
+    list_14: {
         parameters: {
             query: {
                 classId?: number;
@@ -20046,7 +22162,29 @@ export interface operations {
             };
         };
     };
-    list_12: {
+    history_12: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentYearDecision"][];
+                };
+            };
+        };
+    };
+    list_13: {
         parameters: {
             query?: {
                 classId?: number;
@@ -20260,7 +22398,7 @@ export interface operations {
             };
         };
     };
-    list_11: {
+    list_12: {
         parameters: {
             query: {
                 status?: "DRAFT" | "ACTIVE" | "COMPLETED";
@@ -20327,7 +22465,7 @@ export interface operations {
             };
         };
     };
-    get_4: {
+    get_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -20475,7 +22613,7 @@ export interface operations {
             };
         };
     };
-    publish_5: {
+    publish_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -20616,7 +22754,7 @@ export interface operations {
             };
         };
     };
-    list_10: {
+    list_11: {
         parameters: {
             query: {
                 teacherProfileId?: number;
@@ -20709,7 +22847,7 @@ export interface operations {
             };
         };
     };
-    list_32: {
+    list_35: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -20735,7 +22873,7 @@ export interface operations {
             };
         };
     };
-    get_15: {
+    get_20: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -20805,7 +22943,7 @@ export interface operations {
             };
         };
     };
-    list_9: {
+    list_10: {
         parameters: {
             query: {
                 phone?: string;
@@ -20943,7 +23081,7 @@ export interface operations {
             };
         };
     };
-    get_3: {
+    get_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -21131,7 +23269,7 @@ export interface operations {
             };
         };
     };
-    list_8: {
+    list_9: {
         parameters: {
             query?: {
                 useAiGeneration?: boolean;
@@ -21178,7 +23316,7 @@ export interface operations {
             };
         };
     };
-    get_2: {
+    get_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -21347,7 +23485,7 @@ export interface operations {
             };
         };
     };
-    list_31: {
+    list_34: {
         parameters: {
             query: {
                 teacherProfileId?: number;
@@ -21488,7 +23626,7 @@ export interface operations {
             };
         };
     };
-    list_30: {
+    list_33: {
         parameters: {
             query?: {
                 grade?: string;
@@ -21530,7 +23668,7 @@ export interface operations {
             };
         };
     };
-    get_14: {
+    get_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -21598,7 +23736,7 @@ export interface operations {
             };
         };
     };
-    start_2: {
+    start_3: {
         parameters: {
             query?: never;
             header: {
@@ -22580,6 +24718,55 @@ export interface operations {
             };
         };
     };
+    read_1: {
+        parameters: {
+            query: {
+                classId: number;
+                subjectId: number;
+                academicYearId: number;
+                scope?: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassFinalGradesView"];
+                };
+            };
+        };
+    };
+    publish_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassYearFinalsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassFinalGradesView"];
+                };
+            };
+        };
+    };
     my_5: {
         parameters: {
             query: {
@@ -22703,7 +24890,7 @@ export interface operations {
             };
         };
     };
-    history_9: {
+    history_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -22792,7 +24979,7 @@ export interface operations {
             };
         };
     };
-    get_10: {
+    get_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -22888,7 +25075,7 @@ export interface operations {
             };
         };
     };
-    history_8: {
+    history_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -22910,9 +25097,11 @@ export interface operations {
             };
         };
     };
-    context: {
+    context_1: {
         parameters: {
-            query?: never;
+            query?: {
+                academicYearId?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -22981,7 +25170,7 @@ export interface operations {
             };
         };
     };
-    history_7: {
+    history_9: {
         parameters: {
             query: {
                 subjectId: number;
@@ -23248,7 +25437,7 @@ export interface operations {
             };
         };
     };
-    history_6: {
+    history_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -23292,7 +25481,7 @@ export interface operations {
             };
         };
     };
-    list_6: {
+    list_7: {
         parameters: {
             query: {
                 scope?: "ACTUAL" | "HISTORY";
@@ -23660,7 +25849,7 @@ export interface operations {
             };
         };
     };
-    get_13: {
+    get_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -23752,7 +25941,7 @@ export interface operations {
             };
         };
     };
-    list_7: {
+    list_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -23774,7 +25963,7 @@ export interface operations {
             };
         };
     };
-    start_1: {
+    start_2: {
         parameters: {
             query?: never;
             header: {
@@ -23825,7 +26014,7 @@ export interface operations {
             };
         };
     };
-    apply: {
+    apply_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -24224,7 +26413,7 @@ export interface operations {
             };
         };
     };
-    upload_2: {
+    upload_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -24701,7 +26890,7 @@ export interface operations {
             };
         };
     };
-    get_1: {
+    get_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -24885,7 +27074,7 @@ export interface operations {
             };
         };
     };
-    history_5: {
+    history_7: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -25238,7 +27427,7 @@ export interface operations {
             };
         };
     };
-    history_4: {
+    history_6: {
         parameters: {
             query: {
                 unitId?: number;
@@ -25484,7 +27673,7 @@ export interface operations {
             };
         };
     };
-    list_27: {
+    list_30: {
         parameters: {
             query: {
                 dateFrom?: string;
@@ -25607,7 +27796,7 @@ export interface operations {
             };
         };
     };
-    history_3: {
+    history_5: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -25819,7 +28008,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_6: {
         parameters: {
             query?: {
                 includeClosed?: boolean;
@@ -25869,7 +28058,7 @@ export interface operations {
             };
         };
     };
-    history_2: {
+    history_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -25957,7 +28146,7 @@ export interface operations {
             };
         };
     };
-    history_1: {
+    history_3: {
         parameters: {
             query: {
                 childId?: number;
@@ -26116,7 +28305,7 @@ export interface operations {
             };
         };
     };
-    list_29: {
+    list_32: {
         parameters: {
             query?: {
                 childId?: number;
@@ -26572,7 +28761,7 @@ export interface operations {
             };
         };
     };
-    get: {
+    get_1: {
         parameters: {
             query?: {
                 childId?: number;
@@ -26596,7 +28785,7 @@ export interface operations {
             };
         };
     };
-    save: {
+    save_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -26622,7 +28811,7 @@ export interface operations {
             };
         };
     };
-    start: {
+    start_1: {
         parameters: {
             query?: never;
             header: {
@@ -26699,7 +28888,7 @@ export interface operations {
             };
         };
     };
-    source: {
+    source_2: {
         parameters: {
             query: {
                 sourceType: "TEXTBOOK" | "LESSON_MATERIAL";
@@ -26746,6 +28935,107 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonSummaryView"];
+                };
+            };
+        };
+    };
+    getKtpLessonTeachingTopic: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpLessonTeachingTopic"];
+                };
+            };
+        };
+    };
+    changeKtpLessonTeachingTopic: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpTeachingConfirmation"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpTeachingReceipt"];
+                };
+            };
+        };
+    };
+    listKtpLessonTeachingHistory: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpTeachingAuditPage"];
+                };
+            };
+        };
+    };
+    previewKtpLessonTeachingChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpTeachingChange"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpTeachingPreview"];
                 };
             };
         };
@@ -26825,7 +29115,7 @@ export interface operations {
             };
         };
     };
-    list_28: {
+    list_31: {
         parameters: {
             query?: {
                 childId?: number;
@@ -26925,7 +29215,7 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_5: {
         parameters: {
             query: {
                 subjectId: number;
@@ -26947,7 +29237,7 @@ export interface operations {
             };
         };
     };
-    upload_1: {
+    upload_2: {
         parameters: {
             query: {
                 subjectId: number;
@@ -26980,7 +29270,7 @@ export interface operations {
             };
         };
     };
-    get_9: {
+    get_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -28128,6 +30418,28 @@ export interface operations {
             };
         };
     };
+    history_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentYearDecision"][];
+                };
+            };
+        };
+    };
     getMyClassStudents: {
         parameters: {
             query?: {
@@ -28815,7 +31127,7 @@ export interface operations {
             };
         };
     };
-    get_12: {
+    get_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -28912,7 +31224,7 @@ export interface operations {
             };
         };
     };
-    history: {
+    history_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -29127,7 +31439,7 @@ export interface operations {
             };
         };
     };
-    get_11: {
+    get_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -29187,6 +31499,985 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MyTeacherAvailabilityView"];
+                };
+            };
+        };
+    };
+    list_29: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: number;
+                academicYearId?: number;
+                subjectId?: number;
+                classId?: number;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpBindingPage"];
+                };
+            };
+        };
+    };
+    previewKtpPlanRemoval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpBindingRemovalTargets"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpRemovalPreview"];
+                };
+            };
+        };
+    };
+    removeKtpPlan: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpBindingRemovalRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpRemovalReceipt"];
+                };
+            };
+        };
+    };
+    get_14: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpBindingView"];
+                };
+            };
+        };
+    };
+    distribution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpDistribution"];
+                };
+            };
+        };
+    };
+    reconcile: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpRevisionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReconcileReceipt"];
+                };
+            };
+        };
+    };
+    historicalPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpHistoricalLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpHistoricalLinkPreview"];
+                };
+            };
+        };
+    };
+    historicalLink: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpHistoricalLinkConfirmation"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpProgressReceipt"];
+                };
+            };
+        };
+    };
+    history: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpActivationPage"];
+                };
+            };
+        };
+    };
+    synchronize: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpInitialSyncRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpProgressReceipt"];
+                };
+            };
+        };
+    };
+    preview_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpInitialSyncPreview"];
+                };
+            };
+        };
+    };
+    get_15: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpProgress"];
+                };
+            };
+        };
+    };
+    adjustKtpTopicProgress: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+                topicId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpTopicAdjustmentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpProgressReceipt"];
+                };
+            };
+        };
+    };
+    confirmKtpVersionSync: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpVersionSyncConfirmation"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpProgressReceipt"];
+                };
+            };
+        };
+    };
+    previewKtpVersionSync: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpVersionSyncRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpVersionSyncPreview"];
+                };
+            };
+        };
+    };
+    getKtpVersionTransition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpVersionTransition"];
+                };
+            };
+        };
+    };
+    version_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                versionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpVersionView"];
+                };
+            };
+        };
+    };
+    removeKtpVersion: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+                versionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpRemovalRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpRemovalReceipt"];
+                };
+            };
+        };
+    };
+    previewKtpVersionRemoval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                versionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpRemovalPreview"];
+                };
+            };
+        };
+    };
+    source_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                versionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    context: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpContext"];
+                };
+            };
+        };
+    };
+    list_28: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpDraftPage"];
+                };
+            };
+        };
+    };
+    get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpDraftView"];
+                };
+            };
+        };
+    };
+    save: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpDraftUpdate"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpDraftView"];
+                };
+            };
+        };
+    };
+    preview_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpActivationPreview"];
+                };
+            };
+        };
+    };
+    confirm: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpConfirmation"];
+                };
+            };
+        };
+    };
+    preview: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpStartRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpJobView"];
+                };
+            };
+        };
+    };
+    previewResult: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpParsePreview"];
+                };
+            };
+        };
+    };
+    apply: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpRevisionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpDraftReceipt"];
+                };
+            };
+        };
+    };
+    list_4: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: number;
+                academicYearId?: number;
+                subjectId?: number;
+                classId?: number;
+                status?: string;
+                unconfirmedOnly?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpImportPage"];
+                };
+            };
+        };
+    };
+    upload_1: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    context: components["schemas"]["KtpUploadContext"];
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpImportView"];
+                };
+            };
+        };
+    };
+    get_13: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpImportView"];
+                };
+            };
+        };
+    };
+    removeKtpImport: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpRemovalRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpRemovalReceipt"];
+                };
+            };
+        };
+    };
+    manual: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpRevisionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpDraftReceipt"];
+                };
+            };
+        };
+    };
+    start: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpStartRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpJobView"];
+                };
+            };
+        };
+    };
+    previewKtpImportRemoval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpRemovalPreview"];
+                };
+            };
+        };
+    };
+    source: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    get_12: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpJobView"];
+                };
+            };
+        };
+    };
+    diagnostics: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpDiagnosticPage"];
                 };
             };
         };
@@ -30040,7 +33331,7 @@ export interface operations {
             };
         };
     };
-    list_26: {
+    list_27: {
         parameters: {
             query?: {
                 page?: number;
@@ -30114,7 +33405,7 @@ export interface operations {
             };
         };
     };
-    get_8: {
+    get_9: {
         parameters: {
             query?: never;
             header?: never;

@@ -56,6 +56,7 @@ import { describeHistoryActor, describeHistoryEntry, hhmm } from './lessonHistor
 import { LessonTextbookField } from './LessonTextbookField';
 import { LessonSummaryEntry } from './LessonSummaryEntry';
 import { CopyLessonPreparationModal } from './CopyLessonPreparationModal';
+import { LessonKtpTopicField } from '@/pages/ktp/LessonKtpTopicField';
 
 /**
  * Куда возвращает «К расписанию». У учителя это его собственный экран: админский
@@ -151,7 +152,8 @@ export function LessonCardPage() {
           </div>
         )}
 
-        <TeachingField
+        <LessonKtpTopicField key={id} id={id} editable={canEditTeaching && !periodClosed}
+          canView={hasAny(lesson, ['VIEW_TEACHER_HISTORY'])} cancelled={lesson.status === 'CANCELLED'} fallback={<TeachingField
           label="Тема урока"
           editable={canEditTeaching && !periodClosed}
           empty={!lesson.topic}
@@ -167,7 +169,7 @@ export function LessonCardPage() {
           }
         >
           <p className="text-base font-semibold text-slate-900">{lesson.topic}</p>
-        </TeachingField>
+        </TeachingField>} />
 
         <hr className="border-slate-200" />
 

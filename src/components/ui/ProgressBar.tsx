@@ -11,6 +11,7 @@ export function ProgressBar({
   max,
   label,
   className,
+  tone = 'success',
 }: {
   value: number;
   max: number;
@@ -18,6 +19,7 @@ export function ProgressBar({
   label: string;
   /** Ширина полосы: `w-56` и т. п. */
   className?: string;
+  tone?: 'success' | 'navy';
 }) {
   const ratio = max > 0 ? Math.min(1, Math.max(0, value / max)) : 0;
   return (
@@ -30,7 +32,7 @@ export function ProgressBar({
       className={cx('h-1.5 overflow-hidden rounded-full bg-slate-100', className)}
     >
       <div
-        className="h-full rounded-full bg-success-border transition-[width] duration-300"
+        className={cx('h-full rounded-full transition-[width] duration-300', tone === 'navy' ? 'bg-navy-700' : 'bg-success-border')}
         style={{ width: `${ratio * 100}%` }}
       />
     </div>

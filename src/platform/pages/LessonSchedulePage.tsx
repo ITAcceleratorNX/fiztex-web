@@ -27,7 +27,7 @@ import { Modal } from '@/components/ui/Modal';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useToast } from '@/context/ToastContext';
 import { ApiError } from '@/lib/api';
-import { lessonsApi } from '@/lib/lessonsApi';
+import { useResolveScheduleLesson } from '@/hooks/queries';
 import { scheduleSettingsApi } from '@/lib/scheduleSettingsApi';
 import { subgroupsApi, teacherAvailabilityApi } from '@/lib/schedule2bApi';
 import type { Weekday, WorkingDaysSource } from '@/lib/scheduleSettingsTypes';
@@ -234,6 +234,7 @@ function CheckingCard() {
 }
 
 export function LessonSchedulePage() {
+  const resolveLesson = useResolveScheduleLesson();
   const toast = useToast();
   const navigate = useNavigate();
   const { context: filters, invalid, setContext: setScheduleContext, rememberContext } = useScheduleNavigation();
@@ -950,42 +951,19 @@ export function LessonSchedulePage() {
     setLessonOpen(true);
   }
 
-  /**
-   * Из слота расписания — в карточку фактического урока.
-   *
-   * Слот повторяется каждую неделю, а карточка всегда про конкретную дату, поэтому
-   * открываем ближайший будущий урок этого слота. Если будущих не осталось (слот
-   * доработал своё), показываем последний прошедший — иначе клик просто не сработал бы.
-   */
-  async function openActualLesson(lesson: ScheduleLesson) {
+  /** Дата ячейки обязательна: другой экземпляр повторяющегося слота не подставляется. */
+  async function openActualLesson(lesson: ScheduleLesson, date?: string) {
     const scheduleId = currentSelectedId;
-    if (!scheduleId) return;
+    if (!scheduleId || !date) {
+      toast.info('Выберите неделю действующей публикации, чтобы открыть урок по дате');
+      return;
+    }
     const requestFilterKey = filterKeyRef.current;
-    const today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD в местной зоне
     try {
-      const upcoming = await lessonsApi.list({
-        scheduleLessonId: lesson.id,
-        dateFrom: today,
-        size: 1,
-      });
+      const target = await resolveLesson.mutateAsync({ scheduleLessonId: lesson.id, date });
       if (!selectionRequestIsCurrent(requestFilterKey, scheduleId)) return;
-      let target = upcoming.content?.[0];
-      if (!target) {
-        // Список всегда идёт по возрастанию даты (клиентский sort бэкенд игнорирует),
-        // поэтому последний прошедший урок — это последний элемент последней страницы.
-        // Берём его через totalPages, а не выкачиванием всего слота одной страницей.
-        const past = await lessonsApi.list({ scheduleLessonId: lesson.id, size: 1 });
-        if (!selectionRequestIsCurrent(requestFilterKey, scheduleId)) return;
-        const lastPage = (past.totalPages ?? 0) - 1;
-        target =
-          lastPage > 0
-            ? (await lessonsApi.list({ scheduleLessonId: lesson.id, size: 1, page: lastPage }))
-                .content?.[0]
-            : past.content?.[0];
-        if (!selectionRequestIsCurrent(requestFilterKey, scheduleId)) return;
-      }
       if (!target?.id) {
-        toast.error('Для этого слота ещё нет фактических уроков');
+        toast.info(`На ${date.split('-').reverse().join('.')} урок не создан. Проверьте школьный календарь и горизонт уроков.`);
         return;
       }
       navigate(`/lesson-schedule/lessons/${target.id}`);

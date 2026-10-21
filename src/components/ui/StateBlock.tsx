@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Loader2, AlertTriangle, Inbox } from 'lucide-react';
 import { Button } from './Button';
+import { cx } from '@/lib/format';
 
 export function Spinner({ className }: { className?: string }) {
   return <Loader2 className={className ?? 'h-5 w-5 animate-spin text-brand-500'} />;
@@ -43,20 +44,22 @@ export function EmptyBlock({
   title,
   description,
   action,
+  appearance = 'default',
 }: {
   icon?: ReactNode;
   title: string;
   description?: string;
   action?: ReactNode;
+  appearance?: 'default' | 'planning';
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+    <div className={cx('flex flex-col items-center justify-center gap-3 text-center', appearance === 'planning' ? 'pb-8 pt-14' : 'py-16')}>
+      <div className={cx('flex items-center justify-center rounded-2xl', appearance === 'planning' ? 'mb-2 size-16 bg-planning-period text-navy-700' : 'size-14 bg-slate-100 text-slate-400')}>
         {icon ?? <Inbox className="h-7 w-7" />}
       </div>
       <div>
-        <p className="text-base font-semibold text-slate-700">{title}</p>
-        {description && <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">{description}</p>}
+        <p className={appearance === 'planning' ? 'text-xl font-bold text-planning-ink' : 'text-base font-semibold text-slate-700'}>{title}</p>
+        {description && <p className={cx('mx-auto mt-2 text-sm leading-relaxed', appearance === 'planning' ? 'max-w-lg text-planning-muted' : 'max-w-sm text-slate-500')}>{description}</p>}
       </div>
       {action}
     </div>

@@ -10,12 +10,12 @@ import {
   SCHOOL_STATUS_LABELS,
   YEAR_STATUS_LABELS,
 } from '@/platform/labels';
+import { AcademicYearLifecycleModal } from '@/platform/modals/AcademicYearLifecycleModal';
 import { AcademicYearFormModal } from '@/platform/modals/AcademicYearFormModal';
 import { ClassFormModal } from '@/platform/modals/ClassFormModal';
 import { PeriodFormModal } from '@/platform/modals/PeriodFormModal';
 import {
   activateAcademicYear,
-  archiveAcademicYear,
   listAcademicYears,
   listClasses,
   listPeriods,
@@ -156,6 +156,7 @@ export function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [yearFormOpen, setYearFormOpen] = useState(false);
+  const [completingYear, setCompletingYear] = useState<AcademicYear | null>(null);
   const [editingYear, setEditingYear] = useState<AcademicYear | null>(null);
   const [periodFormOpen, setPeriodFormOpen] = useState(false);
   const [editingPeriod, setEditingPeriod] = useState<AcademicPeriod | null>(null);
@@ -221,17 +222,8 @@ export function DashboardPage() {
     void reload();
   }, [reload]);
 
-  async function handleArchiveYear(year: AcademicYear) {
-    if (!window.confirm(`Завершить учебный год «${year.name}»? Он будет переведён в архив.`)) {
-      return;
-    }
-    try {
-      await archiveAcademicYear(year.id);
-      toast.success('Учебный год завершён');
-      await reload();
-    } catch (err) {
-      toast.error(platformErrorMessage(err, 'Не удалось завершить учебный год. Попробуйте ещё раз.'));
-    }
+  function handleArchiveYear(year: AcademicYear) {
+    setCompletingYear(year);
   }
 
   async function handleActivateYear(year: AcademicYear) {
@@ -685,6 +677,8 @@ export function DashboardPage() {
         </div>
       )}
 
+      <AcademicYearLifecycleModal year={completingYear} action="complete" activeYear={activeYear}
+        onClose={() => setCompletingYear(null)} onSaved={() => void reload()} />
       <AcademicYearFormModal
         open={yearFormOpen}
         onClose={() => setYearFormOpen(false)}

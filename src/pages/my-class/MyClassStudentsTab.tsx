@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { ArrowDownUp, ChevronRight } from 'lucide-react';
 import { ChangeBadge } from '@/components/dynamics/ChangeBadge';
 import { Avatar } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useClassGradeDynamics } from '@/hooks/dynamicsQueries';
@@ -20,6 +21,7 @@ import {
   type SortOrder,
 } from '@/lib/dynamicsModel';
 import { StudentDynamicsDrawer } from './StudentDynamicsDrawer';
+import { MyClassYearDecisionsModal } from './MyClassYearDecisionsModal';
 
 type Row = Schema<'ClassStudentDynamicsView'>;
 type Changed = Schema<'ChangedSubjectView'>;
@@ -60,6 +62,7 @@ export function MyClassStudentsTab({
   className: string;
   onForbidden: () => void;
 }) {
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const period = periodOf(searchParams.get('dynPeriod'));
   const sort = sortOf(searchParams.get('dynSort'));
@@ -90,6 +93,10 @@ export function MyClassStudentsTab({
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button variant="secondary" size="sm" onClick={() => setHistoryOpen(true)}>История перевода и выпуска</Button>
+      </div>
+      {historyOpen && <MyClassYearDecisionsModal classId={classId} onClose={() => setHistoryOpen(false)} onForbidden={onForbidden} />}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
         <SegmentedTabs
           value={period}

@@ -29,6 +29,7 @@ export function JournalFilters({
   monthKey,
   window,
   showWindowToggle,
+  showPeriod = true,
   onChangeClass,
   onChangeSubgroup,
   onChangeSubject,
@@ -47,6 +48,7 @@ export function JournalFilters({
   monthKey: string | null;
   window: JournalWindow;
   showWindowToggle: boolean;
+  showPeriod?: boolean;
   onChangeClass: (classId: number) => void;
   onChangeSubgroup: (subgroupId: number | null) => void;
   onChangeSubject: (subjectId: number) => void;
@@ -98,7 +100,7 @@ export function JournalFilters({
         </Select>
       </Filter>
 
-      <Filter label="Период" className="w-[226px]">
+      {showPeriod && <Filter label="Период" className="w-[226px]">
         {window === 'MONTH' ? (
           <Select value={monthKey ?? ''} onChange={(event) => onChangeMonth(event.target.value)}>
             {months.map((month) => (
@@ -119,7 +121,7 @@ export function JournalFilters({
             ))}
           </Select>
         )}
-      </Filter>
+      </Filter>}
 
       {showWindowToggle && (
         <SegmentedTabs

@@ -136,7 +136,7 @@ describe('Modal accessibility', () => {
     await waitFor(() => expect(document.activeElement).toBe(heading));
   });
 
-  it('closes only the top modal on Escape and restores focus to its opener', async () => {
+  it('keeps right drawer header actions and nested planning dialog focus independent', async () => {
     const user = userEvent.setup();
     function NestedFlow() {
       const [parentOpen, setParentOpen] = useState(false);
@@ -144,10 +144,11 @@ describe('Modal accessibility', () => {
       return (
         <>
           <button type="button" onClick={() => setParentOpen(true)}>Open parent</button>
-          <Modal open={parentOpen} onClose={() => setParentOpen(false)} title="Родительский диалог">
-            <button type="button" onClick={() => setChildOpen(true)}>Open child</button>
+          <Modal open={parentOpen} onClose={() => setParentOpen(false)} title="Родительский диалог" placement="right"
+            headerActions={<button type="button" onClick={() => setChildOpen(true)}>Open child</button>}>
+            <p>Данные ученика</p>
           </Modal>
-          <Modal open={childOpen} onClose={() => setChildOpen(false)} title="Вложенный диалог">
+          <Modal open={childOpen} onClose={() => setChildOpen(false)} title="Вложенный диалог" appearance="planning-wide" size="planning" scrollable>
             <button type="button">Действие вложенного окна</button>
           </Modal>
         </>

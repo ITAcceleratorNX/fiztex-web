@@ -14,6 +14,56 @@ function setup(type: 'FORMATIVE' | 'SUMMATIVE_SECTION' | 'SUMMATIVE_TERM' = 'SUM
 }
 
 describe('PointsPicker', () => {
+  it.each([12, 14, 16])('uses server maximum %i for intermediate assessment, overriding old values and suggestions', async (maximum) => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    render(<PointsPicker
+      workTypes={[{ type: 'INTERMEDIATE_ASSESSMENT', component: 'INTERMEDIATE', scoring: 'RAW_POINTS', fixedMax: maximum }]}
+      defaultType="INTERMEDIATE_ASSESSMENT"
+      value={{ gradeType: 'INTERMEDIATE_ASSESSMENT', score: 8, maxScore: 20 }}
+      suggestedMax={() => 99}
+      onSubmit={onSubmit}
+      onClose={() => undefined}
+    />);
+    const maxInput = screen.getByRole('textbox', { name: /Макс/ });
+    expect(maxInput).toHaveValue(String(maximum));
+    expect(maxInput).toHaveAttribute('readonly');
+    expect(maxInput).toHaveAccessibleDescription('Максимум установлен правилами оценивания для этого класса.');
+    fireEvent.change(maxInput, { target: { value: '99' } });
+    expect(maxInput).toHaveValue(String(maximum));
+    const scoreInput = screen.getByRole('textbox', { name: /Балл/ });
+    for (const score of [0, maximum]) {
+      fireEvent.change(scoreInput, { target: { value: String(score) } });
+      await user.click(screen.getByRole('button', { name: 'Сохранить' }));
+      expect(onSubmit).toHaveBeenLastCalledWith({ score, maxScore: maximum, gradeType: 'INTERMEDIATE_ASSESSMENT' });
+    }
+    fireEvent.change(scoreInput, { target: { value: String(maximum + 1) } });
+    expect(screen.getByRole('button', { name: 'Сохранить' })).toBeDisabled();
+    fireEvent.submit(scoreInput.closest('form')!);
+    expect(onSubmit).toHaveBeenCalledTimes(2);
+  });
+
+  it('takes the fixed maximum when switching from formative to intermediate assessment', async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    render(<PointsPicker
+      workTypes={[
+        { type: 'FORMATIVE', component: 'FORMATIVE', scoring: 'TEN_POINT', fixedMax: 10 },
+        { type: 'INTERMEDIATE_ASSESSMENT', component: 'INTERMEDIATE', scoring: 'RAW_POINTS', fixedMax: 14 },
+      ]}
+      defaultType="FORMATIVE"
+      suggestedMax={() => 20}
+      onSubmit={onSubmit}
+      onClose={() => undefined}
+    />);
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Вид работы' }), 'INTERMEDIATE_ASSESSMENT');
+    expect(screen.getByRole('textbox', { name: /Макс/ })).toHaveValue('14');
+    expect(screen.getByRole('textbox', { name: /Балл/ })).toHaveValue('');
+    fireEvent.change(screen.getByRole('textbox', { name: /Балл/ }), { target: { value: '13' } });
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }));
+    expect(onSubmit).toHaveBeenCalledWith({ score: 13, maxScore: 14, gradeType: 'INTERMEDIATE_ASSESSMENT' });
+  });
+
   it.each(['-1', '−1', '21', '', '1.5', '1e1', '0x10', 'Infinity', ' '])('rejects %j without rewriting the input', async (value) => {
     const onSubmit = setup();
     const input = screen.getByRole('textbox', { name: /Балл/ });
