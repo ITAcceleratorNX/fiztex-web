@@ -15,6 +15,8 @@ import type { Schema } from '@/lib/apiSchemas';
 import { ktpError } from './KtpShared';
 import { ktpCount, ktpHours, ktpRows } from '@/lib/ktpModel';
 import { formatDateTime } from '@/lib/format';
+import { ktpShareUnits, ktpSplitValidation, type KtpSplitPart } from '@/lib/ktpVersionSplitModel';
+import { ApiError } from '@/lib/api';
 
 export function KtpAdjustmentModal({ bindingId, progress, topic, onClose }: { bindingId: number; progress: KtpProgress; topic: Schema<'KtpTopicProgress'>; onClose: () => void }) {
   const change = useKtpCommand(ktpApi.adjustment);
@@ -99,41 +101,115 @@ export function KtpVersionSyncModal({ id, onClose }: { id: number; onClose: () =
   const query = useKtpTransition(id, true);
   const [busy, setBusy] = useState(false);
   return <Modal open onClose={() => { if (!busy) onClose(); }} title="Сверка новой версии КТП" size="xl" appearance="planning" scrollable>
-    {query.isPending || query.isFetching ? <LoadingBlock /> : query.isError ? <ErrorBlock message={ktpError(query.error)} onRetry={() => void query.refetch()} /> : <VersionForm key={query.data.historyFingerprint} id={id} transition={query.data} onClose={onClose} onBusy={setBusy} reload={() => void query.refetch()} />}
+    {query.isPending || query.isFetching ? <LoadingBlock /> : query.isError ? <ErrorBlock message={ktpError(query.error)} onRetry={() => void query.refetch()} /> : <VersionForm key={`${id}-${query.data.bindingRevision}-${query.data.progressRevision}-${query.data.historyFingerprint}`} id={id} transition={query.data} onClose={onClose} onBusy={setBusy} reload={() => void query.refetch()} />}
   </Modal>;
 }
 function VersionForm({ id, transition: t, onClose, onBusy, reload }: { onBusy: (busy: boolean) => void; id: number; transition: Schema<'KtpVersionTransition'>; onClose: () => void; reload: () => void }) {
-  const [matches, setMatches] = useState<Record<number, string>>(Object.fromEntries((t.previousTopics ?? []).map(old => [old.id!, String(t.suggestedCorrespondences?.find(e => e.fromTopicId === old.id)?.toTopicId ?? '')])));
+  const [matches, setMatches] = useState<Record<number, string>>(Object.fromEntries((t.previousTopics ?? []).map(old => {
+    const suggested = t.suggestedCorrespondences?.filter(edge => edge.fromTopicId === old.id) ?? [];
+    return [old.id!, suggested.length > 1 ? 'split' : String(suggested[0]?.toTopicId ?? '')];
+  })));
+  const [splits, setSplits] = useState<Record<number, KtpSplitPart[]>>(Object.fromEntries((t.previousTopics ?? []).map(old => [old.id!,
+    (t.suggestedCorrespondences?.filter(edge => edge.fromTopicId === old.id) ?? []).map(edge => ({ topicId: String(edge.toTopicId), share: String(edge.share ?? 1) })),
+  ])));
   const [statuses, setStatuses] = useState<Record<number, string>>(Object.fromEntries((t.currentTopics ?? []).map(current => [current.id!, t.previousTopics?.find(old => t.suggestedCorrespondences?.some(e => e.fromTopicId === old.id && e.toTopicId === current.id) && old.manualStatus && old.manualStatus !== 'NONE')?.manualStatus ?? 'NONE'])));
   const [reason, setReason] = useState('');
   const [overage, setOverage] = useState(false);
+  const [confirmation, setConfirmation] = useState<Schema<'KtpVersionSyncConfirmation'> | null>(null);
+  const [needsRefresh, setNeedsRefresh] = useState(false);
   const preview = useKtpCommand(ktpApi.versionPreview, false);
   const confirm = useKtpCommand(ktpApi.versionSync);
+  const busy = preview.isPending || confirm.isPending;
+  const locked = busy || !!confirmation || needsRefresh;
   const [review, setReview] = useState<{ request: Schema<'KtpVersionSyncRequest'>; preview: Schema<'KtpVersionSyncPreview'> } | null>(null);
-  const missing = (t.previousTopics ?? []).some(old => !matches[old.id!]);
-  function edited() { setReview(null); setOverage(false); preview.reset(); confirm.reset(); }
+  const targetIds = (t.currentTopics ?? []).map(topic => topic.id!);
+  const missing = (t.previousTopics ?? []).some(old => !matches[old.id!]
+    || (matches[old.id!] === 'split' ? !ktpSplitValidation(splits[old.id!] ?? [], targetIds).valid
+      : matches[old.id!] !== 'discard' && !targetIds.includes(Number(matches[old.id!]))));
+  function edited() { setReview(null); setConfirmation(null); setOverage(false); preview.reset(); confirm.reset(); }
+  function recordConflict(error: unknown) {
+    if (error instanceof ApiError && error.status === 409) {
+      setReview(null); setConfirmation(null); setOverage(false); setNeedsRefresh(true);
+    }
+  }
+  function editSplit(oldId: number, index: number, next: Partial<KtpSplitPart>) {
+    setSplits(previous => ({ ...previous, [oldId]: (previous[oldId] ?? []).map((part, position) => position === index ? { ...part, ...next } : part) }));
+    edited();
+  }
   async function calculate() {
+    if (missing || locked) return;
     const request: Schema<'KtpVersionSyncRequest'> = { expectedBindingRevision: t.bindingRevision!, expectedProgressRevision: t.progressRevision!, fromVersionId: t.fromVersionId!, toVersionId: t.toVersionId!, historyFingerprint: t.historyFingerprint!, cutoff: t.cutoff!,
-      correspondences: (t.previousTopics ?? []).filter(old => matches[old.id!] !== 'discard').map(old => ({ fromTopicId: old.id!, toTopicId: Number(matches[old.id!]), share: 1 })),
+      correspondences: (t.previousTopics ?? []).flatMap(old => matches[old.id!] === 'discard' ? []
+        : matches[old.id!] === 'split' ? (splits[old.id!] ?? []).map(part => ({ fromTopicId: old.id!, toTopicId: Number(part.topicId), share: ktpShareUnits(part.share)! / 10000 }))
+          : [{ fromTopicId: old.id!, toTopicId: Number(matches[old.id!]), share: 1 }]),
       discardedOldTopicIds: (t.previousTopics ?? []).filter(old => matches[old.id!] === 'discard').map(old => old.id!),
       targetStatuses: (t.currentTopics ?? []).map(current => ({ topicId: current.id!, status: statuses[current.id!] as 'NONE' | 'FORCE_COMPLETED' | 'FORCE_IN_PROGRESS' })),
     };
-    try { const result = await preview.mutateAsync({ id, body: request }); setReview({ request, preview: result }); } catch { /* Visible below. */ }
+    try { const result = await preview.mutateAsync({ id, body: request }); setReview({ request, preview: result }); } catch (error) { recordConflict(error); }
   }
   async function save() {
-    if (!review) return;
+    if (!review || needsRefresh || reason.trim().length < 3 || (review.preview.hasOverage && !overage)) return;
+    const body = confirmation ?? { request: review.request, previewFingerprint: review.preview.previewFingerprint!, acceptOverage: overage, reason: reason.trim() };
+    setConfirmation(body);
     onBusy(true);
-    try { await confirm.mutateAsync({ id, body: { request: review.request, previewFingerprint: review.preview.previewFingerprint!, acceptOverage: overage, reason: reason.trim() } }); onClose(); } catch { /* Visible below. */ } finally { onBusy(false); }
+    try { await confirm.mutateAsync({ id, body }); onClose(); } catch (error) { recordConflict(error); } finally { onBusy(false); }
   }
   return <div className="space-y-5"><StatusNotice>Сопоставьте каждую тему предыдущей версии. Проведённые уроки и ручные решения сохранятся. Прогресс переносится только после вашего подтверждения.</StatusNotice>
-    <DataTable appearance="planning" label="Соответствие тем версий"><thead><tr><TableHead>Предыдущая версия</TableHead><TableHead>Прогресс</TableHead><TableHead>Тема новой версии</TableHead></tr></thead><tbody>{t.previousTopics?.map(old => <tr key={old.id}><TableCell>{old.sourceNumber} {old.title}</TableCell><TableCell>{(old.linkedCoverage ?? 0) + (old.baseline ?? 0) + (old.adjustment ?? 0)} / {old.plannedHours} ч</TableCell><TableCell><Select aria-label={`Соответствие: ${old.title}`} value={matches[old.id!] ?? ''} onChange={e => { setMatches(previous => ({ ...previous, [old.id!]: e.target.value })); edited(); }}><option value="">Выберите соответствие</option><option value="discard">Не переносить прогресс этой темы</option>{t.currentTopics?.map(current => <option key={current.id} value={current.id}>{`${current.sourceNumber ?? ''} ${current.title ?? ''}`.trim()}</option>)}</Select></TableCell></tr>)}</tbody></DataTable>
-    <details className="rounded-xl border border-line p-4"><summary className="cursor-pointer text-sm font-semibold">Ручные отметки тем новой версии</summary><div className="mt-4 space-y-3">{t.currentTopics?.map(current => <Field key={current.id} label={current.title ?? ''}><Select value={statuses[current.id!] ?? 'NONE'} onChange={e => { setStatuses(previous => ({ ...previous, [current.id!]: e.target.value })); edited(); }}><option value="NONE">По пройденным часам</option><option value="FORCE_COMPLETED">Пройдена вручную</option><option value="FORCE_IN_PROGRESS">В работе вручную</option></Select></Field>)}</div></details>
-    <Button variant="secondary" disabled={missing} loading={preview.isPending} onClick={() => void calculate()}>Проверить перенос прогресса</Button>
+    <DataTable appearance="planning" label="Соответствие тем версий"><thead><tr><TableHead>Предыдущая версия</TableHead><TableHead>Прогресс</TableHead><TableHead>Тема новой версии</TableHead></tr></thead><tbody>{t.previousTopics?.map(old => {
+      const oldId = old.id!;
+      const parts = splits[oldId] ?? [];
+      const split = matches[oldId] === 'split';
+      const validation = ktpSplitValidation(parts, targetIds);
+      const covered = (old.linkedCoverage ?? 0) + (old.baseline ?? 0) + (old.adjustment ?? 0);
+      return <tr key={oldId}><TableCell>{old.sourceNumber} {old.title}</TableCell><TableCell>{ktpHours(covered)} / {old.plannedHours} ч</TableCell><TableCell>
+        <Select aria-label={`Соответствие: ${old.title}`} disabled={locked} value={matches[oldId] ?? ''} onChange={event => {
+          const value = event.target.value;
+          if (value === 'split' && parts.length < 2) setSplits(previous => ({ ...previous, [oldId]: [
+            { topicId: targetIds.includes(Number(matches[oldId])) ? matches[oldId] : '', share: '0.5' },
+            { topicId: '', share: '0.5' },
+          ] }));
+          setMatches(previous => ({ ...previous, [oldId]: value })); edited();
+        }}><option value="">Выберите соответствие</option><option value="discard">Не переносить прогресс этой темы</option>
+          <option value="split">Разделить между темами</option>
+          {t.currentTopics?.map(current => <option key={current.id} value={current.id}>{`${current.sourceNumber ?? ''} ${current.title ?? ''}`.trim()}</option>)}
+        </Select>
+        {split && <div className="mt-3 space-y-3 rounded-lg border border-line p-3">
+          <p className="text-xs text-muted">Распределите весь прежний прогресс между новыми темами. Доля 0.5 означает 50%. Итоговые часы проверьте в серверном предпросмотре.</p>
+          {parts.map((part, index) => <div key={index} className="space-y-2 border-b border-line pb-3 last:border-0">
+            <Field label={`Новая тема ${index + 1}: ${old.title}`}><Select disabled={locked} value={part.topicId}
+              onChange={event => editSplit(oldId, index, { topicId: event.target.value })}>
+              <option value="">Выберите тему</option>{t.currentTopics?.map(current => <option key={current.id} value={current.id}>{`${current.sourceNumber ?? ''} ${current.title ?? ''}`.trim()}</option>)}
+            </Select></Field>
+            <Field label={`Доля ${index + 1}: ${old.title}`} hint="Больше 0 и не больше 1, до четырёх знаков после запятой.">
+              <TextInput type="number" min="0.0001" max="1" step="0.0001" disabled={locked} value={part.share}
+                onChange={event => editSplit(oldId, index, { share: event.target.value })} />
+            </Field>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-muted">Из прежнего прогресса: {ktpShareUnits(part.share) == null ? '—' : ktpHours(covered * ktpShareUnits(part.share)! / 10000)} ч</p>
+              <Button variant="ghost" size="sm" disabled={locked} aria-label={`Удалить долю ${index + 1}: ${old.title}`}
+                onClick={() => { setSplits(previous => ({ ...previous, [oldId]: parts.filter((_, position) => position !== index) })); edited(); }}>Удалить строку</Button>
+            </div>
+          </div>)}
+          <Button variant="secondary" size="sm" disabled={locked} aria-label={`Добавить долю: ${old.title}`}
+            onClick={() => { setSplits(previous => ({ ...previous, [oldId]: [...parts, { topicId: '', share: '' }] })); edited(); }}>Добавить тему для переноса</Button>
+          <p className={`text-13 font-semibold ${validation.valid ? 'text-success-fg' : 'text-danger-fg'}`}>Сумма долей: {ktpHours(validation.sum / 10000)} из 1 ({ktpHours(validation.sum / 100)}%)</p>
+          {validation.error && <p role="status" className="text-13 text-danger-fg">{validation.error}</p>}
+        </div>}
+        {matches[oldId] === 'discard' && <p className="mt-2 text-xs text-muted">Прогресс этой темы не переносится в новую версию. Исторические уроки сохранятся.</p>}
+      </TableCell></tr>;
+    })}</tbody></DataTable>
+    <details className="rounded-xl border border-line p-4"><summary className="cursor-pointer text-sm font-semibold">Ручные отметки тем новой версии</summary><div className="mt-4 space-y-3">{t.currentTopics?.map(current => <Field key={current.id} label={current.title ?? ''}><Select disabled={locked} value={statuses[current.id!] ?? 'NONE'} onChange={e => { setStatuses(previous => ({ ...previous, [current.id!]: e.target.value })); edited(); }}><option value="NONE">По пройденным часам</option><option value="FORCE_COMPLETED">Пройдена вручную</option><option value="FORCE_IN_PROGRESS">В работе вручную</option></Select></Field>)}</div></details>
+    <Button variant="secondary" disabled={missing || locked} loading={preview.isPending} onClick={() => void calculate()}>Проверить перенос прогресса</Button>
     {review && <><StatusNotice tone="success">Сохранится уроков: {review.preview.preservedLessonIds?.length ?? 0}. Будет перераспределено будущих уроков: {review.preview.replaceableFutureLessonIds?.length ?? 0}.</StatusNotice>
+      {!!review.request.discardedOldTopicIds?.length && <StatusNotice tone="warning">Прогресс этих тем не переносится: {review.request.discardedOldTopicIds.map(topicId => t.previousTopics?.find(topic => topic.id === topicId)?.title).join('; ')}. История проведённых уроков сохраняется.</StatusNotice>}
       <DataTable appearance="planning" label="Предпросмотр переноса прогресса"><thead><tr><TableHead>Тема новой версии</TableHead><TableHead>Перенос часов</TableHead><TableHead>По плану</TableHead></tr></thead><tbody>{review.preview.coverage?.map(c => <tr key={c.topicId}><TableCell>{t.currentTopics?.find(topic => topic.id === c.topicId)?.title}</TableCell><TableCell>{c.total}</TableCell><TableCell>{c.planned}{!!c.overage && <p className="text-red-600">Превышение: {c.overage} ч</p>}</TableCell></tr>)}</tbody></DataTable>
-      {review.preview.hasOverage && <label className="flex gap-3 text-sm"><input className="size-4 accent-navy-700" type="checkbox" checked={overage} onChange={e => setOverage(e.target.checked)} />Я принимаю превышение часов в новой версии</label>}</>}
-    <Field label="Причина переноса" required><TextArea maxLength={1000} value={reason} onChange={e => setReason(e.target.value)} /></Field>
-    {(preview.isError || confirm.isError) && <ErrorBlock message={ktpError(preview.error ?? confirm.error)} onRetry={reload} />}
-    <div className="flex justify-end gap-3"><Button variant="secondary" disabled={confirm.isPending} onClick={onClose}>Назад</Button><Button variant="navy" loading={confirm.isPending} disabled={!review || reason.trim().length < 3 || (!!review?.preview.hasOverage && !overage) || confirm.isError} onClick={() => void save()}>Подтвердить перенос</Button></div>
+      {review.preview.hasOverage && <label className="flex gap-3 text-sm"><input className="size-4 accent-navy-700" type="checkbox" disabled={locked} checked={overage} onChange={e => setOverage(e.target.checked)} />Я принимаю превышение часов в новой версии</label>}</>}
+    <Field label="Причина переноса" required><TextArea maxLength={1000} disabled={locked} value={reason} onChange={e => setReason(e.target.value)} /></Field>
+    {(preview.isError || confirm.isError) && <ErrorBlock message={ktpError(preview.error ?? confirm.error)} />}
+    {confirm.isError && !needsRefresh && review && <StatusNotice tone="warning">Подтверждение не получено. Повторите ту же операцию: проверенный перенос, основание и ваше согласие сохраняются.</StatusNotice>}
+    {needsRefresh && <StatusNotice tone="warning">Данные изменились после проверки. Обновите их и проверьте перенос заново.
+      <div className="mt-3"><Button variant="secondary" size="sm" onClick={reload}>Обновить данные</Button></div>
+    </StatusNotice>}
+    <div className="flex justify-end gap-3"><Button variant="secondary" disabled={busy} onClick={onClose}>Назад</Button><Button variant="navy" loading={confirm.isPending} disabled={busy || needsRefresh || !review || reason.trim().length < 3 || (!!review?.preview.hasOverage && !overage)} onClick={() => void save()}>{confirm.isError && !needsRefresh ? 'Повторить подтверждение' : 'Подтвердить перенос'}</Button></div>
   </div>;
 }

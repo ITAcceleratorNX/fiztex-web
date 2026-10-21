@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/Button';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { formatDate } from '@/lib/format';
 import { YEAR_STATUS_LABELS } from '../labels';
+import { AcademicYearLifecycleModal, type YearLifecycleAction } from '../modals/AcademicYearLifecycleModal';
 import { AcademicYearFormModal } from '../modals/AcademicYearFormModal';
-import { activateAcademicYear, archiveAcademicYear, listAcademicYears } from '../services';
+import { activateAcademicYear, listAcademicYears } from '../services';
 import type { AcademicYear } from '../types';
 import { useToast } from '@/context/ToastContext';
 import { platformErrorMessage } from '../platformErrorMessage';
@@ -17,6 +18,7 @@ export function AcademicYearPage() {
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<AcademicYear | null>(null);
+  const [lifecycle, setLifecycle] = useState<{ year: AcademicYear; action: YearLifecycleAction } | null>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -44,16 +46,6 @@ export function AcademicYearPage() {
     }
   }
 
-  async function handleArchive(year: AcademicYear) {
-    if (!window.confirm(`Архивировать «${year.name}»?`)) return;
-    try {
-      await archiveAcademicYear(year.id);
-      toast.success('Учебный год архивирован');
-      await reload();
-    } catch (err) {
-      toast.error(platformErrorMessage(err, 'Не удалось завершить учебный год. Попробуйте ещё раз.'));
-    }
-  }
 
   return (
     <div>
@@ -102,7 +94,7 @@ export function AcademicYearPage() {
                   <td className="px-4 py-3 text-slate-600">{YEAR_STATUS_LABELS[year.status]}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
-                      <Button
+                      {year.status !== 'ARCHIVED' && <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => {
@@ -111,15 +103,17 @@ export function AcademicYearPage() {
                         }}
                       >
                         Изменить
-                      </Button>
+                      </Button>}
+                      {year.status === 'ARCHIVED' && <Button variant="ghost" size="sm" onClick={() => setLifecycle({ year, action: 'restore' })}>Восстановить</Button>}
+                      <Button variant="ghost" size="sm" onClick={() => setLifecycle({ year, action: 'history' })}>История</Button>
                       {year.status === 'DRAFT' && (
                         <Button variant="ghost" size="sm" onClick={() => void handleActivate(year)}>
                           Активировать
                         </Button>
                       )}
                       {year.status !== 'ARCHIVED' && (
-                        <Button variant="ghost" size="sm" onClick={() => void handleArchive(year)}>
-                          Архив
+                        <Button variant="ghost" size="sm" onClick={() => setLifecycle({ year, action: 'complete' })}>
+                          Завершить
                         </Button>
                       )}
                     </div>
@@ -131,6 +125,8 @@ export function AcademicYearPage() {
         </div>
       )}
 
+      <AcademicYearLifecycleModal year={lifecycle?.year ?? null} action={lifecycle?.action ?? 'complete'}
+        activeYear={years.find(year => year.status === 'ACTIVE') ?? null} onClose={() => setLifecycle(null)} onSaved={() => void reload()} />
       <AcademicYearFormModal
         open={formOpen}
         onClose={() => setFormOpen(false)}

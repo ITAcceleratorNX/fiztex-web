@@ -6,6 +6,7 @@ export function platformErrorMessage(error: unknown, fallback: string): string {
     if (error.code === 'ANOTHER_YEAR_ACTIVE') {
       return 'Сначала завершите текущий учебный год, затем активируйте другой.';
     }
+    if (error.code === 'ACADEMIC_YEAR_NOT_STARTED') return error.message;
     if (error.status === 0) {
       return 'Нет связи с сервером. Проверьте подключение и попробуйте снова.';
     }

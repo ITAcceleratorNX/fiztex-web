@@ -18,6 +18,7 @@ export const COMPONENT_SHORT: Record<AssessmentComponent, string> = {
   FORMATIVE: 'ФО',
   SOR: 'СОР',
   SOCH: 'СОЧ',
+  INTERMEDIATE: 'ПО',
 };
 
 export const SCORING_LABELS: Record<WorkScoring, string> = {

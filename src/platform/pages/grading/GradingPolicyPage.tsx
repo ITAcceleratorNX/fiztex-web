@@ -40,6 +40,7 @@ import {
 import type { GradeType } from '@/lib/gradesApi';
 import { GRADE_TYPE_LABELS } from '@/lib/gradesModel';
 import { platformCoreApi } from '@/lib/platformCoreApi';
+import { PrimaryAssessmentNotice } from './PrimaryAssessmentNotice';
 
 type Issue = { code?: string; field?: string; message?: string };
 type ScopeConflict = { periodId?: number; periodName?: string; reason?: string; count?: number };
@@ -48,10 +49,9 @@ type ScopeConflict = { periodId?: number; periodName?: string; reason?: string; 
  * Политика оценивания школы (GRADES-003): веса ФО, СОР и СОЧ, как учитывается каждый вид
  * работы, пороги «процент → оценка» и вес экзамена.
  *
- * <p><b>Числа здесь — решение школы, а не платформы.</b> Источники противоречат друг другу
- * (Kundelik 25/25/50 против формы журнала 2026 года 50/50 без ФО), поэтому оба варианта
- * предложены шаблонами, и ни один не действует сам. Пока политика года не активирована,
- * журнал считает по-старому: средний балл и шкала 2…5.
+ * <p>Шаблон выбирается по учебному году. При действующей политике сервер применяет
+ * нормативный профиль по ступени обучения; начальная школа с 2026 года использует
+ * ФО и ПО. Пока политика года не активирована, журнал считает по старой шкале.
  *
  * <p><b>Действующая версия не редактируется.</b> Поменять веса — значит сделать копию,
  * поправить черновик и активировать его: прошлая версия уходит в историю, и у каждого
@@ -103,7 +103,7 @@ export function GradingPolicyPage() {
         <div className="flex flex-col gap-1">
           <h1 className="text-28 font-bold text-ink">Политика оценивания</h1>
           <p className="text-13 text-muted">
-            Веса формативного и суммативного оценивания, пороги итоговой оценки и правила, по
+            Веса компонентов оценивания, пороги итоговой оценки и правила, по
             которым журнал считает процент за четверть.
           </p>
         </div>
@@ -145,27 +145,32 @@ export function GradingPolicyPage() {
               <EmptyBlock
                 icon={<Scale className="size-7" />}
                 title="Политика на этот год не действует"
-                description="Журнал считает по-старому: средний балл и итог 2–5. Создайте черновик из шаблона, проверьте числа со школой и активируйте."
+                description="Для публикации новых числовых итогов требуется утверждённая схема. Выберите шаблон для своего учебного года и проверьте его применимость."
               />
             </div>
           )}
 
+          <PrimaryAssessmentNotice
+            startDate={years.find((year) => year.id === selectedYearId)?.startDate}
+            active={active != null}
+          />
           {!active && drafts.length === 0 && (
             <section className="grid gap-4 md:grid-cols-2">
               {(templatesQuery.data ?? []).map((template) => (
                 <article key={template.code} className="card flex flex-col gap-3 p-5">
                   <p className="flex items-center gap-2 text-11 font-bold uppercase text-muted">
                     <FileText className="size-4" />
-                    Шаблон из источника
+                    {template.historical ? 'Исторический шаблон' : 'Действующие правила РК'}
                   </p>
                   <h3 className="text-15 font-bold text-ink">{template.title}</h3>
                   <p className="text-13 text-slate-600">{weightsCaption(template.content?.components)}</p>
-                  <p className="text-11 text-muted">{template.content?.sourceNote}</p>
+                  <p className="text-13 font-semibold text-ink">{template.applicability}</p><p className="text-11 text-muted">{template.content?.sourceNote}</p>
                   <div className="mt-auto">
                     <Button
                       variant="secondary"
                       size="sm"
                       loading={createPolicy.isPending}
+                      disabled={template.historical ? (years.find(y=>y.id===selectedYearId)?.startDate ?? '') >= '2026-09-01' : (years.find(y=>y.id===selectedYearId)?.startDate ?? '') < '2026-09-01'}
                       onClick={() => void create({ template: template.code })}
                     >
                       <Plus className="size-4" />

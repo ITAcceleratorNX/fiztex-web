@@ -15,7 +15,6 @@ import { StatusNotice } from '@/components/ui/StatusNotice';
 import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useKtpBindings, useKtpCommand, useKtpDraft, useKtpContext, useKtpImport } from '@/hooks/queries';
-import { useToast } from '@/context/ToastContext';
 import { useFormDraft } from '@/context/FormDraftContext';
 import { ktpApi, type KtpContent, type KtpDraft, type KtpTopic } from '@/lib/ktpApi';
 import { ktpCount, ktpHours, ktpPaths, ktpRows, ktpWorkLabels, updateKtpTopic, issueMatchesTopic } from '@/lib/ktpModel';
@@ -26,6 +25,7 @@ import { KtpTopicEditor, type KtpEditableField } from './KtpTopicEditor';
 import { KtpActivationModal } from './KtpActivationModal';
 import { KtpIssues } from './KtpIssues';
 import { KtpRemovalDialog } from './KtpRemovalDialog';
+import { KtpReparseModal } from './KtpReparseModal';
 
 export function KtpDraftPage() { return <KtpAccess><DraftLoader /></KtpAccess>; }
 function DraftLoader() {
@@ -34,22 +34,29 @@ function DraftLoader() {
   const query = useKtpDraft(id);
   if (!Number.isSafeInteger(id) || id <= 0) return <ErrorBlock message="Не найдено. Возможно, страницу уже удалили." />;
   if (query.isPending) return <LoadingBlock />;
-  if (query.isError) return <ErrorBlock message={ktpError(query.error)} onRetry={() => void query.refetch()} />;
-  return <DraftEditor key={id} initial={query.data} />;
+  if (!query.data) return <ErrorBlock message={ktpError(query.error)} onRetry={() => void query.refetch()} />;
+  return <DraftEditor key={id} initial={query.data} reload={async () => {
+    const result = await query.refetch({ throwOnError: true });
+    if (!result.data) throw new Error('Черновик не загружен');
+    return result.data;
+  }} />;
 }
 type EditorDraft = { saved: KtpDraft; content: KtpContent; decisions: Schema<'KtpCandidateDecision'>[]; sourceDecisions: Schema<'KtpSourceDecision'>[] };
 function isDirtyDraft(value: EditorDraft) {
   return JSON.stringify(value.content) !== JSON.stringify(value.saved.content) || JSON.stringify(value.decisions) !== JSON.stringify(value.saved.candidateDecisions ?? []) || JSON.stringify(value.sourceDecisions) !== JSON.stringify(value.saved.sourceDecisions ?? []);
 }
-function DraftEditor({ initial }: { initial: KtpDraft }) {
+function DraftEditor({ initial, reload }: { initial: KtpDraft; reload: () => Promise<KtpDraft> }) {
   const { draft: form, setDraft: setForm, clear } = useFormDraft<EditorDraft>(`ktp-editor-${initial.id}`, () => ({ saved: initial, content: initial.content ?? { periods: [], issues: [], candidates: [] }, decisions: initial.candidateDecisions ?? [], sourceDecisions: initial.sourceDecisions ?? [] }), isDirtyDraft);
   const navigate = useNavigate();
   const [removing, setRemoving] = useState(false);
+  const [reparsing, setReparsing] = useState(false);
+  const [saveNotice, setSaveNotice] = useState<string>();
+  const [structureOpen, setStructureOpen] = useState(() => !ktpRows(initial.content).length);
   const { saved, content, decisions, sourceDecisions } = form;
   function setSaved(saved: KtpDraft) { setForm(old => ({ ...old, saved })); }
-  function setContent(next: SetStateAction<KtpContent>) { setForm(old => ({ ...old, content: typeof next === 'function' ? next(old.content) : next })); }
-  function setDecisions(next: SetStateAction<EditorDraft['decisions']>) { setForm(old => ({ ...old, decisions: typeof next === 'function' ? next(old.decisions) : next })); }
-  function setSourceDecisions(next: SetStateAction<EditorDraft['sourceDecisions']>) { setForm(old => ({ ...old, sourceDecisions: typeof next === 'function' ? next(old.sourceDecisions) : next })); }
+  function setContent(next: SetStateAction<KtpContent>) { setSaveNotice(undefined); setForm(old => ({ ...old, content: typeof next === 'function' ? next(old.content) : next })); }
+  function setDecisions(next: SetStateAction<EditorDraft['decisions']>) { setSaveNotice(undefined); setForm(old => ({ ...old, decisions: typeof next === 'function' ? next(old.decisions) : next })); }
+  function setSourceDecisions(next: SetStateAction<EditorDraft['sourceDecisions']>) { setSaveNotice(undefined); setForm(old => ({ ...old, sourceDecisions: typeof next === 'function' ? next(old.sourceDecisions) : next })); }
   const [editing, setEditing] = useState<{ pi: number; si: number; ti: number; topic: KtpTopic; field?: KtpEditableField } | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -57,7 +64,6 @@ function DraftEditor({ initial }: { initial: KtpDraft }) {
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
   const [dragging, setDragging] = useState<{ pi: number; si: number; ti: number } | null>(null);
   const save = useKtpCommand(ktpApi.save);
-  const toast = useToast();
   const context = useKtpContext();
   const imported = useKtpImport(saved.importId!);
   const targetAssignments = context.data?.assignments?.filter(a => a.academicYearId === imported.data?.academicYearId && a.subjectId === imported.data?.subjectId && saved.classIds?.includes(a.classId!)) ?? [];
@@ -70,6 +76,7 @@ function DraftEditor({ initial }: { initial: KtpDraft }) {
   const attentionIssues = [...errors, ...warnings];
   const attentionRows = rows.filter(row => attentionIssues.some(issue => issueMatchesTopic(issue, row.topic)));
   function openEditor(row: NonNullable<typeof editing>) {
+    setSaveNotice(undefined);
     setExpanded(old => ({ ...old, [row.pi]: true })); setAttention(false); setEditing(row);
   }
   async function persist(targets?: Schema<'KtpTargetExpectation'>[]) {
@@ -78,7 +85,14 @@ function DraftEditor({ initial }: { initial: KtpDraft }) {
     const normalized = { ...content, periods: content.periods?.map((p, pi) => ({ ...p, order: pi + 1, sections: p.sections?.map((s, si) => ({ ...s, order: si + 1, topics: s.topics?.map(t => { newOrders.set(t.order!, ++order); return { ...t, order }; }) ?? [] })) ?? [] })) ?? [] };
     const result = await save.mutateAsync({ id: saved.id!, body: { expectedRevision: saved.revision!, content: normalized, classIds: saved.classIds ?? [], candidateDecisions: decisions.filter(d => d.topicOrder != null || !!d.ignoreReason?.trim()).map(d => d.topicOrder == null ? d : { ...d, topicOrder: newOrders.get(d.topicOrder) }), sourceDecisions: sourceDecisions.filter(d => d.reason?.trim()), targetExpectations: targets ?? [] } });
     setSaved(result); setContent(result.content!); setDecisions(result.candidateDecisions ?? []); setSourceDecisions(result.sourceDecisions ?? []);
-    toast.success('Изменения сохранены');
+    setSaveNotice('Черновик сохранён. Проверьте ошибки и предупреждения перед подтверждением КТП.');
+  }
+  async function refreshAfterReparse(applied: boolean) {
+    const latest = await reload();
+    setForm({ saved: latest, content: latest.content ?? { periods: [], issues: [], candidates: [] }, decisions: latest.candidateDecisions ?? [], sourceDecisions: latest.sourceDecisions ?? [] });
+    setStructureOpen(!ktpRows(latest.content).length); setExpanded({}); setAttention(false);
+    setSaveNotice(applied ? 'Новое распознавание применено. Проверьте темы, часы и замечания перед подтверждением КТП.' : undefined);
+    setReparsing(false);
   }
   function sectionTopics(pi: number, si: number, transform: (topics: KtpTopic[]) => KtpTopic[]) {
     setContent(old => ({ ...old, periods: old.periods?.map((p, pIndex) => pIndex !== pi ? p : { ...p, sections: p.sections?.map((s, sIndex) => sIndex !== si ? s : { ...s, topics: transform(s.topics ?? []) }) }) }));
@@ -93,7 +107,7 @@ function DraftEditor({ initial }: { initial: KtpDraft }) {
   function moveTopic(pi: number, si: number, from: number, to: number) {
     sectionTopics(pi, si, topics => { if (to < 0 || to >= topics.length) return topics; const next = [...topics]; const [item] = next.splice(from, 1); next.splice(to, 0, item); return next; });
   }
-  return <div className="planning-page"><WorkspacePageHeader title="Проверка КТП" backTo={ktpPaths.list} backLabel="К списку КТП" actions={editable && <ActionMenu appearance="compact" placement="viewport" label="Действия черновика КТП" items={[{ label: 'Удалить загрузку и черновик', danger: true, disabled: save.isPending, onSelect: () => setRemoving(true) }]} />}
+  return <div className="planning-page"><WorkspacePageHeader title="Проверка КТП" backTo={ktpPaths.list} backLabel="К списку КТП" actions={editable && <ActionMenu appearance="compact" placement="viewport" label="Действия черновика КТП" items={[{ label: 'Повторно распознать файл', disabled: dirty || !!editing || save.isPending, onSelect: () => setReparsing(true) }, { label: 'Удалить загрузку и черновик', danger: true, disabled: save.isPending, onSelect: () => setRemoving(true) }]} />}
     meta={<><strong className="text-planning-ink">{targetAssignments[0]?.subject ?? content.header?.subject}</strong><span>{targetAssignments.map(a => a.className).join(', ')}</span><span>{targetAssignments[0]?.academicYear?.replace('/', '–')}</span><FileTypeBadge format={imported.data?.source?.originalName?.split('.').at(-1)} variant="inline" /><SourceButton appearance="filename" source={{ importId: saved.importId! }} name={imported.data?.source?.originalName} /></>}
     status={<Badge appearance="label" tone={editable ? 'gray' : 'green'}>{editable ? dirty ? 'Есть несохранённые изменения' : `Черновик · сохранён${saved.updatedAt ? ` ${new Date(saved.updatedAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}` : ''}` : 'Подтверждён'}</Badge>} />
     {(context.isError || imported.isError) && <ErrorBlock message={ktpError(context.error ?? imported.error)} onRetry={() => { void context.refetch(); void imported.refetch(); }} />}
@@ -105,6 +119,7 @@ function DraftEditor({ initial }: { initial: KtpDraft }) {
       { title: 'Предупреждения', value: warnings.length, hint: 'Проверьте перед сохранением', tone: 'border-planning-warning-border bg-planning-warning text-amber-700' },
     ].map(card => <div key={card.title} className={`rounded-planning-panel border px-5 py-4 ${card.tone}`}><p className="text-11 font-bold uppercase tracking-wide text-planning-subtle">{card.title}</p><p className="mt-1 text-2xl font-extrabold leading-tight">{card.value}</p><p className="mt-1 text-xs text-planning-muted">{card.hint}</p></div>)}</div>
     {dirty && <StatusNotice>Сохраните черновик, чтобы повторно проверить ошибки и предупреждения.</StatusNotice>}
+    {editable && !rows.length && <StatusNotice><p>Начните с раздела «Структура плана»: добавьте период и раздел, затем темы с положительным количеством часов. После заполнения сохраните черновик.</p><Button variant="secondary" size="sm" className="mt-3" onClick={() => { setStructureOpen(true); requestAnimationFrame(() => document.getElementById('ktp-plan-structure')?.scrollIntoView?.({ block: 'start', behavior: 'smooth' })); }}>Заполнить структуру плана</Button></StatusNotice>}
     <KtpIssues appearance="review" issues={saved.content?.issues ?? []} content={saved.content} onShowIssue={issue => {
       const order = Number(issue.fieldPath?.match(/^periods\[(\d+)\]/)?.[1]);
       const pi = content.periods?.findIndex(period => period.order === order) ?? -1;
@@ -170,7 +185,7 @@ function DraftEditor({ initial }: { initial: KtpDraft }) {
       })}
     </DataTable>
     {editable && <details className="rounded-xl border border-line bg-surface p-4"><summary className="cursor-pointer text-sm font-medium">Данные из шапки документа</summary><div className="mt-4 grid gap-4 sm:grid-cols-2">{(['subject', 'academicYear', 'teacherName', 'declaredAnnualHours', 'declaredWeeklyHours', 'classNames'] as const).map((key, index) => <Field key={key} label={['Предмет', 'Учебный год', 'Учитель', 'Часы за год', 'Часов в неделю', 'Классы в документе'][index]}><TextInput type={key.startsWith('declared') ? 'number' : 'text'} value={key === 'classNames' ? content.header?.classNames?.join(', ') ?? '' : content.header?.[key] ?? ''} onChange={e => setContent(old => ({ ...old, header: { ...old.header, [key]: key === 'classNames' ? e.target.value.split(',').map(s => s.trim()).filter(Boolean) : key.startsWith('declared') ? e.target.value ? Number(e.target.value) : undefined : e.target.value } }))} /></Field>)}</div></details>}
-    {editable && <details className="text-13 text-planning-muted"><summary className="cursor-pointer">Структура плана</summary><div className="mt-3 space-y-3">
+    {editable && <details id="ktp-plan-structure" open={structureOpen} onToggle={event => setStructureOpen(event.currentTarget.open)} className="text-13 text-planning-muted"><summary className="cursor-pointer">Структура плана</summary><div className="mt-3 space-y-3">
       {content.periods?.map((period, pi) => <div key={pi} className="rounded-xl border border-planning-line bg-white p-4"><Field label="Название периода"><TextInput value={period.title ?? ''} onChange={event => setContent(old => ({ ...old, periods: old.periods?.map((p, index) => index === pi ? { ...p, title: event.target.value } : p) }))} /></Field>
         <div className="mt-3 space-y-3">{period.sections?.map((section, si) => <Field key={si} label="Название раздела"><TextInput value={section.title ?? ''} onChange={event => setContent(old => ({ ...old, periods: old.periods?.map((p, index) => index !== pi ? p : { ...p, sections: p.sections?.map((s, index) => index === si ? { ...s, title: event.target.value } : s) }) }))} /></Field>)}</div>
         <Button variant="ghost" size="sm" onClick={() => setContent(old => ({ ...old, periods: old.periods?.map((p, index) => index === pi ? { ...p, sections: [...(p.sections ?? []), { order: (p.sections?.length ?? 0) + 1, title: 'Новый раздел', topics: [] }] } : p) }))}>Добавить раздел</Button>
@@ -178,6 +193,7 @@ function DraftEditor({ initial }: { initial: KtpDraft }) {
       <Button variant="secondary" size="sm" icon={<Plus className="size-4" />} onClick={() => setContent(old => ({ ...old, periods: [...(old.periods ?? []), { order: (old.periods?.length ?? 0) + 1, title: 'Новый период', sections: [{ order: 1, title: 'Новый раздел', topics: [] }] }] }))}>Добавить период</Button>
     </div></details>}
     <p className="text-xs text-planning-subtle">Плановые сроки из документа — ориентир. Реальные даты уроков берутся из расписания.</p>
+    {editable && saveNotice && !dirty && !editing && <StatusNotice tone="success">{saveNotice}</StatusNotice>}
     {editable && <StickyActionBar message={editing ? 'Сохраните или отмените правку темы' : errors.length ? <><strong className="text-red-600">Исправьте {ktpCount(errors.length, ['ошибку', 'ошибки', 'ошибок'])}</strong>, чтобы подтвердить КТП</> : dirty ? 'Есть несохранённые изменения' : 'Черновик сохранён'}>
       <Button variant="secondary" loading={save.isPending} disabled={!dirty || !!editing} onClick={() => void persist().catch(() => {})}>Сохранить черновик</Button>
       <Button variant="primary" disabled={dirty || errors.length > 0 || save.isPending || !!editing} onClick={() => setConfirming(true)}>Подтвердить КТП</Button>
@@ -185,5 +201,6 @@ function DraftEditor({ initial }: { initial: KtpDraft }) {
     <ConfirmDialog open={deleting} title="Удалить тему?" message="Тема будет удалена из черновика. Исходный файл останется без изменений." danger confirmLabel="Удалить" onClose={() => setDeleting(false)} onConfirm={() => { if (editing) sectionTopics(editing.pi, editing.si, topics => topics.filter((_, i) => i !== editing.ti)); setDeleting(false); setEditing(null); }} />
     {confirming && <KtpActivationModal draft={saved} onClose={() => setConfirming(false)} refreshTargets={persist} />}
     {removing && <KtpRemovalDialog target={{ kind: 'import', id: saved.importId!, label: imported.data?.source?.originalName ?? 'Черновик КТП' }} onClose={() => setRemoving(false)} onRemoved={() => { clear(); navigate(ktpPaths.list); }} />}
+    {reparsing && <KtpReparseModal draft={saved} sourceName={imported.data?.source?.originalName} onRefresh={refreshAfterReparse} onClose={applied => { setReparsing(false); if (applied) { clear(); navigate(ktpPaths.list); } }} />}
   </div>;
 }

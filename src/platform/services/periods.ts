@@ -81,7 +81,10 @@ export async function updatePeriod(id: string, input: UpdatePeriodInput): Promis
   );
 
   if (input.status && input.status !== updated.status) {
-    if (input.status === 'DISABLED') {
+    if (input.status === 'ACTIVE') {
+      await request<void>(`/admin/academic-periods/${id}/activate`, { method: 'POST' });
+      updated = { ...updated, status: 'ACTIVE' };
+    } else if (input.status === 'DISABLED') {
       await request<void>(`/admin/academic-periods/${id}/disable`, { method: 'POST' });
       updated = { ...updated, status: 'DISABLED' };
     } else if (input.status === 'ARCHIVED') {

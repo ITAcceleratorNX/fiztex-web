@@ -5,6 +5,7 @@ import { BookOpen, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { WorkspacePageHeader } from '@/components/ui/WorkspacePageHeader';
+import { StatusNotice } from '@/components/ui/StatusNotice';
 import { Badge } from '@/components/ui/Badge';
 import { ActionMenu } from '@/components/ui/ActionMenu';
 import { Field, Select } from '@/components/ui/Field';
@@ -72,12 +73,13 @@ function KtpList() {
       <Field label="Статус" className="min-w-44 flex-1"><Select value={filters.status ?? ''} onChange={event => changeFilter('status', event.target.value)}><option value="">Все статусы</option>{statusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select></Field>
       {filtered && <Button variant="ghost" onClick={resetFilters}>Сбросить</Button>}
     </div>}
+    {context.data?.allocationEnabled === false && <StatusNotice tone="warning">Распределение тем в уроки не подключено. КТП можно загружать, проверять и хранить. Для автоматической подстановки тем обратитесь к ответственному за подключение школы.</StatusNotice>}
     {pending ? <LoadingBlock /> : error ? <ErrorBlock message={ktpError(error)} onRetry={() => { void imports.refetch(); void bindings.refetch(); void context.refetch(); }} /> : !active.length && !uploads.length && filtered ? <EmptyBlock title="Ничего не найдено" description="Попробуйте изменить фильтры." action={<Button variant="secondary" onClick={resetFilters}>Сбросить фильтры</Button>} /> : !active.length && !uploads.length ? <section className="rounded-planning-panel border border-planning-line bg-surface px-6">
-      <EmptyBlock appearance="planning" icon={<BookOpen className="size-7" />} title="КТП пока не загружен" description="Загрузите календарно-тематическое планирование в Word или Excel — темы будут подставляться в ваши уроки по расписанию." action={action} />
+      <EmptyBlock appearance="planning" icon={<BookOpen className="size-7" />} title="КТП пока не загружен" description="Загрузите календарно-тематическое планирование в Word или Excel. После проверки и утверждения проверьте распределение тем и прогресс классов." action={action} />
       <div className="mx-auto grid max-w-4xl gap-6 border-t border-planning-line py-8 sm:grid-cols-3">{[
         ['Загрузите файл', 'DOCX или XLSX, выберите предмет и классы'],
         ['Проверьте и подтвердите', 'Исправьте ошибки распознавания прямо на странице'],
-        ['Работайте в уроках', 'Тема подставится в каждый урок автоматически'],
+        ['Работайте в уроках', 'Проверьте распределение тем по опубликованному расписанию'],
       ].map(([title, description], index) => <div key={title} className="text-center"><span className="mx-auto mb-2 flex size-7 items-center justify-center rounded-full bg-planning-period text-xs font-semibold text-navy-700">{index + 1}</span><p className="text-13 font-semibold text-planning-ink">{title}</p><p className="mt-1 text-xs text-planning-muted">{description}</p></div>)}</div>
     </section> : <DataTable appearance="planning-list" label="Календарно-тематические планы"><colgroup><col className="w-1/4" /><col className="w-32" /><col className="w-32" /><col className="w-32" /><col className="w-1/4" /><col className="w-12" /></colgroup><thead><tr>{['Предмет', 'Классы', 'Учебный год', 'Статус', 'Прохождение', ''].map((label, i) => <TableHead key={i}>{label}</TableHead>)}</tr></thead><tbody>
       {[...groups.values()].map(group => { const binding = group[0]; const a = assignments.find(a => a.classId === binding.classId && a.subjectId === binding.subjectId && a.academicYearId === binding.academicYearId); const classes = group.map(value => assignments.find(a => a.classId === value.classId && a.subjectId === value.subjectId && a.academicYearId === value.academicYearId)?.className ?? ''); const sourceName = binding.sourceName ?? items.find(item => item.draftId === binding.versionId)?.source?.originalName; return <tr key={`b-${binding.id}`}>

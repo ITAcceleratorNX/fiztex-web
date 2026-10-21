@@ -46,7 +46,7 @@ export const topicStatusLabel = (status?: string) => status === 'COMPLETED' ? '�
 
 export const allocationMessages: Record<string, string> = {
   MANUAL_LESSON_TOPIC_PRESENT: 'В части уроков тема указана вручную. КТП её сохраняет; изменить или вернуть плановую тему можно в карточке урока.',
-  PARTIAL_SCHEDULE_HORIZON: 'Расписание создано пока не на весь год. Остальные темы будут распределены, когда появятся уроки.',
+  PARTIAL_SCHEDULE_HORIZON: 'Часть тем пока не привязана к урокам. Проверьте опубликованное расписание и доступность распределения.',
   FRACTIONAL_HOURS_REQUIRE_REVIEW: 'В плане есть дробные часы. Проверьте их распределение по урокам.',
   RESERVATIONS_EXCEED_PLAN: 'Назначенных часов больше, чем предусмотрено планом. Проверьте прогресс и темы уроков.',
   GAP_BEFORE_RESERVED_SEQUENCE: 'Перед ранее назначенными темами появились новые уроки. Проверьте темы этих уроков вручную.',

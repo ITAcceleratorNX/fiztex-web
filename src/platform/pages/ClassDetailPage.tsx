@@ -1,3 +1,4 @@
+import { StudentYearTransitionModal } from '../modals/StudentYearTransitionModal';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
@@ -47,6 +48,7 @@ export function ClassDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [yearsError, setYearsError] = useState(false);
   const [studentsError, setStudentsError] = useState(false);
+  const [transitionOpen,setTransitionOpen]=useState(false);
   const [formOpen, setFormOpen] = useState(false);
 
   const numericClassId = Number(classId);
@@ -120,6 +122,7 @@ export function ClassDetailPage() {
 
   return (
     <div className="flex flex-col gap-8">
+      {transitionOpen && <StudentYearTransitionModal classId={classId} onClose={()=>setTransitionOpen(false)} onSaved={()=>void reload()}/>}
       {loading ? (
         <ProfileCard>
           <LoadingBlock label="Загрузка класса…" />
@@ -154,6 +157,7 @@ export function ClassDetailPage() {
               </div>
               {schoolClass.status === 'ACTIVE' && (
                 <div className="flex items-center gap-2">
+                  <Button variant="secondary" size="sm" onClick={()=>setTransitionOpen(true)}>Перевод и выпуск</Button>
                   <Button variant="ghost" size="sm" onClick={() => setFormOpen(true)}>
                     Изменить
                   </Button>

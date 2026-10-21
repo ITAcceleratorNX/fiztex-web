@@ -1,3 +1,7 @@
+import { useStudentYearDecisions } from '@/hooks/queries';
+import type { Schema } from '@/lib/apiSchemas';
+import { StudentYearDecisionHistory } from '../components/StudentYearDecisionHistory';
+import { StudentYearDecisionCancellationModal } from '../modals/StudentYearDecisionCancellationModal';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Copy, Pencil, RotateCw } from 'lucide-react';
@@ -54,6 +58,7 @@ export function StudentProfilePage() {
   const toast = useToast();
 
   const [detail, setDetail] = useState<StudentProfileDetail | null>(null);
+  const decisions = useStudentYearDecisions(detail ? String(detail.id) : null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [classes, setClasses] = useState<SchoolClass[]>([]);
@@ -71,6 +76,7 @@ export function StudentProfilePage() {
   const [addToClassOpen, setAddToClassOpen] = useState(false);
   const [linkParentOpen, setLinkParentOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const [cancelling, setCancelling] = useState<Schema<'StudentYearDecision'> | null>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -257,7 +263,7 @@ export function StudentProfilePage() {
                     </div>
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                       <ProfileInfoField
-                        label="Класс поступления"
+                        label="Текущий класс"
                         value={
                           detail.currentMembership ? (
                             <span className="flex flex-wrap items-center gap-2">
@@ -377,6 +383,14 @@ export function StudentProfilePage() {
                 )}
               </ProfileCard>
 
+              <ProfileCard className="space-y-4">
+                <ProfileCardTitle>Перевод и выпуск</ProfileCardTitle>
+                {decisions.isPending ? <LoadingBlock label="Загрузка решений…" /> : decisions.isError
+                  ? <ErrorBlock message="Не удалось загрузить историю перевода и выпуска" onRetry={() => void decisions.refetch()} />
+                  : (decisions.data?.length ?? 0) > 0
+                    ? <StudentYearDecisionHistory decisions={decisions.data ?? []} onCancel={setCancelling} />
+                    : <p className="text-13 text-muted">Решения о переводе или выпуске ещё не оформлены.</p>}
+              </ProfileCard>
               {detail.membershipHistory.length > 0 && (
                 <ProfileCard className="flex flex-col gap-4">
                   <ProfileCardTitle>История классов</ProfileCardTitle>
@@ -389,7 +403,7 @@ export function StudentProfilePage() {
                         <span className="font-medium text-slate-700">
                           {formatEnrollmentClass(m.className)} · {m.academicYearName}
                         </span>
-                        <span className="text-slate-400">{SCHOOL_STATUS_LABELS[m.status]}</span>
+                        <span className="text-slate-400">{m.voided ? 'Отменено' : m.status === 'ACTIVE' && m.effectiveFrom && m.effectiveFrom > new Date().toLocaleDateString('en-CA') ? 'Запланирован' : m.status === 'ACTIVE' && m.academicYearStatus === 'DRAFT' ? 'В составе учебного года' : SCHOOL_STATUS_LABELS[m.status]}{m.effectiveFrom ? ` · с ${formatDate(m.effectiveFrom)}` : ''}{m.effectiveTo ? ` до ${formatDate(m.effectiveTo)}` : ''}</span>
                       </li>
                     ))}
                   </ul>
@@ -438,6 +452,8 @@ export function StudentProfilePage() {
             currentMembership={detail.currentMembership}
             onSaved={() => void reload()}
           />
+          {cancelling && <StudentYearDecisionCancellationModal decision={cancelling} onClose={() => setCancelling(null)}
+            onSaved={() => { void reload(); void decisions.refetch(); }} />}
           <LinkParentModal
             open={linkParentOpen}
             onClose={() => setLinkParentOpen(false)}

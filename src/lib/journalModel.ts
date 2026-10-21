@@ -1,3 +1,4 @@
+import { finalResultLabel } from './finalGradeResult';
 import type {
   ClassFinalGradeRow,
   GradebookCell,
@@ -124,7 +125,7 @@ export function finalsByStudent(rows: ClassFinalGradeRow[]): Map<number, ClassFi
  * учителю в его собственном журнале — показывают: это его рабочее состояние.
  */
 export function finalValueLabel(row: ClassFinalGradeRow | undefined): string {
-  return row?.finalGrade?.value != null ? String(row.finalGrade.value) : '—';
+  return finalResultLabel(row?.finalGrade);
 }
 
 function parseIso(iso: string): Date | null {

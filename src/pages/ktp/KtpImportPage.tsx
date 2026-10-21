@@ -41,15 +41,18 @@ function Import() {
     catch { /* A retry uses the same command key. */ }
   }
   const failed = item.status === 'FAILED';
-  const processButton = <Button variant="primary" loading={start.isPending} disabled={!!table && (!Number.isInteger(Number(table)) || Number(table) < 1)} onClick={() => void process()}>Обработать файл</Button>;
+  const processButton = <Button variant="primary" loading={start.isPending} disabled={manual.isPending || !!table && (!Number.isInteger(Number(table)) || Number(table) < 1)} onClick={() => void process()}>Обработать файл</Button>;
+  const manualButton = item.allowedActions?.includes('CREATE_MANUAL_DRAFT') && <Button variant="primary" loading={manual.isPending} disabled={start.isPending} onClick={async () => {
+    try { const draft = await manual.mutateAsync({ id, body: { expectedRevision: item.revision! } }); if (draft.id) navigate(ktpPaths.draft(draft.id)); } catch { /* Visible below. */ }
+  }}>Создать черновик вручную</Button>;
   const back = <Link className={buttonClassName({ variant: 'secondary' })} to={ktpPaths.list}>К списку КТП</Link>;
   return <div className="planning-page gap-8">
     <WorkspacePageHeader section title="КТП" backTo={ktpPaths.list} backLabel="К списку КТП" actions={<ActionMenu appearance="compact" placement="viewport" label="Действия загрузки КТП" items={[{ label: 'Удалить загрузку', danger: true, onSelect: () => setRemoving(true) }]} />} />
     <ResultCard tone={running ? 'loading' : failed ? 'error' : 'success'} title={running ? 'Распознаём КТП' : failed ? 'Не удалось распознать файл' : 'Файл загружен и сохранён отдельно'}
       description={failed ? <>В файле «{item.source?.originalName}» не удалось распознать таблицу тем.<br />Загрузите .docx или .xlsx с таблицей: № · Раздел · Тема урока · Кол-во часов.</> : item.source?.originalName}
-      actions={failed ? <>{back}<Button variant="primary" onClick={() => setUpload(true)}>Загрузить другой файл</Button></> : <>{!running && item.allowedActions?.includes('START_PROCESSING') && processButton}{back}</>}>
+      actions={failed ? <>{manualButton}<Button variant={manualButton ? 'secondary' : 'primary'} disabled={manual.isPending} onClick={() => setUpload(true)}>Загрузить другой файл</Button>{back}</> : <>{!running && item.allowedActions?.includes('START_PROCESSING') && processButton}{back}</>}>
       {running ? <><ul className="mx-auto max-w-sm space-y-3 text-left"><li className="text-planning-success-fg">✓ Файл загружен и сохранён отдельно</li><li className="font-semibold">● Разбираем четверти, разделы и часы…</li></ul><p className="mt-8 text-xs text-planning-muted">Можно закрыть страницу. Обработка продолжится, результат будет доступен в списке КТП.</p>{job.data?.status === 'RETRY_WAIT' && <p className="mt-4 text-amber-700">Обработка будет повторена автоматически.</p>}</>
-        : !failed ? <p>Чтобы проверить темы и часы, запустите обработку.</p> : null}
+        : !failed ? <p>Чтобы проверить темы и часы, запустите обработку.</p> : manualButton ? <p>Можно заполнить план самостоятельно. Нажмите «Создать черновик вручную», затем в разделе «Структура плана» добавьте период, раздел и темы с часами. После заполнения сохраните черновик и проверьте замечания.</p> : null}
     </ResultCard>
     {job.isError && <ErrorBlock message={ktpError(job.error)} onRetry={() => void job.refetch()} />}
     {(start.isError || manual.isError) && <ErrorBlock message={ktpError(start.error ?? manual.error)} onRetry={() => void imported.refetch()} />}
@@ -60,9 +63,7 @@ function Import() {
       </div>}
       {item.allowedActions?.includes('START_PROCESSING') && <div className="grid gap-4 sm:grid-cols-2"><Field label="Номер таблицы Word"><TextInput type="number" min="1" step="1" value={table} onChange={event => setTable(event.target.value)} /></Field><Field label="Лист Excel"><TextInput value={sheet} onChange={event => setSheet(event.target.value)} /></Field></div>}
       <div className="flex flex-wrap items-center gap-3">{failed && item.allowedActions?.includes('START_PROCESSING') && processButton}
-        {item.allowedActions?.includes('CREATE_MANUAL_DRAFT') && <Button variant="secondary" loading={manual.isPending} onClick={async () => {
-          try { const draft = await manual.mutateAsync({ id, body: { expectedRevision: item.revision! } }); if (draft.id) navigate(ktpPaths.draft(draft.id)); } catch { /* Visible above. */ }
-        }}>Создать черновик вручную</Button>}<SourceButton source={{ importId: id }} name={item.source?.originalName} />
+        <SourceButton source={{ importId: id }} name={item.source?.originalName} />
       </div>
     </div></details>}
     {upload && <KtpUploadModal onClose={() => setUpload(false)} />}

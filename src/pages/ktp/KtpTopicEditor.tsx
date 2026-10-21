@@ -18,7 +18,7 @@ export function KtpTopicEditor({ topic, onSave, onClose, onDelete, inline = fals
     <Field className="lg:col-span-1" label="Плановые сроки"><TextInput autoFocus={initialField === 'plannedDates'} value={value.plannedDates ?? ''} onChange={e => text('plannedDates', e.target.value)} /></Field>
     <Field className="lg:col-span-1" label="Рекомендации / виды деятельности"><TextArea autoFocus={initialField === 'recommendations'} value={value.recommendations ?? ''} rows={3} onChange={e => text('recommendations', e.target.value)} /></Field>
     <div className="lg:col-span-3"><details open={initialField === 'notes' || initialField === 'sourceNumber'} className="rounded-xl border border-planning-line bg-white p-3"><summary className="cursor-pointer text-13 font-medium text-planning-muted">Примечания и номер в документе</summary><div className="mt-3 space-y-3">
-      <Field label="Примечания"><TextArea autoFocus={initialField === 'notes'} value={value.notes ?? ''} rows={2} onChange={e => text('notes', e.target.value)} /></Field><Field label="Номер в документе"><TextInput autoFocus={initialField === 'sourceNumber'} value={value.sourceNumber ?? ''} onChange={e => text('sourceNumber', e.target.value)} /></Field>
+      <Field label="Примечания"><TextArea autoFocus={initialField === 'notes'} value={value.notes ?? ''} rows={2} onChange={e => text('notes', e.target.value)} /></Field><Field label="Номер в документе"><TextInput autoFocus={initialField === 'sourceNumber'} value={(value.sourceNumber ?? '').replace(/\s+/g, ' ')} onChange={e => text('sourceNumber', e.target.value)} /></Field>
     </div></details></div>
   </div>;
   if (!inline) return <Modal open onClose={onClose} title="Редактирование темы" size="xl" scrollable footer={actions}>{fields}</Modal>;

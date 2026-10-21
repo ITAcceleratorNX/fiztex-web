@@ -209,6 +209,10 @@ export type ImportRunStatus =
 export type ImportDuplicateStrategy = 'SKIP' | 'UPDATE';
 
 export interface ClassMembership {
+  voided?: boolean;
+  academicYearStatus?: AcademicYearStatus;
+  effectiveFrom?: string;
+  effectiveTo?: string;
   id: number;
   academicYearId: number;
   academicYearName: string;

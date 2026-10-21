@@ -417,8 +417,9 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
 
         {pointsMode && canManage && (
           <p className="-mt-3 text-13 text-slate-500">
-            Четверть считается по политике оценивания: формативные работы — от 1 до 10, СОР и
-            СОЧ — балл из максимума.
+            {sheet.workTypes?.some(type => type.type === 'INTERMEDIATE_ASSESSMENT')
+              ? `2–4 классы: ФО — один балл за урок от 1 до 10 с учётом ДЗ. ПО — из ${sheet.workTypes.find(type => type.type === 'INTERMEDIATE_ASSESSMENT')?.fixedMax} баллов. Итог четверти: ФО 50% + ПО 50%, без СОР и СОЧ.`
+              : 'Четверть считается по политике оценивания: формативные работы — от 1 до 10, СОР и СОЧ — балл из максимума.'}
           </p>
         )}
 

@@ -1,4 +1,7 @@
 import { AlertTriangle, Lock } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { FINAL_RESULT_LABELS, finalResultLabel } from '@/lib/finalGradeResult';
+import type { FinalGrade } from '@/lib/gradebookApi';
 import { cx } from '@/lib/format';
 import type { ClassFinalGradeRow, ClassFinalGrades } from '@/lib/gradebookApi';
 import { formatAverage } from '@/lib/journalModel';
@@ -33,17 +36,25 @@ export function QuarterFinalsTable({
   busyStudentId,
   onPick,
   onOpenBreakdown,
+  onPickResult,
+  onCorrect,
+  onOpenHistory,
+  scope = 'PERIOD',
 }: {
   finals: ClassFinalGrades;
+  scope?: FinalGrade['scope'];
   /** Кого не хватило для публикации — сервер называет их поимённо. */
   highlighted: ReadonlySet<number>;
   busyStudentId: number | null;
   onPick: (row: ClassFinalGradeRow, value: number) => void;
+  onPickResult?: (row: ClassFinalGradeRow, kind: NonNullable<FinalGrade['resultKind']>) => void;
   onOpenBreakdown?: (row: ClassFinalGradeRow) => void;
+  onCorrect?: (row: ClassFinalGradeRow) => void;
+  onOpenHistory?: (row: ClassFinalGradeRow) => void;
 }) {
   const canManage = Boolean(finals.canManage);
   const rows = finals.rows ?? [];
-  const byPolicy = finals.gradingPolicy != null;
+  const byPolicy = scope === 'PERIOD' && finals.gradingPolicy != null;
   const options = finals.allowedValues && finals.allowedValues.length > 0
     ? finals.allowedValues
     : [...FINAL_VALUES];
@@ -57,7 +68,7 @@ export function QuarterFinalsTable({
               ФИО Ученика
             </th>
             <th className="px-6 py-3 text-center text-11 font-bold uppercase text-slate-400">
-              {byPolicy ? 'Процент за четверть' : 'Средний балл'}
+              {byPolicy ? 'Процент за четверть' : scope === 'YEAR' ? 'Средняя по периодам' : 'Средний балл'}
             </th>
             <th className="px-6 py-3 text-center text-11 font-bold uppercase text-slate-400">
               Рекомендованная оценка
@@ -70,7 +81,8 @@ export function QuarterFinalsTable({
         <tbody>
           {rows.map((row) => {
             const studentId = row.studentProfileId as number;
-            const locked = Boolean(row.yearLocked);
+            const temporary = row.finalGrade?.status === 'PUBLISHED' && row.finalGrade.resultKind === 'TEMP_UNATTESTED';
+            const locked = Boolean(row.yearLocked) || (row.finalGrade?.status === 'PUBLISHED' && !temporary);
             const value = row.finalGrade?.value ?? null;
 
             return (
@@ -86,10 +98,10 @@ export function QuarterFinalsTable({
                     <span className="truncate">{row.studentName}</span>
                     {row.currentMember === false && (
                       <span
-                        title="Ученик больше не числится в этом классе — итог за эту четверть остаётся здесь"
+                        title="Сохранённый итог ученика из прежнего состава класса"
                         className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-10 font-semibold text-slate-500"
                       >
-                        выбыл
+                        история класса
                       </span>
                     )}
                   </span>
@@ -127,20 +139,30 @@ export function QuarterFinalsTable({
                     {locked ? (
                       <span
                         className="flex items-center gap-2 text-13 font-semibold text-slate-500"
-                        title="Годовая оценка опубликована — четвертные по этому предмету закрыты"
+                        title={row.yearLocked ? scope === 'PERIOD' ? "Годовая оценка опубликована — четвертные закрыты" : "Окончательный итог опубликован — связанные результаты закрыты" : "Опубликованный итог меняется только по процедуре исправления технической ошибки"}
                       >
                         <Lock className="size-4" />
-                        {value ?? '—'}
+                        {finalResultLabel(row.finalGrade)}
                       </span>
-                    ) : canManage ? (
-                      <FinalValuePicker
-                        options={options}
+                    ) : canManage && row.currentMember !== false ? (
+                      <span className="flex flex-col items-center gap-2">
+                      {temporary && <span className="text-11 text-muted">Временно не аттестован. После сдачи обязательных работ:</span>}
+                      {dataModeNumeric(finals) && <FinalValuePicker
+                        options={temporary ? options.filter(value => value >= 3) : options}
                         value={value}
                         busy={busyStudentId === studentId}
                         onPick={(next) => onPick(row, next)}
-                      />
+                      />}
+                      <span className="flex flex-wrap justify-center gap-1">
+                        {!temporary && (finals.allowedResultKinds ?? []).filter(kind => kind !== 'NUMERIC').map(kind => (
+                          <Button key={kind} variant="secondary" disabled={busyStudentId === studentId}
+                            aria-pressed={row.finalGrade?.resultKind === kind}
+                            onClick={() => onPickResult?.(row, kind)}>{FINAL_RESULT_LABELS[kind]}</Button>
+                        ))}
+                      </span>
+                      </span>
                     ) : (
-                      <span className="text-15 font-bold text-slate-900">{value ?? '—'}</span>
+                      <span className="text-15 font-bold text-slate-900">{finalResultLabel(row.finalGrade)}</span>
                     )}
                     {row.recommendationChanged && (
                       <span
@@ -156,6 +178,13 @@ export function QuarterFinalsTable({
                       </span>
                     )}
                   </span>
+                  {row.finalGrade?.id && <span className="mt-2 flex justify-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => onOpenHistory?.(row)}>История итога</Button>
+                    {finals.canCorrectTechnicalErrors && row.finalGrade.status === 'PUBLISHED' && <Button variant="ghost" size="sm" onClick={() => onCorrect?.(row)}>Исправить техническую ошибку</Button>}
+                  </span>}
+                  {(!row.finalGrade?.resultKind || row.finalGrade.resultKind === 'NUMERIC') && row.publicationIssues?.map(issue => (
+                    <p key={issue} className="mt-2 max-w-sm text-11 text-danger-fg">{issue}</p>
+                  ))}
                 </td>
               </tr>
             );
@@ -218,4 +247,8 @@ function componentsLine(row: ClassFinalGradeRow): string {
     .filter((component) => component.workCount)
     .map((component) => `${component.code ? COMPONENT_SHORT[component.code] : ''} ${formatPercent(component.percent)}`)
     .join(' · ');
+}
+
+function dataModeNumeric(finals: ClassFinalGrades) {
+  return !finals.assessmentMode || finals.assessmentMode === 'NUMERIC';
 }

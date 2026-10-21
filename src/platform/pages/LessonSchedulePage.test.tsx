@@ -9,6 +9,7 @@ import type { ClassSchedule } from '@/platform/services';
 
 const mocks = vi.hoisted(() => ({
   email: 'admin-a',
+  listLessons: vi.fn(), listCalendarEvents: vi.fn(),
   listAcademicYears: vi.fn(), listPeriods: vi.fn(), listClasses: vi.fn(), listSchedules: vi.fn(),
   getSchedule: vi.fn(), getScheduleGrid: vi.fn(), listScheduleHistory: vi.fn(), getConstructorContext: vi.fn(),
   listBellTemplates: vi.fn(), getWorkingDays: vi.fn(), listAvailabilitySummaries: vi.fn(), listGroupSets: vi.fn(),
@@ -20,9 +21,11 @@ vi.mock('@/platform/services', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/platform/services')>(),
   ...mocks,
 }));
+vi.mock('@/lib/lessonsApi', () => ({ lessonsApi: { list: mocks.listLessons } }));
 vi.mock('@/lib/scheduleSettingsApi', () => ({ scheduleSettingsApi: {
   listBellTemplates: mocks.listBellTemplates,
   getWorkingDays: mocks.getWorkingDays,
+  listCalendarEvents: mocks.listCalendarEvents,
 } }));
 vi.mock('@/lib/schedule2bApi', () => ({
   subgroupsApi: { listGroupSets: mocks.listGroupSets },
@@ -101,6 +104,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   sessionStorage.clear();
   mocks.email = 'admin-a';
+  mocks.listCalendarEvents.mockResolvedValue({ content: [], totalPages: 0 });
+  mocks.listLessons.mockResolvedValue({ content: [] });
   mocks.listAcademicYears.mockResolvedValue(years);
   mocks.listPeriods.mockResolvedValue(periods);
   mocks.listClasses.mockResolvedValue(classes);
@@ -119,6 +124,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   clients.splice(0).forEach((client) => client.clear());
   sessionStorage.clear();
 });
@@ -516,5 +522,42 @@ describe('LessonSchedulePage · navigation context', () => {
     await user.click(screen.getByRole('option', { name: 'Класс' }));
     await waitFor(() => expect(screen.getByTestId('url').textContent).toBe('/lesson-schedule?year=2&periodId=22&classId='));
     expect(screen.getByRole('button', { name: 'Класс' })).toBeInTheDocument();
+  });
+});
+
+describe('LessonSchedulePage · даты фактических уроков', () => {
+  function publishedGrid() {
+    const schedule = schedules[2];
+    return { ...gridFor(schedule), weekdays: ['MONDAY'], lessons: [{
+      id: 99, weekday: 'MONDAY', lessonNumber: 1, subjectName: 'Математика QA',
+      teacherFullName: 'Учитель Тестовый', room: '201', targetType: 'CLASS',
+    }] };
+  }
+  it('opens the selected week date and never substitutes the next available lesson', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-20T07:00:00Z'));
+    mocks.getScheduleGrid.mockResolvedValue(publishedGrid());
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: /Математика QA/ }));
+    await waitFor(() => expect(mocks.listLessons).toHaveBeenCalledWith({
+      scheduleLessonId: 99, dateFrom: '2026-10-19', dateTo: '2026-10-19', size: 1,
+    }));
+    expect(mocks.toast.info).toHaveBeenCalledWith(expect.stringContaining('19.10.2026'));
+    expect(mocks.listLessons).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('url')).toHaveTextContent('/lesson-schedule?');
+  });
+  it('shows a school holiday in place of the normal weekly lesson', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-20T07:00:00Z'));
+    mocks.getScheduleGrid.mockResolvedValue(publishedGrid());
+    mocks.listCalendarEvents.mockResolvedValue({ content: [{
+      id: 1, dateFrom: '2026-10-19', dateTo: '2026-10-19', status: 'ACTIVE',
+      effect: 'NO_LESSONS', title: 'QA — день без занятий',
+    }], totalPages: 1 });
+    renderPage();
+    expect(await screen.findByText('QA — день без занятий')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Математика QA/ })).not.toBeInTheDocument();
+    expect(mocks.listLessons).not.toHaveBeenCalled();
   });
 });

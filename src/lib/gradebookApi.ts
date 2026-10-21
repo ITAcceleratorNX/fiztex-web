@@ -43,8 +43,8 @@ export const FINAL_GRADE_ERRORS = {
  */
 export const gradebookApi = {
   /** Чем заполнить фильтры: активный год, его периоды и доступные пары «класс + предмет». */
-  context(signal?: AbortSignal): Promise<GradebookContext> {
-    return request<GradebookContext>('/gradebook/context', { signal });
+  context(signal?: AbortSignal, academicYearId?: number | null): Promise<GradebookContext> {
+    return request<GradebookContext>(`/gradebook/context${pageQuery({ academicYearId: academicYearId ?? undefined })}`, { signal });
   },
 
   journal(query: JournalQuery, signal?: AbortSignal): Promise<Gradebook> {
@@ -62,7 +62,21 @@ export const gradebookApi = {
   },
 };
 
+export type YearFinalsQuery = { classId: number; subjectId: number; academicYearId: number; scope: 'YEAR' | 'EXAM' | 'FINAL' };
+
 export const finalGradesApi = {
+  ofYearClass(query: YearFinalsQuery, signal?: AbortSignal): Promise<ClassFinalGrades> {
+    return request(`/final-grades/class/year${pageQuery(query)}`, { signal });
+  },
+  publishYearClass(body: YearFinalsQuery): Promise<ClassFinalGrades> {
+    return request('/final-grades/class/year-publication', { method: 'POST', body });
+  },
+  history(id: number, signal?: AbortSignal): Promise<Schema<'FinalGradeHistoryView'>[]> {
+    return request(`/final-grades/${id}/history`, { signal });
+  },
+  correctTechnicalError(id: number, body: Schema<'CorrectFinalGradeRequest'>): Promise<FinalGrade> {
+    return request(`/admin/final-grades/${id}/technical-corrections`, { method: 'POST', body });
+  },
   ofClass(
     query: Omit<JournalQuery, 'dateFrom' | 'dateTo'>,
     signal?: AbortSignal,
@@ -82,8 +96,12 @@ export const finalGradesApi = {
   create(body: {
     studentProfileId: number;
     subjectId: number;
-    academicPeriodId: number;
-    value: number;
+    academicPeriodId?: number;
+    academicYearId?: number;
+    scope?: FinalGrade['scope'];
+    value: number | null;
+    resultKind?: FinalGrade['resultKind'];
+    resultReason?: string;
   }): Promise<FinalGrade> {
     return request<FinalGrade>('/final-grades', {
       method: 'POST',
@@ -91,10 +109,10 @@ export const finalGradesApi = {
     });
   },
 
-  changeValue(finalGradeId: number, value: number): Promise<FinalGrade> {
+  changeValue(finalGradeId: number, value: number | null, resultKind?: FinalGrade['resultKind'], resultReason?: string): Promise<FinalGrade> {
     return request<FinalGrade>(`/final-grades/${finalGradeId}`, {
       method: 'PATCH',
-      body: { value },
+      body: { value, resultKind, resultReason },
     });
   },
 

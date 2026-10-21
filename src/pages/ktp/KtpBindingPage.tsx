@@ -24,6 +24,7 @@ import { KtpUploadModal } from './KtpUploadModal';
 import { KtpAdjustmentModal, KtpInitialSyncModal, KtpVersionSyncModal } from './KtpProgressModals';
 import { KtpRemovalDialog } from './KtpRemovalDialog';
 import { KtpVersionsDialog } from './KtpVersionsDialog';
+import { KtpHistoricalLinkModal } from './KtpHistoricalLinkModal';
 
 export function KtpBindingPage() { return <KtpAccess><Binding /></KtpAccess>; }
 function Binding() {
@@ -49,6 +50,7 @@ function Binding() {
   const [removing, setRemoving] = useState<KtpRemovalTarget | null>(null);
   const [sync, setSync] = useState<'version' | null>(null);
   const [topic, setTopic] = useState<Schema<'KtpTopicProgress'> | null>(null);
+  const [historicalLink, setHistoricalLink] = useState(false);
   const highlightedId = params.get('topic');
   useEffect(() => {
     if (highlightedId && progress.data && version.data) {
@@ -81,7 +83,7 @@ function Binding() {
   const sourceName = imported.data?.source?.originalName;
   const sourceMeta = sourceName ? <><FileTypeBadge format={sourceName.split('.').at(-1)} variant="inline" /><SourceButton appearance="filename" source={{ bindingId: id, versionId: versionId! }} name={sourceName} /></> : null;
   function selectVersion(value: string) {
-    setTopic(null); setExpanded({}); setAllExpanded(false);
+    setTopic(null); setHistoricalLink(false); setExpanded({}); setAllExpanded(false);
     setParams(old => { const next = new URLSearchParams(old); if (Number(value) === b.versionId) next.delete('version'); else next.set('version', value); next.delete('period'); return next; });
   }
   function clearConfirmation() { setParams(old => { const next = new URLSearchParams(old); next.delete('confirmed'); return next; }, { replace: true }); }
@@ -124,6 +126,10 @@ function Binding() {
       <p className="text-planning-subtle">Проведено <strong className="text-planning-ink">{ktpCount(p.physicalLessonCount ?? 0, ['урок', 'урока', 'уроков'])}</strong></p>
       <p className="text-muted">{needsVersionSync ? 'Сверьте новую версию' : <>Пройдено <strong className="text-ink">{completed} из {p.topics?.length} тем</strong></>}</p>{!needsVersionSync && <ProgressBar tone="navy" value={completed} max={p.topics?.length ?? 0} label="Пройденные темы" className="w-32" />}
     </section>}
+    {!oldVersion && ['READY', 'AWAITING_INITIAL_SYNC'].includes(b.state ?? '') && <div className="flex flex-wrap items-center gap-3">
+      <Button variant="secondary" size="sm" onClick={() => setHistoricalLink(true)}>Связать проведённый урок</Button>
+      <p className="text-xs text-muted">Укажите фактические темы уже состоявшегося занятия, сохранив его историю.</p>
+    </div>}
     <DataTable appearance="planning" label="Темы и прогресс КТП"><colgroup><col className="w-16" /><col className="w-4/12" /><col className="w-2/12" /><col className="w-16" /><col className="w-40" /><col className="w-40" /></colgroup><thead><tr>{['№', 'Тема урока', 'Цели обучения', 'Часы', 'Уроки в расписании', 'Прогресс темы'].map(label => <TableHead key={label}>{label}</TableHead>)}</tr></thead>
     {content?.periods?.filter(period => !selectedPeriod || String(period.order) === selectedPeriod).map(period => {
       const opened = expanded[period.order!] ?? (period.order === firstPendingPeriod || period.order === highlightedPeriod || !!selectedPeriod);
@@ -139,12 +145,15 @@ function Binding() {
     {distribution.data?.diagnostics?.includes('PARTIAL_SCHEDULE_HORIZON') && <p className="text-xs text-planning-muted">{allocationMessages.PARTIAL_SCHEDULE_HORIZON}</p>}
     <details className="text-xs text-planning-muted"><summary className="cursor-pointer">История версий и распределение</summary><div className="mt-3 flex flex-wrap items-end gap-4">
       {history.hasNextPage && <Button variant="secondary" loading={history.isFetchingNextPage} onClick={() => void history.fetchNextPage()}>Ранние версии</Button>}
-      {!oldVersion && allowed && <Button variant="secondary" icon={<RefreshCw className="size-4" />} loading={reconcile.isPending} onClick={async () => { try { await reconcile.mutateAsync({ id, body: { expectedRevision: b.revision! } }); await distribution.refetch(); } catch { /* Visible below. */ } }}>Обновить распределение</Button>}
+      {!oldVersion && allowed && <Button variant="secondary" icon={<RefreshCw className="size-4" />} disabled={distribution.data?.executionEnabled === false} loading={reconcile.isPending} onClick={async () => { try { await reconcile.mutateAsync({ id, body: { expectedRevision: b.revision! } }); await distribution.refetch(); } catch { /* Visible below. */ } }}>Обновить распределение</Button>}
     </div></details>
     {!oldVersion && allowed && <div><Button variant="secondary" size="sm" onClick={openInitial}>Проверить начальный прогресс</Button></div>}
     {upload && <KtpUploadModal initial={{ academicYearId: b.academicYearId!, subjectId: b.subjectId!, classIds: archived ? [b.classId!] : related.filter(value => value.versionId === b.versionId).map(value => value.classId!) }} onClose={() => setUpload(false)} />}
     {sync === 'version' && <KtpVersionSyncModal id={id} onClose={() => setSync(null)} />}
     {topic && <KtpAdjustmentModal bindingId={id} progress={p} topic={topic} onClose={() => setTopic(null)} />}
+    {historicalLink && !oldVersion && ['READY', 'AWAITING_INITIAL_SYNC'].includes(b.state ?? '') && <KtpHistoricalLinkModal key={id}
+      bindingId={id} classLabel={assignment?.className} subjectLabel={assignment?.subject} yearLabel={assignment?.academicYear}
+      onClose={() => setHistoricalLink(false)} />}
     {versionsOpen && <KtpVersionsDialog bindingId={id} currentVersionId={b.versionId!} classLabel={assignment?.className} onClose={() => setVersionsOpen(false)} onView={value => { selectVersion(String(value)); setVersionsOpen(false); }} onRemoved={value => { if (versionId === value) selectVersion(String(b.versionId)); }} />}
     {removing && <KtpRemovalDialog target={removing} onClose={() => setRemoving(null)} onRemoved={() => navigate(ktpPaths.list)} />}
   </div>;

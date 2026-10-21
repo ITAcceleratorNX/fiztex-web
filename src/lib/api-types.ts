@@ -20,6 +20,22 @@ export interface paths {
         patch: operations["update_23"];
         trace?: never;
     };
+    "/api/admin/academic-periods/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["activate_3"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/academic-periods/{id}/archive": {
         parameters: {
             query?: never;
@@ -184,6 +200,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/academic-years/{id}/completion-readiness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["readiness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/academic-years/{id}/lifecycle-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history_16"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/academic-years/{id}/periods": {
         parameters: {
             query?: never;
@@ -194,6 +242,22 @@ export interface paths {
         get: operations["listPeriods"];
         put?: never;
         post: operations["createPeriod"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/academic-years/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["restore_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -369,7 +433,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_7"];
+        post: operations["publish_8"];
         delete?: never;
         options?: never;
         head?: never;
@@ -837,7 +901,7 @@ export interface paths {
             cookie?: never;
         };
         /** История классных руководителей, включая архивный класс */
-        get: operations["history_13"];
+        get: operations["history_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -860,6 +924,22 @@ export interface paths {
          * @description expectedCurrentAssignmentId обязателен: null — свободный класс, ID — увиденное назначение.
          */
         post: operations["remove"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/classes/{classId}/year-transition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["preview_1"];
+        put?: never;
+        post: operations["apply_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -924,6 +1004,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["publishSnapshots"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/final-grades/{id}/technical-corrections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["correct"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1259,7 +1355,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel_4"];
+        post: operations["cancel_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1419,7 +1515,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel_3"];
+        post: operations["cancel_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1657,7 +1753,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_12"];
+        get: operations["history_14"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1865,7 +1961,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_11"];
+        get: operations["history_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1915,7 +2011,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_6"];
+        post: operations["publish_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1994,6 +2090,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["audit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/student-year-decisions/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancel_3"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/student-year-decisions/{id}/cancellation-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["cancellationPreview"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2108,6 +2236,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["resetStudentPin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/students/{studentId}/year-decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history_12"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2315,7 +2459,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["publish_5"];
+        post: operations["publish_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3506,6 +3650,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/final-grades/class/year": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/final-grades/class/year-publication": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["publish_5"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/final-grades/my": {
         parameters: {
             query?: never;
@@ -3593,7 +3769,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_10"];
+        get: operations["history_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3705,7 +3881,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_9"];
+        get: operations["history_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3769,7 +3945,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_8"];
+        get: operations["history_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3931,7 +4107,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_7"];
+        get: operations["history_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4811,7 +4987,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_6"];
+        get: operations["history_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5019,7 +5195,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_5"];
+        get: operations["history_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5227,7 +5403,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_4"];
+        get: operations["history_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5355,7 +5531,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_3"];
+        get: operations["history_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5419,7 +5595,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_2"];
+        get: operations["history_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6400,6 +6576,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/student-year-decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/students": {
         parameters: {
             query?: never;
@@ -7185,7 +7377,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["preview_2"];
+        get: operations["preview_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7378,7 +7570,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["preview_1"];
+        get: operations["preview_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8439,7 +8631,7 @@ export interface components {
             author?: components["schemas"]["ReportGradeAuthorView"];
             /** Format: int64 */
             gradeId?: number;
-            gradeType?: ("FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER") | null;
+            gradeType?: ("FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT") | null;
             maxScore?: number | null;
             numericValue?: number | null;
             /** Format: date-time */
@@ -8465,6 +8657,33 @@ export interface components {
             currentStudentCount?: number | null;
             metrics?: components["schemas"]["ReportMetricsView"];
             scope?: components["schemas"]["ReportScopeView"];
+        };
+        AcademicYearLifecycleEventView: {
+            action?: string;
+            /** Format: int64 */
+            actorId?: number;
+            actorName?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            fromStatus?: string;
+            /** Format: int64 */
+            id?: number;
+            reason?: string;
+            /** Format: int64 */
+            relatedYearId?: number;
+            toStatus?: string;
+        };
+        AcademicYearReadinessView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            blockers?: string[];
+            canComplete?: boolean;
+            /** Format: int64 */
+            futureLessons?: number;
+            /** Format: int64 */
+            missingYearFinals?: number;
+            /** Format: int64 */
+            unfinishedPeriods?: number;
         };
         AcademicYearView: {
             /** Format: date-time */
@@ -9188,8 +9407,11 @@ export interface components {
             versionNumber: number;
         };
         ChangeFinalGradeValueRequest: {
+            /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultReason?: string;
             /** Format: int32 */
-            value: number;
+            value?: number;
         };
         ChangedSubjectView: {
             change?: number;
@@ -9296,6 +9518,7 @@ export interface components {
             average?: number;
             currentMember?: boolean;
             finalGrade?: components["schemas"]["FinalGradeView"];
+            publicationIssues?: string[];
             recommendationChanged?: boolean;
             /** Format: int32 */
             recommendedValue?: number;
@@ -9310,7 +9533,10 @@ export interface components {
             academicPeriodId?: number;
             /** Format: int64 */
             academicYearId?: number;
+            allowedResultKinds?: ("NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED")[];
             allowedValues?: number[];
+            assessmentMode?: string;
+            canCorrectTechnicalErrors?: boolean;
             canManage?: boolean;
             /** Format: int64 */
             classId?: number;
@@ -9368,15 +9594,22 @@ export interface components {
             /** Format: int64 */
             academicYearId?: number;
             academicYearName?: string;
+            /** @enum {string} */
+            academicYearStatus?: "DRAFT" | "ACTIVE" | "ARCHIVED";
             /** Format: int64 */
             classId?: number;
             className?: string;
             /** Format: date-time */
             createdAt?: string;
+            /** Format: date */
+            effectiveFrom?: string;
+            /** Format: date */
+            effectiveTo?: string;
             /** Format: int64 */
             id?: number;
             /** @enum {string} */
             status?: "ACTIVE" | "ARCHIVED";
+            voided?: boolean;
         };
         ClassScheduleView: {
             /** Format: int64 */
@@ -9451,9 +9684,19 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        ClassYearFinalsRequest: {
+            /** Format: int64 */
+            academicYearId: number;
+            /** Format: int64 */
+            classId: number;
+            /** @enum {string} */
+            scope: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
+            /** Format: int64 */
+            subjectId: number;
+        };
         ComponentSummaryView: {
             /** @enum {string} */
-            code?: "FORMATIVE" | "SOR" | "SOCH";
+            code?: "FORMATIVE" | "SOR" | "SOCH" | "INTERMEDIATE";
             contribution?: number | null;
             effectiveWeightPercent?: number;
             maxSum?: number;
@@ -9607,6 +9850,16 @@ export interface components {
             includeDrafts?: boolean;
             title?: string;
         };
+        CorrectFinalGradeRequest: {
+            documentReference?: string;
+            /** Format: int64 */
+            expectedVersion: number;
+            reason?: string;
+            /** @enum {string} */
+            resultKind: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            /** Format: int32 */
+            value?: number;
+        };
         CreateAcademicPeriodRequest: {
             /** Format: date */
             endDate: string;
@@ -9681,13 +9934,16 @@ export interface components {
             /** Format: int64 */
             academicYearId?: number;
             /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultReason?: string;
+            /** @enum {string} */
             scope: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
             /** Format: int64 */
             studentProfileId: number;
             /** Format: int64 */
             subjectId: number;
             /** Format: int32 */
-            value: number;
+            value?: number;
         };
         CreateGradeCorrectionRequest: {
             comment?: string;
@@ -9701,7 +9957,7 @@ export interface components {
         };
         CreateGradeRequest: {
             /** @enum {string} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             maxScore?: number;
             scaleCode?: string;
             score?: number;
@@ -9719,7 +9975,7 @@ export interface components {
             copyFromPolicyId?: number;
             name?: string;
             /** @enum {string} */
-            template?: "KUNDELIK_2020" | "JOURNAL_FORM_2026";
+            template?: "KAZAKHSTAN_2026" | "KUNDELIK_2020" | "JOURNAL_FORM_2026";
         };
         CreateGroupRequest: {
             /** Format: int64 */
@@ -10004,14 +10260,14 @@ export interface components {
         };
         DynamicsPointView: {
             /** @enum {string|null} */
-            component?: "FORMATIVE" | "SOR" | "SOCH" | null;
+            component?: "FORMATIVE" | "SOR" | "SOCH" | "INTERMEDIATE" | null;
             cumulativeValue?: number | null;
             /** Format: date */
             date?: string;
             /** Format: int64 */
             gradeId?: number;
             /** @enum {string|null} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | null;
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT" | null;
             maxScore?: number | null;
             numericValue?: number | null;
             /** Format: date-time */
@@ -10048,6 +10304,13 @@ export interface components {
             to?: string;
             /** @enum {string} */
             type?: "WEEK" | "MONTH" | "QUARTER" | "YEAR";
+        };
+        Entry: {
+            decision?: string;
+            /** Format: int64 */
+            studentProfileId: number;
+            /** Format: int64 */
+            targetClassId?: number;
         };
         EquipmentActorView: {
             /** Format: int64 */
@@ -10260,6 +10523,7 @@ export interface components {
             action?: "CREATE" | "UPDATE" | "PUBLISH";
             /** Format: int64 */
             actorId?: number;
+            actorName?: string;
             after?: components["schemas"]["JsonNode"];
             before?: components["schemas"]["JsonNode"];
             /** Format: date-time */
@@ -10283,10 +10547,14 @@ export interface components {
             academicYearId?: number;
             /** Format: int64 */
             classId?: number;
+            correctionReference?: string;
             /** Format: int64 */
             id?: number;
             /** Format: date-time */
             publishedAt?: string;
+            /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultReason?: string;
             /** @enum {string} */
             scope?: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
             /** @enum {string} */
@@ -10421,14 +10689,14 @@ export interface components {
         };
         GradeValueInput: {
             /** @enum {string} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             maxScore?: number;
             scaleCode?: string;
             score?: number;
         };
         GradeValueModeView: {
             /** @enum {string} */
-            defaultWorkType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            defaultWorkType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             /** @enum {string} */
             valueMode?: "SCALE" | "POINTS";
             workTypes?: components["schemas"]["SheetWorkTypeView"][];
@@ -10442,7 +10710,7 @@ export interface components {
             createdAt?: string;
             deleted?: boolean;
             /** @enum {string} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             /** Format: int64 */
             id?: number;
             maxScore?: number;
@@ -10499,6 +10767,7 @@ export interface components {
         };
         GradebookContextView: {
             academicYear?: components["schemas"]["GradebookYearView"];
+            academicYears?: components["schemas"]["GradebookYearView"][];
             periods?: components["schemas"]["GradebookPeriodRefView"][];
             scopes?: components["schemas"]["GradebookScopeView"][];
         };
@@ -10566,6 +10835,8 @@ export interface components {
             name?: string;
             /** Format: date */
             startDate?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "ACTIVE" | "ARCHIVED";
         };
         GradingPolicyContentRequest: {
             bands: components["schemas"]["PolicyBandDto"][];
@@ -10597,9 +10868,11 @@ export interface components {
             id?: number;
         };
         GradingPolicyTemplateView: {
+            applicability?: string;
             /** @enum {string} */
-            code?: "KUNDELIK_2020" | "JOURNAL_FORM_2026";
+            code?: "KAZAKHSTAN_2026" | "KUNDELIK_2020" | "JOURNAL_FORM_2026";
             content?: components["schemas"]["GradingPolicyContentRequest"];
+            historical?: boolean;
             title?: string;
         };
         GradingPolicyView: {
@@ -11503,6 +11776,7 @@ export interface components {
             versionId?: number;
         };
         KtpContext: {
+            allocationEnabled?: boolean;
             assignments?: components["schemas"]["KtpAssignment"][];
             formats?: string[];
             /** Format: int32 */
@@ -11611,6 +11885,7 @@ export interface components {
             expectedProgressRevision?: number;
             /** Format: int64 */
             lessonId?: number;
+            reason: string;
             topics?: components["schemas"]["KtpHistoricalTopic"][];
         };
         KtpHistoricalTopic: {
@@ -12237,7 +12512,7 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             /** @enum {string} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             /** Format: int64 */
             id?: number;
             maxScore?: number;
@@ -12260,7 +12535,7 @@ export interface components {
             /** @enum {string} */
             capacity?: "MAIN_TEACHER" | "SUBSTITUTE_TEACHER";
             /** @enum {string} */
-            defaultWorkType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            defaultWorkType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             /** Format: int64 */
             lessonId?: number;
             /** Format: int32 */
@@ -12270,7 +12545,7 @@ export interface components {
             valueMode?: "SCALE" | "POINTS";
             workTypes?: components["schemas"]["SheetWorkTypeView"][];
             /** @enum {string} */
-            writeState?: "ALLOWED" | "NOT_TEACHING" | "LESSON_CANCELLED" | "LESSON_SUPERSEDED" | "SUBSTITUTION_ENDED" | "SUBSTITUTE_NOT_PERMITTED" | "SUBSTITUTE_WINDOW_NOT_OPEN" | "SUBSTITUTE_WINDOW_CLOSED";
+            writeState?: "ALLOWED" | "NO_ASSESSMENT" | "ACADEMIC_YEAR_ARCHIVED" | "NOT_TEACHING" | "LESSON_CANCELLED" | "LESSON_SUPERSEDED" | "SUBSTITUTION_ENDED" | "SUBSTITUTE_NOT_PERMITTED" | "SUBSTITUTE_WINDOW_NOT_OPEN" | "SUBSTITUTE_WINDOW_CLOSED";
         };
         LessonHistoryView: {
             /** @enum {string} */
@@ -12344,7 +12619,7 @@ export interface components {
             lessonId?: number;
             students?: components["schemas"]["ParentCommentStudentRow"][];
             /** @enum {string} */
-            writeState?: "ALLOWED" | "NOT_TEACHING" | "LESSON_CANCELLED" | "LESSON_SUPERSEDED" | "SUBSTITUTION_ENDED" | "SUBSTITUTE_NOT_PERMITTED" | "SUBSTITUTE_WINDOW_NOT_OPEN" | "SUBSTITUTE_WINDOW_CLOSED";
+            writeState?: "ALLOWED" | "NO_ASSESSMENT" | "ACADEMIC_YEAR_ARCHIVED" | "NOT_TEACHING" | "LESSON_CANCELLED" | "LESSON_SUPERSEDED" | "SUBSTITUTION_ENDED" | "SUBSTITUTE_NOT_PERMITTED" | "SUBSTITUTE_WINDOW_NOT_OPEN" | "SUBSTITUTE_WINDOW_CLOSED";
         };
         LessonParticipantView: {
             fullName?: string;
@@ -13071,7 +13346,7 @@ export interface components {
             /** Format: int64 */
             gradeId?: number;
             /** @enum {string|null} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | null;
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT" | null;
             maxScore?: number | null;
             numericValue?: number | null;
             /** Format: date-time */
@@ -14620,7 +14895,7 @@ export interface components {
         PeriodResultSummaryView: {
             bandLabel?: string | null;
             components?: components["schemas"]["ComponentSummaryView"][];
-            missingComponents?: ("FORMATIVE" | "SOR" | "SOCH")[];
+            missingComponents?: ("FORMATIVE" | "SOR" | "SOCH" | "INTERMEDIATE")[];
             percent?: number | null;
             /** Format: int64 */
             policyId?: number;
@@ -14647,7 +14922,7 @@ export interface components {
         };
         PolicyComponentDto: {
             /** @enum {string} */
-            code: "FORMATIVE" | "SOR" | "SOCH";
+            code: "FORMATIVE" | "SOR" | "SOCH" | "INTERMEDIATE";
             title?: string;
             weightPercent: number;
         };
@@ -14660,12 +14935,12 @@ export interface components {
         };
         PolicyWorkTypeDto: {
             /** @enum {string} */
-            component?: "FORMATIVE" | "SOR" | "SOCH";
+            component?: "FORMATIVE" | "SOR" | "SOCH" | "INTERMEDIATE";
             /** @enum {string} */
             scoring: "TEN_POINT" | "RAW_POINTS";
             weight: number;
             /** @enum {string} */
-            workType: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            workType: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
         };
         ProposalIntervalView: {
             /** @enum {string} */
@@ -15117,6 +15392,12 @@ export interface components {
             selectedOptionTexts?: string[];
             /** @enum {string} */
             type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT";
+        };
+        RestoreAcademicYearRequest: {
+            /** Format: int64 */
+            expectedActiveYearId?: number;
+            makeActive?: boolean;
+            reason?: string;
         };
         ResultDetailResponse: {
             answers?: components["schemas"]["AnswerReviewItem"][];
@@ -15679,13 +15960,13 @@ export interface components {
         };
         SheetWorkTypeView: {
             /** @enum {string} */
-            component?: "FORMATIVE" | "SOR" | "SOCH";
+            component?: "FORMATIVE" | "SOR" | "SOCH" | "INTERMEDIATE";
             /** Format: int32 */
             fixedMax?: number;
             /** @enum {string} */
             scoring?: "TEN_POINT" | "RAW_POINTS";
             /** @enum {string} */
-            type?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            type?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
         };
         Skipped: {
             /** Format: int64 */
@@ -15913,6 +16194,91 @@ export interface components {
             studentProfileId?: number;
             /** Format: int64 */
             subjectId?: number;
+        };
+        StudentYearDecision: {
+            actorName?: string;
+            basis?: string;
+            cancellation?: components["schemas"]["StudentYearDecisionCancellation"];
+            cancelled?: boolean;
+            decision?: string;
+            /** Format: date */
+            effectiveDate?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: date */
+            orderDate?: string;
+            orderNumber?: string;
+            /** Format: int64 */
+            sourceClassId?: number;
+            sourceClassName?: string;
+            /** Format: int64 */
+            sourceYearId?: number;
+            sourceYearName?: string;
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            targetClassId?: number;
+            targetClassName?: string;
+            targetYearName?: string;
+        };
+        StudentYearDecisionCancellation: {
+            actorName?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date */
+            orderDate?: string;
+            orderNumber?: string;
+            reason?: string;
+        };
+        StudentYearDecisionCancellationRequest: {
+            /** Format: int64 */
+            expectedDecisionId: number;
+            /** Format: date */
+            orderDate: string;
+            orderNumber?: string;
+            reason?: string;
+        };
+        StudentYearDecisionCancellationView: {
+            blockers?: string[];
+            canCancel?: boolean;
+            decision?: string;
+            /** Format: int64 */
+            decisionId?: number;
+            effects?: string[];
+            /** Format: int64 */
+            sourceClassId?: number;
+            sourceClassName?: string;
+            sourceYearArchived?: boolean;
+            /** Format: int64 */
+            sourceYearId?: number;
+            sourceYearName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            targetClassName?: string;
+            targetYearName?: string;
+        };
+        StudentYearDecisionRequest: {
+            basis?: string;
+            /** Format: date */
+            effectiveDate: string;
+            /** Format: date */
+            orderDate: string;
+            orderNumber?: string;
+            students?: components["schemas"]["Entry"][];
+        };
+        StudentYearTransitionView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            /** Format: date */
+            earliestDecisionDate?: string;
+            sourceGrade?: string;
+            students?: components["schemas"]["YearTransitionStudent"][];
+            targets?: components["schemas"]["YearTransitionTarget"][];
+            yearEnded?: boolean;
         };
         Subgroup: {
             /** Format: int64 */
@@ -16603,7 +16969,7 @@ export interface components {
         };
         TemporaryGradeView: {
             /** @enum {string} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             maxScore?: number;
             numericValue?: number;
             scaleCode?: string;
@@ -16916,7 +17282,7 @@ export interface components {
         };
         UpdateGradeRequest: {
             /** @enum {string} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             maxScore?: number;
             scaleCode?: string;
             score?: number;
@@ -17112,13 +17478,13 @@ export interface components {
         };
         WorkView: {
             /** @enum {string} */
-            component?: "FORMATIVE" | "SOR" | "SOCH";
+            component?: "FORMATIVE" | "SOR" | "SOCH" | "INTERMEDIATE";
             /** Format: date */
             date?: string;
             /** Format: int64 */
             gradeId?: number;
             /** @enum {string} */
-            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER";
+            gradeType?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
             maxScore?: number;
             /** Format: date-time */
             publishedAt?: string;
@@ -17231,6 +17597,24 @@ export interface components {
             /** Format: int32 */
             recommendedValue?: number;
         };
+        YearTransitionStudent: {
+            blockers?: string[];
+            decision?: components["schemas"]["StudentYearDecision"];
+            name?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
+        YearTransitionTarget: {
+            /** Format: int64 */
+            academicYearId?: number;
+            academicYearName?: string;
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            grade?: string;
+            /** Format: date */
+            startDate?: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -17263,6 +17647,26 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AcademicPeriodView"];
                 };
+            };
+        };
+    };
+    activate_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -17701,6 +18105,50 @@ export interface operations {
             };
         };
     };
+    readiness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicYearReadinessView"];
+                };
+            };
+        };
+    };
+    history_16: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicYearLifecycleEventView"][];
+                };
+            };
+        };
+    };
     listPeriods: {
         parameters: {
             query?: never;
@@ -17745,6 +18193,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AcademicPeriodView"];
+                };
+            };
+        };
+    };
+    restore_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreAcademicYearRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicYearView"];
                 };
             };
         };
@@ -18046,7 +18520,7 @@ export interface operations {
             };
         };
     };
-    publish_7: {
+    publish_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -19049,7 +19523,7 @@ export interface operations {
             };
         };
     };
-    history_13: {
+    history_15: {
         parameters: {
             query?: {
                 page?: number;
@@ -19181,6 +19655,54 @@ export interface operations {
             };
         };
     };
+    preview_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentYearTransitionView"];
+                };
+            };
+        };
+    };
+    apply_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StudentYearDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentYearTransitionView"];
+                };
+            };
+        };
+    };
     getById_6: {
         parameters: {
             query?: never;
@@ -19289,6 +19811,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EventSnapshotRunView"];
+                };
+            };
+        };
+    };
+    correct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CorrectFinalGradeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinalGradeView"];
                 };
             };
         };
@@ -19943,7 +20491,7 @@ export interface operations {
             };
         };
     };
-    cancel_4: {
+    cancel_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -20256,7 +20804,7 @@ export interface operations {
             };
         };
     };
-    cancel_3: {
+    cancel_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -20684,7 +21232,7 @@ export interface operations {
             };
         };
     };
-    history_12: {
+    history_14: {
         parameters: {
             query: {
                 entityType: "BELL_TEMPLATE" | "WORKING_DAYS" | "CALENDAR_EVENT" | "TEACHER_AVAILABILITY" | "GROUP_SET" | "SUBGROUP" | "LESSON_GENERATION";
@@ -21036,7 +21584,7 @@ export interface operations {
             };
         };
     };
-    history_11: {
+    history_13: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -21156,7 +21704,7 @@ export interface operations {
             };
         };
     };
-    publish_6: {
+    publish_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -21351,6 +21899,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PageServiceRequestAuditEntryView"];
+                };
+            };
+        };
+    };
+    cancel_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StudentYearDecisionCancellationRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentYearDecisionCancellationView"];
+                };
+            };
+        };
+    };
+    cancellationPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentYearDecisionCancellationView"];
                 };
             };
         };
@@ -21563,6 +22159,28 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    history_12: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentYearDecision"][];
+                };
             };
         };
     };
@@ -21995,7 +22613,7 @@ export interface operations {
             };
         };
     };
-    publish_5: {
+    publish_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -24100,6 +24718,55 @@ export interface operations {
             };
         };
     };
+    read_1: {
+        parameters: {
+            query: {
+                classId: number;
+                subjectId: number;
+                academicYearId: number;
+                scope?: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassFinalGradesView"];
+                };
+            };
+        };
+    };
+    publish_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassYearFinalsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassFinalGradesView"];
+                };
+            };
+        };
+    };
     my_5: {
         parameters: {
             query: {
@@ -24223,7 +24890,7 @@ export interface operations {
             };
         };
     };
-    history_10: {
+    history_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -24408,7 +25075,7 @@ export interface operations {
             };
         };
     };
-    history_9: {
+    history_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -24432,7 +25099,9 @@ export interface operations {
     };
     context_1: {
         parameters: {
-            query?: never;
+            query?: {
+                academicYearId?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -24501,7 +25170,7 @@ export interface operations {
             };
         };
     };
-    history_8: {
+    history_9: {
         parameters: {
             query: {
                 subjectId: number;
@@ -24768,7 +25437,7 @@ export interface operations {
             };
         };
     };
-    history_7: {
+    history_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -26405,7 +27074,7 @@ export interface operations {
             };
         };
     };
-    history_6: {
+    history_7: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -26758,7 +27427,7 @@ export interface operations {
             };
         };
     };
-    history_5: {
+    history_6: {
         parameters: {
             query: {
                 unitId?: number;
@@ -27127,7 +27796,7 @@ export interface operations {
             };
         };
     };
-    history_4: {
+    history_5: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -27389,7 +28058,7 @@ export interface operations {
             };
         };
     };
-    history_3: {
+    history_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -27477,7 +28146,7 @@ export interface operations {
             };
         };
     };
-    history_2: {
+    history_3: {
         parameters: {
             query: {
                 childId?: number;
@@ -29749,6 +30418,28 @@ export interface operations {
             };
         };
     };
+    history_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentYearDecision"][];
+                };
+            };
+        };
+    };
     getMyClassStudents: {
         parameters: {
             query?: {
@@ -31068,7 +31759,7 @@ export interface operations {
             };
         };
     };
-    preview_2: {
+    preview_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -31406,7 +32097,7 @@ export interface operations {
             };
         };
     };
-    preview_1: {
+    preview_2: {
         parameters: {
             query?: never;
             header?: never;

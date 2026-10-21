@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { cx } from '@/lib/format';
 import type { GradeType, SheetWorkType } from '@/lib/gradesApi';
@@ -17,8 +17,8 @@ const TEN_POINTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
  *
  * <p><b>Что как оценивается, решает политика</b>, а не поповер: типы работ и их способ
  * приходят в листе урока (`workTypes`). У 10-балльной работы — сетка 1…10 и одно нажатие,
- * как у старой шкалы; у СОР и СОЧ — «балл из максимума»: максимум общий для работы, поэтому
- * его подставляет последний введённый на этом уроке (`suggestedMax`).
+ * как у старой шкалы; у работ из максимума фиксированный максимум приходит с сервера,
+ * иначе подставляется последний введённый на этом уроке (`suggestedMax`).
  *
  * <p>Тип выбирается первым и не сохраняется сам по себе: смена типа может сменить способ
  * оценивания (7 из 10 → 15 из 20), и сохранить «новый тип со старым баллом» значило бы
@@ -51,12 +51,14 @@ export function PointsPicker({
   onClose: () => void;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const fixedMaximumId = useId();
   const [type, setType] = useState<GradeType>(value?.gradeType ?? defaultType);
   const rule = workTypes.find((item) => item.type === type);
   const tenPoint = rule?.scoring !== 'RAW_POINTS';
 
   const [score, setScore] = useState(value?.score != null && !tenPoint ? String(value.score) : '');
   const [maxScore, setMaxScore] = useState(() => {
+    if (rule?.fixedMax != null) return String(rule.fixedMax);
     if (value?.maxScore != null && value.gradeType === type && !tenPoint) return String(value.maxScore);
     const suggested = suggestedMax?.(type);
     return suggested != null ? String(suggested) : '';
@@ -82,13 +84,14 @@ export function PointsPicker({
     setTouched({ score: false, maxScore: false });
     const nextRule = workTypes.find((item) => item.type === next);
     if (nextRule?.scoring === 'RAW_POINTS') {
-      const suggested = suggestedMax?.(next);
+      const suggested = nextRule.fixedMax ?? suggestedMax?.(next);
       setMaxScore(suggested != null ? String(suggested) : '');
       setScore('');
     }
   }
 
-  const validation = validateGradePoints(score, maxScore);
+  const displayedMax = rule?.fixedMax != null ? String(rule.fixedMax) : maxScore;
+  const validation = validateGradePoints(score, displayedMax);
   const [touched, setTouched] = useState({ score: false, maxScore: false });
 
   return (
@@ -163,13 +166,20 @@ export function PointsPicker({
           <Field label="Макс." required className="min-w-0 flex-1" error={touched.maxScore ? validation.maxError ?? undefined : undefined}>
             <TextInput
               inputMode="numeric"
-              value={maxScore}
+              value={displayedMax}
               disabled={busy}
-              onChange={(event) => setMaxScore(event.target.value)}
+              readOnly={rule?.fixedMax != null}
+              aria-describedby={rule?.fixedMax != null ? fixedMaximumId : undefined}
+              onChange={(event) => { if (rule?.fixedMax == null) setMaxScore(event.target.value); }}
               onBlur={() => setTouched((old) => ({ ...old, maxScore: true }))}
               className="h-9 px-2 py-1 text-center text-13"
             />
           </Field>
+          {rule?.fixedMax != null && (
+            <p id={fixedMaximumId} className="w-full text-11 text-muted">
+              Максимум установлен правилами оценивания для этого класса.
+            </p>
+          )}
           <button
             type="submit"
             disabled={busy || !validation.valid}

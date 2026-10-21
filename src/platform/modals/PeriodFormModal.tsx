@@ -5,7 +5,7 @@ import { Field, TextInput, Select } from '@/components/ui/Field';
 import { Toggle } from '@/components/ui/Toggle';
 import { useToast } from '@/context/ToastContext';
 import { PERIOD_TYPE_LABELS } from '../labels';
-import { createPeriod, updatePeriod } from '../services';
+import { useSaveAcademicPeriod } from '@/hooks/queries';
 import { platformErrorMessage } from '../platformErrorMessage';
 import type {
   AcademicPeriod,
@@ -33,14 +33,15 @@ export function PeriodFormModal({
 }) {
   const isEdit = Boolean(period);
   const toast = useToast();
+  const save = useSaveAcademicPeriod();
   const [academicYearId, setAcademicYearId] = useState('');
   const [name, setName] = useState('');
   const [type, setType] = useState<AcademicPeriodType>('QUARTER');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [active, setActive] = useState(false);
+  const [active, setActive] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const pending = save.isPending;
 
   useEffect(() => {
     if (!open) return;
@@ -55,7 +56,7 @@ export function PeriodFormModal({
     setType(period?.type ?? 'QUARTER');
     setStartDate(period?.startDate ?? '');
     setEndDate(period?.endDate ?? '');
-    setActive(period ? period.status === 'ACTIVE' : false);
+    setActive(period ? period.status === 'ACTIVE' : true);
     setError(null);
   }, [open, period, defaultYearId, years]);
 
@@ -77,33 +78,29 @@ export function PeriodFormModal({
 
     const status: AcademicPeriodStatus = active ? 'ACTIVE' : 'DISABLED';
 
-    setPending(true);
     try {
       if (isEdit && period) {
-        await updatePeriod(period.id, { name, type, startDate, endDate, status });
+        await save.mutateAsync({ periodId: period.id, input: { name, type, startDate, endDate, status } });
         toast.success('Период обновлён');
       } else {
         if (!academicYearId) {
           setError('Выберите учебный год');
-          setPending(false);
           return;
         }
-        await createPeriod({ academicYearId, name, type, startDate, endDate, status });
+        await save.mutateAsync({ input: { academicYearId, name, type, startDate, endDate, status } });
         toast.success('Период создан');
       }
       onSaved();
       onClose();
     } catch (err) {
       setError(platformErrorMessage(err, 'Не удалось сохранить период. Проверьте данные и попробуйте ещё раз.'));
-    } finally {
-      setPending(false);
     }
   }
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={() => { if (!pending) onClose(); }}
       title={isEdit ? 'Редактировать период' : 'Создать период'}
       subtitle="Настройте параметры учебного периода."
       footer={
@@ -157,8 +154,9 @@ export function PeriodFormModal({
             <TextInput type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
           </Field>
         </div>
-        <Toggle checked={active} onChange={setActive} label="Период активен" />
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        <Toggle checked={active} onChange={setActive} disabled={pending} label="Период активен"
+          description="Активные периоды доступны в журнале и расписании. Выключенный период не предлагается для новых занятий." />
+        {error && <p role="alert" className="text-sm text-danger-fg">{error}</p>}
       </form>
     </Modal>
   );

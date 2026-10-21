@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/Button';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useMyClassRoster } from '@/hooks/queries';
 import type { Schema } from '@/lib/apiSchemas';
+import { useState } from 'react';
+import { MyClassYearDecisionsModal } from './MyClassYearDecisionsModal';
 
 function studentCountLabel(count: number): string {
   const plural = new Intl.PluralRules('ru-RU').select(count);
@@ -21,14 +23,18 @@ function StudentCell({ student }: { student: Schema<'MyClassStudentView'> }) {
 }
 
 /** Вкладка «Ученики» (Figma 2200:3093): действующий состав по страницам. */
-export function MyClassStudentsTab({ classId }: { classId: number }) {
+export function MyClassStudentsTab({ classId, onForbidden }: { classId: number; onForbidden?: () => void }) {
   const roster = useMyClassRoster(classId);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const students = roster.data?.pages.flatMap((page) => page.items ?? []) ?? [];
   const totalStudents = roster.data?.pages[0]?.totalItems ?? students.length;
 
   return (
     <section aria-label="Ученики класса" className="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
-      <div className="h-10 border-b border-line bg-canvas" aria-hidden="true" />
+      <div className="flex justify-end border-b border-line bg-canvas px-6 py-3">
+        <Button variant="secondary" size="sm" onClick={() => setHistoryOpen(true)}>История перевода и выпуска</Button>
+      </div>
+      {historyOpen && <MyClassYearDecisionsModal classId={classId} onClose={() => setHistoryOpen(false)} onForbidden={onForbidden} />}
       {roster.isPending ? <LoadingBlock label="Загрузка учеников…" /> : roster.isError ? (
         <ErrorBlock message="Не удалось загрузить данные класса." onRetry={() => void roster.refetch()} />
       ) : students.length === 0 ? (
