@@ -35,10 +35,12 @@ export function SubmissionGradeBlock({
   homeworkId,
   studentProfileId,
   disabled,
+  aiGradeDraft,
 }: {
   homeworkId: number;
   studentProfileId: number;
   disabled?: boolean;
+  aiGradeDraft?: number | null;
 }) {
   const toast = useToast();
   const [picking, setPicking] = useState(false);
@@ -64,6 +66,24 @@ export function SubmissionGradeBlock({
         <Award className="size-4 text-subtle" />
         Оценка за задание
       </p>
+
+      {aiGradeDraft != null && (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-13">
+          <span>Черновик AI: <strong>{aiGradeDraft}/10</strong>. Проверьте по работе перед выставлением.</span>
+          {pointsMode && !disabled ? (
+            <Button size="sm" variant="secondary" disabled={busy}
+              onClick={() => setGrade.mutate(
+                { studentProfileId, score: aiGradeDraft, maxScore: 10,
+                  gradeType: 'HOMEWORK', gradeId: grade?.id ?? null },
+                { onError: (error) => fail(error, 'Не удалось выставить оценку') },
+              )}>
+              Выставить {aiGradeDraft}/10
+            </Button>
+          ) : (
+            <span className="text-subtle">Выберите итоговую оценку по действующей шкале ниже.</span>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">

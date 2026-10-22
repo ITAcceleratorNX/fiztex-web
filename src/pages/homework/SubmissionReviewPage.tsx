@@ -18,7 +18,7 @@ import { SUBMISSION_STATUS_LABELS, SUBMISSION_STATUS_TONES } from './homeworkMod
 import { useHomeworkGrades, useHomeworkQuestions, useStudentAnswers } from '@/hooks/queries';
 import { SubmissionGradeBlock } from './SubmissionGradeBlock';
 import { HomeworkTestAnswerReview } from './HomeworkTestAnswerReview';
-import { SubmissionAiReview } from './SubmissionAiReview';
+import { SubmissionAiReview, type PhotoAiDraft } from './SubmissionAiReview';
 import { SubmissionAntiCheat } from './SubmissionAntiCheat';
 /** §9.3: комментарий и фотографии ограничены бэкендом, дублировать числа больше негде. */
 const COMMENT_LIMIT = 2000;
@@ -46,6 +46,7 @@ export function SubmissionReviewPage() {
   const toast = useToast();
 
   const [comment, setComment] = useState('');
+  const [aiGradeDraft, setAiGradeDraft] = useState<number | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
   const [confirm, setConfirm] = useState<ReviewDecision | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -87,8 +88,9 @@ export function SubmissionReviewPage() {
   // Новая работа — чистая форма: чужой комментарий не должен уехать другому ученику.
   useEffect(() => {
     setComment('');
+    setAiGradeDraft(null);
     setPhotos([]);
-  }, [id, studentId]);
+  }, [id, studentId, submission?.currentAttempt?.id]);
 
   const loadAttachment = useCallback(
     (attachmentId: number) => homeworkApi.submissionAttachmentBlob(id, studentId, attachmentId),
@@ -226,7 +228,19 @@ export function SubmissionReviewPage() {
               У обычного задания нет ни вопросов, ни баллов — разбирать по строкам нечего,
               и вся проверка ИИ умещается в один блок над самой работой (ТЗ §11).
             */}
-            <SubmissionAiReview homeworkId={id} studentProfileId={studentId} />
+            <SubmissionAiReview
+              key={current.id}
+              homeworkId={id}
+              studentProfileId={studentId}
+              attemptId={current.id}
+              photoCount={current.photos?.length ?? 0}
+              canTransfer={canDecide}
+              onConfirm={(draft: PhotoAiDraft, restored?: boolean) => {
+                setComment(draft.comment.slice(0, COMMENT_LIMIT));
+                setAiGradeDraft(draft.grade);
+                if (!restored) toast.success('Черновик AI перенесён в обычную проверку. Решение остаётся за вами.');
+              }}
+            />
             <AttemptCard
               attempt={current}
               totalVersions={submission.attemptCount ?? 1}
@@ -269,7 +283,7 @@ export function SubmissionReviewPage() {
         Отправка для оценки тоже не обязательна — достаточно быть получателем задания,
         и «двойка за несданное» это нормальный случай, а не край.
       */}
-      <SubmissionGradeBlock homeworkId={id} studentProfileId={studentId} />
+      <SubmissionGradeBlock homeworkId={id} studentProfileId={studentId} aiGradeDraft={aiGradeDraft} />
 
       {canDecide && (
         <section className="card flex flex-col gap-4 p-5">

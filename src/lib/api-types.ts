@@ -4772,6 +4772,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/homework/{homeworkId}/submissions/{studentProfileId}/ai-recommendation/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirmPhotoReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/homework/{homeworkId}/submissions/{studentProfileId}/answer-photos/{photoId}/content": {
         parameters: {
             query?: never;
@@ -9712,6 +9728,14 @@ export interface components {
             /** Format: double */
             finalScore: number;
         };
+        ConfirmHomeworkPhotoReviewRequest: {
+            comment?: string;
+            /** Format: int64 */
+            expectedAttemptId: number;
+            /** Format: int32 */
+            grade?: number;
+            recognizedText?: string;
+        };
         ConfirmResultRequest: {
             internalComment?: string;
             schoolComment?: string;
@@ -11021,9 +11045,21 @@ export interface components {
             issues?: string[];
             maxScore?: number;
             percent?: number;
+            recognizedText?: string;
             scaleCode?: string;
             score?: number;
+            strengths?: string[];
+            suggestedComment?: string;
+            /** Format: int32 */
+            suggestedGrade?: number;
             summary?: string;
+            teacherComment?: string;
+            /** Format: date-time */
+            teacherConfirmedAt?: string;
+            /** Format: int32 */
+            teacherGrade?: number;
+            teacherRecognizedText?: string;
+            uncertainFragments?: string[];
         };
         HomeworkAiResultView: {
             applied?: boolean;
@@ -26649,6 +26685,33 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkAiRecommendationView"];
+                };
+            };
+        };
+    };
+    confirmPhotoReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmHomeworkPhotoReviewRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {

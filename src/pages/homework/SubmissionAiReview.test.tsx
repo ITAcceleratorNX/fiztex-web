@@ -1,12 +1,16 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SubmissionAiReview } from './SubmissionAiReview';
 
 const useAiGradeSuggestion = vi.fn();
+const confirmPhotoReview = vi.fn();
 
 vi.mock('./useAiGradeSuggestion', () => ({
   useAiGradeSuggestion: (...args: unknown[]) => useAiGradeSuggestion(...args),
+}));
+vi.mock('@/lib/homeworkAiApi', () => ({
+  homeworkAiApi: { confirmPhotoReview: (...args: unknown[]) => confirmPhotoReview(...args) },
 }));
 
 function ai(overrides: Record<string, unknown> = {}) {
@@ -29,6 +33,7 @@ describe('SubmissionAiReview', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useAiGradeSuggestion.mockReturnValue(ai());
+    confirmPhotoReview.mockResolvedValue({});
   });
 
   it('одна кнопка на всю работу, а не по частям', async () => {
@@ -89,5 +94,77 @@ describe('SubmissionAiReview', () => {
     render(<SubmissionAiReview homeworkId={5} studentProfileId={7} />);
 
     expect(screen.getByRole('button', { name: /Проверяю работу/ })).toBeDisabled();
+  });
+
+  it('фото-работа: учитель правит распознавание, оценку и комментарий до передачи в проверку', async () => {
+    const user = userEvent.setup();
+    const onConfirm = vi.fn();
+    useAiGradeSuggestion.mockReturnValue(ai({
+      recommendation: {
+        basis: 'COMPLETENESS', percent: 80, score: 80, maxScore: 100,
+        summary: 'Большая часть выполнена.', issues: ['Нет единиц измерения'],
+        recognizedText: 'Страница 1: F = ma', uncertainFragments: ['Страница 1: показатель степени'],
+        strengths: ['Верно записана формула'], suggestedGrade: 8,
+        suggestedComment: 'Добавьте единицы измерения.',
+      },
+    }));
+
+    render(<SubmissionAiReview homeworkId={5} studentProfileId={7} attemptId={9}
+      photoCount={2} onConfirm={onConfirm} />);
+
+    expect(screen.getByRole('button', { name: 'Проверить с AI' })).toBeInTheDocument();
+    expect(screen.getByText(/показатель степени/)).toBeInTheDocument();
+    expect(screen.getByText(/Верно записана формула/)).toBeInTheDocument();
+    await user.clear(screen.getByLabelText('Текст и формулы по порядку страниц'));
+    await user.type(screen.getByLabelText('Текст и формулы по порядку страниц'), 'Страница 1: F = m a');
+    await user.clear(screen.getByLabelText('Оценка 1–10'));
+    await user.type(screen.getByLabelText('Оценка 1–10'), '7');
+    await user.clear(screen.getByLabelText('Комментарий ученику'));
+    await user.type(screen.getByLabelText('Комментарий ученику'), 'Проверьте формулу.');
+    expect(onConfirm).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Передать в проверку ДЗ' }));
+    await waitFor(() => expect(onConfirm).toHaveBeenCalledWith({
+      recognizedText: 'Страница 1: F = m a', grade: 7, comment: 'Проверьте формулу.',
+    }));
+    expect(confirmPhotoReview).toHaveBeenCalledWith(5, 7, {
+      expectedAttemptId: 9,
+      recognizedText: 'Страница 1: F = m a', grade: 7, comment: 'Проверьте формулу.',
+    });
+  });
+
+  it('не передаёт черновик в обычную проверку, если сервер не сохранил его', async () => {
+    const user = userEvent.setup();
+    const onConfirm = vi.fn();
+    confirmPhotoReview.mockRejectedValue(new Error('network'));
+    useAiGradeSuggestion.mockReturnValue(ai({ recommendation: {
+      basis: 'COMPLETENESS', percent: 80, summary: 'Проверка',
+      recognizedText: 'Страница 1', suggestedGrade: 8,
+    } }));
+
+    render(<SubmissionAiReview homeworkId={5} studentProfileId={7} attemptId={9}
+      photoCount={1} onConfirm={onConfirm} />);
+    await user.click(screen.getByRole('button', { name: 'Передать в проверку ДЗ' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось сохранить AI-черновик');
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
+  it('после повторного открытия восстанавливает подтверждённый черновик Teacher', async () => {
+    const onConfirm = vi.fn();
+    useAiGradeSuggestion.mockReturnValue(ai({ recommendation: {
+      basis: 'COMPLETENESS', recognizedText: 'AI-текст', suggestedGrade: 8,
+      suggestedComment: 'AI-комментарий',
+      teacherRecognizedText: 'Исправленный текст', teacherGrade: 7,
+      teacherComment: 'Исправленный комментарий', teacherConfirmedAt: '2026-10-08T10:00:00Z',
+    } }));
+
+    render(<SubmissionAiReview homeworkId={5} studentProfileId={7} attemptId={9}
+      photoCount={1} onConfirm={onConfirm} />);
+
+    await waitFor(() => expect(onConfirm).toHaveBeenCalledWith({
+      recognizedText: 'Исправленный текст', grade: 7,
+      comment: 'Исправленный комментарий',
+    }, true));
+    expect(screen.getByLabelText('Текст и формулы по порядку страниц')).toHaveValue('Исправленный текст');
+    expect(screen.getByLabelText('Оценка 1–10')).toHaveValue(7);
   });
 });
