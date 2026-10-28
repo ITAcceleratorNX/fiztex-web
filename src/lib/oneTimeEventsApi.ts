@@ -11,7 +11,17 @@ export type OneTimeEventRequest = Schema<'UpdateOneTimeEventRequest'>;
  * Кого событие касается и какие уроки перекрывает, считает бэкенд: клиент только отправляет
  * поля формы и рисует пришедшие `overlaps`.
  */
+export type OneTimeEventPage = Schema<'PageOneTimeEventView'>;
+
 export const oneTimeEventsApi = {
+  /** События учебного года — список школьного календаря. */
+  list(
+    params: { academicYearId: number; dateFrom?: string; status?: 'ACTIVE' | 'CANCELLED'; page?: number; size?: number },
+    signal?: AbortSignal,
+  ) {
+    return request<OneTimeEventPage>(`/admin/one-time-events${pageQuery(params)}`, { signal });
+  },
+
   /** События класса за неделю с перекрытыми уроками его сетки. */
   classSchedule(classId: number, dateFrom: string, dateTo: string, signal?: AbortSignal) {
     return request<OneTimeEventOnSchedule[]>(

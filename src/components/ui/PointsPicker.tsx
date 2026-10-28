@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { cx } from '@/lib/format';
+import { AnchoredPanel } from './AnchoredPanel';
 import type { GradeType, SheetWorkType } from '@/lib/gradesApi';
 import { GRADE_TYPE_LABELS } from '@/lib/gradesModel';
 import { COMPONENT_SHORT } from '@/lib/gradingModel';
@@ -95,12 +96,12 @@ export function PointsPicker({
   const [touched, setTouched] = useState({ score: false, maxScore: false });
 
   return (
-    <div
+    <AnchoredPanel
       ref={rootRef}
       role="dialog"
       aria-label={studentName ? `Оценка: ${studentName}` : 'Выбор оценки'}
       className={cx(
-        'absolute right-0 top-full z-30 mt-2 flex w-[260px] flex-col gap-3 rounded-lg',
+        'flex w-[260px] flex-col gap-3 rounded-lg',
         'border border-slate-200 bg-white p-3 shadow-pop animate-scale-in',
         busy && 'pointer-events-none opacity-70',
       )}
@@ -129,6 +130,7 @@ export function PointsPicker({
               <button
                 key={point}
                 type="button"
+                aria-pressed={selected}
                 disabled={busy}
                 onClick={() => { if (!busy) onSubmit({ score: point, maxScore: 10, gradeType: type }); }}
                 className={cx(
@@ -205,6 +207,6 @@ export function PointsPicker({
       )}
 
       {error && <p className="text-13 font-medium text-red-600">{error}</p>}
-    </div>
+    </AnchoredPanel>
   );
 }

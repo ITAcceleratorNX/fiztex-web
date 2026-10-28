@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { cx } from '@/lib/format';
+import { AnchoredPanel } from './AnchoredPanel';
 import type { GradeScaleValue, GradeType } from '@/lib/gradesApi';
 import { GRADE_TYPES, GRADE_TYPE_LABELS } from '@/lib/gradesModel';
 
@@ -64,12 +65,12 @@ export function GradePicker({
   }, [onClose]);
 
   return (
-    <div
+    <AnchoredPanel
       ref={rootRef}
       role="dialog"
       aria-label={studentName ? `Оценка: ${studentName}` : 'Выбор оценки'}
       className={cx(
-        'absolute right-0 top-full z-30 mt-2 flex w-[230px] flex-col gap-3 rounded-lg',
+        'flex w-[230px] flex-col gap-3 rounded-lg',
         'border border-slate-200 bg-white p-3 shadow-pop animate-scale-in',
         busy && 'pointer-events-none opacity-70',
       )}
@@ -82,6 +83,7 @@ export function GradePicker({
             <button
               key={code}
               type="button"
+              aria-pressed={selected}
               onClick={() => onPick(code)}
               className={cx(
                 'h-8 rounded-md text-13 font-semibold transition',
@@ -153,6 +155,6 @@ export function GradePicker({
       )}
 
       {error && <p className="text-13 font-medium text-red-600">{error}</p>}
-    </div>
+    </AnchoredPanel>
   );
 }

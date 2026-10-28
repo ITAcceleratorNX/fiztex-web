@@ -104,6 +104,15 @@ export function gradeValueLabel(grade: GradeValueLike | null | undefined): strin
   return `${trimNumber(grade.score)}/${trimNumber(grade.maxScore)}`;
 }
 
+/**
+ * Оценка по шкале 2–5, оставленная историей периода, который теперь считается баллами
+ * (QA-06). Правится она в своей шкале — сервер перевод формы правкой не принимает, — поэтому
+ * экран открывает для неё выбор шкалы, а не баллов, хотя лист в режиме `POINTS`.
+ */
+export function isKeptScaleGrade(valueMode: string | null | undefined, grade: GradeValueLike | null | undefined): boolean {
+  return valueMode === 'POINTS' && Boolean(grade?.scaleCode) && grade?.score == null;
+}
+
 /** `15.00` → «15», `15.5` → «15,5». Баллы сегодня целые, но формат не должен на это полагаться. */
 export function trimNumber(value: number | string): string {
   const text = String(value);

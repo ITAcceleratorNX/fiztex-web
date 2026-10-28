@@ -339,6 +339,9 @@ function DraftEditor({
   const [examText, setExamText] = useState(policy.examWeightPercent != null ? String(policy.examWeightPercent) : '');
   const [issues, setIssues] = useState<Issue[]>([]);
   const [conflicts, setConflicts] = useState<ScopeConflict[]>([]);
+  // Сервер разрешает оставить оценки 2–5 историей, только когда других расхождений нет.
+  const [canKeepScaleGrades, setCanKeepScaleGrades] = useState(false);
+  const [confirmKeep, setConfirmKeep] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [confirmActivate, setConfirmActivate] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -363,9 +366,11 @@ function DraftEditor({
 
   function readFailure(error: unknown, fallback: string) {
     if (error instanceof ApiError) {
-      const details = error.details as { issues?: Issue[]; periods?: ScopeConflict[] } | undefined;
+      const details = error.details as { issues?: Issue[]; periods?: ScopeConflict[]; canKeepScaleGrades?: boolean } | undefined;
       setIssues(details?.issues ?? []);
-      setConflicts(error.code === GRADING_POLICY_ERRORS.gradesOutsideScope ? details?.periods ?? [] : []);
+      const outsideScope = error.code === GRADING_POLICY_ERRORS.gradesOutsideScope;
+      setConflicts(outsideScope ? details?.periods ?? [] : []);
+      setCanKeepScaleGrades(outsideScope && Boolean(details?.canKeepScaleGrades));
       setMessage(error.message);
       return;
     }
@@ -386,14 +391,16 @@ function DraftEditor({
     }
   }
 
-  async function doActivate() {
+  async function doActivate(keepScaleGrades = false) {
     setConfirmActivate(false);
+    setConfirmKeep(false);
     if (dirty && !(await save())) return;
     setIssues([]);
     setConflicts([]);
+    setCanKeepScaleGrades(false);
     setMessage(null);
     try {
-      await activate.mutateAsync(policy.id as number);
+      await activate.mutateAsync({ policyId: policy.id as number, keepScaleGrades });
     } catch (error) {
       readFailure(error, 'Не удалось активировать политику');
     }
@@ -433,10 +440,23 @@ function DraftEditor({
               <span key={conflict.periodId}>
                 • «{conflict.periodName}»: {conflict.count}{' '}
                 {conflict.reason === 'SCALE_GRADES_IN_SCOPE'
-                  ? 'оценок по шкале 2–5 попадают в область политики — начните её действие с более позднего периода'
+                  ? canKeepScaleGrades
+                    ? 'оценок по шкале 2–5 попадают в область политики'
+                    : 'оценок по шкале 2–5 попадают в область политики — начните её действие с более позднего периода'
                   : 'оценок в баллах остаются вне области политики — начните её действие раньше'}
               </span>
             ))}
+            {canKeepScaleGrades && (
+              <span className="mt-1 flex flex-wrap items-center gap-3">
+                <span>
+                  Можно начать действие позже или оставить эти оценки как есть: они не изменятся и
+                  останутся в журнале, но в процент периода не войдут.
+                </span>
+                <Button size="sm" variant="secondary" loading={activate.isPending} onClick={() => setConfirmKeep(true)}>
+                  Оставить оценки и активировать
+                </Button>
+              </span>
+            )}
           </span>
         </NoticeBar>
       )}
@@ -685,6 +705,27 @@ function DraftEditor({
         loading={activate.isPending}
         onConfirm={() => void doActivate()}
         onClose={() => setConfirmActivate(false)}
+      />
+      <ConfirmDialog
+        open={confirmKeep}
+        title="Оставить оценки по шкале 2–5?"
+        message={
+          <span className="flex flex-col gap-2">
+            <span>
+              Уже выставленные оценки ({conflicts.reduce((sum, conflict) => sum + (conflict.count ?? 0), 0)}) не
+              переводятся в баллы и не меняются: они остаются в журнале и в истории, а исправляются в той же
+              шкале 2–5.
+            </span>
+            <span>
+              Процент периода считается только по оценкам в баллах — новые оценки этих периодов ставятся по
+              10-балльной шкале. Решение сохранится в истории политики.
+            </span>
+          </span>
+        }
+        confirmLabel="Оставить и активировать"
+        loading={activate.isPending}
+        onConfirm={() => void doActivate(true)}
+        onClose={() => setConfirmKeep(false)}
       />
       <ConfirmDialog
         open={confirmDelete}

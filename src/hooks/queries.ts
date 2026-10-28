@@ -2234,7 +2234,8 @@ export function useDeleteGradingPolicy() {
 }
 
 export function useActivateGradingPolicy() {
-  return useGradingPolicyCommand((policyId: number) => gradingPolicyApi.activate(policyId));
+  return useGradingPolicyCommand(({ policyId, keepScaleGrades }: { policyId: number; keepScaleGrades?: boolean }) =>
+    gradingPolicyApi.activate(policyId, { keepScaleGrades }));
 }
 
 // ---- Анонсы вступительных тестов ----
@@ -2813,6 +2814,18 @@ export function useAiRecommendation(homeworkId: number | null, studentProfileId:
     queryFn: ({ signal }) =>
       homeworkAiApi.recommendation(homeworkId as number, studentProfileId as number, signal),
     enabled: homeworkId != null && studentProfileId != null,
+  });
+}
+
+/** Ответ правки — та же рекомендация целиком: кладём её в кэш, второго запроса не нужно. */
+export function useCorrectAiRecognition(homeworkId: number, studentProfileId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (pages: { photo: number; text: string }[]) =>
+      homeworkAiApi.correctRecognition(homeworkId, studentProfileId, pages),
+    onSuccess: (view) => {
+      qc.setQueryData(keys.homeworkAiRecommendation(homeworkId, studentProfileId), view);
+    },
   });
 }
 

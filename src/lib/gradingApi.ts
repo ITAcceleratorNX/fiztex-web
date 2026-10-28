@@ -65,8 +65,16 @@ export const gradingPolicyApi = {
     return request<void>(`/admin/grading-policies/${policyId}`, { method: 'DELETE' });
   },
 
-  activate(policyId: number): Promise<GradingPolicy> {
-    return request<GradingPolicy>(`/admin/grading-policies/${policyId}/activate`, { method: 'POST' });
+  /**
+   * `keepScaleGrades` — администратор явно оставляет уже выставленные оценки 2–5 в периодах
+   * новой области (QA-06): сервер их не меняет и в процент не берёт. Без флага такая
+   * активация отвечает 409 с `details.canKeepScaleGrades`.
+   */
+  activate(policyId: number, options: { keepScaleGrades?: boolean } = {}): Promise<GradingPolicy> {
+    return request<GradingPolicy>(`/admin/grading-policies/${policyId}/activate`, {
+      method: 'POST',
+      body: { keepScaleGrades: Boolean(options.keepScaleGrades) },
+    });
   },
 
   history(policyId: number, signal?: AbortSignal): Promise<GradingPolicyHistoryEntry[]> {

@@ -54,7 +54,7 @@ import type {
   LessonGradeRow,
   SheetWorkType,
 } from '@/lib/gradesApi';
-import { GRADE_TYPE_LABELS, gradeValueLabel, writeStateNotice } from '@/lib/gradesModel';
+import { GRADE_TYPE_LABELS, gradeValueLabel, isKeptScaleGrade, writeStateNotice } from '@/lib/gradesModel';
 import type { Lesson } from '@/lib/lessonsApi';
 import {
   CorrectionExpiredModal,
@@ -690,7 +690,7 @@ function StudentRow({
               onClick={() => onShowGradeHistory(grade)}>
               <History className="size-4" aria-hidden="true" />
             </Button>}
-            {openSlot === index && pointsMode && (
+            {openSlot === index && pointsMode && !isKeptScaleGrade('POINTS', grade) && (
               <PointsPicker
                 workTypes={workTypes}
                 value={grade}
@@ -705,7 +705,7 @@ function StudentRow({
                 onClose={onClose}
               />
             )}
-            {openSlot === index && !pointsMode && (
+            {openSlot === index && (!pointsMode || isKeptScaleGrade('POINTS', grade)) && (
               <GradePicker
                 scale={scale}
                 studentName={row.fullName}
