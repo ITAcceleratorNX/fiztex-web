@@ -11030,6 +11030,14 @@ export interface components {
             /** Format: int64 */
             remaining?: number;
         };
+        HomeworkAiRecognitionCorrection: {
+            pages?: components["schemas"]["HomeworkAiRecognitionCorrectionPage"][];
+        };
+        HomeworkAiRecognitionCorrectionPage: {
+            /** Format: int32 */
+            photo?: number;
+            text?: string;
+        };
         HomeworkAiRecommendationView: {
             /** @enum {string} */
             basis?: "POINTS" | "COMPLETENESS";
@@ -13906,11 +13914,6 @@ export interface components {
             percent?: number;
             text?: string;
         };
-        Page: {
-            /** Format: int32 */
-            photo?: number;
-            text?: string;
-        };
         PageAcademicYearView: {
             content?: components["schemas"]["AcademicYearView"][];
             empty?: boolean;
@@ -15209,9 +15212,6 @@ export interface components {
         ReadParentCommentRequest: {
             /** Format: int64 */
             version: number;
-        };
-        RecognitionCorrection: {
-            pages?: components["schemas"]["Page"][];
         };
         RecognizedPage: {
             /** Format: int64 */
@@ -26736,7 +26736,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RecognitionCorrection"];
+                "application/json": components["schemas"]["HomeworkAiRecognitionCorrection"];
             };
         };
         responses: {
