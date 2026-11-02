@@ -13,7 +13,7 @@ import { useSetAnswerScores } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import type { HomeworkQuestion, TeacherAnswer } from '@/lib/homeworkAiApi';
 import { homeworkAnswersApi } from '@/lib/homeworkAiApi';
-import { AttachmentThumb } from './AttachmentLink';
+import { AttachmentGallery } from './AttachmentLink';
 import { RecommendationCard } from './RecommendationCard';
 import { useAiGradeSuggestion } from './useAiGradeSuggestion';
 import { cx, pluralRu } from '@/lib/format';
@@ -82,7 +82,7 @@ export function HomeworkTestAnswerReview({
       ),
     [questions],
   );
-  // Стабильная ссылка: AttachmentThumb перезагружает картинку при смене загрузчика, и
+  // Стабильная ссылка: AttachmentGallery перезагружает картинку при смене загрузчика, и
   // новая функция на каждый рендер означала бы бесконечную перезагрузку фотографий.
   const loadPhoto = useCallback(
     (photoId: number) => homeworkAnswersApi.photoBlob(homeworkId, studentProfileId, photoId),
@@ -370,14 +370,8 @@ function OpenTextAnswer({
           быть его задачей.
         */}
         {photos.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2" aria-label="Фотографии решения">
-            {photos.map((photo, photoIndex) => (
-              <AttachmentThumb
-                key={photo.id ?? `photo-${photoIndex}`}
-                attachment={photo}
-                load={loadPhoto}
-              />
-            ))}
+          <div className="mt-3" aria-label="Фотографии решения">
+            <AttachmentGallery attachments={photos} load={loadPhoto} />
           </div>
         )}
       </div>

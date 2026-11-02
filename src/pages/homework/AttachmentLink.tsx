@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Paperclip } from 'lucide-react';
+import { PhotoViewer } from '@/components/review/PhotoViewer';
 import { cx } from '@/lib/format';
 import type { Attachment } from '@/lib/homeworkApi';
 
@@ -81,5 +82,59 @@ export function AttachmentThumb({
         <img src={url} alt={attachment.fileName ?? 'Фото'} className="size-full object-cover" />
       ) : null}
     </span>
+  );
+}
+
+/**
+ * Фотографии одной работы: миниатюры, а по нажатию — крупный просмотр с листанием всех
+ * снимков, масштабом и возвратом к карточке (QA B2-037). Раньше миниатюра в 80 точек была
+ * единственным способом увидеть снимок, и текст и формулы на нём было не разобрать.
+ *
+ * Просмотр — наложение поверх страницы, а не новая вкладка: учитель остаётся у той же работы
+ * того же ученика. Снимки грузятся под авторизацией и живут как object URL, которые
+ * освобождаются при уходе со страницы.
+ */
+export function AttachmentGallery({
+  attachments,
+  load,
+}: {
+  attachments: Attachment[];
+  load: (id: number) => Promise<Blob>;
+}) {
+  const [urls, setUrls] = useState<Record<number, string>>({});
+  const ids = attachments.map((item) => item.id).filter((id): id is number => id != null);
+  const key = ids.join(',');
+
+  useEffect(() => {
+    let cancelled = false;
+    const created: string[] = [];
+    setUrls({});
+    for (const id of key ? key.split(',').map(Number) : []) {
+      void load(id).then((blob) => {
+        if (cancelled) return;
+        const url = URL.createObjectURL(blob);
+        created.push(url);
+        setUrls((prev) => ({ ...prev, [id]: url }));
+      }).catch(() => undefined);
+    }
+    return () => {
+      cancelled = true;
+      created.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [key, load]);
+
+  // Порядок — тот, в котором ученик прислал снимки: страницы решения читаются подряд.
+  const ready = ids.filter((id) => urls[id]).map((id) => ({ id, url: urls[id] }));
+  const pending = ids.length - ready.length;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {ready.length > 0 && <PhotoViewer photos={ready} />}
+      {pending > 0 && (
+        <span className="text-11 text-subtle" aria-live="polite">
+          Загружаем фото: {pending}
+        </span>
+      )}
+    </div>
   );
 }

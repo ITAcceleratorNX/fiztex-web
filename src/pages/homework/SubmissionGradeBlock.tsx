@@ -6,6 +6,7 @@ import { GradePicker } from '@/components/ui/GradePicker';
 import { PointsPicker } from '@/components/ui/PointsPicker';
 import { useToast } from '@/context/ToastContext';
 import {
+  useAiRecommendation,
   useGradeScale,
   useHomeworkGrades,
   useHomeworkValueMode,
@@ -14,7 +15,7 @@ import {
 } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import type { GradeType } from '@/lib/gradesApi';
-import { gradeValueLabel } from '@/lib/gradesModel';
+import { gradeValueLabel, isKeptScaleGrade } from '@/lib/gradesModel';
 
 /**
  * Оценка за домашнее задание.
@@ -35,10 +36,13 @@ export function SubmissionGradeBlock({
   homeworkId,
   studentProfileId,
   disabled,
+  withAiSuggestion = false,
 }: {
   homeworkId: number;
   studentProfileId: number;
   disabled?: boolean;
+  /** Есть сданная работа — у неё может быть рекомендация ИИ; без работы её не спрашиваем. */
+  withAiSuggestion?: boolean;
 }) {
   const toast = useToast();
   const [picking, setPicking] = useState(false);
@@ -54,6 +58,34 @@ export function SubmissionGradeBlock({
     (row) => row.studentProfileId === studentProfileId && !row.deleted,
   );
   const busy = setGrade.isPending || removeGrade.isPending;
+  // Оценка 2–5, оставленная при переходе периода на баллы, правится в своей шкале (QA-06).
+  const keptScale = isKeptScaleGrade(modeQuery.data?.valueMode, grade);
+
+  // Рекомендация ИИ — подсказка, а не оценка: в журнал её кладёт только нажатие учителя.
+  // Тот же кэш, что у карточки проверки, второго запроса нет.
+  const recommendation = useAiRecommendation(
+    withAiSuggestion ? homeworkId : null,
+    withAiSuggestion ? studentProfileId : null,
+  ).data ?? null;
+  const suggestedCode = recommendation?.scaleCode;
+  const suggestedScore = recommendation?.suggestedScore;
+  const suggestedMax = recommendation?.suggestedMaxScore ?? 10;
+  const suggestion = !pointsMode
+    ? suggestedCode
+      ? { label: suggestedCode, value: { scaleCode: suggestedCode } }
+      : null
+    : suggestedScore != null && !keptScale
+      ? {
+          label: `${suggestedScore} из ${suggestedMax}`,
+          value: {
+            score: suggestedScore,
+            maxScore: suggestedMax,
+            gradeType: (modeQuery.data?.defaultWorkType ?? 'HOMEWORK') as GradeType,
+          },
+        }
+      : null;
+  const suggestionApplied = suggestion != null && grade != null
+    && gradeValueLabel(grade) === (pointsMode ? String(suggestedScore) : suggestedCode);
 
   const fail = (error: unknown, fallback: string) =>
     toast.error(error instanceof ApiError ? error.message : fallback);
@@ -90,8 +122,7 @@ export function SubmissionGradeBlock({
               {grade ? 'Изменить' : 'Поставить оценку'}
             </Button>
 
-            {picking && pointsMode && (
-              <div className="absolute right-0 top-full z-20 mt-2">
+            {picking && pointsMode && !keptScale && (
                 <PointsPicker
                   workTypes={modeQuery.data?.workTypes ?? []}
                   value={grade ?? null}
@@ -126,11 +157,9 @@ export function SubmissionGradeBlock({
                   }
                   onClose={() => setPicking(false)}
                 />
-              </div>
             )}
 
-            {picking && !pointsMode && (
-              <div className="absolute right-0 top-full z-20 mt-2">
+            {picking && (!pointsMode || keptScale) && (
                 <GradePicker
                   scale={scaleQuery.data ?? []}
                   value={grade?.scaleCode ?? null}
@@ -160,11 +189,31 @@ export function SubmissionGradeBlock({
                   }
                   onClose={() => setPicking(false)}
                 />
-              </div>
             )}
           </div>
         )}
       </div>
+
+      {suggestion && !disabled && !suggestionApplied && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-neutral-bg px-3 py-2">
+          <p className="text-13 text-ink">
+            ИИ предлагает: <strong>{suggestion.label}</strong>
+            <span className="text-11 text-muted"> — оценку выставляете вы</span>
+          </p>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={busy || modeQuery.isPending}
+            onClick={() =>
+              setGrade.mutate({ studentProfileId, gradeId: grade?.id ?? null, ...suggestion.value }, {
+                onError: (error) => fail(error, 'Не удалось выставить оценку'),
+              })
+            }
+          >
+            Выставить {suggestion.label}
+          </Button>
+        </div>
+      )}
 
       {grade && (
         <p className="text-11 text-subtle">

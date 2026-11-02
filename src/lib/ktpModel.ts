@@ -60,3 +60,35 @@ export const allocationMessages: Record<string, string> = {
   SUCCESSOR_SCOPE_REVIEW_REQUIRED: 'У перенесённого урока изменился класс или предмет. Проверьте назначенную тему.',
   SUCCESSOR_VERSION_REVIEW_REQUIRED: 'У перенесённого урока отличается версия КТП. Проверьте его тему.',
 };
+
+type HoursOverage = {
+  plannedHours?: number; assignedHours?: number; conductedLessonHours?: number; upcomingLessonHours?: number;
+  otherLessonHours?: number; extraHours?: number; excessHours?: number;
+};
+
+/**
+ * Откуда взялись лишние часы темы (UX-03): те же числа, что посчитал бэкенд, словами.
+ * Правило подсчёта не меняется, и ручной прогресс не выдаётся за проведённый урок —
+ * поэтому «учтено вручную» называется отдельно от уроков.
+ */
+export function overageParts(o: HoursOverage): string[] {
+  const parts = [`по плану ${ktpHours(o.plannedHours ?? 0)} ч`];
+  const lessons = [
+    o.conductedLessonHours ? `проведено ${ktpHours(o.conductedLessonHours)}` : null,
+    o.upcomingLessonHours ? `впереди ${ktpHours(o.upcomingLessonHours)}` : null,
+    o.otherLessonHours ? `в отменённых или перенесённых ${ktpHours(o.otherLessonHours)}` : null,
+  ].filter(Boolean);
+  parts.push(`назначено на уроки ${ktpHours(o.assignedHours ?? 0)} ч${lessons.length ? ` (${lessons.join(', ')})` : ''}`);
+  if (o.extraHours) parts.push(`учтено без урока по плану ${ktpHours(o.extraHours)} ч`);
+  return parts;
+}
+
+export function overageReason(o: HoursOverage): string {
+  if ((o.extraHours ?? 0) > 0) {
+    return 'Часть часов темы учтена без урока по плану — начальный прогресс, ручная корректировка или фактическая тема другого урока, — а уроки по плану на неё уже назначены.';
+  }
+  if ((o.otherLessonHours ?? 0) > 0) {
+    return 'Отменённые и перенесённые уроки сохраняют назначенную тему, поэтому часы на тему назначены дважды.';
+  }
+  return 'На тему назначено больше уроков, чем часов в плане: проверьте темы этих уроков.';
+}

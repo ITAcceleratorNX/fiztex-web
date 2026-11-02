@@ -13,6 +13,7 @@ import {
   DEFAULT_CALENDAR_FILTERS,
   type CalendarFilterState,
 } from './CalendarTab';
+import { OneTimeEventsSection } from './OneTimeEventsSection';
 import {
   parseTeachersTabState,
   TeachersAvailabilityTab,
@@ -255,6 +256,7 @@ export function ScheduleSettingsPage({ section }: { section: ScheduleSection }) 
                 filters={calendarFilters}
                 onFiltersChange={setCalendarFilters}
               />
+              <OneTimeEventsSection yearId={selectedYearId} />
             </div>
           )}
         </>

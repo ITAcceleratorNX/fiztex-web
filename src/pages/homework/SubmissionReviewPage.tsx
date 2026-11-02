@@ -12,7 +12,7 @@ import { ApiError } from '@/lib/api';
 import { withHomeworkReturnTo } from '@/lib/homeworkListNavigation';
 import { cx, formatDateTime } from '@/lib/format';
 import { homeworkApi, type Attempt, type ReviewDecision } from '@/lib/homeworkApi';
-import { AttachmentChip, AttachmentThumb } from './AttachmentLink';
+import { AttachmentChip, AttachmentGallery } from './AttachmentLink';
 import { SUBMISSION_STATUS_LABELS, SUBMISSION_STATUS_TONES } from './homeworkModel';
 
 import { useHomeworkGrades, useHomeworkQuestions, useStudentAnswers } from '@/hooks/queries';
@@ -226,7 +226,12 @@ export function SubmissionReviewPage() {
               У обычного задания нет ни вопросов, ни баллов — разбирать по строкам нечего,
               и вся проверка ИИ умещается в один блок над самой работой (ТЗ §11).
             */}
-            <SubmissionAiReview homeworkId={id} studentProfileId={studentId} />
+            <SubmissionAiReview
+              homeworkId={id}
+              studentProfileId={studentId}
+              loadAttachment={loadAttachment}
+              onUseComment={canDecide ? (text) => setComment(text.slice(0, COMMENT_LIMIT)) : undefined}
+            />
             <AttemptCard
               attempt={current}
               totalVersions={submission.attemptCount ?? 1}
@@ -269,7 +274,7 @@ export function SubmissionReviewPage() {
         Отправка для оценки тоже не обязательна — достаточно быть получателем задания,
         и «двойка за несданное» это нормальный случай, а не край.
       */}
-      <SubmissionGradeBlock homeworkId={id} studentProfileId={studentId} />
+      <SubmissionGradeBlock homeworkId={id} studentProfileId={studentId} withAiSuggestion={current?.id != null} />
 
       {canDecide && (
         <section className="card flex flex-col gap-4 p-5">
@@ -414,10 +419,11 @@ function AttemptCard({
       )}
 
       {(attempt.photos?.length ?? 0) > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {attempt.photos?.map((photo) => (
-            <AttachmentThumb key={photo.id} attachment={photo} load={loadAttachment} />
-          ))}
+        <div className="flex flex-col gap-1">
+          <span className="text-13 text-subtle">
+            Фото работы: {attempt.photos?.length} — нажмите, чтобы открыть крупно
+          </span>
+          <AttachmentGallery attachments={attempt.photos ?? []} load={loadAttachment} />
         </div>
       )}
 
@@ -438,11 +444,7 @@ function AttemptCard({
               </div>
               {decision.comment && <p className="whitespace-pre-wrap text-13 text-muted">{decision.comment}</p>}
               {(decision.photos?.length ?? 0) > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {decision.photos?.map((photo) => (
-                    <AttachmentThumb key={photo.id} attachment={photo} load={loadReviewPhoto} />
-                  ))}
-                </div>
+                <AttachmentGallery attachments={decision.photos ?? []} load={loadReviewPhoto} />
               )}
             </div>
           ))}

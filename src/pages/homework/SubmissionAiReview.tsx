@@ -13,14 +13,20 @@ import { useAiGradeSuggestion } from './useAiGradeSuggestion';
  * приложенные файлы, называет процент выполнения, а в оценку его переводит школьная шкала.
  *
  * <p>Блок ничего не блокирует: отказ ИИ оставляет и комментарий, и оценку доступными —
- * это AC-9 и главный инвариант всей фичи.
+ * это AC-9 и главный инвариант всей фичи. Комментарий ИИ можно подставить в поле обратной
+ * связи, но отправляет его учитель, как и любой свой.
  */
 export function SubmissionAiReview({
   homeworkId,
   studentProfileId,
+  loadAttachment,
+  onUseComment,
 }: {
   homeworkId: number;
   studentProfileId: number;
+  /** Загрузчик вложений работы — оригинал фото ставится рядом с его расшифровкой. */
+  loadAttachment?: (id: number) => Promise<Blob>;
+  onUseComment?: (text: string) => void;
 }) {
   const ai = useAiGradeSuggestion(homeworkId, studentProfileId);
 
@@ -58,7 +64,15 @@ export function SubmissionAiReview({
         />
       )}
 
-      {ai.recommendation && <RecommendationCard recommendation={ai.recommendation} />}
+      {ai.recommendation && (
+        <RecommendationCard
+          recommendation={ai.recommendation}
+          homeworkId={homeworkId}
+          studentProfileId={studentProfileId}
+          loadAttachment={loadAttachment}
+          onUseComment={onUseComment}
+        />
+      )}
     </section>
   );
 }

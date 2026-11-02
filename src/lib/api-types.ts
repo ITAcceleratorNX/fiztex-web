@@ -4772,6 +4772,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/homework/{homeworkId}/submissions/{studentProfileId}/ai-recommendation/recognition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["correctRecognition"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/homework/{homeworkId}/submissions/{studentProfileId}/answer-photos/{photoId}/content": {
         parameters: {
             query?: never;
@@ -8746,6 +8762,9 @@ export interface components {
             password?: string;
             phone?: string;
         };
+        ActivateGradingPolicyRequest: {
+            keepScaleGrades?: boolean;
+        };
         ActiveGradingPolicyView: {
             /** Format: int64 */
             academicYearId?: number;
@@ -11011,6 +11030,14 @@ export interface components {
             /** Format: int64 */
             remaining?: number;
         };
+        HomeworkAiRecognitionCorrection: {
+            pages?: components["schemas"]["HomeworkAiRecognitionCorrectionPage"][];
+        };
+        HomeworkAiRecognitionCorrectionPage: {
+            /** Format: int32 */
+            photo?: number;
+            text?: string;
+        };
         HomeworkAiRecommendationView: {
             /** @enum {string} */
             basis?: "POINTS" | "COMPLETENESS";
@@ -11018,11 +11045,21 @@ export interface components {
             closedScore?: number;
             /** Format: date-time */
             createdAt?: string;
+            doubtful?: string[];
             issues?: string[];
             maxScore?: number;
             percent?: number;
+            /** Format: date-time */
+            recognitionEditedAt?: string;
+            recognitionEditedByName?: string;
+            recognized?: components["schemas"]["RecognizedPage"][];
             scaleCode?: string;
             score?: number;
+            solution?: string;
+            /** Format: int32 */
+            suggestedMaxScore?: number;
+            /** Format: int32 */
+            suggestedScore?: number;
             summary?: string;
         };
         HomeworkAiResultView: {
@@ -11803,6 +11840,7 @@ export interface components {
             coverageThrough?: string;
             diagnostics?: string[];
             executionEnabled?: boolean;
+            overages?: components["schemas"]["KtpHoursOverage"][];
             provisional?: boolean;
             /** Format: int64 */
             revision?: number;
@@ -11892,6 +11930,18 @@ export interface components {
             /** Format: int64 */
             topicId?: number;
             units: number;
+        };
+        KtpHoursOverage: {
+            assignedHours?: number;
+            conductedLessonHours?: number;
+            excessHours?: number;
+            extraHours?: number;
+            otherLessonHours?: number;
+            plannedHours?: number;
+            title?: string;
+            /** Format: int64 */
+            topicId?: number;
+            upcomingLessonHours?: number;
         };
         KtpImportPage: {
             items?: components["schemas"]["KtpImportView"][];
@@ -15162,6 +15212,15 @@ export interface components {
         ReadParentCommentRequest: {
             /** Format: int64 */
             version: number;
+        };
+        RecognizedPage: {
+            /** Format: int64 */
+            attachmentId?: number;
+            correctedText?: string;
+            /** Format: int32 */
+            photo?: number;
+            text?: string;
+            unclear?: string[];
         };
         ReconcileReceipt: {
             /** Format: int64 */
@@ -19984,7 +20043,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ActivateGradingPolicyRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -26649,6 +26712,33 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkAiRecommendationView"];
+                };
+            };
+        };
+    };
+    correctRecognition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HomeworkAiRecognitionCorrection"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {

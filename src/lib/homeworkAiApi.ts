@@ -129,6 +129,20 @@ export const homeworkAiApi = {
     ),
 
   /**
+   * Правка учителем распознанного с фото текста. Не оценка и не комментарий: только текст,
+   * по которому учитель сверяет разбор ИИ. Пустой текст снимает правку.
+   */
+  correctRecognition: (
+    homeworkId: number,
+    studentProfileId: number,
+    pages: { photo: number; text: string }[],
+  ) =>
+    request<AiRecommendation>(
+      `/homework/${homeworkId}/submissions/${studentProfileId}/ai-recommendation/recognition`,
+      { method: 'PUT', body: { pages } },
+    ),
+
+  /**
    * Последняя подсказка по текущей попытке ученика — или пусто, если её не запускали.
    *
    * Состояние идущей задачи спрашивается у сервера, а не хранится в браузере: учитель,

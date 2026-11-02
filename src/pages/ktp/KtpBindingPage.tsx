@@ -15,7 +15,7 @@ import { StatusNotice } from '@/components/ui/StatusNotice';
 import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useKtpBinding, useKtpBindings, useKtpCommand, useKtpContext, useKtpDistribution, useKtpHistory, useKtpImport, useKtpProgress, useKtpVersion } from '@/hooks/queries';
 import { ktpApi, type KtpRemovalTarget } from '@/lib/ktpApi';
-import { allocationMessages, bindingStateLabel, ktpCount, ktpHours, ktpPaths, ktpRows, ktpWorkLabels, topicStatusLabel } from '@/lib/ktpModel';
+import { allocationMessages, bindingStateLabel, ktpCount, ktpHours, ktpPaths, ktpRows, ktpWorkLabels, overageParts, overageReason, topicStatusLabel } from '@/lib/ktpModel';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { formatDateTime } from '@/lib/format';
 import type { Schema } from '@/lib/apiSchemas';
@@ -116,7 +116,17 @@ function Binding() {
     {distribution.isError && <ErrorBlock message={ktpError(distribution.error)} onRetry={() => void distribution.refetch()} />}
     {distribution.data?.executionEnabled === false && <StatusNotice tone="warning">Автоматическое распределение тем пока недоступно. КТП сохранён; темы появятся в расписании после включения распределения.</StatusNotice>}
     {!!distribution.data?.diagnostics?.includes('SUBGROUP_POLICY_REQUIRED') && <StatusNotice tone="warning">В расписании есть уроки подгрупп. Для них требуется согласовать правила распределения КТП.</StatusNotice>}
-    {(distribution.data?.diagnostics ?? []).filter(code => allocationMessages[code] && code !== 'PARTIAL_SCHEDULE_HORIZON').map(code => <StatusNotice key={code} tone="warning">{allocationMessages[code]}</StatusNotice>)}
+    {(distribution.data?.diagnostics ?? []).filter(code => allocationMessages[code] && code !== 'PARTIAL_SCHEDULE_HORIZON' && code !== 'RESERVATIONS_EXCEED_PLAN').map(code => <StatusNotice key={code} tone="warning">{allocationMessages[code]}</StatusNotice>)}
+    {distribution.data?.diagnostics?.includes('RESERVATIONS_EXCEED_PLAN') && <StatusNotice tone="warning">
+      <p>{allocationMessages.RESERVATIONS_EXCEED_PLAN}</p>
+      {!!distribution.data.overages?.length && <ul className="mt-2 space-y-2" aria-label="Темы сверх плана">
+        {distribution.data.overages.map(o => <li key={o.topicId}>
+          <p className="font-semibold">«{o.title}»: сверх плана {ktpHours(o.excessHours ?? 0)} ч</p>
+          <p>{overageParts(o).join(' · ')}</p>
+          <p className="text-planning-subtle">{overageReason(o)}</p>
+        </li>)}
+      </ul>}
+    </StatusNotice>}
     {oldVersion && <StatusNotice>Показана предыдущая версия. Прогресс класса относится к текущей версии.</StatusNotice>}
 
     {history.isError && <ErrorBlock message={ktpError(history.error)} onRetry={() => void history.refetch()} />}
