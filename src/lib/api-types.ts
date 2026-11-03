@@ -4,6 +4,86 @@
  */
 
 export interface paths {
+    "/api/access-requests/classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["classes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/access-requests/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["saveDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/access-requests/resubmit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resubmit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/access-requests/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["status"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/access-requests/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["submit_4"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/academic-periods/{id}": {
         parameters: {
             query?: never;
@@ -5409,7 +5489,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["saveDraft"];
+        patch: operations["saveDraft_1"];
         trace?: never;
     };
     "/api/lessons/{lessonId}/attendance/history": {
@@ -8716,6 +8796,58 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        AccessRequestClassOptionsView: {
+            grades?: components["schemas"]["GradeOption"][];
+            yearConfigured?: boolean;
+        };
+        AccessRequestFormRequest: {
+            /** Format: int64 */
+            childClassId?: number;
+            childFullName?: string;
+            /** Format: int64 */
+            classId?: number;
+            fullName?: string;
+            password?: string;
+            phone?: string;
+            /** @enum {string} */
+            role: "STUDENT" | "PARENT";
+            token?: string;
+        };
+        AccessRequestStatusView: {
+            childClassName?: string;
+            childFullName?: string;
+            className?: string;
+            /** Format: date-time */
+            decidedAt?: string;
+            fullName?: string;
+            /** @enum {string} */
+            nextStep?: "FINISH_FORM" | "WAIT_REVIEW" | "SIGN_IN_WITH_PHONE" | "SIGN_IN_WITH_CODE" | "ACTIVATE_WITH_CODE" | "FIX_AND_RESUBMIT";
+            phone?: string;
+            rejectionReason?: string;
+            /** Format: int64 */
+            requestId?: number;
+            resubmitAllowed?: boolean;
+            /** @enum {string} */
+            role?: "STUDENT" | "PARENT";
+            /** @enum {string} */
+            stage?: "DRAFT" | "PENDING" | "APPROVED_PENDING_ACTIVATION" | "ACTIVE" | "REJECTED";
+            /** Format: date-time */
+            submittedAt?: string;
+        };
+        AccessRequestTicketView: {
+            /** @enum {string} */
+            nextStep?: "FINISH_FORM" | "WAIT_REVIEW" | "SIGN_IN_WITH_PHONE" | "SIGN_IN_WITH_CODE" | "ACTIVATE_WITH_CODE" | "FIX_AND_RESUBMIT";
+            /** Format: int64 */
+            requestId?: number;
+            /** @enum {string} */
+            stage?: "DRAFT" | "PENDING" | "APPROVED_PENDING_ACTIVATION" | "ACTIVE" | "REJECTED";
+            /** Format: date-time */
+            submittedAt?: string;
+            token?: string;
+        };
+        AccessRequestTokenRequest: {
+            token?: string;
+        };
         AccountLoginRequest: {
             login?: string;
             password?: string;
@@ -9629,6 +9761,12 @@ export interface components {
             /** @enum {string} */
             status?: "ACTIVE" | "ARCHIVED";
             voided?: boolean;
+        };
+        ClassOption: {
+            /** Format: int64 */
+            classId?: number;
+            letter?: string;
+            name?: string;
         };
         ClassScheduleView: {
             /** Format: int64 */
@@ -10698,6 +10836,10 @@ export interface components {
             createdAt?: string;
             /** Format: int64 */
             id?: number;
+        };
+        GradeOption: {
+            grade?: string;
+            letters?: components["schemas"]["ClassOption"][];
         };
         GradeScaleValueView: {
             code?: string;
@@ -17683,6 +17825,122 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    classes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestClassOptionsView"];
+                };
+            };
+        };
+    };
+    saveDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccessRequestFormRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestTicketView"];
+                };
+            };
+        };
+    };
+    resubmit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccessRequestFormRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestTicketView"];
+                };
+            };
+        };
+    };
+    status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccessRequestTokenRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestStatusView"];
+                };
+            };
+        };
+    };
+    submit_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccessRequestFormRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestTicketView"];
+                };
+            };
+        };
+    };
     update_23: {
         parameters: {
             query?: never;
@@ -27860,7 +28118,7 @@ export interface operations {
             };
         };
     };
-    saveDraft: {
+    saveDraft_1: {
         parameters: {
             query?: never;
             header?: never;
