@@ -392,6 +392,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/access-requests/{id}/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["suggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/accounts": {
         parameters: {
             query?: never;
@@ -8947,6 +8963,14 @@ export interface components {
             /** Format: date-time */
             submittedAt?: string;
         };
+        AccessRequestSuggestionsView: {
+            applicantMatches?: components["schemas"]["ProfileCandidateView"][];
+            childCandidates?: components["schemas"]["ChildCandidateView"][];
+            phoneConflicts?: components["schemas"]["PhoneConflictView"][];
+            relatedRequests?: components["schemas"]["AccessRequestRowView"][];
+            /** Format: int64 */
+            requestId?: number;
+        };
         AccessRequestTicketView: {
             /** @enum {string} */
             nextStep?: "FINISH_FORM" | "WAIT_REVIEW" | "SIGN_IN_WITH_PHONE" | "SIGN_IN_WITH_CODE" | "ACTIVATE_WITH_CODE" | "FIX_AND_RESUBMIT";
@@ -9684,6 +9708,19 @@ export interface components {
             subjectName?: string;
             /** @enum {string} */
             trend?: "GROWTH" | "DECLINE" | "STABLE" | "INSUFFICIENT_DATA";
+        };
+        ChildCandidateView: {
+            /** Format: int64 */
+            accountId?: number;
+            /** @enum {string} */
+            accountStatus?: "NOT_ACTIVATED" | "ACTIVE" | "BLOCKED" | "ARCHIVED";
+            className?: string;
+            fullName?: string;
+            loginMethods?: ("PHONE_PASSWORD" | "CODE_PIN")[];
+            matchReasons?: ("EXACT_NAME" | "NAME_WITHOUT_MIDDLE" | "SAME_LAST_NAME_IN_CLASS" | "CLASS_AND_NAME" | "SAME_PHONE")[];
+            parentLinks?: components["schemas"]["ParentLinkView"][];
+            /** Format: int64 */
+            studentProfileId?: number;
         };
         ChildFeedbackCoverageView: {
             /** Format: int32 */
@@ -15079,6 +15116,14 @@ export interface components {
             /** Format: int64 */
             version?: number;
         };
+        ParentLinkView: {
+            /** Format: int64 */
+            accountId?: number;
+            fullName?: string;
+            /** Format: int64 */
+            parentProfileId?: number;
+            phone?: string;
+        };
         ParentProfileDetailView: {
             /** Format: int64 */
             accountId?: number;
@@ -15258,6 +15303,16 @@ export interface components {
             /** Format: int32 */
             order?: number;
         };
+        PhoneConflictView: {
+            /** Format: int64 */
+            accountId?: number;
+            fullName?: string;
+            phone?: string;
+            /** @enum {string} */
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
+            /** @enum {string} */
+            status?: "NOT_ACTIVATED" | "ACTIVE" | "BLOCKED" | "ARCHIVED";
+        };
         PolicyBandDto: {
             label?: string;
             /** Format: int32 */
@@ -15286,6 +15341,22 @@ export interface components {
             weight: number;
             /** @enum {string} */
             workType: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
+        };
+        ProfileCandidateView: {
+            academicYearName?: string;
+            /** Format: int64 */
+            accountId?: number;
+            className?: string;
+            fullName?: string;
+            loginMethods?: ("PHONE_PASSWORD" | "CODE_PIN")[];
+            matchReasons?: ("EXACT_NAME" | "NAME_WITHOUT_MIDDLE" | "SAME_LAST_NAME_IN_CLASS" | "CLASS_AND_NAME" | "SAME_PHONE")[];
+            phone?: string;
+            /** @enum {string} */
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
+            /** Format: int64 */
+            schoolProfileId?: number;
+            /** @enum {string} */
+            status?: "NOT_ACTIVATED" | "ACTIVE" | "BLOCKED" | "ARCHIVED";
         };
         ProposalIntervalView: {
             /** @enum {string} */
@@ -18766,6 +18837,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccessRequestDetailView"];
+                };
+            };
+        };
+    };
+    suggestions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestSuggestionsView"];
                 };
             };
         };
