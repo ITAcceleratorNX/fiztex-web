@@ -344,6 +344,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/access-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_36"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/access-requests/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["stats_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/access-requests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/accounts": {
         parameters: {
             query?: never;
@@ -8800,6 +8848,36 @@ export interface components {
             grades?: components["schemas"]["GradeOption"][];
             yearConfigured?: boolean;
         };
+        AccessRequestDetailView: {
+            childClass?: components["schemas"]["RequestClassView"];
+            childFullName?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            createdProfile?: boolean;
+            /** Format: date-time */
+            decidedAt?: string;
+            decidedByName?: string;
+            fullName?: string;
+            journal?: components["schemas"]["JournalItemView"][];
+            linkedAccount?: components["schemas"]["LinkedAccountView"];
+            /** @enum {string} */
+            nextStep?: "FINISH_FORM" | "WAIT_REVIEW" | "SIGN_IN_WITH_PHONE" | "SIGN_IN_WITH_CODE" | "ACTIVATE_WITH_CODE" | "FIX_AND_RESUBMIT";
+            passwordProvided?: boolean;
+            phone?: string;
+            previousRequests?: components["schemas"]["AccessRequestRowView"][];
+            rejectionReason?: string;
+            /** Format: int64 */
+            requestId?: number;
+            /** @enum {string} */
+            role?: "STUDENT" | "PARENT";
+            schoolClass?: components["schemas"]["RequestClassView"];
+            /** @enum {string} */
+            stage?: "DRAFT" | "PENDING" | "APPROVED_PENDING_ACTIVATION" | "ACTIVE" | "REJECTED";
+            /** Format: date-time */
+            submittedAt?: string;
+            /** Format: int64 */
+            version?: number;
+        };
         AccessRequestFormRequest: {
             /** Format: int64 */
             childClassId?: number;
@@ -8812,6 +8890,41 @@ export interface components {
             /** @enum {string} */
             role: "STUDENT" | "PARENT";
             token?: string;
+        };
+        AccessRequestRowView: {
+            childClassName?: string;
+            childFullName?: string;
+            className?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            decidedAt?: string;
+            fullName?: string;
+            phone?: string;
+            rejectionReason?: string;
+            repeat?: boolean;
+            /** Format: int64 */
+            requestId?: number;
+            /** @enum {string} */
+            role?: "STUDENT" | "PARENT";
+            /** @enum {string} */
+            stage?: "DRAFT" | "PENDING" | "APPROVED_PENDING_ACTIVATION" | "ACTIVE" | "REJECTED";
+            /** Format: date-time */
+            submittedAt?: string;
+        };
+        AccessRequestStatsView: {
+            /** Format: int64 */
+            active?: number;
+            /** Format: int64 */
+            approvedPendingActivation?: number;
+            /** Format: int64 */
+            draft?: number;
+            /** Format: int64 */
+            pending?: number;
+            /** Format: int64 */
+            rejected?: number;
+            /** Format: int64 */
+            total?: number;
         };
         AccessRequestStatusView: {
             childClassName?: string;
@@ -11710,6 +11823,18 @@ export interface components {
         IssuedCodeResponse: {
             issuedCode?: string;
         };
+        JournalItemView: {
+            actorLabel?: string;
+            details?: {
+                [key: string]: Record<string, never>;
+            };
+            /** Format: int64 */
+            id?: number;
+            /** Format: date-time */
+            occurredAt?: string;
+            /** @enum {string} */
+            type?: "REQUEST_DRAFT_SAVED" | "REQUEST_SUBMITTED" | "REQUEST_RESUBMITTED" | "REQUEST_APPROVED_LINKED" | "REQUEST_APPROVED_CREATED" | "REQUEST_REJECTED" | "PARENT_LINK_ADDED" | "LOGIN_METHOD_ENABLED" | "STUDENT_CODE_ISSUED" | "STUDENT_CODE_REISSUED" | "STUDENT_PIN_RESET" | "ACCESS_RESET" | "TEMP_PASSWORD_ISSUED" | "PASSWORD_CHANGED" | "PHONE_CHANGED" | "CODE_GRANT_ADDED" | "CODE_GRANT_REVOKED";
+        };
         JsonNode: Record<string, never>;
         KeyActorView: {
             /** Format: int64 */
@@ -13215,6 +13340,16 @@ export interface components {
             /** Format: int64 */
             studentProfileId: number;
         };
+        LinkedAccountView: {
+            /** Format: int64 */
+            accountId?: number;
+            fullName?: string;
+            phone?: string;
+            /** @enum {string} */
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
+            /** @enum {string} */
+            status?: "NOT_ACTIVATED" | "ACTIVE" | "BLOCKED" | "ARCHIVED";
+        };
         LinkedParentView: {
             /** Format: int64 */
             accountId?: number;
@@ -14058,6 +14193,24 @@ export interface components {
         };
         PageAcademicYearView: {
             content?: components["schemas"]["AcademicYearView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        PageAccessRequestRowView: {
+            content?: components["schemas"]["AccessRequestRowView"][];
             empty?: boolean;
             first?: boolean;
             last?: boolean;
@@ -15568,6 +15721,13 @@ export interface components {
             startDate?: string;
             /** @enum {string} */
             status?: "DRAFT" | "ACTIVE" | "ARCHIVED";
+        };
+        RequestClassView: {
+            active?: boolean;
+            /** Format: int64 */
+            classId?: number;
+            currentName?: string;
+            snapshotName?: string;
         };
         ResolveDraftRequest: {
             /** Format: int64 */
@@ -18536,6 +18696,76 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AcademicYearView"];
+                };
+            };
+        };
+    };
+    list_36: {
+        parameters: {
+            query: {
+                stage?: "DRAFT" | "PENDING" | "APPROVED_PENDING_ACTIVATION" | "ACTIVE" | "REJECTED";
+                role?: "STUDENT" | "PARENT";
+                from?: string;
+                to?: string;
+                repeat?: boolean;
+                query?: string;
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageAccessRequestRowView"];
+                };
+            };
+        };
+    };
+    stats_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestStatsView"];
+                };
+            };
+        };
+    };
+    detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestDetailView"];
                 };
             };
         };
