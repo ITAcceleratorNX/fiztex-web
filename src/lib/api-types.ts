@@ -504,6 +504,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/accounts/{id}/phone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["changePhone"];
+        trace?: never;
+    };
     "/api/admin/accounts/{id}/reset-access": {
         parameters: {
             query?: never;
@@ -534,6 +550,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["changeRole"];
+        trace?: never;
+    };
+    "/api/admin/accounts/{id}/temporary-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["issueTemporaryPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/admin/accounts/{id}/unblock": {
@@ -3500,6 +3532,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["activateParent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/password/change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["changePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/sign-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["signIn"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9023,6 +9087,7 @@ export interface components {
         };
         AccountLoginResponse: {
             fullName?: string;
+            mustChangePassword?: boolean;
             /** @enum {string} */
             role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
             token?: string;
@@ -9731,6 +9796,9 @@ export interface components {
         CancelLessonRequest: {
             comment?: string;
         };
+        ChangeAccountPhoneRequest: {
+            phone?: string;
+        };
         ChangeAccountRoleRequest: {
             /** @enum {string} */
             role: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
@@ -9745,6 +9813,10 @@ export interface components {
             resultReason?: string;
             /** Format: int32 */
             value?: number;
+        };
+        ChangePasswordRequest: {
+            currentPassword?: string;
+            newPassword?: string;
         };
         ChangedSubjectView: {
             change?: number;
@@ -16450,6 +16522,10 @@ export interface components {
             /** @enum {string} */
             type?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
         };
+        SignInRequest: {
+            login?: string;
+            secret?: string;
+        };
         Skipped: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -17456,6 +17532,9 @@ export interface components {
             numericValue?: number;
             scaleCode?: string;
             score?: number;
+        };
+        TemporaryPasswordResponse: {
+            temporaryPassword?: string;
         };
         TerminateBindingRequest: {
             /** Format: date */
@@ -19076,6 +19155,32 @@ export interface operations {
             };
         };
     };
+    changePhone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeAccountPhoneRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountView"];
+                };
+            };
+        };
+    };
     resetServiceStaffAccess: {
         parameters: {
             query?: never;
@@ -19120,6 +19225,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccountView"];
+                };
+            };
+        };
+    };
+    issueTemporaryPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemporaryPasswordResponse"];
                 };
             };
         };
@@ -24906,6 +25033,54 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ActivateByCodeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountLoginResponse"];
+                };
+            };
+        };
+    };
+    changePassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountLoginResponse"];
+                };
+            };
+        };
+    };
+    signIn: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignInRequest"];
             };
         };
         responses: {
