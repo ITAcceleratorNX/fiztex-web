@@ -392,6 +392,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/access-requests/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/access-requests/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/access-requests/{id}/suggestions": {
         parameters: {
             query?: never;
@@ -9317,6 +9349,19 @@ export interface components {
             id?: number;
             parentFullName?: string;
         };
+        ApproveAccessRequestRequest: {
+            /** Format: int64 */
+            accountId?: number;
+            allowPhoneLogin?: boolean;
+            /** Format: int64 */
+            childStudentProfileId?: number;
+            confirmDuplicate?: boolean;
+            createProfile?: boolean;
+            /** @enum {string} */
+            relationType?: "MOTHER" | "FATHER" | "GUARDIAN" | "OTHER";
+            /** Format: int64 */
+            version: number;
+        };
         AssignResult: {
             created?: components["schemas"]["AssignmentSummary"][];
             skipped?: components["schemas"]["SkippedAssignment"][];
@@ -15613,6 +15658,11 @@ export interface components {
             platform: "IOS" | "ANDROID";
             token: string;
         };
+        RejectAccessRequestRequest: {
+            reason?: string;
+            /** Format: int64 */
+            version: number;
+        };
         RejectAvailabilityProposalRequest: {
             comment?: string;
         };
@@ -18829,6 +18879,58 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestDetailView"];
+                };
+            };
+        };
+    };
+    approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveAccessRequestRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestDetailView"];
+                };
+            };
+        };
+    };
+    reject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectAccessRequestRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
