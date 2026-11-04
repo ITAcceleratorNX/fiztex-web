@@ -223,7 +223,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_26"];
+        get: operations["list_27"];
         put?: never;
         post: operations["create_23"];
         delete?: never;
@@ -351,7 +351,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_36"];
+        get: operations["list_37"];
         put?: never;
         post?: never;
         delete?: never;
@@ -447,7 +447,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_25"];
+        get: operations["list_26"];
         put?: never;
         post: operations["create_22"];
         delete?: never;
@@ -591,7 +591,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_24"];
+        get: operations["list_25"];
         put?: never;
         post: operations["create_21"];
         delete?: never;
@@ -767,7 +767,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_23"];
+        get: operations["list_24"];
         put?: never;
         post: operations["create_20"];
         delete?: never;
@@ -831,7 +831,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_22"];
+        get: operations["list_23"];
         put?: never;
         post: operations["create_19"];
         delete?: never;
@@ -991,7 +991,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_21"];
+        get: operations["list_22"];
         put?: never;
         post: operations["create_18"];
         delete?: never;
@@ -1055,7 +1055,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_20"];
+        get: operations["list_21"];
         put?: never;
         post: operations["create_17"];
         delete?: never;
@@ -1321,7 +1321,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_19"];
+        get: operations["list_20"];
         put?: never;
         post: operations["create_16"];
         delete?: never;
@@ -1673,7 +1673,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_18"];
+        get: operations["list_19"];
         put?: never;
         post: operations["create_15"];
         delete?: never;
@@ -1737,7 +1737,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_17"];
+        get: operations["list_18"];
         put?: never;
         post: operations["create_14"];
         delete?: never;
@@ -1993,7 +1993,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_16"];
+        get: operations["list_17"];
         put?: never;
         post: operations["create_13"];
         delete?: never;
@@ -2233,7 +2233,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_15"];
+        get: operations["list_16"];
         put?: never;
         post: operations["create_12"];
         delete?: never;
@@ -2461,6 +2461,38 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/students/{studentProfileId}/code-grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_15"];
+        put?: never;
+        post: operations["grant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/students/{studentProfileId}/code-grants/{grantId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["revoke"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2793,7 +2825,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_35"];
+        get: operations["list_36"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3113,7 +3145,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_34"];
+        get: operations["list_35"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3193,7 +3225,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_33"];
+        get: operations["list_34"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5579,7 +5611,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_30"];
+        get: operations["list_31"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5915,7 +5947,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_32"];
+        get: operations["list_33"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6107,7 +6139,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["students"];
+        get: operations["students_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6315,7 +6347,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_31"];
+        get: operations["list_32"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6415,6 +6447,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["reExtract"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/children/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["children_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/children/{studentProfileId}/access-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["issueCode_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7472,7 +7536,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_29"];
+        get: operations["list_30"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7794,7 +7858,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_28"];
+        get: operations["list_29"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8172,6 +8236,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teacher/students/access-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["students"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/students/{studentProfileId}/access-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["issueCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teacher/textbook-bindings": {
         parameters: {
             query?: never;
@@ -8435,7 +8531,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_27"];
+        get: operations["list_28"];
         put?: never;
         post?: never;
         delete?: never;
@@ -9826,6 +9922,21 @@ export interface components {
             /** @enum {string} */
             trend?: "GROWTH" | "DECLINE" | "STABLE" | "INSUFFICIENT_DATA";
         };
+        ChildAccessView: {
+            /** Format: int64 */
+            accountId?: number;
+            /** @enum {string} */
+            accountStatus?: "NOT_ACTIVATED" | "ACTIVE" | "BLOCKED" | "ARCHIVED";
+            canIssueCode?: boolean;
+            className?: string;
+            /** Format: date-time */
+            codeIssuedAt?: string;
+            fullName?: string;
+            loginMethods?: ("PHONE_PASSWORD" | "CODE_PIN")[];
+            pinSet?: boolean;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
         ChildCandidateView: {
             /** Format: int64 */
             accountId?: number;
@@ -10547,6 +10658,12 @@ export interface components {
             locationText?: string;
             /** @enum {string} */
             serviceType?: "CLEANING" | "TECHNICIAN";
+        };
+        CreateStudentCodeGrantRequest: {
+            /** Format: date-time */
+            expiresAt?: string;
+            /** Format: int64 */
+            teacherProfileId: number;
         };
         CreateStudentRequest: {
             /** Format: int64 */
@@ -16587,6 +16704,21 @@ export interface components {
             code?: string;
             pin?: string;
         };
+        StudentCodeGrantView: {
+            active?: boolean;
+            /** Format: date-time */
+            expiresAt?: string;
+            /** Format: int64 */
+            grantId?: number;
+            /** Format: date-time */
+            grantedAt?: string;
+            grantedByName?: string;
+            /** Format: date-time */
+            revokedAt?: string;
+            teacherName?: string;
+            /** Format: int64 */
+            teacherProfileId?: number;
+        };
         StudentFinalGradesView: {
             /** Format: int64 */
             academicYearId?: number;
@@ -17420,6 +17552,18 @@ export interface components {
             status?: "ACTIVE" | "ARCHIVED";
             /** Format: date-time */
             updatedAt?: string;
+        };
+        TeacherStudentAccessView: {
+            canIssueCode?: boolean;
+            className?: string;
+            /** Format: date-time */
+            codeIssuedAt?: string;
+            fullName?: string;
+            /** Format: date-time */
+            grantExpiresAt?: string;
+            pinSet?: boolean;
+            /** Format: int64 */
+            studentProfileId?: number;
         };
         TeacherTestSubject: {
             /** @enum {string} */
@@ -18646,7 +18790,7 @@ export interface operations {
             };
         };
     };
-    list_26: {
+    list_27: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -18900,7 +19044,7 @@ export interface operations {
             };
         };
     };
-    list_36: {
+    list_37: {
         parameters: {
             query: {
                 stage?: "DRAFT" | "PENDING" | "APPROVED_PENDING_ACTIVATION" | "ACTIVE" | "REJECTED";
@@ -19044,7 +19188,7 @@ export interface operations {
             };
         };
     };
-    list_25: {
+    list_26: {
         parameters: {
             query: {
                 role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
@@ -19271,7 +19415,7 @@ export interface operations {
             };
         };
     };
-    list_24: {
+    list_25: {
         parameters: {
             query: {
                 status?: "DRAFT" | "PUBLISHED" | "HIDDEN";
@@ -19559,7 +19703,7 @@ export interface operations {
             };
         };
     };
-    list_23: {
+    list_24: {
         parameters: {
             query?: never;
             header?: never;
@@ -19704,7 +19848,7 @@ export interface operations {
             };
         };
     };
-    list_22: {
+    list_23: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -20033,7 +20177,7 @@ export interface operations {
             };
         };
     };
-    list_21: {
+    list_22: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -20199,7 +20343,7 @@ export interface operations {
             };
         };
     };
-    list_20: {
+    list_21: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -20892,7 +21036,7 @@ export interface operations {
             };
         };
     };
-    list_19: {
+    list_20: {
         parameters: {
             query: {
                 classId: number;
@@ -21554,7 +21698,7 @@ export interface operations {
             };
         };
     };
-    list_18: {
+    list_19: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -21699,7 +21843,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_18: {
         parameters: {
             query: {
                 phone?: string;
@@ -22175,7 +22319,7 @@ export interface operations {
             };
         };
     };
-    list_16: {
+    list_17: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -22603,7 +22747,7 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    list_16: {
         parameters: {
             query: {
                 name?: string;
@@ -23054,6 +23198,75 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["StudentYearDecision"][];
                 };
+            };
+        };
+    };
+    list_15: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentCodeGrantView"][];
+                };
+            };
+        };
+    };
+    grant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateStudentCodeGrantRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentCodeGrantView"];
+                };
+            };
+        };
+    };
+    revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentProfileId: number;
+                grantId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -23720,7 +23933,7 @@ export interface operations {
             };
         };
     };
-    list_35: {
+    list_36: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -24358,7 +24571,7 @@ export interface operations {
             };
         };
     };
-    list_34: {
+    list_35: {
         parameters: {
             query: {
                 teacherProfileId?: number;
@@ -24499,7 +24712,7 @@ export interface operations {
             };
         };
     };
-    list_33: {
+    list_34: {
         parameters: {
             query?: {
                 grade?: string;
@@ -28621,7 +28834,7 @@ export interface operations {
             };
         };
     };
-    list_30: {
+    list_31: {
         parameters: {
             query: {
                 dateFrom?: string;
@@ -29253,7 +29466,7 @@ export interface operations {
             };
         };
     };
-    list_32: {
+    list_33: {
         parameters: {
             query?: {
                 childId?: number;
@@ -29637,7 +29850,7 @@ export interface operations {
             };
         };
     };
-    students: {
+    students_1: {
         parameters: {
             query?: {
                 childId?: number;
@@ -30063,7 +30276,7 @@ export interface operations {
             };
         };
     };
-    list_31: {
+    list_32: {
         parameters: {
             query?: {
                 childId?: number;
@@ -30325,6 +30538,50 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    children_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChildAccessView"][];
+                };
+            };
+        };
+    };
+    issueCode_1: {
+        parameters: {
+            query?: {
+                confirmReissue?: boolean;
+            };
+            header?: never;
+            path: {
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedCodeResponse"];
+                };
             };
         };
     };
@@ -32451,7 +32708,7 @@ export interface operations {
             };
         };
     };
-    list_29: {
+    list_30: {
         parameters: {
             query?: {
                 cursor?: number;
@@ -32974,7 +33231,7 @@ export interface operations {
             };
         };
     };
-    list_28: {
+    list_29: {
         parameters: {
             query?: {
                 cursor?: number;
@@ -33709,6 +33966,50 @@ export interface operations {
             };
         };
     };
+    students: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherStudentAccessView"][];
+                };
+            };
+        };
+    };
+    issueCode: {
+        parameters: {
+            query?: {
+                confirmReissue?: boolean;
+            };
+            header?: never;
+            path: {
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedCodeResponse"];
+                };
+            };
+        };
+    };
     list_2: {
         parameters: {
             query?: {
@@ -34279,7 +34580,7 @@ export interface operations {
             };
         };
     };
-    list_27: {
+    list_28: {
         parameters: {
             query?: {
                 page?: number;
