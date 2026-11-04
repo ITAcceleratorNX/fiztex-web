@@ -9,6 +9,7 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useAccessRequestStats } from '@/hooks/queries';
 import { AccessRequestsPanel } from '@/pages/access/AccessRequestsPanel';
+import { IssuedSecretModal } from '../components/IssuedSecretModal';
 import { useToast } from '@/context/ToastContext';
 import { ACCOUNT_STATUS_LABELS, ROLE_LABELS } from '../labels';
 import {
@@ -87,8 +88,12 @@ export function AccessCodesPage() {
   );
 }
 
+const CODE_NOTE = 'Прежний код перестал работать. PIN у ученика остался прежним.';
+const RESET_NOTE = 'Человек войдёт по нему и задаст новый пароль. Прежние сессии завершены.';
+
 function CodesPanel() {
   const toast = useToast();
+  const [issued, setIssued] = useState<{ title: string; value: string; note: string } | null>(null);
   const [query, setQuery] = useState('');
   const [role, setRole] = useState<AccountRole | 'ALL'>('ALL');
   const [users, setUsers] = useState<PlatformUser[]>([]);
@@ -123,13 +128,14 @@ function CodesPanel() {
         toast.success(res.message);
       } else if (pending.type === 'reissue') {
         const res = await reissueCode(pending.user.id);
-        toast.success(res.message);
+        // Код показывается окном, а не тостом: сервер отдаёт его один раз.
+        setIssued({ title: 'Персональный код выдан', value: res.issuedCode ?? '', note: CODE_NOTE });
       } else {
         if (pending.user.role !== 'PARENT' && pending.user.role !== 'TEACHER') {
           throw new Error('Сброс доступа только для родителя или учителя');
         }
         const res = await resetAccess(pending.user.id, pending.user.role);
-        toast.success(res.message);
+        setIssued({ title: 'Код восстановления выдан', value: res.issuedCode ?? '', note: RESET_NOTE });
       }
       setPending(null);
       await reload();
@@ -255,6 +261,14 @@ function CodesPanel() {
         danger={pending ? ACTION_COPY[pending.type].danger : false}
         loading={busy}
         onConfirm={() => void confirmAction()}
+      />
+
+      <IssuedSecretModal
+        open={issued !== null}
+        title={issued?.title ?? ''}
+        value={issued?.value ?? null}
+        note={issued?.note ?? ''}
+        onClose={() => setIssued(null)}
       />
     </div>
   );

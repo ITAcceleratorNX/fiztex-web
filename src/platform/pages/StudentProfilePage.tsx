@@ -4,7 +4,7 @@ import { StudentYearDecisionHistory } from '../components/StudentYearDecisionHis
 import { StudentYearDecisionCancellationModal } from '../modals/StudentYearDecisionCancellationModal';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Copy, Pencil, RotateCw } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
@@ -14,7 +14,6 @@ import { formatDate } from '@/lib/format';
 import { ROLE_AVATAR_COLOR, SCHOOL_STATUS_LABELS } from '../labels';
 import { AccountActionsMenu } from '../components/AccountActionsMenu';
 import {
-  IconActionButton,
   ProfileBreadcrumb,
   ProfileCard,
   ProfileCardTitle,
@@ -22,8 +21,8 @@ import {
   ProfileInfoField,
   ProfileLinkAction,
   ProfileStatusBadge,
-  SoftBadge,
 } from '../components/ProfileChrome';
+import { StudentAccessCard } from '../components/AccessRecoveryCards';
 import { AddToClassModal } from '../modals/AddToClassModal';
 import { LinkParentModal } from '../modals/LinkParentModal';
 import {
@@ -31,7 +30,6 @@ import {
   blockUser,
   getStudentByAccount,
   listClasses,
-  reissueCode,
   unblockUser,
   updateStudent,
 } from '../services';
@@ -70,16 +68,16 @@ export function StudentProfilePage() {
   const [birthDate, setBirthDate] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const [issuedCode, setIssuedCode] = useState<string | null>(null);
-  const [reissuing, setReissuing] = useState(false);
-
   const [addToClassOpen, setAddToClassOpen] = useState(false);
   const [linkParentOpen, setLinkParentOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [cancelling, setCancelling] = useState<Schema<'StudentYearDecision'> | null>(null);
 
-  const reload = useCallback(async () => {
-    setLoading(true);
+  // `silent` — перечитать данные, не подменяя страницу скелетом: иначе карточка доступа
+  // размонтируется вместе с открытым окном выданного кода, а показать его второй раз
+  // нечем. Обычная загрузка (вход на страницу, смена ученика) по-прежнему со скелетом.
+  const reload = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const [d, c] = await Promise.all([
@@ -120,29 +118,6 @@ export function StudentProfilePage() {
       toast.error(err instanceof Error ? err.message : 'Не удалось сохранить');
     } finally {
       setSaving(false);
-    }
-  }
-
-  async function handleReissue() {
-    setReissuing(true);
-    try {
-      const res = await reissueCode(String(accountId));
-      setIssuedCode(res.issuedCode ?? null);
-      toast.success('Новый персональный код выпущен');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не удалось перевыпустить код');
-    } finally {
-      setReissuing(false);
-    }
-  }
-
-  async function handleCopyCode() {
-    if (!issuedCode) return;
-    try {
-      await navigator.clipboard.writeText(issuedCode);
-      toast.success('Код скопирован');
-    } catch {
-      toast.error('Не удалось скопировать код');
     }
   }
 
@@ -287,46 +262,17 @@ export function StudentProfilePage() {
                           )
                         }
                       />
-                      <div className="flex min-w-0 flex-col gap-1.5">
-                        <p className="text-11 font-semibold uppercase text-[#9ca3af]">
-                          Персональный код
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-navy-700">
-                            {issuedCode ?? 'Скрыт'}
-                          </span>
-                          <IconActionButton
-                            title="Скопировать"
-                            disabled={!issuedCode}
-                            onClick={() => void handleCopyCode()}
-                          >
-                            <Copy className="size-3" />
-                          </IconActionButton>
-                          <IconActionButton
-                            title="Перевыпустить код"
-                            disabled={reissuing}
-                            onClick={() => void handleReissue()}
-                          >
-                            <RotateCw className={`size-3.5 ${reissuing ? 'animate-spin' : ''}`} />
-                          </IconActionButton>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                      <ProfileInfoField
-                        label="Статус PIN-кода"
-                        value={
-                          detail.pinSet ? (
-                            <SoftBadge tone="green">Создан</SoftBadge>
-                          ) : (
-                            <SoftBadge tone="gray">Не создан</SoftBadge>
-                          )
-                        }
-                      />
                     </div>
                   </div>
                 )}
               </ProfileCard>
+
+              {/* Доступ — отдельной карточкой (макет D5): это действия, а не сведения. */}
+              <StudentAccessCard
+                accountId={accountId}
+                pinSet={Boolean(detail.pinSet)}
+                onChanged={() => void reload(true)}
+              />
 
               <ProfileCard className="flex flex-col gap-4">
                 <ProfileCardTitle
@@ -414,27 +360,8 @@ export function StudentProfilePage() {
             <ProfileCard className="flex h-fit flex-col gap-5">
               <ProfileCardTitle>Сводка</ProfileCardTitle>
               <div className="flex flex-col gap-4">
-                <ProfileInfoField
-                  label="Статус"
-                  value={<ProfileStatusBadge status={detail.accountStatus} />}
-                />
-                <ProfileInfoField label="Персональный код" value={issuedCode ?? 'Скрыт'} />
-                <ProfileInfoField
-                  label="PIN-код"
-                  value={
-                    detail.pinSet ? (
-                      <span className="inline-flex items-center gap-1.5 font-medium text-[#059669]">
-                        <span className="size-1.5 rounded-full bg-[#10b981]" />
-                        Создан
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 font-medium text-[#9ca3af]">
-                        <span className="size-1.5 rounded-full bg-slate-300" />
-                        Не создан
-                      </span>
-                    )
-                  }
-                />
+                {/* Код и PIN переехали в «Вход и восстановление»: в сводке они повторяли
+                    карточку доступа, а «Статус» и так стоит бейджем у имени. */}
                 <ProfileInfoField label="Дата создания" value={formatDate(detail.createdAt)} />
                 <ProfileInfoField
                   label="Последняя активность"

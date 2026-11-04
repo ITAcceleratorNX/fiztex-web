@@ -30,6 +30,7 @@ export {
   resetPin,
   reissueCode,
   resetAccess,
+  issueTemporaryPassword,
   exportAccessCodesCsv,
 } from './accessCodes';
 export {

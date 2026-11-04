@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Copy, Pencil, RotateCw } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
@@ -10,7 +10,6 @@ import { formatDate, initials, pluralRu } from '@/lib/format';
 import { ACCOUNT_STATUS_LABELS } from '../labels';
 import { AccountActionsMenu } from '../components/AccountActionsMenu';
 import {
-  IconActionButton,
   ProfileBreadcrumb,
   ProfileCard,
   ProfileCardTitle,
@@ -20,12 +19,12 @@ import {
   ProfileStatusBadge,
   SoftBadge,
 } from '../components/ProfileChrome';
+import { ParentAccessCard } from '../components/AccessRecoveryCards';
 import { LinkStudentModal } from '../modals/LinkStudentModal';
 import {
   archiveUser,
   blockUser,
   getParentByAccount,
-  resetAccess,
   unblockUser,
   updateParent,
 } from '../services';
@@ -87,14 +86,14 @@ export function ParentProfilePage() {
   const [phone, setPhone] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const [issuedCode, setIssuedCode] = useState<string | null>(null);
-  const [reissuing, setReissuing] = useState(false);
-
   const [linkOpen, setLinkOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
 
-  const reload = useCallback(async () => {
-    setLoading(true);
+  // `silent` — перечитать данные, не подменяя страницу скелетом: иначе карточка доступа
+  // размонтируется вместе с открытым окном выданного кода, а показать его второй раз
+  // нечем. Обычная загрузка (вход на страницу, смена родителя) по-прежнему со скелетом.
+  const reload = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const d = await getParentByAccount(accountId);
@@ -126,30 +125,6 @@ export function ParentProfilePage() {
       toast.error(err instanceof Error ? err.message : 'Не удалось сохранить');
     } finally {
       setSaving(false);
-    }
-  }
-
-  async function handleResetAccess() {
-    setReissuing(true);
-    try {
-      const res = await resetAccess(String(accountId), 'PARENT');
-      setIssuedCode(res.issuedCode ?? null);
-      toast.success('Новый код активации выпущен');
-      await reload();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не удалось сбросить доступ');
-    } finally {
-      setReissuing(false);
-    }
-  }
-
-  async function handleCopyCode() {
-    if (!issuedCode) return;
-    try {
-      await navigator.clipboard.writeText(issuedCode);
-      toast.success('Код скопирован');
-    } catch {
-      toast.error('Не удалось скопировать код');
     }
   }
 
@@ -222,7 +197,6 @@ export function ParentProfilePage() {
                   onBlock={() => void handleBlock()}
                   onUnblock={() => void handleUnblock()}
                   onArchive={() => setArchiveOpen(true)}
-                  onResetAccess={() => void handleResetAccess()}
                 />
               </div>
             </div>
@@ -264,48 +238,17 @@ export function ParentProfilePage() {
                     </div>
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                       <ProfileInfoField label="Телефон" value={detail.phone} />
-                      <div className="flex min-w-0 flex-col gap-1.5">
-                        <p className="text-11 font-semibold uppercase text-[#9ca3af]">
-                          Код активации
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-navy-700">
-                            {issuedCode ?? '—'}
-                          </span>
-                          <IconActionButton
-                            title="Скопировать"
-                            disabled={!issuedCode}
-                            onClick={() => void handleCopyCode()}
-                          >
-                            <Copy className="size-3" />
-                          </IconActionButton>
-                          <IconActionButton
-                            title="Перевыпустить код"
-                            disabled={reissuing}
-                            onClick={() => void handleResetAccess()}
-                          >
-                            <RotateCw className={`size-3.5 ${reissuing ? 'animate-spin' : ''}`} />
-                          </IconActionButton>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                      <ProfileInfoField
-                        label="Статус активации"
-                        value={
-                          detail.accountStatus === 'ACTIVE' ? (
-                            <SoftBadge tone="green">Аккаунт активирован</SoftBadge>
-                          ) : (
-                            <SoftBadge tone="gray">
-                              {ACCOUNT_STATUS_LABELS[detail.accountStatus]}
-                            </SoftBadge>
-                          )
-                        }
-                      />
                     </div>
                   </div>
                 )}
               </ProfileCard>
+
+              {/* Доступ — отдельной карточкой (макет D5-P): код и пароль выдаются один раз. */}
+              <ParentAccessCard
+                accountId={accountId}
+                accountStatus={detail.accountStatus}
+                onChanged={() => void reload(true)}
+              />
 
               <ProfileCard className="flex flex-col gap-4">
                 <ProfileCardTitle
