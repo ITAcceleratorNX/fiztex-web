@@ -65,7 +65,8 @@ beforeEach(() => {
   setToken(null);
   fetchMock.mockReset();
   fetchMock.mockImplementation(async (url, init) => {
-    if (url === '/api/auth/login') {
+    // Панель входит через единую точку `/auth/sign-in` (AUTH-BE-001 §9).
+    if (url === '/api/auth/sign-in') {
       const { login } = JSON.parse(init?.body as string) as { login: string };
       const account = accounts.find((item) => item.email === login);
       if (!account) throw new Error('Unknown test account');
