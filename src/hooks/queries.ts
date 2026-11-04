@@ -13,6 +13,7 @@ import {
   lessonSummaryApi, summaryRunning, type LessonSummary, type SummaryGeneration, type SummarySave,
 } from '@/lib/lessonSummaryApi';
 import { ApiError, api, pageQuery, request, type CopyTestRequest } from '@/lib/api';
+import { accessRequestsApi, type AccessRequestFilters } from '@/lib/accessRequestsApi';
 import {
   lessonAdminApi,
   lessonTeachingApi,
@@ -176,6 +177,13 @@ export const keys = {
     ['physical-keys', 'dashboard', filters] as const,
   physicalKeyHistory: (filters: KeyHistoryFilters) =>
     ['physical-keys', 'history', filters] as const,
+  accessRequests: ['access-requests'] as const,
+  accessRequestLists: ['access-requests', 'list'] as const,
+  accessRequestList: (filters: AccessRequestFilters) => ['access-requests', 'list', filters] as const,
+  accessRequestStats: ['access-requests', 'stats'] as const,
+  accessRequest: (requestId: number) => ['access-requests', 'detail', requestId] as const,
+  accessRequestSuggestions: (requestId: number) =>
+    ['access-requests', 'suggestions', requestId] as const,
   subjects: ['subjects'] as const,
   tests: (useAiGeneration?: boolean) =>
     useAiGeneration === true
@@ -1003,6 +1011,74 @@ export function usePhysicalKeyHistory(filters: KeyHistoryFilters) {
         ? previous
         : undefined,
   });
+}
+
+// ---- Заявки на доступ (AUTH-BE-001) ----
+export function useAccessRequests(filters: AccessRequestFilters) {
+  return useQuery({
+    queryKey: keys.accessRequestList(filters),
+    queryFn: ({ signal }) => accessRequestsApi.list(filters, signal),
+    // Поиск и роль не мигают пустой таблицей, а переход между полосами показывает
+    // собственное loading: «Новые» и «Отклонены» — разные списки, а не фильтр одного.
+    placeholderData: (previous, previousQuery) =>
+      (previousQuery?.queryKey[2] as AccessRequestFilters | undefined)?.stage === filters.stage
+        ? previous
+        : undefined,
+  });
+}
+
+export function useAccessRequestStats() {
+  return useQuery({
+    queryKey: keys.accessRequestStats,
+    queryFn: ({ signal }) => accessRequestsApi.stats(signal),
+  });
+}
+
+export function useAccessRequest(requestId: number) {
+  return useQuery({
+    queryKey: keys.accessRequest(requestId),
+    enabled: Number.isSafeInteger(requestId) && requestId > 0,
+    queryFn: ({ signal }) => accessRequestsApi.detail(requestId, signal),
+  });
+}
+
+/** Подсказки нужны только на нерешённой заявке — решённую они уже ни на что не меняют. */
+export function useAccessRequestSuggestions(requestId: number, enabled: boolean) {
+  return useQuery({
+    queryKey: keys.accessRequestSuggestions(requestId),
+    enabled: enabled && Number.isSafeInteger(requestId) && requestId > 0,
+    queryFn: ({ signal }) => accessRequestsApi.suggestions(requestId, signal),
+  });
+}
+
+/**
+ * Решение меняет не только карточку: этап заявки вычисляемый, и от него зависят и список,
+ * и счётчик вкладки. Поэтому ответ кладётся в карточку, а реестр со статистикой
+ * перечитываются — досчитывать их здесь значило бы завести вторую версию правила этапа.
+ */
+function useAccessRequestDecision<B>(
+  requestId: number,
+  decide: (body: B) => Promise<Schema<'AccessRequestDetailView'>>,
+) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: decide,
+    onSuccess: (detail) => {
+      client.setQueryData(keys.accessRequest(requestId), detail);
+      void client.invalidateQueries({ queryKey: keys.accessRequestLists });
+      void client.invalidateQueries({ queryKey: keys.accessRequestStats });
+    },
+  });
+}
+
+export function useApproveAccessRequest(requestId: number) {
+  return useAccessRequestDecision(requestId, (body: Schema<'ApproveAccessRequestRequest'>) =>
+    accessRequestsApi.approve(requestId, body));
+}
+
+export function useRejectAccessRequest(requestId: number) {
+  return useAccessRequestDecision(requestId, (body: Schema<'RejectAccessRequestRequest'>) =>
+    accessRequestsApi.reject(requestId, body));
 }
 
 const ADMISSIONS_POLL_MS = 30_000;

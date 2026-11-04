@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Download } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Select } from '@/components/ui/Field';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { useAccessRequestStats } from '@/hooks/queries';
+import { AccessRequestsPanel } from '@/pages/access/AccessRequestsPanel';
 import { useToast } from '@/context/ToastContext';
 import { ACCOUNT_STATUS_LABELS, ROLE_LABELS } from '../labels';
 import {
@@ -44,7 +48,46 @@ const ACTION_COPY: Record<
   },
 };
 
+/**
+ * Вкладки раздела (макет D0). Счётчик на вкладке — только нерассмотренные заявки:
+ * вкладка зовёт к работе, а одобренные и отклонённые её уже не требуют.
+ */
 export function AccessCodesPage() {
+  const [params, setParams] = useSearchParams();
+  const tab = params.get('tab') === 'requests' ? 'requests' : 'codes';
+  const stats = useAccessRequestStats();
+  const pending = stats.data?.pending ?? 0;
+
+  return (
+    <Tabs
+      value={tab}
+      onValueChange={(value) => {
+        const next = new URLSearchParams();
+        if (value === 'requests') next.set('tab', 'requests');
+        setParams(next);
+      }}
+    >
+      <TabsList className="gap-5">
+        <TabsTrigger value="codes">Коды и PIN</TabsTrigger>
+        <TabsTrigger value="requests">
+          <span className="inline-flex items-center gap-2">
+            Заявки на доступ
+            {pending > 0 && (
+              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-11 font-semibold text-white">
+                {pending}
+              </span>
+            )}
+          </span>
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value={tab} className="mt-6">
+        {tab === 'requests' ? <AccessRequestsPanel /> : <CodesPanel />}
+      </TabsContent>
+    </Tabs>
+  );
+}
+
+function CodesPanel() {
   const toast = useToast();
   const [query, setQuery] = useState('');
   const [role, setRole] = useState<AccountRole | 'ALL'>('ALL');
