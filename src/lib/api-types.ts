@@ -9193,6 +9193,8 @@ export interface components {
             stage?: "DRAFT" | "PENDING" | "APPROVED_PENDING_ACTIVATION" | "ACTIVE" | "REJECTED";
             /** Format: date-time */
             submittedAt?: string;
+            /** Format: date-time */
+            tokenValidUntil?: string;
         };
         AccessRequestSuggestionsView: {
             applicantMatches?: components["schemas"]["ProfileCandidateView"][];
