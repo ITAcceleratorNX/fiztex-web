@@ -344,6 +344,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/access-journal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_38"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/access-requests": {
         parameters: {
             query?: never;
@@ -9052,6 +9068,29 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        AccessJournalRowView: {
+            /** Format: int64 */
+            actorAccountId?: number;
+            actorLabel?: string;
+            details?: {
+                [key: string]: Record<string, never>;
+            };
+            /** Format: int64 */
+            id?: number;
+            /** Format: date-time */
+            occurredAt?: string;
+            /** Format: int64 */
+            requestId?: number;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subjectAccountId?: number;
+            subjectName?: string;
+            /** @enum {string} */
+            subjectRole?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
+            /** @enum {string} */
+            type?: "REQUEST_DRAFT_SAVED" | "REQUEST_SUBMITTED" | "REQUEST_RESUBMITTED" | "REQUEST_APPROVED_LINKED" | "REQUEST_APPROVED_CREATED" | "REQUEST_REJECTED" | "PARENT_LINK_ADDED" | "LOGIN_METHOD_ENABLED" | "STUDENT_CODE_ISSUED" | "STUDENT_CODE_REISSUED" | "STUDENT_PIN_RESET" | "ACCESS_RESET" | "TEMP_PASSWORD_ISSUED" | "PASSWORD_CHANGED" | "PHONE_CHANGED" | "CODE_GRANT_ADDED" | "CODE_GRANT_REVOKED";
+        };
         AccessRequestClassOptionsView: {
             grades?: components["schemas"]["GradeOption"][];
             yearConfigured?: boolean;
@@ -14480,6 +14519,24 @@ export interface components {
             /** Format: int32 */
             totalPages?: number;
         };
+        PageAccessJournalRowView: {
+            content?: components["schemas"]["AccessJournalRowView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
         PageAccessRequestRowView: {
             content?: components["schemas"]["AccessRequestRowView"][];
             empty?: boolean;
@@ -19040,6 +19097,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AcademicYearView"];
+                };
+            };
+        };
+    };
+    list_38: {
+        parameters: {
+            query: {
+                accountId?: number;
+                requestId?: number;
+                type?: "REQUEST_DRAFT_SAVED" | "REQUEST_SUBMITTED" | "REQUEST_RESUBMITTED" | "REQUEST_APPROVED_LINKED" | "REQUEST_APPROVED_CREATED" | "REQUEST_REJECTED" | "PARENT_LINK_ADDED" | "LOGIN_METHOD_ENABLED" | "STUDENT_CODE_ISSUED" | "STUDENT_CODE_REISSUED" | "STUDENT_PIN_RESET" | "ACCESS_RESET" | "TEMP_PASSWORD_ISSUED" | "PASSWORD_CHANGED" | "PHONE_CHANGED" | "CODE_GRANT_ADDED" | "CODE_GRANT_REVOKED";
+                from?: string;
+                to?: string;
+                query?: string;
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageAccessJournalRowView"];
                 };
             };
         };
