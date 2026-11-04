@@ -14,6 +14,10 @@ vi.mock('@/hooks/dynamicsQueries', () => ({
   useStudentSubjectDynamics: (...args: unknown[]) => useStudentSubjectDynamics(...args),
 }));
 
+// Блок персонального кода живёт в панели, но спрашивает свой запрос и свои тосты.
+// Здесь проверяется динамика, а код — своим тестом (`StudentAccessCodeSection.test.tsx`).
+vi.mock('./StudentAccessCodeSection', () => ({ StudentAccessCodeSection: () => null }));
+
 const ok = <T,>(data: T) => ({ data, isPending: false, isError: false, error: null, refetch: vi.fn() });
 const quarter = { type: 'QUARTER', from: '2026-09-01', to: '2026-10-27', academicPeriodName: '1 четверть' };
 const previous = { type: 'QUARTER', academicPeriodName: '4 четверти', academicYearName: '2025–2026' };

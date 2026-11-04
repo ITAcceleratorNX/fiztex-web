@@ -14,6 +14,7 @@ import {
 } from '@/lib/lessonSummaryApi';
 import { ApiError, api, pageQuery, request, type CopyTestRequest } from '@/lib/api';
 import { accessRequestsApi, type AccessRequestFilters } from '@/lib/accessRequestsApi';
+import { teacherAccessCodesApi } from '@/lib/teacherAccessCodesApi';
 import {
   lessonAdminApi,
   lessonTeachingApi,
@@ -184,6 +185,7 @@ export const keys = {
   accessRequest: (requestId: number) => ['access-requests', 'detail', requestId] as const,
   accessRequestSuggestions: (requestId: number) =>
     ['access-requests', 'suggestions', requestId] as const,
+  teacherStudentAccess: ['teacher', 'student-access-codes'] as const,
   subjects: ['subjects'] as const,
   tests: (useAiGeneration?: boolean) =>
     useAiGeneration === true
@@ -1079,6 +1081,31 @@ export function useApproveAccessRequest(requestId: number) {
 export function useRejectAccessRequest(requestId: number) {
   return useAccessRequestDecision(requestId, (body: Schema<'RejectAccessRequestRequest'>) =>
     accessRequestsApi.reject(requestId, body));
+}
+
+// ---- Персональные коды учеников у учителя ----
+export function useTeacherStudentAccess(enabled = true) {
+  return useQuery({
+    queryKey: keys.teacherStudentAccess,
+    enabled,
+    queryFn: ({ signal }) => teacherAccessCodesApi.list(signal),
+  });
+}
+
+/**
+ * Выпуск кода меняет состояние доступа ученика (`codeIssuedAt`), поэтому список
+ * перечитывается. Сам выданный код в кэш не кладётся: он живёт только в компоненте,
+ * который его показал, и повторно его взять неоткуда.
+ */
+export function useIssueStudentAccessCode() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ studentProfileId, confirmReissue }: { studentProfileId: number; confirmReissue: boolean }) =>
+      teacherAccessCodesApi.issue(studentProfileId, confirmReissue),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: keys.teacherStudentAccess });
+    },
+  });
 }
 
 const ADMISSIONS_POLL_MS = 30_000;

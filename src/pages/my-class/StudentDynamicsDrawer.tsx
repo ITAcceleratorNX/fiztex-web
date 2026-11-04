@@ -6,6 +6,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Modal } from '@/components/ui/Modal';
 import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useStudentGradeDynamics, useStudentSubjectDynamics } from '@/hooks/dynamicsQueries';
+import { StudentAccessCodeSection } from './StudentAccessCodeSection';
 import { cx } from '@/lib/format';
 import {
   compareLabel,
@@ -170,6 +171,9 @@ export function StudentDynamicsDrawer({
                 </tbody>
               </table>
             </section>
+            {/* Код ученика — в той же панели, что и успеваемость (макет T1–T3): учитель
+                выдаёт его тому, кого сейчас смотрит, и отдельного экрана для этого нет. */}
+            <StudentAccessCodeSection studentProfileId={student.id} />
           </div>
         )
       ) : subject.isPending ? <LoadingBlock label="Загрузка предмета…" /> : subject.isError ? (
