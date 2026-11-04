@@ -20,6 +20,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/access-requests/device": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["registerDevice"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/access-requests/draft": {
         parameters: {
             query?: never;
@@ -15899,6 +15915,15 @@ export interface components {
         RegenerateQuestionRequest: {
             teacherPrompt?: string;
         };
+        RegisterAccessRequestDeviceRequest: {
+            appVersion?: string;
+            /** Format: uuid */
+            installationId: string;
+            locale?: string;
+            platform: string;
+            pushToken?: string;
+            token?: string;
+        };
         RegisterDeviceRequest: {
             appVersion?: string;
             locale?: string;
@@ -18405,6 +18430,28 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AccessRequestClassOptionsView"];
                 };
+            };
+        };
+    };
+    registerDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterAccessRequestDeviceRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
