@@ -2,8 +2,8 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
 import { cx } from '@/lib/format';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-ghost' | 'navy' | 'success-soft' | 'warning-soft' | 'neutral-soft';
-type Size = 'sm' | 'md' | 'icon' | 'icon-sm' | 'text' | 'badge';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-ghost' | 'danger-outline' | 'link' | 'navy' | 'success-soft' | 'warning-soft' | 'neutral-soft';
+type Size = 'sm' | 'md' | 'icon' | 'icon-sm' | 'text' | 'inline' | 'badge';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -21,6 +21,12 @@ const variants: Record<Variant, string> = {
   ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 active:bg-slate-200',
   danger: 'bg-red-500 text-white hover:bg-red-600 active:bg-red-700 disabled:bg-red-300',
   'danger-ghost': 'bg-transparent text-red-600 hover:bg-red-50 active:bg-red-100 disabled:text-slate-400',
+  // Разрушительное действие в шапке, которое не главное на экране (Figma `phyztex` 2460:2129
+  // «Отклонить заявку»): белая кнопка с красной подписью и розовой рамкой.
+  'danger-outline': 'bg-white text-red-700 ring-1 ring-inset ring-planning-danger-border hover:bg-planning-danger active:bg-red-50 disabled:text-slate-400',
+  // Действие словом — в строке таблицы или списка («Сброс PIN», «Открыть», 2460:1845 / 2460:2564).
+  // Используется с размерами `text` (13) и `inline` (14).
+  link: 'bg-transparent text-navy-700 hover:text-navy-900 hover:underline disabled:text-slate-400 disabled:no-underline',
   // Figma `btn-primary` — фирменный navy. Отдельный вариант, а не замена `primary`:
   // какая кнопка основная, оранжевая или синяя, — открытый продуктовый вопрос
   // (см. CLAUDE.md «Расхождения макета и кода»), а экранам, где макет прямо рисует
@@ -37,6 +43,7 @@ const sizes: Record<Size, string> = {
   icon: 'size-11 shrink-0 p-0 text-sm',
   'icon-sm': 'size-7 shrink-0 p-0 text-13',
   text: 'h-auto p-0 text-13',
+  inline: 'h-auto p-0 text-sm',
   badge: 'h-7 px-2.5 text-xs',
 };
 

@@ -84,11 +84,6 @@ export function AccessJournalPanel() {
 
   return (
     <div className="space-y-4">
-      <p className="max-w-3xl text-sm text-slate-500">
-        Кто и что делал с доступом: заявки, персональные коды, PIN, временные пароли, смена
-        телефона и разрешения учителям. Записи не удаляются и не правятся.
-      </p>
-
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
         <SearchInput
           className="flex-1"

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Download } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { DataTable } from '@/components/ui/DataTable';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Select } from '@/components/ui/Field';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
@@ -20,7 +21,7 @@ import {
   resetAccess,
   resetPin,
 } from '../services';
-import type { AccountRole, PlatformUser } from '../types';
+import type { AccountRole, AccountStatus, PlatformUser } from '../types';
 import { platformErrorMessage } from '../platformErrorMessage';
 
 type PendingAction = {
@@ -50,20 +51,34 @@ const ACTION_COPY: Record<
   },
 };
 
+type SectionTab = 'codes' | 'requests' | 'journal';
+
+/** Подзаголовок шапки меняется вместе с вкладкой (D0 / D1): он объясняет, что под ней. */
+const TAB_DESCRIPTIONS: Record<SectionTab, string> = {
+  codes: 'Для ученика доступны PIN и персональный код. Родителю или учителю можно сбросить доступ, чтобы выдать новый код активации.',
+  requests: 'Ученики и родители, которые отправили заявку из приложения',
+  journal: 'Кто и что делал с доступом: заявки, персональные коды, PIN, временные пароли, смена телефона и разрешения учителям. Записи не удаляются и не правятся.',
+};
+
 /**
  * Вкладки раздела (макет D0). Счётчик на вкладке — только нерассмотренные заявки:
  * вкладка зовёт к работе, а одобренные и отклонённые её уже не требуют.
+ *
+ * Шапка своя, а не общая `AppHeader`: у раздела подзаголовок под каждую вкладку.
  */
 export function AccessCodesPage() {
   const [params, setParams] = useSearchParams();
   const tabParam = params.get('tab');
-  const tab = tabParam === 'requests' || tabParam === 'journal' ? tabParam : 'codes';
+  const tab: SectionTab = tabParam === 'requests' || tabParam === 'journal' ? tabParam : 'codes';
   const stats = useAccessRequestStats();
   const pending = stats.data?.pending ?? 0;
 
   return (
+    <div className="flex flex-col gap-5">
+    <PageHeader eyebrow="Управление школой" title="Доступы / коды" description={TAB_DESCRIPTIONS[tab]} />
     <Tabs
       value={tab}
+      variant="navy"
       // Фильтры вкладок свои и несовместимые (`stage` у заявок, `event` и даты у журнала),
       // поэтому переключение начинает адрес заново, а не тащит чужие параметры.
       onValueChange={(value) => {
@@ -72,28 +87,28 @@ export function AccessCodesPage() {
         setParams(next);
       }}
     >
-      <TabsList className="gap-5">
+      <TabsList>
         <TabsTrigger value="codes">Коды и PIN</TabsTrigger>
-        <TabsTrigger value="requests">
-          <span className="inline-flex items-center gap-2">
-            Заявки на доступ
-            {pending > 0 && (
-              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-11 font-semibold text-white">
-                {pending}
-              </span>
-            )}
-          </span>
-        </TabsTrigger>
+        <TabsTrigger value="requests" count={pending}>Заявки на доступ</TabsTrigger>
         <TabsTrigger value="journal">Журнал доступа</TabsTrigger>
       </TabsList>
-      <TabsContent value={tab} className="mt-6">
+      <TabsContent value={tab} className="mt-5 focus-visible:outline-none">
         {tab === 'requests' && <AccessRequestsPanel />}
         {tab === 'journal' && <AccessJournalPanel />}
         {tab === 'codes' && <CodesPanel />}
       </TabsContent>
     </Tabs>
+    </div>
   );
 }
+
+/** Состояние аккаунта в реестре — цветом слова, без плашки (D0). */
+const STATUS_TONE: Record<AccountStatus, string> = {
+  ACTIVE: 'text-planning-success-fg',
+  NOT_ACTIVATED: 'text-amber-700',
+  BLOCKED: 'text-red-700',
+  ARCHIVED: 'text-planning-subtle',
+};
 
 const CODE_NOTE = 'Прежний код перестал работать. PIN у ученика остался прежним.';
 const RESET_NOTE = 'Человек войдёт по нему и задаст новый пароль. Прежние сессии завершены.';
@@ -170,21 +185,21 @@ function CodesPanel() {
   }
 
   return (
-    <div>
-      <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Для ученика доступны PIN и персональный код. Родителю или учителю можно сбросить доступ,
-        чтобы выдать новый код активации.
-      </p>
-
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
         <SearchInput
           className="flex-1"
           value={query}
           onChange={setQuery}
           placeholder="Поиск по ФИО"
         />
-        <div className="lg:w-44">
-          <Select value={role} onChange={(e) => setRole(e.target.value as AccountRole | 'ALL')}>
+        <div className="lg:w-filter-select">
+          <Select
+            aria-label="Роль"
+            className="h-11"
+            value={role}
+            onChange={(e) => setRole(e.target.value as AccountRole | 'ALL')}
+          >
             <option value="ALL">Все роли</option>
             <option value="STUDENT">Ученик</option>
             <option value="PARENT">Родитель</option>
@@ -192,12 +207,12 @@ function CodesPanel() {
             <option value="ADMIN">Админ</option>
           </Select>
         </div>
-        <Button variant="secondary" icon={<Download className="h-4 w-4" />} onClick={() => void handleExport()}>
+        <Button variant="secondary" className="shrink-0" onClick={() => void handleExport()}>
           CSV
         </Button>
       </div>
 
-      {loading && <LoadingBlock />}
+      {loading && <div className="card"><LoadingBlock /></div>}
       {error && !loading && <ErrorBlock message={error} onRetry={() => void reload()} />}
       {!loading && !error && users.length === 0 && (
         <div className="card">
@@ -205,58 +220,44 @@ function CodesPanel() {
         </div>
       )}
       {!loading && !error && users.length > 0 && (
-        <div className="card overflow-hidden p-0">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-100 bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-3 font-semibold">ФИО</th>
-                <th className="px-4 py-3 font-semibold">Роль</th>
-                <th className="px-4 py-3 font-semibold">Статус</th>
-                <th className="px-4 py-3 font-semibold">Действия</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id} className="border-b border-slate-50 last:border-0">
-                  <td className="px-4 py-3 font-medium text-slate-900">{user.fullName}</td>
-                  <td className="px-4 py-3 text-slate-600">{ROLE_LABELS[user.role]}</td>
-                  <td className="px-4 py-3 text-slate-600">{ACCOUNT_STATUS_LABELS[user.status]}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
-                      {user.role === 'STUDENT' && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setPending({ type: 'resetPin', user })}
-                          >
-                            Сброс PIN
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setPending({ type: 'reissue', user })}
-                          >
-                            Новый код
-                          </Button>
-                        </>
-                      )}
-                      {(user.role === 'PARENT' || user.role === 'TEACHER') && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setPending({ type: 'resetAccess', user })}
-                        >
-                          Сброс доступа
+        <DataTable label="Коды и PIN" appearance="registry">
+          <thead>
+            <tr>
+              <th scope="col">ФИО</th>
+              <th scope="col" className="w-36">Роль</th>
+              <th scope="col" className="w-40">Статус</th>
+              <th scope="col" className="w-56">Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user.id}>
+                <td className="font-semibold">{user.fullName}</td>
+                <td>{ROLE_LABELS[user.role]}</td>
+                <td className={STATUS_TONE[user.status]}>{ACCOUNT_STATUS_LABELS[user.status]}</td>
+                <td>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {user.role === 'STUDENT' && (
+                      <>
+                        <Button variant="link" size="inline" onClick={() => setPending({ type: 'resetPin', user })}>
+                          Сброс PIN
                         </Button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                        <Button variant="link" size="inline" onClick={() => setPending({ type: 'reissue', user })}>
+                          Новый код
+                        </Button>
+                      </>
+                    )}
+                    {(user.role === 'PARENT' || user.role === 'TEACHER') && (
+                      <Button variant="link" size="inline" onClick={() => setPending({ type: 'resetAccess', user })}>
+                        Сброс доступа
+                      </Button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </DataTable>
       )}
 
       <ConfirmDialog

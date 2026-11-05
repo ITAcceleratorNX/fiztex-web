@@ -43,6 +43,10 @@
   --size-planning-state: 420px;
   --size-planning-table: 960px;
   --grid-planning-editor: minmax(0, 1.6fr) minmax(0, 1fr) minmax(5rem, 0.4fr) minmax(10rem, 0.6fr);
+  /* Карточка заявки на доступ (Figma `phyztex` 2460:2129 / 2460:2564): данные заявки 400
+   * слева от подсказок; после решения — итог слева от очереди 380. */
+  --grid-access-request: minmax(0, 400px) minmax(0, 1fr);
+  --grid-access-decision: minmax(0, 1fr) minmax(0, 380px);
   /* Figma parent comment composer 27:1697 / 27:1709. */
   --size-comment-dialog: 560px;
   --size-comment-field: 220px;
@@ -174,6 +178,15 @@
   }
   .planning-table-cell {
     @apply border-planning-row-line px-3 py-3 text-13 leading-relaxed;
+  }
+
+  /* Реестр на всю ширину раздела (Figma `phyztex` 2460:1845 / 2460:1979): белая шапка
+   * 12/600 капсом, строки 14 px высотой 57, поля по краям 24. */
+  .registry-table-head {
+    @apply border-b border-planning-row-line bg-surface px-3 py-3.5 text-xs font-semibold uppercase tracking-filter text-planning-subtle first:pl-6 last:pr-6;
+  }
+  .registry-table-cell {
+    @apply border-b border-planning-row-line px-3 py-4 align-middle text-sm leading-6 first:pl-6 last:pr-6;
   }
 
   .form-section {

@@ -6,15 +6,17 @@ import type { AccessRequestRole, AccessRequestStage } from '@/lib/accessRequests
 import { useAccessRequests } from '@/hooks/queries';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { Button } from '@/components/ui/Button';
+import { DataTable } from '@/components/ui/DataTable';
+import { Select } from '@/components/ui/Field';
+import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
-import { FilterSelect } from '@/components/ui/FilterSelect';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
-import { formatDateTime } from '@/lib/format';
+import { formatShortDayMonthTime } from '@/lib/format';
 import { REQUEST_TABS, isRequestStage, phoneLabel, roleLabel, rowClassLabel } from './accessRequestModel';
 
 const PAGE_SIZE = 25;
-const COLUMNS = ['w-20', 'flex-1', 'w-28', 'w-36', 'w-44', 'w-40'];
+const COLUMNS = ['w-24', 'flex-1', 'w-36', 'w-44', 'w-52', 'w-44'];
 
 const EMPTY_BY_STAGE: Record<AccessRequestStage, { title: string; description: string }> = {
   PENDING: { title: 'Новых заявок нет', description: 'Все заявки рассмотрены. Новые появятся здесь и в меню.' },
@@ -68,41 +70,33 @@ export function AccessRequestsPanel() {
   const empty = EMPTY_BY_STAGE[stage];
 
   return (
-    <div className="space-y-4">
-      <p className="max-w-2xl text-sm text-slate-500">
-        Ученики и родители, которые отправили заявку из приложения.
-      </p>
-
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
         <SearchInput
           className="flex-1"
           value={query}
           onChange={setQuery}
           placeholder="ФИО, телефон или номер заявки"
         />
-        <FilterSelect
-          className="lg:w-44"
-          label="Роль"
-          value={role}
-          onChange={(value) => patchParams({ role: value === 'all' ? null : value, page: null })}
-        >
-          <option value="all">Все роли</option>
-          <option value="STUDENT">Ученик</option>
-          <option value="PARENT">Родитель</option>
-        </FilterSelect>
-        <div className="flex flex-wrap gap-1.5">
-          {REQUEST_TABS.map((tab) => (
-            <Button
-              key={tab.stage}
-              size="sm"
-              variant={tab.stage === stage ? 'navy' : 'ghost'}
-              aria-pressed={tab.stage === stage}
-              onClick={() => patchParams({ stage: tab.stage === 'PENDING' ? null : tab.stage, page: null })}
-            >
-              {tab.label}
-            </Button>
-          ))}
+        <div className="lg:w-filter-select">
+          <Select
+            aria-label="Роль"
+            className="h-11"
+            value={role}
+            onChange={(event) => patchParams({ role: event.target.value === 'all' ? null : event.target.value, page: null })}
+          >
+            <option value="all">Все роли</option>
+            <option value="STUDENT">Ученик</option>
+            <option value="PARENT">Родитель</option>
+          </Select>
         </div>
+        <SegmentedTabs
+          appearance="outlined"
+          ariaLabel="Этап заявки"
+          value={stage}
+          options={REQUEST_TABS.map((tab) => ({ value: tab.stage, label: tab.label }))}
+          onChange={(next) => patchParams({ stage: next === 'PENDING' ? null : next, page: null })}
+        />
       </div>
 
       {requests.isPending && <TableSkeleton columns={COLUMNS} rows={6} />}
@@ -119,51 +113,45 @@ export function AccessRequestsPanel() {
       )}
 
       {rows.length > 0 && (
-        <div className="card overflow-hidden p-0">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-100 bg-slate-50/80 text-10 uppercase tracking-filter text-slate-400">
-              <tr>
-                <th className="px-4 py-3 font-semibold">№</th>
-                <th className="px-4 py-3 font-semibold">ФИО</th>
-                <th className="px-4 py-3 font-semibold">Роль</th>
-                <th className="px-4 py-3 font-semibold">Класс</th>
-                <th className="px-4 py-3 font-semibold">Телефон</th>
-                <th className="px-4 py-3 font-semibold">Дата заявки</th>
+        <DataTable label="Заявки на доступ" appearance="registry">
+          <thead>
+            <tr>
+              <th scope="col" className="w-24">№</th>
+              <th scope="col">ФИО</th>
+              <th scope="col" className="w-36">Роль</th>
+              <th scope="col" className="w-44">Класс</th>
+              <th scope="col" className="w-52">Телефон</th>
+              <th scope="col" className="w-44">Дата заявки</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr
+                key={row.requestId}
+                className="cursor-pointer transition-colors hover:bg-planning-canvas"
+                onClick={() => navigate(`/admin/access-codes/requests/${row.requestId}`)}
+              >
+                <td className="text-planning-muted">{row.requestId}</td>
+                <td>
+                  <Link
+                    to={`/admin/access-codes/requests/${row.requestId}`}
+                    className="font-semibold text-planning-ink hover:text-navy-700"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {row.fullName}
+                  </Link>
+                  {row.repeat && (
+                    <div className="text-13 leading-4 text-amber-700">Повторная заявка</div>
+                  )}
+                </td>
+                <td>{roleLabel(row.role)}</td>
+                <td>{rowClassLabel(row)}</td>
+                <td className={row.phone ? undefined : 'text-planning-subtle'}>{phoneLabel(row.phone)}</td>
+                <td className="text-planning-muted">{formatShortDayMonthTime(row.submittedAt ?? row.createdAt)}</td>
               </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr
-                  key={row.requestId}
-                  className="cursor-pointer border-b border-slate-50 last:border-0 hover:bg-slate-50"
-                  onClick={() => navigate(`/admin/access-codes/requests/${row.requestId}`)}
-                >
-                  <td className="px-4 py-3 text-slate-500">{row.requestId}</td>
-                  <td className="px-4 py-3">
-                    <Link
-                      to={`/admin/access-codes/requests/${row.requestId}`}
-                      className="font-medium text-slate-900 hover:text-navy-700"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      {row.fullName}
-                    </Link>
-                    {row.repeat && (
-                      <div className="text-11 font-medium text-brand-600">Повторная заявка</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">{roleLabel(row.role)}</td>
-                  <td className="px-4 py-3 text-slate-600">{rowClassLabel(row)}</td>
-                  <td className={row.phone ? 'px-4 py-3 text-slate-600' : 'px-4 py-3 text-slate-400'}>
-                    {phoneLabel(row.phone)}
-                  </td>
-                  <td className="px-4 py-3 text-slate-500">
-                    {formatDateTime(row.submittedAt ?? row.createdAt)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </DataTable>
       )}
 
       {totalPages > 1 && (

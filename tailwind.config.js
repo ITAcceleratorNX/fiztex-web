@@ -129,7 +129,11 @@ export default {
         'journal-row': '44px',
       },
       borderRadius: { 'planning-panel': 'var(--radius-planning-panel)', 'planning-modal': 'var(--radius-planning-modal)' },
-      gridTemplateColumns: { 'planning-editor': 'var(--grid-planning-editor)' },
+      gridTemplateColumns: {
+        'planning-editor': 'var(--grid-planning-editor)',
+        'access-request': 'var(--grid-access-request)',
+        'access-decision': 'var(--grid-access-decision)',
+      },
       width: {
         // Переключатель нескольких классов учителя (2200:4727).
         'class-switcher': '220px',

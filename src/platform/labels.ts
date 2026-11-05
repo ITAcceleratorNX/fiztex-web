@@ -193,7 +193,7 @@ export const ADMIN_PAGE_TITLES: Record<string, string> = {
   '/admin/periods': 'Учебные периоды',
   // Все подстраницы расписания рисуют собственный H1 в ScheduleBreadcrumbs.
   '/admin/school-subjects': 'Школьные предметы',
-  '/admin/access-codes': 'Доступы / коды',
+  // `/admin/access-codes` рисует свою шапку: подзаголовок там меняется вместе с вкладкой.
   // `/admin/employees` здесь намеренно нет: раздел сотрудников рисует собственный
   // заголовок, как и `/admin/users`, и запись в этой карте продублировала бы его.
   '/lesson-schedule': 'Расписание',

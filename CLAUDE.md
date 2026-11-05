@@ -806,6 +806,30 @@ Epson» завести нельзя, а добавить в существующ
 Контракт экрана — `.cursor/tasks/extended-auth/screens/AccessRequestsAdmin.md`,
 контракт API — `fiztex-back/docs/access-request-contract.md`.
 
+### Вёрстка раздела по макету (D0–D4)
+
+Раздел свёрстан по `phyztex` 2460:1845…2460:2797 только из DS — под него в DS добавлены
+варианты, а не локальные классы на странице:
+
+| Что в макете | Компонент |
+|---|---|
+| надзаголовок «Управление школой», «← Заявки на доступ» строкой | `PageHeader eyebrow`, `back.appearance="link"`, `actionsAlign="end"` |
+| вкладки navy 15 px со счётчиком | `Tabs variant="navy"` + `TabsTrigger count` |
+| «Новые / Одобрены / …» в строке фильтров | `SegmentedTabs appearance="outlined"` |
+| реестр: белая шапка 12/600, строки 57, поля 24 | `DataTable appearance="registry"` (`.registry-table-*` в `index.css`) |
+| «Сброс PIN», «Открыть» словом | `Button variant="link"` + `size="inline"` (14) / `"text"` (13) |
+| «Отклонить заявку» | `Button variant="danger-outline"` |
+| плашки «✓ ФИО» | `Badge appearance="chip"` |
+| аватар лучшего совпадения / остальных | `Avatar variant="navy"` / `"navy-soft"` |
+| «Частые причины» | `FilterChip appearance="outline"` |
+| сетки 400 + 1fr и 1fr + 380 | `grid-cols-access-request` / `grid-cols-access-decision` |
+
+**Шапка раздела своя, а не `AppHeader`**: подзаголовок меняется вместе с вкладкой, поэтому
+`/admin/access-codes` убран из `ADMIN_PAGE_TITLES`. Кегли 13/15 — токены без межстрочного
+(`--text-13`, `--text-15`): там, где высота строки важна для сетки, рядом стоит `leading-*`.
+После правки `tailwind.config.js` dev-сервер Vite надо перезапустить — новые утилиты без
+этого не появляются.
+
 ### Журнал доступа
 
 Третья вкладка раздела — `/admin/access-codes?tab=journal` (`pages/access/AccessJournalPanel.tsx`).
