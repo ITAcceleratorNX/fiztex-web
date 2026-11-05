@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { DataTable } from '@/components/ui/DataTable';
+import { Pagination } from '@/components/ui/Pagination';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Select } from '@/components/ui/Field';
@@ -22,6 +23,7 @@ import {
   resetPin,
 } from '../services';
 import type { AccountRole, AccountStatus, PlatformUser } from '../types';
+import type { UsersPageResult } from '../services/users';
 import { platformErrorMessage } from '../platformErrorMessage';
 
 type PendingAction = {
@@ -110,6 +112,8 @@ const STATUS_TONE: Record<AccountStatus, string> = {
   ARCHIVED: 'text-planning-subtle',
 };
 
+const PAGE_SIZE = 25;
+
 const CODE_NOTE = 'Прежний код перестал работать. PIN у ученика остался прежним.';
 const RESET_NOTE = 'Человек войдёт по нему и задаст новый пароль. Прежние сессии завершены.';
 
@@ -118,28 +122,49 @@ function CodesPanel() {
   const [issued, setIssued] = useState<{ title: string; value: string; note: string } | null>(null);
   const [query, setQuery] = useState('');
   const [role, setRole] = useState<AccountRole | 'ALL'>('ALL');
-  const [users, setUsers] = useState<PlatformUser[]>([]);
+  const [page, setPage] = useState(0);
+  const [result, setResult] = useState<UsersPageResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [busy, setBusy] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  // Ответ на устаревший запрос (быстрое листание, ввод в поиске) не должен затереть свежий.
+  const requestSeq = useRef(0);
+
+  const users = result?.users ?? [];
+  const totalPages = result?.totalPages ?? 0;
 
   const reload = useCallback(async () => {
+    const seq = ++requestSeq.current;
     setLoading(true);
     setError(null);
     try {
-      setUsers(await listAccessCodes({ query, role }));
+      const next = await listAccessCodes({ query, role, page, size: PAGE_SIZE });
+      if (seq === requestSeq.current) setResult(next);
     } catch (err) {
-      setError(platformErrorMessage(err, 'Не удалось загрузить данные доступа. Попробуйте ещё раз.'));
+      if (seq === requestSeq.current) {
+        setError(platformErrorMessage(err, 'Не удалось загрузить данные доступа. Попробуйте ещё раз.'));
+      }
     } finally {
-      setLoading(false);
+      if (seq === requestSeq.current) setLoading(false);
     }
-  }, [query, role]);
+  }, [query, role, page]);
 
   useEffect(() => {
     const handle = window.setTimeout(() => void reload(), query ? 250 : 0);
     return () => window.clearTimeout(handle);
   }, [reload, query]);
+
+  // Страница опустела (например, после смены фильтра у соседа по вкладке) — на последнюю.
+  useEffect(() => {
+    if (!loading && totalPages > 0 && page >= totalPages) setPage(totalPages - 1);
+  }, [loading, page, totalPages]);
+
+  function changePage(next: number) {
+    setPage(next);
+    rootRef.current?.scrollIntoView?.({ block: 'nearest' });
+  }
 
   async function confirmAction() {
     if (!pending) return;
@@ -185,12 +210,12 @@ function CodesPanel() {
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div ref={rootRef} className="flex scroll-mt-6 flex-col gap-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
         <SearchInput
           className="flex-1"
           value={query}
-          onChange={setQuery}
+          onChange={(value) => { setQuery(value); setPage(0); }}
           placeholder="Поиск по ФИО"
         />
         <div className="lg:w-filter-select">
@@ -198,7 +223,7 @@ function CodesPanel() {
             aria-label="Роль"
             className="h-11"
             value={role}
-            onChange={(e) => setRole(e.target.value as AccountRole | 'ALL')}
+            onChange={(e) => { setRole(e.target.value as AccountRole | 'ALL'); setPage(0); }}
           >
             <option value="ALL">Все роли</option>
             <option value="STUDENT">Ученик</option>
@@ -212,14 +237,17 @@ function CodesPanel() {
         </Button>
       </div>
 
-      {loading && <div className="card"><LoadingBlock /></div>}
+      {/* Первая загрузка — спиннер; дальше прежняя страница держится приглушённой, пока
+          не придёт следующая, — таблица не схлопывается при каждом листании и вводе. */}
+      {loading && !result && !error && <div className="card"><LoadingBlock /></div>}
       {error && !loading && <ErrorBlock message={error} onRetry={() => void reload()} />}
-      {!loading && !error && users.length === 0 && (
+      {!loading && !error && result && users.length === 0 && (
         <div className="card">
           <EmptyBlock title="Нет пользователей" description="Создайте аккаунт на странице Пользователи." />
         </div>
       )}
-      {!loading && !error && users.length > 0 && (
+      {!error && users.length > 0 && (
+        <div aria-busy={loading} className={loading ? 'pointer-events-none opacity-60 transition-opacity' : 'transition-opacity'}>
         <DataTable label="Коды и PIN" appearance="registry">
           <thead>
             <tr>
@@ -258,6 +286,19 @@ function CodesPanel() {
             ))}
           </tbody>
         </DataTable>
+        </div>
+      )}
+
+      {!error && result && (
+        <Pagination
+          page={page}
+          totalPages={result.totalPages}
+          totalElements={result.totalElements}
+          pageSize={PAGE_SIZE}
+          itemForms={['аккаунта', 'аккаунтов', 'аккаунтов']}
+          label="Страницы кодов и PIN"
+          onPageChange={changePage}
+        />
       )}
 
       <ConfirmDialog

@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiError } from '@/lib/api';
 import type { AccessRequestRole, AccessRequestStage } from '@/lib/accessRequestsApi';
 import { useAccessRequests } from '@/hooks/queries';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { Button } from '@/components/ui/Button';
 import { DataTable } from '@/components/ui/DataTable';
+import { Pagination } from '@/components/ui/Pagination';
 import { Select } from '@/components/ui/Field';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
@@ -35,6 +34,7 @@ export function AccessRequestsPanel() {
   const role: AccessRequestRole | 'all' = roleParam === 'STUDENT' || roleParam === 'PARENT' ? roleParam : 'all';
   const page = Math.max(0, Number(params.get('page') ?? 0) || 0);
   const [query, setQuery] = useState(params.get('q') ?? '');
+  const rootRef = useRef<HTMLDivElement>(null);
   const settledQuery = useDebouncedValue(query.trim());
 
   useEffect(() => {
@@ -70,7 +70,7 @@ export function AccessRequestsPanel() {
   const empty = EMPTY_BY_STAGE[stage];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div ref={rootRef} className="flex scroll-mt-6 flex-col gap-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
         <SearchInput
           className="flex-1"
@@ -113,6 +113,10 @@ export function AccessRequestsPanel() {
       )}
 
       {rows.length > 0 && (
+        <div
+          aria-busy={requests.isPlaceholderData}
+          className={requests.isPlaceholderData ? 'pointer-events-none opacity-60 transition-opacity' : 'transition-opacity'}
+        >
         <DataTable label="Заявки на доступ" appearance="registry">
           <thead>
             <tr>
@@ -152,32 +156,22 @@ export function AccessRequestsPanel() {
             ))}
           </tbody>
         </DataTable>
+        </div>
       )}
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-end gap-2">
-          <span className="text-13 text-slate-500">
-            Страница {page + 1} из {totalPages}
-          </span>
-          <Button
-            size="icon-sm"
-            variant="secondary"
-            aria-label="Предыдущая страница"
-            disabled={page === 0}
-            onClick={() => patchParams({ page: page > 1 ? String(page - 1) : null })}
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
-          <Button
-            size="icon-sm"
-            variant="secondary"
-            aria-label="Следующая страница"
-            disabled={page + 1 >= totalPages}
-            onClick={() => patchParams({ page: String(page + 1) })}
-          >
-            <ChevronRight className="size-4" />
-          </Button>
-        </div>
+      {requests.data && !requests.isError && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalElements={requests.data.totalElements ?? 0}
+          pageSize={PAGE_SIZE}
+          itemForms={['заявки', 'заявок', 'заявок']}
+          label="Страницы заявок"
+          onPageChange={(next) => {
+            patchParams({ page: next > 0 ? String(next) : null });
+            rootRef.current?.scrollIntoView?.({ block: 'nearest' });
+          }}
+        />
       )}
     </div>
   );

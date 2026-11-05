@@ -1,15 +1,14 @@
-import { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ApiError } from '@/lib/api';
 import type { AccessJournalEventType, AccessJournalRow } from '@/lib/accessJournalApi';
 import { useAccessJournal } from '@/hooks/queries';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
 import { Field, TextInput } from '@/components/ui/Field';
 import { FilterSelect } from '@/components/ui/FilterSelect';
+import { Pagination } from '@/components/ui/Pagination';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
 import { formatDateTime } from '@/lib/format';
@@ -46,6 +45,7 @@ export function AccessJournalPanel() {
   const requestId = Number(params.get('request') ?? 0) || undefined;
   const page = Math.max(0, Number(params.get('page') ?? 0) || 0);
   const [query, setQuery] = useState(params.get('q') ?? '');
+  const rootRef = useRef<HTMLDivElement>(null);
   const settledQuery = useDebouncedValue(query.trim());
 
   useEffect(() => {
@@ -83,7 +83,7 @@ export function AccessJournalPanel() {
   const filtered = Boolean(type || from || to || settledQuery || requestId);
 
   return (
-    <div className="space-y-4">
+    <div ref={rootRef} className="scroll-mt-6 space-y-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
         <SearchInput
           className="flex-1"
@@ -213,28 +213,19 @@ export function AccessJournalPanel() {
         </div>
       )}
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-end gap-2">
-          <span className="text-13 text-slate-500">Страница {page + 1} из {totalPages}</span>
-          <Button
-            size="icon-sm"
-            variant="secondary"
-            aria-label="Предыдущая страница"
-            disabled={page === 0}
-            onClick={() => patchParams({ page: page > 1 ? String(page - 1) : null })}
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
-          <Button
-            size="icon-sm"
-            variant="secondary"
-            aria-label="Следующая страница"
-            disabled={page + 1 >= totalPages}
-            onClick={() => patchParams({ page: String(page + 1) })}
-          >
-            <ChevronRight className="size-4" />
-          </Button>
-        </div>
+      {journal.data && !journal.isError && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalElements={journal.data.totalElements ?? 0}
+          pageSize={PAGE_SIZE}
+          itemForms={['записи', 'записей', 'записей']}
+          label="Страницы журнала доступа"
+          onPageChange={(next) => {
+            patchParams({ page: next > 0 ? String(next) : null });
+            rootRef.current?.scrollIntoView?.({ block: 'nearest' });
+          }}
+        />
       )}
     </div>
   );

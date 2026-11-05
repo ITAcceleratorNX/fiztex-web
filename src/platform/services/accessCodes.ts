@@ -1,19 +1,38 @@
 import { request } from '@/lib/api';
 import type { AccountRole, PlatformUser } from '../types';
-import { listUsers } from './users';
+import { listUsersPage, type UsersPageResult } from './users';
 
 export interface AccessCredentialActionResult {
   issuedCode?: string | null;
   message: string;
 }
 
-/** List accounts that can have credential actions (not SUPER_ADMIN). */
+/**
+ * Страница реестра «Коды и PIN» — листает сервер (`/admin/accounts`, страницы с нуля).
+ *
+ * Раньше список приходил одним запросом на 200 аккаунтов и молча обрезался. Супер-админов
+ * больше не вырезаем на клиенте: на странице это сбивало бы и размер страницы, и «из N», а
+ * исключить роль сервер не умеет. Действий у них в таблице нет, как у админов и персонала.
+ */
 export async function listAccessCodes(params: {
   query?: string;
   role?: AccountRole | 'ALL';
-} = {}): Promise<PlatformUser[]> {
-  const role = params.role && params.role !== 'ALL' ? params.role : undefined;
-  const users = await listUsers({ query: params.query, role });
+  page?: number;
+  size?: number;
+} = {}): Promise<UsersPageResult> {
+  return listUsersPage({ query: params.query, role: params.role, page: params.page, size: params.size });
+}
+
+const CSV_PAGE_SIZE = 200;
+
+/** Все аккаунты для выгрузки — постранично, сколько бы их ни было. */
+async function listAllAccessCodes(): Promise<PlatformUser[]> {
+  const users: PlatformUser[] = [];
+  for (let page = 0; ; page += 1) {
+    const result = await listUsersPage({ page, size: CSV_PAGE_SIZE });
+    users.push(...result.users);
+    if (page + 1 >= result.totalPages) break;
+  }
   return users.filter((u) => u.role !== 'SUPER_ADMIN');
 }
 
@@ -55,7 +74,7 @@ export async function issueTemporaryPassword(accountId: string): Promise<string 
 }
 
 export async function exportAccessCodesCsv(): Promise<{ fileName: string; content: string }> {
-  const users = await listAccessCodes();
+  const users = await listAllAccessCodes();
   const header = 'id,fullName,role,status,phone,email\n';
   const rows = users
     .map((u) =>
