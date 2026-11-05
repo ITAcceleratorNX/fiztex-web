@@ -898,7 +898,14 @@ Epson» завести нельзя, а добавить в существующ
 отвечать постороннему, есть ли такой человек в школе. Сетевой сбой показывается своим текстом,
 чтобы не выдавать обрыв связи за неверный пароль.
 
-Рамка экранов — `pages/auth/StaffAuthCard.tsx`, поле пароля с показом — `pages/auth/PasswordInput.tsx`.
+Рамка экранов — `components/layout/StaffAuthLayout.tsx` (+ `StaffAuthHeading`), поле пароля
+с показом — `components/ui/PasswordInput.tsx`. Вёрстка по макету W1–W4 (2026-11-05) собрана из
+DS: `TextInput`/`PasswordInput appearance="filled"` (серое поле 54 на радиусе 14, при ошибке
+розовое с красной рамкой), `Field size="lg"` (подпись 14/600 без звёздочки), `Button size="lg"`
+(круглая 56) и `variant="soft"`, `Callout` (W3), `Logo tone="white"` — белый вектор из макета
+(`assets/fiztex-logo-white.svg`; растровый `lockup` с синей подложкой на подсветке смотрелся бы
+плашкой). Подсветка синей панели — растровая заливка из макета, `assets/auth-panel-bg.webp`
+(PNG 930 КБ → WebP с прозрачностью 155 КБ). Токены — `auth-*`, `field-*` в `index.css`.
 Разбор — `screens/StaffSignIn.md`.
 
 ### Код ученика у классного руководителя

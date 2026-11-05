@@ -1,5 +1,6 @@
 import { cx } from '@/lib/format';
 import { APP_NAME } from '@/lib/branding';
+import logoWhite from '@/assets/fiztex-logo-white.svg';
 
 const logoLockups = import.meta.glob('@/assets/*logo-lockup.png', {
   eager: true,
@@ -35,7 +36,18 @@ export function PhysTechMark({ className }: { className?: string }) {
 }
 
 /** Full wordmark lockup (brand blue #274185 bg, white type). */
-export function Logo({ className }: { className?: string }) {
+/**
+ * Логотип.
+ *
+ * `lockup` — растровая сборка на собственной синей подложке (сайдбар, мобильная шапка
+ * входа). `white` — тот же знак белым вектором без подложки, экспорт из Figma `phyztex`
+ * (узел «ЛОГО» 2460:4669): ставится поверх фона, который рисует сам экран, — синей панели
+ * входа с подсветкой. Размер у `white` — родной (137×36), его не растягивают.
+ */
+export function Logo({ className, tone = 'lockup' }: { className?: string; tone?: 'lockup' | 'white' }) {
+  if (tone === 'white') {
+    return <img src={logoWhite} alt={APP_NAME} width={137} height={36} className={cx('shrink-0 self-start', className)} />;
+  }
   return (
     <img
       src={logoLockup}

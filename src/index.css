@@ -47,6 +47,20 @@
    * слева от подсказок; после решения — итог слева от очереди 380. */
   --grid-access-request: minmax(0, 400px) minmax(0, 1fr);
   --grid-access-decision: minmax(0, 1fr) minmax(0, 380px);
+  /* Вход сотрудников (Figma `phyztex` 2460:4665 W1 … 2460:4833 W4): серый фон страницы,
+   * белая карточка на радиусе 44 с синей панелью на радиусе 32, «залитые» поля 54 на
+   * радиусе 14 — серые без рамки, при ошибке розовые с красной рамкой. */
+  --color-auth-canvas: #eceef2;
+  --color-field-filled: #f3f5f8;
+  --color-field-invalid: #fdf2f2;
+  --radius-auth-card: 44px;
+  --radius-auth-panel: 32px;
+  --radius-field-lg: 14px;
+  --size-auth-card: 1384px;
+  --size-auth-form: 400px;
+  --size-field-lg: 54px;
+  --shadow-auth: 0 10px 40px rgb(27 35 51 / 0.06);
+  --text-40: 40px;
   /* Figma parent comment composer 27:1697 / 27:1709. */
   --size-comment-dialog: 560px;
   --size-comment-field: 220px;
@@ -214,6 +228,21 @@
 
   .label-base {
     @apply mb-1.5 block text-sm font-medium text-slate-700;
+  }
+
+  /* «Залитое» поле входа (W1–W4). Плейсхолдер — `planning-subtle`, на тон темнее макетного
+   * #a0a7b5: тот на сером фоне поля почти не читается. */
+  .input-filled {
+    @apply h-field-lg w-full rounded-field-lg border border-transparent bg-field-filled px-5 text-base text-planning-ink
+      placeholder:text-planning-subtle outline-none transition
+      focus:border-brand-400 focus:bg-surface focus:ring-2 focus:ring-brand-400/30;
+  }
+  .input-filled-invalid {
+    @apply border-red-600 bg-field-invalid focus:border-red-600 focus:ring-red-300/30;
+  }
+
+  .label-lg {
+    @apply mb-2 block text-sm font-semibold text-planning-ink;
   }
 
   .label-required::after {

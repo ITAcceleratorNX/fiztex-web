@@ -6,9 +6,9 @@ import { ApiError } from '@/lib/api';
 import { ROUTES, landingRouteForRole } from '@/lib/routes';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
+import { PasswordInput } from '@/components/ui/PasswordInput';
+import { StaffAuthHeading, StaffAuthLayout } from '@/components/layout/StaffAuthLayout';
 import { cx } from '@/lib/format';
-import { StaffAuthCard } from './StaffAuthCard';
-import { PasswordInput } from './PasswordInput';
 
 /**
  * Обязательная смена пароля после входа временным (макет W4).
@@ -19,9 +19,10 @@ import { PasswordInput } from './PasswordInput';
  */
 const MIN_LENGTH = 8;
 
+/** Правило пароля под полем: выполнено — зелёным с галочкой (W4), нет — серым с крестиком. */
 function Rule({ met, children }: { met: boolean; children: string }) {
   return (
-    <p className={cx('mt-1.5 flex items-center gap-1.5 text-13', met ? 'text-emerald-600' : 'text-slate-400')}>
+    <p className={cx('mt-2 flex items-center gap-1 text-13 leading-4', met ? 'text-planning-success-fg' : 'text-planning-subtle')}>
       {met ? <Check className="size-3.5" aria-hidden="true" /> : <X className="size-3.5" aria-hidden="true" />}
       {children}
     </p>
@@ -66,19 +67,20 @@ export function NewPasswordPage() {
   }
 
   return (
-    <StaffAuthCard>
+    <StaffAuthLayout>
       <form onSubmit={onSubmit} noValidate>
-        <h1 className="text-center text-2xl font-bold text-slate-900">Новый пароль</h1>
-        <p className="mt-1 text-center text-13 text-slate-500">
-          Вы вошли по временному паролю. Задайте свой, и временный перестанет работать.
-        </p>
+        <StaffAuthHeading
+          title="Новый пароль"
+          subtitle={'Вы вошли по\u00a0временному паролю. Задайте свой, и\u00a0временный перестанет работать.'}
+        />
 
-        <div className="mt-8 space-y-4">
+        <div className="mt-7 space-y-5">
           {/* Временный пароль живёт в памяти вкладки и теряется при перезагрузке —
               тогда он спрашивается полем: без него сервер смену не примет. */}
           {temporarySecret === null && (
-            <Field label="Временный пароль" required>
+            <Field label="Временный пароль" size="lg">
               <PasswordInput
+                appearance="filled"
                 value={current}
                 onChange={setCurrent}
                 placeholder="Тот, что выдала школа"
@@ -89,8 +91,9 @@ export function NewPasswordPage() {
           )}
 
           <div>
-            <Field label="Новый пароль" required>
+            <Field label="Новый пароль" size="lg">
               <PasswordInput
+                appearance="filled"
                 value={password}
                 onChange={setPassword}
                 placeholder="Придумайте пароль"
@@ -102,8 +105,9 @@ export function NewPasswordPage() {
           </div>
 
           <div>
-            <Field label="Повторите пароль" required>
+            <Field label="Повторите пароль" size="lg">
               <PasswordInput
+                appearance="filled"
                 value={repeat}
                 onChange={setRepeat}
                 placeholder="Ещё раз"
@@ -113,18 +117,18 @@ export function NewPasswordPage() {
             </Field>
             <Rule met={matches}>Пароли совпадают</Rule>
           </div>
-
-          {error && (
-            <p role="alert" className="text-13 text-red-600">
-              {error}
-            </p>
-          )}
-
-          <Button type="submit" className="w-full" loading={loading} disabled={!ready}>
-            Сохранить и войти
-          </Button>
         </div>
+
+        {error && (
+          <p role="alert" className="mt-4 text-13 leading-snug text-red-600">
+            {error}
+          </p>
+        )}
+
+        <Button type="submit" size="lg" className="mt-5 w-full" loading={loading} disabled={!ready}>
+          Сохранить и войти
+        </Button>
       </form>
-    </StaffAuthCard>
+    </StaffAuthLayout>
   );
 }

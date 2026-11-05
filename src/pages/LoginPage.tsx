@@ -5,8 +5,8 @@ import { ApiError } from '@/lib/api';
 import { ROUTES } from '@/lib/routes';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
-import { StaffAuthCard } from './auth/StaffAuthCard';
-import { PasswordInput } from './auth/PasswordInput';
+import { PasswordInput } from '@/components/ui/PasswordInput';
+import { StaffAuthHeading, StaffAuthLayout } from '@/components/layout/StaffAuthLayout';
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -35,27 +35,29 @@ export function LoginPage() {
   }
 
   return (
-    <StaffAuthCard>
+    <StaffAuthLayout>
       <form onSubmit={onSubmit} noValidate>
-        <h1 className="text-center text-2xl font-bold text-slate-900">Добро пожаловать!</h1>
-        <p className="mt-1 text-center text-13 text-slate-500">Войдите в свою учётную запись</p>
+        <StaffAuthHeading title="Добро пожаловать!" subtitle="Войдите в свою учётную запись" />
 
-        <div className="mt-8 space-y-4">
-          <Field label="Телефон или email" required>
+        <div className="mt-7 space-y-5">
+          <Field label="Телефон или email" size="lg">
             <TextInput
+              appearance="filled"
               type="text"
               autoComplete="username"
               placeholder="+7 700 000 00 00"
               value={email}
-              error={Boolean(error)}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </Field>
 
           <div>
-            <Field label="Пароль" required>
+            {/* Красной рамкой — только пароль, как в W2: сервер не говорит, какой из двух
+                реквизитов не подошёл, а логин человек обычно набрал верно. */}
+            <Field label="Пароль" size="lg">
               <PasswordInput
+                appearance="filled"
                 value={password}
                 onChange={setPassword}
                 placeholder="Введите пароль"
@@ -64,29 +66,29 @@ export function LoginPage() {
               />
             </Field>
             {error && (
-              <p role="alert" className="mt-1.5 text-13 text-red-600">
+              <p role="alert" className="mt-2 text-13 leading-snug text-red-600">
                 {error}
               </p>
             )}
-            <div className="mt-1.5 text-right">
+            <div className="mt-3 text-right">
               <Link
                 to={ROUTES.staffForgotPassword}
-                className="text-13 font-medium text-brand-500 hover:text-brand-600"
+                className="text-sm font-medium text-brand-500 transition hover:text-brand-600"
               >
                 Забыли пароль?
               </Link>
             </div>
           </div>
-
-          <Button type="submit" className="w-full" loading={loading}>
-            Войти
-          </Button>
         </div>
 
-        <p className="mt-6 text-center text-13 text-slate-400">
+        <Button type="submit" size="lg" className="mt-5 w-full" loading={loading}>
+          Войти
+        </Button>
+
+        <p className="mt-5 text-center text-sm text-planning-subtle">
           Доступ выдаёт администратор школы.
         </p>
       </form>
-    </StaffAuthCard>
+    </StaffAuthLayout>
   );
 }

@@ -2,8 +2,8 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
 import { cx } from '@/lib/format';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-ghost' | 'danger-outline' | 'link' | 'navy' | 'success-soft' | 'warning-soft' | 'neutral-soft';
-type Size = 'sm' | 'md' | 'icon' | 'icon-sm' | 'text' | 'inline' | 'badge';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-ghost' | 'danger-outline' | 'link' | 'soft' | 'navy' | 'success-soft' | 'warning-soft' | 'neutral-soft';
+type Size = 'sm' | 'md' | 'lg' | 'icon' | 'icon-sm' | 'text' | 'inline' | 'badge';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -27,6 +27,8 @@ const variants: Record<Variant, string> = {
   // Действие словом — в строке таблицы или списка («Сброс PIN», «Открыть», 2460:1845 / 2460:2564).
   // Используется с размерами `text` (13) и `inline` (14).
   link: 'bg-transparent text-navy-700 hover:text-navy-900 hover:underline disabled:text-slate-400 disabled:no-underline',
+  // Второстепенное действие на сером, без рамки — «Вернуться ко входу» (2460:4758).
+  soft: 'bg-field-filled text-planning-ink hover:bg-planning-row-line active:bg-planning-line disabled:text-slate-400',
   // Figma `btn-primary` — фирменный navy. Отдельный вариант, а не замена `primary`:
   // какая кнопка основная, оранжевая или синяя, — открытый продуктовый вопрос
   // (см. CLAUDE.md «Расхождения макета и кода»), а экранам, где макет прямо рисует
@@ -40,6 +42,8 @@ const variants: Record<Variant, string> = {
 const sizes: Record<Size, string> = {
   sm: 'h-9 px-3.5 text-sm',
   md: 'h-11 px-5 text-sm',
+  // Кнопка формы входа: 56 в высоту, круглая, кегль 16 (2460:4665 «Войти»).
+  lg: 'h-14 px-6 text-base',
   icon: 'size-11 shrink-0 p-0 text-sm',
   'icon-sm': 'size-7 shrink-0 p-0 text-13',
   text: 'h-auto p-0 text-13',
@@ -62,7 +66,7 @@ export function buttonClassName({
 }: { variant?: Variant; size?: Size; className?: string } = {}): string {
   return cx(
     'inline-flex items-center justify-center font-semibold transition',
-    size === 'badge' || size === 'icon-sm' ? 'rounded-lg' : 'rounded-xl',
+    size === 'badge' || size === 'icon-sm' ? 'rounded-lg' : size === 'lg' ? 'rounded-full' : 'rounded-xl',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50 disabled:cursor-not-allowed',
     variants[variant],
     sizes[size],

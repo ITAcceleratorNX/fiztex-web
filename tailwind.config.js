@@ -4,6 +4,8 @@ export default {
   theme: {
     extend: {
       colors: {
+        auth: { canvas: 'var(--color-auth-canvas)' },
+        field: { filled: 'var(--color-field-filled)', invalid: 'var(--color-field-invalid)' },
         planning: {
           ink: 'var(--color-planning-ink)', muted: 'var(--color-planning-muted)', subtle: 'var(--color-planning-subtle)',
           line: 'var(--color-planning-line)', 'row-line': 'var(--color-planning-row-line)', canvas: 'var(--color-planning-canvas)',
@@ -115,8 +117,12 @@ export default {
         15: 'var(--text-15)',
         28: 'var(--text-28)',
         32: 'var(--text-32)',
+        // Заголовок синей панели входа (2460:4665).
+        40: 'var(--text-40)',
       },
       height: {
+        // «Залитое» поле входа (2460:4665).
+        'field-lg': 'var(--size-field-lg)',
         // Ряды таймлайна занятости: 70px просмотр (2015:11009), 60px правка
         // (2015:11496). Обе высоты вне 4px-шкалы Tailwind — заведены явно,
         // чтобы не разъезжались между режимами.
@@ -128,7 +134,15 @@ export default {
         'journal-head': '52px',
         'journal-row': '44px',
       },
-      borderRadius: { 'planning-panel': 'var(--radius-planning-panel)', 'planning-modal': 'var(--radius-planning-modal)' },
+      borderRadius: {
+        'planning-panel': 'var(--radius-planning-panel)',
+        'planning-modal': 'var(--radius-planning-modal)',
+        'auth-card': 'var(--radius-auth-card)',
+        'auth-panel': 'var(--radius-auth-panel)',
+        'field-lg': 'var(--radius-field-lg)',
+        // Плашка-подсказка `Callout` (2460:4758).
+        callout: '20px',
+      },
       gridTemplateColumns: {
         'planning-editor': 'var(--grid-planning-editor)',
         'access-request': 'var(--grid-access-request)',
@@ -176,6 +190,8 @@ export default {
       letterSpacing: {
         // Подписи селекторов-фильтров (2015:12038).
         filter: '0.5px',
+        // Крупные заголовки экранов входа: 36–40 px со сжатием -0.5 (2460:4665).
+        display: '-0.5px',
       },
       maxWidth: {
         'planning-dialog': 'var(--size-planning-dialog)',
@@ -189,6 +205,8 @@ export default {
         'state-text-wide': '400px',
         // Ширина модалки «Новое событие» (2015:10714).
         'modal-form': '480px',
+        'auth-card': 'var(--size-auth-card)',
+        'auth-form': 'var(--size-auth-form)',
       },
       maxHeight: {
         // Скролл-список классов в модалке события (2015:10760).
@@ -210,6 +228,7 @@ export default {
         soft: 'var(--shadow-soft)',
         tile: 'var(--shadow-tile)',
         raised: 'var(--shadow-raised)',
+        auth: 'var(--shadow-auth)',
       },
       keyframes: {
         'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
