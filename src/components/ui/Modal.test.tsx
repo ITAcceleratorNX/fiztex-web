@@ -1,5 +1,5 @@
 import { StrictMode, useState } from 'react';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { Modal } from './Modal';
@@ -198,5 +198,126 @@ describe('Modal accessibility', () => {
 
     await user.keyboard('{Escape}');
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+// Боковая шторка уезжает за край перед закрытием (заметка дизайнера к кадру T1 — «страница
+// должна плавно открываться»). В jsdom нет `matchMedia`, поэтому остальные тесты закрывают окно
+// сразу; здесь «система не просит меньше движения» задаётся явно.
+describe('Modal right drawer motion', () => {
+  function motion(allowed: boolean) {
+    const original = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: allowed && query === '(prefers-reduced-motion: no-preference)',
+      media: query,
+      onchange: null,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      dispatchEvent: () => false,
+    })) as typeof window.matchMedia;
+    return () => { window.matchMedia = original; };
+  }
+
+  // В jsdom нет `AnimationEvent`, и React слушает префиксное `webkitAnimationEnd` вместо
+  // `animationend`. Отправляем оба — в браузере сработает одно из них.
+  function endAnimation(element: Element) {
+    fireEvent.animationEnd(element);
+    fireEvent(element, new Event('webkitAnimationEnd', { bubbles: true }));
+  }
+
+  function Drawer({ onClose }: { onClose: () => void }) {
+    return (
+      <Modal open onClose={onClose} title="Шторка ученика" placement="right">
+        <p data-testid="drawer-content" className="animate-fade-in">Данные ученика</p>
+      </Modal>
+    );
+  }
+
+  it('slides in and slides out before calling onClose', () => {
+    const restore = motion(true);
+    try {
+      const onClose = vi.fn();
+      render(<Drawer onClose={onClose} />);
+      const dialog = screen.getByRole('dialog', { name: 'Шторка ученика' });
+      expect(dialog).toHaveClass('animate-drawer-in');
+
+      // Конец въезда и анимации содержимого окно не закрывают.
+      endAnimation(dialog);
+      endAnimation(screen.getByTestId('drawer-content'));
+      expect(onClose).not.toHaveBeenCalled();
+
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Закрыть окно' }));
+      expect(dialog).toHaveClass('animate-drawer-out');
+      expect(onClose).not.toHaveBeenCalled();
+
+      // Второе нажатие во время ухода не закрывает дважды.
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Закрыть окно' }));
+      endAnimation(dialog);
+      expect(onClose).toHaveBeenCalledTimes(1);
+    } finally {
+      restore();
+    }
+  });
+
+  it('leaves by Escape too and closes even without the end of the animation', () => {
+    const restore = motion(true);
+    vi.useFakeTimers();
+    try {
+      const onClose = vi.fn();
+      render(<Drawer onClose={onClose} />);
+      const dialog = screen.getByRole('dialog', { name: 'Шторка ученика' });
+
+      fireEvent.keyDown(dialog, { key: 'Escape' });
+      expect(dialog).toHaveClass('animate-drawer-out');
+      expect(onClose).not.toHaveBeenCalled();
+
+      // Вкладка в фоне: `animationend` не пришёл — запасной таймер всё равно закрывает.
+      act(() => { vi.advanceTimersByTime(400); });
+      expect(onClose).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+      restore();
+    }
+  });
+
+  it('closes at once when the system asks for less motion', () => {
+    const restore = motion(false);
+    try {
+      const onClose = vi.fn();
+      render(<Drawer onClose={onClose} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Закрыть окно' }));
+      expect(onClose).toHaveBeenCalledTimes(1);
+    } finally {
+      restore();
+    }
+  });
+
+  it('starts over with a fresh slide-in after the parent reopens it', () => {
+    const restore = motion(true);
+    try {
+      function Toggle() {
+        const [open, setOpen] = useState(true);
+        return (
+          <>
+            <button type="button" onClick={() => setOpen(true)}>Открыть снова</button>
+            <Modal open={open} onClose={() => setOpen(false)} title="Шторка ученика" placement="right">
+              <p>Данные ученика</p>
+            </Modal>
+          </>
+        );
+      }
+      render(<Toggle />);
+      const dialog = screen.getByRole('dialog', { name: 'Шторка ученика' });
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Закрыть окно' }));
+      endAnimation(dialog);
+      expect(screen.queryByRole('dialog', { name: 'Шторка ученика' })).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Открыть снова' }));
+      expect(screen.getByRole('dialog', { name: 'Шторка ученика' })).toHaveClass('animate-drawer-in');
+    } finally {
+      restore();
+    }
   });
 });

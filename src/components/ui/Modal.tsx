@@ -1,7 +1,10 @@
 import {
+  useCallback,
+  useEffect,
   useId,
   useLayoutEffect,
   useRef,
+  useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from 'react';
@@ -24,7 +27,9 @@ interface ModalProps {
   bottomInset?: number;
   /**
    * `right` — боковая шторка во всю высоту (Figma «Шторка ученика» 2196:22570): тот же
-   * диалог с ловушкой фокуса и Esc, но прижат к правому краю.
+   * диалог с ловушкой фокуса и Esc, но прижат к правому краю. Выезжает из-за края, а на
+   * закрытие (крестик, Esc, фон) сначала уезжает обратно и только потом зовёт `onClose` —
+   * поэтому `onClose` обязан действительно закрыть окно.
    */
   placement?: 'center' | 'right';
   /** Кнопки шапки слева от «Закрыть» — например, листание соседних записей. */
@@ -48,6 +53,21 @@ const focusableSelector = [
   '[contenteditable="true"]',
   '[tabindex]:not([tabindex="-1"])',
 ].join(',');
+
+/**
+ * Запас к длительности `animate-drawer-out` (0,2 с): если `animationend` не придёт —
+ * вкладка в фоне, анимацию прервали, — шторка всё равно закроется.
+ */
+const DRAWER_EXIT_FALLBACK_MS = 400;
+
+/**
+ * Анимировать ли уход шторки. Только если пользователь не просил меньше движения — и только
+ * там, где это вообще можно узнать: без `matchMedia` (jsdom) окно закрывается сразу, как раньше.
+ */
+function drawerExitAnimated() {
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
+}
 
 const modalStack: ModalEntry[] = [];
 const originalInert = new Map<HTMLElement, boolean>();
@@ -268,11 +288,43 @@ export function Modal({
   const openCycleRef = useRef(false);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
+  // Уход шторки: `leaving` — уезжает, `done` — `onClose` уже позван, ждём, пока родитель
+  // закроет окно. Состояние `closing` не сбрасывается до закрытия: верни его раньше — шторка
+  // на кадр встала бы на место, пока родитель размонтирует её.
+  const [closing, setClosing] = useState(false);
+  const exitRef = useRef<'idle' | 'leaving' | 'done'>('idle');
+
+  /** Закрыть по запросу самого окна: крестик, Esc, клик по фону. */
+  const requestClose = useCallback(() => {
+    if (exitRef.current !== 'idle') return;
+    if (!right || !drawerExitAnimated()) {
+      closeRef.current();
+      return;
+    }
+    exitRef.current = 'leaving';
+    setClosing(true);
+  }, [right]);
+  const requestCloseRef = useRef(requestClose);
+  requestCloseRef.current = requestClose;
+
+  const finishClose = useCallback(() => {
+    if (exitRef.current !== 'leaving') return;
+    exitRef.current = 'done';
+    closeRef.current();
+  }, []);
+
+  useEffect(() => {
+    if (!closing) return undefined;
+    const timer = window.setTimeout(finishClose, DRAWER_EXIT_FALLBACK_MS);
+    return () => window.clearTimeout(timer);
+  }, [closing, finishClose]);
 
   useLayoutEffect(() => {
     if (!open) {
       openCycleRef.current = false;
       openerRef.current = null;
+      exitRef.current = 'idle';
+      setClosing(false);
       return;
     }
     if (!layerRef.current || !dialogRef.current) return;
@@ -284,7 +336,7 @@ export function Modal({
       layer: layerRef.current,
       dialog: dialogRef.current,
       previousFocus: openerRef.current,
-      close: () => closeRef.current(),
+      close: () => requestCloseRef.current(),
     };
     entryRef.current = entry;
     const unregister = registerModal(entry);
@@ -309,8 +361,9 @@ export function Modal({
       )}
     >
       <div
-        className={cx('fixed inset-0 bg-slate-900/40 animate-fade-in', !planning && 'backdrop-blur-sm')}
-        onClick={onClose}
+        className={cx('fixed inset-0 bg-slate-900/40', !planning && 'backdrop-blur-sm',
+          closing ? 'animate-fade-out' : 'animate-fade-in', right && 'motion-reduce:animate-none')}
+        onClick={requestClose}
         aria-hidden="true"
       />
       <div
@@ -320,9 +373,13 @@ export function Modal({
         aria-labelledby={titleId}
         aria-describedby={subtitle ? subtitleId : undefined}
         tabIndex={-1}
+        // Конец ухода шторки. Своё событие только у самой шторки: `animationend` всплывает и
+        // от анимаций содержимого, а конец въезда `finishClose` пропускает сам.
+        onAnimationEnd={(event) => { if (event.target === event.currentTarget) finishClose(); }}
         className={cx(
           right
-            ? 'relative flex h-full w-full flex-col overflow-hidden bg-white shadow-pop animate-fade-in'
+            ? cx('relative flex h-full w-full flex-col overflow-hidden bg-white shadow-pop motion-reduce:animate-none',
+              closing ? 'animate-drawer-out' : 'animate-drawer-in')
             : 'relative my-auto w-full bg-white shadow-pop animate-scale-in',
           !right && (wide ? 'rounded-planning-modal' : planning ? 'rounded-planning-panel' : 'rounded-2xl'),
           !right && scrollable && 'flex max-h-full flex-col overflow-hidden',
@@ -340,7 +397,7 @@ export function Modal({
             data-modal-close
             type="button"
             aria-label="Закрыть окно"
-            onClick={onClose}
+            onClick={requestClose}
             className={cx('flex shrink-0 items-center justify-center text-muted transition hover:bg-neutral-bg hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 focus-visible:ring-offset-2',
               appearance === 'composer' ? 'size-8 rounded-lg border border-line bg-slate-50' : planning ? 'size-8 rounded-full bg-slate-100' : 'size-10 rounded-lg')}
           >

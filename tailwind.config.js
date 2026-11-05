@@ -217,11 +217,21 @@ export default {
           from: { opacity: '0', transform: 'translateX(16px)' },
           to: { opacity: '1', transform: 'translateX(0)' },
         },
+        'fade-out': { from: { opacity: '1' }, to: { opacity: '0' } },
+        // Боковая шторка (`Modal placement="right"`) выезжает из-за правого края и уезжает
+        // туда же: заметка дизайнера к кадру T1 — «страница должна плавно открываться».
+        'drawer-in': { from: { transform: 'translateX(100%)' }, to: { transform: 'translateX(0)' } },
+        'drawer-out': { from: { transform: 'translateX(0)' }, to: { transform: 'translateX(100%)' } },
       },
       animation: {
         'fade-in': 'fade-in 0.15s ease-out',
         'scale-in': 'scale-in 0.16s ease-out',
         'slide-in': 'slide-in 0.2s ease-out',
+        // `forwards` держит конечный кадр до размонтирования: без него шторка на миг
+        // вернулась бы на место между концом анимации и закрытием.
+        'fade-out': 'fade-out 0.2s ease-in forwards',
+        'drawer-in': 'drawer-in 0.26s cubic-bezier(0.22, 1, 0.36, 1)',
+        'drawer-out': 'drawer-out 0.2s cubic-bezier(0.4, 0, 1, 1) forwards',
       },
     },
   },

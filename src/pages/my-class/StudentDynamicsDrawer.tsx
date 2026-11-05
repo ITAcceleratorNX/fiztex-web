@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ChangeBadge } from '@/components/dynamics/ChangeBadge';
 import { DynamicsChart, type ChartMarker } from '@/components/dynamics/DynamicsChart';
@@ -30,6 +30,11 @@ import {
  * <p>Предмет открывается внутри той же панели: «‹ Белов Артём · все предметы» возвращает к
  * общей динамике, закрытие — к списку класса с тем же периодом. Всё, что на экране, —
  * ответы сервера; панель ничего не считает.
+ *
+ * <p>Листание ‹ › плавное: пока грузится следующий ученик, панель показывает прежнего —
+ * целиком, с шапкой и блоком кода, приглушённо и без нажатий — и переключается разом, когда
+ * ответ пришёл. Шапка нового ученика над оценками прежнего врала бы, а кнопка «Выдать код»
+ * под чужим именем выдала бы код не тому.
  */
 export function StudentDynamicsDrawer({
   classId,
@@ -58,14 +63,21 @@ export function StudentDynamicsDrawer({
   const next = index >= 0 && index < students.length - 1 ? students[index + 1] : null;
   const overview = useStudentGradeDynamics(classId, student.id, period);
   const subject = useStudentSubjectDynamics(classId, student.id, subjectId, period);
+  // Чьи данные сейчас на экране. Листание (`previous`/`next`) считается от выбранного ученика,
+  // чтобы два быстрых нажатия ушли на два шага, а всё, что подписывает данные, — от показанного.
+  const loadingNext = overview.isPlaceholderData === true;
+  const [shown, setShown] = useState(student);
+  if (!loadingNext && shown.id !== student.id) setShown(student);
+  const display = loadingNext ? shown : student;
+  const displayIndex = students.findIndex((item) => item.id === display.id);
 
   const header = subjectId == null ? (
     <span className="flex items-center gap-3">
-      <Avatar name={student.name} size="lg" variant="navy" />
+      <Avatar name={display.name} size="lg" variant="navy" />
       <span>
-        <span className="block">{student.name}</span>
+        <span className="block">{display.name}</span>
         <span className="block text-sm font-normal text-slate-500">
-          {className} класс{index >= 0 && ` · ученик ${index + 1} из ${students.length}`}
+          {className} класс{displayIndex >= 0 && ` · ученик ${displayIndex + 1} из ${students.length}`}
         </span>
       </span>
     </span>
@@ -109,7 +121,8 @@ export function StudentDynamicsDrawer({
         overview.isPending ? <LoadingBlock label="Загрузка динамики ученика…" /> : overview.isError ? (
           <ErrorBlock message="Не удалось загрузить динамику ученика." onRetry={() => void overview.refetch()} />
         ) : (
-          <div className="space-y-5">
+          <div aria-busy={loadingNext}
+            className={cx('space-y-5 transition-opacity duration-200', loadingNext && 'pointer-events-none select-none opacity-60')}>
             <Headline metric={overview.data.overall} window={overview.data.window} previous={overview.data.previousWindow} />
             <section className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-line">
               <h3 className="text-lg font-bold text-ink">Динамика среднего балла</h3>
@@ -119,12 +132,12 @@ export function StudentDynamicsDrawer({
                   <p className="py-8 text-center text-sm text-slate-500">За период оценок пока нет</p>
                 ) : (
                   <DynamicsChart
-                    label={`Динамика среднего балла: ${student.name}`}
+                    label={`Динамика среднего балла: ${display.name}`}
                     from={overview.data.window?.from ?? ''}
                     to={overview.data.window?.to ?? ''}
                     formatValue={(value) => formatSeriesValue({ value, mode: overview.data.overall?.current?.mode })}
                     lines={[
-                      { key: 'student', label: student.name.split(' ')[1] ?? student.name, points: seriesPoints(overview.data.series) },
+                      { key: 'student', label: display.name.split(' ')[1] ?? display.name, points: seriesPoints(overview.data.series) },
                       ...((overview.data.classSeries ?? []).length > 0
                         ? [{ key: 'class', label: 'Средний по классу (ориентир)', dashed: true, points: seriesPoints(overview.data.classSeries) }]
                         : []),
@@ -173,7 +186,7 @@ export function StudentDynamicsDrawer({
             </section>
             {/* Код ученика — в той же панели, что и успеваемость (макет T1–T3): учитель
                 выдаёт его тому, кого сейчас смотрит, и отдельного экрана для этого нет. */}
-            <StudentAccessCodeSection studentProfileId={student.id} />
+            <StudentAccessCodeSection studentProfileId={display.id} />
           </div>
         )
       ) : subject.isPending ? <LoadingBlock label="Загрузка предмета…" /> : subject.isError ? (
