@@ -15,6 +15,7 @@ import {
 import { ApiError, api, pageQuery, request, type CopyTestRequest } from '@/lib/api';
 import { accessRequestsApi, type AccessRequestFilters } from '@/lib/accessRequestsApi';
 import { teacherAccessCodesApi } from '@/lib/teacherAccessCodesApi';
+import { accessJournalApi, type AccessJournalFilters } from '@/lib/accessJournalApi';
 import {
   lessonAdminApi,
   lessonTeachingApi,
@@ -186,6 +187,7 @@ export const keys = {
   accessRequestSuggestions: (requestId: number) =>
     ['access-requests', 'suggestions', requestId] as const,
   teacherStudentAccess: ['teacher', 'student-access-codes'] as const,
+  accessJournal: (filters: AccessJournalFilters) => ['access-journal', filters] as const,
   subjects: ['subjects'] as const,
   tests: (useAiGeneration?: boolean) =>
     useAiGeneration === true
@@ -1081,6 +1083,18 @@ export function useApproveAccessRequest(requestId: number) {
 export function useRejectAccessRequest(requestId: number) {
   return useAccessRequestDecision(requestId, (body: Schema<'RejectAccessRequestRequest'>) =>
     accessRequestsApi.reject(requestId, body));
+}
+
+/**
+ * Журнал действий с доступом. Свежее сверху считает сервер — страница не пересортировывается,
+ * иначе порядок внутри страницы разошёлся бы с порядком между страницами.
+ */
+export function useAccessJournal(filters: AccessJournalFilters) {
+  return useQuery({
+    queryKey: keys.accessJournal(filters),
+    queryFn: ({ signal }) => accessJournalApi.list(filters, signal),
+    placeholderData: (previous) => previous,
+  });
 }
 
 // ---- Персональные коды учеников у учителя ----

@@ -103,6 +103,14 @@ function RequestHeader({ detail }: { detail: Detail }) {
           {suffix}
         </h1>
         <p className="mt-1 text-13 text-slate-500">{parts.join(' · ')} из приложения</p>
+        {/* Карточка показывает решение, журнал — всё, что с доступом этого человека
+            делали потом: коды, PIN, временные пароли. Это разные вопросы. */}
+        <Link
+          to={`/admin/access-codes?tab=journal&request=${detail.requestId}`}
+          className="mt-1 inline-block text-13 text-navy-700 hover:underline"
+        >
+          История в журнале доступа
+        </Link>
       </div>
       {!decided && (
         <>

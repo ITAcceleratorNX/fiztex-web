@@ -9,6 +9,7 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useAccessRequestStats } from '@/hooks/queries';
 import { AccessRequestsPanel } from '@/pages/access/AccessRequestsPanel';
+import { AccessJournalPanel } from '@/pages/access/AccessJournalPanel';
 import { IssuedSecretModal } from '../components/IssuedSecretModal';
 import { useToast } from '@/context/ToastContext';
 import { ACCOUNT_STATUS_LABELS, ROLE_LABELS } from '../labels';
@@ -55,16 +56,19 @@ const ACTION_COPY: Record<
  */
 export function AccessCodesPage() {
   const [params, setParams] = useSearchParams();
-  const tab = params.get('tab') === 'requests' ? 'requests' : 'codes';
+  const tabParam = params.get('tab');
+  const tab = tabParam === 'requests' || tabParam === 'journal' ? tabParam : 'codes';
   const stats = useAccessRequestStats();
   const pending = stats.data?.pending ?? 0;
 
   return (
     <Tabs
       value={tab}
+      // Фильтры вкладок свои и несовместимые (`stage` у заявок, `event` и даты у журнала),
+      // поэтому переключение начинает адрес заново, а не тащит чужие параметры.
       onValueChange={(value) => {
         const next = new URLSearchParams();
-        if (value === 'requests') next.set('tab', 'requests');
+        if (value !== 'codes') next.set('tab', value);
         setParams(next);
       }}
     >
@@ -80,9 +84,12 @@ export function AccessCodesPage() {
             )}
           </span>
         </TabsTrigger>
+        <TabsTrigger value="journal">Журнал доступа</TabsTrigger>
       </TabsList>
       <TabsContent value={tab} className="mt-6">
-        {tab === 'requests' ? <AccessRequestsPanel /> : <CodesPanel />}
+        {tab === 'requests' && <AccessRequestsPanel />}
+        {tab === 'journal' && <AccessJournalPanel />}
+        {tab === 'codes' && <CodesPanel />}
       </TabsContent>
     </Tabs>
   );
