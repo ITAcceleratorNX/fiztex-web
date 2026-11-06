@@ -17,7 +17,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useKtpBindings, useKtpCommand, useKtpDraft, useKtpContext, useKtpImport } from '@/hooks/queries';
 import { useFormDraft } from '@/context/FormDraftContext';
 import { ktpApi, type KtpContent, type KtpDraft, type KtpTopic } from '@/lib/ktpApi';
-import { ktpCount, ktpHours, ktpPaths, ktpRows, ktpWorkLabels, updateKtpTopic, issueMatchesTopic } from '@/lib/ktpModel';
+import { copiedFromLabel, ktpCount, ktpHours, ktpPaths, ktpRows, ktpWorkLabels, updateKtpTopic, issueMatchesTopic } from '@/lib/ktpModel';
 import { isOptionalKtpIssue, ktpIssueTopic } from '@/lib/ktpIssues';
 import type { Schema } from '@/lib/apiSchemas';
 import { KtpAccess, ktpError, SourceButton } from './KtpShared';
@@ -66,6 +66,10 @@ function DraftEditor({ initial, reload }: { initial: KtpDraft; reload: () => Pro
   const save = useKtpCommand(ktpApi.save);
   const context = useKtpContext();
   const imported = useKtpImport(saved.importId!);
+  // КТП-COPY: черновик-копия — загрузка без файла; файловых действий у неё нет.
+  const copiedFrom = copiedFromLabel(imported.data?.origin);
+  const copyYear = copiedFrom ? imported.data?.origin?.copiedFrom?.academicYear?.replace('/', '–') ?? '' : undefined;
+  const draftLabel = copiedFrom ? `Копия ${copiedFrom}` : imported.data?.source?.originalName;
   const targetAssignments = context.data?.assignments?.filter(a => a.academicYearId === imported.data?.academicYearId && a.subjectId === imported.data?.subjectId && saved.classIds?.includes(a.classId!)) ?? [];
   const bindings = useKtpBindings(saved.status === 'CONFIRMED');
   const dirty = isDirtyDraft(form);
@@ -99,7 +103,7 @@ function DraftEditor({ initial, reload }: { initial: KtpDraft; reload: () => Pro
   }
   const activeBinding = bindings.data?.pages.flatMap(p => p.items ?? []).find(b => b.versionId === saved.id);
   function topicEditor() {
-    return editing && <KtpTopicEditor inline key={`${editing.pi}-${editing.si}-${editing.ti}-${editing.field ?? ''}`} initialField={editing.field} topic={editing.topic} onClose={() => setEditing(null)} onSave={topic => {
+    return editing && <KtpTopicEditor inline copyYear={copyYear} key={`${editing.pi}-${editing.si}-${editing.ti}-${editing.field ?? ''}`} initialField={editing.field} topic={editing.topic} onClose={() => setEditing(null)} onSave={topic => {
       if (editing.ti >= (content.periods?.[editing.pi]?.sections?.[editing.si]?.topics?.length ?? 0)) sectionTopics(editing.pi, editing.si, topics => [...topics, topic]);
       else setContent(old => updateKtpTopic(old, editing.pi, editing.si, editing.ti, topic)); setEditing(null);
     }} onDelete={editing.ti < (content.periods?.[editing.pi]?.sections?.[editing.si]?.topics?.length ?? 0) ? () => setDeleting(true) : undefined} />;
@@ -107,14 +111,14 @@ function DraftEditor({ initial, reload }: { initial: KtpDraft; reload: () => Pro
   function moveTopic(pi: number, si: number, from: number, to: number) {
     sectionTopics(pi, si, topics => { if (to < 0 || to >= topics.length) return topics; const next = [...topics]; const [item] = next.splice(from, 1); next.splice(to, 0, item); return next; });
   }
-  return <div className="planning-page"><WorkspacePageHeader title="Проверка КТП" backTo={ktpPaths.list} backLabel="К списку КТП" actions={editable && <ActionMenu appearance="compact" placement="viewport" label="Действия черновика КТП" items={[{ label: 'Повторно распознать файл', disabled: dirty || !!editing || save.isPending, onSelect: () => setReparsing(true) }, { label: 'Удалить загрузку и черновик', danger: true, disabled: save.isPending, onSelect: () => setRemoving(true) }]} />}
-    meta={<><strong className="text-planning-ink">{targetAssignments[0]?.subject ?? content.header?.subject}</strong><span>{targetAssignments.map(a => a.className).join(', ')}</span><span>{targetAssignments[0]?.academicYear?.replace('/', '–')}</span><FileTypeBadge format={imported.data?.source?.originalName?.split('.').at(-1)} variant="inline" /><SourceButton appearance="filename" source={{ importId: saved.importId! }} name={imported.data?.source?.originalName} /></>}
+  return <div className="planning-page"><WorkspacePageHeader title="Проверка КТП" backTo={ktpPaths.list} backLabel="К списку КТП" actions={editable && <ActionMenu appearance="compact" placement="viewport" label="Действия черновика КТП" items={copiedFrom ? [{ label: 'Удалить черновик', danger: true, disabled: save.isPending, onSelect: () => setRemoving(true) }] : [{ label: 'Повторно распознать файл', disabled: dirty || !!editing || save.isPending, onSelect: () => setReparsing(true) }, { label: 'Удалить загрузку и черновик', danger: true, disabled: save.isPending, onSelect: () => setRemoving(true) }]} />}
+    meta={<><strong className="text-planning-ink">{targetAssignments[0]?.subject ?? content.header?.subject}</strong><span>{targetAssignments.map(a => a.className).join(', ')}</span><span>{targetAssignments[0]?.academicYear?.replace('/', '–')}</span>{copiedFrom ? <span>{draftLabel}</span> : <><FileTypeBadge format={imported.data?.source?.originalName?.split('.').at(-1)} variant="inline" /><SourceButton appearance="filename" source={{ importId: saved.importId! }} name={imported.data?.source?.originalName} /></>}</>}
     status={<Badge appearance="label" tone={editable ? 'gray' : 'green'}>{editable ? dirty ? 'Есть несохранённые изменения' : `Черновик · сохранён${saved.updatedAt ? ` ${new Date(saved.updatedAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}` : ''}` : 'Подтверждён'}</Badge>} />
     {(context.isError || imported.isError) && <ErrorBlock message={ktpError(context.error ?? imported.error)} onRetry={() => { void context.refetch(); void imported.refetch(); }} />}
     {!editable && <StatusNotice tone="success">КТП подтверждён. {activeBinding && <Link className="font-semibold underline" to={ktpPaths.binding(activeBinding.id!)}>Открыть КТП</Link>}</StatusNotice>}
     {save.isError && <StatusNotice tone="error">{ktpError(save.error)}<p>Скопируйте несохранённые правки перед обновлением страницы.</p></StatusNotice>}
     <div className="mt-2 grid gap-3.5 sm:grid-cols-3">{[
-      { title: 'Распознано', value: ktpCount(rows.length, ['тема', 'темы', 'тем']), hint: `${ktpCount(content.periods?.length ?? 0, ['период', 'периода', 'периодов'])}, ${ktpCount(content.periods?.reduce((n, p) => n + (p.sections?.length ?? 0), 0) ?? 0, ['раздел', 'раздела', 'разделов'])}`, tone: 'border-planning-line bg-info-bg text-navy-700' },
+      { title: copiedFrom ? 'Скопировано' : 'Распознано', value: ktpCount(rows.length, ['тема', 'темы', 'тем']), hint: `${ktpCount(content.periods?.length ?? 0, ['период', 'периода', 'периодов'])}, ${ktpCount(content.periods?.reduce((n, p) => n + (p.sections?.length ?? 0), 0) ?? 0, ['раздел', 'раздела', 'разделов'])}`, tone: 'border-planning-line bg-info-bg text-navy-700' },
       { title: 'Ошибок', value: errors.length, hint: 'Исправьте прямо здесь, чтобы подтвердить КТП', tone: 'border-planning-danger-border bg-planning-danger text-red-600' },
       { title: 'Предупреждения', value: warnings.length, hint: 'Проверьте перед сохранением', tone: 'border-planning-warning-border bg-planning-warning text-amber-700' },
     ].map(card => <div key={card.title} className={`rounded-planning-panel border px-5 py-4 ${card.tone}`}><p className="text-11 font-bold uppercase tracking-wide text-planning-subtle">{card.title}</p><p className="mt-1 text-2xl font-extrabold leading-tight">{card.value}</p><p className="mt-1 text-xs text-planning-muted">{card.hint}</p></div>)}</div>
@@ -172,7 +176,7 @@ function DraftEditor({ initial, reload }: { initial: KtpDraft; reload: () => Pro
                     <TableCell><div className="mb-1 flex flex-wrap gap-1">{ktpWorkLabels(topic.title).map(label => <Badge key={label} appearance="label" tone={label.startsWith('СОР') || label === 'СОЧ' ? 'blue' : 'gray'}>{label}</Badge>)}</div><p className="line-clamp-2" title={topic.title}>{topic.title}</p></TableCell>
                     <TableCell><p className="line-clamp-3 text-xs text-planning-muted" title={topic.learningObjectives}>{topic.learningObjectives || <span className="text-planning-subtle">Не указаны</span>}</p></TableCell>
                     <TableCell className="font-bold">{topic.plannedHours ?? <Badge appearance="label" tone="red">Не указаны</Badge>}</TableCell>
-                    <TableCell className="text-xs text-planning-muted">{topic.plannedDates || '—'}</TableCell>
+                    <TableCell className="text-xs text-planning-muted">{topic.plannedDates || (topic.previousPlannedDates ? <span className="text-planning-subtle" title={`Сроки в ${copyYear || 'исходном КТП'}`}>— <br />было: {topic.previousPlannedDates}</span> : '—')}</TableCell>
                     <TableCell>{editable && <Button variant="ghost" size="icon-sm" aria-label={`Редактировать тему ${topic.sourceNumber ?? topic.order}`} icon={<Pencil className="size-3.5 text-planning-subtle" />} onClick={() => openEditor({ pi, si, ti, topic })} />}</TableCell>
                   </>}
                 </tr>;
@@ -184,7 +188,7 @@ function DraftEditor({ initial, reload }: { initial: KtpDraft; reload: () => Pro
         </tbody>;
       })}
     </DataTable>
-    {editable && <details className="rounded-xl border border-line bg-surface p-4"><summary className="cursor-pointer text-sm font-medium">Данные из шапки документа</summary><div className="mt-4 grid gap-4 sm:grid-cols-2">{(['subject', 'academicYear', 'teacherName', 'declaredAnnualHours', 'declaredWeeklyHours', 'classNames'] as const).map((key, index) => <Field key={key} label={['Предмет', 'Учебный год', 'Учитель', 'Часы за год', 'Часов в неделю', 'Классы в документе'][index]}><TextInput type={key.startsWith('declared') ? 'number' : 'text'} value={key === 'classNames' ? content.header?.classNames?.join(', ') ?? '' : content.header?.[key] ?? ''} onChange={e => setContent(old => ({ ...old, header: { ...old.header, [key]: key === 'classNames' ? e.target.value.split(',').map(s => s.trim()).filter(Boolean) : key.startsWith('declared') ? e.target.value ? Number(e.target.value) : undefined : e.target.value } }))} /></Field>)}</div></details>}
+    {editable && <details className="rounded-xl border border-line bg-surface p-4"><summary className="cursor-pointer text-sm font-medium">{copiedFrom ? 'Данные плана' : 'Данные из шапки документа'}</summary><div className="mt-4 grid gap-4 sm:grid-cols-2">{(['subject', 'academicYear', 'teacherName', 'declaredAnnualHours', 'declaredWeeklyHours', 'classNames'] as const).map((key, index) => <Field key={key} label={['Предмет', 'Учебный год', 'Учитель', 'Часы за год', 'Часов в неделю', 'Классы в документе'][index]}><TextInput type={key.startsWith('declared') ? 'number' : 'text'} value={key === 'classNames' ? content.header?.classNames?.join(', ') ?? '' : content.header?.[key] ?? ''} onChange={e => setContent(old => ({ ...old, header: { ...old.header, [key]: key === 'classNames' ? e.target.value.split(',').map(s => s.trim()).filter(Boolean) : key.startsWith('declared') ? e.target.value ? Number(e.target.value) : undefined : e.target.value } }))} /></Field>)}</div></details>}
     {editable && <details id="ktp-plan-structure" open={structureOpen} onToggle={event => setStructureOpen(event.currentTarget.open)} className="text-13 text-planning-muted"><summary className="cursor-pointer">Структура плана</summary><div className="mt-3 space-y-3">
       {content.periods?.map((period, pi) => <div key={pi} className="rounded-xl border border-planning-line bg-white p-4"><Field label="Название периода"><TextInput value={period.title ?? ''} onChange={event => setContent(old => ({ ...old, periods: old.periods?.map((p, index) => index === pi ? { ...p, title: event.target.value } : p) }))} /></Field>
         <div className="mt-3 space-y-3">{period.sections?.map((section, si) => <Field key={si} label="Название раздела"><TextInput value={section.title ?? ''} onChange={event => setContent(old => ({ ...old, periods: old.periods?.map((p, index) => index !== pi ? p : { ...p, sections: p.sections?.map((s, index) => index === si ? { ...s, title: event.target.value } : s) }) }))} /></Field>)}</div>
@@ -192,15 +196,15 @@ function DraftEditor({ initial, reload }: { initial: KtpDraft; reload: () => Pro
       </div>)}
       <Button variant="secondary" size="sm" icon={<Plus className="size-4" />} onClick={() => setContent(old => ({ ...old, periods: [...(old.periods ?? []), { order: (old.periods?.length ?? 0) + 1, title: 'Новый период', sections: [{ order: 1, title: 'Новый раздел', topics: [] }] }] }))}>Добавить период</Button>
     </div></details>}
-    <p className="text-xs text-planning-subtle">Плановые сроки из документа — ориентир. Реальные даты уроков берутся из расписания.</p>
+    <p className="text-xs text-planning-subtle">{copiedFrom ? `Сроки ${copyYear} — только подсказка у каждой темы: впишите сроки нового года или оставьте пустыми. Реальные даты уроков берутся из расписания.` : 'Плановые сроки из документа — ориентир. Реальные даты уроков берутся из расписания.'}</p>
     {editable && saveNotice && !dirty && !editing && <StatusNotice tone="success">{saveNotice}</StatusNotice>}
     {editable && <StickyActionBar message={editing ? 'Сохраните или отмените правку темы' : errors.length ? <><strong className="text-red-600">Исправьте {ktpCount(errors.length, ['ошибку', 'ошибки', 'ошибок'])}</strong>, чтобы подтвердить КТП</> : dirty ? 'Есть несохранённые изменения' : 'Черновик сохранён'}>
       <Button variant="secondary" loading={save.isPending} disabled={!dirty || !!editing} onClick={() => void persist().catch(() => {})}>Сохранить черновик</Button>
       <Button variant="primary" disabled={dirty || errors.length > 0 || save.isPending || !!editing} onClick={() => setConfirming(true)}>Подтвердить КТП</Button>
     </StickyActionBar>}
-    <ConfirmDialog open={deleting} title="Удалить тему?" message="Тема будет удалена из черновика. Исходный файл останется без изменений." danger confirmLabel="Удалить" onClose={() => setDeleting(false)} onConfirm={() => { if (editing) sectionTopics(editing.pi, editing.si, topics => topics.filter((_, i) => i !== editing.ti)); setDeleting(false); setEditing(null); }} />
+    <ConfirmDialog open={deleting} title="Удалить тему?" message={copiedFrom ? 'Тема будет удалена из черновика. Исходный КТП останется без изменений.' : 'Тема будет удалена из черновика. Исходный файл останется без изменений.'} danger confirmLabel="Удалить" onClose={() => setDeleting(false)} onConfirm={() => { if (editing) sectionTopics(editing.pi, editing.si, topics => topics.filter((_, i) => i !== editing.ti)); setDeleting(false); setEditing(null); }} />
     {confirming && <KtpActivationModal draft={saved} onClose={() => setConfirming(false)} refreshTargets={persist} />}
-    {removing && <KtpRemovalDialog target={{ kind: 'import', id: saved.importId!, label: imported.data?.source?.originalName ?? 'Черновик КТП' }} onClose={() => setRemoving(false)} onRemoved={() => { clear(); navigate(ktpPaths.list); }} />}
+    {removing && <KtpRemovalDialog target={{ kind: 'import', id: saved.importId!, label: draftLabel ?? 'Черновик КТП' }} onClose={() => setRemoving(false)} onRemoved={() => { clear(); navigate(ktpPaths.list); }} />}
     {reparsing && <KtpReparseModal draft={saved} sourceName={imported.data?.source?.originalName} onRefresh={refreshAfterReparse} onClose={applied => { setReparsing(false); if (applied) { clear(); navigate(ktpPaths.list); } }} />}
   </div>;
 }

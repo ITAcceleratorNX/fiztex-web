@@ -1,4 +1,4 @@
-import type { KtpContent, KtpTopic } from './ktpApi';
+import type { KtpContent, KtpOrigin, KtpTopic } from './ktpApi';
 
 export const ktpPaths = {
   list: '/workspace/ktp',
@@ -6,6 +6,15 @@ export const ktpPaths = {
   draft: (id: number) => `/workspace/ktp/drafts/${id}`,
   binding: (id: number) => `/workspace/ktp/bindings/${id}`,
 };
+/**
+ * КТП-COPY: подпись источника копии — «КТП 8A · 2026–2027», или `null`, если КТП из файла.
+ * Одна на все экраны: черновик, список, карточку и подсказку сроков.
+ */
+export function copiedFromLabel(origin?: KtpOrigin | null) {
+  if (origin?.type !== 'COPY') return null;
+  const from = origin.copiedFrom;
+  return ['КТП', [from?.className, from?.academicYear?.replace('/', '–')].filter(Boolean).join(' · ')].filter(Boolean).join(' ');
+}
 export const runningKtp = (status?: string) => ['QUEUED', 'RUNNING', 'RETRY_WAIT', 'PROCESSING'].includes(status ?? '');
 export function ktpCount(value: number, forms: [string, string, string]) {
   const last = value % 10, lastTwo = value % 100;

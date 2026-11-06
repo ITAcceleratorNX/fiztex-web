@@ -25,6 +25,8 @@ import { KtpAdjustmentModal, KtpInitialSyncModal, KtpVersionSyncModal } from './
 import { KtpRemovalDialog } from './KtpRemovalDialog';
 import { KtpVersionsDialog } from './KtpVersionsDialog';
 import { KtpHistoricalLinkModal } from './KtpHistoricalLinkModal';
+import { KtpCopyDialog } from './KtpCopyDialog';
+import { copiedFromLabel } from '@/lib/ktpModel';
 
 export function KtpBindingPage() { return <KtpAccess><Binding /></KtpAccess>; }
 function Binding() {
@@ -51,6 +53,7 @@ function Binding() {
   const [sync, setSync] = useState<'version' | null>(null);
   const [topic, setTopic] = useState<Schema<'KtpTopicProgress'> | null>(null);
   const [historicalLink, setHistoricalLink] = useState(false);
+  const [copying, setCopying] = useState(false);
   const highlightedId = params.get('topic');
   useEffect(() => {
     if (highlightedId && progress.data && version.data) {
@@ -81,7 +84,10 @@ function Binding() {
   const versionNumber = versionEntry?.versionNumber ?? versionEntry?.bindingRevision;
   const versionOptions = history.data?.pages.flatMap(page => page.items ?? []) ?? [];
   const sourceName = imported.data?.source?.originalName;
-  const sourceMeta = sourceName ? <><FileTypeBadge format={sourceName.split('.').at(-1)} variant="inline" /><SourceButton appearance="filename" source={{ bindingId: id, versionId: versionId! }} name={sourceName} /></> : null;
+  // Происхождение — из самой версии: загрузку видит только её владелец, а соучитель класса — нет.
+  const copiedFrom = copiedFromLabel(version.data?.origin ?? b.origin);
+  const sourceAction = copiedFrom ? null : <SourceButton source={{ bindingId: id, versionId: versionId! }} name={sourceName} />;
+  const sourceMeta = copiedFrom ? <span>Скопирован из {copiedFrom}</span> : sourceName ? <><FileTypeBadge format={sourceName.split('.').at(-1)} variant="inline" /><SourceButton appearance="filename" source={{ bindingId: id, versionId: versionId! }} name={sourceName} /></> : null;
   function selectVersion(value: string) {
     setTopic(null); setHistoricalLink(false); setExpanded({}); setAllExpanded(false);
     setParams(old => { const next = new URLSearchParams(old); if (Number(value) === b.versionId) next.delete('version'); else next.set('version', value); next.delete('period'); return next; });
@@ -89,7 +95,7 @@ function Binding() {
   function clearConfirmation() { setParams(old => { const next = new URLSearchParams(old); next.delete('confirmed'); return next; }, { replace: true }); }
   function openInitial() { setParams(old => { const next = new URLSearchParams(old); next.delete('confirmed'); next.set('progress', 'initial'); return next; }); }
   function closeInitial() { setParams(old => { const next = new URLSearchParams(old); next.delete('progress'); return next; }, { replace: true }); }
-  if (!archived && params.get('progress') === 'initial') return <div className="planning-page gap-5"><WorkspacePageHeader title="Проверка прогресса по темам КТП" backTo={ktpPaths.list} backLabel="К списку КТП" meta={<><strong className="text-planning-ink">{assignment?.subject}</strong><span>{assignment?.academicYear?.replace('/', '–')} · {assignment?.className}</span>{sourceMeta}<Badge appearance="label" tone={allowed ? 'green' : 'amber'}>{bindingStateLabel(b.state)}</Badge></>} actions={<SourceButton source={{ bindingId: id, versionId: versionId! }} name={sourceName} />} />
+  if (!archived && params.get('progress') === 'initial') return <div className="planning-page gap-5"><WorkspacePageHeader title="Проверка прогресса по темам КТП" backTo={ktpPaths.list} backLabel="К списку КТП" meta={<><strong className="text-planning-ink">{assignment?.subject}</strong><span>{assignment?.academicYear?.replace('/', '–')} · {assignment?.className}</span>{sourceMeta}<Badge appearance="label" tone={allowed ? 'green' : 'amber'}>{bindingStateLabel(b.state)}</Badge></>} actions={sourceAction} />
     <SegmentedTabs appearance="planning" ariaLabel="Классы" value={String(id)} options={related.map(value => ({ value: String(value.id), label: `${assignments.find(a => a.classId === value.classId && a.subjectId === value.subjectId && a.academicYearId === value.academicYearId)?.className ?? ''} класс` }))} onChange={value => { setExpanded({}); navigate(`${ktpPaths.binding(Number(value))}?progress=initial`); }} />
     <KtpInitialSyncModal key={id} id={id} content={content} distribution={distribution.data} classLabel={assignment?.className} presentation="page" onClose={closeInitial} />
   </div>;
@@ -101,7 +107,8 @@ function Binding() {
   </div>;
   return <div className="planning-page gap-5"><WorkspacePageHeader title={`${assignment?.subject ?? b.content?.header?.subject ?? ''} · КТП`} backTo={ktpPaths.list} backLabel="К списку КТП"
     meta={<><span>{assignment?.academicYear?.replace('/', '–')} · {related.map(value => assignments.find(a => a.classId === value.classId && a.subjectId === value.subjectId && a.academicYearId === value.academicYearId)?.className).join(', ') || assignment?.className}</span>{sourceMeta}{versionOptions.length > 1 ? <Select variant="status" aria-label="История версий" value={versionId} onChange={event => selectVersion(event.target.value)}>{versionOptions.map(item => <option key={item.id} value={item.versionId}>{`Версия ${item.versionNumber ?? item.bindingRevision}${item.versionId === b.versionId ? ' · текущая' : ''}`}</option>)}</Select> : versionNumber != null && <span>Версия {versionNumber}</span>}<Badge appearance="label" tone={archived ? 'gray' : allowed ? 'green' : 'amber'}>{oldVersion ? 'Предыдущая версия' : bindingStateLabel(b.state)}</Badge></>}
-    actions={<><SourceButton source={{ bindingId: id, versionId: versionId! }} name={sourceName} /><Button variant="secondary" size="sm" disabled={b.state === 'AWAITING_VERSION_SYNC'} onClick={() => setUpload(true)}>Загрузить новую версию</Button><ActionMenu appearance="compact" placement="viewport" label="Действия КТП" items={[
+    actions={<>{sourceAction}<Button variant="secondary" size="sm" disabled={b.state === 'AWAITING_VERSION_SYNC'} onClick={() => setUpload(true)}>Загрузить новую версию</Button><ActionMenu appearance="compact" placement="viewport" label="Действия КТП" items={[
+      { label: oldVersion ? 'Копировать эту версию' : 'Копировать КТП', description: 'Черновик на другой год или класс', disabled: archived, onSelect: () => setCopying(true) },
       { label: 'Управление версиями', onSelect: () => setVersionsOpen(true) },
       { label: 'Удалить КТП класса', danger: true, disabled: archived, onSelect: () => setRemoving({ kind: 'plan', targets: [{ bindingId: id, expectedRevision: b.revision! }], label: `${assignment?.subject ?? 'КТП'} · ${assignment?.className ?? ''} · ${assignment?.academicYear?.replace('/', '–') ?? ''}` }) },
     ]} /></>} />
@@ -166,5 +173,6 @@ function Binding() {
       onClose={() => setHistoricalLink(false)} />}
     {versionsOpen && <KtpVersionsDialog bindingId={id} currentVersionId={b.versionId!} classLabel={assignment?.className} onClose={() => setVersionsOpen(false)} onView={value => { selectVersion(String(value)); setVersionsOpen(false); }} onRemoved={value => { if (versionId === value) selectVersion(String(b.versionId)); }} />}
     {removing && <KtpRemovalDialog target={removing} onClose={() => setRemoving(null)} onRemoved={() => navigate(ktpPaths.list)} />}
+    {copying && versionId && <KtpCopyDialog bindingId={id} versionId={versionId} onClose={() => setCopying(false)} />}
   </div>;
 }

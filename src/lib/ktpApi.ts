@@ -11,7 +11,10 @@ export type KtpChange = Schema<'KtpTeachingChange'>;
 export type KtpReadScope = 'teacher' | 'admin';
 export type KtpProgress = Schema<'KtpProgress'>;
 export type KtpBinding = Schema<'KtpBindingView'>;
-export type KtpListFilters = Omit<NonNullable<paths['/api/teacher/ktp/imports']['get']['parameters']['query']>, 'cursor' | 'limit'>;
+/** `archived` — только для списка КТП: архивные годы, доступные лишь для копирования. */
+export type KtpListFilters = Omit<NonNullable<paths['/api/teacher/ktp/imports']['get']['parameters']['query']>, 'cursor' | 'limit'> & { archived?: boolean };
+export type KtpCopyTargets = Schema<'KtpCopyTargets'>;
+export type KtpOrigin = Schema<'KtpOrigin'>;
 /** UI selection; request bodies below use generated API schemas. */
 export type KtpRemovalTarget = { kind: 'import'; id: number; label: string }
   | { kind: 'version'; bindingId: number; versionId: number; label: string }
@@ -20,9 +23,9 @@ const root = '/teacher/ktp';
 const command = <T>(path: string, body: unknown, key: string) => request<T>(path, { method: 'POST', body, headers: { 'Idempotency-Key': key } });
 export const ktpApi = {
   context: (signal?: AbortSignal) => request<Schema<'KtpContext'>>(`${root}/context`, { signal }),
-  imports: (cursor?: number, signal?: AbortSignal, filters: KtpListFilters = {}) => request<Schema<'KtpImportPage'>>(`${root}/imports${pageQuery({ ...filters, cursor, limit: 20 })}`, { signal }),
+  imports: (cursor?: number, signal?: AbortSignal, { archived: _archived, ...filters }: KtpListFilters = {}) => request<Schema<'KtpImportPage'>>(`${root}/imports${pageQuery({ ...filters, cursor, limit: 20 })}`, { signal }),
   drafts: (cursor?: number, signal?: AbortSignal) => request<Schema<'KtpDraftPage'>>(`${root}/drafts${pageQuery({ cursor, limit: 100 })}`, { signal }),
-  bindings: (cursor?: number, signal?: AbortSignal, filters: KtpListFilters = {}) => request<Schema<'KtpBindingPage'>>(`${root}/bindings${pageQuery({ academicYearId: filters.academicYearId, subjectId: filters.subjectId, classId: filters.classId, status: filters.status, cursor, limit: 100 })}`, { signal }),
+  bindings: (cursor?: number, signal?: AbortSignal, filters: KtpListFilters = {}) => request<Schema<'KtpBindingPage'>>(`${root}/bindings${pageQuery({ academicYearId: filters.academicYearId, subjectId: filters.subjectId, classId: filters.classId, status: filters.status, archived: filters.archived || undefined, cursor, limit: 100 })}`, { signal }),
   import: (id: number, signal?: AbortSignal) => request<KtpImport>(`${root}/imports/${id}`, { signal }),
   upload: (input: { file: File; context: Schema<'KtpUploadContext'> }, key: string) => {
     const data = new FormData();
@@ -52,6 +55,8 @@ export const ktpApi = {
   adjustment: (input: { id: number; topicId: number; body: Schema<'KtpTopicAdjustmentRequest'> }, key: string) => command<Schema<'KtpProgressReceipt'>>(`${root}/bindings/${input.id}/topics/${input.topicId}/adjustments`, input.body, key),
   history: (id: number, cursor?: number, signal?: AbortSignal) => request<Schema<'KtpActivationPage'>>(`${root}/bindings/${id}/history${pageQuery({ cursor, limit: 30 })}`, { signal }),
   version: (id: number, versionId: number, signal?: AbortSignal) => request<Schema<'KtpVersionView'>>(`${root}/bindings/${id}/versions/${versionId}`, { signal }),
+  copyTargets: (id: number, versionId: number, signal?: AbortSignal) => request<KtpCopyTargets>(`${root}/bindings/${id}/versions/${versionId}/copy-targets`, { signal }),
+  copy: (input: { bindingId: number; versionId: number; body: Schema<'KtpCopyRequest'> }, key: string) => command<Schema<'KtpDraftReceipt'>>(`${root}/bindings/${input.bindingId}/versions/${input.versionId}/copies`, input.body, key),
   transition: (id: number, signal?: AbortSignal) => request<Schema<'KtpVersionTransition'>>(`${root}/bindings/${id}/version-transition`, { signal }),
   versionPreview: (input: { id: number; body: Schema<'KtpVersionSyncRequest'> }) => request<Schema<'KtpVersionSyncPreview'>>(`${root}/bindings/${input.id}/version-sync-preview`, { method: 'POST', body: input.body }),
   versionSync: (input: { id: number; body: Schema<'KtpVersionSyncConfirmation'> }, key: string) => command<Schema<'KtpProgressReceipt'>>(`${root}/bindings/${input.id}/version-sync`, input.body, key),

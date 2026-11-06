@@ -7499,6 +7499,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teacher/ktp/bindings/{id}/versions/{versionId}/copies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Создать черновик-копию КТП на выбранный год и классы */
+        post: operations["copyKtp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ktp/bindings/{id}/versions/{versionId}/copy-targets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Куда можно скопировать КТП: годы, классы и причины недоступности */
+        get: operations["getKtpCopyTargets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teacher/ktp/bindings/{id}/versions/{versionId}/removal-preview": {
         parameters: {
             query?: never;
@@ -11760,10 +11794,13 @@ export interface components {
         KtpBindingSummary: {
             /** Format: int64 */
             academicYearId?: number;
+            /** @description КТП архивного года: доступен только для копирования */
+            archived?: boolean;
             /** Format: int64 */
             classId?: number;
             /** Format: int64 */
             id?: number;
+            origin?: components["schemas"]["KtpOrigin"];
             /** Format: int64 */
             revision?: number;
             sourceName?: string;
@@ -11783,6 +11820,7 @@ export interface components {
             content?: components["schemas"]["ParsedKtp"];
             /** Format: int64 */
             id?: number;
+            origin?: components["schemas"]["KtpOrigin"];
             /** Format: int64 */
             revision?: number;
             state?: string;
@@ -11814,11 +11852,83 @@ export interface components {
         };
         KtpContext: {
             allocationEnabled?: boolean;
+            archive?: components["schemas"]["KtpAssignment"][];
             assignments?: components["schemas"]["KtpAssignment"][];
             formats?: string[];
             /** Format: int32 */
             maxFileBytes?: number;
             periods?: components["schemas"]["KtpPeriodOption"][];
+        };
+        KtpCopiedFrom: {
+            academicYear?: string;
+            className?: string;
+        };
+        KtpCopyClass: {
+            /**
+             * Format: int64
+             * @description КТП, который уже действует в классе
+             */
+            activeBindingId?: number;
+            /** @enum {string} */
+            availability?: "AVAILABLE" | "ACTIVE_PLAN_EXISTS";
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            /**
+             * Format: int64
+             * @description Последний свой неподтверждённый черновик КТП на этот класс и предмет
+             */
+            existingDraftId?: number;
+            /** @description У класса есть будущие уроки предмета: темы распределятся сразу после подтверждения */
+            hasUpcomingLessons?: boolean;
+        };
+        KtpCopyRequest: {
+            /** Format: int64 */
+            academicYearId: number;
+            classIds?: number[];
+        };
+        /** @description Что копируется: КТП класса и его версия */
+        KtpCopySource: {
+            academicYear?: string;
+            /** Format: int64 */
+            academicYearId?: number;
+            /** @description Год источника в архиве: КТП доступен только для копирования */
+            archived?: boolean;
+            /** Format: int64 */
+            bindingId?: number;
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            /** Format: int32 */
+            periodCount?: number;
+            plannedHours?: number;
+            subject?: string;
+            /** Format: int64 */
+            subjectId?: number;
+            /** Format: int32 */
+            topicCount?: number;
+            /** Format: int64 */
+            versionId?: number;
+            /** Format: int64 */
+            versionNumber?: number;
+        };
+        /** @description Сводка источника и возможные цели копии с причинами недоступности */
+        KtpCopyTargets: {
+            source?: components["schemas"]["KtpCopySource"];
+            years?: components["schemas"]["KtpCopyYear"][];
+        };
+        KtpCopyYear: {
+            academicYear?: string;
+            /** Format: int64 */
+            academicYearId?: number;
+            classes?: components["schemas"]["KtpCopyClass"][];
+            /** Format: date */
+            endDate?: string;
+            /** @description Активных учебных периодов не меньше, чем периодов плана: копию можно будет подтвердить */
+            periodsReady?: boolean;
+            /** Format: date */
+            startDate?: string;
+            status?: string;
         };
         KtpDiagnostic: {
             candidate?: components["schemas"]["KtpRowCandidate"];
@@ -11960,6 +12070,7 @@ export interface components {
             draftId?: number;
             /** Format: int64 */
             id?: number;
+            origin?: components["schemas"]["KtpOrigin"];
             /** Format: int64 */
             revision?: number;
             source?: components["schemas"]["KtpSource"];
@@ -12076,6 +12187,11 @@ export interface components {
             units?: number;
             /** Format: int64 */
             versionId?: number;
+        };
+        KtpOrigin: {
+            copiedFrom?: components["schemas"]["KtpCopiedFrom"];
+            /** @enum {string} */
+            type?: "UPLOAD" | "COPY";
         };
         KtpParseOptions: {
             columns?: {
@@ -12213,9 +12329,12 @@ export interface components {
             classId?: number;
         };
         KtpTargetPreview: {
+            /** @enum {string} */
+            blockedReason?: "ACTIVE_PLAN_EXISTS";
             conflict?: boolean;
             /** Format: int64 */
             currentRevision?: number;
+            currentState?: string;
             /** Format: int64 */
             currentVersionId?: number;
             expected?: components["schemas"]["KtpTargetExpectation"];
@@ -12445,6 +12564,7 @@ export interface components {
             content?: components["schemas"]["ParsedKtp"];
             /** Format: int64 */
             id?: number;
+            origin?: components["schemas"]["KtpOrigin"];
             /** Format: int64 */
             revision?: number;
             /** Format: int64 */
@@ -14867,6 +14987,7 @@ export interface components {
             order?: number;
             plannedDates?: string;
             plannedHours?: number;
+            previousPlannedDates?: string;
             recommendations?: string;
             source?: components["schemas"]["KtpSourceLocation"];
             sourceHours?: string;
@@ -31602,6 +31723,7 @@ export interface operations {
                 subjectId?: number;
                 classId?: number;
                 status?: string;
+                archived?: boolean;
             };
             header?: never;
             path?: never;
@@ -32046,6 +32168,58 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KtpRemovalReceipt"];
+                };
+            };
+        };
+    };
+    copyKtp: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                id: number;
+                versionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KtpCopyRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpDraftReceipt"];
+                };
+            };
+        };
+    };
+    getKtpCopyTargets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                versionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KtpCopyTargets"];
                 };
             };
         };
