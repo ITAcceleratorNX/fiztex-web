@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { cx } from '@/lib/format';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-ghost' | 'danger-outline' | 'link' | 'soft' | 'navy' | 'success-soft' | 'warning-soft' | 'neutral-soft';
-type Size = 'sm' | 'md' | 'lg' | 'icon' | 'icon-sm' | 'text' | 'inline' | 'badge';
+type Size = 'sm' | 'md' | 'lg' | 'action' | 'icon' | 'icon-md' | 'icon-sm' | 'text' | 'inline' | 'badge';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -44,7 +44,11 @@ const sizes: Record<Size, string> = {
   md: 'h-11 px-5 text-sm',
   // Кнопка формы входа: 56 в высоту, круглая, кегль 16 (2460:4665 «Войти»).
   lg: 'h-14 px-6 text-base',
+  // Действие в карточке шторки ученика («Скопировать», «Скрыть», 2460:3729): 38 на радиусе 10.
+  action: 'h-action px-3.5 text-sm',
   icon: 'size-11 shrink-0 p-0 text-sm',
+  // ‹ › в шапке шторки (2460:3543): 36 с рамкой.
+  'icon-md': 'size-9 shrink-0 p-0 text-sm',
   'icon-sm': 'size-7 shrink-0 p-0 text-13',
   text: 'h-auto p-0 text-13',
   inline: 'h-auto p-0 text-sm',
@@ -66,7 +70,9 @@ export function buttonClassName({
 }: { variant?: Variant; size?: Size; className?: string } = {}): string {
   return cx(
     'inline-flex items-center justify-center font-semibold transition',
-    size === 'badge' || size === 'icon-sm' ? 'rounded-lg' : size === 'lg' ? 'rounded-full' : 'rounded-xl',
+    size === 'badge' || size === 'icon-sm' || size === 'icon-md'
+      ? 'rounded-lg'
+      : size === 'lg' ? 'rounded-full' : size === 'action' ? 'rounded-action' : 'rounded-xl',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50 disabled:cursor-not-allowed',
     variants[variant],
     sizes[size],

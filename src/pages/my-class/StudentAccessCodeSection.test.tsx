@@ -37,11 +37,30 @@ describe('персональный код ученика у классного �
     ]));
     render(<StudentAccessCodeSection studentProfileId={7} />);
 
-    expect(screen.getByText('Ученик ещё не заходил в приложение')).toBeInTheDocument();
+    expect(screen.getByText('Ученик ещё не входил в приложение')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Выдать код' }));
 
     expect(issueAsync).toHaveBeenCalledWith({ studentProfileId: 7, confirmReissue: false });
     expect(await screen.findByText('D6A44QAX')).toBeInTheDocument();
+  });
+
+  it('при листании учеников код одного не остаётся под именем другого', async () => {
+    useTeacherStudentAccess.mockReturnValue(ready([
+      { studentProfileId: 7, codeIssuedAt: undefined, pinSet: false, canIssueCode: true },
+      { studentProfileId: 8, codeIssuedAt: '2026-08-27T10:00:00Z', pinSet: true, canIssueCode: true },
+    ]));
+    const { rerender } = render(<StudentAccessCodeSection studentProfileId={7} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Выдать код' }));
+    expect(await screen.findByText('D6A44QAX')).toBeInTheDocument();
+
+    // Шторка переходит к следующему ученику, не пересоздавая карточку.
+    rerender(<StudentAccessCodeSection studentProfileId={8} />);
+    expect(screen.queryByText('D6A44QAX')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Код скрыт')).toBeInTheDocument();
+
+    // Вернулись — код по-прежнему его: выданный показывается один раз, пока его не скрыли.
+    rerender(<StudentAccessCodeSection studentProfileId={7} />);
+    expect(screen.getByText('D6A44QAX')).toBeInTheDocument();
   });
 
   it('у выданного кода перевыпуск спрашивает подтверждение', async () => {

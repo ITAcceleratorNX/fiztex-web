@@ -61,6 +61,15 @@
   --size-field-lg: 54px;
   --shadow-auth: 0 10px 40px rgb(27 35 51 / 0.06);
   --text-40: 40px;
+  /* Шторка ученика в «Моём классе» (Figma `phyztex` 2460:3543 T1 … 2460:3921 T3): панель 780
+   * со скруглением 16 сверху слева, ровная серо-синяя вуаль без размытия, карточки на радиусе
+   * 14, кнопки действий 38 на радиусе 10, средний балл 22. */
+  --size-drawer: 780px;
+  --color-drawer-scrim: rgb(120 128 145 / 0.55);
+  --radius-drawer-card: 14px;
+  --radius-action: 10px;
+  --size-action: 38px;
+  --text-22: 22px;
   /* Figma parent comment composer 27:1697 / 27:1709. */
   --size-comment-dialog: 560px;
   --size-comment-field: 220px;

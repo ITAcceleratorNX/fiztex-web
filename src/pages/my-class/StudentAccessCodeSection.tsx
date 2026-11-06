@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Copy, EyeOff } from 'lucide-react';
+import { Copy, EyeOff, KeyRound, RefreshCw } from 'lucide-react';
 import { ApiError } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -24,8 +24,11 @@ export function StudentAccessCodeSection({ studentProfileId }: { studentProfileI
   const toast = useToast();
   const access = useTeacherStudentAccess();
   const issue = useIssueStudentAccessCode();
-  const [code, setCode] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  // Выданный код помнится вместе с учеником, которому выдан. Шторка листает учеников, не
+  // пересоздавая карточку, и код первого иначе остался бы на экране под именем второго —
+  // учитель продиктовал бы чужой код.
+  const [issued, setIssued] = useState<{ studentProfileId: number; value: string } | null>(null);
+  const code = issued?.studentProfileId === studentProfileId ? issued.value : null;
   const [confirming, setConfirming] = useState(false);
 
   const row = access.data?.find((item) => item.studentProfileId === studentProfileId);
@@ -35,8 +38,7 @@ export function StudentAccessCodeSection({ studentProfileId }: { studentProfileI
     try {
       const result = await issue.mutateAsync({ studentProfileId, confirmReissue });
       setConfirming(false);
-      setCopied(false);
-      setCode(result.issuedCode ?? null);
+      setIssued(result.issuedCode ? { studentProfileId, value: result.issuedCode } : null);
     } catch (error) {
       // Код мог появиться у ученика, пока панель была открыта, — тогда сервер просит
       // подтвердить перевыпуск. Это не ошибка ввода, а вопрос к человеку.
@@ -52,7 +54,7 @@ export function StudentAccessCodeSection({ studentProfileId }: { studentProfileI
     if (!code) return;
     try {
       await navigator.clipboard.writeText(code);
-      setCopied(true);
+      // Подпись кнопки не меняется (T2): что код в буфере, говорит всплывающее «Код скопирован».
       toast.success('Код скопирован');
     } catch {
       toast.error('Не удалось скопировать — перепишите код вручную.');
@@ -61,84 +63,85 @@ export function StudentAccessCodeSection({ studentProfileId }: { studentProfileI
 
   if (access.isPending || access.isError) return null;
 
+  // Карточка по макету T1–T3 (2460:3543): слева подпись, код или маска и что с учеником, справа
+  // действия 38 со значками. Строкой, пока хватает ширины шторки; на узкой — кнопки под текстом.
   return (
-    <section className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-line">
-      <h3 className="text-10 font-semibold uppercase tracking-filter text-slate-400">
-        Персональный код
-      </h3>
+    <section className="flex flex-wrap items-center justify-between gap-x-5 gap-y-3 rounded-drawer-card border border-planning-line bg-surface px-5 py-4">
+      <div className="min-w-0 flex-1">
+        <h3 className="text-11 font-bold uppercase leading-tight tracking-filter text-planning-muted">
+          Персональный код
+        </h3>
 
-      {!row ? (
-        <p className="mt-2 text-13 text-slate-500">
-          Администратор не открыл вам выдачу кода этому ученику.
-        </p>
-      ) : (
-        <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
-          <div className="min-w-0">
+        {!row ? (
+          <p className="mt-1.5 text-13 leading-4 text-planning-muted">
+            Администратор не открыл вам выдачу кода этому ученику.
+          </p>
+        ) : (
+          <>
             {code ? (
-              <p className="select-all font-mono text-xl font-bold tracking-widest text-brand-600">
-                {code}
-              </p>
+              <p className="mt-1.5 select-all text-xl font-bold leading-6 tracking-code text-navy-700">{code}</p>
             ) : (
-              <p aria-label="Код скрыт" className="text-xl font-bold tracking-widest text-slate-300">
-                ••••••••
+              <p aria-label="Код скрыт" className="mt-1.5 text-xl font-bold leading-6 tracking-code-mask text-planning-subtle">
+                •••• ••••
               </p>
             )}
 
-            <p className="mt-1 text-13 text-slate-500">
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-13 leading-4 text-planning-muted">
               {row.pinSet ? (
-                <span className="inline-flex items-center gap-1.5 font-medium text-emerald-600">
-                  <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+                <span className="inline-flex items-center gap-1.5 text-planning-success-fg">
+                  <span className="size-1.5 rounded-full bg-planning-success-fg" aria-hidden="true" />
                   Уже входил в приложение
                 </span>
               ) : (
-                'Ученик ещё не заходил в приложение'
+                <span>Ученик ещё не входил в приложение</span>
               )}
-              {issuedBefore && !code && ` · код выдан ${formatDate(row.codeIssuedAt)}`}
+              {issuedBefore && !code && <span>· код выдан {formatDate(row.codeIssuedAt)}</span>}
             </p>
 
             {row.grantExpiresAt && (
-              <p className="mt-0.5 text-11 text-slate-400">
+              <p className="mt-1 text-xs text-planning-subtle">
                 Ваше разрешение действует до {formatDate(row.grantExpiresAt)}
               </p>
             )}
             {row.canIssueCode === false && (
-              <p className="mt-0.5 text-11 text-amber-700">
+              <p className="mt-1 text-xs text-amber-700">
                 Аккаунт ученика выключен — код сейчас не выдать.
               </p>
             )}
-          </div>
+          </>
+        )}
+      </div>
 
-          <div className="flex shrink-0 gap-2">
-            {code ? (
-              <>
-                <Button
-                  size="sm"
-                  icon={copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-                  onClick={() => void copy()}
-                >
-                  {copied ? 'Скопировано' : 'Скопировать'}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  icon={<EyeOff className="size-4" />}
-                  onClick={() => { setCode(null); setCopied(false); }}
-                >
-                  Скрыть
-                </Button>
-              </>
-            ) : (
-              <Button
-                size="sm"
-                variant={issuedBefore ? 'secondary' : 'primary'}
-                disabled={row.canIssueCode === false}
-                loading={issue.isPending}
-                onClick={() => (issuedBefore ? setConfirming(true) : void send(false))}
-              >
-                {issuedBefore ? 'Выдать новый код' : 'Выдать код'}
+      {row && (
+        <div className="flex shrink-0 gap-2">
+          {code ? (
+            <>
+              <Button size="action" icon={<Copy className="size-4" />} onClick={() => void copy()}>
+                Скопировать
               </Button>
-            )}
-          </div>
+              <Button
+                size="action"
+                variant="secondary"
+                className="text-planning-ink"
+                icon={<EyeOff className="size-4" />}
+                onClick={() => setIssued(null)}
+              >
+                Скрыть
+              </Button>
+            </>
+          ) : (
+            <Button
+              size="action"
+              variant="secondary"
+              className="text-planning-ink"
+              icon={issuedBefore ? <RefreshCw className="size-4" /> : <KeyRound className="size-4" />}
+              disabled={row.canIssueCode === false}
+              loading={issue.isPending}
+              onClick={() => (issuedBefore ? setConfirming(true) : void send(false))}
+            >
+              {issuedBefore ? 'Выдать новый код' : 'Выдать код'}
+            </Button>
+          )}
         </div>
       )}
 

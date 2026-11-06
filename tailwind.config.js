@@ -5,6 +5,7 @@ export default {
     extend: {
       colors: {
         auth: { canvas: 'var(--color-auth-canvas)' },
+        drawer: { scrim: 'var(--color-drawer-scrim)' },
         field: { filled: 'var(--color-field-filled)', invalid: 'var(--color-field-invalid)' },
         planning: {
           ink: 'var(--color-planning-ink)', muted: 'var(--color-planning-muted)', subtle: 'var(--color-planning-subtle)',
@@ -119,10 +120,14 @@ export default {
         32: 'var(--text-32)',
         // Заголовок синей панели входа (2460:4665).
         40: 'var(--text-40)',
+        // Средний балл в шторке ученика (2460:3543).
+        22: 'var(--text-22)',
       },
       height: {
         // «Залитое» поле входа (2460:4665).
         'field-lg': 'var(--size-field-lg)',
+        // Кнопка действия в карточке шторки («Скопировать», 2460:3729).
+        action: 'var(--size-action)',
         // Ряды таймлайна занятости: 70px просмотр (2015:11009), 60px правка
         // (2015:11496). Обе высоты вне 4px-шкалы Tailwind — заведены явно,
         // чтобы не разъезжались между режимами.
@@ -142,6 +147,8 @@ export default {
         'field-lg': 'var(--radius-field-lg)',
         // Плашка-подсказка `Callout` (2460:4758).
         callout: '20px',
+        'drawer-card': 'var(--radius-drawer-card)',
+        action: 'var(--radius-action)',
       },
       gridTemplateColumns: {
         'planning-editor': 'var(--grid-planning-editor)',
@@ -192,6 +199,9 @@ export default {
         filter: '0.5px',
         // Крупные заголовки экранов входа: 36–40 px со сжатием -0.5 (2460:4665).
         display: '-0.5px',
+        // Код ученика: маска «•••• ••••» и выданный код (2460:3543 / 2460:3729).
+        'code-mask': '3px',
+        code: '1.5px',
       },
       maxWidth: {
         'planning-dialog': 'var(--size-planning-dialog)',
@@ -207,6 +217,7 @@ export default {
         'modal-form': '480px',
         'auth-card': 'var(--size-auth-card)',
         'auth-form': 'var(--size-auth-form)',
+        drawer: 'var(--size-drawer)',
       },
       maxHeight: {
         // Скролл-список классов в модалке события (2015:10760).

@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ChangeBadge } from '@/components/dynamics/ChangeBadge';
 import { DynamicsChart, type ChartMarker } from '@/components/dynamics/DynamicsChart';
 import { Avatar } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useStudentGradeDynamics, useStudentSubjectDynamics } from '@/hooks/dynamicsQueries';
@@ -23,6 +24,10 @@ import {
   type DynamicsPoint,
   type DynamicsWindow,
 } from '@/lib/dynamicsModel';
+
+/** Карточка шторки (2460:3543): рамка вместо тени, радиус 14, поля 20. */
+const DRAWER_CARD = 'rounded-drawer-card border border-planning-line bg-surface p-5';
+const CARD_TITLE = 'text-base font-bold leading-tight text-planning-ink';
 
 /**
  * Боковая панель динамики ученика (Figma 2216:45841) и его предмета (2216:47552).
@@ -74,9 +79,9 @@ export function StudentDynamicsDrawer({
   const header = subjectId == null ? (
     <span className="flex items-center gap-3">
       <Avatar name={display.name} size="lg" variant="navy" />
-      <span>
-        <span className="block">{display.name}</span>
-        <span className="block text-sm font-normal text-slate-500">
+      <span className="min-w-0">
+        <span className="block truncate leading-tight">{display.name}</span>
+        <span className="mt-0.5 block text-13 font-normal leading-4 text-planning-muted">
           {className} класс{displayIndex >= 0 && ` · ученик ${displayIndex + 1} из ${students.length}`}
         </span>
       </span>
@@ -93,7 +98,7 @@ export function StudentDynamicsDrawer({
         </span>
         <span>
           <span className="block">{subject.data?.subjectName ?? 'Предмет'}</span>
-          <span className="block text-sm font-normal text-slate-500">{student.name} · {className} класс</span>
+          <span className="mt-0.5 block text-13 font-normal leading-4 text-planning-muted">{student.name} · {className} класс</span>
         </span>
       </span>
     </span>
@@ -104,7 +109,8 @@ export function StudentDynamicsDrawer({
       open
       onClose={onClose}
       placement="right"
-      size="xl"
+      appearance="drawer"
+      size="drawer"
       title={header}
       headerActions={subjectId == null ? (
         <div className="flex gap-2">
@@ -122,14 +128,14 @@ export function StudentDynamicsDrawer({
           <ErrorBlock message="Не удалось загрузить динамику ученика." onRetry={() => void overview.refetch()} />
         ) : (
           <div aria-busy={loadingNext}
-            className={cx('space-y-5 transition-opacity duration-200', loadingNext && 'pointer-events-none select-none opacity-60')}>
+            className={cx('space-y-4 transition-opacity duration-200', loadingNext && 'pointer-events-none select-none opacity-60')}>
             <Headline metric={overview.data.overall} window={overview.data.window} previous={overview.data.previousWindow} />
-            <section className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-line">
-              <h3 className="text-lg font-bold text-ink">Динамика среднего балла</h3>
-              <p className="mt-1 text-13 text-slate-500">По всем предметам</p>
-              <div className="mt-4">
+            <section className={DRAWER_CARD}>
+              <h3 className={CARD_TITLE}>Динамика среднего балла</h3>
+              <p className="mt-1 text-xs text-planning-muted">По всем предметам</p>
+              <div className="mt-3">
                 {(overview.data.series ?? []).length === 0 ? (
-                  <p className="py-8 text-center text-sm text-slate-500">За период оценок пока нет</p>
+                  <p className="py-6 text-center text-13 text-planning-muted">За период оценок пока нет</p>
                 ) : (
                   <DynamicsChart
                     label={`Динамика среднего балла: ${display.name}`}
@@ -146,38 +152,38 @@ export function StudentDynamicsDrawer({
                 )}
               </div>
             </section>
-            <section className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-line">
-              <h3 className="text-lg font-bold text-ink">По предметам</h3>
-              <table className="mt-3 w-full border-collapse text-sm">
+            <section className={DRAWER_CARD}>
+              <h3 className={CARD_TITLE}>По предметам</h3>
+              <table className="mt-3.5 w-full border-collapse text-sm">
                 <thead>
-                  <tr className="text-10 font-semibold uppercase tracking-filter text-slate-400">
-                    <th scope="col" className="py-2 text-left">Предмет</th>
-                    <th scope="col" className="py-2 text-right">Ср. балл</th>
-                    <th scope="col" className="py-2 pl-4 text-left">Изменение</th>
-                    <th scope="col" className="w-8"><span className="sr-only">Открыть</span></th>
+                  <tr className="text-11 font-semibold uppercase text-planning-subtle">
+                    <th scope="col" className="py-2 text-left font-semibold">Предмет</th>
+                    <th scope="col" className="w-16 py-2 text-left font-semibold">Ср. балл</th>
+                    <th scope="col" className="w-56 py-2 text-left font-semibold">Изменение</th>
+                    <th scope="col" className="w-6"><span className="sr-only">Открыть</span></th>
                   </tr>
                 </thead>
                 <tbody>
                   {(overview.data.subjects ?? []).map((row) => {
                     const graded = !notGraded(row.metric);
                     return (
-                      <tr key={row.subjectId} className={cx('border-t border-line', graded && 'cursor-pointer hover:bg-slate-50')}
+                      <tr key={row.subjectId} className={cx('border-t border-planning-row-line', graded && 'cursor-pointer hover:bg-planning-canvas')}
                         onClick={graded ? () => onSelectSubject(row.subjectId ?? null) : undefined}>
-                        <th scope="row" className="py-4 text-left font-semibold text-ink">
+                        <th scope="row" className="py-3.5 text-left font-semibold text-planning-ink">
                           {graded ? (
                             <button type="button" className="text-left" onClick={(event) => { event.stopPropagation(); onSelectSubject(row.subjectId ?? null); }}>
                               {row.subjectName}
                             </button>
                           ) : row.subjectName}
                         </th>
-                        <td className="py-4 text-right text-15 font-bold text-ink">{formatIndicator(row.metric?.current) ?? '—'}</td>
-                        <td className="py-4 pl-4">
-                          {!graded ? <span className="text-13 text-slate-500">Оценки не выставляются</span>
+                        <td className="py-3.5 font-bold text-planning-ink">{formatIndicator(row.metric?.current) ?? '—'}</td>
+                        <td className="py-3.5">
+                          {!graded ? <span className="text-13 text-planning-muted">Оценки не выставляются</span>
                             : row.metric?.current?.state !== 'AVAILABLE'
-                              ? <span className="text-13 text-slate-500">{emptyReason(row.metric)}</span>
+                              ? <span className="text-13 text-planning-muted">{emptyReason(row.metric)}</span>
                               : <ChangeBadge metric={row.metric} />}
                         </td>
-                        <td className="w-8 text-right text-slate-400">{graded && <ChevronRight className="ml-auto h-4 w-4" aria-hidden="true" />}</td>
+                        <td className="w-6 text-right text-planning-subtle">{graded && <ChevronRight className="ml-auto h-4 w-4" aria-hidden="true" />}</td>
                       </tr>
                     );
                   })}
@@ -192,10 +198,10 @@ export function StudentDynamicsDrawer({
       ) : subject.isPending ? <LoadingBlock label="Загрузка предмета…" /> : subject.isError ? (
         <ErrorBlock message="Не удалось загрузить динамику предмета." onRetry={() => void subject.refetch()} />
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4">
           <Headline metric={subject.data.metric} window={subject.data.window} previous={subject.data.previousWindow} />
-          <section className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-line">
-            <h3 className="text-lg font-bold text-ink">Оценки и средний балл</h3>
+          <section className={DRAWER_CARD}>
+            <h3 className={CARD_TITLE}>Оценки и средний балл</h3>
             <div className="mt-4">
               <SubjectChart
                 name={`${subject.data.subjectName}: ${student.name}`}
@@ -225,13 +231,13 @@ function Headline({ metric, window, previous }: {
 }) {
   const value = formatIndicator(metric?.current);
   return (
-    <div>
-      <p className="text-11 font-semibold uppercase tracking-filter text-slate-500">Средний балл · {windowLabel(window)}</p>
-      <div className="mt-2 flex items-center gap-3">
-        <span className="text-28 font-bold text-ink">{value ?? '—'}</span>
+    <div className="pb-1">
+      <p className="text-11 font-bold uppercase tracking-filter text-planning-muted">Средний балл · {windowLabel(window)}</p>
+      <div className="mt-3 flex items-center gap-3">
+        <span className="text-22 font-bold leading-tight text-planning-ink">{value ?? '—'}</span>
         {value != null && <ChangeBadge metric={metric} />}
       </div>
-      <p className="mt-2 text-13 text-slate-500">
+      <p className="mt-2 text-13 leading-4 text-planning-muted">
         {value == null ? emptyReason(metric) : metric?.trend === 'INSUFFICIENT_DATA'
           ? 'За прошлый период оценок нет — сравнить пока не с чем'
           : compareLabel(previous)}
@@ -286,8 +292,8 @@ function SubjectChart({ name, window, points, metric }: {
 export function GradeTiles({ points }: { points: DynamicsPoint[] }) {
   const tiles = [...points].reverse();
   return (
-    <section className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-line">
-      <h3 className="text-lg font-bold text-ink">Оценки за период · {points.length}</h3>
+    <section className={DRAWER_CARD}>
+      <h3 className={CARD_TITLE}>Оценки за период · {points.length}</h3>
       {tiles.length === 0 ? <p className="mt-3 text-sm text-slate-500">За период оценок нет</p> : (
         <ul className="mt-4 grid grid-cols-[repeat(auto-fill,minmax(4.25rem,1fr))] gap-2">
           {tiles.map((point) => {
@@ -318,9 +324,16 @@ function NavButton({ label, disabled, onClick, children }: {
   label: string; disabled: boolean; onClick: () => void; children: ReactNode;
 }) {
   return (
-    <button type="button" aria-label={label} disabled={disabled} onClick={onClick}
-      className="flex size-10 items-center justify-center rounded-lg border border-line text-navy-700 transition hover:bg-neutral-bg disabled:cursor-not-allowed disabled:text-slate-300">
+    <Button
+      variant="secondary"
+      size="icon-md"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      onClick={onClick}
+      className="text-planning-ink disabled:text-slate-300"
+    >
       {children}
-    </button>
+    </Button>
   );
 }
