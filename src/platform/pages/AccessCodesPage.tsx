@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useAccessRequestStats } from '@/hooks/queries';
 import { AccessRequestsPanel } from '@/pages/access/AccessRequestsPanel';
 import { AccessJournalPanel } from '@/pages/access/AccessJournalPanel';
+import { CodeGrantsPanel } from '@/pages/access/CodeGrantsPanel';
 import { IssuedSecretModal } from '../components/IssuedSecretModal';
 import { useToast } from '@/context/ToastContext';
 import { ACCOUNT_STATUS_LABELS, ROLE_LABELS } from '../labels';
@@ -53,14 +54,17 @@ const ACTION_COPY: Record<
   },
 };
 
-type SectionTab = 'codes' | 'requests' | 'journal';
+type SectionTab = 'codes' | 'requests' | 'grants' | 'journal';
 
 /** Подзаголовок шапки меняется вместе с вкладкой (D0 / D1): он объясняет, что под ней. */
 const TAB_DESCRIPTIONS: Record<SectionTab, string> = {
   codes: 'Для ученика доступны PIN и персональный код. Родителю или учителю можно сбросить доступ, чтобы выдать новый код активации.',
   requests: 'Ученики и родители, которые отправили заявку из приложения',
+  grants: 'Кому из учителей открыта выдача персональных кодов. Права у роли «учитель» нет: основание — разрешение на конкретного ученика, и выдаёте его здесь. Сброс PIN остаётся за администратором.',
   journal: 'Кто и что делал с доступом: заявки, персональные коды, PIN, временные пароли, смена телефона и разрешения учителям. Записи не удаляются и не правятся.',
 };
+
+const TABS: SectionTab[] = ['codes', 'requests', 'grants', 'journal'];
 
 /**
  * Вкладки раздела (макет D0). Счётчик на вкладке — только нерассмотренные заявки:
@@ -71,7 +75,7 @@ const TAB_DESCRIPTIONS: Record<SectionTab, string> = {
 export function AccessCodesPage() {
   const [params, setParams] = useSearchParams();
   const tabParam = params.get('tab');
-  const tab: SectionTab = tabParam === 'requests' || tabParam === 'journal' ? tabParam : 'codes';
+  const tab: SectionTab = TABS.includes(tabParam as SectionTab) ? (tabParam as SectionTab) : 'codes';
   const stats = useAccessRequestStats();
   const pending = stats.data?.pending ?? 0;
 
@@ -92,10 +96,12 @@ export function AccessCodesPage() {
       <TabsList>
         <TabsTrigger value="codes">Коды и PIN</TabsTrigger>
         <TabsTrigger value="requests" count={pending}>Заявки на доступ</TabsTrigger>
+        <TabsTrigger value="grants">Разрешения учителям</TabsTrigger>
         <TabsTrigger value="journal">Журнал доступа</TabsTrigger>
       </TabsList>
       <TabsContent value={tab} className="mt-5 focus-visible:outline-none">
         {tab === 'requests' && <AccessRequestsPanel />}
+        {tab === 'grants' && <CodeGrantsPanel />}
         {tab === 'journal' && <AccessJournalPanel />}
         {tab === 'codes' && <CodesPanel />}
       </TabsContent>

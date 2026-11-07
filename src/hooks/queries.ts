@@ -1,7 +1,7 @@
 import { studentYearTransitionApi } from '@/lib/studentYearTransitionApi';
 import { createPeriod, updatePeriod } from '@/platform/services/periods';
 import type { CreatePeriodInput, UpdatePeriodInput } from '@/platform/types';
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef } from 'react';
 import { ktpApi, type KtpReadScope, type KtpListFilters, type KtpRemovalTarget } from '@/lib/ktpApi';
 import { runningKtp } from '@/lib/ktpModel';
@@ -16,6 +16,7 @@ import { ApiError, api, pageQuery, request, type CopyTestRequest } from '@/lib/a
 import { accessRequestsApi, type AccessRequestFilters } from '@/lib/accessRequestsApi';
 import { teacherAccessCodesApi } from '@/lib/teacherAccessCodesApi';
 import { accessJournalApi, type AccessJournalFilters } from '@/lib/accessJournalApi';
+import { studentCodeGrantsApi } from '@/lib/studentCodeGrantsApi';
 import {
   lessonAdminApi,
   lessonTeachingApi,
@@ -137,6 +138,8 @@ export const keys = {
   myClassWeekSchedule: (classId: number, weekStart: string) =>
     ['my-class', 'classes', classId, 'schedule', weekStart] as const,
   adminClasses: ['admin', 'classes'] as const,
+  adminActiveClasses: ['admin', 'classes', 'active-year'] as const,
+  adminClassStudents: (classId: number) => ['admin', 'classes', classId, 'students'] as const,
   adminHomeroomTeachers: ['admin', 'teachers', 'homeroom-options'] as const,
   adminHomeroomCurrent: (classId: number) => ['admin', 'classes', classId, 'homeroom'] as const,
   adminHomeroomHistory: (classId: number) => ['admin', 'classes', classId, 'homeroom', 'history'] as const,
@@ -187,6 +190,8 @@ export const keys = {
   accessRequestSuggestions: (requestId: number) =>
     ['access-requests', 'suggestions', requestId] as const,
   teacherStudentAccess: ['teacher', 'student-access-codes'] as const,
+  studentCodeGrants: ['student-code-grants'] as const,
+  studentCodeGrant: (studentProfileId: number) => ['student-code-grants', studentProfileId] as const,
   accessJournal: (filters: AccessJournalFilters) => ['access-journal', filters] as const,
   subjects: ['subjects'] as const,
   tests: (useAiGeneration?: boolean) =>
@@ -329,6 +334,56 @@ export const keys = {
   monthlyFeedbackSheet: (key: FeedbackSheetKey) =>
     ['monthly-feedback', 'teacher', 'sheet', key.month, key.classId, key.subjectId] as const,
 };
+
+/**
+ * Классы действующего учебного года — выбор класса там, где работают с его нынешним
+ * составом. Год спрашивается у сервера, а не берётся «последним по имени»: активный год
+ * — это его статус, и на границе лет список иначе показал бы прошлогодние классы.
+ */
+export function useAdminActiveClasses(enabled: boolean) {
+  return useQuery({
+    queryKey: keys.adminActiveClasses,
+    enabled,
+    staleTime: 60_000,
+    queryFn: async ({ signal }) => {
+      const years = await request<Schema<'PageAcademicYearView'>>(
+        `/admin/academic-years${pageQuery({ page: 0, size: 100 })}`, { signal },
+      );
+      const activeYear = (years.content ?? []).find((year) => year.status === 'ACTIVE');
+      const classes = await request<Schema<'PageSchoolClassView'>>(
+        `/admin/classes${pageQuery({
+          academicYearId: activeYear?.id,
+          status: 'ACTIVE',
+          page: 0,
+          size: 200,
+        })}`,
+        { signal },
+      );
+      return (classes.content ?? [])
+        .filter((item) => item.id != null)
+        .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '', 'ru', { numeric: true }));
+    },
+  });
+}
+
+/** Действующий состав класса. Архивные ученики доступ уже не получают. */
+export function useAdminClassStudents(classId: number | null) {
+  return useQuery({
+    queryKey: keys.adminClassStudents(classId ?? 0),
+    enabled: classId != null && classId > 0,
+    queryFn: async ({ signal }) => {
+      const page = await request<Schema<'PageStudentProfileView'>>(
+        `/admin/students${pageQuery({ classId: classId as number, status: 'ACTIVE', page: 0, size: 200 })}`,
+        { signal },
+      );
+      return (page.content ?? [])
+        .filter((student) => student.id != null)
+        .sort((a, b) => `${a.lastName ?? ''} ${a.firstName ?? ''}`.localeCompare(
+          `${b.lastName ?? ''} ${b.firstName ?? ''}`, 'ru', { sensitivity: 'base' },
+        ));
+    },
+  });
+}
 
 /** Load every teacher page: a class teacher must not disappear after the first page. */
 export function useAdminHomeroomTeachers(enabled: boolean) {
@@ -1094,6 +1149,53 @@ export function useAccessJournal(filters: AccessJournalFilters) {
     queryKey: keys.accessJournal(filters),
     queryFn: ({ signal }) => accessJournalApi.list(filters, signal),
     placeholderData: (previous) => previous,
+  });
+}
+
+/**
+ * Разрешения учителям выпускать код — по ученику за запрос (AUTH-BE-001 §7.1).
+ *
+ * Запроса «разрешения всего класса» на сервере нет, поэтому список класса собирается
+ * `useQueries`: у каждого ученика свой ключ, и выдача разрешения перечитывает строку
+ * одного ученика, а не таблицу. Своего свода на клиенте не держим — он разошёлся бы с
+ * сервером на первом же истёкшем сроке.
+ */
+export function useStudentCodeGrants(studentProfileIds: number[]) {
+  return useQueries({
+    queries: studentProfileIds.map((studentProfileId) => ({
+      queryKey: keys.studentCodeGrant(studentProfileId),
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        studentCodeGrantsApi.list(studentProfileId, signal),
+    })),
+  });
+}
+
+export function useGrantStudentCodeAccess() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ studentProfileId, teacherProfileId, expiresAt }: {
+      studentProfileId: number;
+      teacherProfileId: number;
+      expiresAt?: string;
+    }) => studentCodeGrantsApi.grant(studentProfileId, { teacherProfileId, expiresAt }),
+    onSuccess: (_grant, variables) => {
+      void client.invalidateQueries({ queryKey: keys.studentCodeGrant(variables.studentProfileId) });
+      // Список учеников у учителя строится по разрешениям: пока он открыт в соседней
+      // вкладке, выдача обязана его догнать.
+      void client.invalidateQueries({ queryKey: keys.teacherStudentAccess });
+    },
+  });
+}
+
+export function useRevokeStudentCodeAccess() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ studentProfileId, grantId }: { studentProfileId: number; grantId: number }) =>
+      studentCodeGrantsApi.revoke(studentProfileId, grantId),
+    onSuccess: (_void, variables) => {
+      void client.invalidateQueries({ queryKey: keys.studentCodeGrant(variables.studentProfileId) });
+      void client.invalidateQueries({ queryKey: keys.teacherStudentAccess });
+    },
   });
 }
 
