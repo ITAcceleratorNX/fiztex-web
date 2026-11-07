@@ -20,6 +20,7 @@ import {
   SoftBadge,
 } from '../components/ProfileChrome';
 import { ParentAccessCard } from '../components/AccessRecoveryCards';
+import { UnlinkRelationButton } from '../components/UnlinkRelationButton';
 import { LinkStudentModal } from '../modals/LinkStudentModal';
 import {
   archiveUser,
@@ -305,6 +306,14 @@ export function ParentProfilePage() {
                           >
                             <Pencil className="size-4" />
                           </button>
+                          <UnlinkRelationButton
+                            side="parent"
+                            parentProfileId={detail.id}
+                            studentProfileId={s.studentProfileId}
+                            parentName={name}
+                            studentName={studentName}
+                            onUnlinked={() => void reload(true)}
+                          />
                         </li>
                       );
                     })}

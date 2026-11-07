@@ -23,6 +23,7 @@ import {
   ProfileStatusBadge,
 } from '../components/ProfileChrome';
 import { StudentAccessCard } from '../components/AccessRecoveryCards';
+import { UnlinkRelationButton } from '../components/UnlinkRelationButton';
 import { AddToClassModal } from '../modals/AddToClassModal';
 import { LinkParentModal } from '../modals/LinkParentModal';
 import {
@@ -322,6 +323,14 @@ export function StudentProfilePage() {
                           >
                             <Pencil className="size-4" />
                           </button>
+                          <UnlinkRelationButton
+                            side="student"
+                            parentProfileId={p.parentProfileId}
+                            studentProfileId={detail.id}
+                            parentName={parentName}
+                            studentName={name}
+                            onUnlinked={() => void reload(true)}
+                          />
                         </li>
                       );
                     })}
