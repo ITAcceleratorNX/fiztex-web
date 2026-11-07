@@ -4,7 +4,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { FolderOpen, Paperclip, X } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
-import { Field, focusFirstInvalidField, Select, TextArea, TextInput } from '@/components/ui/Field';
+import { Field, focusFirstInvalidField, Select, TextInput } from '@/components/ui/Field';
+import { RichTextField } from '@/components/ui/RichTextField';
+import { useEmbedEditing } from '@/hooks/useEmbedEditing';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { Toggle } from '@/components/ui/Toggle';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
@@ -141,6 +143,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
     refetchOnMount: 'always',
   });
   const existing = cardQuery.data;
+  const editing = useEmbedEditing(existing?.embeds);
 
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -440,6 +443,7 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
         : `/homework/${result.id}`);
     },
     onError: (err) => {
+      editing.rememberRejection(err);
       setDraft((current) => ({ ...current, saving: false, error: err instanceof ApiError ? err.message : 'Не удалось сохранить задание' }));
     },
   });
@@ -466,6 +470,8 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
 
   function saveForm() {
     if (draftStore.get<HomeworkFormDraft>(draftKey)?.saving) return;
+    // Пока файл грузится, его маркера в описании ещё нет.
+    if (editing.uploading) return;
     if (createdId == null && !valid) {
       setValidationRequest((request) => request + 1);
       return;
@@ -685,9 +691,12 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
           required
           error={validationErrors.description}
         >
-          <TextArea
+          <RichTextField
             value={description}
-            onChange={(event) => setDescription(event.target.value)}
+            onChange={(next) => {
+              setDescription(next);
+              editing.clearRejection();
+            }}
             placeholder={
               answerFormat === 'TEST'
                 ? 'Что за тест, сколько времени занимает, чем можно пользоваться…'
@@ -695,6 +704,8 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
             }
             rows={answerFormat === 'TEST' ? 3 : 5}
             maxLength={4000}
+            invalid={Boolean(validationErrors.description)}
+            {...editing.fieldProps('description')}
           />
           <p className="mt-1.5 text-13 text-muted">
             {answerFormat === 'TEST'
@@ -921,9 +932,9 @@ function HomeworkFormSession({ mode, lessonId, editId, draftKey, prefilledClassI
         {/* Черновик уже заведён: повторяем только неприложенные материалы, не создавая дубль ДЗ. */}
         {createdId != null ? (
           <><Button variant="secondary" onClick={() => navigate(`/homework/${createdId}`)}>Открыть черновик</Button>
-            <Button onClick={saveForm} loading={busy}>Повторить добавление материалов</Button></>
+            <Button onClick={saveForm} loading={busy} disabled={editing.uploading}>Повторить добавление материалов</Button></>
         ) : (
-          <Button onClick={saveForm} loading={busy}>
+          <Button onClick={saveForm} loading={busy} disabled={editing.uploading}>
             {mode === 'edit' ? 'Сохранить' : 'Создать черновик'}
           </Button>
         )}

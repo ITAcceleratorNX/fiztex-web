@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Field, TextInput } from '@/components/ui/Field';
 import { MathText } from '@/components/ui/MathText';
+import { RichText } from '@/components/ui/RichText';
 import { QuestionFigure } from '@/components/ui/QuestionFigure';
 import { Modal } from '@/components/ui/Modal';
 import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
@@ -85,7 +86,7 @@ export function TestTemplateDetailModal({ item, origin, onClose, onReuse }: {
               <span className="text-xs font-semibold text-slate-500">Вопрос {index + 1}</span>
               <Badge tone="gray">{question.maxScore ?? 1} б.</Badge>
             </div>
-            <MathText text={question.text ?? ''} />
+            <RichText text={question.text ?? ''} embeds={template.data?.embeds} />
             <QuestionFigure imageUrl={question.imageUrl} />
             {(question.options ?? []).length > 0 && <ol className="mt-3 space-y-2 pl-5 text-sm text-slate-700">
               {(question.options ?? []).map((option, optionIndex) => <li key={optionIndex} className="list-decimal">
