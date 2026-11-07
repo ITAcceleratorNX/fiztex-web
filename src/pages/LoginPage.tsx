@@ -1,25 +1,12 @@
 import { useState, type FormEvent } from 'react';
-import {
-  Users,
-  Calendar,
-  ClipboardList,
-  Sparkles,
-  type LucideIcon,
-} from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api';
+import { ROUTES } from '@/lib/routes';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
-import { Logo, PhysTechMark } from '@/components/layout/Logo';
-import { PrivacyLinks } from '@/components/layout/PrivacyLinks';
-import { APP_NAME } from '@/lib/branding';
-
-const FEATURES: { icon: LucideIcon; label: string }[] = [
-  { icon: Users, label: 'Ученики, родители и учителя' },
-  { icon: Calendar, label: 'Расписание и дневник' },
-  { icon: ClipboardList, label: 'Вступительные тесты' },
-  { icon: Sparkles, label: 'AI-тесты и сервисы' },
-];
+import { PasswordInput } from '@/components/ui/PasswordInput';
+import { StaffAuthHeading, StaffAuthLayout } from '@/components/layout/StaffAuthLayout';
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -35,94 +22,73 @@ export function LoginPage() {
     try {
       await login(email, password);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Не удалось войти');
+      // Сервер на все отказы отвечает одинаково (§9): какой именно реквизит не подошёл
+      // и существует ли вообще такой человек в школе — не его дело сообщать.
+      setError(
+        err instanceof ApiError
+          ? 'Неверный телефон или пароль. Проверьте данные или восстановите пароль.'
+          : 'Не удалось войти. Проверьте соединение и попробуйте ещё раз.',
+      );
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="flex min-h-screen">
-      <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-navy-700 p-12 lg:flex">
-        <PhysTechMark className="pointer-events-none absolute -right-16 top-1/2 h-[520px] w-[520px] -translate-y-1/2 text-white/[0.06]" />
-        <Logo className="w-[17.5rem] max-w-full h-auto" />
-        <div className="relative max-w-lg">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-300/90">
-            Административная платформа
-          </p>
-          <h2 className="mt-3 text-3xl font-bold leading-tight text-white">
-            Всё управление школой — в одном месте
-          </h2>
-          <p className="mt-4 text-slate-300">
-            {APP_NAME} объединяет учебные процессы, приём, коммуникацию с семьями и внутренние сервисы. {APP_NAME}{' '}
-            для администраторов и сотрудников.
-          </p>
+    <StaffAuthLayout>
+      <form onSubmit={onSubmit} noValidate>
+        <StaffAuthHeading title="Добро пожаловать!" subtitle="Войдите в свою учётную запись" />
 
-          <ul className="mt-8 grid grid-cols-2 gap-3">
-            {FEATURES.map(({ icon: Icon, label }) => (
-              <li
-                key={label}
-                className="flex items-center gap-3 rounded-xl bg-white/5 px-4 py-3 ring-1 ring-white/10"
-              >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-500/20 text-brand-300">
-                  <Icon className="h-4 w-4" />
-                </span>
-                <span className="text-sm font-medium text-slate-200">{label}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <p className="relative text-sm text-slate-400">{APP_NAME}</p>
-      </div>
+        <div className="mt-7 space-y-5">
+          <Field label="Телефон или email" size="lg">
+            <TextInput
+              appearance="filled"
+              type="text"
+              autoComplete="username"
+              placeholder="+7 700 000 00 00"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </Field>
 
-      <div className="flex w-full items-center justify-center bg-slate-50 p-6 lg:w-1/2">
-        <form onSubmit={onSubmit} className="w-full max-w-sm">
-          <div className="mb-8 lg:hidden">
-            <Logo className="w-60 max-w-full h-auto" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900">Вход в {APP_NAME}</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Войдите под учётной записью администратора школы.
-          </p>
-
-          <div className="mt-6 space-y-4">
-            <Field label="Телефон / email" required>
-              <TextInput
-                type="text"
-                autoComplete="username"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </Field>
-            <Field label="Пароль" required>
-              <TextInput
-                type="password"
-                autoComplete="current-password"
+          <div>
+            {/* Красной рамкой — только пароль, как в W2: сервер не говорит, какой из двух
+                реквизитов не подошёл, а логин человек обычно набрал верно. */}
+            <Field label="Пароль" size="lg">
+              <PasswordInput
+                appearance="filled"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+                onChange={setPassword}
+                placeholder="Введите пароль"
+                autoComplete="current-password"
+                invalid={Boolean(error)}
               />
             </Field>
-
             {error && (
-              <div role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-100">
+              <p role="alert" className="mt-2 text-13 leading-snug text-red-600">
                 {error}
-              </div>
+              </p>
             )}
-
-            <Button type="submit" className="w-full" loading={loading}>
-              Войти
-            </Button>
+            <div className="mt-3 text-right">
+              <Link
+                to={ROUTES.staffForgotPassword}
+                className="text-sm font-medium text-brand-500 transition hover:text-brand-600"
+              >
+                Забыли пароль?
+              </Link>
+            </div>
           </div>
+        </div>
 
-          <p className="mt-6 text-center text-xs text-slate-400">
-            Доступ выдаёт администратор школы.
-          </p>
+        <Button type="submit" size="lg" className="mt-5 w-full" loading={loading}>
+          Войти
+        </Button>
 
-          <PrivacyLinks className="mt-3 text-center" />
-        </form>
-      </div>
-    </div>
+        <p className="mt-5 text-center text-sm text-planning-subtle">
+          Доступ выдаёт администратор школы.
+        </p>
+      </form>
+    </StaffAuthLayout>
   );
 }

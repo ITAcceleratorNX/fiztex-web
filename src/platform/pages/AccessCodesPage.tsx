@@ -1,10 +1,19 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Download } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { DataTable } from '@/components/ui/DataTable';
+import { Pagination } from '@/components/ui/Pagination';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Select } from '@/components/ui/Field';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { useAccessRequestStats } from '@/hooks/queries';
+import { AccessRequestsPanel } from '@/pages/access/AccessRequestsPanel';
+import { AccessJournalPanel } from '@/pages/access/AccessJournalPanel';
+import { CodeGrantsPanel } from '@/pages/access/CodeGrantsPanel';
+import { IssuedSecretModal } from '../components/IssuedSecretModal';
 import { useToast } from '@/context/ToastContext';
 import { ACCOUNT_STATUS_LABELS, ROLE_LABELS } from '../labels';
 import {
@@ -14,7 +23,8 @@ import {
   resetAccess,
   resetPin,
 } from '../services';
-import type { AccountRole, PlatformUser } from '../types';
+import type { AccountRole, AccountStatus, PlatformUser } from '../types';
+import type { UsersPageResult } from '../services/users';
 import { platformErrorMessage } from '../platformErrorMessage';
 
 type PendingAction = {
@@ -44,32 +54,123 @@ const ACTION_COPY: Record<
   },
 };
 
+type SectionTab = 'codes' | 'requests' | 'grants' | 'journal';
+
+/** Подзаголовок шапки меняется вместе с вкладкой (D0 / D1): он объясняет, что под ней. */
+const TAB_DESCRIPTIONS: Record<SectionTab, string> = {
+  codes: 'Для ученика доступны PIN и персональный код. Родителю или учителю можно сбросить доступ, чтобы выдать новый код активации.',
+  requests: 'Ученики и родители, которые отправили заявку из приложения',
+  grants: 'Кому из учителей открыта выдача персональных кодов. Права у роли «учитель» нет: основание — разрешение на конкретного ученика, и выдаёте его здесь. Сброс PIN остаётся за администратором.',
+  journal: 'Кто и что делал с доступом: заявки, персональные коды, PIN, временные пароли, смена телефона и разрешения учителям. Записи не удаляются и не правятся.',
+};
+
+const TABS: SectionTab[] = ['codes', 'requests', 'grants', 'journal'];
+
+/**
+ * Вкладки раздела (макет D0). Счётчик на вкладке — только нерассмотренные заявки:
+ * вкладка зовёт к работе, а одобренные и отклонённые её уже не требуют.
+ *
+ * Шапка своя, а не общая `AppHeader`: у раздела подзаголовок под каждую вкладку.
+ */
 export function AccessCodesPage() {
+  const [params, setParams] = useSearchParams();
+  const tabParam = params.get('tab');
+  const tab: SectionTab = TABS.includes(tabParam as SectionTab) ? (tabParam as SectionTab) : 'codes';
+  const stats = useAccessRequestStats();
+  const pending = stats.data?.pending ?? 0;
+
+  return (
+    <div className="flex flex-col gap-5">
+    <PageHeader eyebrow="Управление школой" title="Доступы / коды" description={TAB_DESCRIPTIONS[tab]} />
+    <Tabs
+      value={tab}
+      variant="navy"
+      // Фильтры вкладок свои и несовместимые (`stage` у заявок, `event` и даты у журнала),
+      // поэтому переключение начинает адрес заново, а не тащит чужие параметры.
+      onValueChange={(value) => {
+        const next = new URLSearchParams();
+        if (value !== 'codes') next.set('tab', value);
+        setParams(next);
+      }}
+    >
+      <TabsList>
+        <TabsTrigger value="codes">Коды и PIN</TabsTrigger>
+        <TabsTrigger value="requests" count={pending}>Заявки на доступ</TabsTrigger>
+        <TabsTrigger value="grants">Разрешения учителям</TabsTrigger>
+        <TabsTrigger value="journal">Журнал доступа</TabsTrigger>
+      </TabsList>
+      <TabsContent value={tab} className="mt-5 focus-visible:outline-none">
+        {tab === 'requests' && <AccessRequestsPanel />}
+        {tab === 'grants' && <CodeGrantsPanel />}
+        {tab === 'journal' && <AccessJournalPanel />}
+        {tab === 'codes' && <CodesPanel />}
+      </TabsContent>
+    </Tabs>
+    </div>
+  );
+}
+
+/** Состояние аккаунта в реестре — цветом слова, без плашки (D0). */
+const STATUS_TONE: Record<AccountStatus, string> = {
+  ACTIVE: 'text-planning-success-fg',
+  NOT_ACTIVATED: 'text-amber-700',
+  BLOCKED: 'text-red-700',
+  ARCHIVED: 'text-planning-subtle',
+};
+
+const PAGE_SIZE = 25;
+
+const CODE_NOTE = 'Прежний код перестал работать. PIN у ученика остался прежним.';
+const RESET_NOTE = 'Человек войдёт по нему и задаст новый пароль. Прежние сессии завершены.';
+
+function CodesPanel() {
   const toast = useToast();
+  const [issued, setIssued] = useState<{ title: string; value: string; note: string } | null>(null);
   const [query, setQuery] = useState('');
   const [role, setRole] = useState<AccountRole | 'ALL'>('ALL');
-  const [users, setUsers] = useState<PlatformUser[]>([]);
+  const [page, setPage] = useState(0);
+  const [result, setResult] = useState<UsersPageResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [busy, setBusy] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  // Ответ на устаревший запрос (быстрое листание, ввод в поиске) не должен затереть свежий.
+  const requestSeq = useRef(0);
+
+  const users = result?.users ?? [];
+  const totalPages = result?.totalPages ?? 0;
 
   const reload = useCallback(async () => {
+    const seq = ++requestSeq.current;
     setLoading(true);
     setError(null);
     try {
-      setUsers(await listAccessCodes({ query, role }));
+      const next = await listAccessCodes({ query, role, page, size: PAGE_SIZE });
+      if (seq === requestSeq.current) setResult(next);
     } catch (err) {
-      setError(platformErrorMessage(err, 'Не удалось загрузить данные доступа. Попробуйте ещё раз.'));
+      if (seq === requestSeq.current) {
+        setError(platformErrorMessage(err, 'Не удалось загрузить данные доступа. Попробуйте ещё раз.'));
+      }
     } finally {
-      setLoading(false);
+      if (seq === requestSeq.current) setLoading(false);
     }
-  }, [query, role]);
+  }, [query, role, page]);
 
   useEffect(() => {
     const handle = window.setTimeout(() => void reload(), query ? 250 : 0);
     return () => window.clearTimeout(handle);
   }, [reload, query]);
+
+  // Страница опустела (например, после смены фильтра у соседа по вкладке) — на последнюю.
+  useEffect(() => {
+    if (!loading && totalPages > 0 && page >= totalPages) setPage(totalPages - 1);
+  }, [loading, page, totalPages]);
+
+  function changePage(next: number) {
+    setPage(next);
+    rootRef.current?.scrollIntoView?.({ block: 'nearest' });
+  }
 
   async function confirmAction() {
     if (!pending) return;
@@ -80,13 +181,14 @@ export function AccessCodesPage() {
         toast.success(res.message);
       } else if (pending.type === 'reissue') {
         const res = await reissueCode(pending.user.id);
-        toast.success(res.message);
+        // Код показывается окном, а не тостом: сервер отдаёт его один раз.
+        setIssued({ title: 'Персональный код выдан', value: res.issuedCode ?? '', note: CODE_NOTE });
       } else {
         if (pending.user.role !== 'PARENT' && pending.user.role !== 'TEACHER') {
           throw new Error('Сброс доступа только для родителя или учителя');
         }
         const res = await resetAccess(pending.user.id, pending.user.role);
-        toast.success(res.message);
+        setIssued({ title: 'Код восстановления выдан', value: res.issuedCode ?? '', note: RESET_NOTE });
       }
       setPending(null);
       await reload();
@@ -114,21 +216,21 @@ export function AccessCodesPage() {
   }
 
   return (
-    <div>
-      <p className="mb-4 max-w-2xl text-sm text-slate-500">
-        Для ученика доступны PIN и персональный код. Родителю или учителю можно сбросить доступ,
-        чтобы выдать новый код активации.
-      </p>
-
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+    <div ref={rootRef} className="flex scroll-mt-6 flex-col gap-5">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
         <SearchInput
           className="flex-1"
           value={query}
-          onChange={setQuery}
+          onChange={(value) => { setQuery(value); setPage(0); }}
           placeholder="Поиск по ФИО"
         />
-        <div className="lg:w-44">
-          <Select value={role} onChange={(e) => setRole(e.target.value as AccountRole | 'ALL')}>
+        <div className="lg:w-filter-select">
+          <Select
+            aria-label="Роль"
+            className="h-11"
+            value={role}
+            onChange={(e) => { setRole(e.target.value as AccountRole | 'ALL'); setPage(0); }}
+          >
             <option value="ALL">Все роли</option>
             <option value="STUDENT">Ученик</option>
             <option value="PARENT">Родитель</option>
@@ -136,71 +238,73 @@ export function AccessCodesPage() {
             <option value="ADMIN">Админ</option>
           </Select>
         </div>
-        <Button variant="secondary" icon={<Download className="h-4 w-4" />} onClick={() => void handleExport()}>
+        <Button variant="secondary" className="shrink-0" onClick={() => void handleExport()}>
           CSV
         </Button>
       </div>
 
-      {loading && <LoadingBlock />}
+      {/* Первая загрузка — спиннер; дальше прежняя страница держится приглушённой, пока
+          не придёт следующая, — таблица не схлопывается при каждом листании и вводе. */}
+      {loading && !result && !error && <div className="card"><LoadingBlock /></div>}
       {error && !loading && <ErrorBlock message={error} onRetry={() => void reload()} />}
-      {!loading && !error && users.length === 0 && (
+      {!loading && !error && result && users.length === 0 && (
         <div className="card">
           <EmptyBlock title="Нет пользователей" description="Создайте аккаунт на странице Пользователи." />
         </div>
       )}
-      {!loading && !error && users.length > 0 && (
-        <div className="card overflow-hidden p-0">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-100 bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-3 font-semibold">ФИО</th>
-                <th className="px-4 py-3 font-semibold">Роль</th>
-                <th className="px-4 py-3 font-semibold">Статус</th>
-                <th className="px-4 py-3 font-semibold">Действия</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id} className="border-b border-slate-50 last:border-0">
-                  <td className="px-4 py-3 font-medium text-slate-900">{user.fullName}</td>
-                  <td className="px-4 py-3 text-slate-600">{ROLE_LABELS[user.role]}</td>
-                  <td className="px-4 py-3 text-slate-600">{ACCOUNT_STATUS_LABELS[user.status]}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
-                      {user.role === 'STUDENT' && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setPending({ type: 'resetPin', user })}
-                          >
-                            Сброс PIN
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setPending({ type: 'reissue', user })}
-                          >
-                            Новый код
-                          </Button>
-                        </>
-                      )}
-                      {(user.role === 'PARENT' || user.role === 'TEACHER') && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setPending({ type: 'resetAccess', user })}
-                        >
-                          Сброс доступа
+      {!error && users.length > 0 && (
+        <div aria-busy={loading} className={loading ? 'pointer-events-none opacity-60 transition-opacity' : 'transition-opacity'}>
+        <DataTable label="Коды и PIN" appearance="registry">
+          <thead>
+            <tr>
+              <th scope="col">ФИО</th>
+              <th scope="col" className="w-36">Роль</th>
+              <th scope="col" className="w-40">Статус</th>
+              <th scope="col" className="w-56">Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user.id}>
+                <td className="font-semibold">{user.fullName}</td>
+                <td>{ROLE_LABELS[user.role]}</td>
+                <td className={STATUS_TONE[user.status]}>{ACCOUNT_STATUS_LABELS[user.status]}</td>
+                <td>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {user.role === 'STUDENT' && (
+                      <>
+                        <Button variant="link" size="inline" onClick={() => setPending({ type: 'resetPin', user })}>
+                          Сброс PIN
                         </Button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                        <Button variant="link" size="inline" onClick={() => setPending({ type: 'reissue', user })}>
+                          Новый код
+                        </Button>
+                      </>
+                    )}
+                    {(user.role === 'PARENT' || user.role === 'TEACHER') && (
+                      <Button variant="link" size="inline" onClick={() => setPending({ type: 'resetAccess', user })}>
+                        Сброс доступа
+                      </Button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </DataTable>
         </div>
+      )}
+
+      {!error && result && (
+        <Pagination
+          page={page}
+          totalPages={result.totalPages}
+          totalElements={result.totalElements}
+          pageSize={PAGE_SIZE}
+          itemForms={['аккаунта', 'аккаунтов', 'аккаунтов']}
+          label="Страницы кодов и PIN"
+          onPageChange={changePage}
+        />
       )}
 
       <ConfirmDialog
@@ -212,6 +316,14 @@ export function AccessCodesPage() {
         danger={pending ? ACTION_COPY[pending.type].danger : false}
         loading={busy}
         onConfirm={() => void confirmAction()}
+      />
+
+      <IssuedSecretModal
+        open={issued !== null}
+        title={issued?.title ?? ''}
+        value={issued?.value ?? null}
+        note={issued?.note ?? ''}
+        onClose={() => setIssued(null)}
       />
     </div>
   );

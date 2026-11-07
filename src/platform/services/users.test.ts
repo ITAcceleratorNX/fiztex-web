@@ -7,8 +7,14 @@ vi.mock('@/lib/api', async () => {
   return { ...actual, request };
 });
 
-const { changeEmployeeRole, findAccountByPhone, resetEmployeeAccess, setAccountActive } =
-  await import('./users');
+const {
+  blockUser,
+  changeEmployeeRole,
+  findAccountByPhone,
+  resetEmployeeAccess,
+  setAccountActive,
+  unblockUser,
+} = await import('./users');
 
 const account = (over: Record<string, unknown> = {}) => ({
   id: 9,
@@ -60,6 +66,28 @@ describe('управление сотрудником (SERVICE-FE-004 §3, SERVI
 
     await setAccountActive('9', true);
     expect(lastCall()[0]).toBe('/admin/accounts/9/unblock');
+  });
+
+  /**
+   * Регресс: обе команды дочитывали аккаунт, чтобы вернуть обновлённую строку, и искали
+   * его в первых двухстах записях `/admin/accounts`. Всё, что не попало в это окно (а в
+   * школе 247 аккаунтов), «не находилось»: разблокировка показывала «Пользователь не
+   * найден» поверх успешно выполненной команды. Возвращать там нечего — экраны
+   * перечитывают данные сами.
+   */
+  it('блокировка и разблокировка не дочитывают список аккаунтов', async () => {
+    request.mockResolvedValue(undefined);
+
+    await blockUser('219');
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(lastCall()[0]).toBe('/admin/accounts/219/block');
+
+    request.mockReset();
+    request.mockResolvedValue(undefined);
+
+    await expect(unblockUser('219')).resolves.toBeUndefined();
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(lastCall()[0]).toBe('/admin/accounts/219/unblock');
   });
 
   /**

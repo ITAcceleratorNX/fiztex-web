@@ -22,7 +22,15 @@ interface AuthContextValue {
   admin: Admin | null;
   isAuthenticated: boolean;
   expiredAccountEmail: string | null;
+  /**
+   * Временный пароль, с которым человек только что вошёл. Живёт в памяти вкладки и
+   * нигде не сохраняется: экран смены пароля обязан прислать его как `currentPassword`,
+   * но класть секрет в `localStorage` ради одного запроса нельзя. После перезагрузки
+   * страницы он теряется — экран смены тогда спрашивает его полем.
+   */
+  temporarySecret: string | null;
   login: (email: string, password: string) => Promise<Admin>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<Admin>;
   logout: () => void;
 }
 
@@ -86,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [session, setSession] = useState(() => createSession(loadProfile()));
   const [expiredAccountEmail, setExpiredAccountEmail] = useState<string | null>(null);
+  const [temporarySecret, setTemporarySecret] = useState<string | null>(null);
   const sessionRef = useRef(session);
   const { admin } = session;
 
@@ -115,9 +124,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Возвращает ответ входа целиком, чтобы инициатор при необходимости мог проверить
   // роль и идентичность аккаунта до следующего рендера контекста.
   const login = useCallback(async (email: string, password: string) => {
-    const result = await api.login(email, password);
+    const result = await api.signIn(email, password);
     setExpiredAccountEmail(null);
+    setTemporarySecret(result.mustChangePassword ? password : null);
     persist(result);
+    replaceSession(result);
+    return result;
+  }, [replaceSession]);
+
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    const email = sessionRef.current.admin?.email ?? '';
+    const result = await api.changePassword(email, currentPassword, newPassword);
+    setTemporarySecret(null);
+    persist(result);
+    // Сервер отозвал сессии и выдал новый токен, поэтому сессия пересоздаётся целиком:
+    // кэш запросов, собранный под 403 `PASSWORD_CHANGE_REQUIRED`, переиспользовать нельзя.
     replaceSession(result);
     return result;
   }, [replaceSession]);
@@ -131,6 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       invalidateServerSession(token);
     }
     setExpiredAccountEmail(null);
+    setTemporarySecret(null);
     clearLocalSession();
     replaceSession(null);
     // Explicit logout must not leave the protected page as the next account's
@@ -139,8 +161,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [navigate, replaceSession]);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ admin, isAuthenticated: Boolean(admin), expiredAccountEmail, login, logout }),
-    [admin, expiredAccountEmail, login, logout],
+    () => ({
+      admin,
+      isAuthenticated: Boolean(admin),
+      expiredAccountEmail,
+      temporarySecret,
+      login,
+      changePassword,
+      logout,
+    }),
+    [admin, expiredAccountEmail, temporarySecret, login, changePassword, logout],
   );
 
   return (

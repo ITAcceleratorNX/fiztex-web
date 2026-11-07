@@ -21,6 +21,7 @@ export function Field({
   hint,
   error,
   className,
+  size = 'md',
   children,
 }: {
   label: string;
@@ -28,6 +29,11 @@ export function Field({
   hint?: string;
   error?: string;
   className?: string;
+  /**
+   * `lg` — форма входа (Figma `phyztex` 2460:4665): подпись 14/600 без звёздочки (на экране
+   * входа обязательны все поля), ошибка 13 px красным под полем (2460:4715).
+   */
+  size?: 'md' | 'lg';
   children: ReactNode;
 }) {
   const id = useId();
@@ -38,7 +44,7 @@ export function Field({
 
   return (
     <div className={className}>
-      <label id={labelId} htmlFor={id} className={cx('label-base', required && 'label-required')}>
+      <label id={labelId} htmlFor={id} className={cx(size === 'lg' ? 'label-lg' : 'label-base', size === 'md' && required && 'label-required')}>
         {label}
       </label>
       <FieldContext.Provider value={{
@@ -50,8 +56,8 @@ export function Field({
       }}>
         {children}
       </FieldContext.Provider>
-      {hint && <p id={hintId} className="mt-1 text-xs text-slate-400">{hint}</p>}
-      {error && <p id={errorId} className="mt-1 text-xs text-red-500">{error}</p>}
+      {hint && <p id={hintId} className={size === 'lg' ? 'mt-2 text-13 leading-snug text-planning-subtle' : 'mt-1 text-xs text-slate-400'}>{hint}</p>}
+      {error && <p id={errorId} className={size === 'lg' ? 'mt-2 text-13 leading-snug text-red-600' : 'mt-1 text-xs text-red-500'}>{error}</p>}
     </div>
   );
 }
@@ -59,6 +65,7 @@ export function Field({
 export function TextInput({
   className,
   error,
+  appearance = 'default',
   id,
   required,
   'aria-label': ariaLabel,
@@ -67,7 +74,11 @@ export function TextInput({
   'aria-invalid': ariaInvalid,
   'aria-required': ariaRequired,
   ...props
-}: InputHTMLAttributes<HTMLInputElement> & { error?: boolean }) {
+}: InputHTMLAttributes<HTMLInputElement> & {
+  error?: boolean;
+  /** `filled` — серое поле без рамки высотой 54, как на экранах входа (2460:4665). */
+  appearance?: 'default' | 'filled';
+}) {
   const fieldProps = useFieldControlProps({
     id,
     ariaLabel,
@@ -79,7 +90,11 @@ export function TextInput({
 
   return (
     <input
-      className={cx('input-base', error && 'border-red-300 focus:border-red-400 focus:ring-red-300/30', className)}
+      className={cx(
+        appearance === 'filled' ? 'input-filled' : 'input-base',
+        error && (appearance === 'filled' ? 'input-filled-invalid' : 'border-red-300 focus:border-red-400 focus:ring-red-300/30'),
+        className,
+      )}
       {...props}
       id={fieldProps.id}
       aria-label={ariaLabel}

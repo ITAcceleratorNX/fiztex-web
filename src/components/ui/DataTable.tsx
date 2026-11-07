@@ -2,10 +2,22 @@ import type { ComponentProps, ReactNode } from 'react';
 import { cx } from '@/lib/format';
 import { ChevronDown } from 'lucide-react';
 
-/** Semantic, horizontally scrollable table shared by plan review and progress. */
-export function DataTable({ children, label, appearance = 'default' }: { children: ReactNode; label: string; appearance?: 'default' | 'planning' | 'planning-list' }) {
-  return <div tabIndex={0} role="region" aria-label={label} className={cx('overflow-x-auto border bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700', appearance !== 'default' ? 'rounded-planning-panel border-planning-line' : 'rounded-xl border-line')}>
-    <table aria-label={label} className={cx('w-full border-collapse text-left text-13', appearance !== 'default' ? 'min-w-planning-table text-planning-ink [&_td]:planning-table-cell [&_th[scope=col]]:planning-table-head' : 'text-ink', appearance === 'planning-list' && '[&_td]:px-4 [&_td]:py-3.5 [&_td]:text-sm')}>{children}</table>
+/**
+ * Semantic, horizontally scrollable table shared by plan review and progress.
+ *
+ * `registry` — реестр раздела (Figma `phyztex` 2460:1845 «Коды и PIN», 2460:1979 «Заявки»):
+ * радиус 16, белая шапка, у последней строки нет нижней черты. Ячейки — обычные `<th scope="col">`
+ * и `<td>`, оформление приходит отсюда.
+ */
+export function DataTable({ children, label, appearance = 'default' }: { children: ReactNode; label: string; appearance?: 'default' | 'planning' | 'planning-list' | 'registry' }) {
+  const registry = appearance === 'registry';
+  const planning = appearance === 'planning' || appearance === 'planning-list';
+  return <div tabIndex={0} role="region" aria-label={label} className={cx('overflow-x-auto border bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700', registry ? 'rounded-2xl border-planning-line' : planning ? 'rounded-planning-panel border-planning-line' : 'rounded-xl border-line')}>
+    <table aria-label={label} className={cx('w-full border-collapse text-left text-13',
+      planning && 'min-w-planning-table text-planning-ink [&_td]:planning-table-cell [&_th[scope=col]]:planning-table-head',
+      registry && 'min-w-planning-table text-planning-ink [&_td]:registry-table-cell [&_th[scope=col]]:registry-table-head [&_tbody_tr:last-child_td]:border-b-0',
+      appearance === 'default' && 'text-ink',
+      appearance === 'planning-list' && '[&_td]:px-4 [&_td]:py-3.5 [&_td]:text-sm')}>{children}</table>
   </div>;
 }
 export function TableGroupRow({ columns, children, expanded, onToggle, summary }: { columns: number; children: ReactNode; expanded: boolean; onToggle: () => void; summary?: ReactNode }) {

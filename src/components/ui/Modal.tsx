@@ -1,7 +1,10 @@
 import {
+  useCallback,
+  useEffect,
   useId,
   useLayoutEffect,
   useRef,
+  useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from 'react';
@@ -15,16 +18,24 @@ interface ModalProps {
   subtitle?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'comment' | 'planning' | 'planning-version-upload' | 'planning-confirm' | 'planning-topic';
-  /** Compact composer layout from Figma: no separator between header and field. */
-  appearance?: 'standard' | 'composer' | 'planning' | 'planning-wide';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'comment' | 'planning' | 'planning-version-upload' | 'planning-confirm' | 'planning-topic' | 'drawer';
+  /**
+   * Compact composer layout from Figma: no separator between header and field.
+   *
+   * `drawer` — шторка по макету `phyztex` T1–T3 (2460:3543): с `placement="right"` и `size="drawer"`
+   * панель 780 со скруглением 16 сверху слева, ровная вуаль без размытия, поля 24/28, шапка по
+   * центру строки и простой «×» без рамки.
+   */
+  appearance?: 'standard' | 'composer' | 'planning' | 'planning-wide' | 'drawer';
   /** Keep the header/footer visible and scroll only the contents of a long editor. */
   scrollable?: boolean;
   /** Reserve viewport space for a virtual keyboard. */
   bottomInset?: number;
   /**
    * `right` — боковая шторка во всю высоту (Figma «Шторка ученика» 2196:22570): тот же
-   * диалог с ловушкой фокуса и Esc, но прижат к правому краю.
+   * диалог с ловушкой фокуса и Esc, но прижат к правому краю. Выезжает из-за края, а на
+   * закрытие (крестик, Esc, фон) сначала уезжает обратно и только потом зовёт `onClose` —
+   * поэтому `onClose` обязан действительно закрыть окно.
    */
   placement?: 'center' | 'right';
   /** Кнопки шапки слева от «Закрыть» — например, листание соседних записей. */
@@ -38,7 +49,7 @@ type ModalEntry = {
   close: () => void;
 };
 
-const sizes = { sm: 'max-w-md', md: 'max-w-xl', lg: 'max-w-3xl', xl: 'max-w-4xl', '2xl': 'max-w-5xl', comment: 'max-w-comment-dialog', planning: 'max-w-planning-dialog', 'planning-version-upload': 'max-w-planning-version-upload', 'planning-confirm': 'max-w-planning-confirm', 'planning-topic': 'max-w-planning-topic' };
+const sizes = { sm: 'max-w-md', md: 'max-w-xl', lg: 'max-w-3xl', xl: 'max-w-4xl', '2xl': 'max-w-5xl', comment: 'max-w-comment-dialog', planning: 'max-w-planning-dialog', 'planning-version-upload': 'max-w-planning-version-upload', 'planning-confirm': 'max-w-planning-confirm', 'planning-topic': 'max-w-planning-topic', drawer: 'max-w-drawer' };
 const focusableSelector = [
   'a[href]',
   'button',
@@ -48,6 +59,21 @@ const focusableSelector = [
   '[contenteditable="true"]',
   '[tabindex]:not([tabindex="-1"])',
 ].join(',');
+
+/**
+ * Запас к длительности `animate-drawer-out` (0,2 с): если `animationend` не придёт —
+ * вкладка в фоне, анимацию прервали, — шторка всё равно закроется.
+ */
+const DRAWER_EXIT_FALLBACK_MS = 400;
+
+/**
+ * Анимировать ли уход шторки. Только если пользователь не просил меньше движения — и только
+ * там, где это вообще можно узнать: без `matchMedia` (jsdom) окно закрывается сразу, как раньше.
+ */
+function drawerExitAnimated() {
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
+}
 
 const modalStack: ModalEntry[] = [];
 const originalInert = new Map<HTMLElement, boolean>();
@@ -259,6 +285,7 @@ export function Modal({
   const right = placement === 'right';
   const planning = appearance === 'planning' || appearance === 'planning-wide';
   const wide = appearance === 'planning-wide';
+  const drawer = appearance === 'drawer';
   const titleId = useId();
   const subtitleId = useId();
   const layerRef = useRef<HTMLDivElement>(null);
@@ -268,11 +295,43 @@ export function Modal({
   const openCycleRef = useRef(false);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
+  // Уход шторки: `leaving` — уезжает, `done` — `onClose` уже позван, ждём, пока родитель
+  // закроет окно. Состояние `closing` не сбрасывается до закрытия: верни его раньше — шторка
+  // на кадр встала бы на место, пока родитель размонтирует её.
+  const [closing, setClosing] = useState(false);
+  const exitRef = useRef<'idle' | 'leaving' | 'done'>('idle');
+
+  /** Закрыть по запросу самого окна: крестик, Esc, клик по фону. */
+  const requestClose = useCallback(() => {
+    if (exitRef.current !== 'idle') return;
+    if (!right || !drawerExitAnimated()) {
+      closeRef.current();
+      return;
+    }
+    exitRef.current = 'leaving';
+    setClosing(true);
+  }, [right]);
+  const requestCloseRef = useRef(requestClose);
+  requestCloseRef.current = requestClose;
+
+  const finishClose = useCallback(() => {
+    if (exitRef.current !== 'leaving') return;
+    exitRef.current = 'done';
+    closeRef.current();
+  }, []);
+
+  useEffect(() => {
+    if (!closing) return undefined;
+    const timer = window.setTimeout(finishClose, DRAWER_EXIT_FALLBACK_MS);
+    return () => window.clearTimeout(timer);
+  }, [closing, finishClose]);
 
   useLayoutEffect(() => {
     if (!open) {
       openCycleRef.current = false;
       openerRef.current = null;
+      exitRef.current = 'idle';
+      setClosing(false);
       return;
     }
     if (!layerRef.current || !dialogRef.current) return;
@@ -284,7 +343,7 @@ export function Modal({
       layer: layerRef.current,
       dialog: dialogRef.current,
       previousFocus: openerRef.current,
-      close: () => closeRef.current(),
+      close: () => requestCloseRef.current(),
     };
     entryRef.current = entry;
     const unregister = registerModal(entry);
@@ -302,15 +361,18 @@ export function Modal({
       data-modal-layer
       onKeyDown={(event) => onDialogKeyDown(entryRef.current, event)}
       style={bottomInset ? { bottom: bottomInset } : undefined}
+      // `!m-0`: окно рисуется там, где его объявили, и внутри `space-y-*` слой получал отступ
+      // сверху — шторка «Моего класса» не доходила до верха окна на 16 px.
       className={cx(
-        'fixed inset-0 z-50 flex',
+        'fixed inset-0 z-50 flex !m-0',
         right ? 'justify-end overflow-hidden' : 'justify-center p-4 sm:p-8',
         !right && (scrollable ? 'items-center overflow-hidden' : 'items-start overflow-y-auto'),
       )}
     >
       <div
-        className={cx('fixed inset-0 bg-slate-900/40 animate-fade-in', !planning && 'backdrop-blur-sm')}
-        onClick={onClose}
+        className={cx('fixed inset-0', drawer ? 'bg-drawer-scrim' : 'bg-slate-900/40', !planning && !drawer && 'backdrop-blur-sm',
+          closing ? 'animate-fade-out' : 'animate-fade-in', right && 'motion-reduce:animate-none')}
+        onClick={requestClose}
         aria-hidden="true"
       />
       <div
@@ -320,17 +382,23 @@ export function Modal({
         aria-labelledby={titleId}
         aria-describedby={subtitle ? subtitleId : undefined}
         tabIndex={-1}
+        // Конец ухода шторки. Своё событие только у самой шторки: `animationend` всплывает и
+        // от анимаций содержимого, а конец въезда `finishClose` пропускает сам.
+        onAnimationEnd={(event) => { if (event.target === event.currentTarget) finishClose(); }}
         className={cx(
           right
-            ? 'relative flex h-full w-full flex-col overflow-hidden bg-white shadow-pop animate-fade-in'
+            ? cx('relative flex h-full w-full flex-col overflow-hidden bg-white shadow-pop motion-reduce:animate-none',
+              drawer && 'rounded-tl-2xl',
+              closing ? 'animate-drawer-out' : 'animate-drawer-in')
             : 'relative my-auto w-full bg-white shadow-pop animate-scale-in',
           !right && (wide ? 'rounded-planning-modal' : planning ? 'rounded-planning-panel' : 'rounded-2xl'),
           !right && scrollable && 'flex max-h-full flex-col overflow-hidden',
           sizes[size],
         )}
       >
-        <div className={cx('flex shrink-0 items-start justify-between gap-3', wide ? 'px-4 pt-7 sm:px-7' : 'px-4 sm:px-6',
-          wide ? '' : appearance === 'composer' ? 'pt-6 pb-5' : right ? 'py-5' : 'border-b border-line py-5')}>
+        <div className={cx('flex shrink-0 justify-between', drawer ? 'items-center gap-3.5' : 'items-start gap-3',
+          wide || drawer ? 'px-4 sm:px-7' : 'px-4 sm:px-6',
+          wide ? 'pt-7' : drawer ? 'pb-5 pt-6' : appearance === 'composer' ? 'pt-6 pb-5' : right ? 'py-5' : 'border-b border-line py-5')}>
           <div className="min-w-0 flex-1">
             <h2 id={titleId} className={cx('break-words font-bold text-ink', wide ? 'text-xl' : 'text-lg', appearance === 'composer' && 'leading-snug')}>{title}</h2>
             {subtitle && <p id={subtitleId} className={cx('mt-1 break-words text-muted', appearance === 'composer' ? 'text-xs leading-tight' : 'text-sm leading-relaxed')}>{subtitle}</p>}
@@ -340,14 +408,14 @@ export function Modal({
             data-modal-close
             type="button"
             aria-label="Закрыть окно"
-            onClick={onClose}
+            onClick={requestClose}
             className={cx('flex shrink-0 items-center justify-center text-muted transition hover:bg-neutral-bg hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 focus-visible:ring-offset-2',
-              appearance === 'composer' ? 'size-8 rounded-lg border border-line bg-slate-50' : planning ? 'size-8 rounded-full bg-slate-100' : 'size-10 rounded-lg')}
+              appearance === 'composer' ? 'size-8 rounded-lg border border-line bg-slate-50' : planning ? 'size-8 rounded-full bg-slate-100' : drawer ? 'size-9 rounded-lg text-planning-muted' : 'size-10 rounded-lg')}
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <div className={cx('min-w-0 px-4', wide ? 'sm:px-7' : 'sm:px-6', appearance === 'composer' ? 'pb-6' : right ? 'pb-5' : 'py-5',
+        <div className={cx('min-w-0 px-4', wide || drawer ? 'sm:px-7' : 'sm:px-6', appearance === 'composer' ? 'pb-6' : drawer ? 'pb-8' : right ? 'pb-5' : 'py-5',
           (scrollable || right) && 'min-h-0 overflow-y-auto overscroll-contain', right && 'flex-1')}>{children}</div>
         {footer && (
           <div className={cx('flex shrink-0 flex-wrap items-center gap-3 px-4', wide ? 'pb-7 pt-1 sm:px-7' : 'border-t border-line py-4 sm:px-6', planning ? 'justify-between' : 'justify-end')}>

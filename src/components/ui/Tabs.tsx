@@ -15,8 +15,16 @@ type TabsContextValue = {
   value: string;
   setValue: (next: string) => void;
   baseId: string;
-  variant: 'default' | 'pills';
+  variant: TabsVariant;
 };
+
+/**
+ * - `default` — оранжевая черта бренда;
+ * - `pills` — плашки на серой дорожке;
+ * - `navy` — разделы страницы под шапкой (Figma `phyztex` 2460:1845 «Коды и PIN / Заявки на
+ *   доступ»): кегль 15, шаг 28, активная вкладка — фирменный navy с чертой 2 px.
+ */
+export type TabsVariant = 'default' | 'pills' | 'navy';
 
 const TabsContext = createContext<TabsContextValue | null>(null);
 
@@ -41,7 +49,7 @@ export function Tabs({
   onValueChange?: (value: string) => void;
   children: ReactNode;
   className?: string;
-  variant?: 'default' | 'pills';
+  variant?: TabsVariant;
 }) {
   const baseId = useId();
   const [uncontrolled, setUncontrolled] = useState(defaultValue ?? '');
@@ -75,7 +83,11 @@ export function TabsList({ children, className }: { children: ReactNode; classNa
       role="tablist"
       aria-orientation="horizontal"
       className={cx(
-        variant === 'pills' ? 'inline-flex flex-wrap gap-1.5 rounded-lg bg-neutral-bg p-1' : 'flex gap-1 border-b border-slate-200',
+        variant === 'pills'
+          ? 'inline-flex flex-wrap gap-1.5 rounded-lg bg-neutral-bg p-1'
+          : variant === 'navy'
+            ? 'flex gap-7 border-b border-line'
+            : 'flex gap-1 border-b border-slate-200',
         className,
       )}
     >
@@ -84,13 +96,33 @@ export function TabsList({ children, className }: { children: ReactNode; classNa
   );
 }
 
+const TRIGGER_BASE: Record<TabsVariant, string> = {
+  default: '-mb-px border-b-2 px-4 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50 disabled:cursor-not-allowed disabled:opacity-50',
+  pills: 'rounded-md px-3.5 py-1.5 text-13 font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 disabled:cursor-not-allowed disabled:opacity-50',
+  navy: '-mb-px inline-flex items-center gap-2 border-b-2 px-0.5 pb-3 text-15 leading-tight transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 disabled:cursor-not-allowed disabled:opacity-50',
+};
+
+const TRIGGER_STATE: Record<TabsVariant, { on: string; off: string }> = {
+  default: { on: 'border-brand-500 text-brand-700', off: 'border-transparent text-slate-500 hover:text-slate-800' },
+  pills: { on: 'bg-navy-700 text-white', off: 'text-muted hover:text-ink' },
+  navy: { on: 'border-navy-700 font-semibold text-navy-700', off: 'border-transparent font-medium text-slate-600 hover:text-navy-700' },
+};
+
 export function TabsTrigger({
   value,
   children,
   className,
   onClick,
+  count,
   ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & { value: string }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  value: string;
+  /**
+   * Счётчик рядом с подписью — то, что ждёт работы на вкладке. Ноль не рисуется: пустой
+   * кружок звал бы туда, где делать нечего.
+   */
+  count?: number;
+}) {
   const { value: active, setValue, baseId, variant } = useTabsContext('TabsTrigger');
   const selected = active === value;
   const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
@@ -119,16 +151,20 @@ export function TabsTrigger({
         if (!event.defaultPrevented) setValue(value);
       }}
       className={cx(
-        variant === 'pills'
-          ? 'rounded-md px-3.5 py-1.5 text-13 font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 disabled:cursor-not-allowed disabled:opacity-50'
-          : '-mb-px border-b-2 px-4 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50 disabled:cursor-not-allowed disabled:opacity-50',
-        variant === 'pills'
-          ? selected ? 'bg-navy-700 text-white' : 'text-muted hover:text-ink'
-          : selected ? 'border-brand-500 text-brand-700' : 'border-transparent text-slate-500 hover:text-slate-800',
+        TRIGGER_BASE[variant],
+        selected ? TRIGGER_STATE[variant].on : TRIGGER_STATE[variant].off,
+        count != null && count > 0 && variant !== 'navy' && 'inline-flex items-center gap-2',
         className,
       )}
     >
       {children}
+      {/* Пробел — для имени вкладки («Заявки на доступ 6»); во flex-строке он не рисуется. */}
+      {count != null && count > 0 && ' '}
+      {count != null && count > 0 && (
+        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-xs font-bold leading-none text-white">
+          {count}
+        </span>
+      )}
     </button>
   );
 }

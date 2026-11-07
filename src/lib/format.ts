@@ -60,6 +60,39 @@ export function formatDayMonthYear(iso: string | null | undefined): string {
   return `${d.getDate()} ${MONTHS_GENITIVE[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+function clock(d: Date): string {
+  return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+}
+
+/** Год пишется, только если он не текущий: в реестре заявок почти всё — этого года. */
+function yearSuffix(d: Date, now: Date): string {
+  return d.getFullYear() === now.getFullYear() ? '' : ` ${d.getFullYear()}`;
+}
+
+/** «2 ноября, 15:24»; прошлогодняя дата — «2 ноября 2025, 15:24». Подзаголовок карточки. */
+export function formatDayMonthTime(iso: string | null | undefined, now: Date = new Date()): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  return `${d.getDate()} ${MONTHS_GENITIVE[d.getMonth()]}${yearSuffix(d, now)}, ${clock(d)}`;
+}
+
+/** «2 ноя., 15:24» — момент в строке реестра; год — как у {@link formatDayMonthTime}. */
+export function formatShortDayMonthTime(iso: string | null | undefined, now: Date = new Date()): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}${yearSuffix(d, now)}, ${clock(d)}`;
+}
+
+/** «2 ноя.» — дата в короткой строке списка. */
+export function formatShortDayMonth(iso: string | null | undefined, now: Date = new Date()): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}${yearSuffix(d, now)}`;
+}
+
 /** "Версия 1 · 12 авг. 2026, 10:30" */
 export function versionLabel(versionNumber: number | null | undefined, iso: string | null | undefined): string {
   if (!versionNumber) return 'Без версии';

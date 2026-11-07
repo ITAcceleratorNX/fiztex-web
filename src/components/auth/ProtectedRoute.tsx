@@ -20,6 +20,12 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
     );
   }
 
+  // Временный пароль закрывает панель целиком: `PasswordChangeRequiredFilter` пускает
+  // только смену пароля и выход, и любой раздел встретил бы человека отказами.
+  if (admin?.mustChangePassword) {
+    return <Navigate to={ROUTES.staffNewPassword} replace />;
+  }
+
   if (!isRouteAllowedForRole(location.pathname, admin?.role)) {
     return (
       <Navigate
