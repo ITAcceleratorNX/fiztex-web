@@ -3546,14 +3546,19 @@ export function useKtpCommand<T, V>(action: (variables: V, key: string) => Promi
 export function useKtpContext(enabled = true) {
   return useQuery({ queryKey: keys.ktpResource('context'), queryFn: ({ signal }) => ktpApi.context(signal), enabled });
 }
-export function useKtpImports(filters: KtpListFilters = {}) {
-  return useInfiniteQuery({ queryKey: keys.ktpList('imports', filters), initialPageParam: undefined as number | undefined,
+export function useKtpImports(filters: KtpListFilters = {}, enabled = true) {
+  return useInfiniteQuery({ queryKey: keys.ktpList('imports', filters), initialPageParam: undefined as number | undefined, enabled,
     queryFn: ({ pageParam, signal }) => ktpApi.imports(pageParam, signal, filters), getNextPageParam: page => page.nextCursor ?? undefined,
     refetchInterval: query => query.state.data?.pages.some(page => page.items?.some(item => runningKtp(item.status))) ? 4000 : false });
 }
 export function useKtpBindings(enabled = true, filters: KtpListFilters = {}) {
   return useInfiniteQuery({ queryKey: keys.ktpList('bindings', filters), initialPageParam: undefined as number | undefined,
     queryFn: ({ pageParam, signal }) => ktpApi.bindings(pageParam, signal, filters), getNextPageParam: page => page.nextCursor ?? undefined, enabled });
+}
+// Цели копии меняют другие учителя (занятый класс, новый черновик) — каждый раз свежие.
+export function useKtpCopyTargets(bindingId: number, versionId: number, enabled = true) {
+  return useQuery({ queryKey: keys.ktpResource('copy-targets', bindingId, versionId), queryFn: ({ signal }) => ktpApi.copyTargets(bindingId, versionId, signal),
+    enabled: enabled && bindingId > 0 && versionId > 0, staleTime: 0, retry: false });
 }
 export function useKtpRemovalPreview(target: KtpRemovalTarget) {
   return useQuery({ queryKey: keys.ktpRemovalPreview(target), queryFn: ({ signal }) => ktpApi.removalPreview(target, signal), staleTime: 0, refetchOnWindowFocus: false, retry: false });

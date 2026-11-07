@@ -24,8 +24,14 @@ export function KtpActivationModal({ draft, onClose, refreshTargets }: { draft: 
   const preview = query.data;
   const errors = preview?.issues?.filter(i => i.severity === 'ERROR') ?? [];
   const codes = preview?.warningCodes ?? [];
-  const conflict = preview?.targets?.some(t => t.conflict);
-  const replacing = preview?.targets?.some(t => t.currentVersionId != null);
+  // КТП-COPY: копия не заменяет действующий КТП. blockedReason — раньше conflict: у только что
+  // занятой цели conflict тоже true, и окно иначе предложило бы «Обновить привязки», то есть замену.
+  const blocked = preview?.targets?.filter(t => t.blockedReason) ?? [];
+  const className = (classId?: number) => context.data?.assignments?.find(a => a.classId === classId)?.className;
+  const conflict = !blocked.length && preview?.targets?.some(t => t.conflict);
+  const replacing = !blocked.length && preview?.targets?.some(t => t.currentVersionId != null);
+  const removedTargets = !blocked.length && preview?.targets?.some(t => t.currentState === 'ARCHIVED');
+  const noPeriods = !!preview && !preview.availablePeriods?.length;
   const periods = (draft.content?.periods ?? []).map(p => ({ planPeriodOrder: p.order!, academicPeriodId: mapping[p.order!] ?? preview?.suggestedPeriodMapping?.find(m => m.planPeriodOrder === p.order)?.academicPeriodId }));
   const missing = periods.some(p => !p.academicPeriodId) || new Set(periods.map(p => p.academicPeriodId)).size !== periods.length;
   async function save() {
@@ -36,7 +42,7 @@ export function KtpActivationModal({ draft, onClose, refreshTargets }: { draft: 
     } catch { /* The user must refresh a stale preview explicitly. */ }
   }
   return <Modal open onClose={() => { if (!confirm.isPending && !refreshing) onClose(); }} title={replacing ? 'Подтвердить новую версию КТП?' : 'Подтвердить КТП?'} size={replacing ? 'planning-confirm' : 'planning'} appearance="planning" scrollable footer={<>
-    <Button variant="ghost" disabled={confirm.isPending || refreshing} onClick={onClose}>{replacing ? 'Оставить текущую версию' : 'Отмена'}</Button><Button variant="primary" disabled={!preview || !context.data || !!conflict || !!errors.length || missing || (codes.length > 0 && !accepted) || query.isFetching || confirm.isError} loading={confirm.isPending} onClick={() => void save()}>Подтвердить КТП</Button>
+    <Button variant="ghost" disabled={confirm.isPending || refreshing} onClick={onClose}>{replacing ? 'Оставить текущую версию' : 'Отмена'}</Button><Button variant="primary" disabled={!preview || !context.data || !!conflict || !!blocked.length || !!errors.length || missing || (codes.length > 0 && !accepted) || query.isFetching || confirm.isError} loading={confirm.isPending} onClick={() => void save()}>Подтвердить КТП</Button>
   </>}>
     {query.isPending || context.isPending ? <LoadingBlock /> : query.isError || context.isError ? <ErrorBlock message={ktpError(query.error ?? context.error)} onRetry={() => { void query.refetch(); void context.refetch(); }} /> : <div className="space-y-4">
       {context.data?.allocationEnabled === false && <StatusNotice tone="warning">Автоматическое распределение тем не подключено. План можно утвердить и хранить; для подстановки тем в уроки обратитесь к ответственному за подключение школы.</StatusNotice>}
@@ -44,6 +50,9 @@ export function KtpActivationModal({ draft, onClose, refreshTargets }: { draft: 
       <p className="text-sm font-semibold">{preview?.totals?.topicCount} тем · {preview?.totals?.knownAnnualHours} ч</p>
       {preview?.targets?.map(target => <div key={target.expected?.classId} className="flex flex-wrap justify-between gap-3 rounded-xl border border-line p-3 text-13"><span>{context.data?.assignments?.find(a => a.classId === target.expected?.classId)?.className}</span><span>{target.previousTotals?.knownAnnualHours ?? 0} → {preview.totals?.knownAnnualHours} ч · Изменение количества тем: {target.topicCountDelta ?? 0}</span></div>)}
       {replacing && <p className="text-sm leading-relaxed text-planning-muted">Изменение количества тем сравнивает только их число. Даже при значении 0 названия, цели и содержание могут отличаться — проверьте их в черновике перед подтверждением.</p>}
+      {!!blocked.length && <StatusNotice tone="error">В {blocked.map(t => className(t.expected?.classId)).filter(Boolean).join(', ') || 'выбранном классе'} уже есть активный КТП по этому предмету. Копия не заменяет действующий план: удалите его или создайте копию для другого класса.</StatusNotice>}
+      {removedTargets && <StatusNotice tone="info">КТП этого класса ранее удалён. После подтверждения потребуется сверка версий — прогресс класса сохранится.</StatusNotice>}
+      {noPeriods && <StatusNotice tone="warning">В учебном году ещё нет учебных периодов. Подтвердить КТП получится, когда администратор их заведёт.</StatusNotice>}
       {conflict && <StatusNotice tone="warning">Привязки классов изменились. Проверьте текущие версии перед подтверждением.<Button variant="secondary" size="sm" loading={refreshing} onClick={async () => {
         setRefreshing(true);
         try { await refreshTargets(preview?.targets?.map(t => ({ classId: t.expected?.classId!, bindingRevision: t.currentRevision!, ...(t.currentVersionId != null ? { baseVersionId: t.currentVersionId } : {}) })) ?? []); await query.refetch(); confirm.reset(); setRefreshError(null); } catch (error) { setRefreshError(error); } finally { setRefreshing(false); }
