@@ -19,6 +19,10 @@ import {
 } from 'lucide-react';
 import { Button, buttonClassName } from '@/components/ui/Button';
 import { TextArea, TextInput } from '@/components/ui/Field';
+import { RichText } from '@/components/ui/RichText';
+import { RichTextField } from '@/components/ui/RichTextField';
+import { useEmbedEditing } from '@/hooks/useEmbedEditing';
+import type { ContentEmbed } from '@/lib/contentEmbeds';
 import { ChangedChip } from '@/components/ui/ChangedChip';
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard';
 import { LessonStatusChip } from '@/components/ui/LessonStatusChip';
@@ -180,6 +184,7 @@ export function LessonCardPage() {
           emptyLabel="Комментария пока нет"
           value={lesson.comment?.body ?? ''}
           multiline
+          embeds={lesson.comment?.embeds ?? []}
           maxLength={2000}
           saving={saveComment.isPending}
           onSave={(next) =>
@@ -191,9 +196,11 @@ export function LessonCardPage() {
             })
           }
         >
-          <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600">
-            {lesson.comment?.body}
-          </p>
+          {/* Комментарий для учеников — текстовый материал урока: рисунки и файлы в нём стоят на
+              своих местах (CONTENT-EMBED-001). */}
+          <RichText text={lesson.comment?.body} embeds={lesson.comment?.embeds}
+            className="text-sm leading-relaxed text-slate-600"
+            textClassName="block text-sm leading-relaxed text-slate-600" />
         </TeachingField>
 
         <hr className="border-slate-200" />
@@ -344,6 +351,7 @@ function TeachingField({
   emptyLabel,
   value,
   multiline,
+  embeds,
   maxLength,
   saving,
   onSave,
@@ -355,6 +363,8 @@ function TeachingField({
   emptyLabel: string;
   value: string;
   multiline?: boolean;
+  /** Поле с рисунками и файлами (CONTENT-EMBED-001): правится `RichTextField`, а не `TextArea`. */
+  embeds?: ContentEmbed[] | null;
   maxLength: number;
   saving: boolean;
   onSave: (next: string) => Promise<unknown>;
@@ -362,6 +372,7 @@ function TeachingField({
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
+  const rich = useEmbedEditing(embeds);
 
   const open = () => {
     setDraft(value);
@@ -372,7 +383,18 @@ function TeachingField({
     return (
       <div className="flex flex-col gap-2">
         <p className="text-11 font-bold uppercase text-slate-400">{label}</p>
-        {multiline ? (
+        {multiline && embeds !== undefined ? (
+          <RichTextField
+            ariaLabel={label}
+            value={draft}
+            maxLength={maxLength}
+            onChange={(next) => {
+              setDraft(next);
+              rich.clearRejection();
+            }}
+            {...rich.fieldProps('body')}
+          />
+        ) : multiline ? (
           <TextArea
             autoFocus
             value={draft}
@@ -391,18 +413,23 @@ function TeachingField({
           <Button
             size="sm"
             loading={saving}
+            disabled={rich.uploading}
             onClick={() => {
-              void onSave(draft).then(() => setEditing(false));
+              void onSave(draft).then(() => setEditing(false), (caught: unknown) => {
+                rich.rememberRejection(caught);
+              });
             }}
           >
             Сохранить
           </Button>
-          <Button size="sm" variant="secondary" disabled={saving} onClick={() => setEditing(false)}>
+          <Button size="sm" variant="secondary" disabled={saving || rich.uploading} onClick={() => setEditing(false)}>
             Отмена
           </Button>
-          <span className="ml-auto text-xs text-slate-400">
-            {draft.length} / {maxLength}
-          </span>
+          {embeds === undefined && (
+            <span className="ml-auto text-xs text-slate-400">
+              {draft.length} / {maxLength}
+            </span>
+          )}
         </div>
       </div>
     );

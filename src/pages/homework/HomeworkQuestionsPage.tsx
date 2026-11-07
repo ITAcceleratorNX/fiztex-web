@@ -16,6 +16,7 @@ import {
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useToast } from '@/context/ToastContext';
 import { ApiError } from '@/lib/api';
+import { embedErrorOf } from '@/lib/contentEmbeds';
 import { withHomeworkReturnTo } from '@/lib/homeworkListNavigation';
 import { homeworkApi } from '@/lib/homeworkApi';
 import { QuestionCard } from '@/components/homework/QuestionCard';
@@ -63,6 +64,9 @@ export function HomeworkQuestionsPage() {
   const [leaving, setLeaving] = useState(false);
   const [regeneratingJob, setRegeneratingJob] = useState<number | null>(null);
   const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null);
+  // Загрузка вставки в текст вопроса: пока она идёт, маркера в тексте ещё нет.
+  const [uploading, setUploading] = useState(0);
+  const [rejected, setRejected] = useState<{ field: string; id: string | null } | null>(null);
 
   const { data: job } = useHomeworkAiJob(regeneratingJob);
   const homework = homeworkQuery.data;
@@ -91,11 +95,12 @@ export function HomeworkQuestionsPage() {
   }, [job?.status]);
 
   const problems = useMemo(() => validateQuestions(questions), [questions]);
-  const canSave = !readOnly && dirty && problems.size === 0;
+  const canSave = !readOnly && dirty && problems.size === 0 && uploading === 0;
 
   function update(next: QuestionDraft[]) {
     setQuestions(next);
     setDirty(true);
+    setRejected(null);
   }
 
   async function onSave() {
@@ -104,6 +109,7 @@ export function HomeworkQuestionsPage() {
       setDirty(false);
       toast.success('Вопросы сохранены');
     } catch (error) {
+      setRejected(embedErrorOf(error));
       toast.error(error instanceof ApiError ? error.message : 'Не удалось сохранить вопросы');
     }
   }
@@ -208,6 +214,8 @@ export function HomeworkQuestionsPage() {
               onRemove={() => update(questions.filter((_, i) => i !== index))}
               onMove={(delta) => update(move(questions, index, delta))}
               onRegenerate={() => void onRegenerate(index)}
+              onImageBusyChange={(busy) => setUploading((count) => Math.max(0, count + (busy ? 1 : -1)))}
+              invalidEmbedId={rejected?.field === `questions[${index}].text` ? rejected.id : null}
             />
           ))}
         </div>

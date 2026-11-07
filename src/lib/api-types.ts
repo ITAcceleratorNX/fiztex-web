@@ -3394,6 +3394,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/content-assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["uploadContentAsset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/content-assets/policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["contentEmbedPolicy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/equipment/dashboard": {
         parameters: {
             query?: never;
@@ -9488,6 +9520,8 @@ export interface components {
             dueAt?: string;
             /** @enum {string} */
             dueType?: "EXACT" | "NEXT_LESSON" | "NONE";
+            /** @description Рисунки и файлы из текста описания (CONTENT-EMBED-001) */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             /** Format: int64 */
             id?: number;
             /** Format: int64 */
@@ -9840,6 +9874,48 @@ export interface components {
             subjects?: components["schemas"]["ConstructorContextSubjectView"][];
             teachers?: components["schemas"]["ConstructorContextTeacherView"][];
             weekdays?: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
+        };
+        ContentEmbedKindPolicy: {
+            extensions?: string[];
+            /** Format: int64 */
+            maxBytes?: number;
+        };
+        ContentEmbedPolicyView: {
+            /** @description Открыта ли загрузка. Вставки, уже стоящие в тексте, показываются и сохраняются всегда */
+            enabled?: boolean;
+            file?: components["schemas"]["ContentEmbedKindPolicy"];
+            image?: components["schemas"]["ContentEmbedKindPolicy"];
+            /** Format: int32 */
+            maxEmbedsPerField?: number;
+        };
+        ContentEmbedView: {
+            /** @description false — файла нет: экран показывает «Файл недоступен», а не маркер */
+            available?: boolean;
+            contentType?: string;
+            /** @description Скачать под именем файла */
+            downloadUrl?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            /** @description Расширение без точки: pdf, docx, png… */
+            extension?: string;
+            fileName?: string;
+            /** Format: int32 */
+            height?: number;
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            kind?: "IMAGE" | "FILE";
+            /** @description IMAGE: оригинал для увеличения. У FILE — null */
+            originalUrl?: string;
+            /** Format: int64 */
+            sizeBytes?: number;
+            /** @description IMAGE: копия для показа в тексте. FILE: открыть — PDF и картинки во вкладке, остальное скачивается */
+            url?: string;
+            /**
+             * Format: int32
+             * @description IMAGE: ширина того, что показывается по url, — место под картинку до загрузки
+             */
+            width?: number;
         };
         CopyBellTemplateRequest: {
             name?: string;
@@ -11156,6 +11232,8 @@ export interface components {
         HomeworkQuestionView: {
             aiGenerated?: boolean;
             allowPhoto?: boolean;
+            /** @description Рисунки и файлы из текста вопроса (CONTENT-EMBED-001) */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             formulaIssues?: components["schemas"]["QuestionFormulaIssue"][];
             gradingCriteria?: string;
             /** Format: int64 */
@@ -11368,6 +11446,8 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             definition?: components["schemas"]["HomeworkTestTemplateDefinition"];
+            /** @description Рисунки и файлы из текстов вопросов версии (CONTENT-EMBED-001) */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             /** @enum {string} */
             formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             /** Format: int64 */
@@ -11403,6 +11483,8 @@ export interface components {
             dueAt?: string;
             /** @enum {string} */
             dueType?: "EXACT" | "NEXT_LESSON" | "NONE";
+            /** @description Рисунки и файлы из текста описания (CONTENT-EMBED-001). Только на карточке задания; в списках — null */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             /** @enum {string} */
             formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             hasAnswers?: boolean;
@@ -12483,6 +12565,8 @@ export interface components {
             /** Format: int64 */
             createdById?: number;
             createdByName?: string;
+            /** @description Рисунки и файлы из текста комментария (CONTENT-EMBED-001). Только на карточке урока; в списке уроков — null */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             /** Format: int64 */
             id?: number;
             /** Format: date-time */
@@ -12906,6 +12990,8 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             documents?: components["schemas"]["LessonPreparationDocumentView"][];
+            /** @description Рисунки и файлы из текста конспекта заготовки (CONTENT-EMBED-001) */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             /** Format: int64 */
             id?: number;
             summary?: components["schemas"]["LessonSummaryContent"];
@@ -12971,6 +13057,8 @@ export interface components {
             aiEnabled?: boolean;
             canEdit?: boolean;
             content?: components["schemas"]["LessonSummaryContent"];
+            /** @description Рисунки и файлы из текстов этого ответа (CONTENT-EMBED-001). Ученику и родителю — только вставки опубликованной версии */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             hasUnpublishedChanges?: boolean;
             latestJob?: components["schemas"]["LessonSummaryJobView"];
             /** Format: date-time */
@@ -16146,6 +16234,8 @@ export interface components {
             dueAt?: string;
             /** @enum {string} */
             dueType?: "EXACT" | "NEXT_LESSON" | "NONE";
+            /** @description Рисунки и файлы из текста описания (CONTENT-EMBED-001) */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             /** Format: int64 */
             id?: number;
             /** Format: int64 */
@@ -16229,6 +16319,8 @@ export interface components {
         };
         StudentQuestionView: {
             allowPhoto?: boolean;
+            /** @description Рисунки и файлы из текста вопроса (CONTENT-EMBED-001) */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             /** Format: int64 */
             id?: number;
             imageUrl?: string;
@@ -16630,6 +16722,8 @@ export interface components {
             maxScore?: number;
             openText?: string;
             photos?: components["schemas"]["AnswerPhotoView"][];
+            /** @description Рисунки и файлы из текста вопроса (CONTENT-EMBED-001) */
+            questionEmbeds?: components["schemas"]["ContentEmbedView"][];
             /** Format: int64 */
             questionId?: number;
             questionText?: string;
@@ -24329,6 +24423,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccountLoginResponse"];
+                };
+            };
+        };
+    };
+    uploadContentAsset: {
+        parameters: {
+            query: {
+                kind: "IMAGE" | "FILE";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentEmbedView"];
+                };
+            };
+        };
+    };
+    contentEmbedPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentEmbedPolicyView"];
                 };
             };
         };

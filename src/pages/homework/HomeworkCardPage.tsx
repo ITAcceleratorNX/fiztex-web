@@ -10,7 +10,7 @@ import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { HomeworkStatusChip } from '@/components/ui/HomeworkStatusChip';
 import { AiGeneratedBadge } from '@/components/ui/AiGeneratedBadge';
-import { MathText } from '@/components/ui/MathText';
+import { RichText } from '@/components/ui/RichText';
 import { NoticeBar } from '@/components/ui/NoticeBar';
 import {
   HomeworkAiGenerateModal,
@@ -555,7 +555,8 @@ function HomeworkHeader({
           промпта (HomeworkAiPrompts), да и учитель может набрать формулу руками.
           Сырым текстом ученик увидел бы \frac вместо дроби. */}
       {homework.description ? (
-        <MathText text={homework.description} className="block break-words text-sm leading-relaxed text-ink" />
+        <RichText text={homework.description} embeds={homework.embeds} className="text-sm leading-relaxed text-ink"
+          textClassName="block break-words text-sm leading-relaxed text-ink" />
       ) : null}
 
       {materials.length > 0 && (

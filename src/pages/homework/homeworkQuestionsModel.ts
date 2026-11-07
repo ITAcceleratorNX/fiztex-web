@@ -15,6 +15,8 @@ export interface QuestionDraft {
   text: string;
   imageId?: string;
   imageUrl?: string;
+  /** Рисунки и файлы из текста вопроса (CONTENT-EMBED-001) — описание с сервера, для показа в поле. */
+  embeds?: import('@/lib/contentEmbeds').ContentEmbed[];
   maxScore: number;
   referenceAnswer: string;
   gradingCriteria: string;
@@ -79,6 +81,7 @@ export function toDraft(question: HomeworkQuestion): QuestionDraft {
     id: question.id,
     imageId: question.imageId,
     imageUrl: question.imageUrl,
+    embeds: question.embeds,
     type: (question.type ?? 'SINGLE_CHOICE') as HomeworkQuestionType,
     text: question.text ?? '',
     maxScore: Number(question.maxScore ?? 1),

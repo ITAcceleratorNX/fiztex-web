@@ -1,0 +1,193 @@
+{
+  "about": "Общие примеры разметки вставок (CONTENT-EMBED-001, docs/content-embeds-contract.md). Источник — этот файл; копии: fiztex-web/src/test/fixtures/content-embed-fixtures.json и fiztex-mobile/mobile/scripts/fixtures/content-embed-fixtures.json. Меняется файл — обновляются обе копии. Для каждого примера blocks обязательно serialize(blocks(text)) === text.",
+  "legend": {
+    "A": "3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c",
+    "B": "0b8d2e47-1c3a-4f59-8e6d-7a9b0c1d2e3f"
+  },
+  "blocks": [
+    {
+      "name": "старый текст без вставок — один блок как есть",
+      "text": "Плотность — масса единицы объёма.\n\nФормула $\\rho = \\frac{m}{V}$.",
+      "blocks": [{"text": "Плотность — масса единицы объёма.\n\nФормула $\\rho = \\frac{m}{V}$."}]
+    },
+    {
+      "name": "пустой текст",
+      "text": "",
+      "blocks": [{"text": ""}]
+    },
+    {
+      "name": "рисунок между абзацами",
+      "text": "Первый абзац.\n[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\nВторой абзац.",
+      "blocks": [
+        {"text": "Первый абзац."},
+        {"kind": "image", "id": "3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c", "line": "[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]"},
+        {"text": "Второй абзац."}
+      ]
+    },
+    {
+      "name": "пустые строки вокруг вставки остаются в тексте",
+      "text": "Первый.\n\n[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\n\nВторой.",
+      "blocks": [
+        {"text": "Первый.\n"},
+        {"kind": "image", "id": "3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c", "line": "[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]"},
+        {"text": "\nВторой."}
+      ]
+    },
+    {
+      "name": "файл в начале",
+      "text": "[[file:0b8d2e47-1c3a-4f59-8e6d-7a9b0c1d2e3f]]\nТекст после файла",
+      "blocks": [
+        {"kind": "file", "id": "0b8d2e47-1c3a-4f59-8e6d-7a9b0c1d2e3f", "line": "[[file:0b8d2e47-1c3a-4f59-8e6d-7a9b0c1d2e3f]]"},
+        {"text": "Текст после файла"}
+      ]
+    },
+    {
+      "name": "рисунок в конце",
+      "text": "Текст\n[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]",
+      "blocks": [
+        {"text": "Текст"},
+        {"kind": "image", "id": "3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c", "line": "[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]"}
+      ]
+    },
+    {
+      "name": "рисунок в конце и перевод строки за ним",
+      "text": "Текст\n[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\n",
+      "blocks": [
+        {"text": "Текст"},
+        {"kind": "image", "id": "3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c", "line": "[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]"},
+        {"text": ""}
+      ]
+    },
+    {
+      "name": "две вставки подряд",
+      "text": "[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\n[[file:0b8d2e47-1c3a-4f59-8e6d-7a9b0c1d2e3f]]",
+      "blocks": [
+        {"kind": "image", "id": "3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c", "line": "[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]"},
+        {"kind": "file", "id": "0b8d2e47-1c3a-4f59-8e6d-7a9b0c1d2e3f", "line": "[[file:0b8d2e47-1c3a-4f59-8e6d-7a9b0c1d2e3f]]"}
+      ]
+    },
+    {
+      "name": "старый текст с CRLF",
+      "text": "Строка один\r\nСтрока два",
+      "blocks": [{"text": "Строка один\r\nСтрока два"}]
+    },
+    {
+      "name": "CRLF вокруг вставки — \\r остаётся частью строк",
+      "text": "Один\r\n[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\r\nДва",
+      "blocks": [
+        {"text": "Один\r"},
+        {"kind": "image", "id": "3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c", "line": "[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\r"},
+        {"text": "Два"}
+      ]
+    },
+    {
+      "name": "пробелы вокруг маркера — вставка, строка сохраняется как была",
+      "text": "  [[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\t",
+      "blocks": [
+        {"kind": "image", "id": "3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c", "line": "  [[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\t"}
+      ]
+    },
+    {
+      "name": "маркер посреди строки — не вставка",
+      "text": "Смотри [[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]] тут",
+      "blocks": [{"text": "Смотри [[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]] тут"}]
+    },
+    {
+      "name": "UUID заглавными — не вставка",
+      "text": "[[image:3F2A9C1E-5B7D-4E8A-9F1C-2D3E4F5A6B7C]]",
+      "blocks": [{"text": "[[image:3F2A9C1E-5B7D-4E8A-9F1C-2D3E4F5A6B7C]]"}]
+    },
+    {
+      "name": "короткий id — не вставка",
+      "text": "[[file:123]]",
+      "blocks": [{"text": "[[file:123]]"}]
+    },
+    {
+      "name": "один рисунок дважды",
+      "text": "[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\nтекст\n[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]",
+      "blocks": [
+        {"kind": "image", "id": "3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c", "line": "[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]"},
+        {"text": "текст"},
+        {"kind": "image", "id": "3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c", "line": "[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]"}
+      ]
+    }
+  ],
+  "ids": [
+    {
+      "name": "id в порядке появления, без повторов",
+      "text": "[[file:0b8d2e47-1c3a-4f59-8e6d-7a9b0c1d2e3f]]\nтекст\n[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\n[[file:0b8d2e47-1c3a-4f59-8e6d-7a9b0c1d2e3f]]",
+      "ids": ["0b8d2e47-1c3a-4f59-8e6d-7a9b0c1d2e3f", "3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c"]
+    },
+    {
+      "name": "маркер посреди строки id не даёт",
+      "text": "Смотри [[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]] тут",
+      "ids": []
+    }
+  ],
+  "strip": [
+    {
+      "text": "Первый абзац.\n[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\nВторой абзац.",
+      "expected": "Первый абзац.\nВторой абзац."
+    },
+    {
+      "text": "[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]",
+      "expected": ""
+    },
+    {
+      "text": "Текст без вставок",
+      "expected": "Текст без вставок"
+    }
+  ],
+  "forModel": [
+    {
+      "text": "Решите задачу по рисунку:\n[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\nУсловие — в файле\n[[file:0b8d2e47-1c3a-4f59-8e6d-7a9b0c1d2e3f]]",
+      "expected": "Решите задачу по рисунку:\n[рисунок]\nУсловие — в файле\n[файл]"
+    },
+    {
+      "text": "Без вставок $x^2$",
+      "expected": "Без вставок $x^2$"
+    }
+  ],
+  "carryOver": [
+    {
+      "name": "вставки прежнего текста дописываются в конец нового в прежнем порядке",
+      "previous": "Старый\n[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\nтекст\n[[file:0b8d2e47-1c3a-4f59-8e6d-7a9b0c1d2e3f]]",
+      "next": "Новый текст",
+      "expected": "Новый текст\n[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\n[[file:0b8d2e47-1c3a-4f59-8e6d-7a9b0c1d2e3f]]"
+    },
+    {
+      "name": "уже стоящая в новом тексте вставка не повторяется",
+      "previous": "[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\nстарый",
+      "next": "новый\n[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]",
+      "expected": "новый\n[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]"
+    },
+    {
+      "name": "пустой новый текст",
+      "previous": "[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]",
+      "next": "",
+      "expected": "[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]"
+    },
+    {
+      "name": "повтор в прежнем тексте переносится один раз",
+      "previous": "[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\n[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]",
+      "next": "Новый",
+      "expected": "Новый\n[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]"
+    },
+    {
+      "name": "без вставок ничего не меняется",
+      "previous": "Старый текст",
+      "next": "Новый текст",
+      "expected": "Новый текст"
+    }
+  ],
+  "serverIssues": [
+    {"name": "маркер посреди строки", "text": "Смотри [[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]] тут", "codes": ["MALFORMED"]},
+    {"name": "хвост после маркера", "text": "[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]] хвост", "codes": ["MALFORMED"]},
+    {"name": "UUID заглавными", "text": "[[image:3F2A9C1E-5B7D-4E8A-9F1C-2D3E4F5A6B7C]]", "codes": ["MALFORMED"]},
+    {"name": "вид заглавными", "text": "[[IMAGE:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]", "codes": ["MALFORMED"]},
+    {"name": "короткий id", "text": "[[file:123]]", "codes": ["MALFORMED"]},
+    {"name": "вставка внутри $$…$$", "text": "$$x = 1\n[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\ny = 2$$", "codes": ["IN_FORMULA"]},
+    {"name": "правильные вставки", "text": "Один\r\n[[image:3f2a9c1e-5b7d-4e8a-9f1c-2d3e4f5a6b7c]]\r\nДва $x$\n[[file:0b8d2e47-1c3a-4f59-8e6d-7a9b0c1d2e3f]]", "codes": []},
+    {"name": "похожие скобки без маркера", "text": "Цена 5\\$ и [[ссылка]] в тексте", "codes": []}
+  ]
+}

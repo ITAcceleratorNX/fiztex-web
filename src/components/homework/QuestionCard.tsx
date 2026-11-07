@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/Button';
 import { Field, Select, TextInput } from '@/components/ui/Field';
 import type { FormulaProfile } from '@/lib/formulaProfiles';
 import { FormulaField } from '@/components/ui/FormulaField';
+import { RichTextField } from '@/components/ui/RichTextField';
+import { mergeEmbeds, type ContentEmbed } from '@/lib/contentEmbeds';
 import { AiGeneratedBadge } from '@/components/ui/AiGeneratedBadge';
 import { QuestionImagePicker, type QuestionImage } from '@/components/ui/QuestionImagePicker';
 import { QuestionFigure } from '@/components/ui/QuestionFigure';
@@ -27,6 +29,8 @@ export function QuestionCard({
   onRegenerate,
   onUploadImage,
   onImageBusyChange,
+  embeds,
+  invalidEmbedId,
 }: {
   question: QuestionDraft;
   profile?: FormulaProfile;
@@ -40,7 +44,12 @@ export function QuestionCard({
   onMove: (delta: -1 | 1) => void;
   onRegenerate?: () => void;
   onUploadImage?: (file: File) => Promise<QuestionImage>;
+  /** Идёт загрузка рисунка вопроса или вставки в текст — экран не даёт сохранять. */
   onImageBusyChange?: (busy: boolean) => void;
+  /** Описания вставок, пришедшие на весь тест (у версии теста они общие, а не по вопросу). */
+  embeds?: ContentEmbed[] | null;
+  /** Вставка в тексте этого вопроса, которую сервер отклонил при сохранении. */
+  invalidEmbedId?: string | null;
 }) {
   const invalid = messages.length > 0;
   const formulaProblems = checkFormulas([
@@ -139,13 +148,21 @@ export function QuestionCard({
 
       <div className="mt-4">
         <Field label="Текст вопроса" required>
-          <FormulaField
-            profile={profile}
+          {/* Рисунки и файлы — только в тексте вопроса: варианты сравниваются как текст, а эталон
+              и критерии уходят в ИИ-проверку (CONTENT-EMBED-001, A§11.1). */}
+          <RichTextField
+            formulas
+            formulaProfile={profile}
             disabled={readOnly}
             value={question.text}
             onChange={(text) => onChange({ ...question, text })}
             placeholder="Сформулируйте вопрос"
             ariaLabel={`Текст вопроса ${index + 1}`}
+            maxLength={4000}
+            rows={3}
+            embeds={mergeEmbeds(embeds, question.embeds)}
+            onBusyChange={onImageBusyChange}
+            invalidEmbedId={invalidEmbedId}
           />
         </Field>
       </div>

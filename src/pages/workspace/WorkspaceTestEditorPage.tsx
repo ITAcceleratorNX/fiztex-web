@@ -12,6 +12,7 @@ import { useToast } from '@/context/ToastContext';
 import { useCreateTestTemplateFromQuestions, useTestTemplate, useVersionTestTemplateFromQuestions, useTestSubjectContext, useUploadHomeworkQuestionImage } from '@/hooks/queries';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/lib/api';
+import { embedErrorOf } from '@/lib/contentEmbeds';
 import { ROUTES } from '@/lib/routes';
 import type { TestAiJob } from '@/lib/testTemplateApi';
 import { GenerateWorkspaceTestModal } from './GenerateWorkspaceTestModal';
@@ -36,6 +37,7 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
   const create = useCreateTestTemplateFromQuestions();
   const imageUpload = useUploadHomeworkQuestionImage();
   const [uploadingImages, setUploadingImages] = useState(0);
+  const [rejectedEmbed, setRejectedEmbed] = useState<{ field: string; id: string | null } | null>(null);
   const version = useVersionTestTemplateFromQuestions(id ?? 0);
   const [title, setTitle] = useState('');
   const [baseVersion, setBaseVersion] = useState<number>();
@@ -94,6 +96,7 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
     const payload = toRequest(questions).questions;
     if (!payload) return;
     setSaveError('');
+    setRejectedEmbed(null);
     try {
       if (mode === 'create') {
         await create.mutateAsync({ body: { title: title.trim(), subjectId, questions: payload, ...(aiJobId != null ? { aiJobId } : {}) }, key: saveKey.current });
@@ -108,6 +111,7 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
       setDirty(false);
       navigate(returnTo);
     } catch (caught) {
+      setRejectedEmbed(embedErrorOf(caught));
       setSaveError(caught instanceof ApiError ? caught.message : 'Не удалось сохранить тест');
       if (mode === 'edit' && caught instanceof ApiError && caught.status === 409
         && caught.code === 'HOMEWORK_TEST_VERSION_CHANGED') setConflict(true);
@@ -224,6 +228,8 @@ export function WorkspaceTestEditorPage({ mode }: { mode: 'create' | 'edit' }) {
             index={index} total={questions.length} readOnly={saving}
             onUploadImage={file => imageUpload.mutateAsync(file)}
             onImageBusyChange={busy => setUploadingImages(count => Math.max(0, count + (busy ? 1 : -1)))}
+            embeds={template.data?.embeds}
+            invalidEmbedId={rejectedEmbed?.field === `questions[${index}].text` ? rejectedEmbed.id : null}
             messages={showProblems ? problems.get(index) ?? [] : []}
             onChange={(next) => changed(questions.map((entry, i) => i === index ? next : entry))}
             onRemove={() => changed(questions.filter((_, i) => i !== index))}
