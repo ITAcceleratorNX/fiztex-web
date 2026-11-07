@@ -6,6 +6,7 @@ type Detail = Schema<'AccessRequestDetailView'>;
 type Candidate = Schema<'ProfileCandidateView'>;
 type ChildCandidate = Schema<'ChildCandidateView'>;
 type MatchReason = NonNullable<Candidate['matchReasons']>[number];
+type ApproveBody = Schema<'ApproveAccessRequestRequest'>;
 
 export const REQUEST_ROLE_LABELS: Record<'STUDENT' | 'PARENT', string> = {
   STUDENT: 'Ученик',
@@ -183,4 +184,70 @@ export function rejectionTemplates(detail: Detail): Array<{ label: string; text:
     { label: 'Телефон уже привязан', text: 'Этот номер телефона уже привязан к другому аккаунту. Укажите другой номер или обратитесь в школу.' },
     { label: 'Повторная заявка', text: 'Заявка на этот профиль уже рассмотрена. Войдите в приложение или обратитесь в школу.' },
   ];
+}
+
+export const RELATION_LABELS: Record<NonNullable<ApproveBody['relationType']>, string> = {
+  MOTHER: 'Мать',
+  FATHER: 'Отец',
+  GUARDIAN: 'Опекун',
+  OTHER: 'Другое',
+};
+
+export type ApprovalIntent = {
+  /** `true` — «Создать новый профиль», `false` — «Привязать» к найденному. */
+  createProfile: boolean;
+  /** Имя профиля, к которому привязывают; у создания его нет. */
+  profileName?: string | null;
+  /** Выбранный ребёнок и степень родства — только у родительской заявки. */
+  childName?: string | null;
+  relationType?: NonNullable<ApproveBody['relationType']>;
+};
+
+/**
+ * Текст подтверждения перед одобрением заявки.
+ *
+ * Спрашивать обязательно: одобрение необратимо — «разодобрить» заявку нечем
+ * (`/approve` и `/reject` — единственные решения, и повторная заявка заводится новой
+ * строкой). Промах мимо «Привязать» заводит в школе дубль человека, а промах мимо
+ * «Создать» отдаёт заявителю чужой профиль; и то и другое чинится вручную.
+ *
+ * Поэтому у двух кнопок разный текст: они делают разное, и «Вы уверены?» на обе
+ * не сказало бы ничего. В каждом — что появится, чем человек войдёт и что решение
+ * окончательное.
+ */
+export function approvalConfirm(
+  detail: Detail,
+  intent: ApprovalIntent,
+): { title: string; message: string; confirmLabel: string } {
+  const noun = detail.role === 'PARENT' ? 'родитель' : 'ученик';
+  const className = detail.role === 'PARENT'
+    ? requestClassName(detail.childClass)
+    : requestClassName(detail.schoolClass);
+  const applicant = detail.fullName ?? `заявка № ${detail.requestId ?? ''}`.trim();
+  const login = detail.passwordProvided && detail.phone
+    ? 'Войдёт по телефону и паролю из заявки.'
+    : detail.role === 'PARENT'
+      ? 'Войдёт по персональному коду — его выдаёт администратор.'
+      : 'Войдёт по персональному коду — его выдаёт классный руководитель.';
+  const relation = intent.relationType ? RELATION_LABELS[intent.relationType].toLowerCase() : null;
+  const child = detail.role === 'PARENT' && intent.childName
+    ? ` Связываем с ребёнком ${intent.childName}${relation ? ` (${relation})` : ''}.`
+    : '';
+  const final = ' Решение окончательное: отменить одобрение нельзя.';
+
+  if (!intent.createProfile) {
+    const target = intent.profileName ?? 'выбранному профилю';
+    return {
+      title: 'Привязать заявку к профилю?',
+      message: `${applicant} получит доступ к профилю «${target}» — новый профиль не создаётся.${child} ${login}${final}`,
+      confirmLabel: 'Привязать',
+    };
+  }
+
+  const where = className ? `${applicant}, ${className}` : applicant;
+  return {
+    title: detail.role === 'PARENT' ? 'Создать нового родителя?' : 'Создать нового ученика?',
+    message: `В школе появится новый ${noun}: ${where}.${child} ${login} Если такой ${noun} в школе уже есть, вернитесь и привяжите заявку к его профилю — иначе получится дубль.${final}`,
+    confirmLabel: 'Создать профиль',
+  };
 }

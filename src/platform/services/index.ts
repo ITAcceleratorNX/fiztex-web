@@ -1,8 +1,6 @@
 export {
-  listUsers,
   listUsersPage,
   getUserStats,
-  getUser,
   createUser,
   updateUser,
   blockUser,

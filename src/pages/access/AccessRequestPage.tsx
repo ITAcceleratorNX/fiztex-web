@@ -22,6 +22,8 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock
 import { useToast } from '@/context/ToastContext';
 import { cx, formatDayMonthTime, formatShortDayMonth, pluralRu } from '@/lib/format';
 import {
+  RELATION_LABELS,
+  approvalConfirm,
   candidateBadges,
   candidateMeta,
   changedSincePrevious,
@@ -33,6 +35,7 @@ import {
   rejectionTemplates,
   requestClassName,
   roleLabel,
+  type ApprovalIntent,
   type MatchBadge,
 } from './accessRequestModel';
 
@@ -42,13 +45,6 @@ type ApproveBody = Schema<'ApproveAccessRequestRequest'>;
 type Relation = NonNullable<ApproveBody['relationType']>;
 
 const REQUESTS_PATH = '/admin/access-codes?tab=requests';
-
-const RELATION_LABELS: Record<Relation, string> = {
-  MOTHER: 'Мать',
-  FATHER: 'Отец',
-  GUARDIAN: 'Опекун',
-  OTHER: 'Другое',
-};
 
 function errorMessage(error: unknown, fallback: string) {
   return error instanceof ApiError ? error.message : fallback;
@@ -229,6 +225,9 @@ function SuggestionsCard({ detail }: { detail: Detail }) {
   const [childProfileId, setChildProfileId] = useState<number | null>(null);
   const [relation, setRelation] = useState<Relation>('MOTHER');
   const [duplicate, setDuplicate] = useState<ApproveBody | null>(null);
+  // Одобрение необратимо, и две кнопки делают разное, поэтому между нажатием и запросом
+  // стоит вопрос: что именно собрались сделать и что из этого получится.
+  const [pending, setPending] = useState<{ body: ApproveBody; intent: ApprovalIntent } | null>(null);
 
   async function send(body: ApproveBody) {
     try {
@@ -246,18 +245,31 @@ function SuggestionsCard({ detail }: { detail: Detail }) {
     }
   }
 
-  function approveWith(target: { accountId?: number; createProfile?: boolean }) {
+  function approveWith(
+    target: { accountId?: number; createProfile?: boolean },
+    profileName?: string | null,
+  ) {
     if (detail.version == null) return;
     if (detail.role === 'PARENT' && !childProfileId) {
       toast.error('Выберите ребёнка из заявки — без него связать родителя не с кем.');
       return;
     }
-    void send({
-      ...target,
-      version: detail.version,
-      ...(detail.role === 'PARENT'
-        ? { childStudentProfileId: childProfileId ?? undefined, relationType: relation }
-        : {}),
+    setPending({
+      body: {
+        ...target,
+        version: detail.version,
+        ...(detail.role === 'PARENT'
+          ? { childStudentProfileId: childProfileId ?? undefined, relationType: relation }
+          : {}),
+      },
+      intent: {
+        createProfile: target.createProfile === true,
+        profileName,
+        // Имя ребёнка берём из выбранной карточки, а не из заявки: администратор мог
+        // выбрать однофамильца, и подтверждение обязано назвать того, кого привяжут.
+        childName: children.find((item) => item.studentProfileId === childProfileId)?.fullName,
+        relationType: detail.role === 'PARENT' ? relation : undefined,
+      },
     });
   }
 
@@ -350,7 +362,7 @@ function SuggestionsCard({ detail }: { detail: Detail }) {
               className="shrink-0"
               variant={index === 0 ? 'primary' : 'secondary'}
               loading={approve.isPending}
-              onClick={() => approveWith({ accountId: candidate.accountId })}
+              onClick={() => approveWith({ accountId: candidate.accountId }, candidate.fullName)}
             >
               Привязать
             </Button>
@@ -374,6 +386,18 @@ function SuggestionsCard({ detail }: { detail: Detail }) {
         </div>
       </div>
 
+      <ApproveConfirmDialog
+        detail={detail}
+        pending={pending}
+        loading={approve.isPending}
+        onClose={() => setPending(null)}
+        onConfirm={() => {
+          const body = pending?.body;
+          setPending(null);
+          if (body) void send(body);
+        }}
+      />
+
       <ConfirmDialog
         open={Boolean(duplicate)}
         onClose={() => setDuplicate(null)}
@@ -388,6 +412,42 @@ function SuggestionsCard({ detail }: { detail: Detail }) {
         }}
       />
     </div>
+  );
+}
+
+/**
+ * Вопрос перед одобрением. Отдельный компонент, а не `ConfirmDialog` по месту: текст
+ * зависит от того, какую из двух кнопок нажали, и считает его модель (`approvalConfirm`),
+ * где его можно проверить тестом.
+ */
+function ApproveConfirmDialog({
+  detail,
+  pending,
+  loading,
+  onClose,
+  onConfirm,
+}: {
+  detail: Detail;
+  pending: { body: ApproveBody; intent: ApprovalIntent } | null;
+  loading: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  // Пока намерения нет, окна нет вовсе: диалог в центре закрывается без анимации, и
+  // держать текст после закрытия не нужно.
+  if (!pending) return null;
+  const copy = approvalConfirm(detail, pending.intent);
+
+  return (
+    <ConfirmDialog
+      open
+      onClose={onClose}
+      loading={loading}
+      onConfirm={onConfirm}
+      title={copy.title}
+      message={copy.message}
+      confirmLabel={copy.confirmLabel}
+    />
   );
 }
 

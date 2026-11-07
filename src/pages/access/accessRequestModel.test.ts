@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Schema } from '@/lib/apiSchemas';
 import {
+  approvalConfirm,
   candidateBadges,
   changedSincePrevious,
   childBadges,
@@ -125,5 +126,68 @@ describe('частые причины отказа', () => {
 
   it('у родителя берёт класс ребёнка', () => {
     expect(rejectionTemplates(parentRequest)[0].text).toContain('В 5А');
+  });
+});
+
+describe('подтверждение перед одобрением', () => {
+  it('у создания и привязки разный вопрос', () => {
+    // «Вы уверены?» на обе кнопки не сказало бы ничего: одна заводит человека в школе,
+    // другая отдаёт заявителю уже существующий профиль.
+    const create = approvalConfirm(studentRequest, { createProfile: true });
+    const link = approvalConfirm(studentRequest, { createProfile: false, profileName: 'Сейтқазы Арман' });
+
+    expect(create.title).toBe('Создать нового ученика?');
+    expect(create.confirmLabel).toBe('Создать профиль');
+    expect(link.title).toBe('Привязать заявку к профилю?');
+    expect(link.confirmLabel).toBe('Привязать');
+  });
+
+  it('создание называет класс и предупреждает о дубле', () => {
+    const copy = approvalConfirm(studentRequest, { createProfile: true });
+
+    expect(copy.message).toContain('Сейтқазы Арман Ерланович, 5А');
+    expect(copy.message).toContain('дубль');
+    expect(copy.message).toContain('отменить одобрение нельзя');
+  });
+
+  it('привязка называет профиль и говорит, что нового не создаётся', () => {
+    const copy = approvalConfirm(studentRequest, {
+      createProfile: false,
+      profileName: 'Сейтқазы Арман Ерланович',
+    });
+
+    expect(copy.message).toContain('«Сейтқазы Арман Ерланович»');
+    expect(copy.message).toContain('новый профиль не создаётся');
+  });
+
+  it('у ученика без пароля вход кодом от классного руководителя', () => {
+    expect(approvalConfirm(studentRequest, { createProfile: true }).message)
+      .toContain('классный руководитель');
+  });
+
+  it('у родителя с паролем из заявки вход телефоном', () => {
+    const copy = approvalConfirm(parentRequest, {
+      createProfile: true,
+      childName: 'Кабылов Тимур Серикович',
+      relationType: 'MOTHER',
+    });
+
+    expect(copy.title).toBe('Создать нового родителя?');
+    expect(copy.message).toContain('по телефону и паролю из заявки');
+    expect(copy.message).toContain('Кабылов Тимур Серикович (мать)');
+  });
+
+  it('ребёнок берётся выбранный, а не названный в заявке', () => {
+    // Администратор мог выбрать однофамильца: подтверждение обязано назвать того,
+    // кого действительно привяжут.
+    const copy = approvalConfirm(parentRequest, {
+      createProfile: false,
+      profileName: 'Кабылова Амина',
+      childName: 'Кабылов Тимур Сериков',
+      relationType: 'GUARDIAN',
+    });
+
+    expect(copy.message).toContain('Кабылов Тимур Сериков (опекун)');
+    expect(copy.message).not.toContain('Кабылов Тимур Серикович (');
   });
 });

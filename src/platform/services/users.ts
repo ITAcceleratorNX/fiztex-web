@@ -52,23 +52,6 @@ function mapUser(dto: AccountDto): PlatformUser {
   };
 }
 
-export async function listUsers(params: ListUsersParams = {}): Promise<PlatformUser[]> {
-  const role = params.role && params.role !== 'ALL' ? params.role : undefined;
-  const status = params.status && params.status !== 'ALL' ? params.status : undefined;
-
-  const page = await request<Page<AccountDto>>(
-    `/admin/accounts${pageQuery({
-      role,
-      status,
-      query: params.query?.trim() || undefined,
-      page: 0,
-      size: 200,
-    })}`,
-  );
-
-  return page.content.map(mapUser);
-}
-
 export interface UsersPageResult {
   users: PlatformUser[];
   totalElements: number;
@@ -101,11 +84,6 @@ export async function listUsersPage(
 
 export async function getUserStats(signal?: AbortSignal): Promise<AccountStats> {
   return request<AccountStatsDto>('/admin/accounts/stats', { signal });
-}
-
-export async function getUser(id: string): Promise<PlatformUser | null> {
-  const users = await listUsers();
-  return users.find((u) => u.id === id) ?? null;
 }
 
 /**
@@ -155,29 +133,28 @@ export async function updateUser(_id: string, _input: UpdateUserInput): Promise<
   );
 }
 
-export async function blockUser(id: string): Promise<PlatformUser> {
+/**
+ * Блокировка и разблокировка — одна команда серверу, без чтения в ответ.
+ *
+ * Раньше обе дочитывали аккаунт, чтобы вернуть обновлённую строку, а искали его **в
+ * первых двухстах** записях `/admin/accounts` (`getUser` поверх `listUsers`) — аккаунтов
+ * в школе больше. Всё, что не попало в это окно, «не находилось»: разблокировка
+ * показывала «Пользователь не найден» поверх успешно выполненной команды, а блокировка
+ * молча возвращала пустую заглушку со статусом `BLOCKED`. Роль тут ни при чём — просто
+ * учеников в школе сотни, и за границу окна они уходят первыми.
+ *
+ * Возвращённая строка при этом не нужна никому: все четыре экрана (список пользователей
+ * и три карточки) перечитывают данные сами сразу после вызова. Вместе с `getUser` ушёл и
+ * `listUsers` — «первые двести аккаунтов» одним запросом: его больше никто не звал, а
+ * оставленный рядом он однажды пригодился бы снова и принёс ту же ошибку. Аккаунты
+ * листаются `listUsersPage`, ищутся `query`.
+ */
+export async function blockUser(id: string): Promise<void> {
   await request<void>(`/admin/accounts/${id}/block`, { method: 'POST' });
-  const user = await getUser(id);
-  if (!user) {
-    return {
-      id,
-      fullName: '',
-      role: 'STUDENT',
-      email: null,
-      phone: null,
-      status: 'BLOCKED',
-      relationLabel: null,
-      createdAt: new Date().toISOString(),
-    };
-  }
-  return { ...user, status: 'BLOCKED' };
 }
 
-export async function unblockUser(id: string): Promise<PlatformUser> {
+export async function unblockUser(id: string): Promise<void> {
   await request<void>(`/admin/accounts/${id}/unblock`, { method: 'POST' });
-  const user = await getUser(id);
-  if (!user) throw new Error('Пользователь не найден');
-  return user;
 }
 
 export async function archiveUser(id: string): Promise<void> {
@@ -243,14 +220,11 @@ export async function findAccountByPhone(normalizedPhone: string): Promise<Platf
  *
  * Те же `block` и `unblock`, что у общей таблицы аккаунтов, — и называются они в панели
  * тем же словом: в `block` живёт возврат заявок в очередь (SERVICE-BE-007 §9). Тонкая
- * обёртка вместо `blockUser` — потому что та ради возврата обновлённой строки
- * перечитывает двести аккаунтов, а раздел сотрудников и так перезапрашивает свой список
- * после действия.
+ * обёртка вместо `blockUser` — потому что одно действие переключателя не должно
+ * превращаться в два разных вызова по месту.
  */
 export async function setAccountActive(accountId: string, active: boolean): Promise<void> {
-  await request<void>(`/admin/accounts/${accountId}/${active ? 'unblock' : 'block'}`, {
-    method: 'POST',
-  });
+  return active ? unblockUser(accountId) : blockUser(accountId);
 }
 
 /**
