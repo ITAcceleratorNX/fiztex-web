@@ -4,6 +4,9 @@ export default {
   theme: {
     extend: {
       colors: {
+        auth: { canvas: 'var(--color-auth-canvas)' },
+        drawer: { scrim: 'var(--color-drawer-scrim)' },
+        field: { filled: 'var(--color-field-filled)', invalid: 'var(--color-field-invalid)' },
         planning: {
           ink: 'var(--color-planning-ink)', muted: 'var(--color-planning-muted)', subtle: 'var(--color-planning-subtle)',
           line: 'var(--color-planning-line)', 'row-line': 'var(--color-planning-row-line)', canvas: 'var(--color-planning-canvas)',
@@ -115,8 +118,16 @@ export default {
         15: 'var(--text-15)',
         28: 'var(--text-28)',
         32: 'var(--text-32)',
+        // Заголовок синей панели входа (2460:4665).
+        40: 'var(--text-40)',
+        // Средний балл в шторке ученика (2460:3543).
+        22: 'var(--text-22)',
       },
       height: {
+        // «Залитое» поле входа (2460:4665).
+        'field-lg': 'var(--size-field-lg)',
+        // Кнопка действия в карточке шторки («Скопировать», 2460:3729).
+        action: 'var(--size-action)',
         // Ряды таймлайна занятости: 70px просмотр (2015:11009), 60px правка
         // (2015:11496). Обе высоты вне 4px-шкалы Tailwind — заведены явно,
         // чтобы не разъезжались между режимами.
@@ -128,8 +139,22 @@ export default {
         'journal-head': '52px',
         'journal-row': '44px',
       },
-      borderRadius: { 'planning-panel': 'var(--radius-planning-panel)', 'planning-modal': 'var(--radius-planning-modal)' },
-      gridTemplateColumns: { 'planning-editor': 'var(--grid-planning-editor)' },
+      borderRadius: {
+        'planning-panel': 'var(--radius-planning-panel)',
+        'planning-modal': 'var(--radius-planning-modal)',
+        'auth-card': 'var(--radius-auth-card)',
+        'auth-panel': 'var(--radius-auth-panel)',
+        'field-lg': 'var(--radius-field-lg)',
+        // Плашка-подсказка `Callout` (2460:4758).
+        callout: '20px',
+        'drawer-card': 'var(--radius-drawer-card)',
+        action: 'var(--radius-action)',
+      },
+      gridTemplateColumns: {
+        'planning-editor': 'var(--grid-planning-editor)',
+        'access-request': 'var(--grid-access-request)',
+        'access-decision': 'var(--grid-access-decision)',
+      },
       width: {
         // Переключатель нескольких классов учителя (2200:4727).
         'class-switcher': '220px',
@@ -172,6 +197,11 @@ export default {
       letterSpacing: {
         // Подписи селекторов-фильтров (2015:12038).
         filter: '0.5px',
+        // Крупные заголовки экранов входа: 36–40 px со сжатием -0.5 (2460:4665).
+        display: '-0.5px',
+        // Код ученика: маска «•••• ••••» и выданный код (2460:3543 / 2460:3729).
+        'code-mask': '3px',
+        code: '1.5px',
       },
       maxWidth: {
         'planning-dialog': 'var(--size-planning-dialog)',
@@ -185,6 +215,9 @@ export default {
         'state-text-wide': '400px',
         // Ширина модалки «Новое событие» (2015:10714).
         'modal-form': '480px',
+        'auth-card': 'var(--size-auth-card)',
+        'auth-form': 'var(--size-auth-form)',
+        drawer: 'var(--size-drawer)',
       },
       maxHeight: {
         // Скролл-список классов в модалке события (2015:10760).
@@ -206,6 +239,7 @@ export default {
         soft: 'var(--shadow-soft)',
         tile: 'var(--shadow-tile)',
         raised: 'var(--shadow-raised)',
+        auth: 'var(--shadow-auth)',
       },
       keyframes: {
         'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
@@ -217,11 +251,21 @@ export default {
           from: { opacity: '0', transform: 'translateX(16px)' },
           to: { opacity: '1', transform: 'translateX(0)' },
         },
+        'fade-out': { from: { opacity: '1' }, to: { opacity: '0' } },
+        // Боковая шторка (`Modal placement="right"`) выезжает из-за правого края и уезжает
+        // туда же: заметка дизайнера к кадру T1 — «страница должна плавно открываться».
+        'drawer-in': { from: { transform: 'translateX(100%)' }, to: { transform: 'translateX(0)' } },
+        'drawer-out': { from: { transform: 'translateX(0)' }, to: { transform: 'translateX(100%)' } },
       },
       animation: {
         'fade-in': 'fade-in 0.15s ease-out',
         'scale-in': 'scale-in 0.16s ease-out',
         'slide-in': 'slide-in 0.2s ease-out',
+        // `forwards` держит конечный кадр до размонтирования: без него шторка на миг
+        // вернулась бы на место между концом анимации и закрытием.
+        'fade-out': 'fade-out 0.2s ease-in forwards',
+        'drawer-in': 'drawer-in 0.26s cubic-bezier(0.22, 1, 0.36, 1)',
+        'drawer-out': 'drawer-out 0.2s cubic-bezier(0.4, 0, 1, 1) forwards',
       },
     },
   },

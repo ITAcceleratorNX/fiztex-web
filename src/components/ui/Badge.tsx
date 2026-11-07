@@ -26,7 +26,11 @@ export function Badge({
   dot?: boolean;
   /** Значок вместо точки — «Период открыт» с замком (Figma `period-open-badge` 2162:2088). */
   icon?: ReactNode;
-  appearance?: 'pill' | 'label';
+  /**
+   * `pill` — круглая с обводкой; `label` — плоская на радиусе 6; `chip` — плоская круглая
+   * высотой 24, кегль 12/600 (Figma `phyztex` 2460:3420, плашки совпадений «✓ ФИО»).
+   */
+  appearance?: 'pill' | 'label' | 'chip';
   children: ReactNode;
 }) {
   const t = tones[tone];
@@ -34,8 +38,13 @@ export function Badge({
   return (
     <span
       className={cx(
-        'inline-flex items-center gap-1.5 px-2.5 py-1 text-xs',
-        appearance === 'label' ? `rounded-md font-semibold ${labelTones[tone]}` : `rounded-full font-medium ring-1 ring-inset ${t.wrap}`,
+        'inline-flex items-center px-2.5 py-1 text-xs',
+        appearance === 'chip' ? 'gap-1' : 'gap-1.5',
+        appearance === 'label'
+          ? `rounded-md font-semibold ${labelTones[tone]}`
+          : appearance === 'chip'
+            ? `rounded-full font-semibold leading-4 ${labelTones[tone]}`
+            : `rounded-full font-medium ring-1 ring-inset ${t.wrap}`,
       )}
     >
       {dot && <span className={cx('h-1.5 w-1.5 rounded-full', t.dot)} />}

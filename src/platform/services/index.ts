@@ -1,8 +1,6 @@
 export {
-  listUsers,
   listUsersPage,
   getUserStats,
-  getUser,
   createUser,
   updateUser,
   blockUser,
@@ -30,6 +28,7 @@ export {
   resetPin,
   reissueCode,
   resetAccess,
+  issueTemporaryPassword,
   exportAccessCodesCsv,
 } from './accessCodes';
 export {

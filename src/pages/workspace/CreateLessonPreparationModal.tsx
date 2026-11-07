@@ -3,11 +3,13 @@ import { Sparkles, X } from 'lucide-react';
 import { WorkspaceMaterialPickerModal } from '@/components/workspace/WorkspaceMaterialPickerModal';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { Field, Select, TextArea, TextInput } from '@/components/ui/Field';
+import { Field, Select, TextInput } from '@/components/ui/Field';
+import { RichTextField } from '@/components/ui/RichTextField';
 import { Modal } from '@/components/ui/Modal';
 import { SummaryDocument } from '@/components/ui/SummaryDocument';
 import { useToast } from '@/context/ToastContext';
 import { useCreateLessonPreparation } from '@/hooks/queries';
+import { useEmbedEditing } from '@/hooks/useEmbedEditing';
 import { ApiError } from '@/lib/api';
 import type { SummaryContent } from '@/lib/lessonSummaryApi';
 import type { WorkspaceSearchItem } from '@/lib/teacherWorkspaceApi';
@@ -31,6 +33,7 @@ export function CreateLessonPreparationModal({ onClose, onCreated, initialGenera
   const [pendingGenerated, setPendingGenerated] = useState<{ content: SummaryContent; source: WorkspaceSearchItem | null } | null>(null);
   const create = useCreateLessonPreparation();
   const toast = useToast();
+  const editing = useEmbedEditing(null);
   const canSave = Boolean(title.trim() && topic.trim() && (summaryText.trim() || companionText.trim()));
   const hasChanges = Boolean(title || topic || summaryText || companionText || documents.length || textbook);
 
@@ -62,8 +65,9 @@ export function CreateLessonPreparationModal({ onClose, onCreated, initialGenera
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canSave || create.isPending) return;
+    if (!canSave || create.isPending || editing.uploading) return;
     setError('');
+    editing.clearRejection();
     try {
       await create.mutateAsync({
         title: title.trim(), topic: topic.trim(),
@@ -75,6 +79,7 @@ export function CreateLessonPreparationModal({ onClose, onCreated, initialGenera
       onCreated?.();
       onClose();
     } catch (caught) {
+      editing.rememberRejection(caught);
       setError(caught instanceof ApiError ? caught.message : 'Не удалось сохранить заготовку');
     }
   }
@@ -82,7 +87,7 @@ export function CreateLessonPreparationModal({ onClose, onCreated, initialGenera
   return <>
     <Modal open onClose={requestClose} title="Новая заготовка урока" size="xl" footer={<>
       <Button variant="secondary" onClick={requestClose} disabled={create.isPending}>Отмена</Button>
-      <Button type="submit" form="create-lesson-preparation" loading={create.isPending} disabled={!canSave}>Сохранить заготовку</Button>
+      <Button type="submit" form="create-lesson-preparation" loading={create.isPending} disabled={!canSave || editing.uploading}>Сохранить заготовку</Button>
     </>}>
       <form id="create-lesson-preparation" onSubmit={(event) => void save(event)} className="space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -106,10 +111,11 @@ export function CreateLessonPreparationModal({ onClose, onCreated, initialGenera
           </Button>
         </div>
         {preview ? <div className="rounded-xl border border-slate-200 p-4">
-          <SummaryDocument content={{ title: topic.trim(), summaryText, companionText, companionKind }} />
+          <SummaryDocument content={{ title: topic.trim(), summaryText, companionText, companionKind }} embeds={editing.embeds} />
         </div> : <div className="space-y-4">
           <Field label="Краткий конспект" hint="Основные мысли, определения и формулы. До 20 000 знаков.">
-            <TextArea rows={7} maxLength={20000} value={summaryText} onChange={(event) => setSummaryText(event.target.value)} />
+            <RichTextField rows={7} maxLength={20000} value={summaryText} onChange={setSummaryText}
+              {...editing.fieldProps('summaryText')} />
           </Field>
           <Field label="Второй блок">
             <Select value={companionKind} onChange={(event) => setCompanionKind(event.target.value as NonNullable<SummaryContent['companionKind']>)}>
@@ -118,7 +124,8 @@ export function CreateLessonPreparationModal({ onClose, onCreated, initialGenera
             </Select>
           </Field>
           <Field label={companionKind === 'PLAN' ? 'План урока' : 'Краткий пересказ'}>
-            <TextArea rows={5} maxLength={20000} value={companionText} onChange={(event) => setCompanionText(event.target.value)} />
+            <RichTextField rows={5} maxLength={20000} value={companionText} onChange={setCompanionText}
+              {...editing.fieldProps('companionText')} />
           </Field>
           <p className="text-xs text-slate-500">Заполните хотя бы один блок. Формулы можно записывать между $…$.</p>
         </div>}

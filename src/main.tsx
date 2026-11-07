@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { ToastProvider } from '@/context/ToastContext';
+import { ContentEmbedProvider } from '@/context/ContentEmbedContext';
 import { App } from './App';
 import { ADMIN_TITLE } from '@/lib/branding';
 import './index.css';
@@ -14,7 +15,9 @@ function Root() {
   return (
     <AuthProvider>
       <ToastProvider>
-        <App />
+        <ContentEmbedProvider>
+          <App />
+        </ContentEmbedProvider>
       </ToastProvider>
     </AuthProvider>
   );

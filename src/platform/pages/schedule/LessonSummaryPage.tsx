@@ -5,7 +5,8 @@ import { AiJobProgress } from '@/components/ui/AiJobProgress';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { Field, Select, TextArea, TextInput } from '@/components/ui/Field';
+import { Field, Select, TextInput } from '@/components/ui/Field';
+import { RichTextField } from '@/components/ui/RichTextField';
 import { NoticeBar } from '@/components/ui/NoticeBar';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
@@ -13,6 +14,7 @@ import { SummaryDocument } from '@/components/ui/SummaryDocument';
 import { useToast } from '@/context/ToastContext';
 import { useLesson, useLessonSummary, useSummaryCommands } from '@/hooks/queries';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useEmbedEditing } from '@/hooks/useEmbedEditing';
 import { ApiError } from '@/lib/api';
 import { summaryRunning, type SummaryContent } from '@/lib/lessonSummaryApi';
 import { LessonSummaryGenerateModal } from './LessonSummaryGenerateModal';
@@ -43,7 +45,10 @@ function SummaryPage({ id }: { id: number }) {
   const content: SummaryContent = edit?.content ?? data?.content ?? {
     title: lesson.data?.topic || 'Конспект урока', summaryText: '', companionText: '', companionKind: 'RETELLING',
   };
-  const busy = save.isPending || publish.isPending || unpublish.isPending;
+  const editing = useEmbedEditing(data?.embeds);
+  const saving = save.isPending || publish.isPending || unpublish.isPending;
+  // Пока файл грузится, маркера в тексте ещё нет: сохранить сейчас — значит сохранить без него.
+  const busy = saving || editing.uploading;
   const job = data?.latestJob;
   const running = summaryRunning(job);
   const canPublish = Boolean(content.title?.trim() && content.summaryText.trim() && content.companionText.trim());
@@ -59,6 +64,7 @@ function SummaryPage({ id }: { id: number }) {
   function change(patch: Partial<SummaryContent>) {
     setEdit({ content: { ...content, ...patch }, revision: edit?.revision ?? data?.revision ?? 0 });
     setError('');
+    editing.clearRejection();
   }
 
   async function persist(shouldPublish: boolean) {
@@ -76,6 +82,7 @@ function SummaryPage({ id }: { id: number }) {
       }
       toast.success(shouldPublish ? 'Оба блока опубликованы для учеников' : 'Черновик сохранён');
     } catch (e) {
+      editing.rememberRejection(e);
       setError(e instanceof ApiError ? e.message : 'Не удалось сохранить конспект. Ваши правки остались на странице.');
     }
   }
@@ -145,7 +152,7 @@ function SummaryPage({ id }: { id: number }) {
               </Button>
             </NoticeBar>}
             {candidateOpen && job?.result && <div className="card space-y-5 p-6">
-              <SummaryDocument content={job.result} />
+              <SummaryDocument content={job.result} embeds={data.embeds} onExpired={() => void query.refetch()} />
               <Button variant="secondary" disabled={dirty || busy} onClick={() => {
                 setEdit({ content: job.result!, revision: data.revision ?? 0 });
                 setMode('edit'); setCandidateOpen(false);
@@ -163,15 +170,16 @@ function SummaryPage({ id }: { id: number }) {
             <Button variant="ghost" size="sm" onClick={() => setConfirm('discard')}>Загрузить актуальную версию</Button>
           </NoticeBar>}
           <div className="card p-5 sm:p-8">
-            {data.canEdit && mode === 'edit' ? <fieldset disabled={busy} className="space-y-6">
+            {data.canEdit && mode === 'edit' ? <fieldset disabled={saving} className="space-y-6">
               <Field label="Название" required>
                 <TextInput aria-label="Название конспекта" value={content.title ?? ''} maxLength={300}
                   onChange={(e) => change({ title: e.target.value })} />
               </Field>
               <div className="grid gap-6 xl:grid-cols-2">
                 <Field label="Краткий конспект" hint="Основные мысли, определения и формулы. До 20 000 знаков.">
-                  <TextArea aria-label="Краткий конспект" rows={18} maxLength={20000} value={content.summaryText}
-                    placeholder="Создайте конспект с ИИ или напишите здесь…" onChange={(e) => change({ summaryText: e.target.value })} />
+                  <RichTextField ariaLabel="Краткий конспект" rows={18} maxLength={20000} value={content.summaryText}
+                    placeholder="Создайте конспект с ИИ или напишите здесь…" onChange={(next) => change({ summaryText: next })}
+                    {...editing.fieldProps('summaryText')} />
                 </Field>
                 <div className="space-y-3">
                   <Field label="Второй блок">
@@ -180,15 +188,17 @@ function SummaryPage({ id }: { id: number }) {
                       <option value="RETELLING">Краткий пересказ</option><option value="PLAN">План урока</option>
                     </Select>
                   </Field>
-                  <TextArea aria-label="Текст второго блока" rows={16} maxLength={20000} value={content.companionText}
-                    placeholder="Пересказ или последовательность шагов урока…" onChange={(e) => change({ companionText: e.target.value })} />
+                  <RichTextField ariaLabel="Текст второго блока" rows={16} maxLength={20000} value={content.companionText}
+                    placeholder="Пересказ или последовательность шагов урока…" onChange={(next) => change({ companionText: next })}
+                    {...editing.fieldProps('companionText')} />
                   <p className="text-xs text-muted">Этот блок тоже будет виден ученикам.</p>
                 </div>
               </div>
               <p className="text-xs text-muted">Формулы можно записывать между $…$. Проверьте их в предпросмотре.</p>
             </fieldset> : mode === 'published' && data.publishedContent ?
-              <SummaryDocument content={data.publishedContent} /> :
-              (data.content || dirty) ? <SummaryDocument content={content} /> :
+              <SummaryDocument content={data.publishedContent} embeds={data.embeds} onExpired={() => void query.refetch()} /> :
+              (data.content || dirty) ? <SummaryDocument content={content} embeds={editing.embeds}
+                onExpired={() => void query.refetch()} /> :
                 <EmptyBlock title="Конспект пока не опубликован" description="Здесь появятся материалы, когда учитель их опубликует." />}
           </div>
           {error && (

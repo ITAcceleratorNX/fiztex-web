@@ -166,7 +166,7 @@ export function FormulaField({
 }
 
 /** Предпросмотр, в котором каждая формула — кнопка: щелчок открывает её на правку. */
-function EditableFormulaPreview({
+export function EditableFormulaPreview({
   value,
   onEdit,
   onRemove,

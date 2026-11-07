@@ -274,14 +274,50 @@ export function pageQuery(params: Record<string, string | number | boolean | und
   return query ? `?${query}` : '';
 }
 
+type AccountLoginResponse = {
+  token: string;
+  role: string;
+  fullName: string;
+  mustChangePassword?: boolean;
+};
+
 export const api = {
-  // Auth — backend returns { token, role, fullName }; map login → email for Admin profile.
-  login: async (login: string, password: string): Promise<Admin> => {
-    const res = await request<{ token: string; role: string; fullName: string }>('/auth/login', {
+  /**
+   * Единая точка входа (AUTH-BE-001 §9): сервер сам решает по форме логина, спрашивать
+   * пароль или PIN. Прежний `/auth/login` работает как раньше, но панель ходит сюда —
+   * иначе сотрудник с временным паролем вошёл бы без отметки `mustChangePassword`.
+   */
+  signIn: async (login: string, secret: string): Promise<Admin> => {
+    const res = await request<AccountLoginResponse>('/auth/sign-in', {
       method: 'POST',
-      body: { login, password },
+      body: { login, secret },
     });
-    return { token: res.token, email: login, fullName: res.fullName, role: res.role };
+    return {
+      token: res.token,
+      email: login,
+      fullName: res.fullName,
+      role: res.role,
+      mustChangePassword: res.mustChangePassword ?? false,
+    };
+  },
+
+  /** Смена своего пароля. Сервер отзывает сессии и отдаёт новый токен. */
+  changePassword: async (
+    login: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<Admin> => {
+    const res = await request<AccountLoginResponse>('/auth/password/change', {
+      method: 'POST',
+      body: { currentPassword, newPassword },
+    });
+    return {
+      token: res.token,
+      email: login,
+      fullName: res.fullName,
+      role: res.role,
+      mustChangePassword: res.mustChangePassword ?? false,
+    };
   },
 
   // Subjects — unified on «Школьные предметы» (school_subjects). Read-only here;

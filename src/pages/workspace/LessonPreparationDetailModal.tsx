@@ -21,7 +21,8 @@ export function LessonPreparationDetailModal({ item, onClose, onReuse }: {
       <ErrorBlock message="Не удалось загрузить данные" onRetry={() => preparation.refetch()} /> : <div className="space-y-4">
         <p className="text-sm text-slate-600">Версия {preparation.data?.version} · Тема: {preparation.data?.topic || 'не указана'}</p>
         <p className="text-sm text-slate-600">Эту заготовку можно применить к нескольким урокам через их конспекты.</p>
-        {preparation.data?.summary && <SummaryDocument content={preparation.data.summary} />}
+        {preparation.data?.summary && <SummaryDocument content={preparation.data.summary} embeds={preparation.data.embeds}
+          onExpired={() => void preparation.refetch()} />}
         <div>
           <p className="mb-2 text-sm font-semibold text-slate-900">Материалы</p>
           {(preparation.data?.documents ?? []).length === 0 ? <p className="text-sm text-slate-500">Материалы не добавлены</p>

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { pageQuery, request } from '@/lib/api';
 import type { Schema } from '@/lib/apiSchemas';
 import type { DynamicsPeriod } from '@/lib/dynamicsModel';
@@ -19,6 +19,12 @@ export function useClassGradeDynamics(classId: number | null, period: DynamicsPe
   });
 }
 
+/**
+ * При листании учеников в шторке прежний ответ держится, пока грузится следующий
+ * (`keepPreviousData`): без этого панель на каждое нажатие ‹ › схлопывалась до спиннера и
+ * раскрывалась обратно. Правило выше не нарушается — шторка подписывает такой ответ его
+ * учеником (`isPlaceholderData`), а не тем, кого уже выбрали.
+ */
 export function useStudentGradeDynamics(classId: number | null, studentId: number | null, period: DynamicsPeriod) {
   return useQuery({
     queryKey: ['grade-dynamics', 'class', classId, 'student', studentId, period],
@@ -26,6 +32,7 @@ export function useStudentGradeDynamics(classId: number | null, studentId: numbe
     queryFn: ({ signal }) => request<Schema<'StudentGradeDynamicsView'>>(
       `/my-class/classes/${classId}/students/${studentId}/grade-dynamics${pageQuery({ period })}`, { signal }),
     staleTime: 0,
+    placeholderData: keepPreviousData,
   });
 }
 

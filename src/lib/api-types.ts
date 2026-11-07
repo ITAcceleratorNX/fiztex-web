@@ -4,6 +4,102 @@
  */
 
 export interface paths {
+    "/api/access-requests/classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["classes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/access-requests/device": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["registerDevice"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/access-requests/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["saveDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/access-requests/resubmit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resubmit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/access-requests/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["status"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/access-requests/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["submit_4"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/academic-periods/{id}": {
         parameters: {
             query?: never;
@@ -143,7 +239,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_26"];
+        get: operations["list_27"];
         put?: never;
         post: operations["create_23"];
         delete?: never;
@@ -264,6 +360,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/access-journal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_38"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/access-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_37"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/access-requests/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["stats_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/access-requests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/access-requests/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/access-requests/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/access-requests/{id}/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["suggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/accounts": {
         parameters: {
             query?: never;
@@ -271,7 +479,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_25"];
+        get: operations["list_26"];
         put?: never;
         post: operations["create_22"];
         delete?: never;
@@ -328,6 +536,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/accounts/{id}/phone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["changePhone"];
+        trace?: never;
+    };
     "/api/admin/accounts/{id}/reset-access": {
         parameters: {
             query?: never;
@@ -360,6 +584,22 @@ export interface paths {
         patch: operations["changeRole"];
         trace?: never;
     };
+    "/api/admin/accounts/{id}/temporary-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["issueTemporaryPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/accounts/{id}/unblock": {
         parameters: {
             query?: never;
@@ -383,7 +623,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_24"];
+        get: operations["list_25"];
         put?: never;
         post: operations["create_21"];
         delete?: never;
@@ -559,7 +799,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_23"];
+        get: operations["list_24"];
         put?: never;
         post: operations["create_20"];
         delete?: never;
@@ -623,7 +863,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_22"];
+        get: operations["list_23"];
         put?: never;
         post: operations["create_19"];
         delete?: never;
@@ -783,7 +1023,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_21"];
+        get: operations["list_22"];
         put?: never;
         post: operations["create_18"];
         delete?: never;
@@ -847,7 +1087,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_20"];
+        get: operations["list_21"];
         put?: never;
         post: operations["create_17"];
         delete?: never;
@@ -1113,7 +1353,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_19"];
+        get: operations["list_20"];
         put?: never;
         post: operations["create_16"];
         delete?: never;
@@ -1465,7 +1705,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_18"];
+        get: operations["list_19"];
         put?: never;
         post: operations["create_15"];
         delete?: never;
@@ -1529,7 +1769,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_17"];
+        get: operations["list_18"];
         put?: never;
         post: operations["create_14"];
         delete?: never;
@@ -1785,7 +2025,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_16"];
+        get: operations["list_17"];
         put?: never;
         post: operations["create_13"];
         delete?: never;
@@ -2025,7 +2265,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_15"];
+        get: operations["list_16"];
         put?: never;
         post: operations["create_12"];
         delete?: never;
@@ -2253,6 +2493,38 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/students/{studentProfileId}/code-grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_15"];
+        put?: never;
+        post: operations["grant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/students/{studentProfileId}/code-grants/{grantId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["revoke"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2585,7 +2857,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_35"];
+        get: operations["list_36"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2905,7 +3177,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_34"];
+        get: operations["list_35"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2985,7 +3257,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_33"];
+        get: operations["list_34"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3330,6 +3602,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/password/change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["changePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/sign-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["signIn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/staff/activate": {
         parameters: {
             query?: never;
@@ -3388,6 +3692,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["activateTeacher"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/content-assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["uploadContentAsset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/content-assets/policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["contentEmbedPolicy"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5339,7 +5675,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_30"];
+        get: operations["list_31"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5409,7 +5745,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["saveDraft"];
+        patch: operations["saveDraft_1"];
         trace?: never;
     };
     "/api/lessons/{lessonId}/attendance/history": {
@@ -5675,7 +6011,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_32"];
+        get: operations["list_33"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5867,7 +6203,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["students"];
+        get: operations["students_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6075,7 +6411,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_31"];
+        get: operations["list_32"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6175,6 +6511,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["reExtract"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/children/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["children_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/children/{studentProfileId}/access-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["issueCode_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7232,7 +7600,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_29"];
+        get: operations["list_30"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7588,7 +7956,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_28"];
+        get: operations["list_29"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7966,6 +8334,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teacher/students/access-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["students"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/students/{studentProfileId}/access-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["issueCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teacher/textbook-bindings": {
         parameters: {
             query?: never;
@@ -8229,7 +8629,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_27"];
+        get: operations["list_28"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8750,12 +9150,163 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        AccessJournalRowView: {
+            /** Format: int64 */
+            actorAccountId?: number;
+            actorLabel?: string;
+            details?: {
+                [key: string]: Record<string, never>;
+            };
+            /** Format: int64 */
+            id?: number;
+            /** Format: date-time */
+            occurredAt?: string;
+            /** Format: int64 */
+            requestId?: number;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subjectAccountId?: number;
+            subjectName?: string;
+            /** @enum {string} */
+            subjectRole?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
+            /** @enum {string} */
+            type?: "REQUEST_DRAFT_SAVED" | "REQUEST_SUBMITTED" | "REQUEST_RESUBMITTED" | "REQUEST_APPROVED_LINKED" | "REQUEST_APPROVED_CREATED" | "REQUEST_REJECTED" | "PARENT_LINK_ADDED" | "LOGIN_METHOD_ENABLED" | "STUDENT_CODE_ISSUED" | "STUDENT_CODE_REISSUED" | "STUDENT_PIN_RESET" | "ACCESS_RESET" | "TEMP_PASSWORD_ISSUED" | "PASSWORD_CHANGED" | "PHONE_CHANGED" | "CODE_GRANT_ADDED" | "CODE_GRANT_REVOKED";
+        };
+        AccessRequestClassOptionsView: {
+            grades?: components["schemas"]["GradeOption"][];
+            yearConfigured?: boolean;
+        };
+        AccessRequestDetailView: {
+            childClass?: components["schemas"]["RequestClassView"];
+            childFullName?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            createdProfile?: boolean;
+            /** Format: date-time */
+            decidedAt?: string;
+            decidedByName?: string;
+            fullName?: string;
+            journal?: components["schemas"]["JournalItemView"][];
+            linkedAccount?: components["schemas"]["LinkedAccountView"];
+            /** @enum {string} */
+            nextStep?: "FINISH_FORM" | "WAIT_REVIEW" | "SIGN_IN_WITH_PHONE" | "SIGN_IN_WITH_CODE" | "ACTIVATE_WITH_CODE" | "FIX_AND_RESUBMIT";
+            passwordProvided?: boolean;
+            phone?: string;
+            previousRequests?: components["schemas"]["AccessRequestRowView"][];
+            rejectionReason?: string;
+            /** Format: int64 */
+            requestId?: number;
+            /** @enum {string} */
+            role?: "STUDENT" | "PARENT";
+            schoolClass?: components["schemas"]["RequestClassView"];
+            /** @enum {string} */
+            stage?: "DRAFT" | "PENDING" | "APPROVED_PENDING_ACTIVATION" | "ACTIVE" | "REJECTED";
+            /** Format: date-time */
+            submittedAt?: string;
+            /** Format: int64 */
+            version?: number;
+        };
+        AccessRequestFormRequest: {
+            /** Format: int64 */
+            childClassId?: number;
+            childFullName?: string;
+            /** Format: int64 */
+            classId?: number;
+            fullName?: string;
+            password?: string;
+            phone?: string;
+            /** @enum {string} */
+            role: "STUDENT" | "PARENT";
+            token?: string;
+        };
+        AccessRequestRowView: {
+            childClassName?: string;
+            childFullName?: string;
+            className?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            decidedAt?: string;
+            fullName?: string;
+            phone?: string;
+            rejectionReason?: string;
+            repeat?: boolean;
+            /** Format: int64 */
+            requestId?: number;
+            /** @enum {string} */
+            role?: "STUDENT" | "PARENT";
+            /** @enum {string} */
+            stage?: "DRAFT" | "PENDING" | "APPROVED_PENDING_ACTIVATION" | "ACTIVE" | "REJECTED";
+            /** Format: date-time */
+            submittedAt?: string;
+        };
+        AccessRequestStatsView: {
+            /** Format: int64 */
+            active?: number;
+            /** Format: int64 */
+            approvedPendingActivation?: number;
+            /** Format: int64 */
+            draft?: number;
+            /** Format: int64 */
+            pending?: number;
+            /** Format: int64 */
+            rejected?: number;
+            /** Format: int64 */
+            total?: number;
+        };
+        AccessRequestStatusView: {
+            childClassName?: string;
+            childFullName?: string;
+            className?: string;
+            /** Format: date-time */
+            decidedAt?: string;
+            fullName?: string;
+            /** @enum {string} */
+            nextStep?: "FINISH_FORM" | "WAIT_REVIEW" | "SIGN_IN_WITH_PHONE" | "SIGN_IN_WITH_CODE" | "ACTIVATE_WITH_CODE" | "FIX_AND_RESUBMIT";
+            phone?: string;
+            rejectionReason?: string;
+            /** Format: int64 */
+            requestId?: number;
+            resubmitAllowed?: boolean;
+            /** @enum {string} */
+            role?: "STUDENT" | "PARENT";
+            /** @enum {string} */
+            stage?: "DRAFT" | "PENDING" | "APPROVED_PENDING_ACTIVATION" | "ACTIVE" | "REJECTED";
+            /** Format: date-time */
+            submittedAt?: string;
+            /** Format: date-time */
+            tokenValidUntil?: string;
+        };
+        AccessRequestSuggestionsView: {
+            applicantMatches?: components["schemas"]["ProfileCandidateView"][];
+            childCandidates?: components["schemas"]["ChildCandidateView"][];
+            phoneConflicts?: components["schemas"]["PhoneConflictView"][];
+            relatedRequests?: components["schemas"]["AccessRequestRowView"][];
+            /** Format: int64 */
+            requestId?: number;
+        };
+        AccessRequestTicketView: {
+            /** @enum {string} */
+            nextStep?: "FINISH_FORM" | "WAIT_REVIEW" | "SIGN_IN_WITH_PHONE" | "SIGN_IN_WITH_CODE" | "ACTIVATE_WITH_CODE" | "FIX_AND_RESUBMIT";
+            /** Format: int64 */
+            requestId?: number;
+            /** @enum {string} */
+            stage?: "DRAFT" | "PENDING" | "APPROVED_PENDING_ACTIVATION" | "ACTIVE" | "REJECTED";
+            /** Format: date-time */
+            submittedAt?: string;
+            token?: string;
+        };
+        AccessRequestTokenRequest: {
+            token?: string;
+        };
         AccountLoginRequest: {
             login?: string;
             password?: string;
         };
         AccountLoginResponse: {
             fullName?: string;
+            mustChangePassword?: boolean;
             /** @enum {string} */
             role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
             token?: string;
@@ -9081,6 +9632,19 @@ export interface components {
             /** Format: int64 */
             id?: number;
             parentFullName?: string;
+        };
+        ApproveAccessRequestRequest: {
+            /** Format: int64 */
+            accountId?: number;
+            allowPhoneLogin?: boolean;
+            /** Format: int64 */
+            childStudentProfileId?: number;
+            confirmDuplicate?: boolean;
+            createProfile?: boolean;
+            /** @enum {string} */
+            relationType?: "MOTHER" | "FATHER" | "GUARDIAN" | "OTHER";
+            /** Format: int64 */
+            version: number;
         };
         AssignResult: {
             created?: components["schemas"]["AssignmentSummary"][];
@@ -9451,6 +10015,9 @@ export interface components {
         CancelLessonRequest: {
             comment?: string;
         };
+        ChangeAccountPhoneRequest: {
+            phone?: string;
+        };
         ChangeAccountRoleRequest: {
             /** @enum {string} */
             role: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
@@ -9466,6 +10033,10 @@ export interface components {
             /** Format: int32 */
             value?: number;
         };
+        ChangePasswordRequest: {
+            currentPassword?: string;
+            newPassword?: string;
+        };
         ChangedSubjectView: {
             change?: number;
             /** Format: int64 */
@@ -9473,6 +10044,34 @@ export interface components {
             subjectName?: string;
             /** @enum {string} */
             trend?: "GROWTH" | "DECLINE" | "STABLE" | "INSUFFICIENT_DATA";
+        };
+        ChildAccessView: {
+            /** Format: int64 */
+            accountId?: number;
+            /** @enum {string} */
+            accountStatus?: "NOT_ACTIVATED" | "ACTIVE" | "BLOCKED" | "ARCHIVED";
+            canIssueCode?: boolean;
+            className?: string;
+            /** Format: date-time */
+            codeIssuedAt?: string;
+            fullName?: string;
+            loginMethods?: ("PHONE_PASSWORD" | "CODE_PIN")[];
+            pinSet?: boolean;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
+        ChildCandidateView: {
+            /** Format: int64 */
+            accountId?: number;
+            /** @enum {string} */
+            accountStatus?: "NOT_ACTIVATED" | "ACTIVE" | "BLOCKED" | "ARCHIVED";
+            className?: string;
+            fullName?: string;
+            loginMethods?: ("PHONE_PASSWORD" | "CODE_PIN")[];
+            matchReasons?: ("EXACT_NAME" | "NAME_WITHOUT_MIDDLE" | "SAME_LAST_NAME_IN_CLASS" | "CLASS_AND_NAME" | "SAME_PHONE")[];
+            parentLinks?: components["schemas"]["ParentLinkView"][];
+            /** Format: int64 */
+            studentProfileId?: number;
         };
         ChildFeedbackCoverageView: {
             /** Format: int32 */
@@ -9522,6 +10121,8 @@ export interface components {
             dueAt?: string;
             /** @enum {string} */
             dueType?: "EXACT" | "NEXT_LESSON" | "NONE";
+            /** @description Рисунки и файлы из текста описания (CONTENT-EMBED-001) */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             /** Format: int64 */
             id?: number;
             /** Format: int64 */
@@ -9663,6 +10264,12 @@ export interface components {
             /** @enum {string} */
             status?: "ACTIVE" | "ARCHIVED";
             voided?: boolean;
+        };
+        ClassOption: {
+            /** Format: int64 */
+            classId?: number;
+            letter?: string;
+            name?: string;
         };
         ClassScheduleView: {
             /** Format: int64 */
@@ -9874,6 +10481,48 @@ export interface components {
             subjects?: components["schemas"]["ConstructorContextSubjectView"][];
             teachers?: components["schemas"]["ConstructorContextTeacherView"][];
             weekdays?: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
+        };
+        ContentEmbedKindPolicy: {
+            extensions?: string[];
+            /** Format: int64 */
+            maxBytes?: number;
+        };
+        ContentEmbedPolicyView: {
+            /** @description Открыта ли загрузка. Вставки, уже стоящие в тексте, показываются и сохраняются всегда */
+            enabled?: boolean;
+            file?: components["schemas"]["ContentEmbedKindPolicy"];
+            image?: components["schemas"]["ContentEmbedKindPolicy"];
+            /** Format: int32 */
+            maxEmbedsPerField?: number;
+        };
+        ContentEmbedView: {
+            /** @description false — файла нет: экран показывает «Файл недоступен», а не маркер */
+            available?: boolean;
+            contentType?: string;
+            /** @description Скачать под именем файла */
+            downloadUrl?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            /** @description Расширение без точки: pdf, docx, png… */
+            extension?: string;
+            fileName?: string;
+            /** Format: int32 */
+            height?: number;
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            kind?: "IMAGE" | "FILE";
+            /** @description IMAGE: оригинал для увеличения. У FILE — null */
+            originalUrl?: string;
+            /** Format: int64 */
+            sizeBytes?: number;
+            /** @description IMAGE: копия для показа в тексте. FILE: открыть — PDF и картинки во вкладке, остальное скачивается */
+            url?: string;
+            /**
+             * Format: int32
+             * @description IMAGE: ширина того, что показывается по url, — место под картинку до загрузки
+             */
+            width?: number;
         };
         CopyBellTemplateRequest: {
             name?: string;
@@ -10176,6 +10825,12 @@ export interface components {
             locationText?: string;
             /** @enum {string} */
             serviceType?: "CLEANING" | "TECHNICIAN";
+        };
+        CreateStudentCodeGrantRequest: {
+            /** Format: date-time */
+            expiresAt?: string;
+            /** Format: int64 */
+            teacherProfileId: number;
         };
         CreateStudentRequest: {
             /** Format: int64 */
@@ -10733,6 +11388,10 @@ export interface components {
             /** Format: int64 */
             id?: number;
         };
+        GradeOption: {
+            grade?: string;
+            letters?: components["schemas"]["ClassOption"][];
+        };
         GradeScaleValueView: {
             code?: string;
             minPercent?: number;
@@ -11190,6 +11849,8 @@ export interface components {
         HomeworkQuestionView: {
             aiGenerated?: boolean;
             allowPhoto?: boolean;
+            /** @description Рисунки и файлы из текста вопроса (CONTENT-EMBED-001) */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             formulaIssues?: components["schemas"]["QuestionFormulaIssue"][];
             gradingCriteria?: string;
             /** Format: int64 */
@@ -11402,6 +12063,8 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             definition?: components["schemas"]["HomeworkTestTemplateDefinition"];
+            /** @description Рисунки и файлы из текстов вопросов версии (CONTENT-EMBED-001) */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             /** @enum {string} */
             formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             /** Format: int64 */
@@ -11437,6 +12100,8 @@ export interface components {
             dueAt?: string;
             /** @enum {string} */
             dueType?: "EXACT" | "NEXT_LESSON" | "NONE";
+            /** @description Рисунки и файлы из текста описания (CONTENT-EMBED-001). Только на карточке задания; в списках — null */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             /** @enum {string} */
             formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
             hasAnswers?: boolean;
@@ -11601,6 +12266,18 @@ export interface components {
         };
         IssuedCodeResponse: {
             issuedCode?: string;
+        };
+        JournalItemView: {
+            actorLabel?: string;
+            details?: {
+                [key: string]: Record<string, never>;
+            };
+            /** Format: int64 */
+            id?: number;
+            /** Format: date-time */
+            occurredAt?: string;
+            /** @enum {string} */
+            type?: "REQUEST_DRAFT_SAVED" | "REQUEST_SUBMITTED" | "REQUEST_RESUBMITTED" | "REQUEST_APPROVED_LINKED" | "REQUEST_APPROVED_CREATED" | "REQUEST_REJECTED" | "PARENT_LINK_ADDED" | "LOGIN_METHOD_ENABLED" | "STUDENT_CODE_ISSUED" | "STUDENT_CODE_REISSUED" | "STUDENT_PIN_RESET" | "ACCESS_RESET" | "TEMP_PASSWORD_ISSUED" | "PASSWORD_CHANGED" | "PHONE_CHANGED" | "CODE_GRANT_ADDED" | "CODE_GRANT_REVOKED";
         };
         JsonNode: Record<string, never>;
         KeyActorView: {
@@ -12603,6 +13280,8 @@ export interface components {
             /** Format: int64 */
             createdById?: number;
             createdByName?: string;
+            /** @description Рисунки и файлы из текста комментария (CONTENT-EMBED-001). Только на карточке урока; в списке уроков — null */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             /** Format: int64 */
             id?: number;
             /** Format: date-time */
@@ -13026,6 +13705,8 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             documents?: components["schemas"]["LessonPreparationDocumentView"][];
+            /** @description Рисунки и файлы из текста конспекта заготовки (CONTENT-EMBED-001) */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             /** Format: int64 */
             id?: number;
             summary?: components["schemas"]["LessonSummaryContent"];
@@ -13091,6 +13772,8 @@ export interface components {
             aiEnabled?: boolean;
             canEdit?: boolean;
             content?: components["schemas"]["LessonSummaryContent"];
+            /** @description Рисунки и файлы из текстов этого ответа (CONTENT-EMBED-001). Ученику и родителю — только вставки опубликованной версии */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             hasUnpublishedChanges?: boolean;
             latestJob?: components["schemas"]["LessonSummaryJobView"];
             /** Format: date-time */
@@ -13192,6 +13875,16 @@ export interface components {
             relationType?: "MOTHER" | "FATHER" | "GUARDIAN" | "OTHER";
             /** Format: int64 */
             studentProfileId: number;
+        };
+        LinkedAccountView: {
+            /** Format: int64 */
+            accountId?: number;
+            fullName?: string;
+            phone?: string;
+            /** @enum {string} */
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
+            /** @enum {string} */
+            status?: "NOT_ACTIVATED" | "ACTIVE" | "BLOCKED" | "ARCHIVED";
         };
         LinkedParentView: {
             /** Format: int64 */
@@ -14036,6 +14729,42 @@ export interface components {
         };
         PageAcademicYearView: {
             content?: components["schemas"]["AcademicYearView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        PageAccessJournalRowView: {
+            content?: components["schemas"]["AccessJournalRowView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        PageAccessRequestRowView: {
+            content?: components["schemas"]["AccessRequestRowView"][];
             empty?: boolean;
             first?: boolean;
             last?: boolean;
@@ -14904,6 +15633,14 @@ export interface components {
             /** Format: int64 */
             version?: number;
         };
+        ParentLinkView: {
+            /** Format: int64 */
+            accountId?: number;
+            fullName?: string;
+            /** Format: int64 */
+            parentProfileId?: number;
+            phone?: string;
+        };
         ParentProfileDetailView: {
             /** Format: int64 */
             accountId?: number;
@@ -15084,6 +15821,16 @@ export interface components {
             /** Format: int32 */
             order?: number;
         };
+        PhoneConflictView: {
+            /** Format: int64 */
+            accountId?: number;
+            fullName?: string;
+            phone?: string;
+            /** @enum {string} */
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
+            /** @enum {string} */
+            status?: "NOT_ACTIVATED" | "ACTIVE" | "BLOCKED" | "ARCHIVED";
+        };
         PolicyBandDto: {
             label?: string;
             /** Format: int32 */
@@ -15112,6 +15859,22 @@ export interface components {
             weight: number;
             /** @enum {string} */
             workType: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
+        };
+        ProfileCandidateView: {
+            academicYearName?: string;
+            /** Format: int64 */
+            accountId?: number;
+            className?: string;
+            fullName?: string;
+            loginMethods?: ("PHONE_PASSWORD" | "CODE_PIN")[];
+            matchReasons?: ("EXACT_NAME" | "NAME_WITHOUT_MIDDLE" | "SAME_LAST_NAME_IN_CLASS" | "CLASS_AND_NAME" | "SAME_PHONE")[];
+            phone?: string;
+            /** @enum {string} */
+            role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
+            /** Format: int64 */
+            schoolProfileId?: number;
+            /** @enum {string} */
+            status?: "NOT_ACTIVATED" | "ACTIVE" | "BLOCKED" | "ARCHIVED";
         };
         ProposalIntervalView: {
             /** @enum {string} */
@@ -15361,12 +16124,26 @@ export interface components {
         RegenerateQuestionRequest: {
             teacherPrompt?: string;
         };
+        RegisterAccessRequestDeviceRequest: {
+            appVersion?: string;
+            /** Format: uuid */
+            installationId: string;
+            locale?: string;
+            platform: string;
+            pushToken?: string;
+            token?: string;
+        };
         RegisterDeviceRequest: {
             appVersion?: string;
             locale?: string;
             /** @enum {string} */
             platform: "IOS" | "ANDROID";
             token: string;
+        };
+        RejectAccessRequestRequest: {
+            reason?: string;
+            /** Format: int64 */
+            version: number;
         };
         RejectAvailabilityProposalRequest: {
             comment?: string;
@@ -15547,6 +16324,13 @@ export interface components {
             startDate?: string;
             /** @enum {string} */
             status?: "DRAFT" | "ACTIVE" | "ARCHIVED";
+        };
+        RequestClassView: {
+            active?: boolean;
+            /** Format: int64 */
+            classId?: number;
+            currentName?: string;
+            snapshotName?: string;
         };
         ResolveDraftRequest: {
             /** Format: int64 */
@@ -16148,6 +16932,10 @@ export interface components {
             /** @enum {string} */
             type?: "FORMATIVE" | "LESSON_WORK" | "ORAL_ANSWER" | "BOARD_WORK" | "INDEPENDENT_WORK" | "CONTROL_WORK" | "TEST" | "PRACTICAL_OR_LAB" | "PROJECT_OR_PRESENTATION" | "HOMEWORK" | "SUMMATIVE_SECTION" | "SUMMATIVE_TERM" | "OTHER" | "INTERMEDIATE_ASSESSMENT";
         };
+        SignInRequest: {
+            login?: string;
+            secret?: string;
+        };
         Skipped: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -16209,6 +16997,21 @@ export interface components {
             code?: string;
             pin?: string;
         };
+        StudentCodeGrantView: {
+            active?: boolean;
+            /** Format: date-time */
+            expiresAt?: string;
+            /** Format: int64 */
+            grantId?: number;
+            /** Format: date-time */
+            grantedAt?: string;
+            grantedByName?: string;
+            /** Format: date-time */
+            revokedAt?: string;
+            teacherName?: string;
+            /** Format: int64 */
+            teacherProfileId?: number;
+        };
         StudentFinalGradesView: {
             /** Format: int64 */
             academicYearId?: number;
@@ -16267,6 +17070,8 @@ export interface components {
             dueAt?: string;
             /** @enum {string} */
             dueType?: "EXACT" | "NEXT_LESSON" | "NONE";
+            /** @description Рисунки и файлы из текста описания (CONTENT-EMBED-001) */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             /** Format: int64 */
             id?: number;
             /** Format: int64 */
@@ -16350,6 +17155,8 @@ export interface components {
         };
         StudentQuestionView: {
             allowPhoto?: boolean;
+            /** @description Рисунки и файлы из текста вопроса (CONTENT-EMBED-001) */
+            embeds?: components["schemas"]["ContentEmbedView"][];
             /** Format: int64 */
             id?: number;
             imageUrl?: string;
@@ -16751,6 +17558,8 @@ export interface components {
             maxScore?: number;
             openText?: string;
             photos?: components["schemas"]["AnswerPhotoView"][];
+            /** @description Рисунки и файлы из текста вопроса (CONTENT-EMBED-001) */
+            questionEmbeds?: components["schemas"]["ContentEmbedView"][];
             /** Format: int64 */
             questionId?: number;
             questionText?: string;
@@ -17043,6 +17852,18 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        TeacherStudentAccessView: {
+            canIssueCode?: boolean;
+            className?: string;
+            /** Format: date-time */
+            codeIssuedAt?: string;
+            fullName?: string;
+            /** Format: date-time */
+            grantExpiresAt?: string;
+            pinSet?: boolean;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
         TeacherTestSubject: {
             /** @enum {string} */
             formulaProfile?: "GENERAL" | "MATHEMATICS" | "PHYSICS" | "CHEMISTRY";
@@ -17154,6 +17975,9 @@ export interface components {
             numericValue?: number;
             scaleCode?: string;
             score?: number;
+        };
+        TemporaryPasswordResponse: {
+            temporaryPassword?: string;
         };
         TerminateBindingRequest: {
             /** Format: date */
@@ -17804,6 +18628,144 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    classes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestClassOptionsView"];
+                };
+            };
+        };
+    };
+    registerDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterAccessRequestDeviceRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    saveDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccessRequestFormRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestTicketView"];
+                };
+            };
+        };
+    };
+    resubmit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccessRequestFormRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestTicketView"];
+                };
+            };
+        };
+    };
+    status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccessRequestTokenRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestStatusView"];
+                };
+            };
+        };
+    };
+    submit_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccessRequestFormRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestTicketView"];
+                };
+            };
+        };
+    };
     update_23: {
         parameters: {
             query?: never;
@@ -18149,7 +19111,7 @@ export interface operations {
             };
         };
     };
-    list_26: {
+    list_27: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -18403,7 +19365,179 @@ export interface operations {
             };
         };
     };
-    list_25: {
+    list_38: {
+        parameters: {
+            query: {
+                accountId?: number;
+                requestId?: number;
+                type?: "REQUEST_DRAFT_SAVED" | "REQUEST_SUBMITTED" | "REQUEST_RESUBMITTED" | "REQUEST_APPROVED_LINKED" | "REQUEST_APPROVED_CREATED" | "REQUEST_REJECTED" | "PARENT_LINK_ADDED" | "LOGIN_METHOD_ENABLED" | "STUDENT_CODE_ISSUED" | "STUDENT_CODE_REISSUED" | "STUDENT_PIN_RESET" | "ACCESS_RESET" | "TEMP_PASSWORD_ISSUED" | "PASSWORD_CHANGED" | "PHONE_CHANGED" | "CODE_GRANT_ADDED" | "CODE_GRANT_REVOKED";
+                from?: string;
+                to?: string;
+                query?: string;
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageAccessJournalRowView"];
+                };
+            };
+        };
+    };
+    list_37: {
+        parameters: {
+            query: {
+                stage?: "DRAFT" | "PENDING" | "APPROVED_PENDING_ACTIVATION" | "ACTIVE" | "REJECTED";
+                role?: "STUDENT" | "PARENT";
+                from?: string;
+                to?: string;
+                repeat?: boolean;
+                query?: string;
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageAccessRequestRowView"];
+                };
+            };
+        };
+    };
+    stats_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestStatsView"];
+                };
+            };
+        };
+    };
+    detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestDetailView"];
+                };
+            };
+        };
+    };
+    approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveAccessRequestRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestDetailView"];
+                };
+            };
+        };
+    };
+    reject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectAccessRequestRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestDetailView"];
+                };
+            };
+        };
+    };
+    suggestions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessRequestSuggestionsView"];
+                };
+            };
+        };
+    };
+    list_26: {
         parameters: {
             query: {
                 role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
@@ -18514,6 +19648,32 @@ export interface operations {
             };
         };
     };
+    changePhone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeAccountPhoneRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountView"];
+                };
+            };
+        };
+    };
     resetServiceStaffAccess: {
         parameters: {
             query?: never;
@@ -18562,6 +19722,28 @@ export interface operations {
             };
         };
     };
+    issueTemporaryPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemporaryPasswordResponse"];
+                };
+            };
+        };
+    };
     unblock_1: {
         parameters: {
             query?: never;
@@ -18582,7 +19764,7 @@ export interface operations {
             };
         };
     };
-    list_24: {
+    list_25: {
         parameters: {
             query: {
                 status?: "DRAFT" | "PUBLISHED" | "HIDDEN";
@@ -18870,7 +20052,7 @@ export interface operations {
             };
         };
     };
-    list_23: {
+    list_24: {
         parameters: {
             query?: never;
             header?: never;
@@ -19015,7 +20197,7 @@ export interface operations {
             };
         };
     };
-    list_22: {
+    list_23: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -19344,7 +20526,7 @@ export interface operations {
             };
         };
     };
-    list_21: {
+    list_22: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -19510,7 +20692,7 @@ export interface operations {
             };
         };
     };
-    list_20: {
+    list_21: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -20203,7 +21385,7 @@ export interface operations {
             };
         };
     };
-    list_19: {
+    list_20: {
         parameters: {
             query: {
                 classId: number;
@@ -20865,7 +22047,7 @@ export interface operations {
             };
         };
     };
-    list_18: {
+    list_19: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -21010,7 +22192,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_18: {
         parameters: {
             query: {
                 phone?: string;
@@ -21486,7 +22668,7 @@ export interface operations {
             };
         };
     };
-    list_16: {
+    list_17: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -21914,7 +23096,7 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    list_16: {
         parameters: {
             query: {
                 name?: string;
@@ -22365,6 +23547,75 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["StudentYearDecision"][];
                 };
+            };
+        };
+    };
+    list_15: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentCodeGrantView"][];
+                };
+            };
+        };
+    };
+    grant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateStudentCodeGrantRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentCodeGrantView"];
+                };
+            };
+        };
+    };
+    revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentProfileId: number;
+                grantId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -23031,7 +24282,7 @@ export interface operations {
             };
         };
     };
-    list_35: {
+    list_36: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -23669,7 +24920,7 @@ export interface operations {
             };
         };
     };
-    list_34: {
+    list_35: {
         parameters: {
             query: {
                 teacherProfileId?: number;
@@ -23810,7 +25061,7 @@ export interface operations {
             };
         };
     };
-    list_33: {
+    list_34: {
         parameters: {
             query?: {
                 grade?: string;
@@ -24358,6 +25609,54 @@ export interface operations {
             };
         };
     };
+    changePassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountLoginResponse"];
+                };
+            };
+        };
+    };
+    signIn: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignInRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountLoginResponse"];
+                };
+            };
+        };
+    };
     activateServiceStaff: {
         parameters: {
             query?: never;
@@ -24450,6 +25749,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccountLoginResponse"];
+                };
+            };
+        };
+    };
+    uploadContentAsset: {
+        parameters: {
+            query: {
+                kind: "IMAGE" | "FILE";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentEmbedView"];
+                };
+            };
+        };
+    };
+    contentEmbedPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentEmbedPolicyView"];
                 };
             };
         };
@@ -27884,7 +29232,7 @@ export interface operations {
             };
         };
     };
-    list_30: {
+    list_31: {
         parameters: {
             query: {
                 dateFrom?: string;
@@ -27981,7 +29329,7 @@ export interface operations {
             };
         };
     };
-    saveDraft: {
+    saveDraft_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -28516,7 +29864,7 @@ export interface operations {
             };
         };
     };
-    list_32: {
+    list_33: {
         parameters: {
             query?: {
                 childId?: number;
@@ -28900,7 +30248,7 @@ export interface operations {
             };
         };
     };
-    students: {
+    students_1: {
         parameters: {
             query?: {
                 childId?: number;
@@ -29326,7 +30674,7 @@ export interface operations {
             };
         };
     };
-    list_31: {
+    list_32: {
         parameters: {
             query?: {
                 childId?: number;
@@ -29588,6 +30936,50 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    children_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChildAccessView"][];
+                };
+            };
+        };
+    };
+    issueCode_1: {
+        parameters: {
+            query?: {
+                confirmReissue?: boolean;
+            };
+            header?: never;
+            path: {
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedCodeResponse"];
+                };
             };
         };
     };
@@ -31714,7 +33106,7 @@ export interface operations {
             };
         };
     };
-    list_29: {
+    list_30: {
         parameters: {
             query?: {
                 cursor?: number;
@@ -32290,7 +33682,7 @@ export interface operations {
             };
         };
     };
-    list_28: {
+    list_29: {
         parameters: {
             query?: {
                 cursor?: number;
@@ -33025,6 +34417,50 @@ export interface operations {
             };
         };
     };
+    students: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherStudentAccessView"][];
+                };
+            };
+        };
+    };
+    issueCode: {
+        parameters: {
+            query?: {
+                confirmReissue?: boolean;
+            };
+            header?: never;
+            path: {
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedCodeResponse"];
+                };
+            };
+        };
+    };
     list_2: {
         parameters: {
             query?: {
@@ -33595,7 +35031,7 @@ export interface operations {
             };
         };
     };
-    list_27: {
+    list_28: {
         parameters: {
             query?: {
                 page?: number;

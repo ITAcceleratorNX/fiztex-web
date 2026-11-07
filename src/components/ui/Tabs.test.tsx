@@ -5,6 +5,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './Tabs';
 import { SegmentedTabs } from './SegmentedTabs';
 
 describe('Tabs', () => {
+  it('рисует счётчик рядом с подписью и не рисует ноль', () => {
+    const { rerender } = render(
+      <Tabs value="requests" variant="navy">
+        <TabsList>
+          <TabsTrigger value="codes">Коды и PIN</TabsTrigger>
+          <TabsTrigger value="requests" count={6}>Заявки на доступ</TabsTrigger>
+        </TabsList>
+      </Tabs>,
+    );
+    expect(screen.getByRole('tab', { name: 'Заявки на доступ 6' })).toHaveAttribute('aria-selected', 'true');
+
+    rerender(
+      <Tabs value="requests" variant="navy">
+        <TabsList>
+          <TabsTrigger value="codes">Коды и PIN</TabsTrigger>
+          <TabsTrigger value="requests" count={0}>Заявки на доступ</TabsTrigger>
+        </TabsList>
+      </Tabs>,
+    );
+    expect(screen.getByRole('tab', { name: 'Заявки на доступ' })).toBeInTheDocument();
+  });
+
   it('switches and wraps with arrows, skips disabled tabs, and supports Home/End', async () => {
     const user = userEvent.setup();
     const onValueChange = vi.fn();

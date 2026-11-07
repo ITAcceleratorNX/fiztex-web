@@ -4,6 +4,8 @@ import { AuthenticatedLoginRedirect } from '@/components/auth/AuthenticatedLogin
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { LoginPage } from '@/pages/LoginPage';
+import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
+import { NewPasswordPage } from '@/pages/auth/NewPasswordPage';
 import { EntranceFlow } from '@/pages/entrance/EntranceFlow';
 import { PublicAnnouncementsPage } from '@/pages/public/PublicAnnouncementsPage';
 import { PublicAnnouncementPage } from '@/pages/public/PublicAnnouncementPage';
@@ -28,6 +30,7 @@ import { FeedbackPage } from '@/pages/feedback/FeedbackPage';
 import { ServiceRequestsPage } from '@/pages/service/ServiceRequestsPage';
 import { ServiceRequestCardPage } from '@/pages/service/ServiceRequestCardPage';
 import { KeysAdminPage } from '@/pages/keys/KeysAdminPage';
+import { AccessRequestPage } from '@/pages/access/AccessRequestPage';
 import { EquipmentAdminPage } from '@/pages/equipment/EquipmentAdminPage';
 import { HomeworkCardPage } from '@/pages/homework/HomeworkCardPage';
 import { HomeworkQuestionsPage } from '@/pages/homework/HomeworkQuestionsPage';
@@ -112,6 +115,13 @@ export function App() {
           isAuthenticated ? <AuthenticatedLoginRedirect /> : <LoginPage />
         }
       />
+      {/*
+        Два спутника входа. «Забыли пароль» открыт без входа — туда уходят с формы.
+        Смена пароля требует входа, но живёт вне `ProtectedRoute`: именно туда он и
+        уводит, и вложенность замкнула бы редирект сам на себя.
+      */}
+      <Route path={ROUTES.staffForgotPassword} element={<ForgotPasswordPage />} />
+      <Route path={ROUTES.staffNewPassword} element={<NewPasswordPage />} />
 
       <Route
         element={
@@ -142,6 +152,7 @@ export function App() {
         />
         <Route path="/admin/school-subjects" element={<SchoolSubjectsPage />} />
         <Route path="/admin/access-codes" element={<AccessCodesPage />} />
+        <Route path="/admin/access-codes/requests/:requestId" element={<AccessRequestPage />} />
         <Route path="/admin/import" element={<ImportPage />} />
 
         {/* Admissions & school modules */}

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { AiJobProgress } from '@/components/ui/AiJobProgress';
 import { MathText } from '@/components/ui/MathText';
+import { RichText } from '@/components/ui/RichText';
 import { QuestionFigure } from '@/components/ui/QuestionFigure';
 import { NoticeBar } from '@/components/ui/NoticeBar';
 import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
@@ -258,7 +259,8 @@ function TestAnswerCard({
         <Badge tone="gray">{TYPE_LABELS[type]}</Badge>
       </div>
 
-      <MathText text={answer.questionText ?? question?.text} className="mt-2 block text-sm font-medium text-ink" />
+      <RichText text={answer.questionText ?? question?.text} embeds={answer.questionEmbeds ?? question?.embeds}
+        className="mt-2 text-sm font-medium text-ink" textClassName="mt-2 block text-sm font-medium text-ink" />
       <QuestionFigure imageUrl={question?.imageUrl} />
 
       {choice ? (

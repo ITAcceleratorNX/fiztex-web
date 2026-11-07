@@ -1,19 +1,38 @@
 import { request } from '@/lib/api';
 import type { AccountRole, PlatformUser } from '../types';
-import { listUsers } from './users';
+import { listUsersPage, type UsersPageResult } from './users';
 
 export interface AccessCredentialActionResult {
   issuedCode?: string | null;
   message: string;
 }
 
-/** List accounts that can have credential actions (not SUPER_ADMIN). */
+/**
+ * Страница реестра «Коды и PIN» — листает сервер (`/admin/accounts`, страницы с нуля).
+ *
+ * Раньше список приходил одним запросом на 200 аккаунтов и молча обрезался. Супер-админов
+ * больше не вырезаем на клиенте: на странице это сбивало бы и размер страницы, и «из N», а
+ * исключить роль сервер не умеет. Действий у них в таблице нет, как у админов и персонала.
+ */
 export async function listAccessCodes(params: {
   query?: string;
   role?: AccountRole | 'ALL';
-} = {}): Promise<PlatformUser[]> {
-  const role = params.role && params.role !== 'ALL' ? params.role : undefined;
-  const users = await listUsers({ query: params.query, role });
+  page?: number;
+  size?: number;
+} = {}): Promise<UsersPageResult> {
+  return listUsersPage({ query: params.query, role: params.role, page: params.page, size: params.size });
+}
+
+const CSV_PAGE_SIZE = 200;
+
+/** Все аккаунты для выгрузки — постранично, сколько бы их ни было. */
+async function listAllAccessCodes(): Promise<PlatformUser[]> {
+  const users: PlatformUser[] = [];
+  for (let page = 0; ; page += 1) {
+    const result = await listUsersPage({ page, size: CSV_PAGE_SIZE });
+    users.push(...result.users);
+    if (page + 1 >= result.totalPages) break;
+  }
   return users.filter((u) => u.role !== 'SUPER_ADMIN');
 }
 
@@ -23,12 +42,14 @@ export async function resetPin(accountId: string): Promise<AccessCredentialActio
   return { message: 'PIN сброшен. Ученику нужна повторная активация.' };
 }
 
+// Выданное значение не кладётся в `message`: сообщение уходит в тост, а тост исчезает, и
+// повторно код не показать — в базе хэш. Показывает его `IssuedSecretModal`, из `issuedCode`.
 export async function reissueCode(accountId: string): Promise<AccessCredentialActionResult> {
   const res = await request<{ issuedCode: string }>(
     `/admin/students/${accountId}/reissue-code`,
     { method: 'POST' },
   );
-  return { issuedCode: res.issuedCode, message: `Новый код: ${res.issuedCode}` };
+  return { issuedCode: res.issuedCode, message: 'Персональный код перевыпущен' };
 }
 
 export async function resetAccess(
@@ -40,11 +61,20 @@ export async function resetAccess(
       ? `/admin/parents/${accountId}/reset-access`
       : `/admin/teachers/${accountId}/reset-access`;
   const res = await request<{ issuedCode: string }>(path, { method: 'POST' });
-  return { issuedCode: res.issuedCode, message: `Новый код активации: ${res.issuedCode}` };
+  return { issuedCode: res.issuedCode, message: 'Доступ сброшен, выдан код восстановления' };
+}
+
+/** Временный пароль сотруднику или родителю; ученику бэкенд отвечает 409 — у него код и PIN. */
+export async function issueTemporaryPassword(accountId: string): Promise<string | null> {
+  const res = await request<{ temporaryPassword?: string }>(
+    `/admin/accounts/${accountId}/temporary-password`,
+    { method: 'POST' },
+  );
+  return res.temporaryPassword ?? null;
 }
 
 export async function exportAccessCodesCsv(): Promise<{ fileName: string; content: string }> {
-  const users = await listAccessCodes();
+  const users = await listAllAccessCodes();
   const header = 'id,fullName,role,status,phone,email\n';
   const rows = users
     .map((u) =>
