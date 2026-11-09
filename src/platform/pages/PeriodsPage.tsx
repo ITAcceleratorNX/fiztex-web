@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Field';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { formatDate } from '@/lib/format';
-import { PERIOD_STATUS_LABELS, PERIOD_TYPE_LABELS } from '../labels';
+import { PERIOD_STATUS_LABELS, PERIOD_TYPE_LABELS, periodTemporalLabel } from '../labels';
 import { PeriodFormModal } from '../modals/PeriodFormModal';
 import { listAcademicYears, listPeriods } from '../services';
 import type { AcademicPeriod, AcademicYear } from '../types';
@@ -112,7 +112,13 @@ export function PeriodsPage() {
                   <td className="px-4 py-3 text-slate-600">{PERIOD_TYPE_LABELS[period.type]}</td>
                   <td className="px-4 py-3 text-slate-600">{formatDate(period.startDate)}</td>
                   <td className="px-4 py-3 text-slate-600">{formatDate(period.endDate)}</td>
-                  <td className="px-4 py-3 text-slate-600">{PERIOD_STATUS_LABELS[period.status]}</td>
+                  {/* Включённая запись показывает положение по датам: «Активен» у прошедшей
+                      четверти читался как «идёт сейчас» (пилот, пункт 4.2). */}
+                  <td className="px-4 py-3 text-slate-600">
+                    {period.status === 'ACTIVE' && period.temporalStatus
+                      ? periodTemporalLabel(period.type, period.temporalStatus)
+                      : PERIOD_STATUS_LABELS[period.status]}
+                  </td>
                   <td className="px-4 py-3">
                     <Button
                       variant="ghost"

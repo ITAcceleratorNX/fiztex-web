@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronsLeft, ChevronsRight, LogOut } from 'lucide-react';
 import { Logo, PhysTechMark } from './Logo';
@@ -309,6 +309,20 @@ function SidebarFooter({
 }) {
   const Icon = collapsed ? ChevronsRight : ChevronsLeft;
   const label = collapsed ? 'Развернуть меню' : 'Свернуть меню';
+  const nameRef = useRef<HTMLSpanElement>(null);
+  const nameTipId = useId();
+  const [nameClipped, setNameClipped] = useState(false);
+
+  /**
+   * Пилот, пункт 2.3: длинное ФИО учителя режется многоточием, и прочитать его было негде.
+   * Подсказка появляется только у обрезанного имени и мерится в момент наведения или
+   * фокуса — ширина панели меняется (рельс, раскрытие поверх страницы), и измерение при
+   * отрисовке устаревало бы.
+   */
+  const measureName = () => {
+    const element = nameRef.current;
+    setNameClipped(element != null && element.scrollWidth > element.clientWidth);
+  };
 
   return (
     <div className={cx('relative z-10 pb-6', wide ? 'px-4' : 'px-2')}>
@@ -332,13 +346,16 @@ function SidebarFooter({
       </div>
 
       {wide ? (
-        <div className="flex items-center gap-2.5 rounded-2xl bg-white/10 px-2.5 py-2">
+        <div className="relative flex items-center gap-2.5 rounded-2xl bg-white/10 px-2.5 py-2">
           {/* Карточка человека и есть вход в профиль: отдельного пункта меню у него
               нет — профиль не раздел школы, а «кто я», и место у него там же, где имя. */}
           <Link
             to={ROUTES.profile}
+            onMouseEnter={measureName}
+            onFocus={measureName}
+            aria-describedby={nameClipped ? nameTipId : undefined}
             className={cx(
-              'flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-1.5 py-1 transition hover:bg-white/10',
+              'peer flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-1.5 py-1 transition hover:bg-white/10',
               SIDEBAR_FOCUS_RING,
             )}
           >
@@ -346,7 +363,7 @@ function SidebarFooter({
               {fullName ? initials(fullName) : 'A'}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-13 font-semibold text-white">
+              <span ref={nameRef} className="block truncate text-13 font-semibold text-white">
                 {fullName ?? 'Мой профиль'}
               </span>
               {/* Роль читается из сессии, а не подписана «Администратор» на всех:
@@ -356,6 +373,16 @@ function SidebarFooter({
               </span>
             </span>
           </Link>
+          {/* Над карточкой, а не сбоку: панель режет всё, что выступает за её край. */}
+          {nameClipped && fullName && (
+            <span
+              id={nameTipId}
+              role="tooltip"
+              className="pointer-events-none absolute inset-x-0 bottom-full mb-2 hidden break-words rounded-xl bg-navy-950 px-3 py-2 text-13 font-semibold text-white shadow-popover peer-hover:block peer-focus-visible:block"
+            >
+              {fullName}
+            </span>
+          )}
           <button
             type="button"
             onClick={onLogout}

@@ -14,6 +14,7 @@ interface SchoolClassDto {
   updatedAt?: string;
   /** Активные ученики класса; на ответах создания класса всегда 0. */
   studentCount?: number;
+  demo?: boolean;
 }
 
 function mapClass(dto: SchoolClassDto, yearName = ''): SchoolClass {
@@ -25,6 +26,7 @@ function mapClass(dto: SchoolClassDto, yearName = ''): SchoolClass {
     studentCount: dto.studentCount ?? 0,
     status: dto.status,
     createdAt: dto.createdAt,
+    demo: dto.demo ?? false,
   };
 }
 
@@ -83,7 +85,7 @@ export async function createClass(input: CreateClassInput): Promise<SchoolClass>
 
 export async function updateClass(
   id: string,
-  input: { name?: string; grade?: string; letter?: string },
+  input: { name?: string; grade?: string; letter?: string; demo?: boolean },
 ): Promise<SchoolClass> {
   const dto = await request<SchoolClassDto>(`/admin/classes/${id}`, {
     method: 'PATCH',
@@ -91,6 +93,7 @@ export async function updateClass(
       name: input.name?.trim() || null,
       grade: input.grade?.trim() || null,
       letter: input.letter?.trim() || null,
+      demo: input.demo ?? null,
     },
   });
   return mapClass(dto);

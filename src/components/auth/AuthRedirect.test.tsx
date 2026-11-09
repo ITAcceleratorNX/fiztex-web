@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthenticatedLoginRedirect } from './AuthenticatedLoginRedirect';
@@ -9,6 +10,7 @@ const auth = vi.hoisted(() => ({
     admin: null as { email: string; role: string } | null,
     isAuthenticated: false,
     expiredAccountEmail: null as string | null,
+    logout: (() => {}) as () => void,
   },
 }));
 
@@ -26,7 +28,7 @@ function LocationProbe() {
 
 describe('auth redirects', () => {
   beforeEach(() => {
-    auth.current = { admin: null, isAuthenticated: false, expiredAccountEmail: null };
+    auth.current = { admin: null, isAuthenticated: false, expiredAccountEmail: null, logout: () => {} };
   });
 
   it('сохраняет query, hash и владельца истёкшей сессии до входа', () => {
@@ -52,6 +54,7 @@ describe('auth redirects', () => {
 
   it('после входа открывает полный сохранённый адрес без цикла через login', () => {
     auth.current = {
+      ...auth.current,
       admin: { email: 'teacher-a@fiztex.local', role: 'TEACHER' },
       isAuthenticated: true,
       expiredAccountEmail: null,
@@ -77,6 +80,7 @@ describe('auth redirects', () => {
 
   it('отправляет роль на доступную страницу с объяснением вместо запретного маршрута', () => {
     auth.current = {
+      ...auth.current,
       admin: { email: 'teacher@fiztex.local', role: 'TEACHER' },
       isAuthenticated: true,
       expiredAccountEmail: null,
@@ -97,6 +101,7 @@ describe('auth redirects', () => {
 
   it('не принимает внешний returnTo после входа', () => {
     auth.current = {
+      ...auth.current,
       admin: { email: 'admin@fiztex.local', role: 'ADMIN' },
       isAuthenticated: true,
       expiredAccountEmail: null,
@@ -120,6 +125,7 @@ describe('auth redirects', () => {
 
   it('не переносит адрес истёкшей сессии в другой аккаунт и объясняет переход', () => {
     auth.current = {
+      ...auth.current,
       admin: { email: 'teacher-b@fiztex.local', role: 'TEACHER' },
       isAuthenticated: true,
       expiredAccountEmail: null,
@@ -143,5 +149,28 @@ describe('auth redirects', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/homework');
     expect(screen.getByTestId('location-state')).toHaveTextContent('другой аккаунт');
     expect(screen.getByTestId('location-state')).not.toHaveTextContent('lessonId=42');
+  });
+
+  it('родителю вместо меню администратора объясняет, что его вход — в мобильном приложении', async () => {
+    const logout = vi.fn();
+    auth.current = {
+      admin: { email: '+77010000000', role: 'PARENT' },
+      isAuthenticated: true,
+      expiredAccountEmail: null,
+      logout,
+    };
+
+    render(
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <Routes>
+          <Route path="*" element={<ProtectedRoute><p>админская страница</p></ProtectedRoute>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByText('админская страница')).not.toBeInTheDocument();
+    expect(screen.getByText(/входят через мобильное приложение/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Выйти' }));
+    expect(logout).toHaveBeenCalled();
   });
 });

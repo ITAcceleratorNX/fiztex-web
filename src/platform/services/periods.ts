@@ -14,6 +14,7 @@ interface AcademicPeriodDto {
   startDate: string;
   endDate: string;
   status: AcademicPeriodStatus;
+  temporalStatus?: AcademicPeriod['temporalStatus'];
   sortOrder?: number;
   createdAt?: string;
   updatedAt?: string;
@@ -28,6 +29,7 @@ function mapPeriod(dto: AcademicPeriodDto): AcademicPeriod {
     startDate: dto.startDate,
     endDate: dto.endDate,
     status: dto.status,
+    temporalStatus: dto.temporalStatus,
   };
 }
 

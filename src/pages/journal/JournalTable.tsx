@@ -10,6 +10,7 @@ import {
   columnCaption,
   finalValueLabel,
   formatAverage,
+  inactiveColumnHint,
 } from '@/lib/journalModel';
 
 /**
@@ -19,9 +20,11 @@ import {
  * период и автора, — поэтому пустая клетка здесь не поле ввода, а ссылка в урок. Так же
  * ведёт себя и заголовок колонки: журнал остаётся зеркалом, а не вторым местом правки.
  *
- * <p>Колонка приходит и для отменённого урока (`active: false`, контракт §3): оценки на
- * ней настоящие и в среднем участвуют, новых не будет. Такой столбец рисуется
- * приглушённым — и это единственное, чем он отличается.
+ * <p>Колонка приходит и для неактивного события (`active: false`, контракт §3): урок
+ * отменён или вытеснен переизданием, задание отменено. Оценки на ней настоящие и в
+ * среднем участвуют, новых не будет. Такой столбец рисуется приглушённым, а пустая клетка
+ * называет причину (`state`) — но не «занятие не состоялось»: на проведённом уроке это
+ * неправда.
  *
  * <p><b>Четверть по политике оценивания</b> (GRADES-003) вместо «Ср. балла» показывает
  * проценты компонентов (ФО, СОР, СОЧ) и итоговый процент с рекомендацией — числа приходят
@@ -119,6 +122,7 @@ export function JournalTable({
                 {columns.map((column) => {
                   const cell = cells.get(column.key ?? '');
                   const grades = cell?.grades ?? [];
+                  const inactiveHint = inactiveColumnHint(column);
                   return (
                     <td
                       key={column.key}
@@ -143,9 +147,9 @@ export function JournalTable({
                             />
                           ))}
                         </span>
-                      ) : column.active === false ? (
-                        <span className="text-slate-300" title="Занятие не состоялось">
-                          ✕
+                      ) : inactiveHint ? (
+                        <span className="text-slate-300" title={inactiveHint}>
+                          ·
                         </span>
                       ) : column.type === 'LESSON' && column.sourceId != null ? (
                         <Link
@@ -175,7 +179,11 @@ export function JournalTable({
                   </td>
                 )}
                 <td className={cx(STICKY, 'right-0 w-24 min-w-24 px-2 py-2 text-center font-semibold text-slate-900')}>
-                  {finalValueLabel(finals.get(studentId))}
+                  {finals.get(studentId)?.finalGrade?.resultKind === 'TEMP_UNATTESTED' ? (
+                    <span title="Временно не аттестован">ВНА</span>
+                  ) : (
+                    finalValueLabel(finals.get(studentId))
+                  )}
                 </td>
               </tr>
             );
@@ -207,7 +215,7 @@ function ColumnHead({ column, today }: { column: GradebookColumn; today: string 
   return (
     <th
       scope="col"
-      title={column.title ?? undefined}
+      title={[column.title, inactiveColumnHint(column)].filter(Boolean).join(' · ') || undefined}
       className={cx(
         'w-[78px] px-1 py-2 text-center font-normal',
         column.date === today && 'bg-navy-50/60',

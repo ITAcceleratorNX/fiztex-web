@@ -3,6 +3,7 @@ import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import type { GradebookPeriodRef, GradebookScope, GradebookSubgroup } from '@/lib/gradebookApi';
 import type { MonthOption } from '@/lib/journalModel';
 import { shortDate } from '@/lib/journalModel';
+import { withDemoMark } from '@/lib/demoClass';
 
 export type JournalWindow = 'MONTH' | 'PERIOD';
 
@@ -76,7 +77,7 @@ export function JournalFilters({
         >
           {classes.map((item) => (
             <option key={item.id} value={`class:${item.id}`}>
-              {item.name}
+              {withDemoMark(item.name, item.demo)}
             </option>
           ))}
           {subgroups.map((subgroup) => (
@@ -164,10 +165,12 @@ function periodLabel(period: GradebookPeriodRef): string {
   return `${period.name ?? ''}${range}`;
 }
 
-function uniqueClasses(scopes: GradebookScope[]): Array<{ id: number; name: string }> {
-  const map = new Map<number, string>();
+function uniqueClasses(scopes: GradebookScope[]): Array<{ id: number; name: string; demo: boolean }> {
+  const map = new Map<number, { name: string; demo: boolean }>();
   for (const scope of scopes) {
-    if (scope.classId != null) map.set(scope.classId, scope.className ?? '');
+    if (scope.classId != null) {
+      map.set(scope.classId, { name: scope.className ?? '', demo: Boolean(scope.classDemo) });
+    }
   }
-  return [...map].map(([id, name]) => ({ id, name }));
+  return [...map].map(([id, item]) => ({ id, ...item }));
 }

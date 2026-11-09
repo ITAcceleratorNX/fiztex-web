@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { formatPercent, resultStatusHint, weightsCaption, weightsSum } from './gradingModel';
+import {
+  finalScaleCaption,
+  formatPercent,
+  missingResultsSummary,
+  positiveFinalValues,
+  resultMissingCaption,
+  resultStatusHint,
+  weightsCaption,
+  weightsSum,
+} from './gradingModel';
 import { gradeValueLabel } from './gradesModel';
 
 describe('formatPercent', () => {
@@ -47,5 +56,37 @@ describe('resultStatusHint', () => {
     expect(resultStatusHint({ status: 'INCOMPLETE', missingComponents: ['SOCH'] })).toMatch(/СОЧ/);
     expect(resultStatusHint({ status: 'CALCULATED', missingComponents: ['SOCH'] })).toMatch(/пересчитаны/);
     expect(resultStatusHint({ status: 'CALCULATED', missingComponents: [] })).toBeNull();
+  });
+});
+
+describe('пустой итог четверти (пилот 3.2)', () => {
+  it('называет, чего не хватает, а ноль баллов оставляет нулём', () => {
+    expect(resultMissingCaption({ status: 'NO_WORKS' })).toBe('Нет работ за четверть');
+    expect(resultMissingCaption({ status: 'INCOMPLETE', missingComponents: ['SOR', 'SOCH'] })).toBe('Нет СОР, СОЧ');
+    expect(resultMissingCaption({ status: 'CALCULATED', percent: 0, missingComponents: [] })).toBeNull();
+    expect(resultMissingCaption(null)).toBeNull();
+  });
+
+  it('сводка считает только строки без итога и собирает недостающие работы', () => {
+    expect(missingResultsSummary([
+      { status: 'INCOMPLETE', missingComponents: ['SOCH'] },
+      { status: 'NO_WORKS', missingComponents: ['SOR', 'SOCH'] },
+      { status: 'CALCULATED', percent: 0 },
+      null,
+    ])).toEqual({ students: 2, components: ['СОЧ', 'СОР'] });
+  });
+});
+
+describe('шкала итога (пилот 3.1)', () => {
+  it('подписывает шкалу так, как её прислал сервер', () => {
+    expect(finalScaleCaption([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])).toBe('1–10');
+    expect(finalScaleCaption([5, 2, 4, 3])).toBe('2–5');
+    expect(finalScaleCaption([2, 5, 8])).toBe('2, 5, 8');
+    expect(finalScaleCaption([])).toBeNull();
+  });
+
+  it('ВНА снимается любым итогом выше нижнего порога, а не «с тройки»', () => {
+    expect(positiveFinalValues([2, 3, 4, 5])).toEqual([3, 4, 5]);
+    expect(positiveFinalValues([10, 1, 2, 3, 4, 5, 6, 7, 8, 9])).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10]);
   });
 });

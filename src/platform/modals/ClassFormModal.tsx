@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput, Select } from '@/components/ui/Field';
+import { Toggle } from '@/components/ui/Toggle';
 import { useAdminHomeroomTeachers, useCreateSchoolClass } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
@@ -39,6 +40,7 @@ export function ClassFormModal({
   const [displayName, setDisplayName] = useState('');
   const [academicYearId, setAcademicYearId] = useState('');
   const [homeroomTeacherId, setHomeroomTeacherId] = useState('');
+  const [demo, setDemo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -56,9 +58,11 @@ export function ClassFormModal({
       const letter = (match?.[2] ?? '').trim();
       setDisplayName(grade && letter ? `${grade} «${letter}»` : editing.name);
       setAcademicYearId(editing.academicYearId);
+      setDemo(editing.demo);
     } else {
       setDisplayName('');
       setHomeroomTeacherId('');
+      setDemo(false);
       setAcademicYearId(
         defaultYearId || years.find((y) => y.status === 'ACTIVE')?.id || years[0]?.id || '',
       );
@@ -82,6 +86,7 @@ export function ClassFormModal({
           name,
           grade: parsed.grade,
           letter: parsed.letter,
+          demo,
         });
         toast.success(`Класс ${parsed.grade} «${parsed.letter}» обновлён`);
       } else {
@@ -99,6 +104,7 @@ export function ClassFormModal({
           grade: parsed.grade,
           letter: parsed.letter,
           homeroomTeacherProfileId: teacherId,
+          demo,
         });
         toast.success(teacherId
           ? `Класс ${parsed.grade} «${parsed.letter}» создан, руководитель назначен`
@@ -199,6 +205,12 @@ export function ClassFormModal({
             </div>
           </Field>
         )}
+        <Toggle
+          checked={demo}
+          onChange={setDemo}
+          label="Тестовый класс (DEMO)"
+          description="Для показа и пилота: в списках класс помечается DEMO, чтобы его не путали с настоящим."
+        />
         <Field label="Статус класса" required>
           <Select value="ACTIVE" onChange={() => {}} disabled>
             <option value="ACTIVE">Активен</option>

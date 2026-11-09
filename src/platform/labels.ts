@@ -2,6 +2,7 @@ import type { BadgeTone } from '@/components/ui/Badge';
 import { EMPLOYEE_ROLE_LABELS } from '@/lib/employeesModel';
 import type {
   AcademicPeriodStatus,
+  AcademicPeriodTemporalStatus,
   AcademicPeriodType,
   AcademicYearStatus,
   AccountRole,
@@ -107,6 +108,25 @@ export const PERIOD_STATUS_LABELS: Record<AcademicPeriodStatus, string> = {
   DISABLED: 'Отключён',
   ARCHIVED: 'Архив',
 };
+
+/**
+ * Будущая / текущая / завершённая — по датам периода (пилот, пункт 4.2). Род по типу:
+ * четверть — она, триместр, семестр и свой период — он.
+ */
+export function periodTemporalLabel(
+  type: AcademicPeriodType,
+  status: AcademicPeriodTemporalStatus,
+): string {
+  const feminine = type === 'QUARTER';
+  switch (status) {
+    case 'UPCOMING':
+      return feminine ? 'Будущая' : 'Будущий';
+    case 'CURRENT':
+      return feminine ? 'Текущая' : 'Текущий';
+    case 'COMPLETED':
+      return feminine ? 'Завершена' : 'Завершён';
+  }
+}
 
 export const PERIOD_TYPE_LABELS: Record<AcademicPeriodType, string> = {
   QUARTER: 'Четверть',

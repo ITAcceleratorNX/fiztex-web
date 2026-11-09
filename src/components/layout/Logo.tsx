@@ -1,20 +1,10 @@
 import { cx } from '@/lib/format';
 import { APP_NAME } from '@/lib/branding';
-import logoWhite from '@/assets/fiztex-logo-white.svg';
 
-const logoLockups = import.meta.glob('@/assets/*logo-lockup.png', {
-  eager: true,
-  import: 'default',
-});
-const logoLockup = Object.values(logoLockups)[0] as string;
-
-/**
- * Brand icon mark (swoosh/arrows forming the Ф), traced from the lockup asset.
- * Uses `currentColor` so it can be recolored via a `text-*` class.
- */
-export function PhysTechMark({ className }: { className?: string }) {
+/** Контуры знака (стрелки, складывающиеся в Ф) — общие для знака и локапа. */
+function MarkPaths() {
   return (
-    <svg viewBox="0 0 89 96" fill="none" className={className} aria-hidden>
+    <>
       <path
         d="M41.5892 95.1839H29.0892L31.7513 83.4339C24.6459 80.2003 19.0445 76.268 13.5892 70.6839C7.96976 64.9319 5.58917 55.1839 5.58917 55.1839L1.08917 54.6839L10.0892 45.6839L20.5892 54.6839L15.5892 55.1839C15.5892 55.1839 19.8128 62.3475 23.5892 65.6839C27.2111 68.884 29.7803 70.3081 34.4134 71.6839L43.5892 31.1839L55.0892 32.6839L41.5892 95.1839Z"
         fill="currentColor"
@@ -31,31 +21,83 @@ export function PhysTechMark({ className }: { className?: string }) {
         d="M47.5892 16.1839C49.4452 16.1889 51.7873 16.5201 53.5892 16.6839C55.4509 16.8532 56.7892 16.7833 58.5892 17.1839M47.5892 16.1839L49.5892 8.18393H44.5892L56.5892 0.683929L64.0892 12.1839L59.0892 10.6839L58.5892 17.1839M47.5892 16.1839C43.3351 16.1724 39.0486 16.332 34.0892 17.6839C29.8641 18.8356 23.4667 21.9091 22.0892 22.6839C17.0666 25.5091 13.2406 29.4425 10.0892 33.6839C6.63271 38.3359 5.58917 43.1839 5.58917 43.1839L10.5892 40.1839L16.0892 44.1839C16.0892 44.1839 17.4466 40.813 20.0892 37.6839C22.1264 35.2716 25.1351 33.2058 27.5892 31.6839C35.5006 26.7776 44.5952 26.015 53.5892 28.1839C66.0785 31.1957 78.2051 42.2202 75.0892 54.6839C71.5892 68.6839 51.0892 72.1839 51.0892 72.1839L48.0892 84.1839C48.0892 84.1839 64.1636 82.4812 72.0892 76.6839C81.4952 69.8038 86.8072 62.8114 87.5892 51.1839C88.733 34.1755 75.0025 20.8368 58.5892 17.1839"
         stroke="currentColor"
       />
+    </>
+  );
+}
+
+/**
+ * Brand icon mark (swoosh/arrows forming the Ф), traced from the lockup asset.
+ * Uses `currentColor` so it can be recolored via a `text-*` class.
+ */
+export function PhysTechMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 89 96" fill="none" className={className} aria-hidden>
+      <MarkPaths />
     </svg>
   );
 }
 
-/** Full wordmark lockup (brand blue #274185 bg, white type). */
 /**
- * Логотип.
+ * Логотип: знак и слово {@link APP_NAME}.
  *
- * `lockup` — растровая сборка на собственной синей подложке (сайдбар, мобильная шапка
- * входа). `white` — тот же знак белым вектором без подложки, экспорт из Figma `phyztex`
- * (узел «ЛОГО» 2460:4669): ставится поверх фона, который рисует сам экран, — синей панели
- * входа с подсветкой. Размер у `white` — родной (137×36), его не растягивают.
+ * <p>Обе формы набраны, а не нарисованы картинкой: и прежний растровый локап, и белый
+ * экспорт из Figma `phyztex` (узел «ЛОГО» 2460:4669) читались как «ФIZTEX» — старое имя
+ * продукта на входе и в шапке (пилот, пункт 1.1). Следующее переименование не потребует
+ * нового ассета. `textLength` держит слово в отведённой ширине при любом шрифте.
+ *
+ * - `lockup` — на собственной синей подложке (сайдбар, мобильная шапка входа). Пропорции
+ *   прежнего ассета (496×198), чтобы размеры у вызывающих не поменялись.
+ * - `white` — белым без подложки, поверх фона, который рисует сам экран (синяя панель входа).
+ *   Размер родной, как у макета (137×36), его не растягивают.
  */
 export function Logo({ className, tone = 'lockup' }: { className?: string; tone?: 'lockup' | 'white' }) {
   if (tone === 'white') {
-    return <img src={logoWhite} alt={APP_NAME} width={137} height={36} className={cx('shrink-0 self-start', className)} />;
+    return (
+      <svg
+        viewBox="0 0 137 36"
+        width={137}
+        height={36}
+        role="img"
+        aria-label={APP_NAME}
+        className={cx('shrink-0 self-start', className)}
+      >
+        <svg x="0" y="0" width="34" height="36" viewBox="0 0 89 96" fill="none" className="text-white">
+          <MarkPaths />
+        </svg>
+        <text
+          x="42"
+          y="27"
+          textLength="94"
+          lengthAdjust="spacingAndGlyphs"
+          aria-hidden
+          className="fill-white font-sans text-[25px] font-bold"
+        >
+          {APP_NAME}
+        </text>
+      </svg>
+    );
   }
   return (
-    <img
-      src={logoLockup}
-      alt={APP_NAME}
-      className={cx(
-        'shrink-0 self-start object-contain rounded-md',
-        className ?? 'h-9 w-auto',
-      )}
-    />
+    <svg
+      viewBox="0 0 496 198"
+      role="img"
+      aria-label={APP_NAME}
+      className={cx('shrink-0 self-start rounded-md', className ?? 'h-9 w-auto')}
+    >
+      <rect width="496" height="198" className="fill-navy-700" />
+      <svg x="34" y="43" width="104" height="112" viewBox="0 0 89 96" fill="none" className="text-white">
+        <MarkPaths />
+      </svg>
+      <text
+        x="156"
+        y="122"
+        textLength="306"
+        lengthAdjust="spacingAndGlyphs"
+        aria-hidden
+        className="fill-white font-sans text-[64px] font-bold"
+      >
+        {APP_NAME}
+      </text>
+    </svg>
   );
 }

@@ -13,7 +13,8 @@ import { useFormDraftStore, type FormDraftStore } from './FormDraftContext';
 const ADMIN: Admin = { email: 'admin', fullName: 'Администратор A', role: 'SUPER_ADMIN', token: 'token-admin' };
 const TEACHER_A: Admin = { email: 'teacher-a', fullName: 'Учитель A', role: 'TEACHER', token: 'token-a' };
 const TEACHER_B: Admin = { email: 'teacher-b', fullName: 'Учитель B', role: 'TEACHER', token: 'token-b' };
-const accounts = [ADMIN, TEACHER_A, TEACHER_B];
+const PARENT: Admin = { email: '+77010000000', fullName: 'Родитель', role: 'PARENT', token: 'token-parent' };
+const accounts = [ADMIN, TEACHER_A, TEACHER_B, PARENT];
 
 function profile(account: Admin) {
   return { accountId: accounts.indexOf(account) + 1, fullName: account.fullName, role: account.role, email: account.email, children: [] };
@@ -94,6 +95,29 @@ afterEach(() => {
 });
 
 describe('account session isolation', () => {
+  it('родителя не пускает в панель: сессию не заводит, серверную гасит, объясняет почему', async () => {
+    render(
+      <MemoryRouter initialEntries={['/staff/login']}>
+        <AuthProvider><SessionContents /></AuthProvider>
+      </MemoryRouter>,
+    );
+
+    let refusal: unknown;
+    await act(async () => {
+      await auth.login(PARENT.email, 'test-password').catch((error: unknown) => { refusal = error; });
+    });
+
+    expect(refusal).toBeInstanceOf(Error);
+    expect((refusal as Error).message).toMatch(/мобильное приложение/);
+
+    expect(auth.isAuthenticated).toBe(false);
+    expect(getToken()).toBeNull();
+    expect(localStorage.getItem('fiztex.profile')).toBeNull();
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/logout', expect.objectContaining({
+      headers: { Authorization: `Bearer ${PARENT.token}` },
+    }));
+  });
+
   it('явный выход очищает адрес возврата перед следующим входом', async () => {
     renderSession(TEACHER_A, ['/homework/new?lessonId=42&groupId=7#questions']);
     await screen.findByText(TEACHER_A.email);

@@ -18,6 +18,19 @@ import { useFieldControlProps } from './fieldContext';
 
 type OptionItem = { value: string; label: string; disabled?: boolean };
 
+/**
+ * Текст пункта. `String(children)` годится только для одной строки: у
+ * `<option>{label}: все</option>` дети — массив, и он склеивался через запятую
+ * («Класс,: все»).
+ */
+function optionText(node: ReactNode): string {
+  if (node == null || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(optionText).join('');
+  if (isValidElement<{ children?: ReactNode }>(node)) return optionText(node.props.children);
+  return '';
+}
+
 function parseOptions(children: ReactNode): OptionItem[] {
   return Children.toArray(children)
     .filter(isValidElement)
@@ -25,7 +38,7 @@ function parseOptions(children: ReactNode): OptionItem[] {
       const el = child as ReactElement<{ value?: string | number; disabled?: boolean; children?: ReactNode }>;
       return {
         value: String(el.props.value ?? ''),
-        label: String(el.props.children ?? ''),
+        label: optionText(el.props.children),
         disabled: el.props.disabled,
       };
     });

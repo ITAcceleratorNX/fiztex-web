@@ -126,6 +126,23 @@ export const ROUTES = {
  */
 const SUPER_ADMIN_ROUTE_PREFIXES = [ROUTES.employees, ROUTES.keys, ROUTES.equipment];
 
+/**
+ * Роли, у которых веб-кабинета нет: ученик и родитель работают только в мобильном
+ * приложении (пилот, пункт 5.1). Раньше панель пускала их и показывала меню
+ * администратора — любой пункт заканчивался отказом или ошибкой сервера.
+ *
+ * Это маршрутизация, а не защита: права на `/api/*` проверяет бэкенд, и мобильному
+ * родителю те же адреса по-прежнему открыты.
+ */
+const MOBILE_ONLY_ROLES: ReadonlySet<string> = new Set(['STUDENT', 'PARENT']);
+
+export function isMobileOnlyRole(role: string | undefined): boolean {
+  return role != null && MOBILE_ONLY_ROLES.has(role);
+}
+
+export const MOBILE_ONLY_MESSAGE =
+  'Ученики и родители входят через мобильное приложение PhysTech. Веб-версия — для учителей и администрации школы.';
+
 /** Куда возвращать после входа, если пользователь не шёл на конкретную страницу. */
 export const DEFAULT_AUTHENTICATED_ROUTE = ROUTES.dashboard;
 
@@ -216,6 +233,7 @@ export function resolveLoginRedirect(
  * здесь — только маршрутизация.
  */
 export function isRouteAllowedForRole(path: string, role: string | undefined): boolean {
+  if (isMobileOnlyRole(role)) return false;
   // Профиль общий: он не читает ни одного административного адреса, и роли,
   // которым панель показывает три раздела, тоже должны знать, под кем вошли.
   if (matchesRoutePrefix(path, ROUTES.profile)) return true;

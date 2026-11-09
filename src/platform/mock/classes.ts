@@ -9,6 +9,7 @@ export const MOCK_CLASSES: SchoolClass[] = [
     studentCount: 24,
     status: 'ACTIVE',
     createdAt: '2026-08-15T09:00:00Z',
+    demo: false,
   },
   {
     id: 'class-7b',
@@ -18,6 +19,7 @@ export const MOCK_CLASSES: SchoolClass[] = [
     studentCount: 22,
     status: 'ACTIVE',
     createdAt: '2026-08-15T09:05:00Z',
+    demo: false,
   },
   {
     id: 'class-10a',
@@ -27,6 +29,7 @@ export const MOCK_CLASSES: SchoolClass[] = [
     studentCount: 18,
     status: 'ACTIVE',
     createdAt: '2026-08-15T09:10:00Z',
+    demo: false,
   },
   {
     id: 'class-11a-old',
@@ -36,5 +39,6 @@ export const MOCK_CLASSES: SchoolClass[] = [
     studentCount: 20,
     status: 'ARCHIVED',
     createdAt: '2025-08-15T09:00:00Z',
+    demo: false,
   },
 ];

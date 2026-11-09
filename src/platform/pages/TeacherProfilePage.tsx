@@ -33,6 +33,7 @@ import {
 } from '../services';
 import type { TeacherProfileDetail, TeacherTodayLesson } from '../types';
 import { formatPersonName } from '../types';
+import { DemoBadge } from '@/components/ui/DemoBadge';
 
 export function TeacherProfilePage() {
   const { accountId: accountIdParam } = useParams();
@@ -404,7 +405,10 @@ export function TeacherProfilePage() {
                         key={a.id}
                         className="group flex items-center justify-between gap-4 border-b border-[#f3f4f6] py-3 text-13 last:border-b-0"
                       >
-                        <span className="font-semibold text-[#1a1f36]">{a.className} класс</span>
+                        <span className="flex items-center gap-2 font-semibold text-[#1a1f36]">
+                          {a.className} класс
+                          {a.classDemo && <DemoBadge />}
+                        </span>
                         <div className="flex items-center gap-6">
                           <span className="text-[#6b7280]">{a.schoolSubjectName}</span>
                           <span className="text-[#9ca3af]">

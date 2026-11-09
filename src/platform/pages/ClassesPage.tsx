@@ -12,6 +12,7 @@ import { archiveClass, listAcademicYears, listClasses } from '../services';
 import type { AcademicYear, SchoolClass } from '../types';
 import { useToast } from '@/context/ToastContext';
 import { platformErrorMessage } from '../platformErrorMessage';
+import { DemoBadge } from '@/components/ui/DemoBadge';
 
 export function ClassesPage() {
   const toast = useToast();
@@ -122,12 +123,15 @@ export function ClassesPage() {
               {classes.map((item) => (
                 <tr key={item.id} className="border-b border-slate-50 last:border-0">
                   <td className="px-4 py-3 font-medium text-slate-900">
-                    <Link
-                      to={detailPath(item.id)}
-                      className="text-navy-700 transition hover:text-navy-800 hover:underline"
-                    >
-                      {item.name}
-                    </Link>
+                    <span className="flex items-center gap-2">
+                      <Link
+                        to={detailPath(item.id)}
+                        className="text-navy-700 transition hover:text-navy-800 hover:underline"
+                      >
+                        {item.name}
+                      </Link>
+                      {item.demo && <DemoBadge />}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-slate-600">{item.academicYearName}</td>
                   <td className="px-4 py-3 text-slate-600">{item.studentCount}</td>

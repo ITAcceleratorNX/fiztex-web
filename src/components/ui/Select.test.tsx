@@ -91,3 +91,22 @@ describe('Select keyboard interaction', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Следующее поле' }));
   });
 });
+
+describe('Select option labels', () => {
+  it('joins mixed option children without commas', async () => {
+    const label = 'Класс';
+    render(
+      <Select aria-label={label} value="" onChange={() => {}}>
+        <option value="">{label}: все</option>
+        <option value="7">7А</option>
+      </Select>,
+    );
+
+    const trigger = screen.getByRole('button', { name: label });
+    expect(trigger).toHaveTextContent('Класс: все');
+    expect(trigger).not.toHaveTextContent('Класс,: все');
+
+    await userEvent.click(trigger);
+    expect(screen.getByRole('option', { name: 'Класс: все' })).toBeInTheDocument();
+  });
+});

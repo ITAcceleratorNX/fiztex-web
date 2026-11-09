@@ -39,6 +39,7 @@ interface AssignmentDto {
   createdAt: string;
   updatedAt: string;
   studentCount: number;
+  classDemo?: boolean;
 }
 
 interface TeacherDetailDto extends TeacherDto {
@@ -87,7 +88,7 @@ function mapTeacher(dto: TeacherDto): TeacherProfile {
 }
 
 function mapAssignment(dto: AssignmentDto): TeacherAssignment {
-  return { ...dto };
+  return { ...dto, classDemo: dto.classDemo ?? false };
 }
 
 function mapTodayLesson(dto: TeacherTodayLessonDto): TeacherTodayLesson {

@@ -11,9 +11,18 @@ describe('web branding', () => {
     expect(ADMIN_TITLE).toBe('PhysTech — Административная панель');
   });
 
-  it('uses APP_NAME in Logo alt text', () => {
-    render(<Logo />);
-    expect(screen.getByAltText(APP_NAME)).toBeInTheDocument();
+  it('names the Logo with APP_NAME and spells it in the wordmark', () => {
+    const { container } = render(<Logo />);
+    expect(screen.getByRole('img', { name: APP_NAME })).toBeInTheDocument();
+    expect(container).toHaveTextContent(APP_NAME);
+    expect(container.textContent ?? '').not.toMatch(/fiztex/i);
+  });
+
+  it('белый логотип панели входа тоже называется PhysTech, а не прежним словом', () => {
+    const { container } = render(<Logo tone="white" />);
+    expect(screen.getByRole('img', { name: APP_NAME })).toBeInTheDocument();
+    expect(container).toHaveTextContent(APP_NAME);
+    expect(container.querySelector('img')).toBeNull();
   });
 
   // Роутер нужен, потому что в подвале шелла стоят ссылки на политику

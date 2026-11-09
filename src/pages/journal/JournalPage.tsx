@@ -18,11 +18,12 @@ import {
   useSetFinalGrade,
 } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
-import { formatWeekdayDayMonth } from '@/lib/format';
+import { formatWeekdayDayMonth, pluralRu } from '@/lib/format';
 import {
   FINAL_GRADE_ERRORS,
   incompleteStudentIdsFrom,
   type ClassFinalGradeRow,
+  type ClassFinalGrades,
   type JournalQuery,
 } from '@/lib/gradebookApi';
 import {
@@ -31,7 +32,7 @@ import {
   monthOptionsOf,
   shortDate as formatShortDate,
 } from '@/lib/journalModel';
-import { weightsCaption } from '@/lib/gradingModel';
+import { finalScaleCaption, missingResultsSummary, weightsCaption } from '@/lib/gradingModel';
 import { JournalFilters, type JournalWindow } from './JournalFilters';
 import { JournalTable } from './JournalTable';
 import { PeriodBreakdownModal } from './PeriodBreakdownModal';
@@ -406,8 +407,19 @@ function FinalsTab({
     );
   }
 
+  const missingResults = data.gradingPolicy ? missingResultsSummary(rows.map((row) => row.result)) : null;
+
   return (
     <div className="flex flex-col gap-4">
+      <FinalsScaleNote finals={data} />
+      {missingResults && missingResults.students > 0 && (
+        <p role="status" className="rounded-lg bg-info-bg p-4 text-13 text-info-fg">
+          Итог за четверть не посчитан у {missingResults.students} из {rows.length}{' '}
+          {pluralRu(rows.length, ['ученика', 'учеников', 'учеников'])}
+          {missingResults.components.length > 0 ? `: нет ${missingResults.components.join(', ')}` : ': нет работ'}.
+          {' '}Внесите работы на уроках или, если обязательная работа не сдана, выберите «Временно не аттестован».
+        </p>
+      )}
       <div className="card overflow-hidden p-0">
         <QuarterFinalsTable
           finals={data}
@@ -531,6 +543,33 @@ function JournalShell({
   );
 }
 
+/**
+ * Откуда какое число (пилот, пункт 3.1): на уроке 10-балльная ФО, у СОР и СОЧ — баллы из
+ * максимума работы, итог — по порогам политики. Без подписи 1–10 урока и 2–5 итога
+ * (в четверти по прежней шкале) выглядели одной сломанной шкалой.
+ */
+function FinalsScaleNote({ finals }: { finals: ClassFinalGrades }) {
+  const scale = finalScaleCaption(finals.allowedValues);
+  const policy = finals.gradingPolicy;
+  if (finals.assessmentMode && finals.assessmentMode !== 'NUMERIC') return null;
+  return (
+    <p className="flex items-start gap-2 px-1 text-13 text-slate-500">
+      <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
+      <span>
+        {policy ? (
+          <>
+            Итог четверти — оценка {scale ?? ''} по порогам политики «{policy.name}». Процент считается по весам{' '}
+            {weightsCaption(policy.components)}: ФО — 10-балльная (1–10), СОР и СОЧ — баллы из максимума работы
+            (например, 15/20).
+          </>
+        ) : (
+          <>Четверть без политики оценивания: итог {scale ?? '2–5'} по среднему баллу, как в журнале этой четверти.</>
+        )}
+      </span>
+    </p>
+  );
+}
+
 function Legend({ policyCaption }: { policyCaption: string | null }) {
   return (
     <div className="flex flex-wrap items-center gap-6 px-1 text-13 text-slate-500">
@@ -550,8 +589,8 @@ function Legend({ policyCaption }: { policyCaption: string | null }) {
         Сегодняшний урок
       </span>
       <span className="flex items-center gap-2">
-        <span className="text-slate-300">✕</span>
-        Занятие не состоялось
+        <span className="text-13 font-semibold text-slate-400">01.09</span>
+        Урок отменён или из прежней версии расписания — оценки сохранены, новые не ставятся
       </span>
     </div>
   );

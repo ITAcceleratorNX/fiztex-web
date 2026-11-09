@@ -151,6 +151,29 @@ describe('JournalPage', () => {
     expect(link).toHaveAttribute('href', '/lesson-schedule/lessons/451/grades');
   });
 
+  it('урок прежней версии расписания с оценками не называется несостоявшимся (пилот 3.3)', () => {
+    const data = journal();
+    data.columns[1] = { ...data.columns[1], state: 'LESSON_SUPERSEDED' } as (typeof data.columns)[number];
+    useJournal.mockReturnValue({ data, isPending: false, isError: false, error: null });
+    renderPage();
+
+    expect(screen.queryByText(/не состоялось/i)).not.toBeInTheDocument();
+    expect(screen.queryByTitle(/не состоялось/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /10\.09\s*Урок 2/ })).toBeInTheDocument();
+    // Шапка колонки и пустая клетка ученика без оценки говорят одно и то же.
+    expect(screen.getAllByTitle(/прежней версии расписания/)).toHaveLength(2);
+  });
+
+  it('отменённый урок помечен отменой, а пустая клетка объясняет, что новых оценок не будет', () => {
+    const data = journal();
+    data.columns[1] = { ...data.columns[1], state: 'LESSON_CANCELLED' } as (typeof data.columns)[number];
+    useJournal.mockReturnValue({ data, isPending: false, isError: false, error: null });
+    renderPage();
+
+    expect(screen.getByRole('columnheader', { name: /10\.09\s*Отмена/ })).toBeInTheDocument();
+    expect(screen.getAllByTitle(/^Урок отменён\./)).toHaveLength(2);
+  });
+
   it('показывает сетку без единой оценки и позволяет открыть первый урок через заголовок', async () => {
     const empty = journal();
     useJournal.mockReturnValue({ data: { ...empty, rows: empty.rows.map(row => ({ ...row, cells: [] })) },
@@ -292,6 +315,32 @@ describe('JournalPage', () => {
     expect(screen.getByText('Процент за четверть')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '2' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '5' })).toBeInTheDocument();
+  });
+
+  it('итог без СОЧ объясняет, чего не хватает, и подписывает шкалу итога (пилот 3.1, 3.2)', () => {
+    const base = finals();
+    useClassFinals.mockReturnValue({
+      data: {
+        ...base,
+        gradingPolicy: { name: 'РК 25/25/50', components: [], bands: [] },
+        allowedValues: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        rows: base.rows.map((row) => ({
+          ...row,
+          recommendedValue: null,
+          result: { status: 'INCOMPLETE', missingComponents: ['SOCH'] },
+        })),
+      },
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+
+    renderPage('?tab=finals');
+
+    expect(screen.getByText('Нет СОЧ')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('не посчитан у 1 из 1 ученика: нет СОЧ');
+    expect(screen.getByText(/оценка 1–10 по порогам политики «РК 25\/25\/50»/)).toBeInTheDocument();
+    expect(screen.queryByText('0%')).not.toBeInTheDocument();
   });
 
   /** Публикация — только после окончания четверти; выставлять итоги можно заранее. */

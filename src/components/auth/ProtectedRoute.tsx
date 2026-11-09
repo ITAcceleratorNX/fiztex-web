@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { isRouteAllowedForRole, landingRouteForRole, ROUTES } from '@/lib/routes';
+import { isMobileOnlyRole, isRouteAllowedForRole, landingRouteForRole, ROUTES } from '@/lib/routes';
+import { MobileOnlyNotice } from './MobileOnlyNotice';
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, admin, expiredAccountEmail } = useAuth();
@@ -18,6 +19,12 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
         }}
       />
     );
+  }
+
+  // Раньше чем проверка маршрута: у этих ролей допустимого стартового раздела нет, и
+  // разворот на «стартовый раздел роли» зациклился бы.
+  if (isMobileOnlyRole(admin?.role)) {
+    return <MobileOnlyNotice />;
   }
 
   // Временный пароль закрывает панель целиком: `PasswordChangeRequiredFilter` пускает

@@ -82,8 +82,42 @@ export function currentMonthKey(options: MonthOption[], today = new Date()): str
 export function columnCaption(column: GradebookColumn): { date: string; event: string } {
   const date = column.date ? shortDate(column.date) : '';
   if (column.type === 'HOMEWORK') return { date, event: 'ДЗ' };
-  if (column.active === false) return { date, event: 'Отмена' };
+  if (columnState(column) === 'LESSON_CANCELLED') return { date, event: 'Отмена' };
   return { date, event: column.lessonNumber != null ? `Урок ${column.lessonNumber}` : 'Урок' };
+}
+
+type ColumnState = NonNullable<GradebookColumn['state']>;
+
+/**
+ * Почему колонка не принимает оценок. Без `state` (старый ответ) неактивный урок
+ * по-прежнему читается как отменённый — других причин тот ответ не знал.
+ */
+export function columnState(column: GradebookColumn): ColumnState {
+  if (column.state) return column.state;
+  if (column.active !== false) return 'ACTIVE';
+  return column.type === 'HOMEWORK' ? 'HOMEWORK_CANCELLED' : 'LESSON_CANCELLED';
+}
+
+/**
+ * Подсказка над пустой клеткой неактивной колонки (пилот, пункт 3.3).
+ *
+ * <p>Неактивная колонка приходит в журнал только потому, что на ней уже стоят оценки, —
+ * значит урок был. Прежнее «Занятие не состоялось» в клетке ученика без оценки врало
+ * ровно на проведённом уроке: на вытесненном переизданием расписания, а то и на
+ * отменённом уже после того, как оценки поставили. Клетка говорит только то, что верно
+ * про неё: новых оценок здесь не будет и почему.
+ */
+export function inactiveColumnHint(column: GradebookColumn): string | null {
+  switch (columnState(column)) {
+    case 'ACTIVE':
+      return null;
+    case 'LESSON_CANCELLED':
+      return 'Урок отменён. Оценки, выставленные до отмены, сохранены; новые не ставятся';
+    case 'LESSON_SUPERSEDED':
+      return 'Урок из прежней версии расписания. Его оценки сохранены; новые ставятся в актуальный урок';
+    case 'HOMEWORK_CANCELLED':
+      return 'Задание отменено. Его оценки сохранены; новые не ставятся';
+  }
 }
 
 /** `01.09` — в шапке журнала год не нужен: он один на всю таблицу. */

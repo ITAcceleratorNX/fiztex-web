@@ -5,7 +5,13 @@ import type { FinalGrade } from '@/lib/gradebookApi';
 import { cx } from '@/lib/format';
 import type { ClassFinalGradeRow, ClassFinalGrades } from '@/lib/gradebookApi';
 import { formatAverage } from '@/lib/journalModel';
-import { COMPONENT_SHORT, formatPercent, resultStatusHint } from '@/lib/gradingModel';
+import {
+  COMPONENT_SHORT,
+  formatPercent,
+  positiveFinalValues,
+  resultMissingCaption,
+  resultStatusHint,
+} from '@/lib/gradingModel';
 
 /**
  * Итоговая — только целые 2…5, без знаков (final-grades-contract §3). Это запасной список:
@@ -109,14 +115,19 @@ export function QuarterFinalsTable({
 
                 <td className="px-6 py-3 text-center font-semibold text-slate-900">
                   {byPolicy ? (
-                    <button
-                      type="button"
-                      onClick={() => onOpenBreakdown?.(row)}
-                      title={resultStatusHint(row.result) ?? componentsLine(row)}
-                      className="rounded-lg px-2 py-1 transition hover:bg-navy-50 hover:text-navy-700"
-                    >
-                      {row.result?.percent != null ? formatPercent(row.result.percent) : '—'}
-                    </button>
+                    <span className="flex flex-col items-center gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => onOpenBreakdown?.(row)}
+                        title={resultStatusHint(row.result) ?? componentsLine(row)}
+                        className="rounded-lg px-2 py-1 transition hover:bg-navy-50 hover:text-navy-700"
+                      >
+                        {row.result?.percent != null ? formatPercent(row.result.percent) : '—'}
+                      </button>
+                      {resultMissingCaption(row.result) && (
+                        <span className="text-11 font-normal text-muted">{resultMissingCaption(row.result)}</span>
+                      )}
+                    </span>
                   ) : (
                     formatAverage(row.average)
                   )}
@@ -129,7 +140,12 @@ export function QuarterFinalsTable({
                         {row.recommendedValue}
                       </span>
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <span
+                        className="text-slate-400"
+                        title={resultStatusHint(row.result) ?? 'Рекомендации нет: не хватает оценок за четверть'}
+                      >
+                        —
+                      </span>
                     )}
                   </span>
                 </td>
@@ -148,7 +164,7 @@ export function QuarterFinalsTable({
                       <span className="flex flex-col items-center gap-2">
                       {temporary && <span className="text-11 text-muted">Временно не аттестован. После сдачи обязательных работ:</span>}
                       {dataModeNumeric(finals) && <FinalValuePicker
-                        options={temporary ? options.filter(value => value >= 3) : options}
+                        options={temporary ? positiveFinalValues(options) : options}
                         value={value}
                         busy={busyStudentId === studentId}
                         onPick={(next) => onPick(row, next)}
