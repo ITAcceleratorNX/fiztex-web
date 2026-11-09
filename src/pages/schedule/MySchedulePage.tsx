@@ -9,7 +9,7 @@ import { cx, formatWeekdayDayMonth } from '@/lib/format';
 import { lessonsApi, type RoleScheduleLesson } from '@/lib/lessonsApi';
 import { isValidIsoDate, mergeSearchParams } from '@/lib/listNavigation';
 import { useListSearchParams } from '@/hooks/useListNavigation';
-import { hhmm, lessonsAt, localDate, shiftDays, weekColumns, weekRows, weekState } from './myWeek';
+import { hhmm, isLessonOver, lessonsAt, localDate, shiftDays, weekColumns, weekRows, weekState } from './myWeek';
 
 /**
  * Своё расписание учителя.
@@ -186,20 +186,28 @@ export function MySchedulePage() {
 /**
  * Клетка урока. Отменённый урок остаётся на месте и говорит об этом прямо: убрать его
  * значило бы показать учителю неверную неделю, а не «освободить время».
+ *
+ * Прошедший урок открывается так же, как будущий (пилот, пункт 2.4): в нём проверяют и
+ * исправляют оценки и посещаемость. Пометка «прошёл» только подсказывает, что дата позади, —
+ * гасить клетку значило бы сказать «сюда нельзя», а это решает сервер внутри урока.
  */
 function LessonCell({ lesson, onOpen }: { lesson: RoleScheduleLesson; onOpen: () => void }) {
   const openable = lesson.lessonInstanceId != null;
+  const over = isLessonOver(lesson);
   const target = [lesson.className, lesson.subgroupName].filter(Boolean).join(' · ');
+  const footnote = lesson.cancelled
+    ? 'Урок отменён'
+    : [over ? 'Прошёл' : null, lesson.room ? `Каб. ${lesson.room}` : null].filter(Boolean).join(' · ');
 
   return (
     <button
       type="button"
       disabled={!openable}
       onClick={onOpen}
-      title={openable ? 'Открыть урок' : 'Урок ещё не сгенерирован'}
+      title={openable ? 'Открыть урок' : over ? 'Урока за эту дату в системе нет' : 'Урок ещё не сгенерирован'}
       className={cx(
         'flex min-w-0 flex-1 flex-col gap-0.5 rounded-lg border p-1.5 text-left transition',
-        lesson.cancelled ? 'border-line bg-neutral-bg/60' : 'border-line bg-surface',
+        lesson.cancelled || over ? 'border-line bg-neutral-bg/60' : 'border-line bg-surface',
         openable ? 'hover:border-brand-300 hover:bg-brand-50/40' : 'cursor-default opacity-70',
       )}
     >
@@ -215,9 +223,7 @@ function LessonCell({ lesson, onOpen }: { lesson: RoleScheduleLesson; onOpen: ()
         <span className="shrink-0 text-10 text-subtle">{hhmm(lesson.startTime)}</span>
       </span>
       {target && <span className="truncate text-11 text-muted">{target}</span>}
-      <span className="truncate text-10 text-subtle">
-        {lesson.cancelled ? 'Урок отменён' : lesson.room ? `Каб. ${lesson.room}` : ''}
-      </span>
+      <span className="truncate text-10 text-subtle">{footnote}</span>
     </button>
   );
 }

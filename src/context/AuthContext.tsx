@@ -10,10 +10,10 @@ import {
 } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { getToken, setToken, api, onSessionExpired } from '@/lib/api';
+import { ApiError, getToken, setToken, api, onSessionExpired } from '@/lib/api';
 import type { Admin } from '@/lib/types';
 import { clearListNavigationSession } from '@/lib/listNavigation';
-import { ROUTES } from '@/lib/routes';
+import { isMobileOnlyRole, MOBILE_ONLY_MESSAGE, ROUTES } from '@/lib/routes';
 import { FormDraftProvider, FormDraftStore } from './FormDraftContext';
 
 const PROFILE_KEY = 'fiztex.profile';
@@ -125,6 +125,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // роль и идентичность аккаунта до следующего рендера контекста.
   const login = useCallback(async (email: string, password: string) => {
     const result = await api.signIn(email, password);
+    // Ученик и родитель входят тем же `/auth/login`, что и мобилка, — отличить их можно
+    // только по ответу. Сессию не заводим и серверную гасим: веб-кабинета у них нет.
+    if (isMobileOnlyRole(result.role)) {
+      invalidateServerSession(result.token);
+      throw new ApiError(403, MOBILE_ONLY_MESSAGE, 'MOBILE_ONLY_ROLE');
+    }
     setExpiredAccountEmail(null);
     setTemporarySecret(result.mustChangePassword ? password : null);
     persist(result);

@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { Smartphone } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api';
-import { ROUTES } from '@/lib/routes';
+import { MOBILE_ONLY_MESSAGE, ROUTES } from '@/lib/routes';
 import { Button } from '@/components/ui/Button';
+import { Callout } from '@/components/ui/Callout';
 import { Field, TextInput } from '@/components/ui/Field';
 import { PasswordInput } from '@/components/ui/PasswordInput';
 import { StaffAuthHeading, StaffAuthLayout } from '@/components/layout/StaffAuthLayout';
@@ -24,10 +26,14 @@ export function LoginPage() {
     } catch (err) {
       // Сервер на все отказы отвечает одинаково (§9): какой именно реквизит не подошёл
       // и существует ли вообще такой человек в школе — не его дело сообщать.
+      // Исключение — ученик и родитель (пилот, пункт 5.1): реквизиты у них верные, а вход
+      // не тот. «Неверный пароль» отправил бы их его восстанавливать.
       setError(
-        err instanceof ApiError
-          ? 'Неверный телефон или пароль. Проверьте данные или восстановите пароль.'
-          : 'Не удалось войти. Проверьте соединение и попробуйте ещё раз.',
+        err instanceof ApiError && err.code === 'MOBILE_ONLY_ROLE'
+          ? MOBILE_ONLY_MESSAGE
+          : err instanceof ApiError
+            ? 'Неверный телефон или пароль. Проверьте данные или восстановите пароль.'
+            : 'Не удалось войти. Проверьте соединение и попробуйте ещё раз.',
       );
     } finally {
       setLoading(false);
@@ -37,7 +43,9 @@ export function LoginPage() {
   return (
     <StaffAuthLayout>
       <form onSubmit={onSubmit} noValidate>
-        <StaffAuthHeading title="Добро пожаловать!" subtitle="Войдите в свою учётную запись" />
+        {/* Пилот, пункт 1.2: вход один для учителей и администрации — подзаголовок говорит
+            это прямо, чтобы учитель не решил, что форма только для администратора. */}
+        <StaffAuthHeading title="Добро пожаловать!" subtitle="Вход для сотрудников школы: учителей и администрации" />
 
         <div className="mt-7 space-y-5">
           <Field label="Телефон или email" size="lg">
@@ -84,6 +92,16 @@ export function LoginPage() {
         <Button type="submit" size="lg" className="mt-5 w-full" loading={loading}>
           Войти
         </Button>
+
+        {/* Пилот, пункт 1.3: ученик и родитель находили форму и пробовали войти. Веб-кабинета
+            у них нет — подсказываем, где их вход, а не предлагаем несуществующий. */}
+        <Callout
+          className="mt-5"
+          icon={<Smartphone className="size-5" />}
+          title="Ученикам и родителям — в мобильное приложение"
+        >
+          {MOBILE_ONLY_MESSAGE}
+        </Callout>
 
         <p className="mt-5 text-center text-sm text-planning-subtle">
           Доступ выдаёт администратор школы.

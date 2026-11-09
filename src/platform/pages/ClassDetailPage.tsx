@@ -18,6 +18,7 @@ import { HomeroomAssignmentCard } from '../components/HomeroomAssignmentCard';
 import { archiveClass, getClass, listAcademicYears, listStudents } from '../services';
 import type { AcademicYear, SchoolClass, StudentProfile } from '../types';
 import { formatPersonName } from '../types';
+import { DemoBadge } from '@/components/ui/DemoBadge';
 
 export function ClassDetailPage() {
   const { classId: classIdParam } = useParams();
@@ -145,6 +146,7 @@ export function ClassDetailPage() {
                 <h1 className="text-[28px] font-bold leading-none text-[#1a1f36]">
                   {schoolClass.name}
                 </h1>
+                {schoolClass.demo && <DemoBadge />}
                 <span
                   className={
                     schoolClass.status === 'ACTIVE'

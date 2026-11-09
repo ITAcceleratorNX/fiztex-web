@@ -249,3 +249,37 @@ describe('Sidebar — лента уведомлений', () => {
     expect(screen.queryByRole('button', { name: 'Уведомления' })).not.toBeInTheDocument();
   });
 });
+
+describe('Sidebar — длинное ФИО', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    role.mockReturnValue('TEACHER');
+  });
+
+  function stubNameWidth(scrollWidth: number, clientWidth: number) {
+    const name = screen.getByText('Искаков Алишер');
+    Object.defineProperty(name, 'scrollWidth', { configurable: true, value: scrollWidth });
+    Object.defineProperty(name, 'clientWidth', { configurable: true, value: clientWidth });
+  }
+
+  it('обрезанное имя читается целиком в подсказке по наведению и фокусу', () => {
+    renderSidebar();
+    stubNameWidth(260, 120);
+    const profile = screen.getByRole('link', { name: /Искаков Алишер/ });
+
+    fireEvent.focus(profile);
+
+    const tip = screen.getByRole('tooltip');
+    expect(tip).toHaveTextContent('Искаков Алишер');
+    expect(profile).toHaveAttribute('aria-describedby', tip.id);
+  });
+
+  it('помещающееся имя подсказкой не дублирует', () => {
+    renderSidebar();
+    stubNameWidth(100, 120);
+
+    fireEvent.mouseEnter(screen.getByRole('link', { name: /Искаков Алишер/ }));
+
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  });
+});

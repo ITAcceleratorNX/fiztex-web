@@ -234,4 +234,12 @@ describe('маршрутизация по роли', () => {
       expect(isRouteAllowedForRole(ROUTES.profile, role)).toBe(true);
     }
   });
+
+  it('ученику и родителю панель закрыта целиком: веб-кабинета у них нет (пилот 5.1)', () => {
+    for (const role of ['STUDENT', 'PARENT']) {
+      for (const path of [ROUTES.dashboard, ROUTES.journal, ROUTES.homework, ROUTES.profile, '/admin/users']) {
+        expect(isRouteAllowedForRole(path, role)).toBe(false);
+      }
+    }
+  });
 });

@@ -9027,6 +9027,8 @@ export interface components {
             /** @enum {string} */
             status?: "ACTIVE" | "DISABLED" | "ARCHIVED";
             /** @enum {string} */
+            temporalStatus?: "UPCOMING" | "CURRENT" | "COMPLETED";
+            /** @enum {string} */
             type?: "QUARTER" | "TRIMESTER" | "SEMESTER" | "CUSTOM";
             /** Format: date-time */
             updatedAt?: string;
@@ -10806,6 +10808,7 @@ export interface components {
         CreateSchoolClassRequest: {
             /** Format: int64 */
             academicYearId: number;
+            demo?: boolean;
             grade?: string;
             /** Format: int64 */
             homeroomTeacherProfileId?: number;
@@ -11471,6 +11474,8 @@ export interface components {
             sourceId?: number;
             /** @example 14:30:00 */
             startTime?: string;
+            /** @enum {string} */
+            state?: "ACTIVE" | "LESSON_CANCELLED" | "LESSON_SUPERSEDED" | "HOMEWORK_CANCELLED";
             /** Format: int64 */
             subgroupId?: number;
             title?: string;
@@ -11516,6 +11521,7 @@ export interface components {
             studentProfileId?: number;
         };
         GradebookScopeView: {
+            classDemo?: boolean;
             /** Format: int64 */
             classId?: number;
             className?: string;
@@ -16744,6 +16750,7 @@ export interface components {
             academicYearId?: number;
             /** Format: date-time */
             createdAt?: string;
+            demo?: boolean;
             grade?: string;
             /** Format: int64 */
             id?: number;
@@ -17573,6 +17580,7 @@ export interface components {
             /** Format: int64 */
             academicYearId?: number;
             academicYearName?: string;
+            classDemo?: boolean;
             /** Format: int64 */
             classId?: number;
             className?: string;
@@ -18401,6 +18409,7 @@ export interface components {
             type?: "HOLIDAY" | "VACATION" | "NON_SCHOOL_DAY" | "EXAM_DAY" | "OTHER";
         };
         UpdateSchoolClassRequest: {
+            demo?: boolean;
             grade?: string;
             letter?: string;
             name?: string;

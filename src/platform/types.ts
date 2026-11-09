@@ -55,6 +55,8 @@ export interface SchoolClass {
   studentCount: number;
   status: SchoolRecordStatus;
   createdAt: string;
+  /** Тестовый класс (DEMO) — списки помечают его, чтобы не путать с настоящим. */
+  demo: boolean;
 }
 
 export interface AcademicYear {
@@ -66,6 +68,9 @@ export interface AcademicYear {
   createdAt: string;
 }
 
+/** Положение периода по датам и календарному дню школы — считает сервер. */
+export type AcademicPeriodTemporalStatus = 'UPCOMING' | 'CURRENT' | 'COMPLETED';
+
 export interface AcademicPeriod {
   id: string;
   academicYearId: string;
@@ -73,7 +78,9 @@ export interface AcademicPeriod {
   type: AcademicPeriodType;
   startDate: string;
   endDate: string;
+  /** Включён ли период как запись: у закончившейся четверти тоже ACTIVE. */
   status: AcademicPeriodStatus;
+  temporalStatus?: AcademicPeriodTemporalStatus;
 }
 
 export interface AccessCodeRow {
@@ -319,6 +326,7 @@ export interface TeacherAssignment {
   createdAt: string;
   updatedAt: string;
   studentCount: number;
+  classDemo: boolean;
 }
 
 export interface TeacherTodayLesson {

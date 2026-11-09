@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { AuthenticatedLoginRedirect } from '@/components/auth/AuthenticatedLoginRedirect';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
@@ -98,6 +98,10 @@ export function App() {
       <Route path={ROUTES.entrance} element={<EntranceFlow />} />
       {/* Политику читают до входа — маршрут публичный. */}
       <Route path={ROUTES.privacy} element={<PrivacyPolicyPage />} />
+      {/* Старый адрес журнала (пилот, пункт 2.2): ссылки на него остались в закладках и
+          переписке. Переход стоит до входа и прав — дальше `/grades` проверяет их как обычно,
+          и после входа учитель возвращается уже на действующий адрес. */}
+      <Route path="/gradebook/*" element={<LegacyJournalRedirect />} />
 
       {/*
         Вход администратора на отдельном пути: на главной его больше нет.
@@ -295,4 +299,10 @@ export function App() {
       <Route path="*" element={<NotFoundRoute />} />
     </Routes>
   );
+}
+
+/** `/gradebook?tab=finals` → `/grades?tab=finals`: параметры журнала переживают переход. */
+function LegacyJournalRedirect() {
+  const { search, hash } = useLocation();
+  return <Navigate to={`${ROUTES.journal}${search}${hash}`} replace />;
 }

@@ -207,7 +207,7 @@ function DesktopFooter({ className }: { className?: string }) {
     >
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-8">
         <Logo className="h-7 w-auto opacity-80" />
-        <p className="text-sm text-slate-500">© 2026 Phystech. Все права защищены.</p>
+        <p className="text-sm text-slate-500">© 2026 {APP_NAME}. Все права защищены.</p>
       </div>
     </footer>
   );

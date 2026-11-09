@@ -7,6 +7,7 @@ import { platformErrorMessage } from '@/platform/platformErrorMessage';
 import { cx, pluralRu } from '@/lib/format';
 import {
   PERIOD_TYPE_LABELS,
+  periodTemporalLabel,
   SCHOOL_STATUS_LABELS,
   YEAR_STATUS_LABELS,
 } from '@/platform/labels';
@@ -26,6 +27,7 @@ import type {
   AcademicYear,
   SchoolClass,
 } from '@/platform/types';
+import { DemoBadge } from '@/components/ui/DemoBadge';
 
 const ARCHIVE_YEARS_PREVIEW = 4;
 const PERIODS_PREVIEW = 6;
@@ -54,18 +56,28 @@ const PERIOD_TYPE_TONE: Record<AcademicPeriodType, string> = {
   CUSTOM: 'bg-[#f5f3ff] text-[#7c3aed]',
 };
 
+/**
+ * Статус периода в таблице. Включённая запись говорит, где период по датам: раньше любая
+ * `ACTIVE`-четверть называлась «Активна», и закончившаяся выглядела текущей (пилот, пункт
+ * 4.2). Положение считает сервер по календарному дню школы — у браузера свой пояс.
+ */
 function periodStatusDisplay(period: AcademicPeriod): { label: string; className: string } {
-  if (period.status === 'ACTIVE') {
-    return { label: 'Активна', className: 'bg-[#ecfdf5] text-[#059669]' };
-  }
   if (period.status === 'ARCHIVED') {
     return { label: 'Архив', className: 'bg-[#f3f4f6] text-[#4b5563]' };
   }
-  const start = period.startDate ? new Date(period.startDate) : null;
-  if (start && !Number.isNaN(start.getTime()) && start.getTime() > Date.now()) {
-    return { label: 'Планируется', className: 'bg-[#eff6ff] text-[#2563eb]' };
+  if (period.status === 'DISABLED') {
+    return { label: 'Отключён', className: 'bg-[#fff7ed] text-[#d97706]' };
   }
-  return { label: 'Отключён', className: 'bg-[#fff7ed] text-[#d97706]' };
+  switch (period.temporalStatus) {
+    case 'CURRENT':
+      return { label: periodTemporalLabel(period.type, 'CURRENT'), className: 'bg-success-bg text-success-fg' };
+    case 'UPCOMING':
+      return { label: periodTemporalLabel(period.type, 'UPCOMING'), className: 'bg-info-bg text-navy-700' };
+    case 'COMPLETED':
+      return { label: periodTemporalLabel(period.type, 'COMPLETED'), className: 'bg-[#f3f4f6] text-[#4b5563]' };
+    default:
+      return { label: 'Активна', className: 'bg-[#ecfdf5] text-[#059669]' };
+  }
 }
 
 function SectionHeader({ title, action }: { title: string; action: ReactNode }) {
@@ -597,7 +609,10 @@ export function DashboardPage() {
                           className="h-[52px] border-b border-[#f3f4f6] last:border-b-0"
                         >
                           <td className="px-6 text-sm font-bold text-navy-700">
-                            {formatClassLabel(item.name)}
+                            <span className="flex items-center gap-2">
+                              {formatClassLabel(item.name)}
+                              {item.demo && <DemoBadge />}
+                            </span>
                           </td>
                           <td className="px-2 text-13 text-[#6b7280]">
                             {item.academicYearName}

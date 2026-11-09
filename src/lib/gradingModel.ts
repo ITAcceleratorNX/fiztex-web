@@ -72,6 +72,66 @@ export function resultStatusHint(result: PeriodResult | null | undefined): strin
   }
 }
 
+/**
+ * То же, что `resultStatusHint`, но коротко и на виду — под прочерком процента (пилот,
+ * пункт 3.2). Подсказка только по наведению оставляла пустой процент похожим на поломку.
+ *
+ * <p>Три разных факта читаются по-разному: нет данных — эта подпись; ноль баллов — честные
+ * «0%» без подписи; «Временно не аттестован» — решение учителя в колонке итога.
+ */
+export function resultMissingCaption(result: PeriodResult | null | undefined): string | null {
+  if (!result) return null;
+  const missing = (result.missingComponents ?? []).map((code) => COMPONENT_SHORT[code]).join(', ');
+  switch (result.status) {
+    case 'NO_WORKS':
+      return 'Нет работ за четверть';
+    case 'INCOMPLETE':
+      return missing ? `Нет ${missing}` : 'Не хватает работ';
+    default:
+      return missing ? `Без ${missing}, веса пересчитаны` : null;
+  }
+}
+
+/**
+ * У скольких учеников итог не посчитан и каких работ не хватает — одна строка над таблицей
+ * итогов вместо россыпи прочерков по строкам.
+ */
+export function missingResultsSummary(
+  results: Array<PeriodResult | null | undefined>,
+): { students: number; components: string[] } {
+  let students = 0;
+  const components = new Set<string>();
+  for (const result of results) {
+    if (!result || (result.status !== 'NO_WORKS' && result.status !== 'INCOMPLETE')) continue;
+    students += 1;
+    for (const code of result.missingComponents ?? []) components.add(COMPONENT_SHORT[code]);
+  }
+  return { students, components: [...components] };
+}
+
+/**
+ * «1–10» или «2–5» — шкала итога, как её прислал сервер (`allowedValues`). Экран её не
+ * выбирает: шкалу задают пороги политики, а без политики остаётся прежняя 2–5 (пилот,
+ * пункт 3.1 — подписать, откуда берётся число, чтобы 1–10 урока и итог не спорили молча).
+ */
+export function finalScaleCaption(allowedValues: number[] | undefined): string | null {
+  if (!allowedValues || allowedValues.length === 0) return null;
+  const sorted = [...allowedValues].sort((a, b) => a - b);
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+  const continuous = sorted.every((value, index) => value === first + index);
+  return continuous ? `${first}–${last}` : sorted.join(', ');
+}
+
+/**
+ * Какие итоги снимают «Временно не аттестован»: все, кроме нижнего порога шкалы.
+ * Тот же порог проверяет сервер (`FinalValueOptions.isPositive`): без политики это «не
+ * ниже 3» из 2–5, по политике — выше её порога с 0%.
+ */
+export function positiveFinalValues(allowedValues: number[]): number[] {
+  return [...allowedValues].sort((a, b) => a - b).slice(1);
+}
+
 /** «ФО 25 · СОР 25 · СОЧ 50» — шапка журнала и подпись политики. */
 export function weightsCaption(components: PolicyComponent[] | undefined): string {
   return (components ?? [])

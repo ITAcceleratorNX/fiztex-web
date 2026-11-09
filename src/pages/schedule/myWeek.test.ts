@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RoleSchedule, RoleScheduleLesson } from '@/lib/lessonsApi';
-import { lessonsAt, weekColumns, weekRows, weekState } from './myWeek';
+import { isLessonOver, lessonsAt, weekColumns, weekRows, weekState } from './myWeek';
 
 const lesson = (over: Partial<RoleScheduleLesson>): RoleScheduleLesson => ({
   date: '2026-08-24',
@@ -75,5 +75,19 @@ describe('weekState', () => {
       message: 'Осенние каникулы',
     } as RoleSchedule);
     expect(state).toEqual({ kind: 'empty', message: 'Осенние каникулы' });
+  });
+});
+
+describe('isLessonOver', () => {
+  const now = new Date('2026-11-09T10:30:00');
+
+  it('прошедшие дни — прошли, будущие — нет', () => {
+    expect(isLessonOver({ date: '2026-11-06', endTime: '15:00:00' }, now)).toBe(true);
+    expect(isLessonOver({ date: '2026-11-10', endTime: '08:45:00' }, now)).toBe(false);
+  });
+
+  it('сегодня урок прошёл только после звонка с него', () => {
+    expect(isLessonOver({ date: '2026-11-09', endTime: '10:30:00' }, now)).toBe(true);
+    expect(isLessonOver({ date: '2026-11-09', endTime: '10:35:00' }, now)).toBe(false);
   });
 });

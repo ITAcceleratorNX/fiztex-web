@@ -43,6 +43,22 @@ export function localDate(date = new Date()): string {
   return date.toLocaleDateString('sv-SE');
 }
 
+/**
+ * Урок уже закончился — только для пометки «прошёл» в сетке. Права и окна правки решает
+ * сервер внутри урока; здесь ответ нужен, чтобы прошедшая клетка не выглядела ни
+ * будущей, ни выключенной (пилот, пункт 2.4).
+ */
+export function isLessonOver(
+  lesson: { date?: string; endTime?: string },
+  now = new Date(),
+): boolean {
+  if (!lesson.date) return false;
+  const today = localDate(now);
+  if (lesson.date !== today) return lesson.date < today;
+  if (!lesson.endTime) return false;
+  return lesson.endTime.slice(0, 5) <= now.toTimeString().slice(0, 5);
+}
+
 export function shiftDays(date: string, days: number): string {
   const shifted = new Date(`${date}T12:00:00`);
   shifted.setDate(shifted.getDate() + days);
