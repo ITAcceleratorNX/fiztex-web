@@ -9,11 +9,12 @@ interface Toast {
   id: number;
   kind: ToastKind;
   message: string;
+  description?: string;
 }
 
 interface ToastContextValue {
-  push: (kind: ToastKind, message: string) => void;
-  success: (message: string) => void;
+  push: (kind: ToastKind, message: string, description?: string) => void;
+  success: (message: string, description?: string) => void;
   error: (message: string) => void;
   info: (message: string) => void;
 }
@@ -30,9 +31,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const push = useCallback(
-    (kind: ToastKind, message: string) => {
+    (kind: ToastKind, message: string, description?: string) => {
       const id = (counter += 1);
-      setToasts((prev) => [...prev, { id, kind, message }]);
+      setToasts((prev) => [...prev, { id, kind, message, description }]);
     },
     [],
   );
@@ -40,7 +41,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ToastContextValue>(
     () => ({
       push,
-      success: (m) => push('success', m),
+      success: (m, description) => push('success', m, description),
       error: (m) => push('error', m),
       info: (m) => push('info', m),
     }),
@@ -50,7 +51,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      {createPortal(<div data-modal-notifications className="pointer-events-none fixed bottom-6 right-6 z-[100] flex max-h-[calc(100vh-3rem)] w-[min(34rem,calc(100vw-3rem))] flex-col gap-2.5 overflow-y-auto overscroll-contain">
+      {createPortal(<div data-modal-notifications className="pointer-events-none fixed bottom-6 right-6 z-[100] flex max-h-[calc(100vh-3rem)] w-[min(56rem,calc(100vw-2rem))] flex-col gap-2.5 overflow-y-auto overscroll-contain">
         {toasts.map((t) => (
           <ToastItem key={t.id} toast={t} onClose={remove} />
         ))}
@@ -93,13 +94,14 @@ const TOAST_STYLES = {
 } as const;
 
 function autoDismissDelay(toast: Toast): number {
-  const wordCount = toast.message.trim().split(/\s+/).filter(Boolean).length;
+  const wordCount = `${toast.message} ${toast.description ?? ''}`.trim().split(/\s+/).filter(Boolean).length;
   return Math.min(30_000, Math.max(toast.kind === 'error' ? 15_000 : 10_000, wordCount * 350));
 }
 
 function ToastItem({ toast, onClose }: { toast: Toast; onClose: (id: number) => void }) {
   const config = TOAST_STYLES[toast.kind];
   const Icon = config.icon;
+  const hasDescription = toast.kind === 'success' && Boolean(toast.description);
   const dismissDelay = autoDismissDelay(toast);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dueAtRef = useRef<number | null>(null);
@@ -146,8 +148,10 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: (id: number) => 
   return (
     <div
       className={cx(
-        'pointer-events-auto flex items-start gap-2 rounded-lg border py-2 pl-4 pr-2 animate-slide-in',
-        config.box,
+        'pointer-events-auto ml-auto flex w-full animate-slide-in',
+        hasDescription
+          ? 'items-center gap-4 rounded-[28px] border border-slate-200 bg-white p-4 shadow-[0_12px_32px_rgba(15,23,42,0.24)] sm:gap-6 sm:rounded-[32px] sm:p-6'
+          : cx('max-w-[34rem] items-start gap-2 rounded-lg border py-2 pl-4 pr-2', config.box),
       )}
       onMouseEnter={() => pauseTimer('hover')}
       onMouseLeave={() => resumeTimer('hover')}
@@ -160,25 +164,38 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: (id: number) => 
         role={toast.kind === 'error' ? 'alert' : 'status'}
         aria-live={toast.kind === 'error' ? 'assertive' : 'polite'}
         aria-atomic="true"
-        className="flex min-w-0 flex-1 items-start gap-2.5 py-1"
+        className={cx('flex min-w-0 flex-1', hasDescription ? 'items-center gap-3 sm:gap-6' : 'items-start gap-2.5 py-1')}
       >
-        <Icon className={cx('mt-0.5 shrink-0', config.iconClass)} aria-hidden="true" />
-        <p className={cx('min-w-0 flex-1 whitespace-pre-wrap break-words text-13 font-semibold', config.text)}>
-          {toast.message}
-        </p>
+        {hasDescription ? (
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-emerald-50 sm:size-20">
+            <Icon className="size-7 text-emerald-600 sm:size-9" aria-hidden="true" />
+          </div>
+        ) : <Icon className={cx('mt-0.5 shrink-0', config.iconClass)} aria-hidden="true" />}
+        {hasDescription ? (
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-bold leading-snug text-ink sm:text-2xl">{toast.message}</p>
+            <p className="mt-1 text-sm leading-relaxed text-muted sm:text-xl">{toast.description}</p>
+          </div>
+        ) : (
+          <p className={cx('min-w-0 flex-1 whitespace-pre-wrap break-words text-13 font-semibold', config.text)}>
+            {toast.message}
+          </p>
+        )}
       </div>
       <button
         type="button"
         onClick={(event) => { event.stopPropagation(); onClose(toast.id); }}
         aria-label={toast.kind === 'error' ? 'Закрыть сообщение об ошибке' : 'Закрыть уведомление'}
         className={cx(
-          'flex size-11 shrink-0 items-center justify-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-navy-700',
-          config.boxedClose
+          'flex shrink-0 items-center justify-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-navy-700',
+          hasDescription
+            ? 'size-11 rounded-full border border-line bg-slate-50 text-muted sm:size-16'
+            : cx('size-11 rounded-full', config.boxedClose
             ? cx('rounded-[10px] border bg-white', config.closeClass)
-            : config.closeClass,
+            : config.closeClass),
         )}
       >
-        <X className="size-4" aria-hidden="true" />
+        <X className={cx(hasDescription ? 'size-5 sm:size-6' : 'size-4')} aria-hidden="true" />
       </button>
     </div>
   );

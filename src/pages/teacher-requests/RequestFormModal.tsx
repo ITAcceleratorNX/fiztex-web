@@ -82,7 +82,8 @@ export function RequestFormModal({
           toast.error(uploadCause instanceof Error ? uploadCause.message : 'Заявка сохранена, но документ загрузить не удалось');
         }
       }
-      toast.success(isEditing ? 'Изменения сохранены' : 'Заявка отправлена на рассмотрение');
+      if (isEditing) toast.success('Изменения сохранены');
+      else toast.success('Заявка отправлена', 'Администратор рассмотрит её и пришлёт уведомление.');
       onSaved(saved);
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : 'Не удалось сохранить заявку';
