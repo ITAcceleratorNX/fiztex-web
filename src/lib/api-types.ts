@@ -18083,6 +18083,9 @@ export interface components {
             action?: "CREATED" | "EDITED" | "CANCELLED" | "APPROVED" | "REJECTED" | "DOCUMENT_ADDED" | "DOCUMENT_REMOVED";
             /** Format: int64 */
             actorId?: number;
+            actorName?: string;
+            /** @enum {string} */
+            actorRole?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
             /** Format: date-time */
             createdAt?: string;
             /** Format: int64 */
@@ -18098,6 +18101,8 @@ export interface components {
             dateFrom?: string;
             /** Format: date */
             dateTo?: string;
+            /** Format: int64 */
+            documentCount?: number;
             /** Format: int64 */
             id?: number;
             /** @enum {string} */
