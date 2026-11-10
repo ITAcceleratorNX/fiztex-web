@@ -140,7 +140,7 @@ describe('маршрутизация по роли', () => {
   it('в меню учителя только его разделы, у админа их нет', () => {
     // Своё расписание, журнал, ДЗ, сервисные и кадровые заявки — экраны, которые работают
     // под учителем; остальные читают `/api/admin/*` и рвут ему сессию.
-    const teacher = navSectionsForRole('TEACHER').flatMap((s) => s.items.map((i) => i.to));
+    const teacher = navSectionsForRole('TEACHER').flatMap((s) => s.items.flatMap((i) => i.children?.map((child) => child.to) ?? [i.to]));
     expect(teacher).toEqual([
       // «Текущий урок» стоит первым — это кнопка к работе, а не раздел (ТЗ Быстрый
       // доступ §1), и её позиция в списке такая же часть решения, как её наличие.
@@ -160,7 +160,7 @@ describe('маршрутизация по роли', () => {
       '/teacher-requests',
     ]);
 
-    const admin = navSectionsForRole('ADMIN').flatMap((s) => s.items.map((i) => i.to));
+    const admin = navSectionsForRole('ADMIN').flatMap((s) => s.items.flatMap((i) => i.children?.map((child) => child.to) ?? [i.to]));
     expect(admin).not.toContain('/homework');
     expect(admin).not.toContain('/my-attendance');
     // Учительские адреса отзывов админу отвечают 403 (monthly-feedback-contract §1).
@@ -171,10 +171,11 @@ describe('маршрутизация по роли', () => {
   });
 
   it('«Сотрудники» появляются в «Пользователях» только у Super Admin', () => {
-    const childrenFor = (role: string) =>
+    const userChildrenFor = (role: string) =>
       navSectionsForRole(role)
         .flatMap((section) => section.items)
-        .flatMap((item) => item.children ?? [])
+        .find((item) => item.to === '/admin/users')?.children ?? [];
+    const childrenFor = (role: string) => userChildrenFor(role)
         .map((child) => child.to);
 
     expect(childrenFor('SUPER_ADMIN')).toContain('/admin/employees');

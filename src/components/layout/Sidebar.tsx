@@ -47,14 +47,15 @@ function readOpenSection(): string | null {
 }
 
 function isRouteActive(to: string, end: boolean | undefined, pathname: string): boolean {
+  if (!to) return false;
   if (end) return pathname === to;
   return pathname === to || pathname.startsWith(`${to}/`);
 }
 
 function isBranchActive(item: NavItem, pathname: string): boolean {
   return (
-    isRouteActive(item.to, item.end, pathname) ||
-    (item.children ?? []).some((child) => isRouteActive(child.to, child.end, pathname))
+    isRouteActive(item.to ?? '', item.end, pathname) ||
+    (item.children ?? []).some((child) => isRouteActive(child.to ?? '', child.end, pathname))
   );
 }
 
@@ -233,7 +234,7 @@ function SidebarSection({
     return (
       <div className={cx('space-y-0.5', !first && 'mt-1.5 border-t border-white/10 pt-1.5')}>
         {section.items.map((item) => (
-          <RailLink key={item.to} item={item} />
+          <RailLink key={item.to ?? item.label} item={item} />
         ))}
       </div>
     );
@@ -243,7 +244,7 @@ function SidebarSection({
     return (
       <div className="mb-2">
         {section.items.map((item) => (
-          <SidebarNavItem key={item.to} item={item} />
+          <SidebarNavItem key={item.to ?? item.label} item={item} />
         ))}
       </div>
     );
@@ -272,7 +273,7 @@ function SidebarSection({
       {open && (
         <div className="pb-2">
           {section.items.map((item) => (
-            <SidebarNavItem key={item.to} item={item} />
+            <SidebarNavItem key={item.to ?? item.label} item={item} />
           ))}
         </div>
       )}
@@ -431,14 +432,18 @@ function SidebarFooter({
 function SidebarNavItem({ item }: { item: NavItem }) {
   const location = useLocation();
   const children = item.children ?? [];
-  const selfActive = isRouteActive(item.to, item.end, location.pathname);
+  const selfActive = isRouteActive(item.to ?? '', item.end, location.pathname);
   const childActive = children.some((child) =>
-    isRouteActive(child.to, child.end, location.pathname),
+    isRouteActive(child.to ?? '', child.end, location.pathname),
   );
   const branchOpen = selfActive || childActive;
 
   if (children.length === 0) {
     return <TopLevelLink item={item} />;
+  }
+
+  if (!item.to) {
+    return <CollapsibleNavGroup item={item} children={children} childActive={childActive} />;
   }
 
   return (
@@ -490,6 +495,35 @@ function SidebarNavItem({ item }: { item: NavItem }) {
   );
 }
 
+function CollapsibleNavGroup({ item, children, childActive }: { item: NavItem; children: NavItem[]; childActive: boolean }) {
+  const [expanded, setExpanded] = useState(childActive);
+  const Icon = item.icon;
+
+  useEffect(() => {
+    if (childActive) setExpanded(true);
+  }, [childActive]);
+
+  return (
+    <div className={cx(childActive && 'rounded-l-[24px] bg-white/70')}>
+      <button
+        type="button"
+        aria-expanded={expanded}
+        onClick={() => setExpanded((current) => !current)}
+        className={cx(
+          'nav-fillets relative z-10 flex h-[52px] w-full items-center gap-3 pl-7 pr-3 text-left text-sm transition',
+          SIDEBAR_FOCUS_RING,
+          childActive ? 'font-semibold text-navy-700' : 'font-normal text-sidebar-nav hover:text-white/80',
+        )}
+      >
+        <Icon className={cx('size-[18px] shrink-0', childActive ? 'text-navy-700' : 'text-sidebar-nav')} />
+        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+        <ChevronDown className={cx('size-6 shrink-0 transition-transform', childActive ? 'text-navy-700' : 'text-sidebar-nav', !expanded && '-rotate-90')} />
+      </button>
+      {expanded && <div className="pb-1">{children.map((child, index) => <ChildLink key={child.to ?? child.label} item={child} isLast={index === children.length - 1} />)}</div>}
+    </div>
+  );
+}
+
 /**
  * Пункт рельса (Figma `sidebar-tekushchiy-urok-inactive`): пилюля со значком по центру.
  *
@@ -514,7 +548,7 @@ function RailLink({ item }: { item: NavItem }) {
 
   return (
     <NavLink
-      to={item.to}
+      to={item.to ?? item.children?.[0]?.to ?? '/'}
       end={item.end}
       title={item.label}
       aria-label={item.label}
@@ -534,7 +568,7 @@ function TopLevelLink({ item }: { item: NavItem }) {
   if (item.accent) return <AccentLink item={item} />;
   return (
     <NavLink
-      to={item.to}
+      to={item.to ?? '/'}
       end={item.end}
       className={({ isActive }) =>
         cx(
@@ -572,7 +606,7 @@ function AccentLink({ item }: { item: NavItem }) {
   const Icon = item.icon;
   return (
     <NavLink
-      to={item.to}
+      to={item.to ?? '/'}
       end={item.end}
       className={cx(
         'relative z-10 flex h-12 items-center gap-3 rounded-l-full bg-brand-500 pl-6 pr-3 text-sm font-semibold text-white transition hover:bg-brand-600',
@@ -589,7 +623,7 @@ function ChildLink({ item, isLast }: { item: NavItem; isLast: boolean }) {
   const Icon = item.icon;
   return (
     <NavLink
-      to={item.to}
+      to={item.to ?? '/'}
       end={item.end}
       className={({ isActive }) =>
         cx(

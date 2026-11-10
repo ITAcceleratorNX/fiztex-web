@@ -34,7 +34,8 @@ import {
 import { ROUTES } from '@/lib/routes';
 
 export interface NavItem {
-  to: string;
+  /** Link target; absent for a collapsible visual group. */
+  to?: string;
   label: string;
   icon: LucideIcon;
   end?: boolean;
@@ -98,8 +99,14 @@ export const NAV_SECTIONS: NavSection[] = [
       { to: ROUTES.reporting, label: 'Отчётность', icon: ChartColumn },
       { to: '/ai-tests', label: 'AI-тесты', icon: Sparkles },
       { to: ROUTES.surveys, label: 'Опросы', icon: ListChecks },
-      { to: ROUTES.serviceRequests, label: 'Сервисные заявки', icon: Briefcase },
-      { to: ROUTES.adminTeacherRequests, label: 'Освобождения учителей', icon: CalendarX2 },
+      {
+        label: 'Заявки',
+        icon: Briefcase,
+        children: [
+          { to: ROUTES.serviceRequests, label: 'Сервисные заявки', icon: Wrench },
+          { to: ROUTES.adminTeacherRequests, label: 'Освобождения учителей', icon: CalendarX2 },
+        ],
+      },
     ],
   },
   {
@@ -146,10 +153,15 @@ export const TEACHER_NAV_SECTIONS: NavSection[] = [
       // Отзывы пишет только учитель по своим классам (`/api/monthly-feedback/teacher/*`):
       // администратору эти адреса отвечают 403, поэтому в его меню пункта нет.
       { to: ROUTES.feedback, label: 'Обратная связь', icon: MessageSquareHeart },
-      // Заявки — не учебный раздел, но автор у них тот же (SERVICE-FE-001 §1), и читает
-      // он свой `/api/service-requests/my`, а не `/api/admin/*`: учителю сюда можно.
-      { to: ROUTES.serviceRequests, label: 'Сервисные заявки', icon: Briefcase },
-      { to: ROUTES.teacherRequests, label: 'Освобождения', icon: CalendarX2 },
+      // Оба учительских сценария заявок собраны в раскрываемую группу.
+      {
+        label: 'Заявки',
+        icon: Briefcase,
+        children: [
+          { to: ROUTES.serviceRequests, label: 'Сервисные заявки', icon: Wrench },
+          { to: ROUTES.teacherRequests, label: 'Освобождения', icon: CalendarX2 },
+        ],
+      },
     ],
   },
 ];

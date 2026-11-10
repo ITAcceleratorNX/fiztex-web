@@ -37,7 +37,7 @@ export function TeacherRequestsPage() {
         <h1 className="text-28 font-bold text-ink">Освобождения</h1>
         <Button onClick={() => setCreateOpen(true)}><Plus className="mr-1.5 size-4" aria-hidden />Создать заявку</Button>
       </header>
-      <Tabs value={section} onValueChange={changeSection} variant="navy">
+      <Tabs value={section} onValueChange={changeSection}>
         <TabsList>
           <TabsTrigger value="ACTIVE">Мои заявки</TabsTrigger>
           <TabsTrigger value="HISTORY">История</TabsTrigger>

@@ -62,14 +62,16 @@ describe('Sidebar — свёрнутое состояние', () => {
     expect(screen.getByRole('button', { name: 'Развернуть меню' })).toBeInTheDocument();
   });
 
-  it('свёрнутая панель не теряет ни одного пункта роли', async () => {
+  it('свёрнутая панель сохраняет верхний уровень и показывает группы иконками', async () => {
     renderSidebar();
     const expanded = within(nav()).getAllByRole('link').map((link) => link.getAttribute('href'));
 
     await userEvent.click(screen.getByRole('button', { name: 'Свернуть меню' }));
     const collapsed = within(nav()).getAllByRole('link').map((link) => link.getAttribute('href'));
 
-    expect(collapsed).toEqual(expanded);
+    // Вложенные ссылки доступны при наведении на рельс; в самом рельсе остаётся
+    // иконка группы, ведущая в первый раздел, чтобы не дублировать дочерние пункты.
+    expect(collapsed).toEqual([...expanded, '/service']);
   });
 
   it('вложенные пункты в свёрнутой панели не показываются — от них остался бы один значок', async () => {
@@ -128,6 +130,33 @@ describe('Sidebar — свёрнутое состояние', () => {
   });
 });
 
+describe('Sidebar — группа заявок по ролям', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it.each([
+    ['TEACHER', '/teacher-requests', 'Освобождения'],
+    ['ADMIN', '/admin/teacher-requests', 'Освобождения учителей'],
+  ] as const)('%s может свернуть и снова раскрыть разделы заявок', async (currentRole, path, releaseLabel) => {
+    role.mockReturnValue(currentRole);
+    renderSidebar(path);
+
+    const group = within(nav()).getByRole('button', { name: 'Заявки' });
+    expect(group).toHaveAttribute('aria-expanded', 'true');
+    expect(within(nav()).getByRole('link', { name: 'Сервисные заявки' })).toBeInTheDocument();
+    expect(within(nav()).getByRole('link', { name: releaseLabel })).toBeInTheDocument();
+
+    await userEvent.click(group);
+    expect(group).toHaveAttribute('aria-expanded', 'false');
+    expect(within(nav()).queryByRole('link', { name: 'Сервисные заявки' })).not.toBeInTheDocument();
+
+    await userEvent.click(group);
+    expect(group).toHaveAttribute('aria-expanded', 'true');
+    expect(within(nav()).getByRole('link', { name: releaseLabel })).toBeInTheDocument();
+  });
+});
+
 describe('Sidebar — группы-аккордеон', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -163,6 +192,7 @@ describe('Sidebar — группы-аккордеон', () => {
   it('не показывает раздел кружков как действующий пункт меню', async () => {
     renderSidebar('/dashboard');
     await userEvent.click(screen.getByRole('button', { name: /Учебный процесс/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'Заявки' }));
 
     expect(within(nav()).getByRole('link', { name: 'Сервисные заявки' })).toBeInTheDocument();
     expect(within(nav()).queryByRole('link', { name: 'Кружки и события' })).not.toBeInTheDocument();

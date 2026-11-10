@@ -37,7 +37,7 @@ export function AdminTeacherRequestsPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-28 font-bold text-ink">Освобождения учителей</h1>
-      <Tabs value={selected} variant="navy" onValueChange={(value) => {
+      <Tabs value={selected} onValueChange={(value) => {
         setPage(0);
         setParams(value === 'PENDING' ? {} : { tab: value.toLowerCase() }, { replace: true });
       }}>
