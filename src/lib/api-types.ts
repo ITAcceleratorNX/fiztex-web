@@ -367,7 +367,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_39"];
+        get: operations["list_40"];
         put?: never;
         post?: never;
         delete?: never;
@@ -383,7 +383,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_38"];
+        get: operations["list_39"];
         put?: never;
         post?: never;
         delete?: never;
@@ -433,7 +433,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["approve"];
+        post: operations["approve_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -449,7 +449,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["reject"];
+        post: operations["reject_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1929,7 +1929,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_22"];
+        get: operations["get_23"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2857,7 +2857,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_37"];
+        get: operations["list_38"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2873,9 +2873,73 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        get: operations["get_22"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/teacher-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_37"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/teacher-requests/{requestId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         get: operations["get_21"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/teacher-requests/{requestId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/teacher-requests/{requestId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reject"];
         delete?: never;
         options?: never;
         head?: never;
@@ -16229,6 +16293,9 @@ export interface components {
         RejectAvailabilityProposalRequest: {
             comment?: string;
         };
+        RejectTeacherRequestRequest: {
+            rejectionReason: string;
+        };
         RemoveHomeroomTeacherRequest: {
             /**
              * Format: int64
@@ -17971,6 +18038,9 @@ export interface components {
             id?: number;
             /** @enum {string} */
             status?: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+            teacherName?: string;
+            /** Format: int64 */
+            teacherProfileId?: number;
             /** @enum {string} */
             type?: "RELEASE" | "SICK_LEAVE";
         };
@@ -17994,6 +18064,9 @@ export interface components {
             rejectionReason?: string;
             /** @enum {string} */
             status?: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+            teacherName?: string;
+            /** Format: int64 */
+            teacherProfileId?: number;
             /** @enum {string} */
             type?: "RELEASE" | "SICK_LEAVE";
             /** Format: date-time */
@@ -19513,7 +19586,7 @@ export interface operations {
             };
         };
     };
-    list_39: {
+    list_40: {
         parameters: {
             query: {
                 accountId?: number;
@@ -19541,7 +19614,7 @@ export interface operations {
             };
         };
     };
-    list_38: {
+    list_39: {
         parameters: {
             query: {
                 stage?: "DRAFT" | "PENDING" | "APPROVED_PENDING_ACTIVATION" | "ACTIVE" | "REJECTED";
@@ -19611,7 +19684,7 @@ export interface operations {
             };
         };
     };
-    approve: {
+    approve_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -19637,7 +19710,7 @@ export interface operations {
             };
         };
     };
-    reject: {
+    reject_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -22649,7 +22722,7 @@ export interface operations {
             };
         };
     };
-    get_22: {
+    get_23: {
         parameters: {
             query?: never;
             header?: never;
@@ -24430,7 +24503,7 @@ export interface operations {
             };
         };
     };
-    list_37: {
+    list_38: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -24456,7 +24529,7 @@ export interface operations {
             };
         };
     };
-    get_21: {
+    get_22: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -24476,6 +24549,99 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeacherAvailabilitySummaryView"];
+                };
+            };
+        };
+    };
+    list_37: {
+        parameters: {
+            query: {
+                status?: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageTeacherRequestSummaryView"];
+                };
+            };
+        };
+    };
+    get_21: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherRequestView"];
+                };
+            };
+        };
+    };
+    approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherRequestView"];
+                };
+            };
+        };
+    };
+    reject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectTeacherRequestRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherRequestView"];
                 };
             };
         };
