@@ -1595,7 +1595,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel_5"];
+        post: operations["cancel_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1755,7 +1755,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel_4"];
+        post: operations["cancel_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2347,7 +2347,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel_3"];
+        post: operations["cancel_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4169,7 +4169,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_11"];
+        get: operations["get_12"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4187,7 +4187,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel_2"];
+        post: operations["cancel_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5277,7 +5277,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel_1"];
+        post: operations["cancel_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6476,7 +6476,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_10"];
+        get: operations["get_11"];
         put?: never;
         post?: never;
         delete: operations["delete_5"];
@@ -7378,7 +7378,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel"];
+        post: operations["cancel_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8357,9 +8357,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_12"];
+        get: operations["get_10"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["edit"];
+        trace?: never;
+    };
+    "/api/teacher/requests/{requestId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancel"];
         delete?: never;
         options?: never;
         head?: never;
@@ -21989,7 +22005,7 @@ export interface operations {
             };
         };
     };
-    cancel_5: {
+    cancel_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -22302,7 +22318,7 @@ export interface operations {
             };
         };
     };
-    cancel_4: {
+    cancel_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -23401,7 +23417,7 @@ export interface operations {
             };
         };
     };
-    cancel_3: {
+    cancel_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -26643,7 +26659,7 @@ export interface operations {
             };
         };
     };
-    get_11: {
+    get_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -26691,7 +26707,7 @@ export interface operations {
             };
         };
     };
-    cancel_2: {
+    cancel_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -28649,7 +28665,7 @@ export interface operations {
             };
         };
     };
-    cancel_1: {
+    cancel_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -30961,7 +30977,7 @@ export interface operations {
             };
         };
     };
-    get_10: {
+    get_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -32884,7 +32900,7 @@ export interface operations {
             };
         };
     };
-    cancel: {
+    cancel_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -34596,7 +34612,55 @@ export interface operations {
             };
         };
     };
-    get_12: {
+    get_10: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherRequestView"];
+                };
+            };
+        };
+    };
+    edit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTeacherRequestRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherRequestView"];
+                };
+            };
+        };
+    };
+    cancel: {
         parameters: {
             query?: never;
             header?: never;
