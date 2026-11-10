@@ -23,7 +23,7 @@ describe('RequestDetailHeader', () => {
     expect(screen.getByText('2 ноября 2026')).toBeInTheDocument();
     expect(screen.getByText('1 день')).toBeInTheDocument();
     expect(screen.getByText('Заявка согласована, даты и причину изменить нельзя. Документы можно добавлять в любой момент.')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 1 })).toHaveClass('text-32', 'sm:text-40');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveClass('text-28', 'sm:text-36');
   });
 
   it('matches the rejected state without the approved notice', () => {
@@ -39,7 +39,7 @@ describe('RequestDetailHeader', () => {
   it('uses the separate admin header layout and shows the cancelled request notice', () => {
     render(<RequestDetailHeader request={request('CANCELLED')} admin onBack={vi.fn()} />);
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Марина Демо' })).toHaveClass('text-32', 'sm:text-40');
+    expect(screen.getByRole('heading', { level: 1, name: 'Марина Демо' })).toHaveClass('text-28', 'sm:text-36');
     expect(screen.getByText('Отменена')).toBeInTheDocument();
     expect(screen.getByText('Освобождение')).toBeInTheDocument();
     expect(screen.getByText('27 октября 2026')).toBeInTheDocument();

@@ -212,22 +212,22 @@ export function RequestDetailHeader({ request, admin, onBack }: { request: Teach
     </nav>
     {admin ? (
       <header>
-        <h1 className="text-32 font-bold leading-tight text-ink sm:text-40">{request.teacherName ?? 'Заявка'}</h1>
+        <h1 className="text-28 font-bold leading-tight text-ink sm:text-36">{request.teacherName ?? 'Заявка'}</h1>
         <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
           <Badge tone={statusTone} size="md">{request.status ? TEACHER_REQUEST_STATUS[request.status] : '—'}</Badge>
-          <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-3 py-1.5 text-base font-medium text-ink">
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-3 py-1.5 text-sm font-medium text-ink">
             <CalendarX2 className="size-4" aria-hidden />{request.type ? TEACHER_REQUEST_TYPE[request.type] : 'Заявка'}
           </span>
-          <span className="text-lg font-semibold text-ink">{formatHeaderPeriod(request.dateFrom, request.dateTo)}</span>
-          <span className="text-lg text-subtle">{dayCount} {pluralDays(dayCount)}</span>
+          <span className="text-base font-semibold text-ink">{formatHeaderPeriod(request.dateFrom, request.dateTo)}</span>
+          <span className="text-base text-subtle">{dayCount} {pluralDays(dayCount)}</span>
         </div>
       </header>
     ) : (
       <header className="flex flex-wrap items-center gap-x-5 gap-y-3">
-        <h1 className="text-32 font-bold leading-tight text-ink sm:text-40">{request.type ? TEACHER_REQUEST_TYPE[request.type] : 'Заявка'}</h1>
+        <h1 className="text-28 font-bold leading-tight text-ink sm:text-36">{request.type ? TEACHER_REQUEST_TYPE[request.type] : 'Заявка'}</h1>
         <Badge tone={statusTone} size="md">{request.status ? TEACHER_REQUEST_STATUS[request.status] : '—'}</Badge>
-        <span className="text-lg font-semibold text-ink">{formatHeaderPeriod(request.dateFrom, request.dateTo)}</span>
-        <span className="text-lg text-subtle">{dayCount} {pluralDays(dayCount)}</span>
+        <span className="text-base font-semibold text-ink">{formatHeaderPeriod(request.dateFrom, request.dateTo)}</span>
+        <span className="text-base text-subtle">{dayCount} {pluralDays(dayCount)}</span>
       </header>
     )}
     {!admin && request.status === 'APPROVED' && <div className="flex items-center gap-3 rounded-2xl bg-info-bg px-5 py-4 text-sm leading-relaxed text-link sm:text-base">
