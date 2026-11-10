@@ -1,6 +1,6 @@
 import { useRef, useState, type ChangeEvent, type ReactNode, type Ref } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowDownToLine, Check, ChevronRight, FileText, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { ArrowDownToLine, Check, ChevronRight, FileText, Lock, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -135,26 +135,14 @@ function RequestDetailContent({
   onDownload: (document: TeacherRequestDocument) => void; onRemove: (documentId: number) => void;
   onEdit: () => void; onCancel: () => void; onApprove: () => void; onReject: () => void; onBack: () => void; footer: ReactNode;
 }) {
-  const statusTone = request.status === 'APPROVED' ? 'green' : request.status === 'PENDING' ? 'amber' : request.status === 'REJECTED' ? 'red' : 'gray';
   const decision = request.history?.find((event) => event.action === 'APPROVED' || event.action === 'REJECTED');
   const actions = request.availableActions ?? [];
   const canUpload = !admin && actions.includes('UPLOAD_DOCUMENT');
   const canDelete = !admin && request.status === 'PENDING';
   const documents = request.documents ?? [];
   return (
-    <div className="space-y-5">
-      <nav aria-label="Хлебные крошки" className="flex items-center gap-1.5 text-13 text-subtle">
-        <button type="button" onClick={onBack} className="hover:text-navy-700">{admin ? 'Освобождения учителей' : 'Освобождения'}</button><ChevronRight className="size-3.5" aria-hidden /><span className="font-semibold text-link">Заявка</span>
-      </nav>
-      <header>
-        <h1 className="text-28 font-bold text-ink">{admin ? request.teacherName : request.type ? TEACHER_REQUEST_TYPE[request.type] : 'Заявка'}</h1>
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-          <Badge tone={statusTone} appearance="label">{request.status ? TEACHER_REQUEST_STATUS[request.status] : '—'}</Badge>
-          <Badge tone="gray" appearance="label">{request.type ? TEACHER_REQUEST_TYPE[request.type] : 'Заявка'}</Badge>
-          <span className="font-semibold text-ink">{formatPeriod(request.dateFrom, request.dateTo)}</span>
-          <span className="text-xs text-subtle">{inclusiveDays(request.dateFrom, request.dateTo)} {pluralDays(inclusiveDays(request.dateFrom, request.dateTo))}</span>
-        </div>
-      </header>
+    <div className="space-y-8">
+      <RequestDetailHeader request={request} admin={admin} onBack={onBack} />
       {request.status === 'CANCELLED' && admin && <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-navy-700">Учитель отменил заявку до решения. Рассматривать её не нужно.</div>}
       <section className="space-y-4 rounded-2xl border border-line bg-white p-5 shadow-sm">
         <div><h2 className="text-sm font-semibold text-ink">Причина</h2><p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink">{request.reason}</p></div>
@@ -190,6 +178,33 @@ function RequestDetailContent({
       {footer}
     </div>
   );
+}
+
+export function RequestDetailHeader({ request, admin, onBack }: { request: TeacherRequest; admin: boolean; onBack: () => void }) {
+  const dayCount = inclusiveDays(request.dateFrom, request.dateTo);
+  return <div className="space-y-8">
+    <nav aria-label="Хлебные крошки" className="flex items-center gap-1.5 text-13 text-subtle">
+      <button type="button" onClick={onBack} className="hover:text-navy-700">{admin ? 'Освобождения учителей' : 'Освобождения'}</button><ChevronRight className="size-3.5" aria-hidden /><span className="font-semibold text-link">Заявка</span>
+    </nav>
+    <header className="flex flex-wrap items-center gap-x-5 gap-y-3">
+      <h1 className="text-32 font-bold leading-tight text-ink sm:text-40">{admin ? request.teacherName : request.type ? TEACHER_REQUEST_TYPE[request.type] : 'Заявка'}</h1>
+      <Badge tone={request.status === 'APPROVED' ? 'green' : request.status === 'PENDING' ? 'amber' : request.status === 'REJECTED' ? 'red' : 'gray'}>
+        {request.status ? TEACHER_REQUEST_STATUS[request.status] : '—'}
+      </Badge>
+      <span className="text-base font-semibold text-ink">{formatHeaderPeriod(request.dateFrom, request.dateTo)}</span>
+      <span className="text-base text-subtle">{dayCount} {pluralDays(dayCount)}</span>
+    </header>
+    {!admin && request.status === 'APPROVED' && <div className="flex items-center gap-3 rounded-2xl bg-info-bg px-5 py-4 text-sm leading-relaxed text-link sm:text-base">
+      <Lock className="size-5 shrink-0" aria-hidden />
+      <p>Заявка согласована, даты и причину изменить нельзя. Документы можно добавлять в любой момент.</p>
+    </div>}
+  </div>;
+}
+
+function formatHeaderPeriod(from?: string | null, to?: string | null) {
+  const withoutYearSuffix = (value: string) => formatPeriod(value, value).replace(/\s*г\.$/, '');
+  if (!from) return '—';
+  return from === to ? withoutYearSuffix(from) : `${withoutYearSuffix(from)} — ${withoutYearSuffix(to ?? from)}`;
 }
 
 function DetailValue({ label, value }: { label: string; value: string }) {
