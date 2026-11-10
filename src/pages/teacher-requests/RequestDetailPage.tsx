@@ -1,12 +1,13 @@
 import { useRef, useState, type ChangeEvent, type ReactNode, type Ref } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowDownToLine, Check, ChevronRight, FileText, Lock, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { ArrowDownToLine, Check, ChevronRight, CircleSlash, FileText, Lock, Paperclip, Pencil, Trash2, X } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { Field, TextArea } from '@/components/ui/Field';
 import { Modal } from '@/components/ui/Modal';
+import { StickyActionBar } from '@/components/ui/StickyActionBar';
 import { useToast } from '@/context/ToastContext';
 import { useApproveTeacherRequest, useCancelTeacherRequest, useDeleteTeacherRequestDocument, useRejectTeacherRequest, useTeacherRequest, useUploadTeacherRequestDocument } from '@/hooks/queries';
 import { teacherRequestsApi, TEACHER_REQUEST_FILE_ACCEPT, TEACHER_REQUEST_MAX_FILE_SIZE, TEACHER_REQUEST_STATUS, TEACHER_REQUEST_TYPE, type TeacherRequest, type TeacherRequestDocument, type TeacherRequestHistory } from '@/lib/teacherRequestsApi';
@@ -137,7 +138,6 @@ function RequestDetailContent({
 }) {
   const decision = request.history?.find((event) => event.action === 'APPROVED' || event.action === 'REJECTED');
   const actions = request.availableActions ?? [];
-  const canUpload = !admin && actions.includes('UPLOAD_DOCUMENT');
   const canDelete = !admin && request.status === 'PENDING';
   const documents = request.documents ?? [];
   return (
@@ -147,9 +147,7 @@ function RequestDetailContent({
       <section className="space-y-4 rounded-2xl border border-line bg-white p-5 shadow-sm">
         <div><h2 className="text-sm font-semibold text-ink">Причина</h2><p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink">{request.reason}</p></div>
         <div>
-          <div className="flex items-center justify-between gap-3"><h2 className="text-sm font-semibold text-ink">Документы</h2>
-            {canUpload && <><input ref={inputRef} className="hidden" type="file" accept={TEACHER_REQUEST_FILE_ACCEPT} onChange={onFile} disabled={busy} /><Button variant="secondary" size="sm" onClick={onUploadClick} loading={busy}><Plus className="mr-1 size-4" aria-hidden />Добавить документ</Button></>}
-          </div>
+          <h2 className="text-sm font-semibold text-ink">Документы</h2>
           {documents.length ? <ul className="mt-3 space-y-2">{documents.map((document) => <li key={document.id} className="flex items-center gap-3 rounded-lg border border-line px-3 py-2.5">
             <FileText className="size-4 shrink-0 text-subtle" aria-hidden /><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-ink">{document.fileName}</p><p className="text-xs text-subtle">{fileSize(document.sizeBytes)} · {document.contentType}</p></div>
             <Button variant="ghost" size="icon-sm" aria-label={`Скачать ${document.fileName}`} onClick={() => onDownload(document)}><ArrowDownToLine className="size-4" aria-hidden /></Button>
@@ -165,12 +163,7 @@ function RequestDetailContent({
           {decision?.actorName && <DetailValue label="Администратор" value={decision.actorName} />}
         </div>
       </section>
-      <div className="flex flex-wrap gap-2">
-        {!admin && actions.includes('EDIT') && <Button variant="secondary" onClick={onEdit}><Pencil className="mr-1.5 size-4" aria-hidden />Редактировать</Button>}
-        {!admin && actions.includes('CANCEL') && <Button variant="danger-outline" onClick={onCancel}><X className="mr-1.5 size-4" aria-hidden />Отменить заявку</Button>}
-        {admin && actions.includes('APPROVE') && <Button onClick={onApprove} disabled={busy}><Check className="mr-1.5 size-4" aria-hidden />Согласовать</Button>}
-        {admin && actions.includes('REJECT') && <Button variant="secondary" onClick={onReject}><X className="mr-1.5 size-4 text-red-500" aria-hidden />Отклонить</Button>}
-      </div>
+      <TeacherRequestActionBar admin={admin} actions={actions} busy={busy} inputRef={inputRef} onFile={onFile} onUploadClick={onUploadClick} onEdit={onEdit} onCancel={onCancel} onApprove={onApprove} onReject={onReject} />
       <section>
         <h2 className="text-base font-bold text-ink">История</h2>
         <RequestHistory history={request.history ?? []} />
@@ -178,6 +171,40 @@ function RequestDetailContent({
       {footer}
     </div>
   );
+}
+
+export function TeacherRequestActionBar({
+  admin, actions, busy, inputRef, onFile, onUploadClick, onEdit, onCancel, onApprove, onReject,
+}: {
+  admin: boolean; actions: string[]; busy: boolean; inputRef: Ref<HTMLInputElement>;
+  onFile: (event: ChangeEvent<HTMLInputElement>) => void; onUploadClick: () => void;
+  onEdit: () => void; onCancel: () => void; onApprove: () => void; onReject: () => void;
+}) {
+  const canUpload = !admin && actions.includes('UPLOAD_DOCUMENT');
+  const canEdit = !admin && actions.includes('EDIT');
+  const canCancel = !admin && actions.includes('CANCEL');
+  const canApprove = admin && actions.includes('APPROVE');
+  const canReject = admin && actions.includes('REJECT');
+  if (!canUpload && !canEdit && !canCancel && !canApprove && !canReject) return null;
+
+  return <StickyActionBar>
+    <div className="flex flex-wrap items-center gap-4">
+      {canEdit && <Button variant="secondary" size="lg" className="!rounded-2xl !text-lg !text-navy-700 !ring-navy-700" onClick={onEdit} disabled={busy}>
+        <Pencil className="mr-2 size-5" aria-hidden />Редактировать
+      </Button>}
+      {canUpload && <>
+        <input ref={inputRef} className="hidden" type="file" accept={TEACHER_REQUEST_FILE_ACCEPT} onChange={onFile} disabled={busy} />
+        <Button variant="secondary" size="lg" className="!rounded-2xl !text-lg !text-navy-700 !ring-navy-700" onClick={onUploadClick} loading={busy}>
+          <Paperclip className="mr-2 size-5" aria-hidden />Добавить документ
+        </Button>
+      </>}
+      {canCancel && <Button variant="secondary" size="lg" className="!rounded-2xl !text-lg !text-red-600" onClick={onCancel} disabled={busy}>
+        <CircleSlash className="mr-2 size-5" aria-hidden />Отменить заявку
+      </Button>}
+      {canApprove && <Button onClick={onApprove} disabled={busy}><Check className="mr-1.5 size-4" aria-hidden />Согласовать</Button>}
+      {canReject && <Button variant="secondary" onClick={onReject} disabled={busy}><X className="mr-1.5 size-4 text-red-500" aria-hidden />Отклонить</Button>}
+    </div>
+  </StickyActionBar>;
 }
 
 export function RequestDetailHeader({ request, admin, onBack }: { request: TeacherRequest; admin: boolean; onBack: () => void }) {
