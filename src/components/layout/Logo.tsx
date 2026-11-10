@@ -1,5 +1,7 @@
 import { cx } from '@/lib/format';
 import { APP_NAME } from '@/lib/branding';
+import logoLockup from '@/assets/fiztex-logo-lockup.png';
+import logoWhite from '@/assets/fiztex-logo-white.svg';
 
 /** Контуры знака (стрелки, складывающиеся в Ф) — общие для знака и локапа. */
 function MarkPaths() {
@@ -38,66 +40,18 @@ export function PhysTechMark({ className }: { className?: string }) {
 }
 
 /**
- * Логотип: знак и слово {@link APP_NAME}.
- *
- * <p>Обе формы набраны, а не нарисованы картинкой: и прежний растровый локап, и белый
- * экспорт из Figma `phyztex` (узел «ЛОГО» 2460:4669) читались как «ФIZTEX» — старое имя
- * продукта на входе и в шапке (пилот, пункт 1.1). Следующее переименование не потребует
- * нового ассета. `textLength` держит слово в отведённой ширине при любом шрифте.
- *
- * - `lockup` — на собственной синей подложке (сайдбар, мобильная шапка входа). Пропорции
- *   прежнего ассета (496×198), чтобы размеры у вызывающих не поменялись.
- * - `white` — белым без подложки, поверх фона, который рисует сам экран (синяя панель входа).
- *   Размер родной, как у макета (137×36), его не растягивают.
+ * Экспортированный брендовый локап. `lockup` содержит синюю подложку и используется
+ * в сайдбаре; `white` — векторный белый знак на фоне синей панели входа.
  */
 export function Logo({ className, tone = 'lockup' }: { className?: string; tone?: 'lockup' | 'white' }) {
   if (tone === 'white') {
-    return (
-      <svg
-        viewBox="0 0 137 36"
-        width={137}
-        height={36}
-        role="img"
-        aria-label={APP_NAME}
-        className={cx('shrink-0 self-start', className)}
-      >
-        <svg x="0" y="0" width="34" height="36" viewBox="0 0 89 96" fill="none" className="text-white">
-          <MarkPaths />
-        </svg>
-        <text
-          x="42"
-          y="27"
-          textLength="94"
-          lengthAdjust="spacingAndGlyphs"
-          aria-hidden
-          className="fill-white font-sans text-[25px] font-bold"
-        >
-          {APP_NAME}
-        </text>
-      </svg>
-    );
+    return <img src={logoWhite} alt={APP_NAME} width={137} height={36} className={cx('shrink-0 self-start', className)} />;
   }
   return (
-    <svg
-      viewBox="0 0 496 198"
-      role="img"
-      aria-label={APP_NAME}
-      className={cx('shrink-0 self-start rounded-md', className ?? 'h-9 w-auto')}
-    >
-      <rect width="496" height="198" className="fill-navy-700" />
-      <svg x="34" y="43" width="104" height="112" viewBox="0 0 89 96" fill="none" className="text-white">
-        <MarkPaths />
-      </svg>
-      <text
-        x="156"
-        y="122"
-        textLength="306"
-        lengthAdjust="spacingAndGlyphs"
-        aria-hidden
-        className="fill-white font-sans text-[64px] font-bold"
-      >
-        {APP_NAME}
-      </text>
-    </svg>
+    <img
+      src={logoLockup}
+      alt={APP_NAME}
+      className={cx('shrink-0 self-start object-contain rounded-md', className ?? 'h-9 w-auto')}
+    />
   );
 }
