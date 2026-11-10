@@ -148,11 +148,11 @@ describe('Sidebar — группа заявок по ролям', () => {
     await userEvent.click(group);
     expect(group).toHaveAttribute('aria-expanded', 'false');
     expect(within(nav()).queryByRole('link', { name: 'Сервисные заявки' })).not.toBeInTheDocument();
-    // Освобождения — отдельный пункт меню, поэтому сворачивание группы на него не влияет.
-    expect(within(nav()).getByRole('link', { name: releaseLabel })).toBeInTheDocument();
+    expect(within(nav()).queryByRole('link', { name: releaseLabel })).not.toBeInTheDocument();
 
     await userEvent.click(group);
     expect(group).toHaveAttribute('aria-expanded', 'true');
+    expect(within(nav()).getByRole('link', { name: 'Сервисные заявки' })).toBeInTheDocument();
     expect(within(nav()).getByRole('link', { name: releaseLabel })).toBeInTheDocument();
   });
 });

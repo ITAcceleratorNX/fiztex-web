@@ -104,9 +104,9 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: Briefcase,
         children: [
           { to: ROUTES.serviceRequests, label: 'Сервисные заявки', icon: Wrench },
+          { to: ROUTES.adminTeacherRequests, label: 'Освобождения учителей', icon: CalendarX2 },
         ],
       },
-      { to: ROUTES.adminTeacherRequests, label: 'Освобождения учителей', icon: CalendarX2 },
     ],
   },
   {
@@ -159,9 +159,9 @@ export const TEACHER_NAV_SECTIONS: NavSection[] = [
         icon: Briefcase,
         children: [
           { to: ROUTES.serviceRequests, label: 'Сервисные заявки', icon: Wrench },
+          { to: ROUTES.teacherRequests, label: 'Освобождения', icon: CalendarX2 },
         ],
       },
-      { to: ROUTES.teacherRequests, label: 'Освобождения', icon: CalendarX2 },
     ],
   },
 ];
