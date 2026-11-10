@@ -230,12 +230,12 @@ export function RequestDetailHeader({ request, admin, onBack }: { request: Teach
         <span className="text-base text-subtle">{dayCount} {pluralDays(dayCount)}</span>
       </header>
     )}
-    {!admin && request.status === 'APPROVED' && <div className="flex items-center gap-3 rounded-2xl bg-info-bg px-5 py-4 text-sm leading-relaxed text-link sm:text-base">
-      <Lock className="size-5 shrink-0" aria-hidden />
+    {!admin && request.status === 'APPROVED' && <div className="flex items-center gap-2.5 rounded-xl bg-info-bg px-4 py-3 text-sm leading-relaxed text-link">
+      <Lock className="size-4 shrink-0" aria-hidden />
       <p>Заявка согласована, даты и причину изменить нельзя. Документы можно добавлять в любой момент.</p>
     </div>}
-    {admin && request.status === 'CANCELLED' && <div className="flex items-center gap-3 rounded-2xl bg-info-bg px-5 py-4 text-sm leading-relaxed text-link sm:text-base">
-      <Info className="size-5 shrink-0" aria-hidden />
+    {admin && request.status === 'CANCELLED' && <div className="flex items-center gap-2.5 rounded-xl bg-info-bg px-4 py-3 text-sm leading-relaxed text-link">
+      <Info className="size-4 shrink-0" aria-hidden />
       <p>Учитель отменил заявку до решения. Рассматривать её не нужно.</p>
     </div>}
   </div>;
