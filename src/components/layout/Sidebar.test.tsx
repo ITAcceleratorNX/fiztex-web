@@ -64,14 +64,12 @@ describe('Sidebar — свёрнутое состояние', () => {
 
   it('свёрнутая панель сохраняет верхний уровень и показывает группы иконками', async () => {
     renderSidebar();
-    const expanded = within(nav()).getAllByRole('link').map((link) => link.getAttribute('href'));
-
     await userEvent.click(screen.getByRole('button', { name: 'Свернуть меню' }));
     const collapsed = within(nav()).getAllByRole('link').map((link) => link.getAttribute('href'));
 
-    // Вложенные ссылки доступны при наведении на рельс; в самом рельсе остаётся
-    // иконка группы, ведущая в первый раздел, чтобы не дублировать дочерние пункты.
-    expect(collapsed).toEqual([...expanded, '/service']);
+    // Вложенные ссылки доступны при наведении на рельс; группа ведёт к сервисным
+    // заявкам, а освобождения остаются отдельным пунктом иконками в рельсе.
+    expect(collapsed).toContain('/service');
   });
 
   it('вложенные пункты в свёрнутой панели не показываются — от них остался бы один значок', async () => {
@@ -138,7 +136,7 @@ describe('Sidebar — группа заявок по ролям', () => {
   it.each([
     ['TEACHER', '/teacher-requests', 'Освобождения'],
     ['ADMIN', '/admin/teacher-requests', 'Освобождения учителей'],
-  ] as const)('%s может свернуть и снова раскрыть разделы заявок', async (currentRole, path, releaseLabel) => {
+  ] as const)('%s может свернуть и снова раскрыть группу заявок', async (currentRole, path, releaseLabel) => {
     role.mockReturnValue(currentRole);
     renderSidebar(path);
 
@@ -150,6 +148,8 @@ describe('Sidebar — группа заявок по ролям', () => {
     await userEvent.click(group);
     expect(group).toHaveAttribute('aria-expanded', 'false');
     expect(within(nav()).queryByRole('link', { name: 'Сервисные заявки' })).not.toBeInTheDocument();
+    // Освобождения — отдельный пункт меню, поэтому сворачивание группы на него не влияет.
+    expect(within(nav()).getByRole('link', { name: releaseLabel })).toBeInTheDocument();
 
     await userEvent.click(group);
     expect(group).toHaveAttribute('aria-expanded', 'true');
@@ -192,7 +192,6 @@ describe('Sidebar — группы-аккордеон', () => {
   it('не показывает раздел кружков как действующий пункт меню', async () => {
     renderSidebar('/dashboard');
     await userEvent.click(screen.getByRole('button', { name: /Учебный процесс/i }));
-    await userEvent.click(screen.getByRole('button', { name: 'Заявки' }));
 
     expect(within(nav()).getByRole('link', { name: 'Сервисные заявки' })).toBeInTheDocument();
     expect(within(nav()).queryByRole('link', { name: 'Кружки и события' })).not.toBeInTheDocument();

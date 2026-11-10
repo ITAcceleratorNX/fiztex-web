@@ -496,7 +496,7 @@ function SidebarNavItem({ item }: { item: NavItem }) {
 }
 
 function CollapsibleNavGroup({ item, children, childActive }: { item: NavItem; children: NavItem[]; childActive: boolean }) {
-  const [expanded, setExpanded] = useState(childActive);
+  const [expanded, setExpanded] = useState(true);
   const Icon = item.icon;
 
   useEffect(() => {
@@ -504,7 +504,7 @@ function CollapsibleNavGroup({ item, children, childActive }: { item: NavItem; c
   }, [childActive]);
 
   return (
-    <div className={cx(childActive && 'rounded-l-[24px] bg-white/70')}>
+    <div className={cx(expanded && 'rounded-l-[24px] rounded-br-[24px] bg-white/70')}>
       <button
         type="button"
         aria-expanded={expanded}
@@ -512,12 +512,12 @@ function CollapsibleNavGroup({ item, children, childActive }: { item: NavItem; c
         className={cx(
           'nav-fillets relative z-10 flex h-[52px] w-full items-center gap-3 pl-7 pr-3 text-left text-sm transition',
           SIDEBAR_FOCUS_RING,
-          childActive ? 'font-semibold text-navy-700' : 'font-normal text-sidebar-nav hover:text-white/80',
+          expanded || childActive ? 'font-semibold text-navy-700' : 'font-normal text-sidebar-nav hover:text-white/80',
         )}
       >
-        <Icon className={cx('size-[18px] shrink-0', childActive ? 'text-navy-700' : 'text-sidebar-nav')} />
+        <Icon className={cx('size-[18px] shrink-0', expanded || childActive ? 'text-navy-700' : 'text-sidebar-nav')} />
         <span className="min-w-0 flex-1 truncate">{item.label}</span>
-        <ChevronDown className={cx('size-6 shrink-0 transition-transform', childActive ? 'text-navy-700' : 'text-sidebar-nav', !expanded && '-rotate-90')} />
+        <ChevronDown className={cx('size-6 shrink-0 transition-transform', expanded || childActive ? 'text-navy-700' : 'text-sidebar-nav', !expanded && '-rotate-90')} />
       </button>
       {expanded && <div className="pb-1">{children.map((child, index) => <ChildLink key={child.to ?? child.label} item={child} isLast={index === children.length - 1} />)}</div>}
     </div>
