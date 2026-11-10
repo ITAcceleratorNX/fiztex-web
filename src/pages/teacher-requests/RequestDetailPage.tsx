@@ -188,17 +188,17 @@ export function TeacherRequestActionBar({
 
   return <StickyActionBar>
     <div className="flex flex-wrap items-center gap-4">
-      {canEdit && <Button variant="secondary" size="lg" className="!rounded-2xl !text-lg !text-navy-700 !ring-navy-700" onClick={onEdit} disabled={busy}>
-        <Pencil className="mr-2 size-5" aria-hidden />Редактировать
+      {canEdit && <Button variant="secondary" size="md" className="!text-navy-700 !ring-navy-700" onClick={onEdit} disabled={busy}>
+        <Pencil className="mr-2 size-4" aria-hidden />Редактировать
       </Button>}
       {canUpload && <>
         <input ref={inputRef} className="hidden" type="file" accept={TEACHER_REQUEST_FILE_ACCEPT} onChange={onFile} disabled={busy} />
-        <Button variant="secondary" size="lg" className="!rounded-2xl !text-lg !text-navy-700 !ring-navy-700" onClick={onUploadClick} loading={busy}>
-          <Paperclip className="mr-2 size-5" aria-hidden />Добавить документ
+        <Button variant="secondary" size="md" className="!text-navy-700 !ring-navy-700" onClick={onUploadClick} loading={busy}>
+          <Paperclip className="mr-2 size-4" aria-hidden />Добавить документ
         </Button>
       </>}
-      {canCancel && <Button variant="secondary" size="lg" className="!rounded-2xl !text-lg !text-red-600" onClick={onCancel} disabled={busy}>
-        <CircleSlash className="mr-2 size-5" aria-hidden />Отменить заявку
+      {canCancel && <Button variant="secondary" size="md" className="!text-red-600" onClick={onCancel} disabled={busy}>
+        <CircleSlash className="mr-2 size-4" aria-hidden />Отменить заявку
       </Button>}
       {canApprove && <Button onClick={onApprove} disabled={busy}><Check className="mr-1.5 size-4" aria-hidden />Согласовать</Button>}
       {canReject && <Button variant="secondary" onClick={onReject} disabled={busy}><X className="mr-1.5 size-4 text-red-500" aria-hidden />Отклонить</Button>}

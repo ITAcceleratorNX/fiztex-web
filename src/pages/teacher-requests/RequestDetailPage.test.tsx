@@ -79,8 +79,8 @@ describe('TeacherRequestActionBar', () => {
       'Добавить документ',
       'Отменить заявку',
     ]);
-    expect(buttons[0]).toHaveClass('h-14', '!rounded-2xl', '!text-navy-700', '!ring-navy-700');
-    expect(buttons[1]).toHaveClass('h-14', '!rounded-2xl', '!text-navy-700', '!ring-navy-700');
-    expect(buttons[2]).toHaveClass('h-14', '!rounded-2xl', '!text-lg', '!text-red-600');
+    expect(buttons[0]).toHaveClass('h-11', 'text-sm', '!text-navy-700', '!ring-navy-700');
+    expect(buttons[1]).toHaveClass('h-11', 'text-sm', '!text-navy-700', '!ring-navy-700');
+    expect(buttons[2]).toHaveClass('h-11', 'text-sm', '!text-red-600');
   });
 });
