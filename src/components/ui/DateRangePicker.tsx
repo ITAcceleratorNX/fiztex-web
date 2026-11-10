@@ -31,8 +31,9 @@ export function DateRangePicker({
 }) {
   const [open, setOpen] = useState(false);
   const [selectionStart, setSelectionStart] = useState<string | null>(null);
-  const [month, setMonth] = useState(() => startOfMonth(parseDate(value.from) ?? new Date()));
+  const [month, setMonth] = useState(() => startOfMonth(parseDate(value.from) ?? parseDate(todayKey()) ?? new Date()));
   const root = useRef<HTMLDivElement>(null);
+  const today = todayKey();
   const days = useMemo(() => calendarDays(month), [month]);
   const hasRange = Boolean(value.from && value.to);
 
@@ -46,7 +47,7 @@ export function DateRangePicker({
   }, [open]);
 
   function selectDate(date: string) {
-    if (isOccupied(date, occupiedRanges)) return;
+    if (date < today || isOccupied(date, occupiedRanges)) return;
     if (!selectionStart || date < selectionStart) {
       setSelectionStart(date);
       onChange({ from: date, to: date });
@@ -73,7 +74,7 @@ export function DateRangePicker({
         aria-expanded={open}
         onClick={() => {
           if (!open) {
-            setMonth(startOfMonth(parseDate(value.from) ?? new Date()));
+            setMonth(startOfMonth(parseDate(value.from) ?? parseDate(today) ?? new Date()));
             setSelectionStart(null);
           }
           setOpen((current) => !current);
@@ -99,33 +100,41 @@ export function DateRangePicker({
           {days.map((date) => {
             const key = dateKey(date);
             const outsideMonth = date.getUTCMonth() !== month.getUTCMonth();
+            if (outsideMonth) return <span key={key} aria-hidden className="size-9" />;
+            const past = key < today;
             const unavailable = isOccupied(key, occupiedRanges);
             const selected = key === value.from || key === value.to;
             const insideRange = hasRange && key > value.from && key < value.to;
             return <button
               key={key}
               type="button"
-              aria-label={`${formatDateOnly(key)}${unavailable ? ', дата уже занята' : ''}`}
+              aria-label={`${formatDateOnly(key)}${past ? ', прошедшая дата' : ''}${unavailable ? ', дата уже занята' : ''}`}
               aria-pressed={selected}
-              aria-disabled={unavailable}
-              disabled={unavailable}
-              title={unavailable ? 'Дата пересекается с другой заявкой' : undefined}
+              aria-disabled={past || unavailable}
+              disabled={past || unavailable}
+              title={past ? 'Прошедшую дату выбрать нельзя' : unavailable ? 'Дата пересекается с другой заявкой' : undefined}
               onClick={() => selectDate(key)}
               className={cx(
-                'mx-auto flex size-9 items-center justify-center rounded-full text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700',
-                outsideMonth && 'text-slate-300',
-                !outsideMonth && !selected && 'text-ink hover:bg-slate-100',
-                insideRange && 'rounded-none bg-orange-50 text-ink',
-                selected && 'bg-brand-500 font-semibold text-white hover:bg-brand-600',
-                unavailable && 'cursor-not-allowed bg-red-50 text-red-300 line-through',
+                'relative mx-auto flex size-9 items-center justify-center rounded-full text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700',
+                !outsideMonth && !selected && !insideRange && !past && !unavailable && 'text-ink hover:bg-slate-100',
+                insideRange && 'rounded-none bg-indigo-50 text-navy-700',
+                selected && 'rounded-xl bg-navy-700 font-semibold text-white hover:bg-navy-800',
+                (past || unavailable) && !selected && 'cursor-not-allowed text-slate-400',
+                unavailable && 'rounded-xl bg-slate-100 line-through',
+                past && !unavailable && !selected && 'text-slate-300',
               )}
-            >{date.getUTCDate()}</button>;
+            >
+              {date.getUTCDate()}
+              {!outsideMonth && !unavailable && key === today && <span aria-hidden className="absolute bottom-0.5 size-1.5 rounded-full bg-brand-500" />}
+              {!outsideMonth && unavailable && <span aria-hidden className="absolute bottom-0.5 size-1.5 rounded-full bg-slate-400" />}
+            </button>;
           })}
         </div>
         <div className="mt-4 border-t border-line pt-3">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-            <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full bg-brand-500" />Выбрано</span>
-            {occupiedRanges.length > 0 && <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full bg-red-200" />Занято другой заявкой</span>}
+            <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full bg-navy-700" />Выбранный период</span>
+            <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full bg-brand-500" />Сегодня</span>
+            {occupiedRanges.length > 0 && <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-sm bg-slate-300" />Занято другой заявкой</span>}
           </div>
           <div className="mt-3 flex items-center justify-between gap-2">
             <span className="text-xs font-semibold text-ink">{hasRange ? summaryValue(value.from, value.to) : 'Выберите день или начальную дату периода'}</span>
@@ -153,6 +162,10 @@ function parseDate(value: string): Date | null {
 function startOfMonth(value: Date) { return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), 1)); }
 function addMonths(value: Date, months: number) { return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth() + months, 1)); }
 function dateKey(value: Date) { return `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(2, '0')}-${String(value.getUTCDate()).padStart(2, '0')}`; }
+function todayKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
 function calendarDays(month: Date) {
   const first = startOfMonth(month);
   const mondayOffset = (first.getUTCDay() + 6) % 7;
