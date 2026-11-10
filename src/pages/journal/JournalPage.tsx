@@ -29,6 +29,7 @@ import {
 import {
   currentMonthKey,
   finalsByStudent,
+  hasAnyMarks,
   monthOptionsOf,
   shortDate as formatShortDate,
 } from '@/lib/journalModel';
@@ -261,7 +262,7 @@ function JournalTab({
 
   return (
     <div className="flex flex-col gap-3">
-      {rows.every((row) => (row.cells ?? []).every((cell) => (cell.grades ?? []).length === 0)) && (
+      {!hasAnyMarks(rows) && (
         <p role="status" className="rounded-lg bg-info-bg p-4 text-13 text-info-fg">
           Оценок пока нет. Откройте урок по дате в заголовке таблицы, чтобы выставить первые оценки.
         </p>

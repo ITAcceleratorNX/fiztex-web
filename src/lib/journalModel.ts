@@ -78,12 +78,50 @@ export function currentMonthKey(options: MonthOption[], today = new Date()): str
   return options.find((option) => option.dateFrom <= iso && iso <= option.dateTo)?.key ?? null;
 }
 
-/** Подпись колонки: дата сверху, событие снизу — «Урок 3», «ДЗ» или «Отмена». */
+/** Подпись колонки: дата сверху, событие снизу — «Урок 3», «ДЗ», «СОР 1» или «Отмена». */
 export function columnCaption(column: GradebookColumn): { date: string; event: string } {
   const date = column.date ? shortDate(column.date) : '';
   if (column.type === 'HOMEWORK') return { date, event: 'ДЗ' };
+  if (isAssessmentColumn(column)) return { date, event: assessmentTitle(column) };
   if (columnState(column) === 'LESSON_CANCELLED') return { date, event: 'Отмена' };
   return { date, event: column.lessonNumber != null ? `Урок ${column.lessonNumber}` : 'Урок' };
+}
+
+/**
+ * Колонка работы СОР/СОЧ (V141, `assessment-work-contract.md` §5): стоит сразу за своим
+ * уроком, а в клетке у неё балл работы, а не оценки. Колонка урока остаётся — на ней ФО.
+ */
+export function isAssessmentColumn(column: GradebookColumn): boolean {
+  return column.type === 'ASSESSMENT_WORK';
+}
+
+/** «СОР 2» / «СОЧ» — сервер присылает подпись готовой; без неё — по виду работы. */
+export function assessmentTitle(column: GradebookColumn): string {
+  return column.title ?? (column.assessmentKind === 'SOCH' ? 'СОЧ' : 'СОР');
+}
+
+/**
+ * Куда ведёт заголовок колонки. Урок — в его оценки, задание — в карточку задания, работа
+ * СОР/СОЧ — в карточку своего урока: `sourceId` у неё — id работы, а не урока.
+ */
+export function columnHref(column: GradebookColumn): string | null {
+  if (column.sourceId == null) return null;
+  if (column.type === 'LESSON') return `/lesson-schedule/lessons/${column.sourceId}/grades`;
+  if (column.type === 'HOMEWORK') return `/homework/${column.sourceId}`;
+  return column.lessonId != null ? `/lesson-schedule/lessons/${column.lessonId}` : null;
+}
+
+/** «15/20» — балл работы. Ноль — тоже балл, а не пустая клетка. */
+export function assessmentScoreLabel(result: GradebookCell['assessmentResult']): string | null {
+  if (!result || result.score == null) return null;
+  return result.maxScore != null ? `${result.score}/${result.maxScore}` : String(result.score);
+}
+
+/** Есть ли в строках журнала хоть что-то выставленное — оценка или балл работы. */
+export function hasAnyMarks(rows: GradebookRow[]): boolean {
+  return rows.some((row) =>
+    (row.cells ?? []).some((cell) => (cell.grades ?? []).length > 0 || cell.assessmentResult != null),
+  );
 }
 
 type ColumnState = NonNullable<GradebookColumn['state']>;

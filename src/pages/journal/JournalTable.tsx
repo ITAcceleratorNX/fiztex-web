@@ -6,11 +6,15 @@ import { GRADE_TYPE_LABELS, gradeValueLabel } from '@/lib/gradesModel';
 import type { GradeType } from '@/lib/gradesApi';
 import { COMPONENT_SHORT, componentsByCode, formatPercent, resultStatusHint } from '@/lib/gradingModel';
 import {
+  assessmentScoreLabel,
+  assessmentTitle,
   cellsByColumn,
   columnCaption,
+  columnHref,
   finalValueLabel,
   formatAverage,
   inactiveColumnHint,
+  isAssessmentColumn,
 } from '@/lib/journalModel';
 
 /**
@@ -122,6 +126,7 @@ export function JournalTable({
                 {columns.map((column) => {
                   const cell = cells.get(column.key ?? '');
                   const grades = cell?.grades ?? [];
+                  const score = assessmentScoreLabel(cell?.assessmentResult);
                   const inactiveHint = inactiveColumnHint(column);
                   return (
                     <td
@@ -131,7 +136,11 @@ export function JournalTable({
                         column.date === today && 'bg-navy-50/60',
                       )}
                     >
-                      {grades.length > 0 ? (
+                      {score ? (
+                        <span className="flex items-center justify-center">
+                          <GradeChip size="sm" value={score} title={assessmentTitle(column)} />
+                        </span>
+                      ) : grades.length > 0 ? (
                         <span className="flex items-center justify-center gap-1">
                           {grades.map((grade) => (
                             <GradeChip
@@ -196,19 +205,21 @@ export function JournalTable({
 
 function ColumnHead({ column, today }: { column: GradebookColumn; today: string }) {
   const caption = columnCaption(column);
-  const isLesson = column.type === 'LESSON' && column.sourceId != null;
-  const href = isLesson
-    ? `/lesson-schedule/lessons/${column.sourceId}/grades`
-    : column.sourceId != null
-      ? `/homework/${column.sourceId}`
-      : null;
+  const href = columnHref(column);
 
   const content = (
     <span className="flex flex-col items-center gap-0.5">
       <span className={cx('text-13 font-semibold', column.active === false && 'text-slate-400')}>
         {caption.date}
       </span>
-      <span className="text-10 font-medium uppercase text-slate-400">{caption.event}</span>
+      <span
+        className={cx(
+          'text-10 font-medium uppercase',
+          isAssessmentColumn(column) ? 'text-navy-700' : 'text-slate-400',
+        )}
+      >
+        {caption.event}
+      </span>
     </span>
   );
 

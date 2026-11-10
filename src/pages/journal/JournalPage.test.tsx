@@ -188,6 +188,38 @@ describe('JournalPage', () => {
     expect(screen.getByText('Открыт лист оценок урока')).toBeInTheDocument();
   });
 
+  /** СОР/СОЧ — своя колонка за уроком (V141): в клетке балл работы, заголовок ведёт в урок работы. */
+  it('колонка работы СОР стоит за уроком, показывает балл и ведёт в карточку урока', () => {
+    const data = journal();
+    const work = {
+      key: 'ASSESSMENT_WORK:71',
+      type: 'ASSESSMENT_WORK',
+      sourceId: 71,
+      lessonId: 449,
+      date: '2026-09-09',
+      lessonNumber: 1,
+      title: 'СОР 1',
+      assessmentKind: 'SOR',
+      assessmentStatus: 'CONDUCTED',
+      maxScore: 20,
+      active: true,
+      state: 'ACTIVE',
+    } as unknown as (typeof data.columns)[number];
+    data.columns.splice(1, 0, work);
+    data.rows[0] = {
+      ...data.rows[0],
+      cells: [{ columnKey: 'ASSESSMENT_WORK:71', grades: [], assessmentResult: { resultId: 5, workId: 71, score: 0, maxScore: 20 } }],
+    } as unknown as (typeof data.rows)[number];
+    useJournal.mockReturnValue({ data, isPending: false, isError: false, error: null });
+    renderPage();
+
+    const header = screen.getByRole('columnheader', { name: /09\.09\s*СОР 1/ });
+    expect(within(header).getByRole('link')).toHaveAttribute('href', '/lesson-schedule/lessons/449');
+    // Ноль — полноценный балл, и с одним баллом работы журнал уже не «пустой».
+    expect(screen.getByRole('button', { name: 'Оценка 0/20' })).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
   it('показывает отдельное пустое состояние только когда в журнале нет учеников', () => {
     useJournal.mockReturnValue({ data: { ...journal(), rows: [] }, isPending: false, isError: false, error: null });
     renderPage();
