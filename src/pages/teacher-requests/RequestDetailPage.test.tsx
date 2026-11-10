@@ -4,12 +4,13 @@ import { describe, expect, it, vi } from 'vitest';
 import type { TeacherRequest } from '@/lib/teacherRequestsApi';
 import { RequestDetailHeader, TeacherRequestActionBar } from './RequestDetailPage';
 
-function request(status: 'APPROVED' | 'REJECTED'): TeacherRequest {
+function request(status: 'APPROVED' | 'REJECTED' | 'CANCELLED'): TeacherRequest {
   return {
     status,
     type: 'RELEASE',
-    dateFrom: '2026-11-02',
-    dateTo: '2026-11-02',
+    teacherName: 'Марина Демо',
+    dateFrom: status === 'CANCELLED' ? '2026-10-27' : '2026-11-02',
+    dateTo: status === 'CANCELLED' ? '2026-10-27' : '2026-11-02',
   } as TeacherRequest;
 }
 
@@ -22,6 +23,7 @@ describe('RequestDetailHeader', () => {
     expect(screen.getByText('2 ноября 2026')).toBeInTheDocument();
     expect(screen.getByText('1 день')).toBeInTheDocument();
     expect(screen.getByText('Заявка согласована, даты и причину изменить нельзя. Документы можно добавлять в любой момент.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveClass('text-28', 'sm:text-32');
   });
 
   it('matches the rejected state without the approved notice', () => {
@@ -32,6 +34,26 @@ describe('RequestDetailHeader', () => {
     expect(screen.getByText('2 ноября 2026')).toBeInTheDocument();
     expect(screen.getByText('1 день')).toBeInTheDocument();
     expect(screen.queryByText(/даты и причину изменить нельзя/)).not.toBeInTheDocument();
+  });
+
+  it('uses the separate admin header layout and shows the cancelled request notice', () => {
+    render(<RequestDetailHeader request={request('CANCELLED')} admin onBack={vi.fn()} />);
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Марина Демо' })).toHaveClass('text-28', 'sm:text-32');
+    expect(screen.getByText('Отменена')).toBeInTheDocument();
+    expect(screen.getByText('Освобождение')).toBeInTheDocument();
+    expect(screen.getByText('27 октября 2026')).toBeInTheDocument();
+    expect(screen.getByText('1 день')).toBeInTheDocument();
+    expect(screen.getByText('Учитель отменил заявку до решения. Рассматривать её не нужно.')).toBeInTheDocument();
+  });
+
+  it('shows the admin type chip for rejected requests without the cancelled notice', () => {
+    render(<RequestDetailHeader request={request('REJECTED')} admin onBack={vi.fn()} />);
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Марина Демо' })).toBeInTheDocument();
+    expect(screen.getByText('Отклонена')).toBeInTheDocument();
+    expect(screen.getByText('Освобождение')).toBeInTheDocument();
+    expect(screen.queryByText(/Учитель отменил заявку/)).not.toBeInTheDocument();
   });
 });
 

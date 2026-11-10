@@ -1,6 +1,6 @@
 import { useRef, useState, type ChangeEvent, type ReactNode, type Ref } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowDownToLine, Check, ChevronRight, CircleSlash, FileText, Lock, Paperclip, Pencil, Trash2, X } from 'lucide-react';
+import { ArrowDownToLine, CalendarX2, Check, ChevronRight, CircleSlash, FileText, Info, Lock, Paperclip, Pencil, Trash2, X } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -143,7 +143,6 @@ function RequestDetailContent({
   return (
     <div className="space-y-8">
       <RequestDetailHeader request={request} admin={admin} onBack={onBack} />
-      {request.status === 'CANCELLED' && admin && <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-navy-700">Учитель отменил заявку до решения. Рассматривать её не нужно.</div>}
       <section className="space-y-4 rounded-2xl border border-line bg-white p-5 shadow-sm">
         <div><h2 className="text-sm font-semibold text-ink">Причина</h2><p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink">{request.reason}</p></div>
         <div>
@@ -209,21 +208,38 @@ export function TeacherRequestActionBar({
 
 export function RequestDetailHeader({ request, admin, onBack }: { request: TeacherRequest; admin: boolean; onBack: () => void }) {
   const dayCount = inclusiveDays(request.dateFrom, request.dateTo);
+  const statusTone = request.status === 'APPROVED' ? 'green' : request.status === 'PENDING' ? 'amber' : request.status === 'REJECTED' ? 'red' : 'gray';
   return <div className="space-y-8">
     <nav aria-label="Хлебные крошки" className="flex items-center gap-1.5 text-13 text-subtle">
       <button type="button" onClick={onBack} className="hover:text-navy-700">{admin ? 'Освобождения учителей' : 'Освобождения'}</button><ChevronRight className="size-3.5" aria-hidden /><span className="font-semibold text-link">Заявка</span>
     </nav>
-    <header className="flex flex-wrap items-center gap-x-5 gap-y-3">
-      <h1 className="text-32 font-bold leading-tight text-ink sm:text-40">{admin ? request.teacherName : request.type ? TEACHER_REQUEST_TYPE[request.type] : 'Заявка'}</h1>
-      <Badge tone={request.status === 'APPROVED' ? 'green' : request.status === 'PENDING' ? 'amber' : request.status === 'REJECTED' ? 'red' : 'gray'}>
-        {request.status ? TEACHER_REQUEST_STATUS[request.status] : '—'}
-      </Badge>
-      <span className="text-base font-semibold text-ink">{formatHeaderPeriod(request.dateFrom, request.dateTo)}</span>
-      <span className="text-base text-subtle">{dayCount} {pluralDays(dayCount)}</span>
-    </header>
+    {admin ? (
+      <header>
+        <h1 className="text-28 font-bold leading-tight text-ink sm:text-32">{request.teacherName ?? 'Заявка'}</h1>
+        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <Badge tone={statusTone}>{request.status ? TEACHER_REQUEST_STATUS[request.status] : '—'}</Badge>
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-3 py-1.5 text-sm font-medium text-ink">
+            <CalendarX2 className="size-4" aria-hidden />{request.type ? TEACHER_REQUEST_TYPE[request.type] : 'Заявка'}
+          </span>
+          <span className="text-base font-semibold text-ink">{formatHeaderPeriod(request.dateFrom, request.dateTo)}</span>
+          <span className="text-base text-subtle">{dayCount} {pluralDays(dayCount)}</span>
+        </div>
+      </header>
+    ) : (
+      <header className="flex flex-wrap items-center gap-x-5 gap-y-3">
+        <h1 className="text-28 font-bold leading-tight text-ink sm:text-32">{request.type ? TEACHER_REQUEST_TYPE[request.type] : 'Заявка'}</h1>
+        <Badge tone={statusTone}>{request.status ? TEACHER_REQUEST_STATUS[request.status] : '—'}</Badge>
+        <span className="text-base font-semibold text-ink">{formatHeaderPeriod(request.dateFrom, request.dateTo)}</span>
+        <span className="text-base text-subtle">{dayCount} {pluralDays(dayCount)}</span>
+      </header>
+    )}
     {!admin && request.status === 'APPROVED' && <div className="flex items-center gap-3 rounded-2xl bg-info-bg px-5 py-4 text-sm leading-relaxed text-link sm:text-base">
       <Lock className="size-5 shrink-0" aria-hidden />
       <p>Заявка согласована, даты и причину изменить нельзя. Документы можно добавлять в любой момент.</p>
+    </div>}
+    {admin && request.status === 'CANCELLED' && <div className="flex items-center gap-3 rounded-2xl bg-info-bg px-5 py-4 text-sm leading-relaxed text-link sm:text-base">
+      <Info className="size-5 shrink-0" aria-hidden />
+      <p>Учитель отменил заявку до решения. Рассматривать её не нужно.</p>
     </div>}
   </div>;
 }
