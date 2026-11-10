@@ -43,6 +43,16 @@ export function centerLink(route: string | undefined, params: Params | undefined
       const homeworkId = id(p, 'homeworkId');
       return homeworkId ? `/homework/${homeworkId}` : null;
     }
+    case 'teacher-requests':
+    case 'my-teacher-requests': {
+      const requestId = id(p, 'requestId');
+      if (!requestId) return null;
+      return role === 'TEACHER'
+        ? `${ROUTES.teacherRequests}/${requestId}`
+        : role === 'ADMIN' || role === 'SUPER_ADMIN'
+          ? `${ROUTES.adminTeacherRequests}/${requestId}`
+          : null;
+    }
     case 'feedback': {
       const query = new URLSearchParams();
       if (typeof p.month === 'string') query.set('month', p.month);

@@ -99,6 +99,12 @@ import { notificationCenterApi } from '@/lib/notificationCenterApi';
 import { teacherWorkspaceApi, type WorkspaceSearchQuery } from '@/lib/teacherWorkspaceApi';
 import { testTemplateApi, type TestAiOverview, type TestAiRequest } from '@/lib/testTemplateApi';
 import { lessonPreparationApi, type PreparationAiOverview, type PreparationAiRequest } from '@/lib/lessonPreparationApi';
+import {
+  teacherRequestsApi,
+  TEACHER_REQUEST_PAGE_SIZE,
+  type TeacherRequestInput,
+  type TeacherRequestStatus,
+} from '@/lib/teacherRequestsApi';
 import type {
   ApplicantRequest,
   GenerateTestRequest,
@@ -273,6 +279,8 @@ export const keys = {
   serviceRequests: (section: ServiceSection) => ['service-requests', 'list', section] as const,
   serviceRequest: (id: number) => ['service-requests', id] as const,
   serviceRequestHistory: (id: number) => ['service-requests', id, 'history'] as const,
+  teacherRequests: (scope: 'teacher' | 'admin', filter: string) => ['teacher-requests', scope, 'list', filter] as const,
+  teacherRequest: (scope: 'teacher' | 'admin', id: number) => ['teacher-requests', scope, id] as const,
   // Разделы Super Admin живут в том же пространстве 'service-requests': отмена своей
   // заявки меняет и «Все заявки», и журнал, и сбрасывать их порознь значило бы однажды
   // забыть половину.
@@ -2685,6 +2693,127 @@ export function useReopenServiceRequest() {
   return useServiceRequestCommand(({ id, comment }: { id: number; comment: string }) =>
     serviceRequestsApi.reopen(id, comment),
   );
+}
+
+const TEACHER_ACTIVE_STATUSES: TeacherRequestStatus[] = ['PENDING', 'APPROVED'];
+const TEACHER_HISTORY_STATUSES: TeacherRequestStatus[] = ['REJECTED', 'CANCELLED'];
+const TEACHER_REQUEST_STATUSES: TeacherRequestStatus[] = [...TEACHER_ACTIVE_STATUSES, ...TEACHER_HISTORY_STATUSES];
+
+async function fetchAllTeacherRequestPages(
+  scope: 'teacher' | 'admin',
+  status: TeacherRequestStatus,
+  signal: AbortSignal,
+) {
+  const pages = [];
+  for (let page = 0; ; page += 1) {
+    signal.throwIfAborted();
+    const response = scope === 'teacher'
+      ? await teacherRequestsApi.teacherList(status, page, signal)
+      : await teacherRequestsApi.adminList(status, page, signal);
+    pages.push(response);
+    if (response.last === true || (response.totalPages != null && page + 1 >= response.totalPages)) break;
+    if (response.last == null && response.totalPages == null) {
+      throw new Error('Сервер не вернул метаданные пагинации заявок учителей');
+    }
+  }
+  return pages.flatMap((page) => page.content ?? []);
+}
+
+function useTeacherRequestList(scope: 'teacher' | 'admin', statuses: TeacherRequestStatus[], filter: string) {
+  return useQuery({
+    queryKey: keys.teacherRequests(scope, filter),
+    queryFn: async ({ signal }) => {
+      const content = (await Promise.all(statuses.map((status) =>
+        fetchAllTeacherRequestPages(scope, status, signal),
+      ))).flat();
+      content.sort((left, right) =>
+        (right.createdAt ?? '').localeCompare(left.createdAt ?? '') || (right.id ?? 0) - (left.id ?? 0),
+      );
+      return {
+        content,
+        totalElements: content.length,
+        totalPages: Math.ceil(content.length / TEACHER_REQUEST_PAGE_SIZE),
+        size: TEACHER_REQUEST_PAGE_SIZE,
+        number: 0,
+      };
+    },
+  });
+}
+
+export function useTeacherRequests(section: 'ACTIVE' | 'HISTORY') {
+  return useTeacherRequestList(
+    'teacher',
+    section === 'ACTIVE' ? TEACHER_ACTIVE_STATUSES : TEACHER_HISTORY_STATUSES,
+    section,
+  );
+}
+
+export function useAdminTeacherRequests(status: TeacherRequestStatus | 'ALL') {
+  return useTeacherRequestList(
+    'admin',
+    status === 'ALL' ? TEACHER_REQUEST_STATUSES : [status],
+    status,
+  );
+}
+
+export function useTeacherRequestOccupiedRanges(enabled: boolean) {
+  return useQuery({
+    queryKey: ['teacher-requests', 'teacher', 'occupied-ranges'],
+    queryFn: async ({ signal }) => {
+      const [pending, approved] = await Promise.all([
+        fetchAllTeacherRequestPages('teacher', 'PENDING', signal),
+        fetchAllTeacherRequestPages('teacher', 'APPROVED', signal),
+      ]);
+      return [...pending, ...approved].flatMap((request) =>
+        request.dateFrom && request.dateTo ? [{ id: request.id, from: request.dateFrom, to: request.dateTo }] : [],
+      );
+    },
+    enabled,
+  });
+}
+
+export function useTeacherRequest(id: number | null, scope: 'teacher' | 'admin' = 'teacher') {
+  return useQuery({
+    queryKey: keys.teacherRequest(scope, id ?? 0),
+    queryFn: ({ signal }) => scope === 'teacher'
+      ? teacherRequestsApi.teacherOne(id as number, signal)
+      : teacherRequestsApi.adminOne(id as number, signal),
+    enabled: id != null,
+  });
+}
+
+function useTeacherRequestCommand<TVars, TData>(mutationFn: (variables: TVars) => Promise<TData>) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['teacher-requests'] }); },
+  });
+}
+
+export function useCreateTeacherRequest() {
+  return useTeacherRequestCommand((input: TeacherRequestInput) => teacherRequestsApi.create(input));
+}
+export function useUpdateTeacherRequest() {
+  return useTeacherRequestCommand(({ id, input }: { id: number; input: TeacherRequestInput }) =>
+    teacherRequestsApi.update(id, input));
+}
+export function useCancelTeacherRequest() {
+  return useTeacherRequestCommand((id: number) => teacherRequestsApi.cancel(id));
+}
+export function useApproveTeacherRequest() {
+  return useTeacherRequestCommand((id: number) => teacherRequestsApi.approve(id));
+}
+export function useRejectTeacherRequest() {
+  return useTeacherRequestCommand(({ id, reason }: { id: number; reason: string }) =>
+    teacherRequestsApi.reject(id, reason));
+}
+export function useUploadTeacherRequestDocument() {
+  return useTeacherRequestCommand(({ id, file }: { id: number; file: File }) =>
+    teacherRequestsApi.upload(id, file));
+}
+export function useDeleteTeacherRequestDocument() {
+  return useTeacherRequestCommand(({ requestId, documentId }: { requestId: number; documentId: number }) =>
+    teacherRequestsApi.removeDocument(requestId, documentId));
 }
 
 // ─── Сервисные заявки: разделы Super Admin (ТЗ SERVICE-FE-004) ────────────────

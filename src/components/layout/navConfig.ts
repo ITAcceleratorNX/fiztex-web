@@ -21,6 +21,7 @@ import {
   Sparkles,
   ListChecks,
   Briefcase,
+  CalendarX2,
   Wrench,
   Brain,
   Library,
@@ -98,6 +99,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { to: '/ai-tests', label: 'AI-тесты', icon: Sparkles },
       { to: ROUTES.surveys, label: 'Опросы', icon: ListChecks },
       { to: ROUTES.serviceRequests, label: 'Сервисные заявки', icon: Briefcase },
+      { to: ROUTES.adminTeacherRequests, label: 'Освобождения учителей', icon: CalendarX2 },
     ],
   },
   {
@@ -147,6 +149,7 @@ export const TEACHER_NAV_SECTIONS: NavSection[] = [
       // Заявки — не учебный раздел, но автор у них тот же (SERVICE-FE-001 §1), и читает
       // он свой `/api/service-requests/my`, а не `/api/admin/*`: учителю сюда можно.
       { to: ROUTES.serviceRequests, label: 'Сервисные заявки', icon: Briefcase },
+      { to: ROUTES.teacherRequests, label: 'Освобождения', icon: CalendarX2 },
     ],
   },
 ];

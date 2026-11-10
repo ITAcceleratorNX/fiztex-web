@@ -17,6 +17,12 @@ describe('centerLink — словарь маршрутов уведомлени�
       .toBe('/feedback?month=2026-09&subject=7&class=31');
   });
 
+  it('уведомления по заявкам ведут учителя и администратора в нужную карточку', () => {
+    expect(centerLink('my-teacher-requests', { requestId: 58 }, 'TEACHER')).toBe('/teacher-requests/58');
+    expect(centerLink('teacher-requests', { requestId: 58 }, 'ADMIN')).toBe('/admin/teacher-requests/58');
+    expect(centerLink('teacher-requests', {}, 'ADMIN')).toBeNull();
+  });
+
   it('расписание: учителю — его неделя, администрации — конструктор на нужном периоде', () => {
     expect(centerLink('schedule', {}, 'TEACHER')).toBe('/my-schedule');
     expect(centerLink('schedule', { periodId: 31 }, 'ADMIN')).toBe('/lesson-schedule?periodId=31');

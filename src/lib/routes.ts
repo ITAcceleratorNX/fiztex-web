@@ -90,6 +90,12 @@ export const ROUTES = {
   /** Сервисные заявки автора — Admin и Teacher (SERVICE-FE-001). */
   serviceRequests: '/service',
   serviceRequest: (id: number | string) => `/service/${id}`,
+  /** Заявки учителя на освобождение / больничный (TEACHER-REQUEST-FE-001). */
+  teacherRequests: '/teacher-requests',
+  teacherRequest: (id: number | string) => `/teacher-requests/${id}`,
+  /** Школьная очередь заявок учителей. */
+  adminTeacherRequests: '/admin/teacher-requests',
+  adminTeacherRequest: (id: number | string) => `/admin/teacher-requests/${id}`,
   /** Внутренние сотрудники — раздел Super Admin (SERVICE-FE-004 §3). */
   employees: '/admin/employees',
   /** Состояние физических ключей и журнал операций — read-only раздел Super Admin. */
@@ -288,6 +294,7 @@ const TEACHER_ROUTE_PREFIXES = [
   ROUTES.myAvailability,
   ROUTES.journal,
   ROUTES.serviceRequests,
+  ROUTES.teacherRequests,
   '/lesson-schedule/lessons/',
 ];
 
