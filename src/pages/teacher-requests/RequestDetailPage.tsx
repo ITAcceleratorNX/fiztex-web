@@ -7,7 +7,6 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { Field, TextArea } from '@/components/ui/Field';
 import { Modal } from '@/components/ui/Modal';
-import { StickyActionBar } from '@/components/ui/StickyActionBar';
 import { useToast } from '@/context/ToastContext';
 import { useApproveTeacherRequest, useCancelTeacherRequest, useDeleteTeacherRequestDocument, useRejectTeacherRequest, useTeacherRequest, useUploadTeacherRequestDocument } from '@/hooks/queries';
 import { teacherRequestsApi, TEACHER_REQUEST_FILE_ACCEPT, TEACHER_REQUEST_MAX_FILE_SIZE, TEACHER_REQUEST_STATUS, TEACHER_REQUEST_TYPE, type TeacherRequest, type TeacherRequestDocument, type TeacherRequestHistory } from '@/lib/teacherRequestsApi';
@@ -186,8 +185,7 @@ export function TeacherRequestActionBar({
   const canReject = admin && actions.includes('REJECT');
   if (!canUpload && !canEdit && !canCancel && !canApprove && !canReject) return null;
 
-  return <StickyActionBar>
-    <div className="flex flex-wrap items-center gap-4">
+  return <div role="group" aria-label="Действия по заявке" className="flex flex-wrap items-center gap-4">
       {canEdit && <Button variant="secondary" size="md" className="!text-navy-700 !ring-navy-700" onClick={onEdit} disabled={busy}>
         <Pencil className="mr-2 size-4" aria-hidden />Редактировать
       </Button>}
@@ -202,35 +200,34 @@ export function TeacherRequestActionBar({
       </Button>}
       {canApprove && <Button onClick={onApprove} disabled={busy}><Check className="mr-1.5 size-4" aria-hidden />Согласовать</Button>}
       {canReject && <Button variant="secondary" onClick={onReject} disabled={busy}><X className="mr-1.5 size-4 text-red-500" aria-hidden />Отклонить</Button>}
-    </div>
-  </StickyActionBar>;
+  </div>;
 }
 
 export function RequestDetailHeader({ request, admin, onBack }: { request: TeacherRequest; admin: boolean; onBack: () => void }) {
   const dayCount = inclusiveDays(request.dateFrom, request.dateTo);
   const statusTone = request.status === 'APPROVED' ? 'green' : request.status === 'PENDING' ? 'amber' : request.status === 'REJECTED' ? 'red' : 'gray';
   return <div className="space-y-8">
-    <nav aria-label="Хлебные крошки" className="flex items-center gap-1.5 text-13 text-subtle">
+    <nav aria-label="Хлебные крошки" className="flex items-center gap-1.5 text-sm text-subtle">
       <button type="button" onClick={onBack} className="hover:text-navy-700">{admin ? 'Освобождения учителей' : 'Освобождения'}</button><ChevronRight className="size-3.5" aria-hidden /><span className="font-semibold text-link">Заявка</span>
     </nav>
     {admin ? (
       <header>
-        <h1 className="text-28 font-bold leading-tight text-ink sm:text-32">{request.teacherName ?? 'Заявка'}</h1>
+        <h1 className="text-32 font-bold leading-tight text-ink sm:text-40">{request.teacherName ?? 'Заявка'}</h1>
         <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
-          <Badge tone={statusTone}>{request.status ? TEACHER_REQUEST_STATUS[request.status] : '—'}</Badge>
-          <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-3 py-1.5 text-sm font-medium text-ink">
+          <Badge tone={statusTone} size="md">{request.status ? TEACHER_REQUEST_STATUS[request.status] : '—'}</Badge>
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-3 py-1.5 text-base font-medium text-ink">
             <CalendarX2 className="size-4" aria-hidden />{request.type ? TEACHER_REQUEST_TYPE[request.type] : 'Заявка'}
           </span>
-          <span className="text-base font-semibold text-ink">{formatHeaderPeriod(request.dateFrom, request.dateTo)}</span>
-          <span className="text-base text-subtle">{dayCount} {pluralDays(dayCount)}</span>
+          <span className="text-lg font-semibold text-ink">{formatHeaderPeriod(request.dateFrom, request.dateTo)}</span>
+          <span className="text-lg text-subtle">{dayCount} {pluralDays(dayCount)}</span>
         </div>
       </header>
     ) : (
       <header className="flex flex-wrap items-center gap-x-5 gap-y-3">
-        <h1 className="text-28 font-bold leading-tight text-ink sm:text-32">{request.type ? TEACHER_REQUEST_TYPE[request.type] : 'Заявка'}</h1>
-        <Badge tone={statusTone}>{request.status ? TEACHER_REQUEST_STATUS[request.status] : '—'}</Badge>
-        <span className="text-base font-semibold text-ink">{formatHeaderPeriod(request.dateFrom, request.dateTo)}</span>
-        <span className="text-base text-subtle">{dayCount} {pluralDays(dayCount)}</span>
+        <h1 className="text-32 font-bold leading-tight text-ink sm:text-40">{request.type ? TEACHER_REQUEST_TYPE[request.type] : 'Заявка'}</h1>
+        <Badge tone={statusTone} size="md">{request.status ? TEACHER_REQUEST_STATUS[request.status] : '—'}</Badge>
+        <span className="text-lg font-semibold text-ink">{formatHeaderPeriod(request.dateFrom, request.dateTo)}</span>
+        <span className="text-lg text-subtle">{dayCount} {pluralDays(dayCount)}</span>
       </header>
     )}
     {!admin && request.status === 'APPROVED' && <div className="flex items-center gap-3 rounded-2xl bg-info-bg px-5 py-4 text-sm leading-relaxed text-link sm:text-base">

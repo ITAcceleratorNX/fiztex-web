@@ -20,6 +20,7 @@ export function Badge({
   dot = false,
   icon,
   appearance = 'pill',
+  size = 'sm',
   children,
 }: {
   tone?: Tone;
@@ -31,6 +32,8 @@ export function Badge({
    * высотой 24, кегль 12/600 (Figma `phyztex` 2460:3420, плашки совпадений «✓ ФИО»).
    */
   appearance?: 'pill' | 'label' | 'chip';
+  /** `md` is used for the larger status badges in request detail headers. */
+  size?: 'sm' | 'md';
   children: ReactNode;
 }) {
   const t = tones[tone];
@@ -38,7 +41,8 @@ export function Badge({
   return (
     <span
       className={cx(
-        'inline-flex items-center px-2.5 py-1 text-xs',
+        'inline-flex items-center',
+        size === 'md' ? 'px-3 py-1.5 text-sm' : 'px-2.5 py-1 text-xs',
         appearance === 'chip' ? 'gap-1' : 'gap-1.5',
         appearance === 'label'
           ? `rounded-md font-semibold ${labelTones[tone]}`

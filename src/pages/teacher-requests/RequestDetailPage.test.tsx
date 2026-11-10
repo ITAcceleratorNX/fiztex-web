@@ -23,7 +23,7 @@ describe('RequestDetailHeader', () => {
     expect(screen.getByText('2 ноября 2026')).toBeInTheDocument();
     expect(screen.getByText('1 день')).toBeInTheDocument();
     expect(screen.getByText('Заявка согласована, даты и причину изменить нельзя. Документы можно добавлять в любой момент.')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 1 })).toHaveClass('text-28', 'sm:text-32');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveClass('text-32', 'sm:text-40');
   });
 
   it('matches the rejected state without the approved notice', () => {
@@ -39,7 +39,7 @@ describe('RequestDetailHeader', () => {
   it('uses the separate admin header layout and shows the cancelled request notice', () => {
     render(<RequestDetailHeader request={request('CANCELLED')} admin onBack={vi.fn()} />);
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Марина Демо' })).toHaveClass('text-28', 'sm:text-32');
+    expect(screen.getByRole('heading', { level: 1, name: 'Марина Демо' })).toHaveClass('text-32', 'sm:text-40');
     expect(screen.getByText('Отменена')).toBeInTheDocument();
     expect(screen.getByText('Освобождение')).toBeInTheDocument();
     expect(screen.getByText('27 октября 2026')).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('RequestDetailHeader', () => {
 });
 
 describe('TeacherRequestActionBar', () => {
-  it('keeps adding a document beside editing and cancellation in the sticky footer', () => {
+  it('keeps the actions left-aligned on the page background below the request card', () => {
     render(<TeacherRequestActionBar
       admin={false}
       actions={['EDIT', 'UPLOAD_DOCUMENT', 'CANCEL']}
@@ -72,8 +72,8 @@ describe('TeacherRequestActionBar', () => {
       onReject={vi.fn()}
     />);
 
-    const footer = screen.getByRole('contentinfo');
-    const buttons = within(footer).getAllByRole('button');
+    const actionGroup = screen.getByRole('group', { name: 'Действия по заявке' });
+    const buttons = within(actionGroup).getAllByRole('button');
     expect(buttons.map((button) => button.textContent)).toEqual([
       'Редактировать',
       'Добавить документ',
@@ -82,5 +82,7 @@ describe('TeacherRequestActionBar', () => {
     expect(buttons[0]).toHaveClass('h-11', 'text-sm', '!text-navy-700', '!ring-navy-700');
     expect(buttons[1]).toHaveClass('h-11', 'text-sm', '!text-navy-700', '!ring-navy-700');
     expect(buttons[2]).toHaveClass('h-11', 'text-sm', '!text-red-600');
+    expect(actionGroup).toHaveClass('flex', 'gap-4');
+    expect(actionGroup).not.toHaveClass('bg-surface', 'border-t');
   });
 });
