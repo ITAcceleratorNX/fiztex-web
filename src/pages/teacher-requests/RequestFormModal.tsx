@@ -83,7 +83,7 @@ export function RequestFormModal({
         }
       }
       if (isEditing) toast.success('Изменения сохранены');
-      else toast.success('Заявка отправлена', 'Администратор рассмотрит её и пришлёт уведомление.');
+      else toast.success('Заявка отправлена. Администратор рассмотрит её и пришлёт уведомление.');
       onSaved(saved);
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : 'Не удалось сохранить заявку';

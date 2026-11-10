@@ -10,7 +10,7 @@ function ToastControls() {
   return (
     <div>
       <button type="button" onClick={() => toast.success('Изменения сохранены')}>Успех</button>
-      <button type="button" onClick={() => toast.success('Заявка отправлена', 'Администратор рассмотрит её и пришлёт уведомление.')}>Успешная заявка</button>
+      <button type="button" onClick={() => toast.success('Заявка отправлена. Администратор рассмотрит её и пришлёт уведомление.')}>Успешная заявка</button>
       <button type="button" onClick={() => toast.info('Подсказка')}>Подсказка</button>
       <button type="button" onClick={() => toast.error('Не удалось сохранить длинное сообщение')}>Ошибка</button>
       <button
@@ -34,17 +34,17 @@ function renderToastControls() {
 describe('ToastProvider announcements', () => {
   afterEach(() => vi.useRealTimers());
 
-  it('renders the teacher request success toast as a detailed confirmation card', () => {
+  it('uses the same compact success toast for teacher requests', () => {
     renderToastControls();
 
     fireEvent.click(screen.getByRole('button', { name: 'Успешная заявка' }));
 
     const status = screen.getByRole('status');
-    expect(status).toHaveTextContent('Заявка отправлена');
-    expect(status).toHaveTextContent('Администратор рассмотрит её и пришлёт уведомление.');
+    expect(status).toHaveTextContent('Заявка отправлена. Администратор рассмотрит её и пришлёт уведомление.');
     const card = status.parentElement;
-    expect(card).toHaveClass('bg-white', 'rounded-[28px]');
-    expect(card?.querySelector('.bg-emerald-50')).toBeInTheDocument();
+    expect(card).toHaveClass('rounded-lg', 'bg-emerald-50');
+    expect(document.querySelector('[data-modal-notifications]')).toHaveClass('w-[min(34rem,calc(100vw-3rem))]');
+    expect(card).not.toHaveClass('rounded-[28px]');
     expect(screen.getByRole('button', { name: 'Закрыть уведомление' })).toHaveClass('size-11');
   });
 
