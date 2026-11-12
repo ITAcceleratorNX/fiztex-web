@@ -6084,6 +6084,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/ksp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getKsp"];
+        put: operations["saveKsp"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/ksp/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["kspContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/ksp/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["exportKsp"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/ksp/generations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["startKspGeneration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/ksp/generations/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getKspGeneration"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/materials": {
         parameters: {
             query?: never;
@@ -12578,6 +12658,126 @@ export interface components {
             problem?: components["schemas"]["KeyProblemView"];
             /** @enum {string} */
             state?: "ON_POST" | "ISSUED";
+        };
+        KspContextView: {
+            /** Format: int32 */
+            absentCount?: number;
+            canEdit?: boolean;
+            className?: string;
+            defaultLanguage?: string;
+            /** Format: int32 */
+            durationMinutes?: number;
+            generationEnabled?: boolean;
+            /** Format: int32 */
+            grade?: number;
+            hints?: components["schemas"]["KspHintView"][];
+            ksp?: components["schemas"]["KspState"];
+            ktp?: components["schemas"]["KspTopicSource"];
+            /** Format: int64 */
+            latestJobId?: number;
+            latestJobStatus?: string;
+            lesson?: components["schemas"]["KspTopicSource"];
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            missingFields?: string[];
+            organizationName?: string;
+            /** Format: int32 */
+            presentCount?: number;
+            subjectName?: string;
+            teacherName?: string;
+            topicMismatch?: boolean;
+        };
+        KspDocument: {
+            /** Format: int32 */
+            absentCount?: number;
+            className?: string;
+            language?: string;
+            learningObjectives?: string;
+            /** Format: date */
+            lessonDate?: string;
+            lessonObjectives?: string;
+            organizationName?: string;
+            /** Format: int32 */
+            presentCount?: number;
+            section?: string;
+            stages: components["schemas"]["KspStage"][];
+            teacherName?: string;
+            topic?: string;
+        };
+        KspGenerateRequest: {
+            hintIds?: string[];
+            language?: string;
+            learningObjectives?: string;
+            section?: string;
+            topic?: string;
+            wishes?: string;
+        };
+        KspHintView: {
+            id?: string;
+            label?: string;
+        };
+        KspJobView: {
+            /** Format: date-time */
+            createdAt?: string;
+            errorCode?: string;
+            errorMessage?: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            /** Format: int64 */
+            id?: number;
+            result?: components["schemas"]["KspDocument"];
+            status?: string;
+            warnings?: components["schemas"]["KspWarning"][];
+        };
+        KspSaveRequest: {
+            document: components["schemas"]["KspDocument"];
+            /** Format: int64 */
+            expectedRevision?: number;
+            /** Format: int64 */
+            generationId?: number;
+            replace?: boolean;
+        };
+        KspStage: {
+            assessment?: string;
+            /** Format: int32 */
+            durationMinutes?: number;
+            resources?: string;
+            stage?: string;
+            studentActions?: string;
+            teacherActions?: string;
+        };
+        KspState: {
+            exists?: boolean;
+            /** Format: int64 */
+            revision?: number;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        KspTopicSource: {
+            learningObjectives?: string;
+            section?: string;
+            topic?: string;
+        };
+        KspView: {
+            canEdit?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            document?: components["schemas"]["KspDocument"];
+            exists?: boolean;
+            /** Format: int64 */
+            revision?: number;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int64 */
+            updatedById?: number;
+            warnings?: components["schemas"]["KspWarning"][];
+        };
+        KspWarning: {
+            code?: string;
+            details?: Record<string, never>;
+            message?: string;
         };
         KtpActivation: {
             /** Format: int64 */
@@ -30266,6 +30466,154 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LessonView"];
+                };
+            };
+        };
+    };
+    getKsp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KspView"];
+                };
+            };
+        };
+    };
+    saveKsp: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KspSaveRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KspView"];
+                };
+            };
+        };
+    };
+    kspContext: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KspContextView"];
+                };
+            };
+        };
+    };
+    exportKsp: {
+        parameters: {
+            query: {
+                format: string;
+            };
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": string;
+                };
+            };
+        };
+    };
+    startKspGeneration: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KspGenerateRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KspJobView"];
+                };
+            };
+        };
+    };
+    getKspGeneration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KspJobView"];
                 };
             };
         };
