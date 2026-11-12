@@ -10,7 +10,12 @@ const useClassFinals = vi.fn();
 const setFinal = vi.fn();
 const publishFinals = vi.fn();
 
+const useAssessmentSheets = vi.fn();
+const saveScores = vi.fn();
+vi.mock('@/context/ToastContext', () => ({ useToast: () => ({ success: vi.fn(), error: vi.fn() }) }));
 vi.mock('@/hooks/queries', () => ({
+  useAssessmentSheets: (...args: unknown[]) => useAssessmentSheets(...args),
+  useSaveAssessmentScores: () => ({ mutateAsync: saveScores, isPending: false }),
   useGradebookContext: (...args: unknown[]) => useGradebookContext(...args),
   useJournal: (...args: unknown[]) => useJournal(...args),
   useClassFinals: (...args: unknown[]) => useClassFinals(...args),
@@ -119,6 +124,7 @@ function renderPage(search = '') {
 describe('JournalPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useAssessmentSheets.mockReturnValue([]);
     useGradebookContext.mockReturnValue({
       data: context(),
       isPending: false,
@@ -186,6 +192,149 @@ describe('JournalPage', () => {
     const firstLessonHeader = screen.getByRole('columnheader', { name: /09\.09\s*Урок 1/ });
     await userEvent.click(within(firstLessonHeader).getByRole('link', { name: /09\.09\s*Урок 1/ }));
     expect(screen.getByText('Открыт лист оценок урока')).toBeInTheDocument();
+  });
+
+  /** СОР/СОЧ — своя колонка за уроком (V142): в клетке балл работы, заголовок ведёт в урок работы. */
+  it('колонка работы СОР стоит за уроком, показывает балл и ведёт в карточку урока', () => {
+    const data = journal();
+    const work = {
+      key: 'ASSESSMENT_WORK:71',
+      type: 'ASSESSMENT_WORK',
+      sourceId: 71,
+      lessonId: 449,
+      date: '2026-09-09',
+      lessonNumber: 1,
+      title: 'СОР 1',
+      assessmentKind: 'SOR',
+      assessmentStatus: 'CONDUCTED',
+      maxScore: 20,
+      active: true,
+      state: 'ACTIVE',
+    } as unknown as (typeof data.columns)[number];
+    data.columns.splice(1, 0, work);
+    data.rows[0] = {
+      ...data.rows[0],
+      cells: [{ columnKey: 'ASSESSMENT_WORK:71', grades: [], assessmentResult: { resultId: 5, workId: 71, score: 0, maxScore: 20 } }],
+    } as unknown as (typeof data.rows)[number];
+    useJournal.mockReturnValue({ data, isPending: false, isError: false, error: null });
+    renderPage();
+
+    const header = screen.getByRole('columnheader', { name: /09\.09\s*СОР 1/ });
+    expect(within(header).getByRole('link')).toHaveAttribute('href', '/lesson-schedule/lessons/449');
+    // Ноль — полноценный балл, и с одним баллом работы журнал уже не «пустой».
+    expect(screen.getByRole('button', { name: 'Оценка 0/20' })).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  /** Ввод баллов работ в журнале (Figma D13–D17, ТЗ Frontend §3). */
+  describe('ввод баллов СОР/СОЧ', () => {
+    function withWork(kind: 'SOR' | 'SOCH', canManage: boolean, saved: number | null = null) {
+      const data = journal();
+      data.columns.splice(1, 0, {
+        key: 'ASSESSMENT_WORK:71', type: 'ASSESSMENT_WORK', sourceId: 71, lessonId: 449, date: '2026-09-09',
+        title: kind === 'SOR' ? 'СОР 1' : 'СОЧ', assessmentKind: kind, assessmentStatus: 'CONDUCTED', maxScore: 20,
+        active: true, state: 'ACTIVE',
+      } as unknown as (typeof data.columns)[number]);
+      useJournal.mockReturnValue({ data, isPending: false, isError: false, error: null });
+      const studentId = data.rows[0].studentProfileId as number;
+      useAssessmentSheets.mockReturnValue([{
+        data: {
+          canManage, canCorrect: canManage,
+          work: { id: 71, kind, maxScore: 20 },
+          students: [{ studentProfileId: studentId, studentName: 'Иванов Арсен', score: saved, version: saved == null ? null : 3, inAudience: true }],
+        },
+      }]);
+      return studentId;
+    }
+
+    it('заголовок колонки показывает максимум работы', () => {
+      withWork('SOR', true);
+      renderPage();
+      expect(screen.getByRole('columnheader', { name: /СОР 1 \/ 20/ })).toBeInTheDocument();
+    });
+
+    it('без права от сервера клетки не редактируются', () => {
+      withWork('SOR', false);
+      renderPage();
+      expect(screen.queryByRole('button', { name: /поставить балл/ })).toBeNull();
+    });
+
+    it('копит правки, показывает «Изменено N» и сохраняет явным действием', async () => {
+      const user = userEvent.setup();
+      const studentId = withWork('SOR', true);
+      saveScores.mockResolvedValue({ saved: [`71:${studentId}`], failed: [] });
+      renderPage();
+
+      await user.click(screen.getByRole('button', { name: /СОР 1: Иванов Арсен: поставить балл/ }));
+      await user.type(screen.getByRole('textbox', { name: /Балл СОР 1/ }), '17');
+      expect(screen.getByText('Изменён 1 балл · ещё не сохранены')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Сохранить баллы' }));
+
+      expect(saveScores).toHaveBeenCalledWith({
+        changes: [expect.objectContaining({ workId: 71, studentProfileId: studentId, score: 17, before: null, kind: 'SOR' })],
+        reason: undefined,
+      });
+    });
+
+    it('больше максимума: ошибка в клетке, сохранить нельзя', async () => {
+      const user = userEvent.setup();
+      withWork('SOR', true);
+      renderPage();
+
+      await user.click(screen.getByRole('button', { name: /поставить балл/ }));
+      await user.type(screen.getByRole('textbox', { name: /Балл СОР 1/ }), '23');
+      expect(screen.getByRole('alert')).toHaveTextContent('Не больше 20');
+      expect(screen.getByText('Исправьте ошибку, чтобы сохранить')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Сохранить баллы' })).toBeDisabled();
+    });
+
+    it('«Отменить» сбрасывает несохранённые правки', async () => {
+      const user = userEvent.setup();
+      withWork('SOR', true);
+      renderPage();
+      await user.click(screen.getByRole('button', { name: /поставить балл/ }));
+      await user.type(screen.getByRole('textbox', { name: /Балл СОР 1/ }), '5');
+      await user.click(screen.getByRole('button', { name: 'Отменить' }));
+      expect(screen.queryByRole('button', { name: 'Сохранить баллы' })).toBeNull();
+      expect(saveScores).not.toHaveBeenCalled();
+    });
+
+    it('исправление СОЧ просит причину и отправляет её вместе с баллами', async () => {
+      const user = userEvent.setup();
+      withWork('SOCH', true, 15);
+      saveScores.mockResolvedValue({ saved: ['x'], failed: [] });
+      renderPage();
+
+      await user.click(screen.getByRole('button', { name: /сейчас 15/ }));
+      const input = screen.getByRole('textbox', { name: /Балл СОЧ/ });
+      await user.clear(input);
+      await user.type(input, '11');
+      expect(screen.getByText('Было 15')).toBeInTheDocument();
+      expect(screen.getByText('Изменён 1 балл · исправление попадёт в историю')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Сохранить баллы' }));
+
+      const dialog = screen.getByRole('dialog');
+      const confirm = within(dialog).getByRole('button', { name: 'Сохранить баллы' });
+      expect(confirm).toBeDisabled();
+      await user.type(within(dialog).getByRole('textbox'), 'Пересчитал работу');
+      await user.click(confirm);
+      expect(saveScores).toHaveBeenCalledWith({
+        changes: [expect.objectContaining({ kind: 'SOCH', score: 11, before: 15, version: 3 })],
+        reason: 'Пересчитал работу',
+      });
+    });
+
+    it('после частичного отказа не рисует успех, а называет ошибку и оставляет упавшую правку', async () => {
+      const user = userEvent.setup();
+      const studentId = withWork('SOR', true);
+      saveScores.mockResolvedValue({ saved: [], failed: [{ key: `71:${studentId}`, message: 'Балл уже изменили' }] });
+      renderPage();
+      await user.click(screen.getByRole('button', { name: /поставить балл/ }));
+      await user.type(screen.getByRole('textbox', { name: /Балл СОР 1/ }), '9');
+      await user.click(screen.getByRole('button', { name: 'Сохранить баллы' }));
+      expect(await screen.findByRole('alert')).toHaveTextContent('Сохранено 0 из 1. Балл уже изменили');
+      expect(screen.getByRole('textbox', { name: /Балл СОР 1/ })).toHaveValue('9');
+    });
   });
 
   it('показывает отдельное пустое состояние только когда в журнале нет учеников', () => {

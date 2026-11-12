@@ -11,12 +11,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
+  useAssessmentSheets,
   useClassFinals,
   useGradebookContext,
   useJournal,
   usePublishClassFinals,
+  useSaveAssessmentScores,
   useSetFinalGrade,
 } from '@/hooks/queries';
+import { StickyActionBar } from '@/components/ui/StickyActionBar';
+import { useToast } from '@/context/ToastContext';
+import { hasMeaningfulReason, REASON_MAX_LENGTH } from '@/lib/assessmentCorrectionModel';
+import {
+  barMessage,
+  collectChanges,
+  draftKey,
+  needsReason,
+  scoreDraftProblem,
+  type WorkSheet,
+} from '@/lib/journalScoresModel';
 import { ApiError } from '@/lib/api';
 import { formatWeekdayDayMonth, pluralRu } from '@/lib/format';
 import {
@@ -29,16 +42,18 @@ import {
 import {
   currentMonthKey,
   finalsByStudent,
+  hasAnyMarks,
+  isAssessmentColumn,
   monthOptionsOf,
   shortDate as formatShortDate,
 } from '@/lib/journalModel';
 import { finalScaleCaption, missingResultsSummary, weightsCaption } from '@/lib/gradingModel';
 import { JournalFilters, type JournalWindow } from './JournalFilters';
-import { JournalTable } from './JournalTable';
+import { JournalTable, type ScoreEditor } from './JournalTable';
 import { PeriodBreakdownModal } from './PeriodBreakdownModal';
 import { YearFinalsTab } from './YearFinalsTab';
-import { FinalGradeCorrectionModal, FinalGradeHistoryModal } from './FinalGradeCorrectionModal';
-import { QuarterFinalsTable } from './QuarterFinalsTable';
+import { FinalGradeCorrectionModal, FinalGradeHistoryModal, RepublishFinalModal } from './FinalGradeCorrectionModal';
+import { FINAL_VALUES, QuarterFinalsTable } from './QuarterFinalsTable';
 
 type JournalTab = 'JOURNAL' | 'FINALS' | 'YEAR_FINALS';
 
@@ -213,6 +228,93 @@ function JournalTab({
   finals: ReturnType<typeof useClassFinals>;
 }) {
   const [breakdown, setBreakdown] = useState<{ studentProfileId: number; name: string } | null>(null);
+  const toast = useToast();
+  const saveScores = useSaveAssessmentScores();
+  /** Несохранённые баллы работ: ключ «работа:ученик» → текст поля. */
+  const [drafts, setDrafts] = useState<ReadonlyMap<string, string>>(new Map());
+  const [reasonOpen, setReasonOpen] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Листы результатов работ, которые есть в журнале: из них берём право править и версии.
+  const workIds = (journal.data?.columns ?? [])
+    .filter((column) => isAssessmentColumn(column) && column.assessmentStatus !== 'CANCELLED' && column.sourceId != null)
+    .map((column) => column.sourceId as number);
+  const sheetQueries = useAssessmentSheets(workIds);
+  const sheets = new Map<number, WorkSheet>();
+  workIds.forEach((workId, index) => {
+    const data = sheetQueries[index]?.data;
+    if (!data) return;
+    sheets.set(workId, {
+      workId,
+      kind: data.work?.kind ?? 'SOR',
+      maxScore: data.work?.maxScore ?? 0,
+      canManage: Boolean(data.canManage),
+      students: new Map(
+        (data.students ?? []).map((row) => [
+          row.studentProfileId as number,
+          { score: row.score ?? null, version: row.version ?? null, inAudience: row.inAudience !== false },
+        ]),
+      ),
+    });
+  });
+  const { changes, invalid } = collectChanges(drafts, sheets);
+
+  function setDraft(key: string, text: string | null) {
+    setDrafts((current) => {
+      const next = new Map(current);
+      if (text == null) next.delete(key);
+      else next.set(key, text);
+      return next;
+    });
+  }
+
+  const editor: ScoreEditor | undefined = sheets.size === 0 ? undefined : {
+    canEdit: (column) => sheets.get(column.sourceId ?? -1)?.canManage === true,
+    draft: (column, studentId) => drafts.get(draftKey(column.sourceId as number, studentId)),
+    problem: (column, studentId) => {
+      const sheet = sheets.get(column.sourceId as number);
+      const text = drafts.get(draftKey(column.sourceId as number, studentId));
+      return sheet && text !== undefined ? scoreDraftProblem(text, sheet.maxScore) : null;
+    },
+    saved: (column, studentId) => sheets.get(column.sourceId as number)?.students.get(studentId)?.score ?? null,
+    change: (column, studentId, text) => setDraft(draftKey(column.sourceId as number, studentId), text),
+    // Пустое или совпавшее с сохранённым поле — не правка: поле закрывается без следа.
+    blur: (column, studentId) => {
+      const key = draftKey(column.sourceId as number, studentId);
+      const text = (drafts.get(key) ?? '').trim();
+      const saved = sheets.get(column.sourceId as number)?.students.get(studentId)?.score ?? null;
+      if (text === '' || (saved != null && text === String(saved))) setDraft(key, null);
+    },
+  };
+
+  async function save(reason?: string) {
+    setSaveError(null);
+    setReasonOpen(false);
+    try {
+      const result = await saveScores.mutateAsync({ changes, reason });
+      // Сохранённые уходят из черновиков; упавшие остаются, чтобы их можно было поправить и повторить.
+      setDrafts((current) => {
+        const next = new Map(current);
+        result.saved.forEach((key) => next.delete(key));
+        return next;
+      });
+      if (result.failed.length === 0) {
+        toast.success(result.saved.length === 1 ? 'Балл сохранён' : 'Баллы сохранены');
+      } else {
+        setSaveError(
+          `Сохранено ${result.saved.length} из ${result.saved.length + result.failed.length}. ${result.failed[0].message}`,
+        );
+      }
+    } catch {
+      setSaveError('Не удалось сохранить баллы');
+    }
+  }
+
+  function requestSave() {
+    if (changes.length === 0 || invalid.length > 0) return;
+    if (needsReason(changes)) setReasonOpen(true);
+    else void save();
+  }
 
   if (query == null || journal.isPending) return <TableSkeleton />;
 
@@ -261,7 +363,7 @@ function JournalTab({
 
   return (
     <div className="flex flex-col gap-3">
-      {rows.every((row) => (row.cells ?? []).every((cell) => (cell.grades ?? []).length === 0)) && (
+      {!hasAnyMarks(rows) && (
         <p role="status" className="rounded-lg bg-info-bg p-4 text-13 text-info-fg">
           Оценок пока нет. Откройте урок по дате в заголовке таблицы, чтобы выставить первые оценки.
         </p>
@@ -271,11 +373,42 @@ function JournalTab({
           journal={data!}
           finals={finalsByStudent(finals.data?.rows ?? [])}
           today={todayIso()}
+          editor={editor}
           onOpenBreakdown={(row) =>
             setBreakdown({ studentProfileId: row.studentProfileId as number, name: row.studentName ?? '' })
           }
         />
       </div>
+      {(changes.length > 0 || invalid.length > 0 || saveError) && (
+        <StickyActionBar
+          message={
+            saveError ? (
+              <span role="alert" className="text-danger-fg">{saveError}</span>
+            ) : (
+              <span className={invalid.length > 0 ? 'text-danger-fg' : undefined}>{barMessage(changes, invalid.length)}</span>
+            )
+          }
+        >
+          <Button
+            variant="ghost"
+            disabled={saveScores.isPending}
+            onClick={() => {
+              setDrafts(new Map());
+              setSaveError(null);
+            }}
+          >
+            Отменить
+          </Button>
+          <Button
+            loading={saveScores.isPending}
+            disabled={changes.length === 0 || invalid.length > 0}
+            onClick={requestSave}
+          >
+            Сохранить баллы
+          </Button>
+        </StickyActionBar>
+      )}
+      {reasonOpen && <ScoreReasonModal busy={saveScores.isPending} onClose={() => setReasonOpen(false)} onConfirm={(reason) => void save(reason)} />}
       <Legend policyCaption={data?.gradingPolicy ? weightsCaption(data.gradingPolicy.components) : null} />
       <PeriodBreakdownModal
         query={
@@ -310,6 +443,7 @@ function FinalsTab({
   const [reasonRow, setReasonRow] = useState<ClassFinalGradeRow | null>(null);
   const [correctionRow, setCorrectionRow] = useState<ClassFinalGradeRow | null>(null);
   const [historyRow, setHistoryRow] = useState<ClassFinalGradeRow | null>(null);
+  const [republishRow, setRepublishRow] = useState<ClassFinalGradeRow | null>(null);
   const [reason, setReason] = useState('');
   const [breakdown, setBreakdown] = useState<{ studentProfileId: number; name: string } | null>(null);
 
@@ -428,6 +562,7 @@ function FinalsTab({
           onPick={(row, value) => void pick(row, value)}
           onCorrect={setCorrectionRow}
           onOpenHistory={setHistoryRow}
+          onRepublish={setRepublishRow}
           onPickResult={(row, kind) => {
             if (kind === 'NOT_STUDIED') { setReasonRow(row); setReason(''); }
             else void pick(row, null, kind);
@@ -441,6 +576,10 @@ function FinalsTab({
       {correctionRow?.finalGrade && <FinalGradeCorrectionModal grade={correctionRow.finalGrade}
         studentName={correctionRow.studentName ?? ''} allowedKinds={data.allowedResultKinds ?? ['NUMERIC']}
         onClose={() => setCorrectionRow(null)} />}
+      {republishRow?.finalGrade && republishRow.recommendedValue != null && <RepublishFinalModal grade={republishRow.finalGrade}
+        recommended={republishRow.recommendedValue} studentName={republishRow.studentName ?? ''}
+        options={data.allowedValues && data.allowedValues.length > 0 ? data.allowedValues : [...FINAL_VALUES]}
+        onClose={() => setRepublishRow(null)} />}
       {historyRow?.finalGrade?.id != null && <FinalGradeHistoryModal id={historyRow.finalGrade.id}
         studentName={historyRow.studentName ?? ''} onClose={() => setHistoryRow(null)} />}
       <Modal open={reasonRow != null} onClose={() => setReasonRow(null)} title="Предмет не изучался">
@@ -624,4 +763,46 @@ function todayIso(): string {
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   return `${now.getFullYear()}-${month}-${day}`;
+}
+
+/**
+ * Причина исправления выставленного СОЧ (ТЗ «Исправление результатов СОЧ»): одна на все
+ * исправления СОЧ в пачке. Пустая и бессодержательная не принимаются — сервер проверяет так же.
+ */
+function ScoreReasonModal({
+  busy,
+  onClose,
+  onConfirm,
+}: {
+  busy: boolean;
+  onClose: () => void;
+  onConfirm: (reason: string) => void;
+}) {
+  const [reason, setReason] = useState('');
+  return (
+    <Modal
+      open
+      size="sm"
+      onClose={() => {
+        if (!busy) onClose();
+      }}
+      title="Причина исправления СОЧ"
+      footer={
+        <>
+          <Button variant="secondary" disabled={busy} onClick={onClose}>Отмена</Button>
+          <Button loading={busy} disabled={!hasMeaningfulReason(reason)} onClick={() => onConfirm(reason.trim())}>
+            Сохранить баллы
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-3 text-sm text-slate-600">
+        <p>Прежний балл, причина, автор и время сохранятся в истории. Опубликованный итог четверти не изменится.</p>
+        <label className="text-13 font-semibold text-slate-900">
+          Причина
+          <TextArea value={reason} maxLength={REASON_MAX_LENGTH} onChange={(event) => setReason(event.target.value)} />
+        </label>
+      </div>
+    </Modal>
+  );
 }

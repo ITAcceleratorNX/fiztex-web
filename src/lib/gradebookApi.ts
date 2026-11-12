@@ -109,6 +109,14 @@ export const finalGradesApi = {
     });
   },
 
+  /**
+   * «Подтвердить и опубликовать повторно»: опубликованный итог после правки баллов. Только
+   * когда рекомендация разошлась с итогом; прежнее и новое значение пишутся в историю.
+   */
+  republish(finalGradeId: number, body: { value: number; expectedVersion: number }): Promise<FinalGrade> {
+    return request<FinalGrade>(`/final-grades/${finalGradeId}/republish`, { method: 'POST', body });
+  },
+
   changeValue(finalGradeId: number, value: number | null, resultKind?: FinalGrade['resultKind'], resultReason?: string): Promise<FinalGrade> {
     return request<FinalGrade>(`/final-grades/${finalGradeId}`, {
       method: 'PATCH',

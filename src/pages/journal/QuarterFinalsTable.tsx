@@ -8,7 +8,9 @@ import { formatAverage } from '@/lib/journalModel';
 import {
   COMPONENT_SHORT,
   formatPercent,
+  isPreliminary,
   positiveFinalValues,
+  PRELIMINARY_LABEL,
   resultMissingCaption,
   resultStatusHint,
 } from '@/lib/gradingModel';
@@ -45,6 +47,7 @@ export function QuarterFinalsTable({
   onPickResult,
   onCorrect,
   onOpenHistory,
+  onRepublish,
   scope = 'PERIOD',
 }: {
   finals: ClassFinalGrades;
@@ -57,6 +60,8 @@ export function QuarterFinalsTable({
   onOpenBreakdown?: (row: ClassFinalGradeRow) => void;
   onCorrect?: (row: ClassFinalGradeRow) => void;
   onOpenHistory?: (row: ClassFinalGradeRow) => void;
+  /** «Подтвердить и опубликовать повторно» — когда после правки баллов рекомендация разошлась с итогом. */
+  onRepublish?: (row: ClassFinalGradeRow) => void;
 }) {
   const canManage = Boolean(finals.canManage);
   const rows = finals.rows ?? [];
@@ -124,8 +129,16 @@ export function QuarterFinalsTable({
                       >
                         {row.result?.percent != null ? formatPercent(row.result.percent) : '—'}
                       </button>
-                      {resultMissingCaption(row.result) && (
+                      {isPreliminary(row.result) && (
+                        <span className="rounded bg-info-bg px-1.5 py-0.5 text-10 font-bold uppercase text-info-fg">
+                          {PRELIMINARY_LABEL}
+                        </span>
+                      )}
+                      {resultMissingCaption(row.result) && !isPreliminary(row.result) && (
                         <span className="text-11 font-normal text-muted">{resultMissingCaption(row.result)}</span>
+                      )}
+                      {isPreliminary(row.result) && (
+                        <span className="text-11 font-normal text-muted">без СОЧ</span>
                       )}
                     </span>
                   ) : (
@@ -136,8 +149,18 @@ export function QuarterFinalsTable({
                 <td className="px-6 py-3">
                   <span className="flex justify-center">
                     {row.recommendedValue != null ? (
-                      <span className="flex size-[26px] items-center justify-center rounded-lg bg-slate-100 text-13 font-bold text-slate-600">
-                        {row.recommendedValue}
+                      <span className="flex flex-col items-center gap-0.5">
+                        <span className="flex size-[26px] items-center justify-center rounded-lg bg-slate-100 text-13 font-bold text-slate-600">
+                          {row.recommendedValue}
+                        </span>
+                        {isPreliminary(row.result) && (
+                          <span
+                            title="Расчёт без СОЧ: это не итог четверти и ученику он не виден"
+                            className="text-10 font-semibold uppercase text-muted"
+                          >
+                            {PRELIMINARY_LABEL}
+                          </span>
+                        )}
                       </span>
                     ) : (
                       <span
@@ -194,6 +217,16 @@ export function QuarterFinalsTable({
                       </span>
                     )}
                   </span>
+                  {needsRepublish(row, canManage) && (
+                    <span className="mt-2 flex flex-col items-center gap-1">
+                      <span className="text-11 text-brand-600">
+                        Требуется повторное подтверждение: рекомендация теперь {row.recommendedValue}, ученик видит {finalResultLabel(row.finalGrade)}
+                      </span>
+                      <Button variant="secondary" size="sm" disabled={busyStudentId === studentId} onClick={() => onRepublish?.(row)}>
+                        Подтвердить и опубликовать
+                      </Button>
+                    </span>
+                  )}
                   {row.finalGrade?.id && <span className="mt-2 flex justify-center gap-2">
                     <Button variant="ghost" size="sm" onClick={() => onOpenHistory?.(row)}>История итога</Button>
                     {finals.canCorrectTechnicalErrors && row.finalGrade.status === 'PUBLISHED' && <Button variant="ghost" size="sm" onClick={() => onCorrect?.(row)}>Исправить техническую ошибку</Button>}
@@ -254,6 +287,24 @@ function FinalValuePicker({
         );
       })}
     </span>
+  );
+}
+
+/**
+ * Опубликованный числовой итог, у которого рекомендация после правки баллов стала другой.
+ * Сам итог ученик продолжает видеть прежним, пока учитель не подтвердит новый (ТЗ №9).
+ * Право и «изменилась ли рекомендация» — ответ сервера; здесь только их сочетание.
+ */
+export function needsRepublish(row: ClassFinalGradeRow, canManage: boolean): boolean {
+  const grade = row.finalGrade;
+  return (
+    canManage &&
+    row.currentMember !== false &&
+    !row.yearLocked &&
+    row.recommendationChanged === true &&
+    row.recommendedValue != null &&
+    grade?.status === 'PUBLISHED' &&
+    (grade.resultKind == null || grade.resultKind === 'NUMERIC')
   );
 }
 

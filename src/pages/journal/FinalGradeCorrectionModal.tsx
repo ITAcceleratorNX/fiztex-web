@@ -4,7 +4,7 @@ import { Field, TextArea, TextInput } from '@/components/ui/Field';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { LoadingBlock, ErrorBlock } from '@/components/ui/StateBlock';
-import { useCorrectFinalGrade, useFinalGradeHistory } from '@/hooks/queries';
+import { useCorrectFinalGrade, useFinalGradeHistory, useRepublishFinalGrade } from '@/hooks/queries';
 import type { FinalGrade } from '@/lib/gradebookApi';
 import { FINAL_RESULT_LABELS, finalResultLabel } from '@/lib/finalGradeResult';
 import { ApiError } from '@/lib/api';
@@ -50,11 +50,46 @@ export function FinalGradeHistoryModal({ id, studentName, onClose }: { id: numbe
         const before = event.before as { value?: number; resultKind?: NonNullable<FinalGrade['resultKind']> } | undefined;
         const after = event.after as { value?: number; resultKind?: NonNullable<FinalGrade['resultKind']>; resultReason?: string; correctionReference?: string } | undefined;
         const label = (result: typeof before) => result ? finalResultLabel(result) : '—';
-        return <li key={event.id} className="border-b border-line pb-3 text-13"><p className="font-semibold">{event.action === 'CREATE' ? 'Создание' : event.action === 'PUBLISH' ? 'Публикация' : 'Изменение'}: {label(before)} → {label(after)}</p>
+        return <li key={event.id} className="border-b border-line pb-3 text-13"><p className="font-semibold">{event.action === 'CREATE' ? 'Создание' : event.action === 'PUBLISH' ? 'Публикация' : event.action === 'REPUBLISH' ? 'Повторная публикация' : 'Изменение'}: {label(before)} → {label(after)}</p>
           {after?.resultReason && <p>{after.resultReason}</p>}{after?.correctionReference && <p>Документы: {after.correctionReference}</p>}
           <p className="text-muted">{event.actorName ?? 'Сотрудник школы'} · {event.createdAt ? new Date(event.createdAt).toLocaleString('ru-RU') : ''}</p>
         </li>;
       })}
     </ol>}
+  </Modal>;
+}
+
+/**
+ * «Подтвердить и опубликовать повторно» (ТЗ №9). Учитель видит, что опубликовано и что
+ * рекомендует расчёт после правки баллов, выбирает значение — по умолчанию рекомендованное —
+ * и подтверждает отдельным действием. До этого ученик и родитель видят прежнее значение.
+ */
+export function RepublishFinalModal({ grade, recommended, studentName, options, onClose }: {
+  grade: FinalGrade; recommended: number; studentName: string; options: number[]; onClose: () => void;
+}) {
+  const republish = useRepublishFinalGrade();
+  const [value, setValue] = useState(recommended);
+  const [error, setError] = useState<string | null>(null);
+  async function confirm() {
+    setError(null);
+    if (grade.id == null || grade.version == null) { setError('Обновите журнал перед подтверждением'); return; }
+    try {
+      await republish.mutateAsync({ id: grade.id, value, expectedVersion: grade.version });
+      onClose();
+    } catch (failure) {
+      setError(failure instanceof ApiError ? failure.message : 'Не удалось опубликовать итог повторно');
+    }
+  }
+  return <Modal open onClose={() => { if (!republish.isPending) onClose(); }} title="Подтвердить и опубликовать повторно" subtitle={studentName}
+    footer={<div className="flex justify-end gap-3"><Button variant="secondary" disabled={republish.isPending} onClick={onClose}>Отмена</Button>
+      <Button loading={republish.isPending} onClick={() => void confirm()}>Подтвердить и опубликовать</Button></div>}>
+    <div className="flex flex-col gap-4">
+      <p className="text-13 text-muted">После правки баллов расчёт изменился. Сейчас ученик и родитель видят {finalResultLabel(grade)}. Новое значение они увидят сразу после подтверждения; прежнее и новое значение, автор и время сохранятся в истории.</p>
+      <p className="text-13">Рекомендация по расчёту: <span className="font-bold">{recommended}</span></p>
+      <Field label="Итоговая оценка"><Select value={String(value)} disabled={republish.isPending} onChange={event => setValue(Number(event.target.value))}>
+        {options.map(item => <option key={item} value={item}>{item}</option>)}
+      </Select></Field>
+      {error && <p role="alert" className="rounded-lg bg-danger-bg p-3 text-13 text-danger-fg">{error}</p>}
+    </div>
   </Modal>;
 }

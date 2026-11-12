@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AssessmentBadge } from '@/components/ui/AssessmentBadge';
 import { Button } from '@/components/ui/Button';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -223,7 +224,17 @@ function LessonCell({ lesson, onOpen }: { lesson: RoleScheduleLesson; onOpen: ()
         <span className="shrink-0 text-10 text-subtle">{hhmm(lesson.startTime)}</span>
       </span>
       {target && <span className="truncate text-11 text-muted">{target}</span>}
-      <span className="truncate text-10 text-subtle">{footnote}</span>
+      <span className="flex items-center justify-between gap-1">
+        <span className="truncate text-10 text-subtle">{footnote}</span>
+        {(lesson.assessmentWorks ?? []).map((work) => (
+          <AssessmentBadge
+            key={work.workId}
+            title={work.title ?? (work.kind === 'SOCH' ? 'СОЧ' : 'СОР')}
+            conducted={work.status === 'CONDUCTED'}
+            needsReschedule={work.needsReschedule}
+          />
+        ))}
+      </span>
     </button>
   );
 }
