@@ -82,7 +82,11 @@ export function currentMonthKey(options: MonthOption[], today = new Date()): str
 export function columnCaption(column: GradebookColumn): { date: string; event: string } {
   const date = column.date ? shortDate(column.date) : '';
   if (column.type === 'HOMEWORK') return { date, event: 'ДЗ' };
-  if (isAssessmentColumn(column)) return { date, event: assessmentTitle(column) };
+  if (isAssessmentColumn(column)) {
+    // «СОР 1 / 20»: максимум работы виден в заголовке, а в клетках стоит только балл.
+    const title = assessmentTitle(column);
+    return { date, event: column.maxScore != null ? `${title} / ${column.maxScore}` : title };
+  }
   if (columnState(column) === 'LESSON_CANCELLED') return { date, event: 'Отмена' };
   return { date, event: column.lessonNumber != null ? `Урок ${column.lessonNumber}` : 'Урок' };
 }

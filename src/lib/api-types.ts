@@ -3618,6 +3618,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assessment-works/{workId}/results/{studentProfileId}/correction": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["correctResult"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/attendance/my-marks": {
         parameters: {
             query?: never;
@@ -4300,6 +4316,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["publish_4"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/final-grades/{finalGradeId}/republish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["republish"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9855,6 +9887,7 @@ export interface components {
             sorUsed?: number;
         };
         AssessmentResultsView: {
+            canCorrect?: boolean;
             canManage?: boolean;
             students?: components["schemas"]["StudentResultView"][];
             work?: components["schemas"]["AssessmentWorkView"];
@@ -10817,6 +10850,13 @@ export interface components {
             includeDrafts?: boolean;
             title?: string;
         };
+        CorrectAssessmentResultRequest: {
+            /** Format: int64 */
+            expectedVersion?: number;
+            reason: string;
+            /** Format: int32 */
+            score: number;
+        };
         CorrectFinalGradeRequest: {
             documentReference?: string;
             /** Format: int64 */
@@ -11504,7 +11544,7 @@ export interface components {
         };
         FinalGradeHistoryView: {
             /** @enum {string} */
-            action?: "CREATE" | "UPDATE" | "PUBLISH";
+            action?: "CREATE" | "UPDATE" | "PUBLISH" | "REPUBLISH";
             /** Format: int64 */
             actorId?: number;
             actorName?: string;
@@ -16641,6 +16681,12 @@ export interface components {
             /** @enum {string} */
             status?: "DRAFT" | "ACTIVE" | "ARCHIVED";
         };
+        RepublishFinalGradeRequest: {
+            /** Format: int64 */
+            expectedVersion: number;
+            /** Format: int32 */
+            value: number;
+        };
         RequestClassView: {
             active?: boolean;
             /** Format: int64 */
@@ -16729,6 +16775,7 @@ export interface components {
             at?: string;
             /** Format: int64 */
             id?: number;
+            reason?: string;
             /** Format: int32 */
             scoreAfter?: number;
             /** Format: int32 */
@@ -26114,6 +26161,33 @@ export interface operations {
             };
         };
     };
+    correctResult: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CorrectAssessmentResultRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentResultView"];
+                };
+            };
+        };
+    };
     myMarks: {
         parameters: {
             query: {
@@ -27187,6 +27261,32 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinalGradeView"];
+                };
+            };
+        };
+    };
+    republish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                finalGradeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RepublishFinalGradeRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {

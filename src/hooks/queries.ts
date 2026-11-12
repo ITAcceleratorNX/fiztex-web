@@ -47,6 +47,7 @@ import { gradeCorrectionsApi, type CorrectionGradeValue } from '@/lib/gradeCorre
 import { breakdownApi, gradingPolicyApi, type GradingPolicyContent } from '@/lib/gradingApi';
 import { schoolYearLifecycleApi } from '@/lib/schoolYearLifecycleApi';
 import { profileApi } from '@/lib/profileApi';
+import { assessmentWorksApi } from '@/lib/assessmentWorksApi';
 import { scheduleSettingsApi } from '@/lib/scheduleSettingsApi';
 import type { CalendarEvent } from '@/lib/scheduleSettingsTypes';
 import {
@@ -114,6 +115,8 @@ export const keys = {
   myClassYearDecisions: (classId: number | null) => ['my-class', 'classes', classId, 'year-decisions'] as const,
   classYearFinals: (query: import('@/lib/gradebookApi').YearFinalsQuery | null) => ['gradebook', 'year-finals', query] as const,
   finalGradeHistory: (id: number | null) => ['gradebook', 'final-history', id] as const,
+  assessmentResults: (workId: number | null) => ['assessment-works', workId, 'results'] as const,
+  assessmentHistory: (workId: number | null) => ['assessment-works', workId, 'history'] as const,
   yearReadiness: (id: string | null) => ['academic-years', id, 'completion-readiness'] as const,
   yearLifecycleHistory: (id: string | null) => ['academic-years', id, 'lifecycle-history'] as const,
   scheduleWeekCalendar: (yearId: number | null, classId: number | null, from: string, to: string) =>
@@ -3674,6 +3677,195 @@ export function useFinalGradeHistory(id: number | null) {
   return useQuery({ queryKey: keys.finalGradeHistory(id), enabled: id != null,
     queryFn: ({ signal }) => finalGradesApi.history(id!, signal) });
 }
+export function useRepublishFinalGrade() {
+  return useFinalGradeCommand((vars: { id: number; value: number; expectedVersion: number }) =>
+    finalGradesApi.republish(vars.id, { value: vars.value, expectedVersion: vars.expectedVersion }));
+}
+
+export function useAssessmentResults(workId: number | null) {
+  return useQuery({
+    queryKey: keys.assessmentResults(workId),
+    enabled: workId != null,
+    queryFn: ({ signal }) => assessmentWorksApi.results(workId!, signal),
+    retry: (count, error) => !(error instanceof ApiError && [403, 404].includes(error.status)) && count < 1,
+  });
+}
+
+export function useAssessmentLimits(
+  query: { classId: number; subjectId: number; academicPeriodId: number; subgroupId?: number | null } | null,
+) {
+  return useQuery({
+    queryKey: ['assessment-works', 'limits', query] as const,
+    enabled: query != null,
+    staleTime: 0,
+    queryFn: ({ signal }) => assessmentWorksApi.limits(query!, signal),
+  });
+}
+
+/**
+ * Любая команда над работой меняет сразу несколько экранов: карточку урока, расписание
+ * (плашка «СОР 1»), журнал (колонка) и итоги. Сбрасываем их деревья целиком — работа живёт
+ * на всех четырёх, и вторая копия состояния расходилась бы с сервером.
+ */
+function useAssessmentWorkCommand<TVars>(mutationFn: (vars: TVars) => Promise<unknown>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['assessment-works'] });
+      void qc.invalidateQueries({ queryKey: ['lessons'] });
+      void qc.invalidateQueries({ queryKey: ['schedule'] });
+      void qc.invalidateQueries({ queryKey: ['gradebook'] });
+    },
+  });
+}
+
+/**
+ * Уроки, на которые можно перенести работу: тот же класс, подгруппа, предмет и четверть.
+ * Список — урока `classId` в окне дат вокруг работы; отбор по связке делается здесь, а
+ * окончательно допустимость проверяет сервер (`ASSESSMENT_TARGET_LESSON_INVALID`).
+ */
+export function useRescheduleCandidates(
+  lesson: { id?: number; classId?: number; date?: string } | null,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: ['assessment-works', 'candidates', lesson?.id ?? 0] as const,
+    enabled: enabled && lesson?.classId != null && lesson?.date != null,
+    staleTime: 0,
+    queryFn: ({ signal }) => {
+      const base = new Date(`${lesson!.date}T00:00:00`);
+      const iso = (shift: number) => {
+        const d = new Date(base);
+        d.setDate(d.getDate() + shift);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      };
+      return lessonsApi.list({ classId: lesson!.classId, dateFrom: iso(-60), dateTo: iso(120), size: 200 }, signal);
+    },
+  });
+}
+
+export function useCreateAssessmentWork() {
+  return useAssessmentWorkCommand((vars: { lessonId: number; kind: 'SOR' | 'SOCH'; maxScore: number; reminderDaysBefore: number }) =>
+    assessmentWorksApi.create(vars.lessonId, {
+      kind: vars.kind, maxScore: vars.maxScore, reminderDaysBefore: vars.reminderDaysBefore,
+    }));
+}
+
+export function useUpdateAssessmentWork() {
+  return useAssessmentWorkCommand((vars: { workId: number; maxScore?: number; reminderDaysBefore?: number; expectedVersion?: number }) =>
+    assessmentWorksApi.update(vars.workId, {
+      maxScore: vars.maxScore, reminderDaysBefore: vars.reminderDaysBefore, expectedVersion: vars.expectedVersion,
+    }));
+}
+
+export function useConductAssessmentWork() {
+  return useAssessmentWorkCommand((workId: number) => assessmentWorksApi.conduct(workId));
+}
+
+export function useCancelAssessmentWork() {
+  return useAssessmentWorkCommand((vars: { workId: number; reason?: string; expectedVersion?: number }) =>
+    assessmentWorksApi.cancel(vars.workId, { reason: vars.reason, expectedVersion: vars.expectedVersion }));
+}
+
+export function useRescheduleAssessmentWork() {
+  return useAssessmentWorkCommand((vars: { workId: number; lessonId: number; expectedVersion?: number }) =>
+    assessmentWorksApi.reschedule(vars.workId, { lessonId: vars.lessonId, expectedVersion: vars.expectedVersion }));
+}
+
+/**
+ * Листы результатов работ, видимых в журнале: из них журнал берёт право править (`canManage`),
+ * версии строк и состав. Сам журнал балл правки не знает — зеркало; поэтому спрашиваем лист.
+ */
+export function useAssessmentSheets(workIds: number[]) {
+  return useQueries({
+    queries: workIds.map((workId) => ({
+      queryKey: keys.assessmentResults(workId),
+      queryFn: ({ signal }: { signal: AbortSignal }) => assessmentWorksApi.results(workId, signal),
+      retry: (count: number, error: unknown) =>
+        !(error instanceof ApiError && [403, 404].includes(error.status)) && count < 1,
+    })),
+  });
+}
+
+export type SaveScoresResult = {
+  saved: string[];
+  failed: Array<{ key: string; message: string }>;
+};
+
+/**
+ * «Сохранить баллы»: правки уходят по одной и последовательно — у каждой своя версия строки и
+ * свой отказ, а `Promise.all` оставил бы итог пачки неизвестным. Успешные не откатываются;
+ * неуспешные возвращаются с текстом, чтобы журнал не показал ложного успеха. Исправление
+ * выставленного СОЧ идёт командой с причиной, остальное — обычным сохранением.
+ */
+export function useSaveAssessmentScores() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: {
+      changes: import('@/lib/journalScoresModel').ScoreChange[];
+      reason?: string;
+    }): Promise<SaveScoresResult> => {
+      const result: SaveScoresResult = { saved: [], failed: [] };
+      for (const change of vars.changes) {
+        try {
+          if (change.kind === 'SOCH' && change.before != null) {
+            await assessmentWorksApi.correct(change.workId, change.studentProfileId, {
+              score: change.score,
+              reason: vars.reason ?? '',
+              expectedVersion: change.version ?? undefined,
+            });
+          } else {
+            await assessmentWorksApi.saveResult(change.workId, change.studentProfileId, {
+              score: change.score,
+              expectedVersion: change.version ?? undefined,
+            });
+          }
+          result.saved.push(change.key);
+        } catch (error) {
+          result.failed.push({
+            key: change.key,
+            message: error instanceof ApiError ? error.message : 'Не удалось сохранить балл',
+          });
+        }
+      }
+      return result;
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: ['assessment-works'] });
+      void qc.invalidateQueries({ queryKey: ['gradebook'] });
+    },
+  });
+}
+
+export function useAssessmentHistory(workId: number | null) {
+  return useQuery({
+    queryKey: keys.assessmentHistory(workId),
+    enabled: workId != null,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    queryFn: ({ signal }) => assessmentWorksApi.history(workId!, signal),
+  });
+}
+
+/**
+ * Исправление балла СОЧ. Меняется расчёт четверти, поэтому сбрасывается журнал и итоги
+ * (`gradebook`), но не опубликованный итог: он остаётся прежним до повторного подтверждения.
+ */
+export function useCorrectAssessmentResult() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { workId: number; studentProfileId: number; score: number; reason: string; expectedVersion?: number }) =>
+      assessmentWorksApi.correct(vars.workId, vars.studentProfileId, {
+        score: vars.score, reason: vars.reason, expectedVersion: vars.expectedVersion,
+      }),
+    onSuccess: (_result, vars) => {
+      void qc.invalidateQueries({ queryKey: ['assessment-works', vars.workId] });
+      void qc.invalidateQueries({ queryKey: ['gradebook'] });
+    },
+  });
+}
+
 export function useCorrectFinalGrade() {
   return useFinalGradeCommand((vars: { id: number; body: import('@/lib/apiSchemas').Schema<'CorrectFinalGradeRequest'> }) =>
     finalGradesApi.correctTechnicalError(vars.id, vars.body));

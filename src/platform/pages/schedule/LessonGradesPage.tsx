@@ -62,6 +62,8 @@ import {
   type CorrectionFormValues,
   type TemporaryGradeOptions,
 } from './GradeCorrectionModals';
+import { AssessmentSochCard } from './AssessmentSochCard';
+import { activeWorks } from '@/lib/assessmentWorkModel';
 import { LessonDatePicker } from './LessonDatePicker';
 import { hhmm } from './lessonHistory';
 
@@ -161,7 +163,13 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
   }
 
   const rows = sheet.students ?? [];
-  const maxGrades = sheet.maxGradesPerStudent ?? 1;
+  // На уроке с СОЧ новую обычную оценку сервер не принимает (`GRADE_LESSON_HAS_SOCH`) — пустых мест
+  // под неё нет вовсе, чтобы не предлагать нажатие, которое кончится отказом. Уже стоящие оценки остаются.
+  const hasSoch = activeWorks(lesson.assessmentWorks).some((work) => work.kind === 'SOCH');
+  const maxGrades = hasSoch ? 0 : (sheet.maxGradesPerStudent ?? 1);
+  // Урок с СОЧ без обычных оценок — блока «Оценки» нет вовсе: на нём нечего ставить и нечего читать,
+  // а баллы СОЧ живут в своей карточке ниже.
+  const showGrades = !(hasSoch && rows.every((row) => (row.grades ?? []).length === 0));
   const pointsMode = sheet.valueMode === 'POINTS';
   const workTypes = sheet.workTypes ?? [];
   const defaultWorkType = (sheet.defaultWorkType ?? 'FORMATIVE') as GradeType;
@@ -409,6 +417,7 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
         </NoticeBar>
       )}
 
+      {showGrades && (
       <section className="flex flex-col gap-6 rounded-2xl border border-slate-200 bg-white p-8">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-base font-bold text-slate-900">Оценки</h2>
@@ -436,7 +445,7 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
                 этого шапка перестала стоять над колонкой имён. */}
             <div className="flex items-center justify-between border-b border-slate-200 px-3 pb-2">
               <span className="text-11 font-bold uppercase text-slate-400">ФИО Ученика</span>
-              {canManage && (
+              {canManage && maxGrades > 0 && (
                 <span className="text-11 font-bold uppercase text-slate-400">
                   {maxGrades === 1
                     ? 'одна оценка за урок'
@@ -522,6 +531,9 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
           </div>
         )}
       </section>
+      )}
+
+      <AssessmentSochCard lesson={lesson} />
 
       {gradeHistory && <GradeHistoryDialog key={gradeHistory.gradeId} {...gradeHistory} onClose={() => setGradeHistory(null)} />}
 
@@ -672,7 +684,7 @@ function StudentRow({
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
-        {grades.length === 0 && !canManage && !activeCorrection && (
+        {grades.length === 0 && (!canManage || freeSlots === 0) && !activeCorrection && (
           <span className="text-sm text-slate-400">—</span>
         )}
 

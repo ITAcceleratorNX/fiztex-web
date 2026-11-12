@@ -20,7 +20,9 @@ import {
 /**
  * Таблица журнала (Figma 2098:468).
  *
- * <p><b>Журнал только читает.</b> Оценку ставят на уроке — там она получает источник,
+ * <p><b>Журнал читает, кроме баллов СОР/СОЧ.</b> Для колонок работ (Figma D13–D17) клетка —
+ * поле ввода, если сервер разрешил учителю править результаты этой работы (`editor`).
+ * Оценку ставят на уроке — там она получает источник,
  * период и автора, — поэтому пустая клетка здесь не поле ввода, а ссылка в урок. Так же
  * ведёт себя и заголовок колонки: журнал остаётся зеркалом, а не вторым местом правки.
  *
@@ -35,16 +37,31 @@ import {
  * в строке готовыми. Итоговый процент открывает расшифровку: из каких работ и по какой
  * формуле он получен.
  */
+/** Правка баллов работ прямо в клетках: черновики живут у владельца панели «Сохранить баллы». */
+export type ScoreEditor = {
+  canEdit: (column: GradebookColumn) => boolean;
+  /** Введённый, но не сохранённый текст; `undefined` — клетка не редактируется. */
+  draft: (column: GradebookColumn, studentProfileId: number) => string | undefined;
+  /** Что не так с введённым — показывается в клетке. */
+  problem: (column: GradebookColumn, studentProfileId: number) => string | null;
+  /** Сохранённый балл — «Было 15». */
+  saved: (column: GradebookColumn, studentProfileId: number) => number | null;
+  change: (column: GradebookColumn, studentProfileId: number, text: string) => void;
+  blur: (column: GradebookColumn, studentProfileId: number) => void;
+};
+
 export function JournalTable({
   journal,
   finals,
   today,
   onOpenBreakdown,
+  editor,
 }: {
   journal: Gradebook;
   finals: Map<number, ClassFinalGradeRow>;
   today: string;
   onOpenBreakdown?: (row: GradebookRow) => void;
+  editor?: ScoreEditor;
 }) {
   const columns = journal.columns ?? [];
   const rows = journal.rows ?? [];
@@ -136,7 +153,14 @@ export function JournalTable({
                         column.date === today && 'bg-navy-50/60',
                       )}
                     >
-                      {score ? (
+                      {editor && isAssessmentColumn(column) && editor.canEdit(column) ? (
+                        <ScoreCell
+                          column={column}
+                          studentProfileId={studentId}
+                          studentName={row.studentName ?? ''}
+                          editor={editor}
+                        />
+                      ) : score ? (
                         <span className="flex items-center justify-center">
                           <GradeChip size="sm" value={score} title={assessmentTitle(column)} />
                         </span>
@@ -200,6 +224,77 @@ export function JournalTable({
         </tbody>
       </table>
     </div>
+  );
+}
+
+/**
+ * Клетка балла работы: сохранённый балл — рамка, пустая — «+», нажатие открывает поле.
+ * Ошибка стоит в самой клетке (красная рамка и подсказка «Не больше 20»), а не в тосте.
+ */
+function ScoreCell({
+  column,
+  studentProfileId,
+  studentName,
+  editor,
+}: {
+  column: GradebookColumn;
+  studentProfileId: number;
+  studentName: string;
+  editor: ScoreEditor;
+}) {
+  const draft = editor.draft(column, studentProfileId);
+  const saved = editor.saved(column, studentProfileId);
+  const label = `Балл ${assessmentTitle(column)}: ${studentName}`;
+
+  if (draft === undefined) {
+    return (
+      <button
+        type="button"
+        aria-label={saved != null ? `${label}, сейчас ${saved}` : `${label}: поставить балл`}
+        onClick={() => editor.change(column, studentProfileId, saved != null ? String(saved) : '')}
+        className={cx(
+          'mx-auto flex h-[26px] min-w-[34px] items-center justify-center rounded-lg px-1 text-13 transition',
+          saved != null
+            ? 'border border-navy-700 font-bold text-navy-700 hover:bg-navy-50'
+            : 'border border-dashed border-slate-300 text-slate-400 hover:border-navy-700 hover:text-navy-700',
+        )}
+      >
+        {saved != null ? saved : '+'}
+      </button>
+    );
+  }
+
+  const problem = editor.problem(column, studentProfileId);
+  const changed = saved != null && draft.trim() !== '' && draft.trim() !== String(saved);
+  return (
+    <span className="relative mx-auto flex w-[44px] justify-center">
+      <input
+        autoFocus
+        inputMode="numeric"
+        aria-label={label}
+        aria-invalid={problem != null}
+        value={draft}
+        onChange={(event) => editor.change(column, studentProfileId, event.target.value)}
+        onBlur={() => editor.blur(column, studentProfileId)}
+        className={cx(
+          'h-[26px] w-[44px] rounded-lg border bg-white text-center text-13 font-bold outline-none',
+          problem ? 'border-danger-fg text-danger-fg' : 'border-navy-700 text-navy-700',
+        )}
+      />
+      {problem && (
+        <span
+          role="alert"
+          className="absolute left-1/2 top-full z-20 mt-1 -translate-x-1/2 whitespace-nowrap rounded bg-danger-fg px-2 py-1 text-10 font-semibold text-white"
+        >
+          {problem}
+        </span>
+      )}
+      {!problem && changed && (
+        <span className="absolute left-1/2 top-full z-20 mt-1 -translate-x-1/2 whitespace-nowrap rounded bg-slate-900 px-2 py-1 text-10 font-semibold text-white">
+          Было {saved}
+        </span>
+      )}
+    </span>
   );
 }
 
