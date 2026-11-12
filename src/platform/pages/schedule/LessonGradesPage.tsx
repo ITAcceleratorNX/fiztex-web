@@ -167,9 +167,9 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
   // под неё нет вовсе, чтобы не предлагать нажатие, которое кончится отказом. Уже стоящие оценки остаются.
   const hasSoch = activeWorks(lesson.assessmentWorks).some((work) => work.kind === 'SOCH');
   const maxGrades = hasSoch ? 0 : (sheet.maxGradesPerStudent ?? 1);
-  // Урок с СОЧ без обычных оценок — блока «Оценки» нет вовсе: на нём нечего ставить и нечего читать,
-  // а баллы СОЧ живут в своей карточке ниже.
-  const showGrades = !(hasSoch && rows.every((row) => (row.grades ?? []).length === 0));
+  // Урок с СОЧ без обычных оценок: блок «Оценки» не показывается — на нём нечего ставить, а баллы СОЧ
+  // живут в своей карточке ниже. Остаются комментарии родителям: они от оценок не зависят.
+  const commentsOnly = hasSoch && rows.every((row) => (row.grades ?? []).length === 0);
   const pointsMode = sheet.valueMode === 'POINTS';
   const workTypes = sheet.workTypes ?? [];
   const defaultWorkType = (sheet.defaultWorkType ?? 'FORMATIVE') as GradeType;
@@ -417,14 +417,13 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
         </NoticeBar>
       )}
 
-      {showGrades && (
       <section className="flex flex-col gap-6 rounded-2xl border border-slate-200 bg-white p-8">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-base font-bold text-slate-900">Оценки</h2>
+          <h2 className="text-base font-bold text-slate-900">{commentsOnly ? 'Комментарии для родителей' : 'Оценки'}</h2>
           <span className="text-sm text-slate-600">{target || 'Класс не указан'}</span>
         </div>
 
-        {pointsMode && canManage && (
+        {pointsMode && canManage && !commentsOnly && (
           <p className="-mt-3 text-13 text-slate-500">
             {sheet.workTypes?.some(type => type.type === 'INTERMEDIATE_ASSESSMENT')
               ? `2–4 классы: ФО — один балл за урок от 1 до 10 с учётом ДЗ. ПО — из ${sheet.workTypes.find(type => type.type === 'INTERMEDIATE_ASSESSMENT')?.fixedMax} баллов. Итог четверти: ФО 50% + ПО 50%, без СОР и СОЧ.`
@@ -475,6 +474,7 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
                 onCompletePoints={(open, value) => void completeWith(open, value)}
                 maxGrades={maxGrades}
                 canManage={canManage}
+                commentsOnly={commentsOnly}
                 busy={busy}
                 scale={scaleQuery.data ?? []}
                 pointsMode={pointsMode}
@@ -531,7 +531,6 @@ function LessonGradesScreen({ lessonId }: { lessonId: number }) {
           </div>
         )}
       </section>
-      )}
 
       <AssessmentSochCard lesson={lesson} />
 
@@ -590,6 +589,7 @@ function StudentRow({
   onCompletePoints,
   maxGrades,
   canManage,
+  commentsOnly = false,
   busy,
   scale,
   pointsMode,
@@ -616,6 +616,8 @@ function StudentRow({
   onCompletePoints: (open: GradeCorrection, value: PointsValue) => void;
   maxGrades: number;
   canManage: boolean;
+  /** Урок с СОЧ без оценок: в строке только имя и комментарий родителям. */
+  commentsOnly?: boolean;
   busy: boolean;
   scale: GradeScaleValue[];
   pointsMode: boolean;
@@ -684,7 +686,7 @@ function StudentRow({
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
-        {grades.length === 0 && (!canManage || freeSlots === 0) && !activeCorrection && (
+        {!commentsOnly && grades.length === 0 && (!canManage || freeSlots === 0) && !activeCorrection && (
           <span className="text-sm text-slate-400">—</span>
         )}
 
@@ -813,7 +815,7 @@ function StudentRow({
           </div>
         )}
 
-        {canManage && (
+        {canManage && !commentsOnly && (
           <CorrectionAction
             correction={correction}
             graded={grades.length > 0}
