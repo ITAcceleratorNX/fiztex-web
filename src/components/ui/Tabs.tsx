@@ -103,7 +103,7 @@ const TRIGGER_BASE: Record<TabsVariant, string> = {
 };
 
 const TRIGGER_STATE: Record<TabsVariant, { on: string; off: string }> = {
-  default: { on: 'border-brand-500 text-brand-700', off: 'border-transparent text-slate-500 hover:text-slate-800' },
+  default: { on: 'border-brand-500 text-brand-700', off: 'border-transparent text-slate-500 hover:text-brand-700' },
   pills: { on: 'bg-navy-700 text-white', off: 'text-muted hover:text-ink' },
   navy: { on: 'border-navy-700 font-semibold text-navy-700', off: 'border-transparent font-medium text-slate-600 hover:text-navy-700' },
 };

@@ -92,7 +92,7 @@ export function columnCaption(column: GradebookColumn): { date: string; event: s
 }
 
 /**
- * Колонка работы СОР/СОЧ (V141, `assessment-work-contract.md` §5): стоит сразу за своим
+ * Колонка работы СОР/СОЧ (V142, `assessment-work-contract.md` §5): стоит сразу за своим
  * уроком, а в клетке у неё балл работы, а не оценки. Колонка урока остаётся — на ней ФО.
  */
 export function isAssessmentColumn(column: GradebookColumn): boolean {

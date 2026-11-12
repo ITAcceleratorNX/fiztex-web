@@ -11,18 +11,18 @@ describe('web branding', () => {
     expect(ADMIN_TITLE).toBe('PhysTech — Административная панель');
   });
 
-  it('names the Logo with APP_NAME and spells it in the wordmark', () => {
-    const { container } = render(<Logo />);
+  it('uses the exported brand lockup with APP_NAME as its accessible name', () => {
+    render(<Logo />);
     expect(screen.getByRole('img', { name: APP_NAME })).toBeInTheDocument();
-    expect(container).toHaveTextContent(APP_NAME);
-    expect(container.textContent ?? '').not.toMatch(/fiztex/i);
+    expect(screen.getByRole('img', { name: APP_NAME })).toHaveAttribute('src', expect.stringContaining('fiztex-logo-lockup'));
   });
 
-  it('белый логотип панели входа тоже называется PhysTech, а не прежним словом', () => {
-    const { container } = render(<Logo tone="white" />);
+  it('uses the exported white brand lockup with APP_NAME as its accessible name', () => {
+    render(<Logo tone="white" />);
     expect(screen.getByRole('img', { name: APP_NAME })).toBeInTheDocument();
-    expect(container).toHaveTextContent(APP_NAME);
-    expect(container.querySelector('img')).toBeNull();
+    expect(screen.getByRole('img', { name: APP_NAME })).toHaveAttribute('width', '137');
+    expect(screen.getByRole('img', { name: APP_NAME })).toHaveAttribute('height', '36');
+    expect(screen.getByRole('img', { name: APP_NAME })).toHaveAttribute('src', expect.stringContaining('fiztex-logo-white'));
   });
 
   // Роутер нужен, потому что в подвале шелла стоят ссылки на политику

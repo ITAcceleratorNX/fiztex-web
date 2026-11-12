@@ -62,14 +62,14 @@ describe('Sidebar — свёрнутое состояние', () => {
     expect(screen.getByRole('button', { name: 'Развернуть меню' })).toBeInTheDocument();
   });
 
-  it('свёрнутая панель не теряет ни одного пункта роли', async () => {
+  it('свёрнутая панель сохраняет верхний уровень и показывает группы иконками', async () => {
     renderSidebar();
-    const expanded = within(nav()).getAllByRole('link').map((link) => link.getAttribute('href'));
-
     await userEvent.click(screen.getByRole('button', { name: 'Свернуть меню' }));
     const collapsed = within(nav()).getAllByRole('link').map((link) => link.getAttribute('href'));
 
-    expect(collapsed).toEqual(expanded);
+    // Вложенные ссылки доступны при наведении на рельс; группа ведёт к сервисным
+    // заявкам, а освобождения остаются отдельным пунктом иконками в рельсе.
+    expect(collapsed).toContain('/service');
   });
 
   it('вложенные пункты в свёрнутой панели не показываются — от них остался бы один значок', async () => {
@@ -125,6 +125,35 @@ describe('Sidebar — свёрнутое состояние', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Свернуть меню' }));
 
     expect(screen.getByRole('button', { name: 'Выйти' })).toBeInTheDocument();
+  });
+});
+
+describe('Sidebar — группа заявок по ролям', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it.each([
+    ['TEACHER', '/teacher-requests', 'Освобождения'],
+    ['ADMIN', '/admin/teacher-requests', 'Освобождения учителей'],
+  ] as const)('%s может свернуть и снова раскрыть группу заявок', async (currentRole, path, releaseLabel) => {
+    role.mockReturnValue(currentRole);
+    renderSidebar(path);
+
+    const group = within(nav()).getByRole('button', { name: 'Заявки' });
+    expect(group).toHaveAttribute('aria-expanded', 'true');
+    expect(within(nav()).getByRole('link', { name: 'Сервисные заявки' })).toBeInTheDocument();
+    expect(within(nav()).getByRole('link', { name: releaseLabel })).toBeInTheDocument();
+
+    await userEvent.click(group);
+    expect(group).toHaveAttribute('aria-expanded', 'false');
+    expect(within(nav()).queryByRole('link', { name: 'Сервисные заявки' })).not.toBeInTheDocument();
+    expect(within(nav()).queryByRole('link', { name: releaseLabel })).not.toBeInTheDocument();
+
+    await userEvent.click(group);
+    expect(group).toHaveAttribute('aria-expanded', 'true');
+    expect(within(nav()).getByRole('link', { name: 'Сервисные заявки' })).toBeInTheDocument();
+    expect(within(nav()).getByRole('link', { name: releaseLabel })).toBeInTheDocument();
   });
 });
 

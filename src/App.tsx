@@ -29,6 +29,10 @@ import { TextbooksPage } from '@/pages/textbooks/TextbooksPage';
 import { FeedbackPage } from '@/pages/feedback/FeedbackPage';
 import { ServiceRequestsPage } from '@/pages/service/ServiceRequestsPage';
 import { ServiceRequestCardPage } from '@/pages/service/ServiceRequestCardPage';
+import { TeacherRequestsPage } from '@/pages/teacher-requests/TeacherRequestsPage';
+import { TeacherRequestCardPage } from '@/pages/teacher-requests/TeacherRequestCardPage';
+import { AdminTeacherRequestsPage } from '@/pages/teacher-requests/AdminTeacherRequestsPage';
+import { AdminTeacherRequestCardPage } from '@/pages/teacher-requests/AdminTeacherRequestCardPage';
 import { KeysAdminPage } from '@/pages/keys/KeysAdminPage';
 import { AccessRequestPage } from '@/pages/access/AccessRequestPage';
 import { EquipmentAdminPage } from '@/pages/equipment/EquipmentAdminPage';
@@ -293,6 +297,10 @@ export function App() {
             Общей очереди и исполнительских действий здесь нет: это SERVICE-FE-003. */}
         <Route path={ROUTES.serviceRequests} element={<ServiceRequestsPage />} />
         <Route path="/service/:requestId" element={<ServiceRequestCardPage />} />
+        <Route path={ROUTES.teacherRequests} element={<TeacherRequestsPage />} />
+        <Route path={`${ROUTES.teacherRequests}/:requestId`} element={<TeacherRequestCardPage />} />
+        <Route path={ROUTES.adminTeacherRequests} element={<AdminTeacherRequestsPage />} />
+        <Route path={`${ROUTES.adminTeacherRequests}/:requestId`} element={<AdminTeacherRequestCardPage />} />
       </Route>
 
       {/* Известные маршруты с неподдерживаемыми ID остаются на своих экранах ошибок. */}
