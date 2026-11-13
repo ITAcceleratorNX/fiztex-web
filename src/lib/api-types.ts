@@ -10501,8 +10501,10 @@ export interface components {
             versionNumber: number;
         };
         ChangeFinalGradeValueRequest: {
+            /** Format: int64 */
+            expectedVersion?: number;
             /** @enum {string} */
-            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             resultReason?: string;
             /** Format: int32 */
             value?: number;
@@ -10661,7 +10663,7 @@ export interface components {
             academicPeriodId?: number;
             /** Format: int64 */
             academicYearId?: number;
-            allowedResultKinds?: ("NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED")[];
+            allowedResultKinds?: ("NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED")[];
             allowedValues?: number[];
             assessmentMode?: string;
             canCorrectTechnicalErrors?: boolean;
@@ -11039,7 +11041,7 @@ export interface components {
             expectedVersion: number;
             reason?: string;
             /** @enum {string} */
-            resultKind: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultKind: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             /** Format: int32 */
             value?: number;
         };
@@ -11125,7 +11127,7 @@ export interface components {
             /** Format: int64 */
             academicYearId?: number;
             /** @enum {string} */
-            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             resultReason?: string;
             /** @enum {string} */
             scope: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
@@ -11729,7 +11731,7 @@ export interface components {
         };
         FinalGradeHistoryView: {
             /** @enum {string} */
-            action?: "CREATE" | "UPDATE" | "PUBLISH" | "REPUBLISH";
+            action?: "CREATE" | "UPDATE" | "PUBLISH" | "REPUBLISH" | "PENDING_CHANGE";
             /** Format: int64 */
             actorId?: number;
             actorName?: string;
@@ -11762,7 +11764,7 @@ export interface components {
             /** Format: date-time */
             publishedAt?: string;
             /** @enum {string} */
-            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             resultReason?: string;
             /** @enum {string} */
             scope?: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
@@ -16891,7 +16893,7 @@ export interface components {
             /** Format: int64 */
             expectedVersion: number;
             /** Format: int32 */
-            value: number;
+            value?: number;
         };
         RequestClassView: {
             active?: boolean;
