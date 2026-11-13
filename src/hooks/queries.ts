@@ -2366,8 +2366,10 @@ export function useSetFinalGrade() {
       value: number | null;
       resultKind?: import('@/lib/gradebookApi').FinalGrade['resultKind'];
       resultReason?: string;
+      /** Версия строки, которую видел учитель: устаревшую сервер отклонит 409. */
+      expectedVersion?: number;
     }) => vars.finalGradeId != null
-      ? finalGradesApi.changeValue(vars.finalGradeId, vars.value, vars.resultKind, vars.resultReason)
+      ? finalGradesApi.changeValue(vars.finalGradeId, vars.value, vars.resultKind, vars.resultReason, vars.expectedVersion)
       : finalGradesApi.create({ studentProfileId: vars.studentProfileId, subjectId: vars.subjectId,
           academicPeriodId: vars.academicPeriodId, academicYearId: vars.academicYearId, scope: vars.scope ?? 'PERIOD', value: vars.value,
           resultKind: vars.resultKind, resultReason: vars.resultReason }),
@@ -3806,9 +3808,56 @@ export function useFinalGradeHistory(id: number | null) {
   return useQuery({ queryKey: keys.finalGradeHistory(id), enabled: id != null,
     queryFn: ({ signal }) => finalGradesApi.history(id!, signal) });
 }
+/**
+ * «Подтвердить и опубликовать»: ожидающее изменение ВНА/НА (`value` не передаётся) либо
+ * число после правки баллов (ТЗ №9, `value` — выбор учителя).
+ */
 export function useRepublishFinalGrade() {
-  return useFinalGradeCommand((vars: { id: number; value: number; expectedVersion: number }) =>
+  return useFinalGradeCommand((vars: { id: number; value?: number; expectedVersion: number }) =>
     finalGradesApi.republish(vars.id, { value: vars.value, expectedVersion: vars.expectedVersion }));
+}
+
+/**
+ * Сохранить статус ВНА/НА либо снять его числом — из окна статуса (ATTESTATION-001).
+ *
+ * <p>Учитель и администрация ходят разными адресами: у учителя право — назначение, у
+ * администрации — полномочие, и правила у них разные (администрация не ставит оценки и не
+ * публикует). Что из этого разрешено конкретной строке, экран берёт из её признаков, а
+ * окончательно решает сервер. Сам хук только выбирает дорогу.
+ */
+export function useSaveAttestationStatus() {
+  return useFinalGradeCommand(
+    (vars: {
+      author: 'TEACHER' | 'ADMINISTRATION';
+      finalGrade: import('@/lib/gradebookApi').FinalGrade | null;
+      studentProfileId: number;
+      subjectId: number;
+      academicPeriodId: number;
+      resultKind: NonNullable<import('@/lib/gradebookApi').FinalGrade['resultKind']>;
+      value: number | null;
+      reason: string;
+    }) => {
+      const grade = vars.finalGrade;
+      const value = vars.value ?? undefined;
+      if (grade?.id != null && grade.version == null) {
+        return Promise.reject(new Error('Обновите журнал перед изменением статуса'));
+      }
+      if (vars.author === 'ADMINISTRATION') {
+        return grade?.id == null
+          ? finalGradesApi.createAttestationAsAdministration({
+              studentProfileId: vars.studentProfileId, subjectId: vars.subjectId,
+              academicPeriodId: vars.academicPeriodId, resultKind: vars.resultKind, reason: vars.reason })
+          : finalGradesApi.changeAttestationAsAdministration(grade.id, {
+              resultKind: vars.resultKind, value, reason: vars.reason, expectedVersion: grade.version! });
+      }
+      return grade?.id == null
+        ? finalGradesApi.create({
+            studentProfileId: vars.studentProfileId, subjectId: vars.subjectId,
+            academicPeriodId: vars.academicPeriodId, value: vars.value,
+            resultKind: vars.resultKind, resultReason: vars.reason })
+        : finalGradesApi.changeValue(grade.id, vars.value, vars.resultKind, vars.reason, grade.version);
+    },
+  );
 }
 
 export function useAssessmentResults(workId: number | null) {
