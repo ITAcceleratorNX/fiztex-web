@@ -10687,8 +10687,13 @@ export interface components {
         };
         ClassFinalGradeRowView: {
             average?: number;
+            canChangeAttestation?: boolean;
+            canConfirmPublication?: boolean;
+            canEditResult?: boolean;
             currentMember?: boolean;
             finalGrade?: components["schemas"]["FinalGradeView"];
+            /** Format: int64 */
+            historyCount?: number;
             publicationIssues?: string[];
             recommendationChanged?: boolean;
             /** Format: int32 */
@@ -10709,6 +10714,7 @@ export interface components {
             assessmentMode?: string;
             canCorrectTechnicalErrors?: boolean;
             canManage?: boolean;
+            canManageAttestation?: boolean;
             /** Format: int64 */
             classId?: number;
             gradingPolicy?: components["schemas"]["PolicySummaryView"];
@@ -11787,12 +11793,15 @@ export interface components {
             /** Format: int64 */
             actorId?: number;
             actorName?: string;
+            /** @enum {string} */
+            actorRole?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
             after?: components["schemas"]["JsonNode"];
             before?: components["schemas"]["JsonNode"];
             /** Format: date-time */
             createdAt?: string;
             /** Format: int64 */
             id?: number;
+            reason?: string;
         };
         FinalGradeLockView: {
             finalLocked?: boolean;
@@ -11813,6 +11822,9 @@ export interface components {
             correctionReference?: string;
             /** Format: int64 */
             id?: number;
+            pendingChange?: components["schemas"]["PendingChangeView"];
+            /** @enum {string} */
+            publicationState?: "DRAFT" | "PUBLISHED" | "CHANGED_AFTER_PUBLICATION";
             /** Format: date-time */
             publishedAt?: string;
             /** @enum {string} */
@@ -16346,6 +16358,20 @@ export interface components {
             name?: string;
             /** Format: int64 */
             subjectId?: number;
+        };
+        PendingChangeView: {
+            /** Format: date-time */
+            changedAt?: string;
+            /** Format: int64 */
+            changedById?: number;
+            changedByName?: string;
+            /** @enum {string} */
+            changedByRole?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
+            reason?: string;
+            /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
+            /** Format: int32 */
+            value?: number;
         };
         Period: {
             /** Format: int64 */
