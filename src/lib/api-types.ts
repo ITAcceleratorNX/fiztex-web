@@ -9491,6 +9491,8 @@ export interface components {
             finalScope?: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
             /** Format: date-time */
             publishedAt?: string;
+            /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             sourceClass?: components["schemas"]["ReportReferenceView"];
             student?: components["schemas"]["ReportReferenceView"];
             /** Format: int64 */
@@ -14770,6 +14772,8 @@ export interface components {
             finalGradeId?: number;
             /** Format: date-time */
             publishedAt?: string;
+            /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             /** Format: int64 */
             sourceClassId?: number;
             sourceClassName?: string;
@@ -15034,6 +15038,12 @@ export interface components {
             studentProfileId?: number;
             subjects?: components["schemas"]["MySubjectFinalsView"][];
         };
+        MyFinalResultView: {
+            /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
+            /** Format: int32 */
+            value?: number;
+        };
         MyGradeCorrectionView: {
             comment?: string;
             /** Format: date */
@@ -15092,16 +15102,22 @@ export interface components {
             teacher?: components["schemas"]["TeacherPart"];
         };
         MySubjectFinalsView: {
+            examResult?: components["schemas"]["MyFinalResultView"];
             /** Format: int32 */
             examValue?: number;
+            finalResult?: components["schemas"]["MyFinalResultView"];
             /** Format: int32 */
             finalValue?: number;
+            periodResults?: {
+                [key: string]: components["schemas"]["MyFinalResultView"];
+            };
             periodValues?: {
                 [key: string]: number;
             };
             /** Format: int64 */
             subjectId?: number;
             subjectName?: string;
+            yearResult?: components["schemas"]["MyFinalResultView"];
             /** Format: int32 */
             yearValue?: number;
         };
