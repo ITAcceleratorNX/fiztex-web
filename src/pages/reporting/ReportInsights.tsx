@@ -63,7 +63,7 @@ export function PerformanceStrip({
       <Kpi label="Учеников в расчёте"
         hint={(performance?.studentsExcluded ?? 0) > 0
           ? `Ещё ${formatCount(performance?.studentsExcluded ?? 0)} — с неполными данными или ВНА/НА`
-          : 'Данные полные'}>
+          : (performance?.studentsWithResult ?? 0) > 0 ? 'Данные полные' : 'Нет оценок для расчёта'}>
         {pending || !performance ? <span className="text-slate-400">—</span> : formatCount(performance.studentsWithResult ?? 0)}
       </Kpi>
       <Kpi label="ВНА / НА" hint="Не входят в средние и не считаются нулём">
