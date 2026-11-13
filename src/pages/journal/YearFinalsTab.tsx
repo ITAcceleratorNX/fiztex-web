@@ -8,7 +8,7 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock
 import { useClassYearFinals, usePublishClassYearFinals, useSetFinalGrade } from '@/hooks/queries';
 import type { ClassFinalGradeRow, FinalGrade, YearFinalsQuery } from '@/lib/gradebookApi';
 import { ApiError } from '@/lib/api';
-import { QuarterFinalsTable } from './QuarterFinalsTable';
+import { finalValueOptions, QuarterFinalsTable } from './QuarterFinalsTable';
 import { FinalGradeCorrectionModal, FinalGradeHistoryModal } from './FinalGradeCorrectionModal';
 
 const SCOPES = { YEAR: 'Годовая оценка', EXAM: 'Экзаменационная оценка', FINAL: 'Окончательная оценка' } as const;
@@ -70,7 +70,7 @@ export function YearFinalsTab({ query }: { query: Omit<YearFinalsQuery, 'scope'>
       </>}
     {error && <p role="alert" className="rounded-lg bg-danger-bg p-4 text-13 text-danger-fg">{error}</p>}
     <ConfirmDialog open={confirm} title={`Опубликовать: ${SCOPES[scope].toLowerCase()}?`} message="Публикуется весь заполненный набор класса по предмету. Ученики и родители увидят результаты. Опубликованные итоги закрываются для обычного редактирования." confirmLabel="Опубликовать" loading={publish.isPending} onConfirm={() => void publishAll()} onClose={() => setConfirm(false)} />
-    {correcting?.finalGrade && <FinalGradeCorrectionModal key={correcting.finalGrade.id} grade={correcting.finalGrade} studentName={correcting.studentName ?? ''} allowedKinds={data?.allowedResultKinds ?? ['NUMERIC']} onClose={() => setCorrecting(null)} />}
+    {correcting?.finalGrade && <FinalGradeCorrectionModal key={correcting.finalGrade.id} grade={correcting.finalGrade} studentName={correcting.studentName ?? ''} allowedKinds={data?.allowedResultKinds ?? ['NUMERIC']} allowedValues={finalValueOptions(data)} onClose={() => setCorrecting(null)} />}
     {history?.finalGrade?.id != null && <FinalGradeHistoryModal id={history.finalGrade.id} studentName={history.studentName ?? ''} onClose={() => setHistory(null)} />}
     <Modal open={reasonRow != null} title="Предмет не изучался" onClose={() => setReasonRow(null)} footer={<Button disabled={reason.trim().length < 5} loading={busyId != null} onClick={() => { if (reasonRow) void pick(reasonRow, null, 'NOT_STUDIED', reason.trim()); }}>Сохранить результат</Button>}>
       <Field label="Основание"><TextArea value={reason} onChange={event => setReason(event.target.value)} maxLength={1000} /></Field>

@@ -9,12 +9,15 @@ import type { FinalGrade } from '@/lib/gradebookApi';
 import { FINAL_RESULT_LABELS, finalResultLabel } from '@/lib/finalGradeResult';
 import { ApiError } from '@/lib/api';
 
-export function FinalGradeCorrectionModal({ grade, studentName, allowedKinds, onClose }: {
-  grade: FinalGrade; studentName: string; allowedKinds: NonNullable<FinalGrade['resultKind']>[]; onClose: () => void;
+export function FinalGradeCorrectionModal({ grade, studentName, allowedKinds, allowedValues, onClose }: {
+  grade: FinalGrade; studentName: string; allowedKinds: NonNullable<FinalGrade['resultKind']>[];
+  /** Допустимые итоги из ответа экрана (`allowedValues`): пороги политики либо 2…5. */
+  allowedValues: number[];
+  onClose: () => void;
 }) {
   const correction = useCorrectFinalGrade();
   const [kind, setKind] = useState(grade.resultKind ?? 'NUMERIC');
-  const [value, setValue] = useState(String(grade.value ?? 4));
+  const [value, setValue] = useState(String(grade.value ?? allowedValues.at(-1) ?? ''));
   const [reason, setReason] = useState('');
   const [document, setDocument] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +37,7 @@ export function FinalGradeCorrectionModal({ grade, studentName, allowedKinds, on
       <Field label="Исправленный результат"><Select value={kind} onChange={event => setKind(event.target.value as NonNullable<FinalGrade['resultKind']>)} disabled={correction.isPending}>
         {allowedKinds.map(item => <option key={item} value={item}>{FINAL_RESULT_LABELS[item]}</option>)}
       </Select></Field>
-      {kind === 'NUMERIC' && <Field label="Оценка"><Select value={value} disabled={correction.isPending} onChange={event => setValue(event.target.value)}>{[2, 3, 4, 5].map(item => <option key={item} value={item}>{item}</option>)}</Select></Field>}
+      {kind === 'NUMERIC' && <Field label="Оценка"><Select value={value} disabled={correction.isPending} onChange={event => setValue(event.target.value)}>{allowedValues.map(item => <option key={item} value={item}>{item}</option>)}</Select></Field>}
       <Field label="Описание технической ошибки"><TextArea value={reason} onChange={event => setReason(event.target.value)} disabled={correction.isPending} maxLength={1000} /></Field>
       <Field label="Подтверждающий документ и протокол"><TextInput value={document} onChange={event => setDocument(event.target.value)} disabled={correction.isPending} maxLength={1000} placeholder="Номер и дата протокола, подтверждающие документы" /></Field>
       {error && <p role="alert" className="rounded-lg bg-danger-bg p-3 text-13 text-danger-fg">{error}</p>}

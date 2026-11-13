@@ -53,7 +53,7 @@ import { JournalTable, type ScoreEditor } from './JournalTable';
 import { PeriodBreakdownModal } from './PeriodBreakdownModal';
 import { YearFinalsTab } from './YearFinalsTab';
 import { FinalGradeCorrectionModal, FinalGradeHistoryModal, RepublishFinalModal } from './FinalGradeCorrectionModal';
-import { FINAL_VALUES, QuarterFinalsTable } from './QuarterFinalsTable';
+import { finalValueOptions, QuarterFinalsTable } from './QuarterFinalsTable';
 
 type JournalTab = 'JOURNAL' | 'FINALS' | 'YEAR_FINALS';
 
@@ -575,10 +575,10 @@ function FinalsTab({
 
       {correctionRow?.finalGrade && <FinalGradeCorrectionModal grade={correctionRow.finalGrade}
         studentName={correctionRow.studentName ?? ''} allowedKinds={data.allowedResultKinds ?? ['NUMERIC']}
-        onClose={() => setCorrectionRow(null)} />}
+        allowedValues={finalValueOptions(data)} onClose={() => setCorrectionRow(null)} />}
       {republishRow?.finalGrade && republishRow.recommendedValue != null && <RepublishFinalModal grade={republishRow.finalGrade}
         recommended={republishRow.recommendedValue} studentName={republishRow.studentName ?? ''}
-        options={data.allowedValues && data.allowedValues.length > 0 ? data.allowedValues : [...FINAL_VALUES]}
+        options={finalValueOptions(data)}
         onClose={() => setRepublishRow(null)} />}
       {historyRow?.finalGrade?.id != null && <FinalGradeHistoryModal id={historyRow.finalGrade.id}
         studentName={historyRow.studentName ?? ''} onClose={() => setHistoryRow(null)} />}

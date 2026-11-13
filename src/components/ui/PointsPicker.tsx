@@ -7,10 +7,26 @@ import { GRADE_TYPE_LABELS } from '@/lib/gradesModel';
 import { COMPONENT_SHORT } from '@/lib/gradingModel';
 import { validateGradePoints } from '@/lib/gradePoints';
 import { Field, TextInput } from './Field';
+import { GradeTypeList, type GradeTypeOption } from './GradeTypeList';
 
 export type PointsValue = { score: number; maxScore: number | null; gradeType: GradeType };
 
 const TEN_POINTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+/**
+ * Пункт списка: название вида и компонент расчёта справа. Компонент не повторяется, если
+ * он уже есть в названии («СОР — суммативное за раздел», «Промежуточное оценивание (ПО)»).
+ */
+function workTypeOption(item: SheetWorkType): GradeTypeOption<GradeType> {
+  const type = item.type as GradeType;
+  const label = GRADE_TYPE_LABELS[type] ?? item.type;
+  const component = item.component ? COMPONENT_SHORT[item.component] : null;
+  return {
+    value: type,
+    label,
+    hint: component == null ? 'не учитывается' : label.includes(component) ? undefined : component,
+  };
+}
 
 /**
  * Выбор оценки в баллах (GRADES-003) — пара к `GradePicker` для периодов, которые
@@ -21,9 +37,13 @@ const TEN_POINTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
  * как у старой шкалы; у работ из максимума фиксированный максимум приходит с сервера,
  * иначе подставляется последний введённый на этом уроке (`suggestedMax`).
  *
- * <p>Тип выбирается первым и не сохраняется сам по себе: смена типа может сменить способ
- * оценивания (7 из 10 → 15 из 20), и сохранить «новый тип со старым баллом» значило бы
- * отправить заведомо неверную оценку.
+ * <p>Вёрстка — как у `GradePicker`: значения сверху, вид работы списком под ними
+ * (`GradeTypeList`). Нативного `<select>` здесь нет: из-за него 10-балльный поповер выглядел
+ * браузерным списком рядом с оформленным шкальным.
+ *
+ * <p>Смена вида работы не сохраняется сама по себе: она может сменить способ оценивания
+ * (7 из 10 → 15 из 20), и сохранить «новый тип со старым баллом» значило бы отправить
+ * заведомо неверную оценку.
  */
 export function PointsPicker({
   workTypes,
@@ -101,27 +121,11 @@ export function PointsPicker({
       role="dialog"
       aria-label={studentName ? `Оценка: ${studentName}` : 'Выбор оценки'}
       className={cx(
-        'flex w-[260px] flex-col gap-3 rounded-lg',
+        'flex w-[230px] flex-col gap-3 rounded-lg',
         'border border-slate-200 bg-white p-3 shadow-pop animate-scale-in',
         busy && 'pointer-events-none opacity-70',
       )}
     >
-      <label className="flex flex-col gap-1">
-        <span className="text-11 font-bold uppercase text-slate-400">Вид работы</span>
-        <select
-          value={type}
-          onChange={(event) => changeType(event.target.value as GradeType)}
-          className="input-base h-9 py-1 text-13"
-        >
-          {workTypes.map((item) => (
-            <option key={item.type} value={item.type}>
-              {GRADE_TYPE_LABELS[item.type as GradeType] ?? item.type}
-              {item.component ? ` · ${COMPONENT_SHORT[item.component]}` : ' · не учитывается'}
-            </option>
-          ))}
-        </select>
-      </label>
-
       {tenPoint ? (
         <div className="grid grid-cols-5 gap-1" role="group" aria-label="Балл по 10-балльной шкале">
           {TEN_POINTS.map((point) => {
@@ -191,6 +195,20 @@ export function PointsPicker({
           </button>
         </form>
       )}
+
+      <hr className="border-slate-200" />
+
+      <div className="flex flex-col gap-1">
+        <span className="px-3 text-11 font-bold uppercase text-slate-400">Вид работы</span>
+        <GradeTypeList
+          label="Вид работы"
+          options={workTypes.map(workTypeOption)}
+          selected={type}
+          onSelect={(next) => {
+            if (next && next !== type) changeType(next);
+          }}
+        />
+      </div>
 
       {canRemove && (
         <>

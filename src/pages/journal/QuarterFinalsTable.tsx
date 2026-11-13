@@ -22,6 +22,11 @@ import {
  */
 export const FINAL_VALUES = [2, 3, 4, 5] as const;
 
+/** Допустимые итоги экрана: `allowedValues` сервера, без них — запасные 2…5. */
+export function finalValueOptions(finals: Pick<ClassFinalGrades, 'allowedValues'> | null | undefined): number[] {
+  return finals?.allowedValues && finals.allowedValues.length > 0 ? finals.allowedValues : [...FINAL_VALUES];
+}
+
 /**
  * Итоги четверти (Figma 2098:1360).
  *
@@ -66,9 +71,7 @@ export function QuarterFinalsTable({
   const canManage = Boolean(finals.canManage);
   const rows = finals.rows ?? [];
   const byPolicy = scope === 'PERIOD' && finals.gradingPolicy != null;
-  const options = finals.allowedValues && finals.allowedValues.length > 0
-    ? finals.allowedValues
-    : [...FINAL_VALUES];
+  const options = finalValueOptions(finals);
 
   return (
     <div className="overflow-x-auto">
