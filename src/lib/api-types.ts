@@ -15123,6 +15123,7 @@ export interface components {
         };
         MySubjectGradesRowView: {
             average?: components["schemas"]["GradeAverageView"];
+            finalResult?: components["schemas"]["MyFinalResultView"];
             grades?: components["schemas"]["GradeView"][];
             result?: components["schemas"]["PeriodResultSummaryView"];
             /** Format: int64 */
