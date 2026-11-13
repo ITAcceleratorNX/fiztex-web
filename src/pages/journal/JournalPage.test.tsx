@@ -12,6 +12,7 @@ const publishFinals = vi.fn();
 
 const useAssessmentSheets = vi.fn();
 const saveScores = vi.fn();
+const saveStatus = vi.fn();
 vi.mock('@/context/ToastContext', () => ({ useToast: () => ({ success: vi.fn(), error: vi.fn() }) }));
 vi.mock('@/hooks/queries', () => ({
   useAssessmentSheets: (...args: unknown[]) => useAssessmentSheets(...args),
@@ -22,6 +23,7 @@ vi.mock('@/hooks/queries', () => ({
   useSetFinalGrade: () => ({ mutateAsync: setFinal, isPending: false }),
   usePublishClassFinals: () => ({ mutateAsync: publishFinals, isPending: false }),
   usePeriodBreakdown: () => ({ isPending: true, data: undefined }),
+  useSaveAttestationStatus: () => ({ mutateAsync: saveStatus, isPending: false }),
 }));
 
 function context() {
@@ -104,8 +106,15 @@ function finals(overrides: Record<string, unknown> = {}) {
         recommendedValue: 4,
         finalGrade: null,
         yearLocked: false,
+        // Действия строки считает сервер (ATTESTATION-001): учитель, итога нет.
+        canEditResult: true,
+        canChangeAttestation: true,
+        canConfirmPublication: false,
+        historyCount: 0,
       },
     ],
+    allowedResultKinds: ['NUMERIC', 'TEMP_UNATTESTED', 'NOT_ATTESTED', 'NOT_STUDIED'],
+    canManageAttestation: true,
     ...overrides,
   };
 }
@@ -121,24 +130,26 @@ function renderPage(search = '') {
   );
 }
 
-describe('JournalPage', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    useAssessmentSheets.mockReturnValue([]);
-    useGradebookContext.mockReturnValue({
-      data: context(),
-      isPending: false,
-      isError: false,
-      error: null,
-    });
-    useJournal.mockReturnValue({ data: journal(), isPending: false, isError: false, error: null });
-    useClassFinals.mockReturnValue({
-      data: finals(),
-      isPending: false,
-      isError: false,
-      error: null,
-    });
+function resetMocks() {
+  vi.clearAllMocks();
+  useAssessmentSheets.mockReturnValue([]);
+  useGradebookContext.mockReturnValue({
+    data: context(),
+    isPending: false,
+    isError: false,
+    error: null,
   });
+  useJournal.mockReturnValue({ data: journal(), isPending: false, isError: false, error: null });
+  useClassFinals.mockReturnValue({
+    data: finals(),
+    isPending: false,
+    isError: false,
+    error: null,
+  });
+}
+
+describe('JournalPage', () => {
+  beforeEach(resetMocks);
 
   it('открывается на текущей четверти и первой доступной паре «класс + предмет»', () => {
     renderPage();
@@ -386,7 +397,11 @@ describe('JournalPage', () => {
   /** §8: админ экран открывает, но выставлять не может — решает сервер, а не роль на клиенте. */
   it('без права выставления не показывает выбор оценки и кнопку публикации', () => {
     useClassFinals.mockReturnValue({
-      data: finals({ canManage: false }),
+      data: finals({
+        canManage: false,
+        canManageAttestation: false,
+        rows: [{ ...finals().rows[0], canEditResult: false, canChangeAttestation: false }],
+      }),
       isPending: false,
       isError: false,
       error: null,
@@ -512,6 +527,45 @@ describe('JournalPage', () => {
   });
 });
 
+describe('Статусы ВНА/НА (ATTESTATION-001)', () => {
+  beforeEach(resetMocks);
+
+  it('ВНА открывает окно с причиной и сохраняет статус от имени учителя', async () => {
+    const user = userEvent.setup();
+    saveStatus.mockResolvedValue({ id: 3 });
+    renderPage('?tab=finals');
+
+    await user.click(screen.getByRole('button', { name: 'ВНА — Временно не аттестован' }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText(/Итог отложен/)).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole('button', { name: 'Сохранить статус' }));
+    expect(saveStatus).not.toHaveBeenCalled();
+    expect(within(dialog).getByText('Укажите причину — не короче 5 символов')).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole('button', { name: 'Длительная болезнь' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Сохранить статус' }));
+    expect(saveStatus).toHaveBeenCalledWith({
+      author: 'TEACHER',
+      finalGrade: null,
+      studentProfileId: 19,
+      subjectId: 2,
+      academicPeriodId: 7,
+      resultKind: 'TEMP_UNATTESTED',
+      value: null,
+      reason: 'Длительная болезнь',
+    });
+    expect(setFinal).not.toHaveBeenCalled();
+  });
+
+  it('расшифровывает ВНА и НА рядом со шкалой итога', () => {
+    renderPage('?tab=finals');
+
+    expect(screen.getByText(/временно не аттестован\. Итог отложен/)).toBeInTheDocument();
+    expect(screen.getByText(/не аттестован\. Решение за четверть/)).toBeInTheDocument();
+  });
+});
+
 describe('School assessment constraints', () => {
   it('does not offer any final marks in first grade', () => {
     useClassFinals.mockReturnValue({ data: finals({ assessmentMode: 'NO_ASSESSMENT', canManage: false }), isPending: false, isError: false });
@@ -531,6 +585,7 @@ describe('School assessment constraints', () => {
   it('does not offer ordinary editing for a published numeric final', () => {
     const data = finals();
     data.rows[0].finalGrade = { id: 3, value: 5, status: 'PUBLISHED', resultKind: 'NUMERIC' } as never;
+    data.rows[0].canEditResult = false;
     useClassFinals.mockReturnValue({ data, isPending: false, isError: false });
     renderPage('?tab=finals');
     expect(screen.queryByRole('button', { name: /^4$/ })).not.toBeInTheDocument();

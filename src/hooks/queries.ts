@@ -2345,12 +2345,21 @@ export function useClassFinals(
 /**
  * Команды итоговых оценок. Сбрасывают всё дерево журнала: выставленный итог виден и в
  * колонке «Итог. четв.», а публикация меняет статус сразу у всего набора.
+ *
+ * Отказ 409 тоже перечитывает журнал: это «строку изменили, пока она была открыта» или
+ * «так уже нельзя» — в обоих случаях экран показывает устаревшее состояние, и окно, которое
+ * сообщает об отказе, не должно оставлять под собой старые данные (ATTESTATION-001).
  */
 function useFinalGradeCommand<TVars>(mutationFn: (vars: TVars) => Promise<unknown>) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['gradebook'] }),
+    onError: (error) => {
+      if (error instanceof ApiError && error.status === 409) {
+        void qc.invalidateQueries({ queryKey: ['gradebook'] });
+      }
+    },
   });
 }
 

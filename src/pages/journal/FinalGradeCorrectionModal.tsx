@@ -7,6 +7,7 @@ import { LoadingBlock, ErrorBlock } from '@/components/ui/StateBlock';
 import { useCorrectFinalGrade, useFinalGradeHistory, useRepublishFinalGrade } from '@/hooks/queries';
 import type { FinalGrade } from '@/lib/gradebookApi';
 import { FINAL_RESULT_LABELS, finalResultLabel } from '@/lib/finalGradeResult';
+import { authorLabel, decidedResult, fullResultLabel } from '@/lib/attestationModel';
 import { ApiError } from '@/lib/api';
 
 export function FinalGradeCorrectionModal({ grade, studentName, allowedKinds, allowedValues, onClose }: {
@@ -63,36 +64,57 @@ export function FinalGradeHistoryModal({ id, studentName, onClose }: { id: numbe
 }
 
 /**
- * «Подтвердить и опубликовать повторно» (ТЗ №9). Учитель видит, что опубликовано и что
- * рекомендует расчёт после правки баллов, выбирает значение — по умолчанию рекомендованное —
- * и подтверждает отдельным действием. До этого ученик и родитель видят прежнее значение.
+ * «Подтвердить и опубликовать повторно». Два повода (контракт §3, §12.3):
+ * - изменение ВНА/НА после публикации ждёт подтверждения — публикуется сохранённое, числа
+ *   выбирать не нужно (ATTESTATION-001);
+ * - опубликованное число, а расчёт после правки баллов изменился (ТЗ №9) — учитель выбирает
+ *   значение, по умолчанию рекомендованное.
+ * До подтверждения ученик и родитель видят прежнее значение.
  */
 export function RepublishFinalModal({ grade, recommended, studentName, options, onClose }: {
-  grade: FinalGrade; recommended: number; studentName: string; options: number[]; onClose: () => void;
+  grade: FinalGrade; recommended: number | null; studentName: string; options: number[]; onClose: () => void;
 }) {
   const republish = useRepublishFinalGrade();
-  const [value, setValue] = useState(recommended);
+  const pending = grade.pendingChange ?? null;
+  const [value, setValue] = useState(recommended ?? options.at(-1) ?? 0);
   const [error, setError] = useState<string | null>(null);
   async function confirm() {
     setError(null);
     if (grade.id == null || grade.version == null) { setError('Обновите журнал перед подтверждением'); return; }
     try {
-      await republish.mutateAsync({ id: grade.id, value, expectedVersion: grade.version });
+      await republish.mutateAsync(pending
+        ? { id: grade.id, expectedVersion: grade.version }
+        : { id: grade.id, value, expectedVersion: grade.version });
       onClose();
     } catch (failure) {
-      setError(failure instanceof ApiError ? failure.message : 'Не удалось опубликовать итог повторно');
+      setError(failure instanceof ApiError
+        ? failure.code === 'FINAL_GRADE_VERSION_CHANGED'
+          ? 'Итог изменили, пока окно было открыто. Журнал обновлён — закройте окно и проверьте значение.'
+          : failure.message
+        : 'Не удалось опубликовать итог повторно');
     }
   }
   return <Modal open onClose={() => { if (!republish.isPending) onClose(); }} title="Подтвердить и опубликовать повторно" subtitle={studentName}
     footer={<div className="flex justify-end gap-3"><Button variant="secondary" disabled={republish.isPending} onClick={onClose}>Отмена</Button>
       <Button loading={republish.isPending} onClick={() => void confirm()}>Подтвердить и опубликовать</Button></div>}>
-    <div className="flex flex-col gap-4">
-      <p className="text-13 text-muted">После правки баллов расчёт изменился. Сейчас ученик и родитель видят {finalResultLabel(grade)}. Новое значение они увидят сразу после подтверждения; прежнее и новое значение, автор и время сохранятся в истории.</p>
-      <p className="text-13">Рекомендация по расчёту: <span className="font-bold">{recommended}</span></p>
-      <Field label="Итоговая оценка"><Select value={String(value)} disabled={republish.isPending} onChange={event => setValue(Number(event.target.value))}>
-        {options.map(item => <option key={item} value={item}>{item}</option>)}
-      </Select></Field>
-      {error && <p role="alert" className="rounded-lg bg-danger-bg p-3 text-13 text-danger-fg">{error}</p>}
-    </div>
+    {pending ? (
+      <div className="flex flex-col gap-4">
+        <p className="text-13 text-muted">Сейчас ученик и родитель видят «{finalResultLabel(grade)}». После подтверждения увидят «{fullResultLabel(decidedResult(grade))}». Прежнее и новое значение, автор и время сохранятся в истории.</p>
+        <div className="rounded-lg bg-slate-50 p-3 text-13">
+          <p><span className="text-muted">Причина изменения: </span>{pending.reason}</p>
+          <p className="mt-1 text-muted">{authorLabel(pending.changedByName, pending.changedByRole)}{pending.changedAt ? ` · ${new Date(pending.changedAt).toLocaleString('ru-RU')}` : ''}</p>
+        </div>
+        {error && <p role="alert" className="rounded-lg bg-danger-bg p-3 text-13 text-danger-fg">{error}</p>}
+      </div>
+    ) : (
+      <div className="flex flex-col gap-4">
+        <p className="text-13 text-muted">После правки баллов расчёт изменился. Сейчас ученик и родитель видят {finalResultLabel(grade)}. Новое значение они увидят сразу после подтверждения; прежнее и новое значение, автор и время сохранятся в истории.</p>
+        {recommended != null && <p className="text-13">Рекомендация по расчёту: <span className="font-bold">{recommended}</span></p>}
+        <Field label="Итоговая оценка"><Select value={String(value)} disabled={republish.isPending} onChange={event => setValue(Number(event.target.value))}>
+          {options.map(item => <option key={item} value={item}>{item}</option>)}
+        </Select></Field>
+        {error && <p role="alert" className="rounded-lg bg-danger-bg p-3 text-13 text-danger-fg">{error}</p>}
+      </div>
+    )}
   </Modal>;
 }

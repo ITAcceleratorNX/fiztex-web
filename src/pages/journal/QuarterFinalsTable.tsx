@@ -1,5 +1,19 @@
 import { AlertTriangle, Lock } from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import {
+  ATTESTATION_SHORT,
+  authorLabel,
+  decidedResult,
+  familySees,
+  fullResultLabel,
+  isAttestationStatus,
+  needsReason,
+  publicationBadge,
+  shortResultLabel,
+  type AttestationKind,
+  type ResultValue,
+} from '@/lib/attestationModel';
 import { FINAL_RESULT_LABELS, finalResultLabel } from '@/lib/finalGradeResult';
 import type { FinalGrade } from '@/lib/gradebookApi';
 import { cx } from '@/lib/format';
@@ -42,6 +56,10 @@ export function finalValueOptions(finals: Pick<ClassFinalGrades, 'allowedValues'
  * открывает расшифровку с работами и формулой. Если оценки правили после выставления
  * итога и рекомендация теперь другая, рядом с итогом стоит предупреждение — итог при этом
  * не меняется сам.
+ *
+ * <p>ATTESTATION-001: в ячейке итога один активный результат — число 1…10 либо ВНА/НА. Что
+ * можно сделать со строкой, решает сервер (`canEditResult`, `canChangeAttestation`,
+ * `canConfirmPublication`); таблица только раскладывает его ответ по кнопкам.
  */
 export function QuarterFinalsTable({
   finals,
@@ -53,6 +71,7 @@ export function QuarterFinalsTable({
   onCorrect,
   onOpenHistory,
   onRepublish,
+  onRequestStatus,
   scope = 'PERIOD',
 }: {
   finals: ClassFinalGrades;
@@ -65,10 +84,14 @@ export function QuarterFinalsTable({
   onOpenBreakdown?: (row: ClassFinalGradeRow) => void;
   onCorrect?: (row: ClassFinalGradeRow) => void;
   onOpenHistory?: (row: ClassFinalGradeRow) => void;
-  /** «Подтвердить и опубликовать повторно» — когда после правки баллов рекомендация разошлась с итогом. */
+  /** «Подтвердить и опубликовать» — ожидающее изменение ВНА/НА или итог после правки баллов. */
   onRepublish?: (row: ClassFinalGradeRow) => void;
+  /**
+   * Выбор, которому нужна причина: поставить ВНА/НА, снять статус числом, отменить ожидающее
+   * изменение. Открывает окно статуса — сохранять напрямую такой выбор нельзя.
+   */
+  onRequestStatus?: (row: ClassFinalGradeRow, target: ResultValue) => void;
 }) {
-  const canManage = Boolean(finals.canManage);
   const rows = finals.rows ?? [];
   const byPolicy = scope === 'PERIOD' && finals.gradingPolicy != null;
   const options = finalValueOptions(finals);
@@ -95,9 +118,6 @@ export function QuarterFinalsTable({
         <tbody>
           {rows.map((row) => {
             const studentId = row.studentProfileId as number;
-            const temporary = row.finalGrade?.status === 'PUBLISHED' && row.finalGrade.resultKind === 'TEMP_UNATTESTED';
-            const locked = Boolean(row.yearLocked) || (row.finalGrade?.status === 'PUBLISHED' && !temporary);
-            const value = row.finalGrade?.value ?? null;
 
             return (
               <tr
@@ -177,66 +197,19 @@ export function QuarterFinalsTable({
                 </td>
 
                 <td className="px-6 py-3">
-                  <span className="flex items-center justify-center gap-3">
-                    {locked ? (
-                      <span
-                        className="flex items-center gap-2 text-13 font-semibold text-slate-500"
-                        title={row.yearLocked ? scope === 'PERIOD' ? "Годовая оценка опубликована — четвертные закрыты" : "Окончательный итог опубликован — связанные результаты закрыты" : "Опубликованный итог меняется только по процедуре исправления технической ошибки"}
-                      >
-                        <Lock className="size-4" />
-                        {finalResultLabel(row.finalGrade)}
-                      </span>
-                    ) : canManage && row.currentMember !== false ? (
-                      <span className="flex flex-col items-center gap-2">
-                      {temporary && <span className="text-11 text-muted">Временно не аттестован. После сдачи обязательных работ:</span>}
-                      {dataModeNumeric(finals) && <FinalValuePicker
-                        options={temporary ? positiveFinalValues(options) : options}
-                        value={value}
-                        busy={busyStudentId === studentId}
-                        onPick={(next) => onPick(row, next)}
-                      />}
-                      <span className="flex flex-wrap justify-center gap-1">
-                        {!temporary && (finals.allowedResultKinds ?? []).filter(kind => kind !== 'NUMERIC').map(kind => (
-                          <Button key={kind} variant="secondary" disabled={busyStudentId === studentId}
-                            aria-pressed={row.finalGrade?.resultKind === kind}
-                            onClick={() => onPickResult?.(row, kind)}>{FINAL_RESULT_LABELS[kind]}</Button>
-                        ))}
-                      </span>
-                      </span>
-                    ) : (
-                      <span className="text-15 font-bold text-slate-900">{finalResultLabel(row.finalGrade)}</span>
-                    )}
-                    {row.recommendationChanged && (
-                      <span
-                        title="Оценки изменили после выставления итога — рекомендация сейчас другая"
-                        className="text-brand-600"
-                      >
-                        <AlertTriangle className="size-4" />
-                      </span>
-                    )}
-                    {row.finalGrade?.status === 'PUBLISHED' && (
-                      <span className="rounded bg-success-bg px-2 py-0.5 text-10 font-bold uppercase text-success-fg">
-                        опубл.
-                      </span>
-                    )}
-                  </span>
-                  {needsRepublish(row, canManage) && (
-                    <span className="mt-2 flex flex-col items-center gap-1">
-                      <span className="text-11 text-brand-600">
-                        Требуется повторное подтверждение: рекомендация теперь {row.recommendedValue}, ученик видит {finalResultLabel(row.finalGrade)}
-                      </span>
-                      <Button variant="secondary" size="sm" disabled={busyStudentId === studentId} onClick={() => onRepublish?.(row)}>
-                        Подтвердить и опубликовать
-                      </Button>
-                    </span>
-                  )}
-                  {row.finalGrade?.id && <span className="mt-2 flex justify-center gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => onOpenHistory?.(row)}>История итога</Button>
-                    {finals.canCorrectTechnicalErrors && row.finalGrade.status === 'PUBLISHED' && <Button variant="ghost" size="sm" onClick={() => onCorrect?.(row)}>Исправить техническую ошибку</Button>}
-                  </span>}
-                  {(!row.finalGrade?.resultKind || row.finalGrade.resultKind === 'NUMERIC') && row.publicationIssues?.map(issue => (
-                    <p key={issue} className="mt-2 max-w-sm text-11 text-danger-fg">{issue}</p>
-                  ))}
+                  <FinalResultCell
+                    row={row}
+                    finals={finals}
+                    scope={scope}
+                    options={options}
+                    busy={busyStudentId === studentId}
+                    onPick={onPick}
+                    onPickResult={onPickResult}
+                    onRequestStatus={onRequestStatus}
+                    onRepublish={onRepublish}
+                    onOpenHistory={onOpenHistory}
+                    onCorrect={onCorrect}
+                  />
                 </td>
               </tr>
             );
@@ -248,66 +221,231 @@ export function QuarterFinalsTable({
 }
 
 /**
- * Выбор итоговой прямо в строке (макет 2098:1382): четыре значения всегда на виду, без
- * лишнего нажатия. Уже выставленная оценка остаётся выбранной — повторное нажатие по ней
- * ничего не меняет, а нажатие по соседней меняет значение сразу.
+ * Ячейка итога: выбор, состояние публикации, что видит семья и что ждёт подтверждения.
+ *
+ * Кнопки — по признакам строки от сервера, без своих правил:
+ * - числа — `canEditResult`; у администрации — только снятие статуса числом, то есть при
+ *   `canChangeAttestation` и статусе в самой строке (не в ожидающем изменении);
+ * - ВНА/НА — `canChangeAttestation`, только в итоге четверти: годовой ВНА живёт прежней
+ *   кнопкой результата;
+ * - «Не изучался», зачёт — `canEditResult` и пока итог не опубликован.
+ * Выбор со статусом до или после идёт через окно с причиной (`onRequestStatus`), остальное
+ * сохраняется сразу (`onPick`).
  */
-function FinalValuePicker({
+function FinalResultCell({
+  row,
+  finals,
+  scope,
   options,
-  value,
   busy,
   onPick,
+  onPickResult,
+  onRequestStatus,
+  onRepublish,
+  onOpenHistory,
+  onCorrect,
 }: {
+  row: ClassFinalGradeRow;
+  finals: ClassFinalGrades;
+  scope: FinalGrade['scope'];
   options: number[];
-  value: number | null;
   busy: boolean;
-  onPick: (value: number) => void;
+  onPick: (row: ClassFinalGradeRow, value: number) => void;
+  onPickResult?: (row: ClassFinalGradeRow, kind: NonNullable<FinalGrade['resultKind']>) => void;
+  onRequestStatus?: (row: ClassFinalGradeRow, target: ResultValue) => void;
+  onRepublish?: (row: ClassFinalGradeRow) => void;
+  onOpenHistory?: (row: ClassFinalGradeRow) => void;
+  onCorrect?: (row: ClassFinalGradeRow) => void;
 }) {
+  const grade = row.finalGrade ?? null;
+  const decided = decidedResult(grade);
+  const published = grade?.status === 'PUBLISHED';
+  const periodScope = scope === 'PERIOD';
+  const kinds = finals.allowedResultKinds ?? [];
+  const statusKinds = periodScope ? kinds.filter(isAttestationStatus) : [];
+  const otherKinds = kinds.filter((kind) => kind !== 'NUMERIC' && (!periodScope || !isAttestationStatus(kind)));
+  const numbersEnabled = Boolean(row.canEditResult)
+    || (Boolean(row.canChangeAttestation) && isAttestationStatus(grade?.resultKind));
+  const statusesEnabled = Boolean(row.canChangeAttestation) && statusKinds.length > 0;
+  const showNumbers = dataModeNumeric(finals) && numbersEnabled;
+  const selectable = showNumbers || statusesEnabled;
+  // Пилот 3.1/3.2: опубликованный ВНА снимается только положительным итогом — сервер это
+  // проверит, а выбор не предлагает заведомо отклоняемого.
+  const numberOptions = published && grade?.resultKind === 'TEMP_UNATTESTED' ? positiveFinalValues(options) : options;
+  const badge = publicationBadge(grade);
+  const family = familySees(grade);
+  const pending = grade?.pendingChange ?? null;
+
+  function chooseNumber(value: number) {
+    if (decided?.kind === 'NUMERIC' && decided.value === value) return;
+    if (needsReason(decided?.kind, 'NUMERIC')) onRequestStatus?.(row, { kind: 'NUMERIC', value });
+    else onPick(row, value);
+  }
+
+  function chooseStatus(kind: AttestationKind) {
+    if (decided?.kind === kind) return;
+    onRequestStatus?.(row, { kind, value: null });
+  }
+
   return (
-    <span
-      className={cx(
-        'inline-flex items-center gap-1 rounded-lg border border-slate-200 p-0.5',
-        busy && 'pointer-events-none opacity-60',
-      )}
-    >
-      {options.map((option) => {
-        const selected = value === option;
-        return (
-          <button
-            key={option}
-            type="button"
-            aria-pressed={selected}
-            onClick={() => onPick(option)}
+    <div className="flex flex-col items-center gap-2">
+      <span className="flex items-center justify-center gap-3">
+        {selectable ? (
+          <span
+            role="group"
+            aria-label={`Итог: ${row.studentName ?? ''}`}
             className={cx(
-              'size-[26px] rounded-md text-13 font-bold transition',
-              selected
-                ? 'bg-navy-700 text-white'
-                : 'text-slate-500 hover:bg-slate-100 hover:text-navy-700',
+              'inline-flex items-center gap-1 rounded-lg border border-slate-200 p-0.5',
+              busy && 'pointer-events-none opacity-60',
             )}
           >
-            {option}
-          </button>
-        );
-      })}
-    </span>
+            {showNumbers && numberOptions.map((option) => (
+              <ResultButton
+                key={option}
+                label={String(option)}
+                selected={decided?.kind === 'NUMERIC' && decided.value === option}
+                onClick={() => chooseNumber(option)}
+              />
+            ))}
+            {/* Числа менять нельзя (опубликованное число), а решение — не статус: оно всё равно
+                стоит в ряду выбранным, иначе ячейка показывала бы только «ВНА НА» без итога. */}
+            {!showNumbers && decided && !isAttestationStatus(decided.kind) && (
+              <span
+                title={fullResultLabel(decided)}
+                className="flex h-[26px] min-w-[26px] items-center justify-center rounded-md bg-navy-700 px-1 text-13 font-bold text-white"
+              >
+                {shortResultLabel(decided)}
+              </span>
+            )}
+            {(showNumbers || (decided && !isAttestationStatus(decided.kind))) && statusesEnabled && (
+              <span aria-hidden className="mx-0.5 h-5 w-px bg-slate-200" />
+            )}
+            {statusesEnabled && statusKinds.map((kind) => (
+              <ResultButton
+                key={kind}
+                label={ATTESTATION_SHORT[kind]}
+                title={FINAL_RESULT_LABELS[kind]}
+                ariaLabel={`${ATTESTATION_SHORT[kind]} — ${FINAL_RESULT_LABELS[kind]}`}
+                selected={decided?.kind === kind}
+                onClick={() => chooseStatus(kind)}
+              />
+            ))}
+          </span>
+        ) : (
+          <span
+            className="flex items-center gap-2 text-15 font-bold text-slate-900"
+            title={decided ? fullResultLabel(decided) : undefined}
+          >
+            {row.yearLocked && <Lock className="size-4 text-slate-500" aria-label="Предмет закрыт за год" />}
+            {shortResultLabel(decided)}
+          </span>
+        )}
+        {row.recommendationChanged && (
+          <span title="Оценки изменили после выставления итога — рекомендация сейчас другая" className="text-brand-600">
+            <AlertTriangle className="size-4" />
+          </span>
+        )}
+      </span>
+
+      {(badge || (row.canEditResult && !published && otherKinds.length > 0)) && (
+        <span className="flex flex-wrap items-center justify-center gap-2">
+          {badge && <Badge appearance="label" tone={badge.tone}>{badge.label}</Badge>}
+          {row.canEditResult && !published && otherKinds.map((kind) => (
+            <Button
+              key={kind}
+              variant="secondary"
+              size="sm"
+              disabled={busy}
+              aria-pressed={grade?.resultKind === kind}
+              onClick={() => onPickResult?.(row, kind)}
+            >
+              {FINAL_RESULT_LABELS[kind]}
+            </Button>
+          ))}
+        </span>
+      )}
+
+      {pending && family && (
+        <p className="max-w-xs text-center text-11 text-muted">
+          Ученик видит «{fullResultLabel(family)}». Ждёт подтверждения: «{fullResultLabel(decided)}»
+          {' — '}{authorLabel(pending.changedByName, pending.changedByRole)}
+        </p>
+      )}
+
+      {row.canConfirmPublication ? (
+        <span className="flex flex-col items-center gap-1">
+          {!pending && (
+            <span className="max-w-xs text-center text-11 text-brand-600">
+              Требуется повторное подтверждение: рекомендация теперь {row.recommendedValue}, ученик видит {finalResultLabel(grade)}
+            </span>
+          )}
+          <Button variant="secondary" size="sm" disabled={busy} onClick={() => onRepublish?.(row)}>
+            Подтвердить и опубликовать
+          </Button>
+        </span>
+      ) : pending ? (
+        <span className="text-11 font-semibold text-amber-700">Подтверждает учитель предмета</span>
+      ) : null}
+
+      {(pending && row.canChangeAttestation) || grade?.id ? (
+        <span className="flex flex-wrap justify-center gap-2">
+          {pending && row.canChangeAttestation && grade && (
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={busy}
+              onClick={() => onRequestStatus?.(row, { kind: grade.resultKind ?? 'NUMERIC', value: grade.value ?? null })}
+            >
+              Отменить изменение
+            </Button>
+          )}
+          {grade?.id && (
+            <Button variant="ghost" size="sm" onClick={() => onOpenHistory?.(row)}>История итога</Button>
+          )}
+          {finals.canCorrectTechnicalErrors && published && (
+            <Button variant="ghost" size="sm" onClick={() => onCorrect?.(row)}>Исправить техническую ошибку</Button>
+          )}
+        </span>
+      ) : null}
+
+      {(!grade?.resultKind || grade.resultKind === 'NUMERIC') && row.publicationIssues?.map((issue) => (
+        <p key={issue} className="max-w-sm text-center text-11 text-danger-fg">{issue}</p>
+      ))}
+    </div>
   );
 }
 
 /**
- * Опубликованный числовой итог, у которого рекомендация после правки баллов стала другой.
- * Сам итог ученик продолжает видеть прежним, пока учитель не подтвердит новый (ТЗ №9).
- * Право и «изменилась ли рекомендация» — ответ сервера; здесь только их сочетание.
+ * Кнопка выбора итога (макет 2098:1382): число или ВНА/НА в одном ряду. Выбранная — navy,
+ * как у выбора оценки урока; повторное нажатие по выбранной ничего не меняет.
  */
-export function needsRepublish(row: ClassFinalGradeRow, canManage: boolean): boolean {
-  const grade = row.finalGrade;
+function ResultButton({
+  label,
+  title,
+  ariaLabel,
+  selected,
+  onClick,
+}: {
+  label: string;
+  title?: string;
+  ariaLabel?: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
   return (
-    canManage &&
-    row.currentMember !== false &&
-    !row.yearLocked &&
-    row.recommendationChanged === true &&
-    row.recommendedValue != null &&
-    grade?.status === 'PUBLISHED' &&
-    (grade.resultKind == null || grade.resultKind === 'NUMERIC')
+    <button
+      type="button"
+      aria-pressed={selected}
+      aria-label={ariaLabel}
+      title={title}
+      onClick={onClick}
+      className={cx(
+        'h-[26px] min-w-[26px] rounded-md px-1 text-13 font-bold transition',
+        selected ? 'bg-navy-700 text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-navy-700',
+      )}
+    >
+      {label}
+    </button>
   );
 }
 

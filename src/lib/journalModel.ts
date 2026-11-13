@@ -1,4 +1,3 @@
-import { finalResultLabel } from './finalGradeResult';
 import type {
   ClassFinalGradeRow,
   GradebookCell,
@@ -194,14 +193,6 @@ export function finalsByStudent(rows: ClassFinalGradeRow[]): Map<number, ClassFi
     if (row.studentProfileId != null) map.set(row.studentProfileId, row);
   }
   return map;
-}
-
-/**
- * Итог, который видно в журнале. Черновик ученику не показывают (контракт §7), но
- * учителю в его собственном журнале — показывают: это его рабочее состояние.
- */
-export function finalValueLabel(row: ClassFinalGradeRow | undefined): string {
-  return finalResultLabel(row?.finalGrade);
 }
 
 function parseIso(iso: string): Date | null {
