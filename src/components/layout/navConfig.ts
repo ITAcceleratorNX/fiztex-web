@@ -142,6 +142,9 @@ export const TEACHER_NAV_SECTIONS: NavSection[] = [
       { to: ROUTES.myClass, label: 'Мой класс', icon: School },
       { to: ROUTES.myAvailability, label: 'Моё рабочее время', icon: Clock },
       { to: ROUTES.journal, label: 'Журнал оценок', icon: BookOpen },
+      // Отчётность учителя — свои классы по своему предмету (`/api/teacher/academic-reports`);
+      // свой класс целиком классный руководитель смотрит вкладкой «Моего класса».
+      { to: ROUTES.myReporting, label: 'Отчётность', icon: ChartColumn },
       { to: ROUTES.homework, label: 'Домашние задания', icon: BookOpenCheck },
       // Свой раздел, а не пункт админского `/attendance`: учитель показывает классу код и
       // смотрит журнал по своим урокам — всё на ролевых адресах (ATTENDANCE-TEACHER-001).

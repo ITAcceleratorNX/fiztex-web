@@ -3,6 +3,13 @@ import {
   attendanceDisplay,
   averageDisplay,
   badgeLetters,
+  basisLabel,
+  changeDisplay,
+  decimalDisplay,
+  performanceValueDisplay,
+  periodFinalsBySubject,
+  ratingStateHint,
+  reportFileName,
   counted,
   hasPartialData,
   isEmptyReport,
@@ -105,5 +112,50 @@ describe('reportingModel', () => {
     expect(badgeLetters('Математика')).toBe('М');
     expect(badgeLetters('Английский язык')).toBe('АЯ');
     expect(badgeLetters('8 «А»')).toBe('8А');
+  });
+
+  it('shows attestation statuses as words, never as zero', () => {
+    const finals = periodFinalsByStudent([
+      { finalScope: 'PERIOD', value: null, resultKind: 'TEMPORARILY_UNATTESTED', student: { id: 1 }, subject: { id: 9 } },
+      { finalScope: 'PERIOD', value: null, resultKind: 'NOT_ATTESTED', student: { id: 2 }, subject: { id: 9 } },
+      { finalScope: 'PERIOD', value: 4, resultKind: 'NUMERIC', student: { id: 3 }, subject: { id: 9 } },
+      // Зачёт без числа — не статус аттестации и не ноль: клетки нет.
+      { finalScope: 'PERIOD', value: null, resultKind: 'NOT_NUMERIC', student: { id: 4 }, subject: { id: 9 } },
+    ], 9);
+    expect([...finals.entries()]).toEqual([[1, 'ВНА'], [2, 'НА'], [3, 4]]);
+    expect([...periodFinalsBySubject([
+      { finalScope: 'PERIOD', value: null, resultKind: 'TEMPORARILY_UNATTESTED', subject: { id: 9 } },
+    ]).entries()]).toEqual([[9, 'ВНА']]);
+  });
+
+  it('names the basis of the performance and marks preliminary values', () => {
+    expect(basisLabel('PUBLISHED', false)).toBe('Опубликованные итоги');
+    expect(basisLabel('CURRENT', true)).toBe('Текущая успеваемость · Предварительно');
+    expect(basisLabel('CURRENT', false)).toBe('Текущая успеваемость');
+  });
+
+  it('never turns a missing performance or change into zero', () => {
+    expect(performanceValueDisplay({ basis: 'CURRENT', preliminary: true, value: 4.25, state: 'AVAILABLE' }).text).toBe('4,25');
+    const empty = performanceValueDisplay({ basis: 'PUBLISHED', preliminary: false, value: null, state: 'NO_DATA' });
+    expect(empty).toMatchObject({ text: '—', missing: true, hint: 'Итоги за период не опубликованы' });
+    expect(decimalDisplay(null, 'Нет').text).toBe('—');
+    expect(decimalDisplay(0, 'Нет').text).toBe('0,00');
+    expect(changeDisplay(null)).toMatchObject({ text: '—', trend: null });
+    expect(changeDisplay(0.4)).toMatchObject({ text: '+0,40', trend: 'up' });
+    expect(changeDisplay(-0.2).trend).toBe('down');
+    expect(changeDisplay(0)).toMatchObject({ text: '0,00', trend: 'flat' });
+  });
+
+  it('explains why a rating row has no place', () => {
+    expect(ratingStateHint({ state: 'RANKED' })).toBeUndefined();
+    expect(ratingStateHint({ state: 'MISSING_SUBJECTS', subjectsWithResult: 1, subjectsExpected: 3 }))
+      .toBe('Результаты по 1 из 3 предметов — место не присваивается');
+    expect(ratingStateHint({ state: 'ATTESTATION_STATUS' })).toContain('ВНА/НА');
+    expect(ratingStateHint({ state: 'NO_DATA' })).toBe('Нет результатов за период');
+  });
+
+  it('builds a safe export file name', () => {
+    expect(reportFileName('2026–2027', '1 четверть')).toBe('Отчётность 2026–2027 1 четверть.xlsx');
+    expect(reportFileName('2026/2027', null)).toBe('Отчётность 2026-2027 год.xlsx');
   });
 });

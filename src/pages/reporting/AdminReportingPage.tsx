@@ -6,14 +6,18 @@ import { FilterSelect } from '@/components/ui/FilterSelect';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import {
+  useClassRating,
   useReportBreakdown,
   useReportClasses,
+  useReportDynamics,
+  useReportPerformance,
   useReportDimensionTotal,
   useReportFinals,
   useReportPeriods,
   useReportSubjects,
   useReportSummary,
   useReportYears,
+  useStudentRating,
   type ReportDimension,
   type ReportFilter,
   type ReportOwner,
@@ -35,22 +39,27 @@ import {
   performanceDisplay,
   periodFinalsByStudent,
   periodLabel,
+  reportFileName,
   STUDENTS,
   SUBJECTS,
   TEACHERS,
   yearLabel,
+  type FinalCell,
   type ReportMetrics,
   type ReportRow,
 } from '@/lib/reportingModel';
 import { studentColumns, SubjectStudentsTable } from '../my-class/MyClassReportTab';
 import { ReportHeaderCard } from './ReportHeaderCard';
 import { MetricCell, PartialDataNotice, ReportTable, type ReportColumn } from './ReportTable';
+import { ClassRatingTable, DynamicsPanel, ExportButton, PerformanceStrip, StudentRatingTable } from './ReportInsights';
 import { StudentReportDrawer } from './StudentReportDrawer';
 
 const ADMIN: ReportOwner = { kind: 'admin' };
 const collator = new Intl.Collator('ru-RU', { numeric: true });
 
 type SchoolView = 'classes' | 'subjects' | 'teachers';
+/** Раздел страницы: таблицы показателей, рейтинги или динамика по периодам. */
+type Section = 'metrics' | 'rating' | 'dynamics';
 type Mode = 'school' | 'class' | 'subject' | 'teacher' | 'classSubject';
 
 function idParam(value: string | null): number | null {
@@ -69,6 +78,10 @@ function today(): string {
 
 /** Параметры детализации — сбрасываются вместе, когда пользователь уходит на уровень выше. */
 const DRILL = ['classId', 'subjectId', 'teacherId', 'view', 'student'];
+
+function sectionParam(value: string | null): Section {
+  return value === 'rating' || value === 'dynamics' ? value : 'metrics';
+}
 
 /**
  * Раздел «Отчётность» администратора (Figma 2196:23940 и соседние): сводка по школе,
@@ -133,7 +146,13 @@ export function AdminReportingPage() {
     : mode === 'class' ? (classView === 'students' ? 'STUDENT' : 'SUBJECT')
       : mode === 'classSubject' ? 'STUDENT' : 'CLASS';
 
+  const section = sectionParam(searchParams.get('section'));
   const summary = useReportSummary(ADMIN, filter);
+  const performance = useReportPerformance(ADMIN, filter);
+  const studentRating = useStudentRating(ADMIN, section === 'rating' ? filter : null);
+  // Классы сравниваются, пока класс не выбран: внутри класса сравнивать не с чем.
+  const classRating = useClassRating(ADMIN, section === 'rating' && classId == null ? filter : null);
+  const dynamics = useReportDynamics(ADMIN, section === 'dynamics' ? filter : null);
   const rows = useReportBreakdown(ADMIN, filter, dimension);
   // Учителя зависят от класса и предмета, а не от выбранного учителя (ТЗ §4.1).
   const teacherOptions = useReportBreakdown(ADMIN, filter && { ...filter, teacherProfileId: null }, 'TEACHER');
@@ -152,17 +171,23 @@ export function AdminReportingPage() {
   const teacherName = teachers.find((row) => row.key?.id === teacherId)?.key?.name
     ?? teacherRow.data?.rows.find((row) => row.key?.id === teacherId)?.key?.name;
   const sorted = byName(rows.data?.rows ?? []);
-  const studentRefs = dimension === 'STUDENT' ? sorted.map((row) => row.key!).filter((key) => key?.id != null) : [];
+  // Карточка ученика открывается из таблицы учеников или из рейтинга класса — листается
+  // по тому же списку, из которого её открыли.
+  const ratingStudents = section === 'rating' && classId != null;
+  const studentRefs = ratingStudents
+    ? (studentRating.data?.items ?? []).map((row) => row.student!).filter((key) => key?.id != null)
+    : section === 'metrics' && dimension === 'STUDENT' ? sorted.map((row) => row.key!).filter((key) => key?.id != null) : [];
+  const studentsLoaded = ratingStudents ? studentRating.data != null : section === 'metrics' && dimension === 'STUDENT' && rows.data != null;
   const openStudent = studentRefs.find((item) => item.id === studentId);
 
   useEffect(() => {
-    // Ученик в адресе, которого нет в текущей таблице, не должен открывать чужую карточку.
-    if (studentId != null && rows.data && dimension === 'STUDENT' && !openStudent) {
+    // Ученик в адресе, которого нет в текущем списке, не должен открывать чужую карточку.
+    if (studentId != null && studentsLoaded && !openStudent) {
       const next = new URLSearchParams(searchParams);
       next.delete('student');
       setSearchParams(next, { replace: true });
     }
-  }, [dimension, openStudent, rows.data, searchParams, setSearchParams, studentId]);
+  }, [openStudent, searchParams, setSearchParams, studentId, studentsLoaded]);
 
   function update(changes: Record<string, string | null>, drop: string[] = []) {
     const next = new URLSearchParams(searchParams);
@@ -184,7 +209,10 @@ export function AdminReportingPage() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-28 font-bold text-ink">Отчётность</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-28 font-bold text-ink">Отчётность</h1>
+        <ExportButton owner={ADMIN} filter={filter} fileName={reportFileName(yearText, period?.name)} />
+      </div>
 
       {mode !== 'school' && (
         <button
@@ -297,16 +325,43 @@ export function AdminReportingPage() {
         </section>
       ) : (
         <>
-          {mode === 'school' && (
+          <PerformanceStrip performance={performance.data?.performance} pending={performance.isPending}
+            failed={performance.isError} attendance={attendanceDisplay(summary.data?.metrics)} />
+          <SegmentedTabs value={section} ariaLabel="Раздел отчётности"
+            onChange={(value) => update({ section: value === 'metrics' ? null : value, student: null })}
+            options={[{ value: 'metrics', label: 'Показатели' }, { value: 'rating', label: 'Рейтинг' }, { value: 'dynamics', label: 'Динамика' }]} />
+          {section === 'rating' && (
+            <div className="space-y-6">
+              {classId == null && (
+                <section className="space-y-3">
+                  <h2 className="text-lg font-semibold text-ink">Рейтинг классов</h2>
+                  <ClassRatingTable rating={classRating.data} pending={classRating.isPending} error={classRating.error}
+                    onRetry={() => void classRating.refetch()}
+                    onOpen={(row) => row.schoolClass?.id != null && update({ classId: String(row.schoolClass.id), view: null })} />
+                </section>
+              )}
+              <section className="space-y-3">
+                <h2 className="text-lg font-semibold text-ink">{classId == null ? 'Рейтинг учеников школы' : 'Рейтинг учеников класса'}</h2>
+                <StudentRatingTable rating={studentRating.data} pending={studentRating.isPending} error={studentRating.error}
+                  onRetry={() => void studentRating.refetch()} showClass={classId == null} selectedId={studentId}
+                  onOpen={classId == null ? undefined : (row) => row.student?.id != null && update({ student: String(row.student.id) })} />
+              </section>
+            </div>
+          )}
+          {section === 'dynamics' && (
+            <DynamicsPanel points={dynamics.data?.points} pending={dynamics.isPending} error={dynamics.error}
+              onRetry={() => void dynamics.refetch()} />
+          )}
+          {section === 'metrics' && mode === 'school' && (
             <SegmentedTabs value={schoolView} ariaLabel="Разрез отчётности" onChange={(value) => update({ view: value === 'classes' ? null : value })}
               options={[{ value: 'classes', label: 'По классам' }, { value: 'subjects', label: 'По предметам' }, { value: 'teachers', label: 'По учителям' }]} />
           )}
-          {mode === 'class' && (
+          {section === 'metrics' && mode === 'class' && (
             <SegmentedTabs value={classView} ariaLabel="Представление класса" onChange={(value) => update({ view: value === 'students' ? 'students' : null, student: null })}
               options={[{ value: 'subjects', label: 'По предметам' }, { value: 'students', label: 'По ученикам' }]} />
           )}
-          {hasPartialData(sorted) && <PartialDataNotice subject={partialSubject(dimension)} />}
-          <ReportBody
+          {section === 'metrics' && hasPartialData(sorted) && <PartialDataNotice subject={partialSubject(dimension)} />}
+          {section === 'metrics' && <ReportBody
             mode={mode}
             dimension={dimension}
             rows={sorted}
@@ -329,7 +384,7 @@ export function AdminReportingPage() {
               } else if (dimension === 'SUBJECT') update({ subjectId: String(id), view: null });
               else update({ teacherId: String(id), view: null });
             }}
-          />
+          />}
         </>
       )}
 
@@ -422,7 +477,7 @@ function ReportBody({
   teacherTotal: number | undefined;
   subjectTotal: number | undefined;
   classTotal: number | undefined;
-  finals: Map<number, number>;
+  finals: Map<number, FinalCell>;
   finalsReady: boolean;
   periodName?: string;
   selectedStudentId: number | null;

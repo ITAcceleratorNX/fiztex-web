@@ -2,7 +2,8 @@ import type { ReactNode } from 'react';
 import { ChevronRight, Info } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { cx } from '@/lib/format';
-import type { MetricDisplay } from '@/lib/reportingModel';
+import { GradeChip } from '@/components/ui/GradeChip';
+import { ATTESTATION_TITLES, type FinalCell, type MetricDisplay } from '@/lib/reportingModel';
 
 /**
  * Колонка таблицы отчётности. Значения уже посчитаны сервером — колонка только решает,
@@ -171,4 +172,21 @@ export function PartialDataNotice({ subject }: { subject: string }) {
       Для части {subject} данные отсутствуют — итоги посчитаны по доступным данным
     </p>
   );
+}
+
+/**
+ * Итог в клетке: число — плашкой оценки, ВНА/НА — словом с расшифровкой, не ноль;
+ * пусто — прочерк «не опубликован».
+ */
+export function FinalValue({ value }: { value: FinalCell | null | undefined }) {
+  if (value == null) return <span className="text-slate-400" title="Итог за период не опубликован">—</span>;
+  if (typeof value === 'string') {
+    return (
+      <span title={ATTESTATION_TITLES[value]}
+        className="inline-flex items-center rounded bg-warning-bg px-1.5 py-0.5 text-11 font-semibold text-amber-700">
+        {value}
+      </span>
+    );
+  }
+  return <GradeChip size="sm" value={String(value)} />;
 }

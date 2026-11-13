@@ -3,12 +3,14 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReportDimension, ReportFilter, ReportOwner } from '@/hooks/reportingQueries';
-import { metrics, NO_GRADES, ok, row } from '../reporting/reportingTestData';
+import { idleQuery, metrics, NO_GRADES, ok, row } from '../reporting/reportingTestData';
 import { MyClassReportTab } from './MyClassReportTab';
 
 const summary = vi.fn();
 const breakdown = vi.fn();
 const owners: ReportOwner[] = [];
+
+vi.mock('@/context/ToastContext', () => ({ useToast: () => ({ push: vi.fn(), success: vi.fn(), error: vi.fn(), info: vi.fn() }) }));
 
 vi.mock('@/hooks/reportingQueries', () => ({
   useReportSummary: (owner: ReportOwner, filter: ReportFilter | null) => {
@@ -17,6 +19,12 @@ vi.mock('@/hooks/reportingQueries', () => ({
   },
   useReportBreakdown: (_owner: ReportOwner, filter: ReportFilter | null, dimension: ReportDimension | null) => breakdown(filter, dimension),
   useReportFinals: () => ok([{ finalScope: 'PERIOD', value: 4, student: { id: 31 }, subject: { id: 7 } }]),
+  useReportPerformance: () => ok({ performance: { basis: 'CURRENT', preliminary: true, value: 4.25, state: 'AVAILABLE',
+    studentsWithResult: 2, studentsExcluded: 0, temporarilyUnattestedCount: 0, notAttestedCount: 0 } }),
+  useStudentRating: () => idleQuery(),
+  useClassRating: () => idleQuery(),
+  useReportDynamics: () => idleQuery(),
+  downloadReportExcel: vi.fn(),
 }));
 
 function LocationProbe() {

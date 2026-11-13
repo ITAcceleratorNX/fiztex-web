@@ -38,3 +38,8 @@ export function row(id: number, name: string, overrides: Partial<ReportRow> = {}
 export function ok<T>(data: T) {
   return { data, isPending: false, isError: false, error: null, refetch: () => Promise.resolve({ data }) };
 }
+
+/** Запрос, который страница не включила (`enabled: false`). */
+export function idleQuery() {
+  return { data: undefined, isPending: true, isFetching: false, fetchStatus: 'idle', isError: false, error: null, refetch: () => Promise.resolve({}) };
+}

@@ -14,6 +14,8 @@ const periods = vi.fn();
 // TanStack keeps disabled queries pending until their dependencies are available.
 const disabledQuery = () => ({ data: undefined, isPending: true, isFetching: false, fetchStatus: 'idle', isError: false, error: null, refetch: vi.fn() });
 
+vi.mock('@/context/ToastContext', () => ({ useToast: () => ({ push: vi.fn(), success: vi.fn(), error: vi.fn(), info: vi.fn() }) }));
+
 vi.mock('@/hooks/reportingQueries', () => ({
   useReportYears: () => years(),
   useReportPeriods: (yearId: number | null) => periods(yearId),
@@ -23,6 +25,12 @@ vi.mock('@/hooks/reportingQueries', () => ({
   useReportBreakdown: (_owner: unknown, filter: ReportFilter | null, dimension: ReportDimension | null) => breakdown(filter, dimension),
   useReportDimensionTotal: () => ok(3),
   useReportFinals: () => ok([{ finalScope: 'PERIOD', value: 5, student: { id: 31 }, subject: { id: 7 } }]),
+  useReportPerformance: () => ok({ performance: { basis: 'CURRENT', preliminary: true, value: 4.25, state: 'AVAILABLE',
+    studentsWithResult: 2, studentsExcluded: 0, temporarilyUnattestedCount: 0, notAttestedCount: 0 } }),
+  useStudentRating: () => disabledQuery(),
+  useClassRating: () => disabledQuery(),
+  useReportDynamics: () => disabledQuery(),
+  downloadReportExcel: vi.fn(),
 }));
 
 function LocationProbe() {

@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
-import { GradeChip } from '@/components/ui/GradeChip';
 import { Modal } from '@/components/ui/Modal';
 import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import {
@@ -20,7 +19,7 @@ import {
   type MetricDisplay,
   type ReportReference,
 } from '@/lib/reportingModel';
-import { MetricCell } from './ReportTable';
+import { FinalValue, MetricCell } from './ReportTable';
 
 /**
  * Боковая карточка ученика (Figma «Шторка ученика» 2196:22570): сводка за выбранный
@@ -38,6 +37,7 @@ export function StudentReportDrawer({
   context,
   students,
   highlightSubjectId,
+  keepSubject = false,
   onSelect,
   onClose,
 }: {
@@ -52,11 +52,18 @@ export function StudentReportDrawer({
   students: ReportReference[];
   /** Предмет детализации, из которой открыли карточку, — подсвечивается в таблице. */
   highlightSubjectId?: number | null;
+  /**
+   * Не расширять карточку до всех предметов. Учителю-предметнику положен только его
+   * предмет (ТЗ Frontend §4), и сервер без предмета ему не ответит.
+   */
+  keepSubject?: boolean;
   onSelect: (studentId: number) => void;
   onClose: () => void;
 }) {
-  // Предмет страницы карточку не сужает: в ней все предметы ученика.
-  const scope: ReportFilter = { ...filter, subjectId: null, teacherProfileId: null, studentProfileId: student.id };
+  // Предмет страницы карточку не сужает: в ней все предметы ученика — кроме предметника.
+  const scope: ReportFilter = {
+    ...filter, subjectId: keepSubject ? filter.subjectId : null, teacherProfileId: null, studentProfileId: student.id,
+  };
   const summary = useReportSummary(owner, scope);
   const subjects = useReportBreakdown(owner, scope, 'SUBJECT');
   const finals = useReportFinals(owner, scope);
@@ -136,9 +143,7 @@ export function StudentReportDrawer({
                       <td className="px-3 py-3 text-right tabular-nums"><MetricCell value={averageDisplay(row.metrics)} /></td>
                       <td className="px-3 py-3">
                         <span className="flex justify-center">
-                          {final == null
-                            ? <span className="text-slate-400" title="Итог за период не опубликован">—</span>
-                            : <GradeChip size="sm" value={String(final)} />}
+                          <FinalValue value={final} />
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums">
