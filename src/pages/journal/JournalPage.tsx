@@ -54,7 +54,13 @@ import { PeriodBreakdownModal } from './PeriodBreakdownModal';
 import { YearFinalsTab } from './YearFinalsTab';
 import { FinalGradeCorrectionModal, FinalGradeHistoryModal, RepublishFinalModal } from './FinalGradeCorrectionModal';
 import { AttestationStatusModal } from './AttestationStatusModal';
-import { ATTESTATION_HINT, ATTESTATION_KINDS, ATTESTATION_SHORT, type ResultValue } from '@/lib/attestationModel';
+import {
+  ATTESTATION_HINT,
+  ATTESTATION_KINDS,
+  ATTESTATION_SHORT,
+  isAttestationStatus,
+  type ResultValue,
+} from '@/lib/attestationModel';
 import { FINAL_RESULT_LABELS } from '@/lib/finalGradeResult';
 import { finalValueOptions, QuarterFinalsTable } from './QuarterFinalsTable';
 
@@ -580,7 +586,8 @@ function FinalsTab({
       </div>
 
       {correctionRow?.finalGrade && <FinalGradeCorrectionModal grade={correctionRow.finalGrade}
-        studentName={correctionRow.studentName ?? ''} allowedKinds={data.allowedResultKinds ?? ['NUMERIC']}
+        studentName={correctionRow.studentName ?? ''}
+        allowedKinds={(data.allowedResultKinds ?? ['NUMERIC']).filter((kind) => !isAttestationStatus(kind))}
         allowedValues={finalValueOptions(data)} onClose={() => setCorrectionRow(null)} />}
       {statusRequest && <AttestationStatusModal row={statusRequest.row} target={statusRequest.target}
         author={canManage ? 'TEACHER' : 'ADMINISTRATION'} subjectId={finalsKey.subjectId}

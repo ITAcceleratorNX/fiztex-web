@@ -1,4 +1,4 @@
-import { AlertTriangle, Lock } from 'lucide-react';
+import { AlertTriangle, History, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import {
@@ -275,6 +275,11 @@ function FinalResultCell({
   const badge = publicationBadge(grade);
   const family = familySees(grade);
   const pending = grade?.pendingChange ?? null;
+  const events = row.historyCount ?? 0;
+  // Техисправление у итога четверти статусы не трогает и не идёт поверх ожидающего
+  // изменения — сервер отказал бы 409; ВНА/НА меняются своим окном (контракт §12.4).
+  const correctable = Boolean(finals.canCorrectTechnicalErrors) && published
+    && !(periodScope && (isAttestationStatus(grade?.resultKind) || pending != null));
 
   function chooseNumber(value: number) {
     if (decided?.kind === 'NUMERIC' && decided.value === value) return;
@@ -400,9 +405,21 @@ function FinalResultCell({
             </Button>
           )}
           {grade?.id && (
-            <Button variant="ghost" size="sm" onClick={() => onOpenHistory?.(row)}>История итога</Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<History className="size-4" />}
+              aria-label={events > 1 ? `История итога — событий: ${events}` : 'История итога'}
+              onClick={() => onOpenHistory?.(row)}
+            >
+              История итога
+              {/* ТЗ-2 §4: индикатор — у строки есть что-то кроме создания. */}
+              {events > 1 && (
+                <span aria-hidden className="rounded-full bg-slate-100 px-1.5 text-10 font-bold text-slate-600">{events}</span>
+              )}
+            </Button>
           )}
-          {finals.canCorrectTechnicalErrors && published && (
+          {correctable && (
             <Button variant="ghost" size="sm" onClick={() => onCorrect?.(row)}>Исправить техническую ошибку</Button>
           )}
         </span>

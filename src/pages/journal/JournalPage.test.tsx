@@ -558,6 +558,35 @@ describe('Статусы ВНА/НА (ATTESTATION-001)', () => {
     expect(setFinal).not.toHaveBeenCalled();
   });
 
+  /** ТЗ-2 §6: администрация меняет статус на том же экране, но не публикует и не ставит оценки. */
+  it('администрация меняет статус опубликованного итога от своего имени', async () => {
+    const user = userEvent.setup();
+    saveStatus.mockResolvedValue({ id: 3 });
+    const published = { id: 3, value: 6, status: 'PUBLISHED', resultKind: 'NUMERIC', version: 4, publicationState: 'PUBLISHED' };
+    useClassFinals.mockReturnValue({
+      data: finals({
+        canManage: false,
+        rows: [{ ...finals().rows[0], finalGrade: published, canEditResult: false, canChangeAttestation: true }],
+      }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    renderPage('?tab=finals');
+
+    expect(screen.queryByRole('button', { name: 'Опубликовать итоги четверти' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '5' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'НА — Не аттестован' }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText(/пока учитель не подтвердит изменение/)).toBeInTheDocument();
+    await user.type(within(dialog).getByRole('textbox'), 'Решение педсовета №4');
+    await user.click(within(dialog).getByRole('button', { name: 'Сохранить статус' }));
+
+    expect(saveStatus).toHaveBeenCalledWith(expect.objectContaining({
+      author: 'ADMINISTRATION', finalGrade: published, resultKind: 'NOT_ATTESTED', reason: 'Решение педсовета №4',
+    }));
+  });
+
   it('расшифровывает ВНА и НА рядом со шкалой итога', () => {
     renderPage('?tab=finals');
 

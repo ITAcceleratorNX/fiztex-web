@@ -176,6 +176,31 @@ describe('статусы ВНА/НА в ячейке итога (ATTESTATION-001
     expect(screen.getByLabelText('Предмет закрыт за год')).toBeInTheDocument();
   });
 
+  it('история с изменениями помечена числом событий', () => {
+    renderTable({ finalGrade: vnaPendingSeven, historyCount: 3 });
+    expect(screen.getByRole('button', { name: 'История итога — событий: 3' })).toBeInTheDocument();
+  });
+
+  it('техисправление — только у числа без ожидающего изменения', () => {
+    const corrections = (row: Record<string, unknown>) => {
+      const data = finals(row);
+      (data as { canCorrectTechnicalErrors?: boolean }).canCorrectTechnicalErrors = true;
+      const { unmount } = render(
+        <QuarterFinalsTable finals={data} highlighted={new Set()} busyStudentId={null} onPick={vi.fn()} />,
+      );
+      const found = screen.queryByRole('button', { name: 'Исправить техническую ошибку' }) != null;
+      unmount();
+      return found;
+    };
+
+    expect(corrections({ finalGrade: published, canEditResult: false })).toBe(true);
+    expect(corrections({ finalGrade: publishedVna, canEditResult: false })).toBe(false);
+    expect(corrections({
+      finalGrade: { ...published, publicationState: 'CHANGED_AFTER_PUBLICATION', pendingChange: { resultKind: 'TEMP_UNATTESTED' } },
+      canEditResult: false,
+    })).toBe(false);
+  });
+
   it('«Не изучался» — только пока итог не опубликован', () => {
     renderTable({});
     expect(screen.getByRole('button', { name: 'Не изучался' })).toBeInTheDocument();

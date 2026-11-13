@@ -7,7 +7,14 @@ import { LoadingBlock, ErrorBlock } from '@/components/ui/StateBlock';
 import { useCorrectFinalGrade, useFinalGradeHistory, useRepublishFinalGrade } from '@/hooks/queries';
 import type { FinalGrade } from '@/lib/gradebookApi';
 import { FINAL_RESULT_LABELS, finalResultLabel } from '@/lib/finalGradeResult';
-import { authorLabel, decidedResult, fullResultLabel } from '@/lib/attestationModel';
+import {
+  authorLabel,
+  decidedResult,
+  fullResultLabel,
+  historyEventNote,
+  historyEventTitle,
+  type FinalGradeHistoryEvent,
+} from '@/lib/attestationModel';
 import { ApiError } from '@/lib/api';
 
 export function FinalGradeCorrectionModal({ grade, studentName, allowedKinds, allowedValues, onClose }: {
@@ -46,21 +53,47 @@ export function FinalGradeCorrectionModal({ grade, studentName, allowedKinds, al
   </Modal>;
 }
 
+/**
+ * История итога (ТЗ-2 §4): цепочка «было → стало», причина, автор с ролью, дата и время,
+ * публикации и изменения, ждущие подтверждения. Слова событий — `attestationModel`; у
+ * записей до ATTESTATION-001 причины действия нет — вместо неё основание из снимка.
+ */
 export function FinalGradeHistoryModal({ id, studentName, onClose }: { id: number; studentName: string; onClose: () => void }) {
   const history = useFinalGradeHistory(id);
   return <Modal open title="История итоговой оценки" subtitle={studentName} onClose={onClose}>
-    {history.isPending ? <LoadingBlock /> : history.isError ? <ErrorBlock message="Не удалось загрузить историю итога" onRetry={() => void history.refetch()} /> : <ol className="space-y-4">
-      {history.data?.map(event => {
-        const before = event.before as { value?: number; resultKind?: NonNullable<FinalGrade['resultKind']> } | undefined;
-        const after = event.after as { value?: number; resultKind?: NonNullable<FinalGrade['resultKind']>; resultReason?: string; correctionReference?: string } | undefined;
-        const label = (result: typeof before) => result ? finalResultLabel(result) : '—';
-        return <li key={event.id} className="border-b border-line pb-3 text-13"><p className="font-semibold">{event.action === 'CREATE' ? 'Создание' : event.action === 'PUBLISH' ? 'Публикация' : event.action === 'REPUBLISH' ? 'Повторная публикация' : 'Изменение'}: {label(before)} → {label(after)}</p>
-          {after?.resultReason && <p>{after.resultReason}</p>}{after?.correctionReference && <p>Документы: {after.correctionReference}</p>}
-          <p className="text-muted">{event.actorName ?? 'Сотрудник школы'} · {event.createdAt ? new Date(event.createdAt).toLocaleString('ru-RU') : ''}</p>
-        </li>;
-      })}
-    </ol>}
+    {history.isPending ? <LoadingBlock /> : history.isError
+      ? <ErrorBlock message="Не удалось загрузить историю итога" onRetry={() => void history.refetch()} />
+      : !history.data?.length
+        ? <p className="text-13 text-muted">Событий пока нет</p>
+        : <ol className="flex flex-col gap-4">{history.data.map((event) => <HistoryEvent key={event.id} event={event} />)}</ol>}
   </Modal>;
+}
+
+function HistoryEvent({ event }: { event: FinalGradeHistoryEvent }) {
+  const after = (event.after ?? null) as { resultReason?: string | null; correctionReference?: string | null } | null;
+  // Записи до V144 причины действия не знают: у создания и правки показать хотя бы основание
+  // результата. У публикаций оно лишь повторяло бы основание предыдущего события.
+  const basis = !event.reason && (event.action === 'CREATE' || event.action === 'UPDATE') && after?.resultReason
+    ? after.resultReason
+    : null;
+  const note = historyEventNote(event);
+  const dot = event.action === 'PUBLISH' || event.action === 'REPUBLISH'
+    ? 'bg-green-500'
+    : event.action === 'PENDING_CHANGE' ? 'bg-amber-500' : 'bg-slate-300';
+  return <li className="flex gap-3 text-13">
+    <span aria-hidden className={`mt-1.5 size-2 shrink-0 rounded-full ${dot}`} />
+    <div className="flex min-w-0 flex-col gap-0.5">
+      <p className="font-semibold text-ink">{historyEventTitle(event)}</p>
+      {event.reason && <p className="text-slate-700"><span className="text-muted">Причина: </span>{event.reason}</p>}
+      {basis && <p className="text-slate-700"><span className="text-muted">Основание: </span>{basis}</p>}
+      {after?.correctionReference && <p className="text-slate-700"><span className="text-muted">Документы: </span>{after.correctionReference}</p>}
+      {note && <p className="text-11 text-amber-700">{note}</p>}
+      <p className="text-11 text-muted">
+        {authorLabel(event.actorName, event.actorRole)}
+        {event.createdAt ? ` · ${new Date(event.createdAt).toLocaleString('ru-RU')}` : ''}
+      </p>
+    </div>
+  </li>;
 }
 
 /**
