@@ -113,7 +113,7 @@ describe('account session isolation', () => {
     expect(auth.isAuthenticated).toBe(false);
     expect(getToken()).toBeNull();
     expect(localStorage.getItem('fiztex.profile')).toBeNull();
-    // Серверный выход отзывает сессии всего аккаунта — и ту, что в мобильном приложении.
+    // Серверный выход токеном старого формата отзывает сессии всего аккаунта — и ту, что в приложении.
     expect(fetchMock).not.toHaveBeenCalledWith('/api/auth/logout', expect.anything());
   });
 
