@@ -62,11 +62,20 @@ export function reasonProblem(reason: string): string | null {
 }
 
 /**
- * Нужна ли причина у этого выбора: статус был до или будет после. Решает, открывать ли окно
- * перед отправкой; сервер проверит то же самое (`FINAL_GRADE_REASON_REQUIRED`).
+ * Нужна ли причина у этого выбора: статус был до или будет после — или опубликован сейчас. Если
+ * ученику показан ВНА/НА, любая правка решённого (в том числе ожидающего числа «7 → 8») — это всё
+ * ещё снятие или замена статуса (D-1 ручной проверки: без этого правка уходила без окна и
+ * причины). Решает, открывать ли окно перед отправкой; сервер проверит то же самое
+ * (`FINAL_GRADE_REASON_REQUIRED`).
+ *
+ * @param publishedKind вид опубликованного итога — только у опубликованной строки
  */
-export function needsReason(current: ResultKind | null | undefined, next: ResultKind): boolean {
-  return isAttestationStatus(current) || isAttestationStatus(next);
+export function needsReason(
+  current: ResultKind | null | undefined,
+  next: ResultKind,
+  publishedKind?: ResultKind | null,
+): boolean {
+  return isAttestationStatus(current) || isAttestationStatus(next) || isAttestationStatus(publishedKind);
 }
 
 export type ResultValue = { kind: ResultKind; value: number | null };

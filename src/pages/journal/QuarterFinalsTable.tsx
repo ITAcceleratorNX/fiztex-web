@@ -72,10 +72,16 @@ export function QuarterFinalsTable({
   onOpenHistory,
   onRepublish,
   onRequestStatus,
+  rowError = null,
   scope = 'PERIOD',
 }: {
   finals: ClassFinalGrades;
   scope?: FinalGrade['scope'];
+  /**
+   * Отказ действия в ячейке — показывается под строкой этого ученика, а не под таблицей: внизу
+   * страницы его не видно, и строка просто «не менялась» (D-3 ручной проверки).
+   */
+  rowError?: { studentProfileId: number; message: string } | null;
   /** Кого не хватило для публикации — сервер называет их поимённо. */
   highlighted: ReadonlySet<number>;
   busyStudentId: number | null;
@@ -203,6 +209,7 @@ export function QuarterFinalsTable({
                     scope={scope}
                     options={options}
                     busy={busyStudentId === studentId}
+                    error={rowError?.studentProfileId === studentId ? rowError.message : null}
                     onPick={onPick}
                     onPickResult={onPickResult}
                     onRequestStatus={onRequestStatus}
@@ -238,6 +245,7 @@ function FinalResultCell({
   scope,
   options,
   busy,
+  error,
   onPick,
   onPickResult,
   onRequestStatus,
@@ -250,6 +258,7 @@ function FinalResultCell({
   scope: FinalGrade['scope'];
   options: number[];
   busy: boolean;
+  error: string | null;
   onPick: (row: ClassFinalGradeRow, value: number) => void;
   onPickResult?: (row: ClassFinalGradeRow, kind: NonNullable<FinalGrade['resultKind']>) => void;
   onRequestStatus?: (row: ClassFinalGradeRow, target: ResultValue) => void;
@@ -283,8 +292,11 @@ function FinalResultCell({
 
   function chooseNumber(value: number) {
     if (decided?.kind === 'NUMERIC' && decided.value === value) return;
-    if (needsReason(decided?.kind, 'NUMERIC')) onRequestStatus?.(row, { kind: 'NUMERIC', value });
-    else onPick(row, value);
+    if (needsReason(decided?.kind, 'NUMERIC', published ? grade?.resultKind : null)) {
+      onRequestStatus?.(row, { kind: 'NUMERIC', value });
+    } else {
+      onPick(row, value);
+    }
   }
 
   function chooseStatus(kind: AttestationKind) {
@@ -356,18 +368,23 @@ function FinalResultCell({
         <span className="flex flex-wrap items-center justify-center gap-2">
           {badge && <Badge appearance="label" tone={badge.tone}>{badge.label}</Badge>}
           {row.canEditResult && !published && otherKinds.map((kind) => (
+            // Выбранный «Не изучался» обязан выглядеть выбранным, как число в ряду (D-2).
             <Button
               key={kind}
-              variant="secondary"
+              variant={decided?.kind === kind ? 'navy' : 'secondary'}
               size="sm"
               disabled={busy}
-              aria-pressed={grade?.resultKind === kind}
+              aria-pressed={decided?.kind === kind}
               onClick={() => onPickResult?.(row, kind)}
             >
               {FINAL_RESULT_LABELS[kind]}
             </Button>
           ))}
         </span>
+      )}
+
+      {error && (
+        <p role="alert" className="max-w-xs text-center text-11 font-semibold text-danger-fg">{error}</p>
       )}
 
       {pending && family && (

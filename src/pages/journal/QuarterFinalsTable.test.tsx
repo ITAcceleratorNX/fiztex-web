@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { QuarterFinalsTable } from './QuarterFinalsTable';
@@ -199,6 +199,47 @@ describe('статусы ВНА/НА в ячейке итога (ATTESTATION-001
       finalGrade: { ...published, publicationState: 'CHANGED_AFTER_PUBLICATION', pendingChange: { resultKind: 'TEMP_UNATTESTED' } },
       canEditResult: false,
     })).toBe(false);
+  });
+
+  it('D-1: правка ожидающего числа поверх опубликованного ВНА — через окно с причиной', async () => {
+    const { onPick, onRequestStatus } = renderTable({ finalGrade: vnaPendingSeven, canConfirmPublication: true });
+
+    await userEvent.click(screen.getByRole('button', { name: '8' }));
+
+    expect(onRequestStatus).toHaveBeenCalledWith(expect.anything(), { kind: 'NUMERIC', value: 8 });
+    expect(onPick).not.toHaveBeenCalled();
+  });
+
+  it('D-1: у администрации то же — окно, а не учительский адрес', async () => {
+    const { onPick, onRequestStatus } = renderTable(
+      { finalGrade: vnaPendingSeven, canEditResult: false, canConfirmPublication: false }, false);
+
+    await userEvent.click(screen.getByRole('button', { name: '8' }));
+
+    expect(onRequestStatus).toHaveBeenCalledWith(expect.anything(), { kind: 'NUMERIC', value: 8 });
+    expect(onPick).not.toHaveBeenCalled();
+  });
+
+  it('D-2: выбранный «Не изучался» выглядит выбранным', () => {
+    renderTable({ finalGrade: { id: 9, status: 'DRAFT', value: null, resultKind: 'NOT_STUDIED', publicationState: 'DRAFT' } });
+
+    const chosen = screen.getByRole('button', { name: 'Не изучался' });
+    expect(chosen).toHaveAttribute('aria-pressed', 'true');
+    expect(chosen.className).toContain('bg-navy-700');
+  });
+
+  it('D-3: отказ действия виден под строкой ученика', () => {
+    render(
+      <QuarterFinalsTable
+        finals={finals({})}
+        highlighted={new Set()}
+        busyStudentId={null}
+        onPick={vi.fn()}
+        rowError={{ studentProfileId: 1, message: 'Укажите причину — от 5 до 1000 символов' }}
+      />,
+    );
+    const row = screen.getByText('Айдар Нурланов').closest('tr')!;
+    expect(within(row).getByRole('alert')).toHaveTextContent('Укажите причину');
   });
 
   it('«Не изучался» — только пока итог не опубликован', () => {

@@ -21,6 +21,8 @@ export function YearFinalsTab({ query }: { query: Omit<YearFinalsQuery, 'scope'>
   const publish = usePublishClassYearFinals();
   const [busyId, setBusyId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Отказ действия в ячейке — под строкой ученика (D-3); в окне «Не изучался» — в самом окне.
+  const [rowError, setRowError] = useState<{ studentProfileId: number; message: string } | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [reasonRow, setReasonRow] = useState<ClassFinalGradeRow | null>(null);
   const [reason, setReason] = useState('');
@@ -29,12 +31,16 @@ export function YearFinalsTab({ query }: { query: Omit<YearFinalsQuery, 'scope'>
 
   async function pick(row: ClassFinalGradeRow, value: number | null, resultKind: FinalGrade['resultKind'] = 'NUMERIC', resultReason?: string) {
     if (!query) return;
-    setBusyId(row.studentProfileId!); setError(null);
+    setBusyId(row.studentProfileId!); setError(null); setRowError(null);
     try {
       await setFinal.mutateAsync({ finalGradeId: row.finalGrade?.id ?? null, studentProfileId: row.studentProfileId!,
         subjectId: query.subjectId, academicYearId: query.academicYearId, scope, value, resultKind, resultReason });
       setReasonRow(null);
-    } catch (failure) { setError(failure instanceof ApiError ? failure.message : 'Не удалось сохранить итог'); }
+    } catch (failure) {
+      const message = failure instanceof ApiError ? failure.message : 'Не удалось сохранить итог';
+      if (resultKind === 'NOT_STUDIED') setError(message);
+      else setRowError({ studentProfileId: row.studentProfileId!, message });
+    }
     finally { setBusyId(null); }
   }
   async function publishAll() {
@@ -58,7 +64,7 @@ export function YearFinalsTab({ query }: { query: Omit<YearFinalsQuery, 'scope'>
       : data?.assessmentMode === 'NO_EXAM' ? <EmptyBlock title="В 2–4 классах экзаменационная оценка не выставляется" description="Итог года определяется по четвертным оценкам. Выберите годовую оценку." />
       : rows.length === 0 ? <EmptyBlock title="В классе нет учеников" /> : <>
         <div className="card overflow-hidden p-0"><QuarterFinalsTable finals={data!} scope={scope} highlighted={new Set()} busyStudentId={busyId}
-          onPick={(row, value) => void pick(row, value)} onPickResult={(row, kind) => {
+          rowError={rowError} onPick={(row, value) => void pick(row, value)} onPickResult={(row, kind) => {
             if (kind === 'NOT_STUDIED') { setReasonRow(row); setReason(''); } else void pick(row, null, kind);
           }} onCorrect={setCorrecting} onOpenHistory={setHistory} /></div>
         {data?.canManage && <div className="card flex flex-wrap items-center justify-between gap-3 p-5">

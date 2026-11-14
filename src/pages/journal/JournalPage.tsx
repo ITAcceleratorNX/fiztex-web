@@ -447,6 +447,8 @@ function FinalsTab({
   const publish = usePublishClassFinals();
   const [busyStudentId, setBusyStudentId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Отказ действия в ячейке — под строкой ученика, а не внизу страницы (D-3).
+  const [rowError, setRowError] = useState<{ studentProfileId: number; message: string } | null>(null);
   const [missing, setMissing] = useState<ReadonlySet<number>>(new Set());
   const [confirmPublish, setConfirmPublish] = useState(false);
   const [reasonRow, setReasonRow] = useState<ClassFinalGradeRow | null>(null);
@@ -488,6 +490,7 @@ function FinalsTab({
 
   async function pick(row: ClassFinalGradeRow, value: number | null, resultKind: FinalGrade['resultKind'] = 'NUMERIC', resultReason?: string) {
     setError(null);
+    setRowError(null);
     setBusyStudentId(row.studentProfileId as number);
     try {
       await setFinal.mutateAsync({
@@ -503,13 +506,14 @@ function FinalsTab({
         return next;
       });
     } catch (failure) {
-      setError(
-        failure instanceof ApiError && failure.code === FINAL_GRADE_ERRORS.yearLocked
+      setRowError({
+        studentProfileId: row.studentProfileId as number,
+        message: failure instanceof ApiError && failure.code === FINAL_GRADE_ERRORS.yearLocked
           ? 'Годовая оценка опубликована — четвертные по этому предмету закрыты'
           : failure instanceof ApiError
             ? failure.message
             : 'Не удалось сохранить итоговую оценку',
-      );
+      });
     } finally {
       setBusyStudentId(null);
     }
@@ -570,6 +574,7 @@ function FinalsTab({
           finals={data}
           highlighted={missing}
           busyStudentId={busyStudentId}
+          rowError={rowError}
           onPick={(row, value) => void pick(row, value)}
           onCorrect={setCorrectionRow}
           onOpenHistory={setHistoryRow}

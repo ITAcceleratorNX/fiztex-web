@@ -35,6 +35,9 @@ describe('attestationModel', () => {
     expect(needsReason('NOT_ATTESTED', 'NUMERIC')).toBe(true);
     expect(needsReason('NUMERIC', 'NUMERIC')).toBe(false);
     expect(needsReason(undefined, 'NUMERIC')).toBe(false);
+    // D-1: опубликован ВНА, ждёт 7 — смена на 8 всё ещё снимает статус
+    expect(needsReason('NUMERIC', 'NUMERIC', 'TEMP_UNATTESTED')).toBe(true);
+    expect(needsReason('NUMERIC', 'NUMERIC', 'NUMERIC')).toBe(false);
   });
 
   it('hints at the reason length the server expects', () => {
