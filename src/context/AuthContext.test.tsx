@@ -95,7 +95,7 @@ afterEach(() => {
 });
 
 describe('account session isolation', () => {
-  it('родителя не пускает в панель: сессию не заводит, серверную гасит, объясняет почему', async () => {
+  it('родителя не пускает в панель: сессию не заводит, объясняет почему и не выкидывает из приложения', async () => {
     render(
       <MemoryRouter initialEntries={['/staff/login']}>
         <AuthProvider><SessionContents /></AuthProvider>
@@ -113,8 +113,30 @@ describe('account session isolation', () => {
     expect(auth.isAuthenticated).toBe(false);
     expect(getToken()).toBeNull();
     expect(localStorage.getItem('fiztex.profile')).toBeNull();
+    // Серверный выход токеном старого формата отзывает сессии всего аккаунта — и ту, что в приложении.
+    expect(fetchMock).not.toHaveBeenCalledWith('/api/auth/logout', expect.anything());
+  });
+
+  it('выход из сохранённой сессии родителя не трогает его сессию в приложении', async () => {
+    renderSession(PARENT, ['/profile']);
+    await waitFor(() => expect(auth.isAuthenticated).toBe(true));
+
+    act(() => auth.logout());
+
+    expect(auth.isAuthenticated).toBe(false);
+    expect(getToken()).toBeNull();
+    expect(localStorage.getItem('fiztex.profile')).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalledWith('/api/auth/logout', expect.anything());
+  });
+
+  it('выход сотрудника по-прежнему гасит сессию на сервере', async () => {
+    renderSession(TEACHER_A);
+    await screen.findByText(TEACHER_A.email);
+
+    act(() => auth.logout());
+
     expect(fetchMock).toHaveBeenCalledWith('/api/auth/logout', expect.objectContaining({
-      headers: { Authorization: `Bearer ${PARENT.token}` },
+      headers: { Authorization: `Bearer ${TEACHER_A.token}` },
     }));
   });
 
