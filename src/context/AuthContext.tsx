@@ -80,7 +80,13 @@ function createSession(admin: Admin | null, revision = 0) {
   };
 }
 
-/** Fire-and-forget server logout so tokenVersion is bumped; ignores network/HTTP errors. */
+/**
+ * Fire-and-forget server logout so tokenVersion is bumped; ignores network/HTTP errors.
+ *
+ * Сервер отзывает **все** сессии аккаунта, а не одну вкладку: версия токенов одна на
+ * аккаунт. Поэтому для ученика и родителя его не зовём никогда — их живая сессия в
+ * мобильном приложении, и выход из панели выкинул бы их оттуда.
+ */
 function invalidateServerSession(token: string): void {
   void fetch('/api/auth/logout', {
     method: 'POST',
@@ -125,10 +131,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // роль и идентичность аккаунта до следующего рендера контекста.
   const login = useCallback(async (email: string, password: string) => {
     const result = await api.signIn(email, password);
-    // Ученик и родитель входят тем же `/auth/login`, что и мобилка, — отличить их можно
-    // только по ответу. Сессию не заводим и серверную гасим: веб-кабинета у них нет.
+    // Ученик и родитель входят той же `/auth/sign-in`, что и мобилка, — отличить их можно
+    // только по ответу. Сессию не заводим: токен нигде не сохранён и просто отбрасывается.
+    // Серверный выход здесь звать нельзя — он отзывает сессии всего аккаунта, и человек,
+    // по ошибке открывший панель, вылетел бы из мобильного приложения.
     if (isMobileOnlyRole(result.role)) {
-      invalidateServerSession(result.token);
       throw new ApiError(403, MOBILE_ONLY_MESSAGE, 'MOBILE_ONLY_ROLE');
     }
     setExpiredAccountEmail(null);
@@ -154,7 +161,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       'В этой вкладке есть несохранённые формы. Выйти из аккаунта и удалить введённые данные и выбранные файлы?',
     )) return;
     const token = getToken();
-    if (token) {
+    // Сохранённая сессия ученика или родителя — наследие панели до запрета (её показывает
+    // `MobileOnlyNotice`): забываем токен у себя, а сессию в приложении не трогаем.
+    if (token && !isMobileOnlyRole(sessionRef.current.admin?.role)) {
       invalidateServerSession(token);
     }
     setExpiredAccountEmail(null);
