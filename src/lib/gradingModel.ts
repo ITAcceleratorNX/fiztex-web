@@ -64,12 +64,28 @@ export function resultStatusHint(result: PeriodResult | null | undefined): strin
     case 'NO_WORKS':
       return 'Нет учитываемых работ — процент не считается';
     case 'INCOMPLETE':
-      return `Нет работ: ${(result.missingComponents ?? []).map((code) => COMPONENT_SHORT[code]).join(', ')} — по политике процент без них не считается`;
+      return `Недостаточно данных для расчёта. Нет работ: ${(result.missingComponents ?? []).map((code) => COMPONENT_SHORT[code]).join(', ')} — по политике процент без них не считается`;
     default:
+      if (isPreliminary(result)) {
+        return 'Предварительно: СОЧ ещё нет, веса пересчитаны на остальные работы. Итог четверти появится после СОЧ';
+      }
       return result.missingComponents && result.missingComponents.length > 0
         ? `Нет работ: ${result.missingComponents.map((code) => COMPONENT_SHORT[code]).join(', ')} — веса пересчитаны`
         : null;
   }
+}
+
+/** Пометка расчёта без СОЧ (ТЗ №9): учителю виден показатель, но он не итог четверти. */
+export const PRELIMINARY_LABEL = 'Предварительно';
+
+/**
+ * Период считается без СОЧ, который политика требует: показатель есть, но он предварительный.
+ * Ничего не вычисляется — расчёт сделал сервер, отсутствие СОЧ он назвал в
+ * `missingComponents`. Отсутствующий СОЧ в расчёт не входит и не подставляется нулём.
+ * Ученик и родитель такого расчёта не получают вовсе (`AWAITING_SOCH`).
+ */
+export function isPreliminary(result: PeriodResult | null | undefined): boolean {
+  return result?.status === 'CALCULATED' && (result.missingComponents ?? []).includes('SOCH');
 }
 
 /**
@@ -82,6 +98,7 @@ export function resultStatusHint(result: PeriodResult | null | undefined): strin
 export function resultMissingCaption(result: PeriodResult | null | undefined): string | null {
   if (!result) return null;
   const missing = (result.missingComponents ?? []).map((code) => COMPONENT_SHORT[code]).join(', ');
+  if (isPreliminary(result)) return `${PRELIMINARY_LABEL} · без СОЧ`;
   switch (result.status) {
     case 'NO_WORKS':
       return 'Нет работ за четверть';

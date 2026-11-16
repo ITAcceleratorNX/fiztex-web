@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { cx } from '@/lib/format';
 import { AnchoredPanel } from './AnchoredPanel';
+import { GradeTypeList } from './GradeTypeList';
 import type { GradeScaleValue, GradeType } from '@/lib/gradesApi';
 import { GRADE_TYPES, GRADE_TYPE_LABELS } from '@/lib/gradesModel';
 
@@ -101,35 +102,15 @@ export function GradePicker({
       <hr className="border-slate-200" />
 
       {typesOpen ? (
-        <div className="flex max-h-64 flex-col overflow-y-auto">
-          <button
-            type="button"
-            onClick={() => onTypeChange(null)}
-            className={cx(
-              'flex h-8 shrink-0 items-center rounded-lg px-3 text-left text-13 transition',
-              gradeType == null
-                ? 'bg-navy-50 font-semibold text-navy-700'
-                : 'font-medium text-slate-600 hover:bg-slate-50',
-            )}
-          >
-            Без типа
-          </button>
-          {GRADE_TYPES.map((type) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => onTypeChange(type)}
-              className={cx(
-                'flex h-8 shrink-0 items-center rounded-lg px-3 text-left text-13 transition',
-                gradeType === type
-                  ? 'bg-navy-50 font-semibold text-navy-700'
-                  : 'font-medium text-slate-600 hover:bg-slate-50',
-              )}
-            >
-              {GRADE_TYPE_LABELS[type]}
-            </button>
-          ))}
-        </div>
+        <GradeTypeList
+          label="Тип оценки"
+          options={[
+            { value: null, label: 'Без типа' },
+            ...GRADE_TYPES.map((type) => ({ value: type, label: GRADE_TYPE_LABELS[type] })),
+          ]}
+          selected={gradeType}
+          onSelect={onTypeChange}
+        />
       ) : (
         <button
           type="button"

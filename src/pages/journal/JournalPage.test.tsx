@@ -10,13 +10,22 @@ const useClassFinals = vi.fn();
 const setFinal = vi.fn();
 const publishFinals = vi.fn();
 
+const useAssessmentSheets = vi.fn();
+const saveScores = vi.fn();
+const correctFinal = vi.fn();
+vi.mock('@/context/ToastContext', () => ({ useToast: () => ({ success: vi.fn(), error: vi.fn() }) }));
 vi.mock('@/hooks/queries', () => ({
+  useAssessmentSheets: (...args: unknown[]) => useAssessmentSheets(...args),
+  useSaveAssessmentScores: () => ({ mutateAsync: saveScores, isPending: false }),
   useGradebookContext: (...args: unknown[]) => useGradebookContext(...args),
   useJournal: (...args: unknown[]) => useJournal(...args),
   useClassFinals: (...args: unknown[]) => useClassFinals(...args),
   useSetFinalGrade: () => ({ mutateAsync: setFinal, isPending: false }),
   usePublishClassFinals: () => ({ mutateAsync: publishFinals, isPending: false }),
   usePeriodBreakdown: () => ({ isPending: true, data: undefined }),
+  useCorrectFinalGrade: () => ({ mutateAsync: correctFinal, isPending: false }),
+  useRepublishFinalGrade: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useFinalGradeHistory: () => ({ isPending: true, data: undefined }),
 }));
 
 function context() {
@@ -99,8 +108,15 @@ function finals(overrides: Record<string, unknown> = {}) {
         recommendedValue: 4,
         finalGrade: null,
         yearLocked: false,
+        // Действия строки считает сервер (ATTESTATION-001): учитель, итога нет.
+        canEditResult: true,
+        canChangeAttestation: true,
+        canConfirmPublication: false,
+        historyCount: 0,
       },
     ],
+    allowedResultKinds: ['NUMERIC', 'TEMP_UNATTESTED', 'NOT_ATTESTED', 'NOT_STUDIED'],
+    canManageAttestation: true,
     ...overrides,
   };
 }
@@ -116,23 +132,26 @@ function renderPage(search = '') {
   );
 }
 
-describe('JournalPage', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    useGradebookContext.mockReturnValue({
-      data: context(),
-      isPending: false,
-      isError: false,
-      error: null,
-    });
-    useJournal.mockReturnValue({ data: journal(), isPending: false, isError: false, error: null });
-    useClassFinals.mockReturnValue({
-      data: finals(),
-      isPending: false,
-      isError: false,
-      error: null,
-    });
+function resetMocks() {
+  vi.clearAllMocks();
+  useAssessmentSheets.mockReturnValue([]);
+  useGradebookContext.mockReturnValue({
+    data: context(),
+    isPending: false,
+    isError: false,
+    error: null,
   });
+  useJournal.mockReturnValue({ data: journal(), isPending: false, isError: false, error: null });
+  useClassFinals.mockReturnValue({
+    data: finals(),
+    isPending: false,
+    isError: false,
+    error: null,
+  });
+}
+
+describe('JournalPage', () => {
+  beforeEach(resetMocks);
 
   it('открывается на текущей четверти и первой доступной паре «класс + предмет»', () => {
     renderPage();
@@ -188,6 +207,149 @@ describe('JournalPage', () => {
     expect(screen.getByText('Открыт лист оценок урока')).toBeInTheDocument();
   });
 
+  /** СОР/СОЧ — своя колонка за уроком (V142): в клетке балл работы, заголовок ведёт в урок работы. */
+  it('колонка работы СОР стоит за уроком, показывает балл и ведёт в карточку урока', () => {
+    const data = journal();
+    const work = {
+      key: 'ASSESSMENT_WORK:71',
+      type: 'ASSESSMENT_WORK',
+      sourceId: 71,
+      lessonId: 449,
+      date: '2026-09-09',
+      lessonNumber: 1,
+      title: 'СОР 1',
+      assessmentKind: 'SOR',
+      assessmentStatus: 'CONDUCTED',
+      maxScore: 20,
+      active: true,
+      state: 'ACTIVE',
+    } as unknown as (typeof data.columns)[number];
+    data.columns.splice(1, 0, work);
+    data.rows[0] = {
+      ...data.rows[0],
+      cells: [{ columnKey: 'ASSESSMENT_WORK:71', grades: [], assessmentResult: { resultId: 5, workId: 71, score: 0, maxScore: 20 } }],
+    } as unknown as (typeof data.rows)[number];
+    useJournal.mockReturnValue({ data, isPending: false, isError: false, error: null });
+    renderPage();
+
+    const header = screen.getByRole('columnheader', { name: /09\.09\s*СОР 1/ });
+    expect(within(header).getByRole('link')).toHaveAttribute('href', '/lesson-schedule/lessons/449');
+    // Ноль — полноценный балл, и с одним баллом работы журнал уже не «пустой».
+    expect(screen.getByRole('button', { name: 'Оценка 0/20' })).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  /** Ввод баллов работ в журнале (Figma D13–D17, ТЗ Frontend §3). */
+  describe('ввод баллов СОР/СОЧ', () => {
+    function withWork(kind: 'SOR' | 'SOCH', canManage: boolean, saved: number | null = null) {
+      const data = journal();
+      data.columns.splice(1, 0, {
+        key: 'ASSESSMENT_WORK:71', type: 'ASSESSMENT_WORK', sourceId: 71, lessonId: 449, date: '2026-09-09',
+        title: kind === 'SOR' ? 'СОР 1' : 'СОЧ', assessmentKind: kind, assessmentStatus: 'CONDUCTED', maxScore: 20,
+        active: true, state: 'ACTIVE',
+      } as unknown as (typeof data.columns)[number]);
+      useJournal.mockReturnValue({ data, isPending: false, isError: false, error: null });
+      const studentId = data.rows[0].studentProfileId as number;
+      useAssessmentSheets.mockReturnValue([{
+        data: {
+          canManage, canCorrect: canManage,
+          work: { id: 71, kind, maxScore: 20 },
+          students: [{ studentProfileId: studentId, studentName: 'Иванов Арсен', score: saved, version: saved == null ? null : 3, inAudience: true }],
+        },
+      }]);
+      return studentId;
+    }
+
+    it('заголовок колонки показывает максимум работы', () => {
+      withWork('SOR', true);
+      renderPage();
+      expect(screen.getByRole('columnheader', { name: /СОР 1 \/ 20/ })).toBeInTheDocument();
+    });
+
+    it('без права от сервера клетки не редактируются', () => {
+      withWork('SOR', false);
+      renderPage();
+      expect(screen.queryByRole('button', { name: /поставить балл/ })).toBeNull();
+    });
+
+    it('копит правки, показывает «Изменено N» и сохраняет явным действием', async () => {
+      const user = userEvent.setup();
+      const studentId = withWork('SOR', true);
+      saveScores.mockResolvedValue({ saved: [`71:${studentId}`], failed: [] });
+      renderPage();
+
+      await user.click(screen.getByRole('button', { name: /СОР 1: Иванов Арсен: поставить балл/ }));
+      await user.type(screen.getByRole('textbox', { name: /Балл СОР 1/ }), '17');
+      expect(screen.getByText('Изменён 1 балл · ещё не сохранены')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Сохранить баллы' }));
+
+      expect(saveScores).toHaveBeenCalledWith({
+        changes: [expect.objectContaining({ workId: 71, studentProfileId: studentId, score: 17, before: null, kind: 'SOR' })],
+        reason: undefined,
+      });
+    });
+
+    it('больше максимума: ошибка в клетке, сохранить нельзя', async () => {
+      const user = userEvent.setup();
+      withWork('SOR', true);
+      renderPage();
+
+      await user.click(screen.getByRole('button', { name: /поставить балл/ }));
+      await user.type(screen.getByRole('textbox', { name: /Балл СОР 1/ }), '23');
+      expect(screen.getByRole('alert')).toHaveTextContent('Не больше 20');
+      expect(screen.getByText('Исправьте ошибку, чтобы сохранить')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Сохранить баллы' })).toBeDisabled();
+    });
+
+    it('«Отменить» сбрасывает несохранённые правки', async () => {
+      const user = userEvent.setup();
+      withWork('SOR', true);
+      renderPage();
+      await user.click(screen.getByRole('button', { name: /поставить балл/ }));
+      await user.type(screen.getByRole('textbox', { name: /Балл СОР 1/ }), '5');
+      await user.click(screen.getByRole('button', { name: 'Отменить' }));
+      expect(screen.queryByRole('button', { name: 'Сохранить баллы' })).toBeNull();
+      expect(saveScores).not.toHaveBeenCalled();
+    });
+
+    it('исправление СОЧ просит причину и отправляет её вместе с баллами', async () => {
+      const user = userEvent.setup();
+      withWork('SOCH', true, 15);
+      saveScores.mockResolvedValue({ saved: ['x'], failed: [] });
+      renderPage();
+
+      await user.click(screen.getByRole('button', { name: /сейчас 15/ }));
+      const input = screen.getByRole('textbox', { name: /Балл СОЧ/ });
+      await user.clear(input);
+      await user.type(input, '11');
+      expect(screen.getByText('Было 15')).toBeInTheDocument();
+      expect(screen.getByText('Изменён 1 балл · исправление попадёт в историю')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Сохранить баллы' }));
+
+      const dialog = screen.getByRole('dialog');
+      const confirm = within(dialog).getByRole('button', { name: 'Сохранить баллы' });
+      expect(confirm).toBeDisabled();
+      await user.type(within(dialog).getByRole('textbox'), 'Пересчитал работу');
+      await user.click(confirm);
+      expect(saveScores).toHaveBeenCalledWith({
+        changes: [expect.objectContaining({ kind: 'SOCH', score: 11, before: 15, version: 3 })],
+        reason: 'Пересчитал работу',
+      });
+    });
+
+    it('после частичного отказа не рисует успех, а называет ошибку и оставляет упавшую правку', async () => {
+      const user = userEvent.setup();
+      const studentId = withWork('SOR', true);
+      saveScores.mockResolvedValue({ saved: [], failed: [{ key: `71:${studentId}`, message: 'Балл уже изменили' }] });
+      renderPage();
+      await user.click(screen.getByRole('button', { name: /поставить балл/ }));
+      await user.type(screen.getByRole('textbox', { name: /Балл СОР 1/ }), '9');
+      await user.click(screen.getByRole('button', { name: 'Сохранить баллы' }));
+      expect(await screen.findByRole('alert')).toHaveTextContent('Сохранено 0 из 1. Балл уже изменили');
+      expect(screen.getByRole('textbox', { name: /Балл СОР 1/ })).toHaveValue('9');
+    });
+  });
+
   it('показывает отдельное пустое состояние только когда в журнале нет учеников', () => {
     useJournal.mockReturnValue({ data: { ...journal(), rows: [] }, isPending: false, isError: false, error: null });
     renderPage();
@@ -237,7 +399,11 @@ describe('JournalPage', () => {
   /** §8: админ экран открывает, но выставлять не может — решает сервер, а не роль на клиенте. */
   it('без права выставления не показывает выбор оценки и кнопку публикации', () => {
     useClassFinals.mockReturnValue({
-      data: finals({ canManage: false }),
+      data: finals({
+        canManage: false,
+        canManageAttestation: false,
+        rows: [{ ...finals().rows[0], canEditResult: false, canChangeAttestation: false }],
+      }),
       isPending: false,
       isError: false,
       error: null,
@@ -363,6 +529,119 @@ describe('JournalPage', () => {
   });
 });
 
+describe('Статусы ВНА/НА (ATTESTATION-001, макет Т1–Т6, А0–А1)', () => {
+  beforeEach(resetMocks);
+
+  it('ВНА открывает окно с частыми причинами и сохраняет статус с причиной', async () => {
+    const user = userEvent.setup();
+    setFinal.mockResolvedValue({ id: 3 });
+    renderPage('?tab=finals');
+
+    await user.click(screen.getByRole('button', { name: 'Временно не аттестован' }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByRole('button', { name: 'Сохранить' })).toBeDisabled();
+
+    await user.click(within(dialog).getByRole('button', { name: 'Пропуски по уважительной причине' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Сохранить' }));
+    expect(setFinal).toHaveBeenCalledWith(expect.objectContaining({
+      finalGradeId: null, studentProfileId: 19, subjectId: 2, academicPeriodId: 7,
+      resultKind: 'TEMP_UNATTESTED', value: null, resultReason: 'Пропуски по уважительной причине',
+    }));
+  });
+
+  it('после публикации — «Редактировать»: у ВНА положительные оценки, сохранение с причиной', async () => {
+    const user = userEvent.setup();
+    setFinal.mockResolvedValue({ id: 3 });
+    const vna = { id: 3, value: null, status: 'PUBLISHED', resultKind: 'TEMP_UNATTESTED', resultReason: 'Не сдан СОЧ', version: 4 };
+    useClassFinals.mockReturnValue({
+      data: finals({
+        allowedValues: [2, 3, 4, 5], positiveValues: [3, 4, 5],
+        rows: [{ ...finals().rows[0], finalGrade: vna, canEditResult: true, canChangeAttestation: false, historyCount: 2 }],
+      }),
+      isPending: false, isError: false, error: null,
+    });
+    renderPage('?tab=finals');
+
+    expect(screen.getByText('Итоги четверти опубликованы — их видят ученик и родитель')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '4' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Редактировать' }));
+    expect(screen.getByText(/Режим изменения: после публикации можно заменить только ВНА на оценку/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '2' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '4' }));
+    const dialog = screen.getByRole('dialog', { name: 'Изменить итог' });
+    expect(within(dialog).getByText('ОПУБЛ.')).toBeInTheDocument();
+    await user.type(within(dialog).getByRole('textbox'), 'СОЧ сдан 12.01, работа оценена');
+    await user.click(within(dialog).getByRole('button', { name: 'Сохранить' }));
+
+    expect(setFinal).toHaveBeenCalledWith(expect.objectContaining({
+      finalGradeId: 3, resultKind: 'NUMERIC', value: 4, resultReason: 'СОЧ сдан 12.01, работа оценена', expectedVersion: 4,
+    }));
+    await user.click(screen.getByRole('button', { name: 'Готово' }));
+    expect(screen.getByRole('button', { name: 'Редактировать' })).toBeInTheDocument();
+  });
+
+  it('«Редактировать» неактивна, когда заменять нечего', () => {
+    const four = { id: 3, value: 4, status: 'PUBLISHED', resultKind: 'NUMERIC', version: 4 };
+    useClassFinals.mockReturnValue({
+      data: finals({ rows: [{ ...finals().rows[0], finalGrade: four, canEditResult: false, canChangeAttestation: false }] }),
+      isPending: false, isError: false, error: null,
+    });
+    renderPage('?tab=finals');
+
+    expect(screen.getByRole('button', { name: 'Редактировать' })).toBeDisabled();
+  });
+
+  it('ошибка загрузки итогов — понятный текст и повтор, пустой класс — своё состояние', async () => {
+    const user = userEvent.setup();
+    const refetch = vi.fn();
+    useClassFinals.mockReturnValue({ data: undefined, isPending: false, isError: true, error: new Error('network'), refetch });
+    const { unmount } = renderPage('?tab=finals');
+
+    expect(screen.getByText('Не удалось загрузить итоги. Проверьте подключение к интернету и попробуйте ещё раз')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Повторить' }));
+    expect(refetch).toHaveBeenCalled();
+    unmount();
+
+    useClassFinals.mockReturnValue({ data: finals({ rows: [] }), isPending: false, isError: false, error: null });
+    renderPage('?tab=finals');
+    expect(screen.getByText('В классе нет учеников')).toBeInTheDocument();
+    expect(screen.getByText('Проверьте состав класса или подгруппы у администратора')).toBeInTheDocument();
+  });
+
+  /** А0–А1: администрация не выставляет, а исправляет опубликованное по протоколу — сразу. */
+  it('администрация исправляет опубликованный НА техисправлением', async () => {
+    const user = userEvent.setup();
+    correctFinal.mockResolvedValue({ id: 3 });
+    const na = { id: 3, value: null, status: 'PUBLISHED', resultKind: 'NOT_ATTESTED', resultReason: 'Работы не сданы', version: 4 };
+    useClassFinals.mockReturnValue({
+      data: finals({
+        canManage: false, canManageAttestation: false, allowedValues: [2, 3, 4, 5],
+        rows: [{ ...finals().rows[0], finalGrade: na, canEditResult: false, canChangeAttestation: false,
+          canCorrectTechnicalError: true, historyCount: 2 }],
+      }),
+      isPending: false, isError: false, error: null,
+    });
+    renderPage('?tab=finals');
+
+    expect(screen.queryByRole('button', { name: 'Опубликовать итоги четверти' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Временно не аттестован' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Исправить' }));
+    const dialog = screen.getByRole('dialog', { name: 'Исправление технической ошибки' });
+    expect(within(dialog).getByText(/Сейчас опубликовано: Не аттестован/)).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Исправленный результат' }));
+    await user.click(screen.getByRole('option', { name: 'Временно не аттестован' }));
+    const [description, document] = within(dialog).getAllByRole('textbox');
+    await user.type(description, 'Ошибка ввода при выставлении');
+    await user.type(document, 'Протокол №7 от 29.12');
+    await user.click(within(dialog).getByRole('button', { name: 'Подтвердить исправление' }));
+
+    expect(correctFinal).toHaveBeenCalledWith({ id: 3, body: expect.objectContaining({
+      resultKind: 'TEMP_UNATTESTED', reason: 'Ошибка ввода при выставлении', documentReference: 'Протокол №7 от 29.12', expectedVersion: 4,
+    }) });
+  });
+});
+
 describe('School assessment constraints', () => {
   it('does not offer any final marks in first grade', () => {
     useClassFinals.mockReturnValue({ data: finals({ assessmentMode: 'NO_ASSESSMENT', canManage: false }), isPending: false, isError: false });
@@ -382,10 +661,12 @@ describe('School assessment constraints', () => {
   it('does not offer ordinary editing for a published numeric final', () => {
     const data = finals();
     data.rows[0].finalGrade = { id: 3, value: 5, status: 'PUBLISHED', resultKind: 'NUMERIC' } as never;
+    data.rows[0].canEditResult = false;
+    data.rows[0].canChangeAttestation = false;
     useClassFinals.mockReturnValue({ data, isPending: false, isError: false });
     renderPage('?tab=finals');
     expect(screen.queryByRole('button', { name: /^4$/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'История итога' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Итог закрыт для правки')).toBeInTheDocument();
   });
   it('keeps historical year selection available when the current year has no assignments', async () => {
     const user = userEvent.setup();

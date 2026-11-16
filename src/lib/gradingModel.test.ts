@@ -4,6 +4,7 @@ import {
   formatPercent,
   missingResultsSummary,
   positiveFinalValues,
+  isPreliminary,
   resultMissingCaption,
   resultStatusHint,
   weightsCaption,
@@ -88,5 +89,25 @@ describe('шкала итога (пилот 3.1)', () => {
   it('ВНА снимается любым итогом выше нижнего порога, а не «с тройки»', () => {
     expect(positiveFinalValues([2, 3, 4, 5])).toEqual([3, 4, 5]);
     expect(positiveFinalValues([10, 1, 2, 3, 4, 5, 6, 7, 8, 9])).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  });
+});
+
+describe('предварительный показатель (ТЗ №9)', () => {
+  it('предварительный только расчёт, где нет требуемого СОЧ', () => {
+    expect(isPreliminary({ status: 'CALCULATED', percent: 80, missingComponents: ['SOCH'] })).toBe(true);
+    expect(isPreliminary({ status: 'CALCULATED', percent: 80, missingComponents: ['SOR'] })).toBe(false);
+    expect(isPreliminary({ status: 'CALCULATED', percent: 0, missingComponents: [] })).toBe(false);
+  });
+
+  it('без данных это не предварительный показатель, а причина', () => {
+    expect(isPreliminary({ status: 'NO_WORKS', missingComponents: ['SOCH'] })).toBe(false);
+    expect(isPreliminary({ status: 'INCOMPLETE', missingComponents: ['SOCH'] })).toBe(false);
+    expect(resultStatusHint({ status: 'INCOMPLETE', missingComponents: ['SOCH'] })).toMatch(/Недостаточно данных/);
+    expect(isPreliminary(null)).toBe(false);
+  });
+
+  it('подпись под процентом называет, что СОЧ не учтён', () => {
+    expect(resultMissingCaption({ status: 'CALCULATED', percent: 80, missingComponents: ['SOCH'] }))
+      .toBe('Предварительно · без СОЧ');
   });
 });

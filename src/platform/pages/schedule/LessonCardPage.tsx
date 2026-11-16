@@ -57,6 +57,7 @@ import { LessonHomeworkRows } from '@/pages/homework/LessonHomeworkRows';
 import { CopyHomeworkToLessonModal } from '@/pages/workspace/CopyHomeworkToLessonModal';
 import { LessonManagementCard, SubstituteGradeAccessCard } from './LessonManagementCard';
 import { describeHistoryActor, describeHistoryEntry, hhmm } from './lessonHistory';
+import { AssessmentWorkPanel } from './AssessmentWorkPanel';
 import { LessonTextbookField } from './LessonTextbookField';
 import { LessonSummaryEntry } from './LessonSummaryEntry';
 import { CopyLessonPreparationModal } from './CopyLessonPreparationModal';
@@ -174,6 +175,9 @@ export function LessonCardPage() {
         >
           <p className="text-base font-semibold text-slate-900">{lesson.topic}</p>
         </TeachingField>} />
+
+        {/* СОР/СОЧ урока: назначение, проведение, перенос, отмена (Figma D2, D4–D11). Решает сервер. */}
+        <AssessmentWorkPanel lesson={lesson} canEdit={canEditTeaching && !periodClosed} />
 
         <hr className="border-slate-200" />
 

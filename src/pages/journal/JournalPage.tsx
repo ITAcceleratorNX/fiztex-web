@@ -11,12 +11,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
+  useAssessmentSheets,
   useClassFinals,
   useGradebookContext,
   useJournal,
   usePublishClassFinals,
+  useSaveAssessmentScores,
   useSetFinalGrade,
 } from '@/hooks/queries';
+import { StickyActionBar } from '@/components/ui/StickyActionBar';
+import { useToast } from '@/context/ToastContext';
+import { hasMeaningfulReason, REASON_MAX_LENGTH } from '@/lib/assessmentCorrectionModel';
+import {
+  barMessage,
+  collectChanges,
+  draftKey,
+  needsReason,
+  scoreDraftProblem,
+  type WorkSheet,
+} from '@/lib/journalScoresModel';
 import { ApiError } from '@/lib/api';
 import { formatWeekdayDayMonth, pluralRu } from '@/lib/format';
 import {
@@ -29,16 +42,25 @@ import {
 import {
   currentMonthKey,
   finalsByStudent,
+  hasAnyMarks,
+  isAssessmentColumn,
   monthOptionsOf,
   shortDate as formatShortDate,
 } from '@/lib/journalModel';
 import { finalScaleCaption, missingResultsSummary, weightsCaption } from '@/lib/gradingModel';
 import { JournalFilters, type JournalWindow } from './JournalFilters';
-import { JournalTable } from './JournalTable';
+import { JournalTable, type ScoreEditor } from './JournalTable';
 import { PeriodBreakdownModal } from './PeriodBreakdownModal';
 import { YearFinalsTab } from './YearFinalsTab';
-import { FinalGradeCorrectionModal, FinalGradeHistoryModal } from './FinalGradeCorrectionModal';
-import { QuarterFinalsTable } from './QuarterFinalsTable';
+import { FinalGradeCorrectionModal, FinalGradeHistoryModal, RepublishFinalModal } from './FinalGradeCorrectionModal';
+import { AttestationStatusModal, ChangeFinalResultModal } from './AttestationStatusModal';
+import {
+  isAttestationStatus,
+  PUBLISHED_EDIT_RULE,
+  type AttestationKind,
+  type ResultValue,
+} from '@/lib/attestationModel';
+import { finalValueOptions, QuarterFinalsTable } from './QuarterFinalsTable';
 
 type JournalTab = 'JOURNAL' | 'FINALS' | 'YEAR_FINALS';
 
@@ -213,6 +235,93 @@ function JournalTab({
   finals: ReturnType<typeof useClassFinals>;
 }) {
   const [breakdown, setBreakdown] = useState<{ studentProfileId: number; name: string } | null>(null);
+  const toast = useToast();
+  const saveScores = useSaveAssessmentScores();
+  /** Несохранённые баллы работ: ключ «работа:ученик» → текст поля. */
+  const [drafts, setDrafts] = useState<ReadonlyMap<string, string>>(new Map());
+  const [reasonOpen, setReasonOpen] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Листы результатов работ, которые есть в журнале: из них берём право править и версии.
+  const workIds = (journal.data?.columns ?? [])
+    .filter((column) => isAssessmentColumn(column) && column.assessmentStatus !== 'CANCELLED' && column.sourceId != null)
+    .map((column) => column.sourceId as number);
+  const sheetQueries = useAssessmentSheets(workIds);
+  const sheets = new Map<number, WorkSheet>();
+  workIds.forEach((workId, index) => {
+    const data = sheetQueries[index]?.data;
+    if (!data) return;
+    sheets.set(workId, {
+      workId,
+      kind: data.work?.kind ?? 'SOR',
+      maxScore: data.work?.maxScore ?? 0,
+      canManage: Boolean(data.canManage),
+      students: new Map(
+        (data.students ?? []).map((row) => [
+          row.studentProfileId as number,
+          { score: row.score ?? null, version: row.version ?? null, inAudience: row.inAudience !== false },
+        ]),
+      ),
+    });
+  });
+  const { changes, invalid } = collectChanges(drafts, sheets);
+
+  function setDraft(key: string, text: string | null) {
+    setDrafts((current) => {
+      const next = new Map(current);
+      if (text == null) next.delete(key);
+      else next.set(key, text);
+      return next;
+    });
+  }
+
+  const editor: ScoreEditor | undefined = sheets.size === 0 ? undefined : {
+    canEdit: (column) => sheets.get(column.sourceId ?? -1)?.canManage === true,
+    draft: (column, studentId) => drafts.get(draftKey(column.sourceId as number, studentId)),
+    problem: (column, studentId) => {
+      const sheet = sheets.get(column.sourceId as number);
+      const text = drafts.get(draftKey(column.sourceId as number, studentId));
+      return sheet && text !== undefined ? scoreDraftProblem(text, sheet.maxScore) : null;
+    },
+    saved: (column, studentId) => sheets.get(column.sourceId as number)?.students.get(studentId)?.score ?? null,
+    change: (column, studentId, text) => setDraft(draftKey(column.sourceId as number, studentId), text),
+    // Пустое или совпавшее с сохранённым поле — не правка: поле закрывается без следа.
+    blur: (column, studentId) => {
+      const key = draftKey(column.sourceId as number, studentId);
+      const text = (drafts.get(key) ?? '').trim();
+      const saved = sheets.get(column.sourceId as number)?.students.get(studentId)?.score ?? null;
+      if (text === '' || (saved != null && text === String(saved))) setDraft(key, null);
+    },
+  };
+
+  async function save(reason?: string) {
+    setSaveError(null);
+    setReasonOpen(false);
+    try {
+      const result = await saveScores.mutateAsync({ changes, reason });
+      // Сохранённые уходят из черновиков; упавшие остаются, чтобы их можно было поправить и повторить.
+      setDrafts((current) => {
+        const next = new Map(current);
+        result.saved.forEach((key) => next.delete(key));
+        return next;
+      });
+      if (result.failed.length === 0) {
+        toast.success(result.saved.length === 1 ? 'Балл сохранён' : 'Баллы сохранены');
+      } else {
+        setSaveError(
+          `Сохранено ${result.saved.length} из ${result.saved.length + result.failed.length}. ${result.failed[0].message}`,
+        );
+      }
+    } catch {
+      setSaveError('Не удалось сохранить баллы');
+    }
+  }
+
+  function requestSave() {
+    if (changes.length === 0 || invalid.length > 0) return;
+    if (needsReason(changes)) setReasonOpen(true);
+    else void save();
+  }
 
   if (query == null || journal.isPending) return <TableSkeleton />;
 
@@ -261,7 +370,7 @@ function JournalTab({
 
   return (
     <div className="flex flex-col gap-3">
-      {rows.every((row) => (row.cells ?? []).every((cell) => (cell.grades ?? []).length === 0)) && (
+      {!hasAnyMarks(rows) && (
         <p role="status" className="rounded-lg bg-info-bg p-4 text-13 text-info-fg">
           Оценок пока нет. Откройте урок по дате в заголовке таблицы, чтобы выставить первые оценки.
         </p>
@@ -271,11 +380,42 @@ function JournalTab({
           journal={data!}
           finals={finalsByStudent(finals.data?.rows ?? [])}
           today={todayIso()}
+          editor={editor}
           onOpenBreakdown={(row) =>
             setBreakdown({ studentProfileId: row.studentProfileId as number, name: row.studentName ?? '' })
           }
         />
       </div>
+      {(changes.length > 0 || invalid.length > 0 || saveError) && (
+        <StickyActionBar
+          message={
+            saveError ? (
+              <span role="alert" className="text-danger-fg">{saveError}</span>
+            ) : (
+              <span className={invalid.length > 0 ? 'text-danger-fg' : undefined}>{barMessage(changes, invalid.length)}</span>
+            )
+          }
+        >
+          <Button
+            variant="ghost"
+            disabled={saveScores.isPending}
+            onClick={() => {
+              setDrafts(new Map());
+              setSaveError(null);
+            }}
+          >
+            Отменить
+          </Button>
+          <Button
+            loading={saveScores.isPending}
+            disabled={changes.length === 0 || invalid.length > 0}
+            onClick={requestSave}
+          >
+            Сохранить баллы
+          </Button>
+        </StickyActionBar>
+      )}
+      {reasonOpen && <ScoreReasonModal busy={saveScores.isPending} onClose={() => setReasonOpen(false)} onConfirm={(reason) => void save(reason)} />}
       <Legend policyCaption={data?.gradingPolicy ? weightsCaption(data.gradingPolicy.components) : null} />
       <PeriodBreakdownModal
         query={
@@ -305,12 +445,17 @@ function FinalsTab({
   const publish = usePublishClassFinals();
   const [busyStudentId, setBusyStudentId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Отказ действия в ячейке — под строкой ученика, а не внизу страницы (D-3).
+  const [rowError, setRowError] = useState<{ studentProfileId: number; message: string } | null>(null);
   const [missing, setMissing] = useState<ReadonlySet<number>>(new Set());
   const [confirmPublish, setConfirmPublish] = useState(false);
-  const [reasonRow, setReasonRow] = useState<ClassFinalGradeRow | null>(null);
+  // «Редактировать» после публикации (макет Т5а): открывает замену ВНА оценкой.
+  const [editMode, setEditMode] = useState(false);
+  const [statusRequest, setStatusRequest] = useState<{ row: ClassFinalGradeRow; kind: AttestationKind } | null>(null);
+  const [changeRequest, setChangeRequest] = useState<{ row: ClassFinalGradeRow; initial: ResultValue | null } | null>(null);
   const [correctionRow, setCorrectionRow] = useState<ClassFinalGradeRow | null>(null);
   const [historyRow, setHistoryRow] = useState<ClassFinalGradeRow | null>(null);
-  const [reason, setReason] = useState('');
+  const [republishRow, setRepublishRow] = useState<ClassFinalGradeRow | null>(null);
   const [breakdown, setBreakdown] = useState<{ studentProfileId: number; name: string } | null>(null);
 
   if (finalsKey == null || finals.isPending) return <TableSkeleton />;
@@ -333,17 +478,21 @@ function FinalsTab({
   const data = finals.data!;
   const rows = data.rows ?? [];
   const canManage = Boolean(data.canManage);
+  const placement = { subjectId: finalsKey.subjectId, academicPeriodId: finalsKey.academicPeriodId };
   const filled = rows.filter((row) => row.finalGrade != null).length;
   const allFilled = rows.length > 0 && filled === rows.length;
   const hasPublicationIssues = rows.some(row => (!row.finalGrade?.resultKind || row.finalGrade.resultKind === 'NUMERIC') && (row.publicationIssues?.length ?? 0) > 0);
-  const allPublished =
-    rows.length > 0 && rows.every((row) => row.finalGrade?.status === 'PUBLISHED');
+  const allPublished = rows.length > 0 && rows.every((row) => row.finalGrade?.status === 'PUBLISHED');
+  // Сервер разрешает строке замену опубликованного ВНА — значит, «Редактировать» есть что.
+  const editable = rows.some((row) => row.canEditResult && row.finalGrade?.status === 'PUBLISHED');
+  const inEditMode = editMode && allPublished && editable;
   // Публиковать итоги можно только после окончания четверти — дату считает сервер.
   const publicationOpen = data.publicationOpen !== false;
   const publishableFrom = data.publishableFrom ? formatShortDate(data.publishableFrom) : null;
 
-  async function pick(row: ClassFinalGradeRow, value: number | null, resultKind: FinalGrade['resultKind'] = 'NUMERIC', resultReason?: string) {
+  async function pick(row: ClassFinalGradeRow, value: number | null, resultKind: FinalGrade['resultKind'] = 'NUMERIC') {
     setError(null);
+    setRowError(null);
     setBusyStudentId(row.studentProfileId as number);
     try {
       await setFinal.mutateAsync({
@@ -351,7 +500,8 @@ function FinalsTab({
         studentProfileId: row.studentProfileId as number,
         subjectId: finalsKey!.subjectId,
         academicPeriodId: finalsKey!.academicPeriodId,
-        value, resultKind, resultReason,
+        value, resultKind,
+        expectedVersion: row.finalGrade?.version,
       });
       setMissing((current) => {
         const next = new Set(current);
@@ -359,13 +509,14 @@ function FinalsTab({
         return next;
       });
     } catch (failure) {
-      setError(
-        failure instanceof ApiError && failure.code === FINAL_GRADE_ERRORS.yearLocked
+      setRowError({
+        studentProfileId: row.studentProfileId as number,
+        message: failure instanceof ApiError && failure.code === FINAL_GRADE_ERRORS.yearLocked
           ? 'Годовая оценка опубликована — четвертные по этому предмету закрыты'
           : failure instanceof ApiError
             ? failure.message
             : 'Не удалось сохранить итоговую оценку',
-      );
+      });
     } finally {
       setBusyStudentId(null);
     }
@@ -408,6 +559,11 @@ function FinalsTab({
   }
 
   const missingResults = data.gradingPolicy ? missingResultsSummary(rows.map((row) => row.result)) : null;
+  // Особые результаты без числа — «…» в ряду оценок и окно «Изменить итог» (Т4).
+  const otherKinds = (data.allowedResultKinds ?? []).filter((kind) => kind !== 'NUMERIC' && !isAttestationStatus(kind)
+    && (data.assessmentMode !== 'PASS_FAIL' || kind === 'NOT_STUDIED'));
+  const changeRow = changeRequest?.row ?? null;
+  const changingPublished = changeRow?.finalGrade?.status === 'PUBLISHED';
 
   return (
     <div className="flex flex-col gap-4">
@@ -425,32 +581,39 @@ function FinalsTab({
           finals={data}
           highlighted={missing}
           busyStudentId={busyStudentId}
-          onPick={(row, value) => void pick(row, value)}
-          onCorrect={setCorrectionRow}
-          onOpenHistory={setHistoryRow}
-          onPickResult={(row, kind) => {
-            if (kind === 'NOT_STUDIED') { setReasonRow(row); setReason(''); }
-            else void pick(row, null, kind);
+          rowError={rowError}
+          editMode={inEditMode}
+          actions={{
+            onPickValue: (row, value) => void pick(row, value),
+            onPickResult: (row, kind) => void pick(row, null, kind),
+            onRequestStatus: (row, kind) => setStatusRequest({ row, kind }),
+            onRequestChange: (row, initial) => setChangeRequest({ row, initial }),
+            onOpenHistory: setHistoryRow,
+            onCorrect: setCorrectionRow,
+            onRepublish: setRepublishRow,
+            onOpenBreakdown: (row) =>
+              setBreakdown({ studentProfileId: row.studentProfileId as number, name: row.studentName ?? '' }),
           }}
-          onOpenBreakdown={(row) =>
-            setBreakdown({ studentProfileId: row.studentProfileId as number, name: row.studentName ?? '' })
-          }
         />
       </div>
 
+      {statusRequest && <AttestationStatusModal row={statusRequest.row} kind={statusRequest.kind}
+        placement={placement} onClose={() => setStatusRequest(null)} />}
+      {changeRow && <ChangeFinalResultModal row={changeRow} initial={changeRequest?.initial}
+        values={changingPublished ? (data.positiveValues?.length ? data.positiveValues : finalValueOptions(data))
+          : data.assessmentMode === 'PASS_FAIL' ? [] : finalValueOptions(data)}
+        otherKinds={changingPublished ? [] : data.assessmentMode === 'PASS_FAIL' ? ['PASS', 'FAIL', ...otherKinds] : otherKinds}
+        placement={placement} onClose={() => setChangeRequest(null)} />}
       {correctionRow?.finalGrade && <FinalGradeCorrectionModal grade={correctionRow.finalGrade}
-        studentName={correctionRow.studentName ?? ''} allowedKinds={data.allowedResultKinds ?? ['NUMERIC']}
-        onClose={() => setCorrectionRow(null)} />}
+        studentName={correctionRow.studentName ?? ''}
+        allowedKinds={data.allowedResultKinds ?? ['NUMERIC']}
+        allowedValues={finalValueOptions(data)} onClose={() => setCorrectionRow(null)} />}
+      {republishRow?.finalGrade && <RepublishFinalModal grade={republishRow.finalGrade}
+        recommended={republishRow.recommendedValue ?? null} studentName={republishRow.studentName ?? ''}
+        options={finalValueOptions(data)}
+        onClose={() => setRepublishRow(null)} />}
       {historyRow?.finalGrade?.id != null && <FinalGradeHistoryModal id={historyRow.finalGrade.id}
         studentName={historyRow.studentName ?? ''} onClose={() => setHistoryRow(null)} />}
-      <Modal open={reasonRow != null} onClose={() => setReasonRow(null)} title="Предмет не изучался">
-        <p className="text-13 text-muted">Укажите основание, например перевод из школы, где этот предмет не изучался. Результат сохранится в истории.</p>
-        <label className="mt-4 block text-13 font-semibold">Основание
-          <TextArea value={reason} onChange={event => setReason(event.target.value)} maxLength={1000} />
-        </label>
-        <div className="mt-4 flex justify-end gap-3"><Button variant="secondary" onClick={() => setReasonRow(null)}>Отмена</Button>
-          <Button disabled={reason.trim().length < 5} onClick={() => { if (reasonRow) void pick(reasonRow, null, 'NOT_STUDIED', reason.trim()).then(() => setReasonRow(null)); }}>Сохранить результат</Button></div>
-      </Modal>
       <PeriodBreakdownModal
         query={
           breakdown
@@ -478,7 +641,7 @@ function FinalsTab({
               className={`size-2 shrink-0 rounded-full ${allPublished ? 'bg-green-500' : allFilled && publicationOpen ? 'bg-brand-500' : 'bg-slate-300'}`}
             />
             {allPublished
-              ? 'Итоги четверти опубликованы — их видят ученик и родитель'
+              ? inEditMode ? PUBLISHED_EDIT_RULE : 'Итоги четверти опубликованы — их видят ученик и родитель'
               : !publicationOpen
                 ? `Итоги можно выставлять уже сейчас, а опубликовать — после окончания четверти${publishableFrom ? `, с ${publishableFrom}` : ''} (${filled} из ${rows.length} выставлено)`
                 : hasPublicationIssues
@@ -487,20 +650,26 @@ function FinalsTab({
                   ? `Все итоги выставлены (${filled} из ${rows.length}) — можно публиковать`
                   : `Выставьте оценку всем ученикам, чтобы опубликовать итоги четверти (${filled} из ${rows.length} оценено)`}
           </p>
-          <Button
-            onClick={() => setConfirmPublish(true)}
-            disabled={!allFilled || allPublished || !publicationOpen || hasPublicationIssues}
-            loading={publish.isPending}
-          >
-            Опубликовать итоги четверти
-          </Button>
+          {allPublished ? (
+            inEditMode
+              ? <Button onClick={() => setEditMode(false)}>Готово</Button>
+              : <Button disabled={!editable} onClick={() => setEditMode(true)}>Редактировать</Button>
+          ) : (
+            <Button
+              onClick={() => setConfirmPublish(true)}
+              disabled={!allFilled || !publicationOpen || hasPublicationIssues}
+              loading={publish.isPending}
+            >
+              Опубликовать итоги четверти
+            </Button>
+          )}
         </div>
       )}
 
       <ConfirmDialog
         open={confirmPublish}
         title="Опубликовать итоги четверти?"
-        message="После публикации итоговые оценки увидят ученики и родители. Обычная правка будет закрыта. Техническую ошибку исправляет администратор по документам и протоколу; временная неаттестация завершается после сдачи обязательных работ."
+        message="После публикации итоговые оценки увидят ученики и родители. Изменить после публикации можно только «Временно не аттестован» на оценку — с причиной. Остальные итоги исправляет администратор по документам и протоколу."
         confirmLabel="Опубликовать"
         loading={publish.isPending}
         onConfirm={() => void publishAll()}
@@ -624,4 +793,46 @@ function todayIso(): string {
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   return `${now.getFullYear()}-${month}-${day}`;
+}
+
+/**
+ * Причина исправления выставленного СОЧ (ТЗ «Исправление результатов СОЧ»): одна на все
+ * исправления СОЧ в пачке. Пустая и бессодержательная не принимаются — сервер проверяет так же.
+ */
+function ScoreReasonModal({
+  busy,
+  onClose,
+  onConfirm,
+}: {
+  busy: boolean;
+  onClose: () => void;
+  onConfirm: (reason: string) => void;
+}) {
+  const [reason, setReason] = useState('');
+  return (
+    <Modal
+      open
+      size="sm"
+      onClose={() => {
+        if (!busy) onClose();
+      }}
+      title="Причина исправления СОЧ"
+      footer={
+        <>
+          <Button variant="secondary" disabled={busy} onClick={onClose}>Отмена</Button>
+          <Button loading={busy} disabled={!hasMeaningfulReason(reason)} onClick={() => onConfirm(reason.trim())}>
+            Сохранить баллы
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-3 text-sm text-slate-600">
+        <p>Прежний балл, причина, автор и время сохранятся в истории. Опубликованный итог четверти не изменится.</p>
+        <label className="text-13 font-semibold text-slate-900">
+          Причина
+          <TextArea value={reason} maxLength={REASON_MAX_LENGTH} onChange={(event) => setReason(event.target.value)} />
+        </label>
+      </div>
+    </Modal>
+  );
 }

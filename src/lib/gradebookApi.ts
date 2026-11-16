@@ -109,10 +109,29 @@ export const finalGradesApi = {
     });
   },
 
-  changeValue(finalGradeId: number, value: number | null, resultKind?: FinalGrade['resultKind'], resultReason?: string): Promise<FinalGrade> {
+  /**
+   * «Подтвердить и опубликовать повторно» (ТЗ №9): опубликованное число после правки баллов,
+   * `value` — выбранное учителем. Прежнее и новое значение пишутся в историю.
+   */
+  republish(finalGradeId: number, body: { value: number; expectedVersion: number }): Promise<FinalGrade> {
+    return request<FinalGrade>(`/final-grades/${finalGradeId}/republish`, { method: 'POST', body });
+  },
+
+  /**
+   * Правка результата учителем. У опубликованного итога учителю можно только заменить ВНА
+   * положительной оценкой — сразу (§12.3). `resultReason` обязателен у всего, что ставит или
+   * снимает статус; `expectedVersion` — защита от правки устаревшей строки.
+   */
+  changeValue(
+    finalGradeId: number,
+    value: number | null,
+    resultKind?: FinalGrade['resultKind'],
+    resultReason?: string,
+    expectedVersion?: number,
+  ): Promise<FinalGrade> {
     return request<FinalGrade>(`/final-grades/${finalGradeId}`, {
       method: 'PATCH',
-      body: { value, resultKind, resultReason },
+      body: { value, resultKind, resultReason, expectedVersion },
     });
   },
 

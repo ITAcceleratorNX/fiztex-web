@@ -113,7 +113,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_23"];
+        patch: operations["update_24"];
         trace?: never;
     };
     "/api/admin/academic-periods/{id}/activate": {
@@ -241,7 +241,7 @@ export interface paths {
         };
         get: operations["list_28"];
         put?: never;
-        post: operations["create_24"];
+        post: operations["create_25"];
         delete?: never;
         options?: never;
         head?: never;
@@ -261,7 +261,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_22"];
+        patch: operations["update_23"];
         trace?: never;
     };
     "/api/admin/academic-years/{id}/activate": {
@@ -319,7 +319,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_16"];
+        get: operations["history_17"];
         put?: never;
         post?: never;
         delete?: never;
@@ -367,7 +367,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_40"];
+        get: operations["list_41"];
         put?: never;
         post?: never;
         delete?: never;
@@ -383,7 +383,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_39"];
+        get: operations["list_40"];
         put?: never;
         post?: never;
         delete?: never;
@@ -481,7 +481,7 @@ export interface paths {
         };
         get: operations["list_27"];
         put?: never;
-        post: operations["create_23"];
+        post: operations["create_24"];
         delete?: never;
         options?: never;
         head?: never;
@@ -625,7 +625,7 @@ export interface paths {
         };
         get: operations["list_26"];
         put?: never;
-        post: operations["create_22"];
+        post: operations["create_23"];
         delete?: never;
         options?: never;
         head?: never;
@@ -639,7 +639,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_8"];
+        get: operations["get_9"];
         put: operations["update_6"];
         post?: never;
         delete?: never;
@@ -801,7 +801,7 @@ export interface paths {
         };
         get: operations["list_25"];
         put?: never;
-        post: operations["create_21"];
+        post: operations["create_22"];
         delete?: never;
         options?: never;
         head?: never;
@@ -815,7 +815,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_7"];
+        get: operations["get_8"];
         put: operations["update_5"];
         post?: never;
         delete?: never;
@@ -856,6 +856,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/attestation-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAttestationSettings"];
+        put?: never;
+        post: operations["saveAttestationSetting"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/attestation-settings/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAttestationSettingHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/attestation-settings/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["previewAttestationSetting"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/attestation-settings/{settingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAttestationSetting"];
+        put?: never;
+        post?: never;
+        delete: operations["cancelAttestationSetting"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/attestation-settings/{settingId}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["retireAttestationSetting"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/bell-templates": {
         parameters: {
             query?: never;
@@ -865,7 +945,7 @@ export interface paths {
         };
         get: operations["list_24"];
         put?: never;
-        post: operations["create_20"];
+        post: operations["create_21"];
         delete?: never;
         options?: never;
         head?: never;
@@ -885,7 +965,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_21"];
+        patch: operations["update_22"];
         trace?: never;
     };
     "/api/admin/bell-templates/{id}/activate": {
@@ -1025,7 +1105,7 @@ export interface paths {
         };
         get: operations["list_23"];
         put?: never;
-        post: operations["create_19"];
+        post: operations["create_20"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1045,7 +1125,7 @@ export interface paths {
         delete: operations["delete_8"];
         options?: never;
         head?: never;
-        patch: operations["update_20"];
+        patch: operations["update_21"];
         trace?: never;
     };
     "/api/admin/calendar-events/{id}/activate": {
@@ -1089,7 +1169,7 @@ export interface paths {
         };
         get: operations["list_22"];
         put?: never;
-        post: operations["create_18"];
+        post: operations["create_19"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1125,7 +1205,7 @@ export interface paths {
          * Назначить или заменить классного руководителя
          * @description expectedCurrentAssignmentId обязателен: null — свободный класс, ID — увиденное назначение. Несовпадение даёт 409 HOMEROOM_ASSIGNMENT_CHANGED.
          */
-        put: operations["put_1"];
+        put: operations["put_2"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1141,7 +1221,7 @@ export interface paths {
             cookie?: never;
         };
         /** История классных руководителей, включая архивный класс */
-        get: operations["history_15"];
+        get: operations["history_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1199,7 +1279,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_19"];
+        patch: operations["update_20"];
         trace?: never;
     };
     "/api/admin/classes/{id}/archive": {
@@ -1355,7 +1435,7 @@ export interface paths {
         };
         get: operations["list_21"];
         put?: never;
-        post: operations["create_17"];
+        post: operations["create_18"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1375,7 +1455,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_18"];
+        patch: operations["update_19"];
         trace?: never;
     };
     "/api/admin/group-sets/{id}/archive": {
@@ -1583,7 +1663,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_17"];
+        patch: operations["update_18"];
         trace?: never;
     };
     "/api/admin/lessons/{lessonId}/cancel": {
@@ -1595,7 +1675,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel_6"];
+        post: operations["cancel_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1707,7 +1787,7 @@ export interface paths {
         };
         get: operations["list_20"];
         put?: never;
-        post: operations["create_16"];
+        post: operations["create_17"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1737,7 +1817,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_6"];
+        get: operations["get_7"];
         put: operations["update_4"];
         post?: never;
         delete?: never;
@@ -1755,7 +1835,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel_5"];
+        post: operations["cancel_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1771,7 +1851,7 @@ export interface paths {
         };
         get: operations["list_19"];
         put?: never;
-        post: operations["create_15"];
+        post: operations["create_16"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1807,7 +1887,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_16"];
+        patch: operations["update_17"];
         trace?: never;
     };
     "/api/admin/parents/{id}/archive": {
@@ -1929,7 +2009,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_23"];
+        get: operations["get_25"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1993,7 +2073,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_14"];
+        get: operations["history_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2027,7 +2107,7 @@ export interface paths {
         };
         get: operations["list_18"];
         put?: never;
-        post: operations["create_14"];
+        post: operations["create_15"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2201,7 +2281,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_13"];
+        get: operations["history_14"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2267,7 +2347,7 @@ export interface paths {
         };
         get: operations["list_17"];
         put?: never;
-        post: operations["create_13"];
+        post: operations["create_14"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2287,7 +2367,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_15"];
+        patch: operations["update_16"];
         trace?: never;
     };
     "/api/admin/school-subjects/{id}/archive": {
@@ -2347,7 +2427,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cancel_4"];
+        post: operations["cancel_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2379,7 +2459,7 @@ export interface paths {
         };
         get: operations["list_15"];
         put?: never;
-        post: operations["create_12"];
+        post: operations["create_13"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2415,7 +2495,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_14"];
+        patch: operations["update_15"];
         trace?: never;
     };
     "/api/admin/students/{id}/archive": {
@@ -2489,7 +2569,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_12"];
+        get: operations["history_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2539,7 +2619,7 @@ export interface paths {
         };
         get: operations["list_14"];
         put?: never;
-        post: operations["create_11"];
+        post: operations["create_12"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2559,7 +2639,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_13"];
+        patch: operations["update_14"];
         trace?: never;
     };
     "/api/admin/subgroups/{id}/archive": {
@@ -2626,6 +2706,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/subject-assessment-limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_6"];
+        put: operations["put_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/surveys": {
         parameters: {
             query?: never;
@@ -2635,7 +2731,7 @@ export interface paths {
         };
         get: operations["list_13"];
         put?: never;
-        post: operations["create_10"];
+        post: operations["create_11"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2811,7 +2907,7 @@ export interface paths {
         };
         get: operations["list_12"];
         put?: never;
-        post: operations["create_9"];
+        post: operations["create_10"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2857,7 +2953,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_38"];
+        get: operations["list_39"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2873,7 +2969,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_22"];
+        get: operations["get_24"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2889,7 +2985,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_37"];
+        get: operations["list_38"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2905,7 +3001,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_21"];
+        get: operations["get_23"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2975,7 +3071,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_12"];
+        patch: operations["update_13"];
         trace?: never;
     };
     "/api/admin/teacher-working-time/{id}/archive": {
@@ -3003,7 +3099,7 @@ export interface paths {
         };
         get: operations["list_11"];
         put?: never;
-        post: operations["create_8"];
+        post: operations["create_9"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3039,7 +3135,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_11"];
+        patch: operations["update_12"];
         trace?: never;
     };
     "/api/admin/teachers/{id}/archive": {
@@ -3163,7 +3259,7 @@ export interface paths {
         };
         get: operations["list_10"];
         put?: never;
-        post: operations["create_7"];
+        post: operations["create_8"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3257,7 +3353,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_36"];
+        get: operations["list_37"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3337,7 +3433,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_35"];
+        get: operations["list_36"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3369,7 +3465,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_20"];
+        get: operations["get_22"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3522,6 +3618,182 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assessment-works": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_35"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assessment-works/limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["limits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assessment-works/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["mine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assessment-works/{workId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_14"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["update_11"];
+        trace?: never;
+    };
+    "/api/assessment-works/{workId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancel_4"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assessment-works/{workId}/conduct": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["conduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assessment-works/{workId}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history_12"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assessment-works/{workId}/reschedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reschedule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assessment-works/{workId}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["results"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assessment-works/{workId}/results/{studentProfileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["saveResult"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assessment-works/{workId}/results/{studentProfileId}/correction": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["correctResult"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/attendance/my-marks": {
         parameters: {
             query?: never;
@@ -3610,6 +3882,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["journalOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attestation-settings/effective": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getEffectiveAttestation"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4027,7 +4315,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["create_6"];
+        post: operations["create_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4178,6 +4466,22 @@ export interface paths {
         patch: operations["changeValue"];
         trace?: never;
     };
+    "/api/final-grades/{finalGradeId}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirmFinalGrade"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/final-grades/{finalGradeId}/history": {
         parameters: {
             query?: never;
@@ -4204,6 +4508,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["publish_4"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/final-grades/{finalGradeId}/republish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["republish"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4249,7 +4569,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_12"];
+        get: operations["get_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4379,7 +4699,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["create_5"];
+        post: operations["create_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4557,7 +4877,7 @@ export interface paths {
         };
         get: operations["list_8"];
         put?: never;
-        post: operations["create_4"];
+        post: operations["create_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4731,7 +5051,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_19"];
+        get: operations["get_21"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5796,6 +6116,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/assessment-works": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["create_4"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/attendance": {
         parameters: {
             query?: never;
@@ -6636,7 +6972,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_11"];
+        get: operations["get_12"];
         put?: never;
         post?: never;
         delete: operations["delete_5"];
@@ -7520,7 +7856,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_18"];
+        get: operations["get_20"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7728,7 +8064,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_17"];
+        get: operations["get_19"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7809,7 +8145,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_15"];
+        get: operations["get_17"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7937,7 +8273,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_16"];
+        get: operations["get_18"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8244,7 +8580,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_14"];
+        get: operations["get_16"];
         put?: never;
         post?: never;
         /** Remove an upload and draft from the workspace without erasing immutable history */
@@ -8325,7 +8661,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_13"];
+        get: operations["get_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8517,7 +8853,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_10"];
+        get: operations["get_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8933,7 +9269,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_9"];
+        get: operations["get_10"];
         put?: never;
         post?: never;
         delete: operations["delete_2"];
@@ -9315,6 +9651,8 @@ export interface components {
             finalScope?: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
             /** Format: date-time */
             publishedAt?: string;
+            /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             sourceClass?: components["schemas"]["ReportReferenceView"];
             student?: components["schemas"]["ReportReferenceView"];
             /** Format: int64 */
@@ -9904,6 +10242,73 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        AssessmentHistoryView: {
+            results?: components["schemas"]["ResultHistoryEventView"][];
+            work?: components["schemas"]["WorkHistoryEventView"][];
+        };
+        AssessmentLimitsView: {
+            sochAllowed?: boolean;
+            /** Format: int32 */
+            sochUsed?: number;
+            sorAllowed?: boolean;
+            /** Format: int32 */
+            sorLimit?: number;
+            /** Format: int32 */
+            sorUsed?: number;
+        };
+        AssessmentResultsView: {
+            canCorrect?: boolean;
+            canManage?: boolean;
+            students?: components["schemas"]["StudentResultView"][];
+            work?: components["schemas"]["AssessmentWorkView"];
+        };
+        AssessmentWorkView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            cancelReason?: string;
+            /** Format: date-time */
+            cancelledAt?: string;
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            /** Format: date-time */
+            conductedAt?: string;
+            /** @example 14:30:00 */
+            endTime?: string;
+            hasResults?: boolean;
+            /** Format: int64 */
+            id?: number;
+            /** @enum {string} */
+            kind?: "SOR" | "SOCH";
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int32 */
+            lessonNumber?: number;
+            /** Format: int32 */
+            maxScore?: number;
+            myResult?: components["schemas"]["LearnerResultView"];
+            needsReschedule?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            reminderDaysBefore?: number;
+            /** Format: int32 */
+            resultsCount?: number;
+            /** @example 14:30:00 */
+            startTime?: string;
+            /** @enum {string} */
+            status?: "PLANNED" | "CONDUCTED" | "CANCELLED";
+            /** Format: int64 */
+            subgroupId?: number;
+            subgroupName?: string;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            /** Format: int64 */
+            version?: number;
+        };
         AssignResult: {
             created?: components["schemas"]["AssignmentSummary"][];
             skipped?: components["schemas"]["SkippedAssignment"][];
@@ -10199,6 +10604,97 @@ export interface components {
             /** Format: date */
             startDate?: string;
         };
+        AttestationHistoryView: {
+            /** @enum {string} */
+            action?: "CREATE" | "UPDATE" | "RETIRE" | "CANCEL";
+            /** Format: int64 */
+            actorId?: number;
+            actorName?: string;
+            after?: components["schemas"]["JsonNode"];
+            before?: components["schemas"]["JsonNode"];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            settingId?: number;
+        };
+        AttestationInfoView: {
+            configured?: boolean;
+            confirmationRequired?: boolean;
+            finalAllowed?: boolean;
+            finalNotAllowedReason?: string;
+            halfYear?: components["schemas"]["HalfYearView"];
+            /** @enum {string} */
+            periodicity?: "QUARTER" | "HALF_YEAR";
+            /** @enum {string} */
+            resultFormat?: "NUMERIC" | "PASS_FAIL";
+            /** Format: int64 */
+            settingId?: number;
+            sochProvided?: boolean;
+        };
+        AttestationPeriodRefView: {
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+        };
+        AttestationPreviewView: {
+            canSave?: boolean;
+            conflicts?: components["schemas"]["AttestationSettingView"][];
+            earliestAllowed?: components["schemas"]["AttestationPeriodRefView"];
+            effectiveFrom?: components["schemas"]["AttestationPeriodRefView"];
+            /** Format: int64 */
+            endsSettingId?: number;
+            /** Format: int64 */
+            finalsInScope?: number;
+            replacesSettingIds?: number[];
+        };
+        AttestationSettingRequest: {
+            /** Format: int64 */
+            academicYearId: number;
+            /** Format: int64 */
+            classId?: number;
+            /** Format: int64 */
+            effectiveFromPeriodId?: number;
+            parallel?: string;
+            /** @enum {string} */
+            periodicity: "QUARTER" | "HALF_YEAR";
+            /** @enum {string} */
+            resultFormat: "NUMERIC" | "PASS_FAIL";
+            sochProvided: boolean;
+            /** Format: int64 */
+            subjectId: number;
+        };
+        AttestationSettingView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            effectiveFrom?: components["schemas"]["AttestationPeriodRefView"];
+            effectiveTo?: components["schemas"]["AttestationPeriodRefView"];
+            /** Format: int64 */
+            id?: number;
+            parallel?: string;
+            /** @enum {string} */
+            periodicity?: "QUARTER" | "HALF_YEAR";
+            /** @enum {string} */
+            resultFormat?: "NUMERIC" | "PASS_FAIL";
+            sochProvided?: boolean;
+            /** @enum {string} */
+            state?: "SCHEDULED" | "ACTIVE" | "ENDED" | "CANCELLED";
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int64 */
+            version?: number;
+        };
         AutoSplitRequest: {
             firstName?: string;
             secondName?: string;
@@ -10270,6 +10766,11 @@ export interface components {
             classIds?: number[];
             grades?: string[];
         };
+        CancelAssessmentWorkRequest: {
+            /** Format: int64 */
+            expectedVersion?: number;
+            reason?: string;
+        };
         CancelLessonRequest: {
             comment?: string;
         };
@@ -10285,8 +10786,10 @@ export interface components {
             versionNumber: number;
         };
         ChangeFinalGradeValueRequest: {
+            /** Format: int64 */
+            expectedVersion?: number;
             /** @enum {string} */
-            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             resultReason?: string;
             /** Format: int32 */
             value?: number;
@@ -10428,13 +10931,22 @@ export interface components {
         };
         ClassFinalGradeRowView: {
             average?: number;
+            canChangeAttestation?: boolean;
+            canConfirmPublication?: boolean;
+            canCorrectTechnicalError?: boolean;
+            canEditResult?: boolean;
             currentMember?: boolean;
             finalGrade?: components["schemas"]["FinalGradeView"];
+            /** Format: int64 */
+            historyCount?: number;
             publicationIssues?: string[];
+            recommendation?: components["schemas"]["RecommendationOutcome"];
             recommendationChanged?: boolean;
             /** Format: int32 */
             recommendedValue?: number;
             result?: components["schemas"]["PeriodResultSummaryView"];
+            /** @enum {string} */
+            state?: "NOT_CALCULATED" | "RECOMMENDATION" | "DRAFT" | "CONFIRMED" | "PUBLISHED" | "CHANGED_AFTER_PUBLICATION";
             studentName?: string;
             /** Format: int64 */
             studentProfileId?: number;
@@ -10445,14 +10957,17 @@ export interface components {
             academicPeriodId?: number;
             /** Format: int64 */
             academicYearId?: number;
-            allowedResultKinds?: ("NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED")[];
+            allowedResultKinds?: ("NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED")[];
             allowedValues?: number[];
             assessmentMode?: string;
+            attestation?: components["schemas"]["AttestationInfoView"];
             canCorrectTechnicalErrors?: boolean;
             canManage?: boolean;
+            canManageAttestation?: boolean;
             /** Format: int64 */
             classId?: number;
             gradingPolicy?: components["schemas"]["PolicySummaryView"];
+            positiveValues?: number[];
             publicationOpen?: boolean;
             /** Format: date */
             publishableFrom?: string;
@@ -10629,6 +11144,11 @@ export interface components {
             adminComment?: string;
             /** Format: double */
             finalScore: number;
+        };
+        ConfirmFinalGradeRequest: {
+            /** Format: int64 */
+            expectedVersion: number;
+            reason?: string;
         };
         ConfirmResultRequest: {
             internalComment?: string;
@@ -10810,13 +11330,20 @@ export interface components {
             includeDrafts?: boolean;
             title?: string;
         };
+        CorrectAssessmentResultRequest: {
+            /** Format: int64 */
+            expectedVersion?: number;
+            reason: string;
+            /** Format: int32 */
+            score: number;
+        };
         CorrectFinalGradeRequest: {
             documentReference?: string;
             /** Format: int64 */
             expectedVersion: number;
             reason?: string;
             /** @enum {string} */
-            resultKind: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultKind: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             /** Format: int32 */
             value?: number;
         };
@@ -10858,6 +11385,14 @@ export interface components {
             /** @enum {string} */
             status?: "NOT_ACTIVATED" | "ACTIVE" | "BLOCKED" | "ARCHIVED";
         };
+        CreateAssessmentWorkRequest: {
+            /** @enum {string} */
+            kind: "SOR" | "SOCH";
+            /** Format: int32 */
+            maxScore: number;
+            /** Format: int32 */
+            reminderDaysBefore?: number;
+        };
         CreateBellTemplateRequest: {
             /** Format: int64 */
             academicYearId: number;
@@ -10894,7 +11429,7 @@ export interface components {
             /** Format: int64 */
             academicYearId?: number;
             /** @enum {string} */
-            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             resultReason?: string;
             /** @enum {string} */
             scope: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
@@ -11235,6 +11770,8 @@ export interface components {
             trend?: "GROWTH" | "DECLINE" | "STABLE" | "INSUFFICIENT_DATA";
         };
         DynamicsPointView: {
+            /** Format: int64 */
+            assessmentResultId?: number | null;
             /** @enum {string|null} */
             component?: "FORMATIVE" | "SOR" | "SOCH" | "INTERMEDIATE" | null;
             cumulativeValue?: number | null;
@@ -11280,6 +11817,26 @@ export interface components {
             to?: string;
             /** @enum {string} */
             type?: "WEEK" | "MONTH" | "QUARTER" | "YEAR";
+        };
+        EffectiveAttestationView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            classId?: number;
+            configured?: boolean;
+            finalAllowed?: boolean;
+            finalNotAllowedReason?: string;
+            halfYear?: components["schemas"]["HalfYearView"];
+            next?: components["schemas"]["AttestationSettingView"];
+            /** @enum {string} */
+            periodicity?: "QUARTER" | "HALF_YEAR";
+            /** @enum {string} */
+            resultFormat?: "NUMERIC" | "PASS_FAIL";
+            /** Format: int64 */
+            settingId?: number;
+            sochProvided?: boolean;
+            /** Format: int64 */
+            subjectId?: number;
         };
         Entry: {
             decision?: string;
@@ -11496,16 +12053,19 @@ export interface components {
         };
         FinalGradeHistoryView: {
             /** @enum {string} */
-            action?: "CREATE" | "UPDATE" | "PUBLISH";
+            action?: "CREATE" | "UPDATE" | "PUBLISH" | "REPUBLISH" | "CONFIRM" | "PENDING_CHANGE";
             /** Format: int64 */
             actorId?: number;
             actorName?: string;
+            /** @enum {string} */
+            actorRole?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
             after?: components["schemas"]["JsonNode"];
             before?: components["schemas"]["JsonNode"];
             /** Format: date-time */
             createdAt?: string;
             /** Format: int64 */
             id?: number;
+            reason?: string;
         };
         FinalGradeLockView: {
             finalLocked?: boolean;
@@ -11521,15 +12081,25 @@ export interface components {
             academicPeriodId?: number;
             /** Format: int64 */
             academicYearId?: number;
+            /** @enum {string} */
+            attestationPeriod?: "QUARTER" | "HALF_YEAR";
             /** Format: int64 */
             classId?: number;
+            confirmed?: boolean;
+            /** Format: date-time */
+            confirmedAt?: string;
+            /** @enum {string} */
+            confirmedRecommendedKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
+            /** Format: int32 */
+            confirmedRecommendedValue?: number;
             correctionReference?: string;
+            deviationReason?: string;
             /** Format: int64 */
             id?: number;
             /** Format: date-time */
             publishedAt?: string;
             /** @enum {string} */
-            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             resultReason?: string;
             /** @enum {string} */
             scope?: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
@@ -11711,6 +12281,20 @@ export interface components {
             updatedAt?: string;
             weight?: number;
         };
+        GradebookAssessmentResultView: {
+            /** Format: int32 */
+            maxScore?: number;
+            /** Format: int64 */
+            resultId?: number;
+            /** Format: int32 */
+            score?: number;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int64 */
+            version?: number;
+            /** Format: int64 */
+            workId?: number;
+        };
         GradebookAverageView: {
             /** Format: int64 */
             count?: number;
@@ -11719,11 +12303,18 @@ export interface components {
             visibleCount?: number;
         };
         GradebookCellView: {
+            assessmentResult?: components["schemas"]["GradebookAssessmentResultView"];
             columnKey?: string;
             grades?: components["schemas"]["GradeView"][];
         };
         GradebookColumnView: {
             active?: boolean;
+            /** @enum {string} */
+            assessmentKind?: "SOR" | "SOCH";
+            /** Format: int32 */
+            assessmentNumber?: number;
+            /** @enum {string} */
+            assessmentStatus?: "PLANNED" | "CONDUCTED" | "CANCELLED";
             /** Format: date */
             date?: string;
             /** Format: date-time */
@@ -11733,6 +12324,9 @@ export interface components {
             lessonId?: number;
             /** Format: int32 */
             lessonNumber?: number;
+            /** Format: int32 */
+            maxScore?: number;
+            needsReschedule?: boolean;
             /** @enum {string} */
             recipientType?: "CLASS" | "SUBGROUP" | "TEMP_GROUP" | "STUDENTS";
             /** Format: int64 */
@@ -11745,7 +12339,7 @@ export interface components {
             subgroupId?: number;
             title?: string;
             /** @enum {string} */
-            type?: "LESSON" | "HOMEWORK";
+            type?: "LESSON" | "HOMEWORK" | "ASSESSMENT_WORK";
         };
         GradebookContextView: {
             academicYear?: components["schemas"]["GradebookYearView"];
@@ -11898,6 +12492,13 @@ export interface components {
             name?: string;
             /** Format: int64 */
             subjectId?: number;
+        };
+        HalfYearView: {
+            closing?: components["schemas"]["AttestationPeriodRefView"];
+            name?: string;
+            /** Format: int32 */
+            number?: number;
+            opening?: components["schemas"]["AttestationPeriodRefView"];
         };
         HomeroomAssignmentView: {
             /** Format: int64 */
@@ -12520,7 +13121,7 @@ export interface components {
             /** @enum {string|null} */
             mode?: "SCALE_AVERAGE" | "POLICY_PERCENT" | null;
             /** @enum {string} */
-            state?: "AVAILABLE" | "NO_DATA" | "NO_COUNTED_WORKS" | "POLICY_INCOMPLETE" | "NO_POLICY" | "MIXED_MODES";
+            state?: "AVAILABLE" | "NO_DATA" | "NO_COUNTED_WORKS" | "POLICY_INCOMPLETE" | "NO_POLICY" | "MIXED_MODES" | "AWAITING_SOCH";
             value?: number | null;
         };
         IssueEquipmentRequest: {
@@ -13664,6 +14265,12 @@ export interface components {
             submissionStatus?: "NOT_SUBMITTED" | "SUBMITTED" | "RETURNED" | "DONE";
             title?: string;
         };
+        LearnerResultView: {
+            /** Format: int32 */
+            maxScore?: number;
+            /** Format: int32 */
+            score?: number;
+        };
         LessonCommentView: {
             body?: string;
             /** Format: date-time */
@@ -14209,6 +14816,7 @@ export interface components {
             academicPeriodName?: string;
             /** @enum {string} */
             academicPeriodStatus?: "ACTIVE" | "DISABLED" | "ARCHIVED";
+            assessmentWorks?: components["schemas"]["AssessmentWorkView"][];
             cancellationComment?: string;
             /** @enum {string} */
             cancellationReason?: "CALENDAR_NO_LESSONS" | "SCHEDULE_SLOT_REMOVED" | "MANUAL";
@@ -14560,6 +15168,8 @@ export interface components {
             finalGradeId?: number;
             /** Format: date-time */
             publishedAt?: string;
+            /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             /** Format: int64 */
             sourceClassId?: number;
             sourceClassName?: string;
@@ -14824,6 +15434,12 @@ export interface components {
             studentProfileId?: number;
             subjects?: components["schemas"]["MySubjectFinalsView"][];
         };
+        MyFinalResultView: {
+            /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
+            /** Format: int32 */
+            value?: number;
+        };
         MyGradeCorrectionView: {
             comment?: string;
             /** Format: date */
@@ -14882,21 +15498,36 @@ export interface components {
             teacher?: components["schemas"]["TeacherPart"];
         };
         MySubjectFinalsView: {
+            examResult?: components["schemas"]["MyFinalResultView"];
             /** Format: int32 */
             examValue?: number;
+            finalResult?: components["schemas"]["MyFinalResultView"];
             /** Format: int32 */
             finalValue?: number;
+            periodAttestation?: {
+                [key: string]: "QUARTER" | "HALF_YEAR";
+            };
+            periodResultKinds?: {
+                [key: string]: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
+            };
+            periodResults?: {
+                [key: string]: components["schemas"]["MyFinalResultView"];
+            };
             periodValues?: {
                 [key: string]: number;
             };
             /** Format: int64 */
             subjectId?: number;
             subjectName?: string;
+            yearResult?: components["schemas"]["MyFinalResultView"];
+            /** @enum {string} */
+            yearResultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             /** Format: int32 */
             yearValue?: number;
         };
         MySubjectGradesRowView: {
             average?: components["schemas"]["GradeAverageView"];
+            finalResult?: components["schemas"]["MyFinalResultView"];
             grades?: components["schemas"]["GradeView"][];
             result?: components["schemas"]["PeriodResultSummaryView"];
             /** Format: int64 */
@@ -16190,6 +16821,12 @@ export interface components {
             startDate?: string;
             studied?: boolean;
         };
+        PeriodLimitView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int32 */
+            sorLimit?: number;
+        };
         PeriodOption: {
             current?: boolean;
             /** Format: date */
@@ -16221,7 +16858,7 @@ export interface components {
             /** Format: int32 */
             roundedPercent?: number | null;
             /** @enum {string} */
-            status?: "CALCULATED" | "NO_WORKS" | "INCOMPLETE";
+            status?: "CALCULATED" | "NO_WORKS" | "INCOMPLETE" | "AWAITING_SOCH";
         };
         PeriodTotal: {
             complete?: boolean;
@@ -16515,6 +17152,17 @@ export interface components {
             text?: string;
             unclear?: string[];
         };
+        RecommendationOutcome: {
+            available?: boolean;
+            basis?: string;
+            /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
+            sufficientData?: boolean;
+            unavailableMessage?: string;
+            unavailableReason?: string;
+            /** Format: int32 */
+            value?: number;
+        };
         ReconcileReceipt: {
             /** Format: int64 */
             bindingId?: number;
@@ -16737,12 +17385,25 @@ export interface components {
             /** @enum {string} */
             status?: "DRAFT" | "ACTIVE" | "ARCHIVED";
         };
+        RepublishFinalGradeRequest: {
+            /** Format: int64 */
+            expectedVersion: number;
+            reason?: string;
+            /** Format: int32 */
+            value: number;
+        };
         RequestClassView: {
             active?: boolean;
             /** Format: int64 */
             classId?: number;
             currentName?: string;
             snapshotName?: string;
+        };
+        RescheduleAssessmentWorkRequest: {
+            /** Format: int64 */
+            expectedVersion?: number;
+            /** Format: int64 */
+            lessonId: number;
         };
         ResolveDraftRequest: {
             /** Format: int64 */
@@ -16810,6 +17471,24 @@ export interface components {
             violationCount?: number;
             weakTopics?: string[];
         };
+        ResultHistoryEventView: {
+            /** Format: int64 */
+            actorId?: number;
+            actorName?: string;
+            actorRole?: string;
+            /** Format: date-time */
+            at?: string;
+            /** Format: int64 */
+            id?: number;
+            reason?: string;
+            /** Format: int32 */
+            scoreAfter?: number;
+            /** Format: int32 */
+            scoreBefore?: number;
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
         ResultListItemResponse: {
             applicantName?: string;
             /** Format: int64 */
@@ -16858,6 +17537,18 @@ export interface components {
             /** Format: int64 */
             teacherProfileId?: number;
         };
+        RoleScheduleAssessmentWorkView: {
+            /** @enum {string} */
+            kind?: "SOR" | "SOCH";
+            needsReschedule?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** @enum {string} */
+            status?: "PLANNED" | "CONDUCTED";
+            title?: string;
+            /** Format: int64 */
+            workId?: number;
+        };
         RoleScheduleEventOverlapView: {
             /** @enum {string} */
             coverage?: "FULL" | "PARTIAL";
@@ -16885,6 +17576,7 @@ export interface components {
             type?: "HOLIDAY" | "VACATION" | "NON_SCHOOL_DAY" | "EXAM_DAY" | "OTHER";
         };
         RoleScheduleLessonView: {
+            assessmentWorks?: components["schemas"]["RoleScheduleAssessmentWorkView"][];
             audienceType?: string;
             cancelled?: boolean;
             /** Format: int64 */
@@ -17004,6 +17696,12 @@ export interface components {
             /** Format: int64 */
             remainingSeconds?: number;
             status?: string;
+        };
+        SaveAssessmentResultRequest: {
+            /** Format: int64 */
+            expectedVersion?: number;
+            /** Format: int32 */
+            score: number;
         };
         SaveAttendanceEntriesRequest: {
             entries?: components["schemas"]["AttendanceEntryChange"][];
@@ -17456,6 +18154,7 @@ export interface components {
             window?: components["schemas"]["DynamicsWindowView"];
         };
         StudentGradeEventView: {
+            assessmentResult?: components["schemas"]["GradebookAssessmentResultView"];
             /** Format: int64 */
             classId?: number;
             className?: string;
@@ -17471,7 +18170,7 @@ export interface components {
             subgroupId?: number;
             title?: string;
             /** @enum {string} */
-            type?: "LESSON" | "HOMEWORK";
+            type?: "LESSON" | "HOMEWORK" | "ASSESSMENT_WORK";
         };
         StudentHomeworkView: {
             /** @enum {string} */
@@ -17583,6 +18282,20 @@ export interface components {
             /** @enum {string} */
             type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT";
         };
+        StudentResultView: {
+            inAudience?: boolean;
+            /** Format: int64 */
+            resultId?: number;
+            /** Format: int32 */
+            score?: number;
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int64 */
+            version?: number;
+        };
         StudentSubjectHistoryView: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -17684,6 +18397,23 @@ export interface components {
             /** Format: int64 */
             id?: number;
             name?: string;
+        };
+        SubjectAssessmentLimitRequest: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int32 */
+            sorLimit?: number;
+            /** Format: int64 */
+            subjectId: number;
+        };
+        SubjectAssessmentLimitView: {
+            /** Format: int32 */
+            defaultSorLimit?: number;
+            /** Format: int32 */
+            effectiveDefault?: number;
+            periods?: components["schemas"]["PeriodLimitView"][];
+            /** Format: int64 */
+            subjectId?: number;
         };
         SubjectDynamicsView: {
             metric?: components["schemas"]["DynamicsMetricView"];
@@ -18745,6 +19475,14 @@ export interface components {
             /** Format: date */
             startDate?: string;
         };
+        UpdateAssessmentWorkRequest: {
+            /** Format: int64 */
+            expectedVersion?: number;
+            /** Format: int32 */
+            maxScore?: number;
+            /** Format: int32 */
+            reminderDaysBefore?: number;
+        };
         UpdateBellTemplateRequest: {
             confirmImpact?: boolean;
             description?: string;
@@ -18970,7 +19708,24 @@ export interface components {
             accessToken?: string;
             applicant?: components["schemas"]["ApplicantView"];
         };
+        WorkHistoryEventView: {
+            action?: string;
+            /** Format: int64 */
+            actorId?: number;
+            actorName?: string;
+            actorRole?: string;
+            after?: string;
+            /** Format: date-time */
+            at?: string;
+            before?: string;
+            /** Format: int64 */
+            id?: number;
+        };
         WorkView: {
+            /** Format: int64 */
+            assessmentResultId?: number;
+            /** Format: int64 */
+            assessmentWorkId?: number;
             /** @enum {string} */
             component?: "FORMATIVE" | "SOR" | "SOCH" | "INTERMEDIATE";
             /** Format: date */
@@ -19256,7 +20011,7 @@ export interface operations {
             };
         };
     };
-    update_23: {
+    update_24: {
         parameters: {
             query?: never;
             header?: never;
@@ -19623,7 +20378,7 @@ export interface operations {
             };
         };
     };
-    create_24: {
+    create_25: {
         parameters: {
             query?: never;
             header?: never;
@@ -19669,7 +20424,7 @@ export interface operations {
             };
         };
     };
-    update_22: {
+    update_23: {
         parameters: {
             query?: never;
             header?: never;
@@ -19759,7 +20514,7 @@ export interface operations {
             };
         };
     };
-    history_16: {
+    history_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -19855,7 +20610,7 @@ export interface operations {
             };
         };
     };
-    list_40: {
+    list_41: {
         parameters: {
             query: {
                 accountId?: number;
@@ -19883,7 +20638,7 @@ export interface operations {
             };
         };
     };
-    list_39: {
+    list_40: {
         parameters: {
             query: {
                 stage?: "DRAFT" | "PENDING" | "APPROVED_PENDING_ACTIVATION" | "ACTIVE" | "REJECTED";
@@ -20052,7 +20807,7 @@ export interface operations {
             };
         };
     };
-    create_23: {
+    create_24: {
         parameters: {
             query?: {
                 force?: boolean;
@@ -20278,7 +21033,7 @@ export interface operations {
             };
         };
     };
-    create_22: {
+    create_23: {
         parameters: {
             query?: never;
             header?: never;
@@ -20302,7 +21057,7 @@ export interface operations {
             };
         };
     };
-    get_8: {
+    get_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -20562,7 +21317,7 @@ export interface operations {
             };
         };
     };
-    create_21: {
+    create_22: {
         parameters: {
             query?: never;
             header?: never;
@@ -20586,7 +21341,7 @@ export interface operations {
             };
         };
     };
-    get_7: {
+    get_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -20687,6 +21442,165 @@ export interface operations {
             };
         };
     };
+    listAttestationSettings: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                subjectId?: number;
+                includeCancelled?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttestationSettingView"][];
+                };
+            };
+        };
+    };
+    saveAttestationSetting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttestationSettingRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttestationSettingView"];
+                };
+            };
+        };
+    };
+    getAttestationSettingHistory: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                subjectId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttestationHistoryView"][];
+                };
+            };
+        };
+    };
+    previewAttestationSetting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttestationSettingRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttestationPreviewView"];
+                };
+            };
+        };
+    };
+    getAttestationSetting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                settingId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttestationSettingView"];
+                };
+            };
+        };
+    };
+    cancelAttestationSetting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                settingId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    retireAttestationSetting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                settingId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttestationSettingView"];
+                };
+            };
+        };
+    };
     list_24: {
         parameters: {
             query: {
@@ -20711,7 +21625,7 @@ export interface operations {
             };
         };
     };
-    create_20: {
+    create_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -20757,7 +21671,7 @@ export interface operations {
             };
         };
     };
-    update_21: {
+    update_22: {
         parameters: {
             query?: never;
             header?: never;
@@ -21046,7 +21960,7 @@ export interface operations {
             };
         };
     };
-    create_19: {
+    create_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -21112,7 +22026,7 @@ export interface operations {
             };
         };
     };
-    update_20: {
+    update_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -21207,7 +22121,7 @@ export interface operations {
             };
         };
     };
-    create_18: {
+    create_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -21304,7 +22218,7 @@ export interface operations {
             };
         };
     };
-    put_1: {
+    put_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -21375,7 +22289,7 @@ export interface operations {
             };
         };
     };
-    history_15: {
+    history_16: {
         parameters: {
             query?: {
                 page?: number;
@@ -21577,7 +22491,7 @@ export interface operations {
             };
         };
     };
-    update_19: {
+    update_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -21900,7 +22814,7 @@ export interface operations {
             };
         };
     };
-    create_17: {
+    create_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -21946,7 +22860,7 @@ export interface operations {
             };
         };
     };
-    update_18: {
+    update_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -22321,7 +23235,7 @@ export interface operations {
             };
         };
     };
-    update_17: {
+    update_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -22347,7 +23261,7 @@ export interface operations {
             };
         };
     };
-    cancel_6: {
+    cancel_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -22564,7 +23478,7 @@ export interface operations {
             };
         };
     };
-    create_16: {
+    create_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -22612,7 +23526,7 @@ export interface operations {
             };
         };
     };
-    get_6: {
+    get_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -22660,7 +23574,7 @@ export interface operations {
             };
         };
     };
-    cancel_5: {
+    cancel_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -22706,7 +23620,7 @@ export interface operations {
             };
         };
     };
-    create_15: {
+    create_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -22774,7 +23688,7 @@ export interface operations {
             };
         };
     };
-    update_16: {
+    update_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -22991,7 +23905,7 @@ export interface operations {
             };
         };
     };
-    get_23: {
+    get_25: {
         parameters: {
             query?: never;
             header?: never;
@@ -23088,7 +24002,7 @@ export interface operations {
             };
         };
     };
-    history_14: {
+    history_15: {
         parameters: {
             query: {
                 entityType: "BELL_TEMPLATE" | "WORKING_DAYS" | "CALENDAR_EVENT" | "TEACHER_AVAILABILITY" | "GROUP_SET" | "SUBGROUP" | "LESSON_GENERATION";
@@ -23184,7 +24098,7 @@ export interface operations {
             };
         };
     };
-    create_14: {
+    create_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -23440,7 +24354,7 @@ export interface operations {
             };
         };
     };
-    history_13: {
+    history_14: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -23610,7 +24524,7 @@ export interface operations {
             };
         };
     };
-    create_13: {
+    create_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -23656,7 +24570,7 @@ export interface operations {
             };
         };
     };
-    update_15: {
+    update_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -23759,7 +24673,7 @@ export interface operations {
             };
         };
     };
-    cancel_4: {
+    cancel_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -23833,7 +24747,7 @@ export interface operations {
             };
         };
     };
-    create_12: {
+    create_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -23901,7 +24815,7 @@ export interface operations {
             };
         };
     };
-    update_14: {
+    update_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -24018,7 +24932,7 @@ export interface operations {
             };
         };
     };
-    history_12: {
+    history_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -24133,7 +25047,7 @@ export interface operations {
             };
         };
     };
-    create_11: {
+    create_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -24179,7 +25093,7 @@ export interface operations {
             };
         };
     };
-    update_13: {
+    update_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -24323,6 +25237,52 @@ export interface operations {
             };
         };
     };
+    get_6: {
+        parameters: {
+            query: {
+                subjectId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubjectAssessmentLimitView"];
+                };
+            };
+        };
+    };
+    put_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubjectAssessmentLimitRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubjectAssessmentLimitView"];
+                };
+            };
+        };
+    };
     list_13: {
         parameters: {
             query: {
@@ -24346,7 +25306,7 @@ export interface operations {
             };
         };
     };
-    create_10: {
+    create_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -24706,7 +25666,7 @@ export interface operations {
             };
         };
     };
-    create_9: {
+    create_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -24772,7 +25732,7 @@ export interface operations {
             };
         };
     };
-    list_38: {
+    list_39: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -24798,7 +25758,7 @@ export interface operations {
             };
         };
     };
-    get_22: {
+    get_24: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -24822,7 +25782,7 @@ export interface operations {
             };
         };
     };
-    list_37: {
+    list_38: {
         parameters: {
             query: {
                 status?: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
@@ -24845,7 +25805,7 @@ export interface operations {
             };
         };
     };
-    get_21: {
+    get_23: {
         parameters: {
             query?: never;
             header?: never;
@@ -24938,7 +25898,7 @@ export interface operations {
             };
         };
     };
-    update_12: {
+    update_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -25008,7 +25968,7 @@ export interface operations {
             };
         };
     };
-    create_8: {
+    create_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -25076,7 +26036,7 @@ export interface operations {
             };
         };
     };
-    update_11: {
+    update_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -25333,7 +26293,7 @@ export interface operations {
             };
         };
     };
-    create_7: {
+    create_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -25526,7 +26486,7 @@ export interface operations {
             };
         };
     };
-    list_36: {
+    list_37: {
         parameters: {
             query: {
                 teacherProfileId?: number;
@@ -25667,7 +26627,7 @@ export interface operations {
             };
         };
     };
-    list_35: {
+    list_36: {
         parameters: {
             query?: {
                 grade?: string;
@@ -25709,7 +26669,7 @@ export interface operations {
             };
         };
     };
-    get_20: {
+    get_22: {
         parameters: {
             query?: never;
             header?: never;
@@ -25987,6 +26947,302 @@ export interface operations {
             };
         };
     };
+    list_35: {
+        parameters: {
+            query: {
+                classId: number;
+                subgroupId?: number;
+                subjectId: number;
+                academicPeriodId: number;
+                includeCancelled?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssessmentWorkView"][];
+                };
+            };
+        };
+    };
+    limits: {
+        parameters: {
+            query: {
+                classId: number;
+                subgroupId?: number;
+                subjectId: number;
+                academicPeriodId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssessmentLimitsView"];
+                };
+            };
+        };
+    };
+    mine: {
+        parameters: {
+            query?: {
+                childId?: number;
+                academicPeriodId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssessmentWorkView"][];
+                };
+            };
+        };
+    };
+    get_14: {
+        parameters: {
+            query?: {
+                childId?: number;
+            };
+            header?: never;
+            path: {
+                workId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssessmentWorkView"];
+                };
+            };
+        };
+    };
+    update_11: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAssessmentWorkRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssessmentWorkView"];
+                };
+            };
+        };
+    };
+    cancel_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CancelAssessmentWorkRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssessmentWorkView"];
+                };
+            };
+        };
+    };
+    conduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssessmentWorkView"];
+                };
+            };
+        };
+    };
+    history_12: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssessmentHistoryView"];
+                };
+            };
+        };
+    };
+    reschedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RescheduleAssessmentWorkRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssessmentWorkView"];
+                };
+            };
+        };
+    };
+    results: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssessmentResultsView"];
+                };
+            };
+        };
+    };
+    saveResult: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveAssessmentResultRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentResultView"];
+                };
+            };
+        };
+    };
+    correctResult: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CorrectAssessmentResultRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentResultView"];
+                };
+            };
+        };
+    };
     myMarks: {
         parameters: {
             query: {
@@ -26121,6 +27377,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeacherJournalOptionsView"];
+                };
+            };
+        };
+    };
+    getEffectiveAttestation: {
+        parameters: {
+            query: {
+                classId: number;
+                subjectId: number;
+                academicPeriodId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EffectiveAttestationView"];
                 };
             };
         };
@@ -26783,7 +28063,7 @@ export interface operations {
             };
         };
     };
-    create_6: {
+    create_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -27028,6 +28308,32 @@ export interface operations {
             };
         };
     };
+    confirmFinalGrade: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                finalGradeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmFinalGradeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinalGradeView"];
+                };
+            };
+        };
+    };
     history_11: {
         parameters: {
             query?: never;
@@ -27060,6 +28366,32 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinalGradeView"];
+                };
+            };
+        };
+    };
+    republish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                finalGradeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RepublishFinalGradeRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -27117,7 +28449,7 @@ export interface operations {
             };
         };
     };
-    get_12: {
+    get_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -27333,7 +28665,7 @@ export interface operations {
             };
         };
     };
-    create_5: {
+    create_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -27651,7 +28983,7 @@ export interface operations {
             };
         };
     };
-    create_4: {
+    create_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -27987,7 +29319,7 @@ export interface operations {
             };
         };
     };
-    get_19: {
+    get_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -29913,6 +31245,32 @@ export interface operations {
             };
         };
     };
+    create_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAssessmentWorkRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssessmentWorkView"];
+                };
+            };
+        };
+    };
     sheet_2: {
         parameters: {
             query?: never;
@@ -31583,7 +32941,7 @@ export interface operations {
             };
         };
     };
-    get_11: {
+    get_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -33484,7 +34842,7 @@ export interface operations {
             };
         };
     };
-    get_18: {
+    get_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -33796,7 +35154,7 @@ export interface operations {
             };
         };
     };
-    get_17: {
+    get_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -33938,7 +35296,7 @@ export interface operations {
             };
         };
     };
-    get_15: {
+    get_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -34139,7 +35497,7 @@ export interface operations {
             };
         };
     };
-    get_16: {
+    get_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -34695,7 +36053,7 @@ export interface operations {
             };
         };
     };
-    get_14: {
+    get_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -34845,7 +36203,7 @@ export interface operations {
             };
         };
     };
-    get_13: {
+    get_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -35218,7 +36576,7 @@ export interface operations {
             };
         };
     };
-    get_10: {
+    get_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -36049,7 +37407,7 @@ export interface operations {
             };
         };
     };
-    get_9: {
+    get_10: {
         parameters: {
             query?: never;
             header?: never;
