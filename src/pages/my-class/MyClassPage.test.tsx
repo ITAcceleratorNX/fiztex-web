@@ -14,6 +14,12 @@ const useMyClassSubjectJournal = vi.fn();
 const useMyClassAttendanceJournal = vi.fn();
 const useMyClassWeekSchedule = vi.fn();
 const useClassGradeDynamics = vi.fn();
+const useReportPerformance = vi.fn((..._args: unknown[]) => ({ isPending: true, isLoading: false, data: undefined }));
+
+vi.mock('@/hooks/reportingQueries', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/hooks/reportingQueries')>()),
+  useReportPerformance: (...args: unknown[]) => useReportPerformance(...args),
+}));
 
 vi.mock('@/hooks/dynamicsQueries', () => ({
   useClassGradeDynamics: (...args: unknown[]) => useClassGradeDynamics(...args),
@@ -565,5 +571,34 @@ describe('MyClassPage — несколько классов', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('classId=18');
     expect(useMyClassRoster).toHaveBeenLastCalledWith(18);
     expect(useMyClassSummary).toHaveBeenLastCalledWith(18, 7);
+  });
+});
+
+describe('MyClassPage — средняя оценка в шапке', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useClassGradeDynamics.mockImplementation((classId: number) => classDynamics(classId));
+    useMyClassContext.mockReturnValue({ isPending: false, isError: false, data: { ...context(), academicYearId: 3 }, refetch });
+    useMyClassRoster.mockReturnValue({ isPending: false, data: { pages: [{ totalItems: 2, items: [] }] }, refetch });
+    // Под политикой оценивания шкальный средний сводки пуст.
+    useMyClassSummary.mockReturnValue({ isPending: false, data: { averageGrade: null, monthlyAttendancePercent: 94 }, refetch });
+  });
+
+  it('shows the class performance from reporting instead of the empty scale average', () => {
+    useReportPerformance.mockReturnValue({ isPending: false, isLoading: false, data: { performance: {
+      basis: 'CURRENT', preliminary: true, value: 6.9, state: 'AVAILABLE' } } } as never);
+    renderPage();
+
+    expect(useReportPerformance).toHaveBeenLastCalledWith({ kind: 'homeroom', classId: 18 }, { academicYearId: 3, academicPeriodId: 7 });
+    expect(screen.getByText('Средняя оценка').nextElementSibling).toHaveTextContent('6,90');
+    expect(screen.queryByText(/Общая средняя оценка не рассчитана/)).not.toBeInTheDocument();
+  });
+
+  it('keeps explaining the dash when the class has no result', () => {
+    useReportPerformance.mockReturnValue({ isPending: false, isLoading: false, data: { performance: { state: 'NO_DATA' } } } as never);
+    renderPage();
+
+    expect(screen.getByText('Средняя оценка').nextElementSibling).toHaveTextContent('—');
+    expect(screen.getByText(/Общая средняя оценка не рассчитана/)).toBeInTheDocument();
   });
 });

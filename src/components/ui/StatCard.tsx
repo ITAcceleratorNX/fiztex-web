@@ -7,12 +7,15 @@ export function StatCard({
   icon: Icon,
   tone = 'navy',
   variant = 'default',
+  hint,
 }: {
   label: string;
   value: number | string;
   icon?: LucideIcon;
   tone?: 'navy' | 'success';
   variant?: 'default' | 'compact';
+  /** Расшифровка значения: основа расчёта и т. п. — подсказкой при наведении. */
+  hint?: string;
 }) {
   if (variant === 'compact') {
     return (
@@ -26,7 +29,7 @@ export function StatCard({
         )}
         <div className="min-w-0">
           <p className="text-13 font-semibold uppercase tracking-wide text-subtle">{label}</p>
-          <p className="mt-1 text-2xl font-bold text-ink">{value}</p>
+          <p className="mt-1 text-2xl font-bold text-ink" title={hint}>{value}</p>
         </div>
       </div>
     );
