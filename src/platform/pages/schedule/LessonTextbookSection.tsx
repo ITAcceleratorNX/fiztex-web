@@ -1,6 +1,8 @@
 import { useEffect, useState, type FocusEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Library } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { EntryCard } from '@/components/ui/EntryCard';
 import { Select, TextInput } from '@/components/ui/Field';
 import { useToast } from '@/context/ToastContext';
 import { useClearLessonTextbook, useLessonTextbooks, useSelectLessonTextbook } from '@/hooks/queries';
@@ -13,41 +15,63 @@ import { lessonTextbooksApi, type LessonTextbook, type LessonTextbooks } from '@
 const NOT_ASSIGNED_ANYMORE = 'Учебник больше не назначен классу — для этого урока он сохранён';
 
 /**
- * Поле «Учебник» на карточке урока (Figma 2149:4182, 2149:4297, 2149:4415).
+ * Раздел «Учебник» в «Материалах урока» (Figma 2212:9448 / 2212:9521). До KSP-FE-001 это было
+ * поле в блоке темы на карточке урока (2149:4182, 2149:4297, 2149:4415); карточка разрослась,
+ * и учебник переехал к остальному, что видят ученики. Выбор учебника и страниц — тот же, что был
+ * на карточке: раскрывается по «Выбрать учебник» / «Изменить».
  *
  * Кто может выбирать, говорит сервер (`canSelect`: учителя урока, не администратор), а
- * закрытый период замораживает поле так же, как тему и комментарий. Остальным поле
- * показывает выбор и открывает файл.
+ * закрытый период замораживает выбор. Остальным раздел показывает выбор и открывает файл.
  *
- * Список запрашивается у каждой карточки, а не по `LessonView.textbookCount`: счётчик считает
+ * Список запрашивается у каждого урока, а не по `LessonView.textbookCount`: счётчик считает
  * только то, что действует на дату урока, и выбор, назначение которого потом завершили,
- * он не видит — а карточка обязана его показать (контракт §6, `selected.active = false`).
+ * он не видит — а раздел обязан его показать (контракт §6, `selected.active = false`).
  */
-export function LessonTextbookField({ lessonId, locked }: { lessonId: number; locked: boolean }) {
+export function LessonTextbookSection({ lessonId, locked }: { lessonId: number; locked: boolean }) {
   const query = useLessonTextbooks(lessonId);
+  const [editing, setEditing] = useState(false);
+  const data = query.data;
+  const selected = data?.selected ?? null;
+  const canSelect = Boolean(data?.canSelect) && !locked;
 
-  return (
-    <div className="flex flex-col gap-2">
-      <p className="text-11 font-bold uppercase text-slate-400">Учебник</p>
-      {query.isPending ? (
-        <p className="text-sm text-slate-400">Загружаем учебники…</p>
-      ) : query.isError ? (
-        <p className="flex items-center gap-3 text-sm text-slate-500">
+  const description = query.isPending
+    ? 'Загружаем учебники…'
+    : query.isError
+      ? (
+        <span className="flex items-center gap-3">
           Не удалось загрузить учебники урока
-          <button
-            type="button"
-            onClick={() => void query.refetch()}
-            className="font-semibold text-navy-700 underline hover:text-navy-800"
-          >
+          <button type="button" onClick={() => void query.refetch()}
+            className="font-semibold text-navy-700 underline hover:text-navy-800">
             Повторить
           </button>
-        </p>
-      ) : query.data.canSelect && !locked ? (
-        <TextbookPicker lessonId={lessonId} data={query.data} />
-      ) : (
-        <TextbookReadOnly lessonId={lessonId} data={query.data} />
+        </span>
+      )
+      : selected ? lessonTextbookLabel(selected) : 'Учебник к уроку не выбран';
+
+  return (
+    <EntryCard
+      icon={<Library className="size-5" />}
+      title="Учебник"
+      meta="видят ученики в уроке"
+      description={description}
+      actions={data && (
+        <>
+          {canSelect && (selected
+            ? <Button variant="ghost" onClick={() => setEditing((open) => !open)} aria-expanded={editing}>
+              {editing ? 'Свернуть' : 'Изменить'}
+            </Button>
+            : <Button variant="secondary" onClick={() => setEditing((open) => !open)} aria-expanded={editing}>
+              {editing ? 'Свернуть' : 'Выбрать учебник'}
+            </Button>)}
+          {selected && <OpenTextbookButton lessonId={lessonId} textbook={selected} />}
+        </>
       )}
-    </div>
+    >
+      {data && canSelect && editing && <TextbookPicker lessonId={lessonId} data={data} />}
+      {data && !editing && selected?.active === false && (
+        <p className="text-xs text-slate-400">{NOT_ASSIGNED_ANYMORE}</p>
+      )}
+    </EntryCard>
   );
 }
 
@@ -172,7 +196,6 @@ function TextbookPicker({ lessonId, data }: { lessonId: number; data: LessonText
           </span>
         )}
 
-        {selected && <OpenTextbookButton lessonId={lessonId} textbook={selected} />}
       </div>
 
       {pageError && <p className="text-xs text-red-500">{pageError}</p>}
@@ -183,21 +206,6 @@ function TextbookPicker({ lessonId, data }: { lessonId: number; data: LessonText
           страницы для этого урока.
         </p>
       )}
-    </div>
-  );
-}
-
-function TextbookReadOnly({ lessonId, data }: { lessonId: number; data: LessonTextbooks }) {
-  const selected = data.selected;
-  if (!selected) return <p className="text-sm text-slate-400">Учебник не выбран</p>;
-
-  return (
-    <div className="flex flex-col gap-1">
-      <div className="flex flex-wrap items-center gap-3">
-        <p className="text-sm font-semibold text-slate-900">{lessonTextbookLabel(selected)}</p>
-        <OpenTextbookButton lessonId={lessonId} textbook={selected} />
-      </div>
-      {selected.active === false && <p className="text-xs text-slate-400">{NOT_ASSIGNED_ANYMORE}</p>}
     </div>
   );
 }
@@ -225,14 +233,9 @@ function OpenTextbookButton({ lessonId, textbook }: { lessonId: number; textbook
   }
 
   return (
-    <button
-      type="button"
-      onClick={() => void open()}
-      disabled={opening}
-      className="inline-flex items-center gap-1 text-13 font-semibold text-navy-700 transition hover:text-navy-800 disabled:opacity-60"
-    >
-      <ExternalLink className="size-3.5" aria-hidden />
+    <Button variant="secondary" loading={opening} onClick={() => void open()}
+      icon={<ExternalLink className="size-4" aria-hidden />}>
       {textbook.format === 'DOCX' ? 'Скачать' : 'Открыть'}
-    </button>
+    </Button>
   );
 }

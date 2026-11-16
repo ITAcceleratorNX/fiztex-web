@@ -34,6 +34,8 @@ import {
   useLessonGradeSheet,
   useLessonHistory,
   useLessonHomework,
+  useLessonSummary,
+  useLessonTextbooks,
   useSaveLessonComment,
   useSaveLessonTopic,
   useSetHomeworkNotAssigned,
@@ -58,8 +60,7 @@ import { CopyHomeworkToLessonModal } from '@/pages/workspace/CopyHomeworkToLesso
 import { LessonManagementCard, SubstituteGradeAccessCard } from './LessonManagementCard';
 import { describeHistoryActor, describeHistoryEntry, hhmm } from './lessonHistory';
 import { AssessmentWorkPanel } from './AssessmentWorkPanel';
-import { LessonTextbookField } from './LessonTextbookField';
-import { LessonSummaryEntry } from './LessonSummaryEntry';
+import { KspEntryCard } from './ksp/KspEntryCard';
 import { CopyLessonPreparationModal } from './CopyLessonPreparationModal';
 import { LessonKtpTopicField } from '@/pages/ktp/LessonKtpTopicField';
 
@@ -207,11 +208,6 @@ export function LessonCardPage() {
             textClassName="block text-sm leading-relaxed text-slate-600" />
         </TeachingField>
 
-        <hr className="border-slate-200" />
-
-        {/* Учебник — та же учебная часть урока, что тема и комментарий (Figma 2149:4458). */}
-        <LessonTextbookField lessonId={id} locked={periodClosed} />
-
         {lesson.comment?.createdByName && (
           <>
             <hr className="border-slate-200" />
@@ -228,7 +224,14 @@ export function LessonCardPage() {
         canCreate={canEditTeaching && !periodClosed}
       />
 
-      <LessonSummaryEntry lesson={lesson} />
+      {/*
+        «Поурочный план (КСП)» — на месте прежней карточки конспекта (Figma К1–К4). Учебник и
+        конспект переехали в «Материалы урока»: плитки с подборками на карточке перестали работать.
+        КСП — рабочий документ учителя урока: администратору эндпоинты КСП отвечают 403.
+      */}
+      {admin?.role === 'TEACHER' && hasAny(lesson, ['VIEW_TEACHER_HISTORY']) && lesson.id != null && (
+        <KspEntryCard lessonId={lesson.id} />
+      )}
       <LessonModules lesson={lesson} />
 
       {/*
@@ -474,14 +477,24 @@ function TeachingField({
 }
 
 /**
- * Подпись плитки материалов. Счётчик приходит с карточкой урока
- * (`LessonView.materialCount`) и уже посчитан по правам смотрящего: ученик и родитель
- * видят только то, что учитель открыл классу. Отдельного запроса за списком плитке
- * не нужно — у большинства уроков материалов нет вовсе.
+ * Подпись плитки материалов: что внутри — учебник, конспект, число файлов (Figma К1,
+ * «Учебник, конспект, 2 файла»). Учебник и конспект живут в «Материалах урока» с этой
+ * задачи, и плитка — единственное место на карточке, где видно, что они есть.
+ *
+ * Счётчик файлов приходит с карточкой (`LessonView.materialCount`, уже по правам смотрящего),
+ * учебник и конспект — из тех же запросов, что и раньше спрашивала карточка, поэтому лишних
+ * обращений к серверу у плитки нет.
  */
-function materialsTileValue(count: number | undefined): string {
-  if (!count) return 'Ничего не приложено';
-  return `${count} ${pluralRu(count, ['материал', 'материала', 'материалов'])}`;
+export function materialsTileValue(
+  { textbook, summary, files }: { textbook: boolean; summary: boolean; files: number | undefined },
+): string {
+  const parts: string[] = [];
+  if (textbook) parts.push('учебник');
+  if (summary) parts.push('конспект');
+  if (files) parts.push(`${files} ${pluralRu(files, ['файл', 'файла', 'файлов'])}`);
+  if (parts.length === 0) return 'Ничего не приложено';
+  const text = parts.join(', ');
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 /**
@@ -709,6 +722,8 @@ function LessonModules({ lesson }: { lesson: Lesson }) {
   // Тот же запрос, что у секции выше: react-query отдаёт обеим один кэш, а не два ответа.
   const homeworkQuery = useLessonHomework(lesson.id ?? null, canReadHomework);
   const gradesQuery = useLessonGradeSheet(lesson.id ?? null, canViewGrades);
+  const textbooksQuery = useLessonTextbooks(lesson.id ?? null);
+  const summaryQuery = useLessonSummary(lesson.id ?? null);
 
   return (
     <div className="flex flex-wrap items-stretch gap-4">
@@ -743,7 +758,11 @@ function LessonModules({ lesson }: { lesson: Lesson }) {
         icon={<Paperclip className="size-[18px]" />}
         tone="violet"
         title="Материалы"
-        value={materialsTileValue(lesson.materialCount)}
+        value={materialsTileValue({
+          textbook: Boolean(textbooksQuery.data?.selected),
+          summary: Boolean(summaryQuery.data?.content),
+          files: lesson.materialCount,
+        })}
         onClick={() => navigate(`/lesson-schedule/lessons/${lesson.id}/materials`)}
       />
       <ModuleTile

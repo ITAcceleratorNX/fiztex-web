@@ -6,6 +6,9 @@ import { LessonMaterialsPage } from './LessonMaterialsPage';
 
 const useLesson = vi.fn();
 const useLessonMaterials = vi.fn();
+const useLessonTextbooks = vi.fn();
+const useLessonSummary = vi.fn();
+const selectTextbook = vi.fn();
 const attachWorkspace = vi.fn();
 
 vi.mock('@/components/workspace/WorkspaceMaterialPickerModal', () => ({
@@ -32,7 +35,27 @@ vi.mock('@/hooks/queries', () => ({
   useAttachWorkspaceDocumentToLesson: () => ({ ...idleMutation(), mutateAsync: attachWorkspace }),
   useSetLessonMaterialVisibility: () => idleMutation(),
   useDeleteLessonMaterial: () => idleMutation(),
+  useLessonTextbooks: (...args: unknown[]) => useLessonTextbooks(...args),
+  useSelectLessonTextbook: () => ({ mutate: selectTextbook, isPending: false }),
+  useClearLessonTextbook: () => idleMutation(),
+  useLessonSummary: (...args: unknown[]) => useLessonSummary(...args),
 }));
+
+/** Учебник урока в том виде, в каком его отдаёт GET /api/lessons/{id}/textbooks. */
+function textbook(overrides: Record<string, unknown> = {}) {
+  return {
+    bindingId: 7,
+    textbookId: 3,
+    title: 'Spotlight 5. Student’s Book',
+    format: 'PDF',
+    pageCount: 142,
+    pageNavigation: true,
+    pageFrom: null,
+    pageTo: null,
+    active: true,
+    ...overrides,
+  };
+}
 
 function lesson(capabilities: string[]) {
   return {
@@ -73,6 +96,10 @@ describe('LessonMaterialsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useLessonMaterials.mockReturnValue({ data: [], isPending: false, isError: false });
+    useLessonTextbooks.mockReturnValue({
+      data: { canSelect: false, selected: null, available: [] }, isPending: false, isError: false,
+    });
+    useLessonSummary.mockReturnValue({ data: { canEdit: false }, isPending: false, isError: false });
     attachWorkspace.mockResolvedValue({ id: 13 });
   });
 
@@ -86,9 +113,9 @@ describe('LessonMaterialsPage', () => {
     renderPage();
 
     expect(screen.getByRole('button', { name: /Загрузить файл/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Добавить ссылку/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Добавить' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Выбрать из рабочего пространства/ })).toBeInTheDocument();
-    expect(screen.getByText(/Приложите конспект/)).toBeInTheDocument();
+    expect(screen.getByText(/Приложите презентацию/)).toBeInTheDocument();
   });
 
   it('прикрепляет выбранный материал к уроку с видимостью для учеников', async () => {
@@ -145,5 +172,86 @@ describe('LessonMaterialsPage', () => {
     renderPage();
 
     expect(screen.getByText(/Не удалось загрузить материалы/)).toBeInTheDocument();
+  });
+
+  /**
+   * KSP-FE-001: учебник переехал сюда с карточки урока (Figma 2212:9448 / 9521). Выбор тот же —
+   * раскрывается по «Выбрать учебник», а не стоит открытым: страницу смотрят чаще, чем меняют.
+   */
+  describe('учебник урока', () => {
+    it('учитель выбирает из назначенного классу; пока не выбрал — подсказка из макета', async () => {
+      const user = userEvent.setup();
+      useLesson.mockReturnValue({ data: lesson(['VIEW_CARD', 'EDIT_TEACHING_PART']) });
+      useLessonTextbooks.mockReturnValue({
+        data: { canSelect: true, selected: null, available: [textbook()] }, isPending: false, isError: false,
+      });
+      renderPage();
+
+      expect(screen.getByText('Учебник к уроку не выбран')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Выбрать учебник' }));
+      expect(screen.getByText(/Ученики всё равно смогут открыть учебники/)).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Учебник' }));
+      await user.click(screen.getByRole('option', { name: 'Spotlight 5. Student’s Book' }));
+
+      // Выбор уходит назначением, а не учебником: учебник действует у класса через него.
+      expect(selectTextbook).toHaveBeenCalledWith({ bindingId: 7 }, expect.anything());
+    });
+
+    it('страницы у PDF сохраняются диапазоном, когда фокус уходит из обоих полей', async () => {
+      const user = userEvent.setup();
+      useLesson.mockReturnValue({ data: lesson(['VIEW_CARD', 'EDIT_TEACHING_PART']) });
+      useLessonTextbooks.mockReturnValue({
+        data: { canSelect: true, selected: textbook(), available: [textbook()] }, isPending: false, isError: false,
+      });
+      renderPage();
+
+      await user.click(screen.getByRole('button', { name: 'Изменить' }));
+      await user.type(screen.getByRole('textbox', { name: 'С какой страницы' }), '24');
+      await user.click(screen.getByRole('textbox', { name: 'По какую страницу' }));
+      expect(selectTextbook).not.toHaveBeenCalled();
+
+      await user.keyboard('26');
+      await user.click(document.body);
+      expect(selectTextbook).toHaveBeenCalledTimes(1);
+      expect(selectTextbook).toHaveBeenCalledWith({ bindingId: 7, pageFrom: 24, pageTo: 26 }, expect.anything());
+    });
+
+    it('у администратора — только чтение выбранного учителем', () => {
+      useLesson.mockReturnValue({ data: lesson(['VIEW_CARD']) });
+      useLessonTextbooks.mockReturnValue({
+        data: { canSelect: false, selected: textbook({ pageFrom: 24, pageTo: 26, active: false }), available: [] },
+        isPending: false,
+        isError: false,
+      });
+      renderPage();
+
+      expect(screen.getByText('Spotlight 5. Student’s Book · стр. 24–26')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Открыть' })).toBeInTheDocument();
+      expect(screen.getByText(/больше не назначен классу/)).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Выбрать учебник|Изменить/ })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('конспект урока', () => {
+    it('без конспекта учитель создаёт его на прежней странице конспекта', () => {
+      useLesson.mockReturnValue({ data: lesson(['VIEW_CARD', 'EDIT_TEACHING_PART']) });
+      useLessonSummary.mockReturnValue({ data: { canEdit: true }, isPending: false, isError: false });
+      renderPage();
+
+      expect(screen.getByText(/Конспект пока не создан. ИИ составит его/)).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /Создать с ИИ/ })).toHaveAttribute('href', '/lesson-schedule/lessons/1/summary');
+    });
+
+    it('черновик открывается и помечен', () => {
+      useLesson.mockReturnValue({ data: lesson(['VIEW_CARD', 'EDIT_TEACHING_PART']) });
+      useLessonSummary.mockReturnValue({
+        data: { canEdit: true, content: { title: 'Умножение дробей' } }, isPending: false, isError: false,
+      });
+      renderPage();
+
+      expect(screen.getByText('Умножение дробей')).toBeInTheDocument();
+      expect(screen.getByText('Черновик')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Открыть' })).toHaveAttribute('href', '/lesson-schedule/lessons/1/summary');
+    });
   });
 });

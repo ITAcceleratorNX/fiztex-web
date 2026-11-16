@@ -12,7 +12,8 @@ const useLessonHomework = vi.fn();
 const useLessonGradeSheet = vi.fn();
 const useGradePermission = vi.fn();
 const useLessonTextbooks = vi.fn();
-const selectTextbook = vi.fn();
+const useLessonSummary = vi.fn();
+const useKspContext = vi.fn();
 const setHomeworkNotAssigned = vi.fn();
 const session = vi.hoisted(() => ({ role: 'ADMIN' }));
 
@@ -51,7 +52,8 @@ vi.mock('@/hooks/queries', () => ({
   useKtpTeaching: () => ({ data: {}, isPending: false }),
   useKtpTeachingHistory: () => ({ data: undefined, isPending: false }),
   useKtpProgress: () => ({ data: undefined, isPending: false }),
-  useLessonSummary: () => ({ data: { canEdit: true }, isPending: false }),
+  useLessonSummary: (...args: unknown[]) => useLessonSummary(...args),
+  useKspContext: (...args: unknown[]) => useKspContext(...args),
   useLesson: (...args: unknown[]) => useLesson(...args),
   useLessonHistory: (...args: unknown[]) => useLessonHistory(...args),
   useAttendanceSheet: (...args: unknown[]) => useAttendanceSheet(...args),
@@ -67,8 +69,6 @@ vi.mock('@/hooks/queries', () => ({
   useSaveLessonComment: () => idleMutation(),
   useSetHomeworkNotAssigned: () => ({ mutate: setHomeworkNotAssigned, isPending: false }),
   useLessonTextbooks: (...args: unknown[]) => useLessonTextbooks(...args),
-  useSelectLessonTextbook: () => ({ mutate: selectTextbook, isPending: false }),
-  useClearLessonTextbook: () => idleMutation(),
 }));
 
 /** Учебник урока в том виде, в каком его отдаёт GET /api/lessons/{id}/textbooks. */
@@ -144,7 +144,10 @@ describe('LessonCardPage', () => {
       isPending: false,
       isError: false,
     });
-    selectTextbook.mockReset();
+    useLessonSummary.mockReset();
+    useLessonSummary.mockReturnValue({ data: { canEdit: true }, isPending: false });
+    useKspContext.mockReset();
+    useKspContext.mockReturnValue({ data: undefined, isPending: true, isError: false });
   });
 
   it('возвращает учителя к неделе, с которой открыта карточка', () => {
@@ -158,75 +161,42 @@ describe('LessonCardPage', () => {
     );
   });
 
-  describe('учебник урока', () => {
-    it('учитель выбирает из назначенного классу; пока не выбрал — подсказка из макета', async () => {
-      const user = userEvent.setup();
+  describe('КСП и материалы (KSP-FE-001)', () => {
+    it('учитель урока видит карточку КСП в состоянии с сервера, она ведёт на страницу КСП', () => {
+      session.role = 'TEACHER';
       useLesson.mockReturnValue({
-        data: lesson({ capabilities: TEACHING }),
-        isPending: false,
-        isError: false,
-        error: null,
+        data: lesson({ capabilities: [...TEACHING, 'VIEW_TEACHER_HISTORY'] }), isPending: false, isError: false, error: null,
       });
-      useLessonTextbooks.mockReturnValue({
-        data: { canSelect: true, selected: null, available: [textbook()] },
-        isPending: false,
-        isError: false,
-      });
+      useKspContext.mockReturnValue({ data: { entryState: 'UNSAVED' }, isPending: false, isError: false });
       renderCard();
 
-      expect(screen.getByText(/Ученики всё равно смогут открыть учебники/)).toBeInTheDocument();
-      await user.click(screen.getByRole('button', { name: 'Учебник' }));
-      await user.click(screen.getByRole('option', { name: 'Spotlight 5. Student’s Book' }));
-
-      // Выбор уходит назначением, а не учебником: учебник действует у класса через него.
-      expect(selectTextbook).toHaveBeenCalledWith({ bindingId: 7 }, expect.anything());
+      const card = screen.getByRole('link', { name: /Поурочный план \(КСП\)/ });
+      expect(card).toHaveAttribute('href', '/lesson-schedule/lessons/6/ksp');
+      expect(card).toHaveTextContent('Результат готов, но не сохранён. Проверьте и сохраните');
     });
 
-    it('страницы у PDF сохраняются диапазоном, когда фокус уходит из обоих полей', async () => {
-      const user = userEvent.setup();
-      useLesson.mockReturnValue({
-        data: lesson({ capabilities: TEACHING }),
-        isPending: false,
-        isError: false,
-        error: null,
-      });
-      useLessonTextbooks.mockReturnValue({
-        data: { canSelect: true, selected: textbook(), available: [textbook()] },
-        isPending: false,
-        isError: false,
-      });
-      renderCard();
-
-      await user.type(screen.getByRole('textbox', { name: 'С какой страницы' }), '24');
-      await user.click(screen.getByRole('textbox', { name: 'По какую страницу' }));
-      expect(selectTextbook).not.toHaveBeenCalled();
-
-      await user.keyboard('26');
-      await user.click(document.body);
-      expect(selectTextbook).toHaveBeenCalledTimes(1);
-      expect(selectTextbook).toHaveBeenCalledWith(
-        { bindingId: 7, pageFrom: 24, pageTo: 26 },
-        expect.anything(),
-      );
-    });
-
-    it('у администратора — только чтение выбранного учителем', () => {
+    it('администратору карточки КСП нет и КСП не спрашивается', () => {
       useLesson.mockReturnValue({ data: lesson(), isPending: false, isError: false, error: null });
-      useLessonTextbooks.mockReturnValue({
-        data: {
-          canSelect: false,
-          selected: textbook({ pageFrom: 24, pageTo: 26, active: false }),
-          available: [],
-        },
-        isPending: false,
-        isError: false,
-      });
       renderCard();
 
-      expect(screen.getByText('Spotlight 5. Student’s Book · стр. 24–26')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Открыть' })).toBeInTheDocument();
-      expect(screen.getByText(/больше не назначен классу/)).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /Поурочный план/ })).not.toBeInTheDocument();
+      expect(useKspContext).not.toHaveBeenCalled();
+    });
+
+    it('учебника и конспекта на карточке нет — плитка «Материалы» называет, что внутри', () => {
+      session.role = 'TEACHER';
+      useLesson.mockReturnValue({
+        data: lesson({ capabilities: TEACHING, materialCount: 2 }), isPending: false, isError: false, error: null,
+      });
+      useLessonTextbooks.mockReturnValue({
+        data: { canSelect: true, selected: textbook(), available: [textbook()] }, isPending: false, isError: false,
+      });
+      useLessonSummary.mockReturnValue({ data: { canEdit: true, content: { title: 'Конспект' } }, isPending: false });
+      renderCard();
+
       expect(screen.queryByRole('button', { name: 'Учебник' })).not.toBeInTheDocument();
+      expect(screen.queryByText('Конспект урока')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Материалы/ })).toHaveTextContent('Учебник, конспект, 2 файла');
     });
   });
 
