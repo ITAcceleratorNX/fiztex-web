@@ -11,7 +11,9 @@ import {
   ratingStateHint,
   reportFileName,
   counted,
+  hasAcademicPerformance,
   hasPartialData,
+  headerAverageDisplay,
   isEmptyReport,
   lessonsDisplay,
   namesLabel,
@@ -157,5 +159,26 @@ describe('reportingModel', () => {
   it('builds a safe export file name', () => {
     expect(reportFileName('2026–2027', '1 четверть')).toBe('Отчётность 2026–2027 1 четверть.xlsx');
     expect(reportFileName('2026/2027', null)).toBe('Отчётность 2026-2027 год.xlsx');
+  });
+});
+
+describe('header metrics', () => {
+  const points = metrics({ grades: { gradeCount: 30, scaleCount: 0, pointsCount: 30,
+    scaleAverage: { value: null, state: 'NO_DATA', reason: 'NO_SCALE_GRADES' } } });
+
+  it('shows the same average as the performance card, labelled by its basis', () => {
+    const performance = { basis: 'CURRENT', preliminary: true, value: 6.94, state: 'AVAILABLE' } as const;
+    expect(headerAverageDisplay(points, performance))
+      .toEqual({ text: '6,94', hint: 'Текущая успеваемость · Предварительно', missing: false });
+  });
+
+  it('falls back to the summary average while performance is missing', () => {
+    expect(headerAverageDisplay(metrics(), undefined).text).toBe('7,85');
+    expect(headerAverageDisplay(points, { basis: 'PUBLISHED', preliminary: false, value: null, state: 'NO_DATA' }).missing).toBe(true);
+  });
+
+  it('hides academic performance until the server calculates it', () => {
+    expect(hasAcademicPerformance(metrics())).toBe(false);
+    expect(hasAcademicPerformance(metrics({ academicPerformance: { value: 92, state: 'AVAILABLE' } }))).toBe(true);
   });
 });

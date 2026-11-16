@@ -2,27 +2,35 @@ import type { ReactNode } from 'react';
 import { cx } from '@/lib/format';
 import {
   attendanceDisplay,
-  averageDisplay,
   badgeLetters,
+  hasAcademicPerformance,
+  headerAverageDisplay,
   performanceDisplay,
   type ReportMetrics,
+  type ReportPerformance,
 } from '@/lib/reportingModel';
 import { MetricCell } from './ReportTable';
 
 /**
  * Шапка детализации (Figma «Отчётность › 8 «А»» 2196:22757, «› Математика», «› Петров
- * А.А.»): плашка с буквами, название, строка контекста и три показателя среза справа.
+ * А.А.»): плашка с буквами, название, строка контекста и показатели среза справа.
+ *
+ * «Ср. балл» — сводная успеваемость того же среза (`performance`), «Успеваемость» — только когда
+ * сервер её посчитал: колонка, в которой всегда прочерк, хуже её отсутствия.
  */
 export function ReportHeaderCard({
   title,
   subtitle,
   metrics,
+  performance,
   badge,
   round = false,
 }: {
   title: string;
   subtitle?: ReactNode;
   metrics: ReportMetrics | undefined;
+  /** Сводная успеваемость того же фильтра, что и `metrics`. */
+  performance?: ReportPerformance | null;
   /** Текст плашки; по умолчанию — первые буквы названия. */
   badge?: string;
   /** Круглая тёмная плашка — у человека (учитель), квадратная светлая — у класса и предмета. */
@@ -47,8 +55,10 @@ export function ReportHeaderCard({
         {subtitle && <p className="mt-1 text-13 text-slate-500">{subtitle}</p>}
       </div>
       <dl className="flex gap-10 text-right">
-        <HeaderMetric label="Ср. балл" value={<MetricCell value={averageDisplay(metrics)} />} />
-        <HeaderMetric label="Успеваемость" value={<MetricCell value={performanceDisplay(metrics)} />} />
+        <HeaderMetric label="Ср. балл" value={<MetricCell value={headerAverageDisplay(metrics, performance)} />} />
+        {hasAcademicPerformance(metrics) && (
+          <HeaderMetric label="Успеваемость" value={<MetricCell value={performanceDisplay(metrics)} />} />
+        )}
         <HeaderMetric label="Посещаемость" value={<MetricCell value={attendanceDisplay(metrics)} />} />
       </dl>
     </section>

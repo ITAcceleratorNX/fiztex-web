@@ -154,6 +154,7 @@ export function MyClassReportTab({
               ? null : counted(summary.data.metrics.lessons.completedLessonCount, LESSONS)]
             .filter(Boolean).join(' · ')}
           metrics={summary.data?.metrics}
+          performance={performance.data?.performance}
         />
       )}
 

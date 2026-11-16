@@ -186,6 +186,24 @@ export function performanceValueDisplay(performance: ReportPerformance | null | 
 }
 
 /**
+ * «Ср. балл» в шапке детализации. Сводная успеваемость — то же число, что стоит в карточке под
+ * шапкой: два разных средних на одном экране читались бы как ошибка. Шкальный средний сводки —
+ * запасной путь, пока сводная успеваемость не пришла или её нет.
+ */
+export function headerAverageDisplay(metrics: ReportMetrics | undefined,
+  performance: ReportPerformance | null | undefined): MetricDisplay {
+  if (performance?.state === 'AVAILABLE' && performance.value != null) {
+    return { text: decimal.format(performance.value), hint: basisLabel(performance.basis, performance.preliminary), missing: false };
+  }
+  return averageDisplay(metrics);
+}
+
+/** Процент успеваемости сервер пока не считает — пустую колонку шапка не показывает. */
+export function hasAcademicPerformance(metrics: ReportMetrics | undefined): boolean {
+  return metrics?.academicPerformance?.state === 'AVAILABLE' && metrics.academicPerformance.value != null;
+}
+
+/**
  * Подпись основы расчёта. Текущий средний — не четвертная оценка, поэтому он всегда
  * подписан, и «Предварительно» стоит у незавершённого периода (ТЗ Frontend §5–6).
  */

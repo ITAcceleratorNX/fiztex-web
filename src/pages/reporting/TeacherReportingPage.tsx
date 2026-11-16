@@ -158,6 +158,7 @@ export function TeacherReportingPage() {
         <>
           {classId != null && summary.data && !isEmptyReport(summary.data.metrics) && (
             <ReportHeaderCard title={`${subjectName ?? 'Предмет'} · ${className}`} metrics={summary.data.metrics}
+              performance={performance.data?.performance}
               subtitle={[summary.data.currentStudentCount == null ? null : counted(summary.data.currentStudentCount, STUDENTS),
                 summary.data.metrics?.lessons?.completedLessonCount == null
                   ? null : counted(summary.data.metrics.lessons.completedLessonCount, LESSONS)].filter(Boolean).join(' · ')} />

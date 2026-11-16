@@ -46,6 +46,7 @@ import {
   yearLabel,
   type FinalCell,
   type ReportMetrics,
+  type ReportPerformance,
   type ReportRow,
 } from '@/lib/reportingModel';
 import { studentColumns, SubjectStudentsTable } from '../my-class/MyClassReportTab';
@@ -232,6 +233,7 @@ export function AdminReportingPage() {
           subjectName={subjectName}
           teacherName={teacherName}
           metrics={summary.data.metrics}
+          performance={performance.data?.performance}
           classAttributes={classRow.data?.rows[0]?.attributes}
           teacherAttributes={teacherRow.data?.rows[0]?.attributes}
           subjectTeachers={teachers}
@@ -421,13 +423,14 @@ function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
 }
 
 function DetailHeader({
-  mode, className, subjectName, teacherName, metrics, classAttributes, teacherAttributes, subjectTeachers, teacherCount, studentCount,
+  mode, className, subjectName, teacherName, metrics, performance, classAttributes, teacherAttributes, subjectTeachers, teacherCount, studentCount,
 }: {
   mode: Mode;
   className?: string;
   subjectName?: string;
   teacherName?: string;
   metrics: ReportMetrics | undefined;
+  performance: ReportPerformance | null | undefined;
   classAttributes: ReportRow['attributes'];
   teacherAttributes: ReportRow['attributes'];
   subjectTeachers: ReportRow[];
@@ -439,7 +442,7 @@ function DetailHeader({
   if (mode === 'class') {
     const homeroom = classAttributes?.homeroomTeacher?.name;
     return (
-      <ReportHeaderCard title={`${className ?? 'Класс'} класс`} badge={(className ?? '').replace(/[«»"\s]/g, '')} metrics={metrics}
+      <ReportHeaderCard title={`${className ?? 'Класс'} класс`} badge={(className ?? '').replace(/[«»"\s]/g, '')} metrics={metrics} performance={performance}
         subtitle={[homeroom ? `Кл. руководитель ${homeroom}` : 'Кл. руководитель не назначен',
           studentCount == null ? null : counted(studentCount, STUDENTS), lessonText].filter(Boolean).join(' · ')} />
     );
@@ -447,18 +450,18 @@ function DetailHeader({
   if (mode === 'classSubject') {
     const names = namesLabel(subjectTeachers.map((row) => row.key!).filter(Boolean));
     return (
-      <ReportHeaderCard title={`${subjectName ?? 'Предмет'} · ${className ?? ''}`} badge={undefined} metrics={metrics}
+      <ReportHeaderCard title={`${subjectName ?? 'Предмет'} · ${className ?? ''}`} badge={undefined} metrics={metrics} performance={performance}
         subtitle={[names && (subjectTeachers.length > 1 ? `${names} (подгруппы)` : names), lessonText].filter(Boolean).join(' · ')} />
     );
   }
   if (mode === 'subject') {
     return (
-      <ReportHeaderCard title={subjectName ?? 'Предмет'} metrics={metrics}
+      <ReportHeaderCard title={subjectName ?? 'Предмет'} metrics={metrics} performance={performance}
         subtitle={['Вся школа', teacherCount == null ? null : counted(teacherCount, TEACHERS), lessonText].filter(Boolean).join(' · ')} />
     );
   }
   return (
-    <ReportHeaderCard title={teacherName ?? 'Учитель'} round metrics={metrics}
+    <ReportHeaderCard title={teacherName ?? 'Учитель'} round metrics={metrics} performance={performance}
       subtitle={[namesLabel(teacherAttributes?.subjects, 3),
         teacherAttributes?.classCount == null ? null : counted(teacherAttributes.classCount, CLASSES), lessonText]
         .filter(Boolean).join(' · ')} />
