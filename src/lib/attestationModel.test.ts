@@ -36,7 +36,12 @@ describe('attestationModel', () => {
   });
 
   describe('история (макет Т7, А2)', () => {
-    const event = (patch: Partial<FinalGradeHistoryEvent>): FinalGradeHistoryEvent => ({ id: 1, ...patch });
+    // Снимки истории в типах API — `JsonNode` (пустой объект), а сервер шлёт в них поля итога:
+    // в тесте они задаются обычным объектом, как приходят в ответе.
+    type Snapshot = Record<string, unknown> | null;
+    const event = (
+      patch: Omit<Partial<FinalGradeHistoryEvent>, 'before' | 'after'> & { before?: Snapshot; after?: Snapshot },
+    ): FinalGradeHistoryEvent => ({ id: 1, ...patch }) as unknown as FinalGradeHistoryEvent;
 
     it('«было → стало» полными словами у каждого действия', () => {
       expect(historyEventTitle(event({ action: 'CREATE', after: { resultKind: 'TEMP_UNATTESTED' } })))
