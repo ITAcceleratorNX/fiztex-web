@@ -13,7 +13,7 @@ import {
   counted,
   hasAcademicPerformance,
   hasPartialData,
-  headerAverageDisplay,
+  reportAverageDisplay,
   isEmptyReport,
   lessonsDisplay,
   namesLabel,
@@ -168,13 +168,22 @@ describe('header metrics', () => {
 
   it('shows the same average as the performance card, labelled by its basis', () => {
     const performance = { basis: 'CURRENT', preliminary: true, value: 6.94, state: 'AVAILABLE' } as const;
-    expect(headerAverageDisplay(points, performance))
+    expect(reportAverageDisplay(points, performance))
       .toEqual({ text: '6,94', hint: 'Текущая успеваемость · Предварительно', missing: false });
   });
 
   it('falls back to the summary average while performance is missing', () => {
-    expect(headerAverageDisplay(metrics(), undefined).text).toBe('7,85');
-    expect(headerAverageDisplay(points, { basis: 'PUBLISHED', preliminary: false, value: null, state: 'NO_DATA' }).missing).toBe(true);
+    expect(reportAverageDisplay(metrics(), undefined).text).toBe('7,85');
+    expect(reportAverageDisplay(points, { basis: 'PUBLISHED', preliminary: false, value: null, state: 'NO_DATA' }).missing).toBe(true);
+  });
+
+  it('keeps the policy percent of a student subject in the hint', () => {
+    const studentSubject = metrics({ grades: { gradeCount: 3, scaleCount: 0, pointsCount: 3,
+      scaleAverage: { value: null, state: 'NO_DATA' },
+      periodResult: { state: 'AVAILABLE', mode: 'POINTS', result: { roundedPercent: 75 } } } });
+    const shown = reportAverageDisplay(studentSubject, { basis: 'CURRENT', preliminary: false, value: 6.5, state: 'AVAILABLE' });
+    expect(shown.text).toBe('6,50');
+    expect(shown.hint).toBe('Текущая успеваемость · процент периода по политике: 75%');
   });
 
   it('hides academic performance until the server calculates it', () => {

@@ -186,16 +186,31 @@ export function performanceValueDisplay(performance: ReportPerformance | null | 
 }
 
 /**
- * «Ср. балл» в шапке детализации. Сводная успеваемость — то же число, что стоит в карточке под
- * шапкой: два разных средних на одном экране читались бы как ошибка. Шкальный средний сводки —
- * запасной путь, пока сводная успеваемость не пришла или её нет.
+ * «Ср. балл» отчётности — в шапке, шторке и в каждой строке таблиц. Это сводная успеваемость
+ * того же среза (`performance` строки или ответа `/performance`): то же число, что в карточке
+ * «Сводная успеваемость» и в рейтингах, поэтому строка класса совпадает с рейтингом классов, а
+ * строка ученика — с рейтингом учеников. Шкальный средний сводки — запасной путь, пока
+ * сводной успеваемости нет. Процент периода по политике (у пары «ученик × предмет») не
+ * пропадает — он в подсказке.
  */
-export function headerAverageDisplay(metrics: ReportMetrics | undefined,
+export function reportAverageDisplay(metrics: ReportMetrics | undefined,
   performance: ReportPerformance | null | undefined): MetricDisplay {
   if (performance?.state === 'AVAILABLE' && performance.value != null) {
-    return { text: decimal.format(performance.value), hint: basisLabel(performance.basis, performance.preliminary), missing: false };
+    const percent = metrics?.grades?.periodResult;
+    const policy = percent?.state === 'AVAILABLE' && percent.mode === 'POINTS' && percent.result?.roundedPercent != null
+      ? ` · процент периода по политике: ${percent.result.roundedPercent}%` : '';
+    return {
+      text: decimal.format(performance.value),
+      hint: basisLabel(performance.basis, performance.preliminary) + policy,
+      missing: false,
+    };
   }
   return averageDisplay(metrics);
+}
+
+/** Нужна ли колонка «Успеваемость»: процент сервер пока не считает, пустая колонка не рисуется. */
+export function anyAcademicPerformance(metrics: (ReportMetrics | undefined)[]): boolean {
+  return metrics.some(hasAcademicPerformance);
 }
 
 /** Процент успеваемости сервер пока не считает — пустую колонку шапка не показывает. */

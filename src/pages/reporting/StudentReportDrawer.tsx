@@ -14,9 +14,8 @@ import {
 import { cx } from '@/lib/format';
 import {
   attendanceDisplay,
-  averageDisplay,
   countDisplay,
-  headerAverageDisplay,
+  reportAverageDisplay,
   periodFinalsBySubject,
   type MetricDisplay,
   type ReportReference,
@@ -116,7 +115,7 @@ export function StudentReportDrawer({
       ) : (
         <>
           <dl className="mt-4 grid grid-cols-4 gap-2">
-            <Stat label="Ср. балл" value={headerAverageDisplay(summary.data?.metrics, performance.data?.performance)} />
+            <Stat label="Ср. балл" value={reportAverageDisplay(summary.data?.metrics, performance.data?.performance)} />
             <Stat label="Пропуски" value={countDisplay(attendance?.missedCount)} />
             <Stat label="Опоздания" value={countDisplay(attendance?.lateCount)} />
             <Stat label="Посещ." value={attendanceDisplay(summary.data?.metrics)} />
@@ -144,7 +143,7 @@ export function StudentReportDrawer({
                     <tr key={subjectId} className={cx('border-t border-line', highlighted && 'bg-info-bg')}>
                       <th scope="row" className={cx('px-4 py-3 text-left font-semibold text-navy-700',
                         highlighted && 'border-l-2 border-navy-700')}>{row.key?.name}</th>
-                      <td className="px-3 py-3 text-right tabular-nums"><MetricCell value={averageDisplay(row.metrics)} /></td>
+                      <td className="px-3 py-3 text-right tabular-nums"><MetricCell value={reportAverageDisplay(row.metrics, row.performance)} /></td>
                       <td className="px-3 py-3">
                         <span className="flex justify-center">
                           <FinalValue value={final} />

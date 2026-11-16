@@ -4,7 +4,7 @@ import {
   attendanceDisplay,
   badgeLetters,
   hasAcademicPerformance,
-  headerAverageDisplay,
+  reportAverageDisplay,
   performanceDisplay,
   type ReportMetrics,
   type ReportPerformance,
@@ -55,7 +55,7 @@ export function ReportHeaderCard({
         {subtitle && <p className="mt-1 text-13 text-slate-500">{subtitle}</p>}
       </div>
       <dl className="flex gap-10 text-right">
-        <HeaderMetric label="Ср. балл" value={<MetricCell value={headerAverageDisplay(metrics, performance)} />} />
+        <HeaderMetric label="Ср. балл" value={<MetricCell value={reportAverageDisplay(metrics, performance)} />} />
         {hasAcademicPerformance(metrics) && (
           <HeaderMetric label="Успеваемость" value={<MetricCell value={performanceDisplay(metrics)} />} />
         )}

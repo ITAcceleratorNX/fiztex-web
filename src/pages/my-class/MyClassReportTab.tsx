@@ -19,7 +19,8 @@ import { ApiError } from '@/lib/api';
 import type { Schema } from '@/lib/apiSchemas';
 import {
   attendanceDisplay,
-  averageDisplay,
+  anyAcademicPerformance,
+  reportAverageDisplay,
   counted,
   countDisplay,
   hasPartialData,
@@ -33,6 +34,7 @@ import {
   reportFileName,
   SUBJECTS,
   type FinalCell,
+  type ReportPerformance,
   type ReportRow,
 } from '@/lib/reportingModel';
 import { ReportHeaderCard } from '../reporting/ReportHeaderCard';
@@ -241,7 +243,7 @@ export function MyClassReportTab({
               selectedKey={studentId}
               onOpen={(row) => update({ reportStudent: String(row.key?.id) })}
               total={{ caption: 'итого', title: 'Весь класс' }}
-              columns={studentColumns(summary.data?.metrics)}
+              columns={studentColumns(summary.data?.metrics, performance.data?.performance)}
             />
           ) : (
             <ReportTable
@@ -251,7 +253,8 @@ export function MyClassReportTab({
               rowLabel={(row) => `Открыть предмет ${row.key?.name}`}
               onOpen={(row) => update({ reportSubject: String(row.key?.id), reportStudent: null })}
               total={{ caption: 'итого', title: 'Весь класс' }}
-              columns={subjectColumns(summary.data?.metrics, subjectRows.data?.total ?? subjects.length)}
+              columns={subjectColumns(summary.data?.metrics, subjectRows.data?.total ?? subjects.length,
+                performance.data?.performance, subjects)}
             />
           )}
         </>
@@ -274,8 +277,9 @@ export function MyClassReportTab({
   );
 }
 
-function subjectColumns(total: ReportRow['metrics'], subjectCount: number): ReportColumn<ReportRow>[] {
-  return [
+function subjectColumns(total: ReportRow['metrics'], subjectCount: number,
+  totalPerformance: ReportPerformance | null | undefined, rows: ReportRow[]): ReportColumn<ReportRow>[] {
+  const columns: ReportColumn<ReportRow>[] = [
     { key: 'subject', header: 'Предмет', className: 'w-56', cell: (row) => row.key?.name },
     {
       key: 'teacher', header: 'Учитель', cell: (row) => namesLabel(row.attributes?.teachers) || <span className="text-slate-400">—</span>,
@@ -283,20 +287,24 @@ function subjectColumns(total: ReportRow['metrics'], subjectCount: number): Repo
     },
     { key: 'lessons', header: 'Уроков', align: 'right', cell: (row) => <MetricCell value={lessonsDisplay(row.metrics)} />,
       total: <MetricCell value={lessonsDisplay(total)} strong /> },
-    { key: 'average', header: 'Ср. балл', align: 'right', cell: (row) => <MetricCell value={averageDisplay(row.metrics)} />,
-      total: <MetricCell value={averageDisplay(total)} strong /> },
+    { key: 'average', header: 'Ср. балл', align: 'right', cell: (row) => <MetricCell value={reportAverageDisplay(row.metrics, row.performance)} />,
+      total: <MetricCell value={reportAverageDisplay(total, totalPerformance)} strong /> },
     { key: 'performance', header: 'Успеваемость', align: 'right', cell: (row) => <MetricCell value={performanceDisplay(row.metrics)} />,
       total: <MetricCell value={performanceDisplay(total)} strong /> },
     { key: 'attendance', header: 'Посещаемость', align: 'right', cell: (row) => <MetricCell value={attendanceDisplay(row.metrics)} />,
       total: <MetricCell value={attendanceDisplay(total)} strong /> },
   ];
+  // Процент успеваемости сервер пока не считает — пустая колонка не рисуется.
+  return anyAcademicPerformance([total, ...rows.map((row) => row.metrics)])
+    ? columns : columns.filter((column) => column.key !== 'performance');
 }
 
-export function studentColumns(total: ReportRow['metrics']): ReportColumn<ReportRow>[] {
+export function studentColumns(total: ReportRow['metrics'],
+  totalPerformance: ReportPerformance | null | undefined): ReportColumn<ReportRow>[] {
   return [
     { key: 'student', header: 'Ученик', className: 'w-72', cell: (row) => <StudentName name={row.key?.name ?? ''} /> },
-    { key: 'average', header: 'Ср. балл', align: 'right', cell: (row) => <MetricCell value={averageDisplay(row.metrics)} />,
-      total: <MetricCell value={averageDisplay(total)} strong /> },
+    { key: 'average', header: 'Ср. балл', align: 'right', cell: (row) => <MetricCell value={reportAverageDisplay(row.metrics, row.performance)} />,
+      total: <MetricCell value={reportAverageDisplay(total, totalPerformance)} strong /> },
     { key: 'missed', header: 'Пропуски', align: 'right', cell: (row) => <MetricCell value={countDisplay(row.metrics?.attendance?.missedCount)} />,
       total: <MetricCell value={countDisplay(total?.attendance?.missedCount)} strong /> },
     { key: 'late', header: 'Опоздания', align: 'right', cell: (row) => <MetricCell value={countDisplay(row.metrics?.attendance?.lateCount)} />,
@@ -333,7 +341,7 @@ export function SubjectStudentsTable({
       columns={[
         { key: 'student', header: 'Ученик', className: 'w-72', cell: (row) => <StudentName name={row.key?.name ?? ''} /> },
         { key: 'grades', header: 'Оценок', align: 'right', cell: (row) => <MetricCell value={countDisplay(row.metrics?.grades?.gradeCount)} /> },
-        { key: 'average', header: 'Ср. балл', align: 'right', cell: (row) => <MetricCell value={averageDisplay(row.metrics)} /> },
+        { key: 'average', header: 'Ср. балл', align: 'right', cell: (row) => <MetricCell value={reportAverageDisplay(row.metrics, row.performance)} /> },
         {
           key: 'final', header: periodName ? `Итог за ${periodName.replace(/^\d+\s*/, '')}` : 'Итог', align: 'right',
           cell: (row) => {

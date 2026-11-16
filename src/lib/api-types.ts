@@ -17524,6 +17524,8 @@ export interface components {
             attributes?: components["schemas"]["ReportRowAttributesView"];
             key?: components["schemas"]["ReportReferenceView"];
             metrics?: components["schemas"]["ReportMetricsView"];
+            /** @description Сводная успеваемость строки — тот же расчёт, что у /performance и рейтингов */
+            performance?: components["schemas"]["AcademicReportPerformanceView"];
         };
         ReportDecimalMetric: {
             reason?: ("NO_SCALE_GRADES" | "NO_PUBLISHED_ATTENDANCE" | "ACADEMIC_PERFORMANCE_NOT_IMPLEMENTED" | "SINGLE_STUDENT_SUBJECT_PERIOD_REQUIRED" | "TEACHER_FILTER" | "INCOMPLETE_CLASS_INPUT" | "PARTICIPANT_SNAPSHOT_MISSING") | null;

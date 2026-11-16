@@ -19,7 +19,7 @@ import {
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
   attendanceDisplay,
-  averageDisplay,
+  reportAverageDisplay,
   counted,
   isEmptyReport,
   lessonsDisplay,
@@ -220,7 +220,7 @@ export function TeacherReportingPage() {
                   { key: 'students', header: 'Учеников', align: 'right',
                     cell: (row) => row.attributes?.currentStudentCount ?? <span className="text-slate-400">—</span> },
                   { key: 'lessons', header: 'Уроков', align: 'right', cell: (row) => <MetricCell value={lessonsDisplay(row.metrics)} /> },
-                  { key: 'average', header: 'Ср. балл', align: 'right', cell: (row) => <MetricCell value={averageDisplay(row.metrics)} /> },
+                  { key: 'average', header: 'Ср. балл', align: 'right', cell: (row) => <MetricCell value={reportAverageDisplay(row.metrics, row.performance)} /> },
                   { key: 'attendance', header: 'Посещаемость', align: 'right', cell: (row) => <MetricCell value={attendanceDisplay(row.metrics)} /> },
                 ]}
               />

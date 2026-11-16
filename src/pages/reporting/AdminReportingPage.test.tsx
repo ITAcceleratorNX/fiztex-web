@@ -123,15 +123,16 @@ describe('AdminReportingPage', () => {
     const total = within(table).getByRole('rowheader', { name: /Вся школа/ }).closest('tr')!;
     expect(within(total).getByText('48')).toBeInTheDocument();
     expect(within(total).getByText('1 кл. руководитель')).toBeInTheDocument();
-    expect(within(total).getByText('8,10')).toBeInTheDocument();
+    // Средний «итого» — сводная успеваемость (как в карточке и рейтинге), а не шкальный средний.
+    expect(within(total).getByText('4,25')).toBeInTheDocument();
 
     const empty = within(table).getByRole('button', { name: 'Открыть класс 1 «А»' }).closest('tr')!;
     expect(within(empty).getByLabelText('Нет значения. За период оценки не выставлялись')).toBeInTheDocument();
     expect(within(empty).queryByText('0')).not.toBeInTheDocument();
     expect(within(empty).getByText('Не назначен')).toBeInTheDocument();
     expect(screen.getByRole('note')).toHaveTextContent('Для части классов данные отсутствуют');
-    // Успеваемость системой не считается — прочерк, а не ноль.
-    expect(within(total).getByLabelText(/Показатель успеваемости пока не рассчитывается/)).toBeInTheDocument();
+    // Процент успеваемости сервер не считает — пустой колонки нет вовсе.
+    expect(within(table).queryByRole('columnheader', { name: 'Успеваемость' })).not.toBeInTheDocument();
   });
 
   it('drills down into a class and keeps the year and period', async () => {

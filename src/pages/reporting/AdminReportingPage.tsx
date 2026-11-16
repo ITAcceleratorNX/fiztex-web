@@ -26,7 +26,8 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { cx } from '@/lib/format';
 import {
   attendanceDisplay,
-  averageDisplay,
+  anyAcademicPerformance,
+  reportAverageDisplay,
   CLASSES,
   counted,
   formatCount,
@@ -368,6 +369,7 @@ export function AdminReportingPage() {
             dimension={dimension}
             rows={sorted}
             total={summary.data?.metrics}
+            totalPerformance={performance.data?.performance}
             studentCount={summary.data?.currentStudentCount ?? null}
             teacherTotal={totals.teachers.data}
             subjectTotal={totals.subjects.data}
@@ -469,13 +471,14 @@ function DetailHeader({
 }
 
 function ReportBody({
-  mode, dimension, rows, total, studentCount, teacherTotal, subjectTotal, classTotal,
+  mode, dimension, rows, total, totalPerformance, studentCount, teacherTotal, subjectTotal, classTotal,
   finals, finalsReady, periodName, selectedStudentId, onOpen,
 }: {
   mode: Mode;
   dimension: ReportDimension;
   rows: ReportRow[];
   total: ReportMetrics | undefined;
+  totalPerformance: ReportPerformance | null | undefined;
   studentCount: number | null;
   teacherTotal: number | undefined;
   subjectTotal: number | undefined;
@@ -490,16 +493,19 @@ function ReportBody({
     return <SubjectStudentsTable rows={rows} finals={finals} finalsReady={finalsReady} periodName={periodName}
       selectedId={selectedStudentId} onOpen={(id) => onOpen(rows.find((row) => row.key?.id === id)!)} />;
   }
-  const metricColumns: ReportColumn<ReportRow>[] = [
+  const allMetricColumns: ReportColumn<ReportRow>[] = [
     { key: 'lessons', header: 'Уроков', align: 'right', cell: (row) => <MetricCell value={lessonsDisplay(row.metrics)} />,
       total: <MetricCell value={lessonsDisplay(total)} strong /> },
-    { key: 'average', header: 'Ср. балл', align: 'right', cell: (row) => <MetricCell value={averageDisplay(row.metrics)} />,
-      total: <MetricCell value={averageDisplay(total)} strong /> },
+    { key: 'average', header: 'Ср. балл', align: 'right', cell: (row) => <MetricCell value={reportAverageDisplay(row.metrics, row.performance)} />,
+      total: <MetricCell value={reportAverageDisplay(total, totalPerformance)} strong /> },
     { key: 'performance', header: 'Успеваемость', align: 'right', cell: (row) => <MetricCell value={performanceDisplay(row.metrics)} />,
       total: <MetricCell value={performanceDisplay(total)} strong /> },
     { key: 'attendance', header: 'Посещаемость', align: 'right', cell: (row) => <MetricCell value={attendanceDisplay(row.metrics)} />,
       total: <MetricCell value={attendanceDisplay(total)} strong /> },
   ];
+  // Процент успеваемости сервер пока не считает — пустая колонка не рисуется.
+  const metricColumns = anyAcademicPerformance([total, ...rows.map((row) => row.metrics)])
+    ? allMetricColumns : allMetricColumns.filter((column) => column.key !== 'performance');
   const dash = <span className="text-slate-400">—</span>;
   const students: ReportColumn<ReportRow> = {
     key: 'students', header: 'Учеников', align: 'right',
@@ -514,7 +520,7 @@ function ReportBody({
 
   if (dimension === 'STUDENT') {
     return <ReportTable {...common} label="Отчётность по ученикам" rowLabel={(row) => `Открыть карточку: ${row.key?.name}`}
-      selectedKey={selectedStudentId} total={{ caption: 'итого', title: 'Весь класс' }} columns={studentColumns(total)} />;
+      selectedKey={selectedStudentId} total={{ caption: 'итого', title: 'Весь класс' }} columns={studentColumns(total, totalPerformance)} />;
   }
   if (dimension === 'SUBJECT') {
     const inClass = mode === 'class';

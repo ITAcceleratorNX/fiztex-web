@@ -82,7 +82,8 @@ describe('MyClassReportTab', () => {
     const table = screen.getByRole('region', { name: 'Отчётность по предметам' });
     const total = within(table).getByRole('rowheader', { name: /Весь класс/ }).closest('tr')!;
     expect(within(total).getByText('2 предмета')).toBeInTheDocument();
-    expect(within(total).getByText('8,10')).toBeInTheDocument();
+    expect(within(total).getByText('4,25')).toBeInTheDocument();
+    expect(within(table).queryByRole('columnheader', { name: 'Успеваемость' })).not.toBeInTheDocument();
     const pe = within(table).getByRole('button', { name: 'Открыть предмет Физкультура' }).closest('tr')!;
     expect(within(pe).getByText('Гордеев Ф.С.')).toBeInTheDocument();
     expect(within(pe).getByLabelText('Нет значения. За период оценки не выставлялись')).toBeInTheDocument();
