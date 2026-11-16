@@ -5,6 +5,7 @@ export default {
     extend: {
       colors: {
         auth: { canvas: 'var(--color-auth-canvas)' },
+        'ai-panel': { DEFAULT: 'var(--color-ai-panel)', line: 'var(--color-ai-panel-line)' },
         drawer: { scrim: 'var(--color-drawer-scrim)' },
         field: { filled: 'var(--color-field-filled)', invalid: 'var(--color-field-invalid)' },
         planning: {
@@ -154,6 +155,10 @@ export default {
         'planning-editor': 'var(--grid-planning-editor)',
         'access-request': 'var(--grid-access-request)',
         'access-decision': 'var(--grid-access-decision)',
+        'data-row': 'var(--grid-data-row)',
+        'ksp-header': 'var(--grid-ksp-header)',
+        'ksp-stages': 'var(--grid-ksp-stages)',
+        'ksp-stages-edit': 'var(--grid-ksp-stages-edit)',
       },
       width: {
         // Переключатель нескольких классов учителя (2200:4727).

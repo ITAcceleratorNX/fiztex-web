@@ -5,6 +5,9 @@ import { cx } from '@/lib/format';
 const tones = {
   info: 'border-blue-200 bg-blue-50 text-blue-900',
   warning: 'border-amber-200 bg-amber-50 text-amber-900',
+  // Предупреждение в оранжевой гамме бренда (Figma `КСП / Плашка` 2212:8008): несохранённый
+  // результат, расхождение темы и времени — «обратите внимание», а не «что-то сломалось».
+  attention: 'border-brand-200 bg-brand-50 font-medium text-orange-800',
   error: 'border-red-200 bg-red-50 text-red-900',
   success: 'border-emerald-200 bg-emerald-50 text-emerald-900',
 };
