@@ -87,6 +87,7 @@ import {
   LessonMaterialsPage,
 } from '@/platform';
 import { LessonSummaryPage } from '@/platform/pages/schedule/LessonSummaryPage';
+import { KspPage } from '@/platform/pages/schedule/ksp/KspPage';
 
 export function App() {
   const { isAuthenticated } = useAuth();
@@ -191,6 +192,8 @@ export function App() {
         <Route path="/lesson-schedule" element={<LessonSchedulePage />} />
         <Route path="/lesson-schedule/lessons/:lessonId" element={<LessonCardPage />} />
         <Route path="/lesson-schedule/lessons/:lessonId/summary" element={<LessonSummaryPage />} />
+        {/* КСП урока (KSP-FE-001): вход с карточки «Поурочный план (КСП)», только учитель урока. */}
+        <Route path="/lesson-schedule/lessons/:lessonId/ksp" element={<KspPage />} />
         {/* Лист посещаемости вложен в урок, потому что без урока не существует:
             он заводится не для расписания, а для конкретного LessonInstance. */}
         <Route

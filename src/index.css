@@ -245,6 +245,12 @@
       focus:border-brand-400 focus:ring-2 focus:ring-brand-400/30;
   }
 
+  /* Компактное поле — ячейки «Хода урока» КСП (Figma 2212:8042): 13 px на радиусе 10. Стоит
+   * после `.input-base` в том же слое и перекрывает его отступы и кегль. */
+  .input-compact {
+    @apply rounded-action px-3 py-2 text-13 leading-5;
+  }
+
   .label-base {
     @apply mb-1.5 block text-sm font-medium text-slate-700;
   }
