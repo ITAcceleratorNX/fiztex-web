@@ -118,6 +118,9 @@ describe('attestationModel', () => {
       expect(historyEventTitle(event({ action: 'UPDATE', before: { value: 4 }, after: { value: 5 } })))
         .toBe('Изменено: 4 → 5');
       expect(historyEventTitle(event({ action: 'PUBLISH', after: null }))).toBe('Опубликовано: —');
+      // «Итоговая аттестация по предметам»: подтверждение значение не меняет — называем, что подтвердили.
+      expect(historyEventTitle(event({ action: 'CONFIRM', before: { value: 4 }, after: { value: 4 } })))
+        .toBe('Подтверждено к публикации: 4');
     });
   });
 });

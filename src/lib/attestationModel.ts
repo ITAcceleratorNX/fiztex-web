@@ -147,6 +147,7 @@ const ACTION_LABELS: Record<NonNullable<FinalGradeHistoryEvent['action']>, strin
   UPDATE: 'Изменено',
   PUBLISH: 'Опубликовано',
   REPUBLISH: 'Повторно опубликовано',
+  CONFIRM: 'Подтверждено к публикации',
   PENDING_CHANGE: 'Изменено после публикации',
 };
 
@@ -193,6 +194,7 @@ export function historyEventTitle(event: FinalGradeHistoryEvent): string {
   switch (event.action) {
     case 'CREATE':
     case 'PUBLISH':
+    case 'CONFIRM':
       return `${historyActionLabel(event.action)}: ${shortResultLabel(shownIn(after))}`;
     case 'PENDING_CHANGE':
       return after?.pendingResultKind
