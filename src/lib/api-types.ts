@@ -6500,6 +6500,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/ksp/generations/{jobId}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["dismissKspGeneration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/materials": {
         parameters: {
             query?: never;
@@ -13268,6 +13284,8 @@ export interface components {
             defaultLanguage?: string;
             /** Format: int32 */
             durationMinutes?: number;
+            /** @enum {string} */
+            entryState?: "NOT_CREATED" | "GENERATING" | "UNSAVED" | "SAVED";
             generationEnabled?: boolean;
             /** Format: int32 */
             grade?: number;
@@ -13284,6 +13302,8 @@ export interface components {
             lessonId?: number;
             missingFields?: string[];
             organizationName?: string;
+            /** Format: int64 */
+            pendingJobId?: number;
             /** Format: int32 */
             presentCount?: number;
             subjectName?: string;
@@ -13308,9 +13328,13 @@ export interface components {
             topic?: string;
         };
         KspGenerateRequest: {
+            /** Format: int32 */
+            absentCount?: number;
             hintIds?: string[];
             language?: string;
             learningObjectives?: string;
+            /** Format: int32 */
+            presentCount?: number;
             section?: string;
             topic?: string;
             wishes?: string;
@@ -13318,6 +13342,18 @@ export interface components {
         KspHintView: {
             id?: string;
             label?: string;
+        };
+        KspJobSource: {
+            /** Format: int32 */
+            absentCount?: number;
+            hintIds?: string[];
+            language?: string;
+            learningObjectives?: string;
+            /** Format: int32 */
+            presentCount?: number;
+            section?: string;
+            topic?: string;
+            wishes?: string;
         };
         KspJobView: {
             /** Format: date-time */
@@ -13328,7 +13364,9 @@ export interface components {
             finishedAt?: string;
             /** Format: int64 */
             id?: number;
+            resolution?: string;
             result?: components["schemas"]["KspDocument"];
+            source?: components["schemas"]["KspJobSource"];
             status?: string;
             warnings?: components["schemas"]["KspWarning"][];
         };
@@ -31954,6 +31992,29 @@ export interface operations {
         };
     };
     getKspGeneration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KspJobView"];
+                };
+            };
+        };
+    };
+    dismissKspGeneration: {
         parameters: {
             query?: never;
             header?: never;
