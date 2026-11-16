@@ -3,84 +3,99 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/lib/api';
 import type { ClassFinalGradeRow } from '@/lib/gradebookApi';
-import { AttestationStatusModal } from './AttestationStatusModal';
+import { AttestationStatusModal, ChangeFinalResultModal } from './AttestationStatusModal';
 
 const save = vi.fn();
 vi.mock('@/hooks/queries', () => ({
-  useSaveAttestationStatus: () => ({ mutateAsync: save, isPending: false }),
+  useSetFinalGrade: () => ({ mutateAsync: save, isPending: false }),
 }));
 
-const publishedSix = {
+const placement = { subjectId: 2, academicPeriodId: 7 };
+const draftFour = {
   studentProfileId: 4,
-  studentName: 'Сериков Данияр',
-  finalGrade: { id: 9, status: 'PUBLISHED', resultKind: 'NUMERIC', value: 6, version: 5, publicationState: 'PUBLISHED' },
+  studentName: 'Мухамеджанов Тимур',
+  finalGrade: { id: 9, status: 'DRAFT', resultKind: 'NUMERIC', value: 4, version: 5 },
+} as ClassFinalGradeRow;
+const publishedVna = {
+  studentProfileId: 3,
+  studentName: 'Ахметов Нурсултан',
+  finalGrade: { id: 7, status: 'PUBLISHED', resultKind: 'TEMP_UNATTESTED', value: undefined, version: 2 },
 } as ClassFinalGradeRow;
 
-function open(row: ClassFinalGradeRow, target: { kind: 'TEMP_UNATTESTED' | 'NOT_ATTESTED' | 'NUMERIC'; value: number | null },
-  author: 'TEACHER' | 'ADMINISTRATION' = 'TEACHER') {
-  const onClose = vi.fn();
-  render(<AttestationStatusModal row={row} target={target} author={author} subjectId={2} academicPeriodId={7} onClose={onClose} />);
-  return onClose;
-}
-
-describe('AttestationStatusModal', () => {
+describe('AttestationStatusModal (макет Т2, Т3)', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('без причины не отправляет и объясняет, сколько нужно', async () => {
-    open(publishedSix, { kind: 'NOT_ATTESTED', value: null });
+  it('без причины «Сохранить» неактивна; частая причина подставляется в поле', async () => {
+    render(<AttestationStatusModal row={draftFour} kind="TEMP_UNATTESTED" placement={placement} onClose={vi.fn()} />);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Сохранить статус' }));
+    expect(screen.getByRole('heading', { name: 'Временно не аттестован' })).toBeInTheDocument();
+    expect(screen.getByText('Причина сохранится в истории итога')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Сохранить' })).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Не сдан СОЧ' }));
 
-    expect(save).not.toHaveBeenCalled();
-    expect(screen.getByText('Укажите причину — не короче 5 символов')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Например: не сдан СОЧ по уважительной причине')).toHaveValue('Не сдан СОЧ');
+    expect(screen.getByRole('button', { name: 'Сохранить' })).toBeEnabled();
   });
 
-  it('у опубликованного итога предупреждает, что семья видит прежнее до подтверждения', async () => {
+  it('сохраняет статус с причиной и версией строки', async () => {
     save.mockResolvedValue({});
-    const onClose = open(publishedSix, { kind: 'NOT_ATTESTED', value: null }, 'ADMINISTRATION');
+    const onClose = vi.fn();
+    render(<AttestationStatusModal row={draftFour} kind="NOT_ATTESTED" placement={placement} onClose={onClose} />);
 
-    expect(screen.getByText(/продолжат видеть «6», пока учитель не подтвердит изменение/)).toBeInTheDocument();
-    await userEvent.type(screen.getByRole('textbox'), '  Решение педсовета №4  ');
-    await userEvent.click(screen.getByRole('button', { name: 'Сохранить статус' }));
+    await userEvent.type(screen.getByRole('textbox'), 'Пропущено больше половины уроков');
+    await userEvent.click(screen.getByRole('button', { name: 'Сохранить' }));
 
     expect(save).toHaveBeenCalledWith(expect.objectContaining({
-      author: 'ADMINISTRATION', resultKind: 'NOT_ATTESTED', value: null, reason: 'Решение педсовета №4',
-      finalGrade: publishedSix.finalGrade, studentProfileId: 4,
+      finalGradeId: 9, studentProfileId: 4, subjectId: 2, academicPeriodId: 7,
+      resultKind: 'NOT_ATTESTED', value: null, resultReason: 'Пропущено больше половины уроков', expectedVersion: 5,
     }));
     expect(onClose).toHaveBeenCalled();
   });
 
   it('отказ сервера остаётся в окне и не выглядит успехом', async () => {
     save.mockRejectedValue(new ApiError(409, 'Итог изменился', 'FINAL_GRADE_VERSION_CHANGED'));
-    const onClose = open(publishedSix, { kind: 'TEMP_UNATTESTED', value: null });
+    const onClose = vi.fn();
+    render(<AttestationStatusModal row={draftFour} kind="TEMP_UNATTESTED" placement={placement} onClose={onClose} />);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Пропуски по уважительной причине' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Сохранить статус' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Не сданы СОР' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Сохранить' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Итог изменили, пока окно было открыто');
+    expect(screen.getByRole('alert')).toHaveTextContent('Итог изменили, пока окно было открыто');
     expect(onClose).not.toHaveBeenCalled();
   });
+});
 
-  it('снятие статуса числом — своё название и без заготовок причин статуса', () => {
-    const row = { ...publishedSix, finalGrade: { ...publishedSix.finalGrade, resultKind: 'TEMP_UNATTESTED', value: undefined } } as ClassFinalGradeRow;
-    open(row, { kind: 'NUMERIC', value: 7 });
+describe('ChangeFinalResultModal (макет Т4, Т6)', () => {
+  beforeEach(() => vi.clearAllMocks());
 
-    expect(screen.getByRole('button', { name: 'Снять статус' })).toBeInTheDocument();
-    expect(screen.queryByText('Частые причины')).toBeNull();
+  it('опубликованный ВНА: «Сейчас … ОПУБЛ.», выбранная оценка и обязательная причина', async () => {
+    save.mockResolvedValue({});
+    const onClose = vi.fn();
+    render(<ChangeFinalResultModal row={publishedVna} values={[3, 4, 5]} initial={{ kind: 'NUMERIC', value: 4 }}
+      placement={placement} onClose={onClose} />);
+
     expect(screen.getByText('Временно не аттестован')).toBeInTheDocument();
+    expect(screen.getByText('ОПУБЛ.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '4' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByRole('button', { name: '2' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Сохранить' })).toBeDisabled();
+
+    await userEvent.type(screen.getByRole('textbox'), 'СОЧ сдан 12.01, работа оценена');
+    await userEvent.click(screen.getByRole('button', { name: 'Сохранить' }));
+
+    expect(save).toHaveBeenCalledWith(expect.objectContaining({
+      finalGradeId: 7, resultKind: 'NUMERIC', value: 4, resultReason: 'СОЧ сдан 12.01, работа оценена', expectedVersion: 2,
+    }));
+    expect(onClose).toHaveBeenCalled();
   });
 
-  it('выбор опубликованного поверх ожидающего — отмена изменения', () => {
-    const row = {
-      ...publishedSix,
-      finalGrade: {
-        ...publishedSix.finalGrade, publicationState: 'CHANGED_AFTER_PUBLICATION',
-        pendingChange: { resultKind: 'TEMP_UNATTESTED', reason: 'Болел' },
-      },
-    } as ClassFinalGradeRow;
-    open(row, { kind: 'NUMERIC', value: 6 });
+  it('без выбранного итога сохранить нельзя; особые результаты — рядом с оценками', async () => {
+    render(<ChangeFinalResultModal row={draftFour} values={[2, 3, 4, 5]} otherKinds={['NOT_STUDIED']}
+      placement={placement} onClose={vi.fn()} />);
 
-    expect(screen.getByRole('heading', { name: 'Отменить изменение' })).toBeInTheDocument();
-    expect(screen.getByText(/вернётся к опубликованному: «6»/)).toBeInTheDocument();
+    await userEvent.type(screen.getByRole('textbox'), 'Перевёлся из другой школы');
+    expect(screen.getByRole('button', { name: 'Сохранить' })).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Не изучался' }));
+    expect(screen.getByRole('button', { name: 'Сохранить' })).toBeEnabled();
   });
 });

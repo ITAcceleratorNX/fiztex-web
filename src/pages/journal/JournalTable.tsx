@@ -5,7 +5,7 @@ import type { ClassFinalGradeRow, Gradebook, GradebookColumn, GradebookRow } fro
 import { GRADE_TYPE_LABELS, gradeValueLabel } from '@/lib/gradesModel';
 import type { GradeType } from '@/lib/gradesApi';
 import { COMPONENT_SHORT, componentsByCode, formatPercent, resultStatusHint } from '@/lib/gradingModel';
-import { decidedResult, fullResultLabel, shortResultLabel } from '@/lib/attestationModel';
+import { currentResult, fullResultLabel, shortResultLabel } from '@/lib/attestationModel';
 import { finalResultLabel } from '@/lib/finalGradeResult';
 import {
   assessmentScoreLabel,
@@ -425,19 +425,18 @@ function componentOffset(index: number, count: number): number {
 }
 
 /**
- * «Итог. четв.» в журнале — то, что решено сейчас: ВНА/НА коротко, полная подпись под курсором.
- * Изменение после публикации помечено: ученик пока видит прежнее (ATTESTATION-001).
+ * «Итог. четв.» в журнале (макет Т8 2209:4339): число как есть, ВНА — оранжевым, НА — красным,
+ * полная подпись под курсором.
  */
 function FinalColumnValue({ grade }: { grade: ClassFinalGradeRow['finalGrade'] }) {
-  const decided = decidedResult(grade);
-  if (!decided) return <>{finalResultLabel(grade)}</>;
-  const pending = grade?.pendingChange != null;
+  const current = currentResult(grade);
+  if (!current) return <>{finalResultLabel(grade)}</>;
   return (
     <span
-      title={pending ? `${fullResultLabel(decided)} — ждёт подтверждения` : fullResultLabel(decided)}
-      className={cx(pending && 'text-amber-700')}
+      title={fullResultLabel(current)}
+      className={cx(current.kind === 'TEMP_UNATTESTED' && 'text-amber-500', current.kind === 'NOT_ATTESTED' && 'text-red-600')}
     >
-      {shortResultLabel(decided)}{pending && '*'}
+      {shortResultLabel(current)}
     </span>
   );
 }
