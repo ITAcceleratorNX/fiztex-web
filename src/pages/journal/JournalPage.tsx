@@ -53,15 +53,13 @@ import { JournalTable, type ScoreEditor } from './JournalTable';
 import { PeriodBreakdownModal } from './PeriodBreakdownModal';
 import { YearFinalsTab } from './YearFinalsTab';
 import { FinalGradeCorrectionModal, FinalGradeHistoryModal, RepublishFinalModal } from './FinalGradeCorrectionModal';
-import { AttestationStatusModal } from './AttestationStatusModal';
+import { AttestationStatusModal, ChangeFinalResultModal } from './AttestationStatusModal';
 import {
-  ATTESTATION_HINT,
-  ATTESTATION_KINDS,
-  ATTESTATION_SHORT,
   isAttestationStatus,
+  PUBLISHED_EDIT_RULE,
+  type AttestationKind,
   type ResultValue,
 } from '@/lib/attestationModel';
-import { FINAL_RESULT_LABELS } from '@/lib/finalGradeResult';
 import { finalValueOptions, QuarterFinalsTable } from './QuarterFinalsTable';
 
 type JournalTab = 'JOURNAL' | 'FINALS' | 'YEAR_FINALS';
@@ -451,12 +449,13 @@ function FinalsTab({
   const [rowError, setRowError] = useState<{ studentProfileId: number; message: string } | null>(null);
   const [missing, setMissing] = useState<ReadonlySet<number>>(new Set());
   const [confirmPublish, setConfirmPublish] = useState(false);
-  const [reasonRow, setReasonRow] = useState<ClassFinalGradeRow | null>(null);
+  // «Редактировать» после публикации (макет Т5а): открывает замену ВНА оценкой.
+  const [editMode, setEditMode] = useState(false);
+  const [statusRequest, setStatusRequest] = useState<{ row: ClassFinalGradeRow; kind: AttestationKind } | null>(null);
+  const [changeRequest, setChangeRequest] = useState<{ row: ClassFinalGradeRow; initial: ResultValue | null } | null>(null);
   const [correctionRow, setCorrectionRow] = useState<ClassFinalGradeRow | null>(null);
   const [historyRow, setHistoryRow] = useState<ClassFinalGradeRow | null>(null);
   const [republishRow, setRepublishRow] = useState<ClassFinalGradeRow | null>(null);
-  const [statusRequest, setStatusRequest] = useState<{ row: ClassFinalGradeRow; target: ResultValue } | null>(null);
-  const [reason, setReason] = useState('');
   const [breakdown, setBreakdown] = useState<{ studentProfileId: number; name: string } | null>(null);
 
   if (finalsKey == null || finals.isPending) return <TableSkeleton />;
@@ -479,16 +478,19 @@ function FinalsTab({
   const data = finals.data!;
   const rows = data.rows ?? [];
   const canManage = Boolean(data.canManage);
+  const placement = { subjectId: finalsKey.subjectId, academicPeriodId: finalsKey.academicPeriodId };
   const filled = rows.filter((row) => row.finalGrade != null).length;
   const allFilled = rows.length > 0 && filled === rows.length;
   const hasPublicationIssues = rows.some(row => (!row.finalGrade?.resultKind || row.finalGrade.resultKind === 'NUMERIC') && (row.publicationIssues?.length ?? 0) > 0);
-  const allPublished =
-    rows.length > 0 && rows.every((row) => row.finalGrade?.status === 'PUBLISHED');
+  const allPublished = rows.length > 0 && rows.every((row) => row.finalGrade?.status === 'PUBLISHED');
+  // Сервер разрешает строке замену опубликованного ВНА — значит, «Редактировать» есть что.
+  const editable = rows.some((row) => row.canEditResult && row.finalGrade?.status === 'PUBLISHED');
+  const inEditMode = editMode && allPublished && editable;
   // Публиковать итоги можно только после окончания четверти — дату считает сервер.
   const publicationOpen = data.publicationOpen !== false;
   const publishableFrom = data.publishableFrom ? formatShortDate(data.publishableFrom) : null;
 
-  async function pick(row: ClassFinalGradeRow, value: number | null, resultKind: FinalGrade['resultKind'] = 'NUMERIC', resultReason?: string) {
+  async function pick(row: ClassFinalGradeRow, value: number | null, resultKind: FinalGrade['resultKind'] = 'NUMERIC') {
     setError(null);
     setRowError(null);
     setBusyStudentId(row.studentProfileId as number);
@@ -498,7 +500,8 @@ function FinalsTab({
         studentProfileId: row.studentProfileId as number,
         subjectId: finalsKey!.subjectId,
         academicPeriodId: finalsKey!.academicPeriodId,
-        value, resultKind, resultReason,
+        value, resultKind,
+        expectedVersion: row.finalGrade?.version,
       });
       setMissing((current) => {
         const next = new Set(current);
@@ -556,11 +559,15 @@ function FinalsTab({
   }
 
   const missingResults = data.gradingPolicy ? missingResultsSummary(rows.map((row) => row.result)) : null;
+  // Особые результаты без числа — «…» в ряду оценок и окно «Изменить итог» (Т4).
+  const otherKinds = (data.allowedResultKinds ?? []).filter((kind) => kind !== 'NUMERIC' && !isAttestationStatus(kind)
+    && (data.assessmentMode !== 'PASS_FAIL' || kind === 'NOT_STUDIED'));
+  const changeRow = changeRequest?.row ?? null;
+  const changingPublished = changeRow?.finalGrade?.status === 'PUBLISHED';
 
   return (
     <div className="flex flex-col gap-4">
       <FinalsScaleNote finals={data} />
-      {data.canManageAttestation && <AttestationLegend />}
       {missingResults && missingResults.students > 0 && (
         <p role="status" className="rounded-lg bg-info-bg p-4 text-13 text-info-fg">
           Итог за четверть не посчитан у {missingResults.students} из {rows.length}{' '}
@@ -575,42 +582,38 @@ function FinalsTab({
           highlighted={missing}
           busyStudentId={busyStudentId}
           rowError={rowError}
-          onPick={(row, value) => void pick(row, value)}
-          onCorrect={setCorrectionRow}
-          onOpenHistory={setHistoryRow}
-          onRepublish={setRepublishRow}
-          onRequestStatus={(row, target) => setStatusRequest({ row, target })}
-          onPickResult={(row, kind) => {
-            if (kind === 'NOT_STUDIED') { setReasonRow(row); setReason(''); }
-            else void pick(row, null, kind);
+          editMode={inEditMode}
+          actions={{
+            onPickValue: (row, value) => void pick(row, value),
+            onPickResult: (row, kind) => void pick(row, null, kind),
+            onRequestStatus: (row, kind) => setStatusRequest({ row, kind }),
+            onRequestChange: (row, initial) => setChangeRequest({ row, initial }),
+            onOpenHistory: setHistoryRow,
+            onCorrect: setCorrectionRow,
+            onRepublish: setRepublishRow,
+            onOpenBreakdown: (row) =>
+              setBreakdown({ studentProfileId: row.studentProfileId as number, name: row.studentName ?? '' }),
           }}
-          onOpenBreakdown={(row) =>
-            setBreakdown({ studentProfileId: row.studentProfileId as number, name: row.studentName ?? '' })
-          }
         />
       </div>
 
+      {statusRequest && <AttestationStatusModal row={statusRequest.row} kind={statusRequest.kind}
+        placement={placement} onClose={() => setStatusRequest(null)} />}
+      {changeRow && <ChangeFinalResultModal row={changeRow} initial={changeRequest?.initial}
+        values={changingPublished ? (data.positiveValues?.length ? data.positiveValues : finalValueOptions(data))
+          : data.assessmentMode === 'PASS_FAIL' ? [] : finalValueOptions(data)}
+        otherKinds={changingPublished ? [] : data.assessmentMode === 'PASS_FAIL' ? ['PASS', 'FAIL', ...otherKinds] : otherKinds}
+        placement={placement} onClose={() => setChangeRequest(null)} />}
       {correctionRow?.finalGrade && <FinalGradeCorrectionModal grade={correctionRow.finalGrade}
         studentName={correctionRow.studentName ?? ''}
-        allowedKinds={(data.allowedResultKinds ?? ['NUMERIC']).filter((kind) => !isAttestationStatus(kind))}
+        allowedKinds={data.allowedResultKinds ?? ['NUMERIC']}
         allowedValues={finalValueOptions(data)} onClose={() => setCorrectionRow(null)} />}
-      {statusRequest && <AttestationStatusModal row={statusRequest.row} target={statusRequest.target}
-        author={canManage ? 'TEACHER' : 'ADMINISTRATION'} subjectId={finalsKey.subjectId}
-        academicPeriodId={finalsKey.academicPeriodId} onClose={() => setStatusRequest(null)} />}
       {republishRow?.finalGrade && <RepublishFinalModal grade={republishRow.finalGrade}
         recommended={republishRow.recommendedValue ?? null} studentName={republishRow.studentName ?? ''}
         options={finalValueOptions(data)}
         onClose={() => setRepublishRow(null)} />}
       {historyRow?.finalGrade?.id != null && <FinalGradeHistoryModal id={historyRow.finalGrade.id}
         studentName={historyRow.studentName ?? ''} onClose={() => setHistoryRow(null)} />}
-      <Modal open={reasonRow != null} onClose={() => setReasonRow(null)} title="Предмет не изучался">
-        <p className="text-13 text-muted">Укажите основание, например перевод из школы, где этот предмет не изучался. Результат сохранится в истории.</p>
-        <label className="mt-4 block text-13 font-semibold">Основание
-          <TextArea value={reason} onChange={event => setReason(event.target.value)} maxLength={1000} />
-        </label>
-        <div className="mt-4 flex justify-end gap-3"><Button variant="secondary" onClick={() => setReasonRow(null)}>Отмена</Button>
-          <Button disabled={reason.trim().length < 5} onClick={() => { if (reasonRow) void pick(reasonRow, null, 'NOT_STUDIED', reason.trim()).then(() => setReasonRow(null)); }}>Сохранить результат</Button></div>
-      </Modal>
       <PeriodBreakdownModal
         query={
           breakdown
@@ -638,7 +641,7 @@ function FinalsTab({
               className={`size-2 shrink-0 rounded-full ${allPublished ? 'bg-green-500' : allFilled && publicationOpen ? 'bg-brand-500' : 'bg-slate-300'}`}
             />
             {allPublished
-              ? 'Итоги четверти опубликованы — их видят ученик и родитель'
+              ? inEditMode ? PUBLISHED_EDIT_RULE : 'Итоги четверти опубликованы — их видят ученик и родитель'
               : !publicationOpen
                 ? `Итоги можно выставлять уже сейчас, а опубликовать — после окончания четверти${publishableFrom ? `, с ${publishableFrom}` : ''} (${filled} из ${rows.length} выставлено)`
                 : hasPublicationIssues
@@ -647,20 +650,26 @@ function FinalsTab({
                   ? `Все итоги выставлены (${filled} из ${rows.length}) — можно публиковать`
                   : `Выставьте оценку всем ученикам, чтобы опубликовать итоги четверти (${filled} из ${rows.length} оценено)`}
           </p>
-          <Button
-            onClick={() => setConfirmPublish(true)}
-            disabled={!allFilled || allPublished || !publicationOpen || hasPublicationIssues}
-            loading={publish.isPending}
-          >
-            Опубликовать итоги четверти
-          </Button>
+          {allPublished ? (
+            inEditMode
+              ? <Button onClick={() => setEditMode(false)}>Готово</Button>
+              : <Button disabled={!editable} onClick={() => setEditMode(true)}>Редактировать</Button>
+          ) : (
+            <Button
+              onClick={() => setConfirmPublish(true)}
+              disabled={!allFilled || !publicationOpen || hasPublicationIssues}
+              loading={publish.isPending}
+            >
+              Опубликовать итоги четверти
+            </Button>
+          )}
         </div>
       )}
 
       <ConfirmDialog
         open={confirmPublish}
         title="Опубликовать итоги четверти?"
-        message="После публикации итоговые оценки увидят ученики и родители. Число после публикации обычной правкой не меняется: техническую ошибку исправляет администратор по документам и протоколу. Статусы ВНА и НА можно менять и после публикации — с причиной, ученик увидит изменение после повторного подтверждения."
+        message="После публикации итоговые оценки увидят ученики и родители. Изменить после публикации можно только «Временно не аттестован» на оценку — с причиной. Остальные итоги исправляет администратор по документам и протоколу."
         confirmLabel="Опубликовать"
         loading={publish.isPending}
         onConfirm={() => void publishAll()}
@@ -727,23 +736,6 @@ function FinalsScaleNote({ finals }: { finals: ClassFinalGrades }) {
         )}
       </span>
     </p>
-  );
-}
-
-/**
- * Расшифровка статусов рядом со шкалой итога (ТЗ-1, «UI»: «понятная подпись и расшифровка
- * ВНА/НА»). Показывается тем, кто статусы ставит: учителю предмета и администрации.
- */
-function AttestationLegend() {
-  return (
-    <ul className="flex flex-col gap-1 px-1 text-13 text-slate-500">
-      {ATTESTATION_KINDS.map((kind) => (
-        <li key={kind}>
-          <span className="font-semibold text-slate-700">{ATTESTATION_SHORT[kind]}</span>
-          {' — '}{FINAL_RESULT_LABELS[kind].toLowerCase()}. {ATTESTATION_HINT[kind]}
-        </li>
-      ))}
-    </ul>
   );
 }
 

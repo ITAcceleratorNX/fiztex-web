@@ -29,22 +29,27 @@ export function Badge({
   icon?: ReactNode;
   /**
    * `pill` — круглая с обводкой; `label` — плоская на радиусе 6; `chip` — плоская круглая
-   * высотой 24, кегль 12/600 (Figma `phyztex` 2460:3420, плашки совпадений «✓ ФИО»).
+   * высотой 24, кегль 12/600 (Figma `phyztex` 2460:3420, плашки совпадений «✓ ФИО»);
+   * `solid` — залитая, белый 13/700 на радиусе 8: решённый статус ВНА/НА в итоге четверти
+   * (Figma 2209:2164). Заливка есть у `amber` (ВНА) и `red` (НА), остальные тона — navy.
    */
-  appearance?: 'pill' | 'label' | 'chip';
+  appearance?: 'pill' | 'label' | 'chip' | 'solid';
   /** `md` is used for the larger status badges in request detail headers. */
   size?: 'sm' | 'md';
   children: ReactNode;
 }) {
   const t = tones[tone];
+  const solidTones: Partial<Record<Tone, string>> = { amber: 'bg-amber-500', red: 'bg-red-600', green: 'bg-emerald-600' };
   const labelTones: Record<Tone, string> = { green: 'bg-planning-success text-planning-success-fg', gray: 'bg-planning-row-line text-slate-600', amber: 'bg-orange-50 text-amber-700', blue: 'bg-indigo-50 text-navy-700', red: 'bg-red-50 text-red-600', purple: 'bg-violet-50 text-violet-700', navy: 'bg-indigo-50 text-navy-700' };
   return (
     <span
       className={cx(
         'inline-flex items-center',
-        size === 'md' ? 'px-3 py-1.5 text-sm' : 'px-2.5 py-1 text-xs',
+        appearance === 'solid' ? 'px-2.5 py-1.5 text-13' : size === 'md' ? 'px-3 py-1.5 text-sm' : 'px-2.5 py-1 text-xs',
         appearance === 'chip' ? 'gap-1' : 'gap-1.5',
-        appearance === 'label'
+        appearance === 'solid'
+          ? `rounded-lg font-bold leading-4 text-white ${solidTones[tone] ?? 'bg-navy-700'}`
+          : appearance === 'label'
           ? `rounded-md font-semibold ${labelTones[tone]}`
           : appearance === 'chip'
             ? `rounded-full font-semibold leading-4 ${labelTones[tone]}`

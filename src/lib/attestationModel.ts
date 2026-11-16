@@ -1,24 +1,23 @@
 import type { Schema } from './apiSchemas';
-import type { FinalGrade } from './gradebookApi';
-import type { BadgeTone } from '@/components/ui/Badge';
+import type { ClassFinalGradeRow, FinalGrade } from './gradebookApi';
 import { FINAL_RESULT_LABELS } from './finalGradeResult';
 
 /**
- * Статусы аттестации ВНА / НА в итоге четверти (ATTESTATION-001).
+ * Статусы аттестации ВНА / НА в итоге четверти (ATTESTATION-001, макет Figma 2209:178…5780).
  *
  * Здесь только слова и чтение того, что прислал сервер. Права, допустимые переходы,
  * обязательность причины и публикацию решает бэкенд (`docs/final-grades-contract.md` §12):
- * экран берёт признаки строки (`canEditResult`, `canChangeAttestation`,
- * `canConfirmPublication`) и не вычисляет их сам. Проверка причины ниже — подсказка до
- * отправки, а не правило: отказ сервера показывается как есть.
+ * экран берёт признаки строки (`canEditResult`, `canChangeAttestation`, `canCorrectTechnicalError`)
+ * и не вычисляет их сам. Проверка причины ниже — подсказка до отправки, а не правило: отказ
+ * сервера показывается как есть.
  */
 
 export type ResultKind = NonNullable<FinalGrade['resultKind']>;
 export type AttestationKind = 'TEMP_UNATTESTED' | 'NOT_ATTESTED';
-export type PendingChange = Schema<'PendingChangeView'>;
 export type FinalGradeHistoryEvent = Schema<'FinalGradeHistoryView'>;
+export type ResultValue = { kind: ResultKind; value: number | null };
 
-/** Порядок кнопок в селекторе: сначала временный, потом окончательный. */
+/** Порядок в колонке «Аттестация»: сначала временный, потом окончательный. */
 export const ATTESTATION_KINDS: readonly AttestationKind[] = ['TEMP_UNATTESTED', 'NOT_ATTESTED'];
 
 export const ATTESTATION_SHORT: Record<AttestationKind, string> = {
@@ -26,24 +25,17 @@ export const ATTESTATION_SHORT: Record<AttestationKind, string> = {
   NOT_ATTESTED: 'НА',
 };
 
-/** Расшифровка для легенды и окна статуса: что статус значит и чем он снимается. */
-export const ATTESTATION_HINT: Record<AttestationKind, string> = {
-  TEMP_UNATTESTED:
-    'Итог отложен: обязательные работы ещё не сданы. Снимается оценкой, когда работы сданы, — с причиной.',
-  NOT_ATTESTED:
-    'Решение за четверть: ученик не аттестован. Изменить его можно только вручную, с причиной.',
+/** Частые причины — заготовки поля «Причина» в окне статуса (макет 2209:672, 2209:1153). */
+export const FREQUENT_REASONS: Record<AttestationKind, readonly string[]> = {
+  TEMP_UNATTESTED: ['Не сдан СОЧ', 'Не сданы СОР', 'Пропуски по уважительной причине'],
+  NOT_ATTESTED: ['Пропущено больше половины уроков', 'Не сданы обязательные работы'],
 };
 
-/**
- * Частые причины — заготовки поля «Причина» (вопрос В6 разбора). Макета у них нет:
- * список — предположение до согласования, и правится он здесь одной константой.
- */
-export const FREQUENT_REASONS: readonly string[] = [
-  'Пропуски по уважительной причине',
-  'Не выполнены СОР/СОЧ',
-  'Длительная болезнь',
-  'Прибыл из другой школы',
-];
+export const REASON_PLACEHOLDER = 'Например: не сдан СОЧ по уважительной причине';
+
+/** Подпись нижней панели в режиме изменения — тот же текст отказа пришлёт сервер. */
+export const PUBLISHED_EDIT_RULE =
+  'Режим изменения: после публикации можно заменить только ВНА на оценку. Остальные итоги исправляет администратор';
 
 /** Совпадает с сервером (`AttestationStatusRules`), но отказ всё равно приходит от него. */
 export const REASON_MIN = 5;
@@ -61,30 +53,9 @@ export function reasonProblem(reason: string): string | null {
   return null;
 }
 
-/**
- * Нужна ли причина у этого выбора: статус был до или будет после — или опубликован сейчас. Если
- * ученику показан ВНА/НА, любая правка решённого (в том числе ожидающего числа «7 → 8») — это всё
- * ещё снятие или замена статуса (D-1 ручной проверки: без этого правка уходила без окна и
- * причины). Решает, открывать ли окно перед отправкой; сервер проверит то же самое
- * (`FINAL_GRADE_REASON_REQUIRED`).
- *
- * @param publishedKind вид опубликованного итога — только у опубликованной строки
- */
-export function needsReason(
-  current: ResultKind | null | undefined,
-  next: ResultKind,
-  publishedKind?: ResultKind | null,
-): boolean {
-  return isAttestationStatus(current) || isAttestationStatus(next) || isAttestationStatus(publishedKind);
-}
-
-export type ResultValue = { kind: ResultKind; value: number | null };
-
-/** Что решено сейчас: ожидающее изменение, если оно есть, иначе сам итог. */
-export function decidedResult(grade: FinalGrade | null | undefined): ResultValue | null {
+/** Что стоит в строке сейчас: у опубликованной — то, что видят ученик и родитель. */
+export function currentResult(grade: FinalGrade | null | undefined): ResultValue | null {
   if (!grade) return null;
-  const pending = grade.pendingChange;
-  if (pending?.resultKind) return { kind: pending.resultKind, value: pending.value ?? null };
   return { kind: grade.resultKind ?? 'NUMERIC', value: grade.value ?? null };
 }
 
@@ -103,111 +74,82 @@ export function fullResultLabel(result: ResultValue | null | undefined): string 
   return FINAL_RESULT_LABELS[result.kind];
 }
 
-/** То, что видят ученик и родитель, — только у опубликованного итога. */
-export function familySees(grade: FinalGrade | null | undefined): ResultValue | null {
-  if (!grade || grade.status !== 'PUBLISHED') return null;
-  return { kind: grade.resultKind ?? 'NUMERIC', value: grade.value ?? null };
+/** Заголовок подсказки у значка причины: «Причина не аттестован» (макет 2209:178). */
+export function reasonCaption(kind: AttestationKind): string {
+  return `Причина ${FINAL_RESULT_LABELS[kind].toLowerCase()}`;
 }
-
-export type PublicationBadge = { label: string; tone: BadgeTone };
 
 /**
- * Состояние публикации строки (ТЗ-2 §5): черновик / опубликовано / изменено после публикации.
- * Состояние присылает сервер; у старых ответов без него — выводится из `status`.
+ * Показывать ли значок истории: у строки со статусом всегда (Т1), у остальных — когда было что-то
+ * кроме выставления и публикации. После снятия ВНА значок остаётся (Т7а): в истории есть изменение.
  */
-export function publicationBadge(grade: FinalGrade | null | undefined): PublicationBadge | null {
-  if (!grade) return null;
-  const state = grade.publicationState
-    ?? (grade.status === 'PUBLISHED' ? 'PUBLISHED' : 'DRAFT');
-  switch (state) {
-    case 'DRAFT':
-      return { label: 'Черновик', tone: 'gray' };
-    case 'PUBLISHED':
-      return { label: 'Опубликовано', tone: 'green' };
-    case 'CHANGED_AFTER_PUBLICATION':
-      return { label: 'Изменено после публикации', tone: 'amber' };
-  }
-}
-
-const ROLE_LABELS: Partial<Record<NonNullable<FinalGradeHistoryEvent['actorRole']>, string>> = {
-  TEACHER: 'Учитель',
-  ADMIN: 'Администрация',
-  SUPER_ADMIN: 'Администрация',
-};
-
-/** «Иванова А. · Администрация» — кто изменил; роль важна, потому что подтверждает учитель. */
-export function authorLabel(name: string | null | undefined, role: FinalGradeHistoryEvent['actorRole']): string {
-  const who = name?.trim() || 'Сотрудник школы';
-  const roleLabel = role ? ROLE_LABELS[role] : undefined;
-  return roleLabel ? `${who} · ${roleLabel}` : who;
+export function hasNotableHistory(row: Pick<ClassFinalGradeRow, 'finalGrade' | 'historyCount'>): boolean {
+  const grade = row.finalGrade;
+  if (!grade?.id) return false;
+  if (isAttestationStatus(grade.resultKind)) return true;
+  const routine = grade.status === 'PUBLISHED' ? 2 : 1;
+  return (row.historyCount ?? 0) > routine;
 }
 
 const ACTION_LABELS: Record<NonNullable<FinalGradeHistoryEvent['action']>, string> = {
-  CREATE: 'Выставлено',
-  UPDATE: 'Изменено',
-  PUBLISH: 'Опубликовано',
-  REPUBLISH: 'Повторно опубликовано',
-  CONFIRM: 'Подтверждено к публикации',
-  PENDING_CHANGE: 'Изменено после публикации',
+  CREATE: 'Создание',
+  UPDATE: 'Изменение',
+  PUBLISH: 'Публикация',
+  REPUBLISH: 'Повторная публикация',
+  CONFIRM: 'Подтверждение',
+  // Старые записи (до 16.11.2026): изменение ждало подтверждения учителя и семье не показывалось.
+  PENDING_CHANGE: 'Изменение без публикации',
 };
-
-export function historyActionLabel(action: FinalGradeHistoryEvent['action']): string {
-  return action ? ACTION_LABELS[action] : 'Событие';
-}
 
 /** Снимок истории — объект, а не строка: старые записи без новых полей читаются как пустые. */
 type Snapshot = {
   value?: number | null;
   resultKind?: ResultKind | null;
+  correctionReference?: string | null;
+  resultReason?: string | null;
   pendingResultKind?: ResultKind | null;
   pendingValue?: number | null;
 };
 
-function asSnapshot(raw: unknown): Snapshot | null {
+export function historySnapshot(raw: unknown): Snapshot | null {
   return raw && typeof raw === 'object' ? (raw as Snapshot) : null;
 }
 
-/** Что видели ученик и родитель в момент снимка (основные поля). */
 function shownIn(snapshot: Snapshot | null): ResultValue | null {
   return snapshot ? { kind: snapshot.resultKind ?? 'NUMERIC', value: snapshot.value ?? null } : null;
 }
 
-/** Что было решено в момент снимка: ожидающее, если было, иначе показанное. */
+/** У старого события «ждало подтверждения» новое значение лежит в `pending*` снимка. */
 function decidedIn(snapshot: Snapshot | null): ResultValue | null {
-  if (snapshot?.pendingResultKind) {
-    return { kind: snapshot.pendingResultKind, value: snapshot.pendingValue ?? null };
-  }
-  return shownIn(snapshot);
+  return snapshot?.pendingResultKind
+    ? { kind: snapshot.pendingResultKind, value: snapshot.pendingValue ?? null }
+    : shownIn(snapshot);
 }
 
-/**
- * Строка события истории (ТЗ-2 §4: «исходное → новое значение»).
- *
- * У изменения после публикации «было → стало» — решение школы, а не то, что видел ученик:
- * «ВНА → 7», а не «ВНА → ВНА». Отмена ожидающего изменения названа отдельно, иначе она
- * выглядела бы как ещё одно изменение. Снимки до ATTESTATION-001 ожидающего не знают и
- * читаются как обычные.
- */
+/** Техисправление администрации — правка с новым документом в «после» (А1). */
+export function isTechnicalCorrection(event: FinalGradeHistoryEvent): boolean {
+  const before = historySnapshot(event.before);
+  const after = historySnapshot(event.after);
+  return event.action === 'UPDATE' && Boolean(after?.correctionReference)
+    && after?.correctionReference !== before?.correctionReference;
+}
+
+/** «Изменение: Временно не аттестован → 4» — строка события (макет 2209:3481). */
 export function historyEventTitle(event: FinalGradeHistoryEvent): string {
-  const before = asSnapshot(event.before);
-  const after = asSnapshot(event.after);
-  switch (event.action) {
-    case 'CREATE':
-    case 'PUBLISH':
-    case 'CONFIRM':
-      return `${historyActionLabel(event.action)}: ${shortResultLabel(shownIn(after))}`;
-    case 'PENDING_CHANGE':
-      return after?.pendingResultKind
-        ? `Изменено после публикации: ${shortResultLabel(decidedIn(before))} → ${shortResultLabel(decidedIn(after))}`
-        : `Изменение после публикации отменено: ${shortResultLabel(decidedIn(before))} → ${shortResultLabel(shownIn(after))}`;
-    default:
-      return `${historyActionLabel(event.action)}: ${shortResultLabel(shownIn(before))} → ${shortResultLabel(shownIn(after))}`;
-  }
+  const label = isTechnicalCorrection(event)
+    ? 'Исправление технической ошибки'
+    : event.action ? ACTION_LABELS[event.action] : 'Событие';
+  const after = historySnapshot(event.after);
+  const next = event.action === 'PENDING_CHANGE' ? decidedIn(after) : shownIn(after);
+  return `${label}: ${fullResultLabel(decidedIn(historySnapshot(event.before)))} → ${fullResultLabel(next)}`;
 }
 
-/** Пояснение под событием, которое ещё не дошло до семьи. */
-export function historyEventNote(event: FinalGradeHistoryEvent): string | null {
-  return event.action === 'PENDING_CHANGE' && asSnapshot(event.after)?.pendingResultKind
-    ? 'Ученик и родитель видели прежнее значение до повторной публикации'
-    : null;
+/** «Марина Демо · 13.01.2027, 11:20:00» — кто и когда (макет 2209:3481). */
+export function historyEventAuthor(event: FinalGradeHistoryEvent): string {
+  const who = event.actorName?.trim() || 'Сотрудник школы';
+  if (!event.createdAt) return who;
+  const at = new Date(event.createdAt);
+  const date = at.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const time = at.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return `${who} · ${date}, ${time}`;
 }

@@ -1,21 +1,23 @@
-import { AlertTriangle, History, Lock } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { AlertTriangle, History, Lock, MessageSquareText } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { HoverCard } from '@/components/ui/HoverCard';
+import { SegmentedChoice } from '@/components/ui/SegmentedChoice';
 import {
+  ATTESTATION_KINDS,
   ATTESTATION_SHORT,
-  authorLabel,
-  decidedResult,
-  familySees,
+  currentResult,
   fullResultLabel,
+  hasNotableHistory,
   isAttestationStatus,
-  needsReason,
-  publicationBadge,
+  reasonCaption,
   shortResultLabel,
   type AttestationKind,
+  type ResultKind,
   type ResultValue,
 } from '@/lib/attestationModel';
-import { FINAL_RESULT_LABELS, finalResultLabel } from '@/lib/finalGradeResult';
-import type { FinalGrade } from '@/lib/gradebookApi';
+import { FINAL_RESULT_LABELS } from '@/lib/finalGradeResult';
 import { cx } from '@/lib/format';
 import type { ClassFinalGradeRow, ClassFinalGrades } from '@/lib/gradebookApi';
 import { formatAverage } from '@/lib/journalModel';
@@ -23,7 +25,6 @@ import {
   COMPONENT_SHORT,
   formatPercent,
   isPreliminary,
-  positiveFinalValues,
   PRELIMINARY_LABEL,
   resultMissingCaption,
   resultStatusHint,
@@ -41,183 +42,124 @@ export function finalValueOptions(finals: Pick<ClassFinalGrades, 'allowedValues'
   return finals?.allowedValues && finals.allowedValues.length > 0 ? finals.allowedValues : [...FINAL_VALUES];
 }
 
+/** Вариант «…» в ряду оценок — особые результаты без числа («Не изучался»), как в окне Т4. */
+const MORE = 'MORE' as const;
+
+const STATUS_TONE: Record<AttestationKind, 'warning' | 'danger'> = { TEMP_UNATTESTED: 'warning', NOT_ATTESTED: 'danger' };
+const STATUS_BADGE: Record<AttestationKind, 'amber' | 'red'> = { TEMP_UNATTESTED: 'amber', NOT_ATTESTED: 'red' };
+
+export interface QuarterFinalsActions {
+  /** Число в черновике без статуса — сохраняется сразу. */
+  onPickValue: (row: ClassFinalGradeRow, value: number) => void;
+  /** Зачёт / незачёт — сохраняется сразу. */
+  onPickResult: (row: ClassFinalGradeRow, kind: ResultKind) => void;
+  /** ВНА/НА, которого ещё нет в строке, — окно статуса с причиной (Т2, Т3). */
+  onRequestStatus: (row: ClassFinalGradeRow, kind: AttestationKind) => void;
+  /** «Изменить итог» — снять статус, выбрать особый результат, заменить опубликованный ВНА (Т4, Т6). */
+  onRequestChange: (row: ClassFinalGradeRow, initial: ResultValue | null) => void;
+  onOpenHistory: (row: ClassFinalGradeRow) => void;
+  /** Администрация: «Исправить» опубликованный итог по документу и протоколу (А1). */
+  onCorrect: (row: ClassFinalGradeRow) => void;
+  /** ТЗ №9: рекомендация разошлась с опубликованным числом. */
+  onRepublish: (row: ClassFinalGradeRow) => void;
+  onOpenBreakdown?: (row: ClassFinalGradeRow) => void;
+}
+
 /**
- * Итоги четверти (Figma 2098:1360).
+ * Итоги четверти (макет Т1 2209:178, Т5 2209:2164, Т5а 2209:2585, А0 2209:4887).
  *
- * <p>Три числа в строке отвечают на разные вопросы и потому стоят рядом: средний балл —
- * что получилось у ученика, рекомендация — что из этого следует по порогам, итоговая —
- * что решил учитель. Рекомендация не подставляется в итог никогда (контракт §4): решение
- * остаётся решением, даже когда совпадает с арифметикой.
+ * Пять колонок: процент (что получилось у ученика), рекомендация (что из него следует), итоговая
+ * оценка (решение учителя) и аттестация — ВНА/НА. Оценка и статус в разных колонках, но активен
+ * всегда один результат: у строки со статусом в колонке оценки — прочерк.
  *
- * <p>Пустой средний и пустая рекомендация — законное состояние (оценок за четверть нет),
- * и руками выставить итог это не мешает.
- *
- * <p>В четверти по политике оценивания (GRADES-003) вместо среднего — процент: он
- * открывает расшифровку с работами и формулой. Если оценки правили после выставления
- * итога и рекомендация теперь другая, рядом с итогом стоит предупреждение — итог при этом
- * не меняется сам.
- *
- * <p>ATTESTATION-001: в ячейке итога один активный результат — число 1…10 либо ВНА/НА. Что
- * можно сделать со строкой, решает сервер (`canEditResult`, `canChangeAttestation`,
- * `canConfirmPublication`); таблица только раскладывает его ответ по кнопкам.
+ * Что можно сделать со строкой, решает сервер (`canEditResult`, `canChangeAttestation`,
+ * `canCorrectTechnicalError`, `canConfirmPublication`); таблица раскладывает ответ по кнопкам.
+ * `editMode` — режим «Редактировать» после публикации (Т5а): только он открывает у
+ * опубликованного ВНА положительные оценки (`positiveValues`).
  */
 export function QuarterFinalsTable({
   finals,
   highlighted,
   busyStudentId,
-  onPick,
-  onOpenBreakdown,
-  onPickResult,
-  onCorrect,
-  onOpenHistory,
-  onRepublish,
-  onRequestStatus,
   rowError = null,
-  scope = 'PERIOD',
+  editMode = false,
+  actions,
 }: {
   finals: ClassFinalGrades;
-  scope?: FinalGrade['scope'];
-  /**
-   * Отказ действия в ячейке — показывается под строкой этого ученика, а не под таблицей: внизу
-   * страницы его не видно, и строка просто «не менялась» (D-3 ручной проверки).
-   */
-  rowError?: { studentProfileId: number; message: string } | null;
   /** Кого не хватило для публикации — сервер называет их поимённо. */
   highlighted: ReadonlySet<number>;
   busyStudentId: number | null;
-  onPick: (row: ClassFinalGradeRow, value: number) => void;
-  onPickResult?: (row: ClassFinalGradeRow, kind: NonNullable<FinalGrade['resultKind']>) => void;
-  onOpenBreakdown?: (row: ClassFinalGradeRow) => void;
-  onCorrect?: (row: ClassFinalGradeRow) => void;
-  onOpenHistory?: (row: ClassFinalGradeRow) => void;
-  /** «Подтвердить и опубликовать» — ожидающее изменение ВНА/НА или итог после правки баллов. */
-  onRepublish?: (row: ClassFinalGradeRow) => void;
-  /**
-   * Выбор, которому нужна причина: поставить ВНА/НА, снять статус числом, отменить ожидающее
-   * изменение. Открывает окно статуса — сохранять напрямую такой выбор нельзя.
-   */
-  onRequestStatus?: (row: ClassFinalGradeRow, target: ResultValue) => void;
+  /** Отказ действия в ячейке — под строкой этого ученика, а не под таблицей (D-3). */
+  rowError?: { studentProfileId: number; message: string } | null;
+  editMode?: boolean;
+  actions: QuarterFinalsActions;
 }) {
   const rows = finals.rows ?? [];
-  const byPolicy = scope === 'PERIOD' && finals.gradingPolicy != null;
-  const options = finalValueOptions(finals);
+  const byPolicy = finals.gradingPolicy != null;
+  const numeric = !finals.assessmentMode || finals.assessmentMode === 'NUMERIC';
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-max border-collapse text-sm">
         <thead>
           <tr className="border-b border-slate-200">
-            <th className="w-[320px] px-6 py-3 text-left text-11 font-bold uppercase text-slate-400">
-              ФИО Ученика
-            </th>
-            <th className="px-6 py-3 text-center text-11 font-bold uppercase text-slate-400">
-              {byPolicy ? 'Процент за четверть' : scope === 'YEAR' ? 'Средняя по периодам' : 'Средний балл'}
-            </th>
-            <th className="px-6 py-3 text-center text-11 font-bold uppercase text-slate-400">
-              Рекомендованная оценка
-            </th>
-            <th className="px-6 py-3 text-center text-11 font-bold uppercase text-slate-400">
-              Итоговая оценка
-            </th>
+            <Th className="w-[300px] text-left">ФИО ученика</Th>
+            <Th>{byPolicy ? 'Процент за четверть' : 'Средний балл'}</Th>
+            <Th>Рекомендованная оценка</Th>
+            <Th>Итоговая оценка</Th>
+            {numeric && <Th className="text-left">Аттестация</Th>}
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => {
             const studentId = row.studentProfileId as number;
-
+            const busy = busyStudentId === studentId;
             return (
               <tr
                 key={studentId}
-                className={cx(
-                  'border-b border-slate-200 last:border-b-0',
-                  highlighted.has(studentId) && 'bg-danger-bg/60',
-                )}
+                className={cx('group border-b border-slate-200 last:border-b-0', highlighted.has(studentId) && 'bg-danger-bg/60')}
               >
-                <td className="px-6 py-3 text-slate-900">
+                <td className="px-6 py-4 text-slate-900">
                   <span className="flex items-center gap-2">
                     <span className="truncate">{row.studentName}</span>
                     {row.currentMember === false && (
-                      <span
-                        title="Сохранённый итог ученика из прежнего состава класса"
-                        className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-10 font-semibold text-slate-500"
-                      >
+                      <span title="Сохранённый итог ученика из прежнего состава класса"
+                        className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-10 font-semibold text-slate-500">
                         история класса
                       </span>
                     )}
                   </span>
                 </td>
-
-                <td className="px-6 py-3 text-center font-semibold text-slate-900">
-                  {byPolicy ? (
-                    <span className="flex flex-col items-center gap-0.5">
-                      <button
-                        type="button"
-                        onClick={() => onOpenBreakdown?.(row)}
-                        title={resultStatusHint(row.result) ?? componentsLine(row)}
-                        className="rounded-lg px-2 py-1 transition hover:bg-navy-50 hover:text-navy-700"
-                      >
-                        {row.result?.percent != null ? formatPercent(row.result.percent) : '—'}
-                      </button>
-                      {isPreliminary(row.result) && (
-                        <span className="rounded bg-info-bg px-1.5 py-0.5 text-10 font-bold uppercase text-info-fg">
-                          {PRELIMINARY_LABEL}
-                        </span>
-                      )}
-                      {resultMissingCaption(row.result) && !isPreliminary(row.result) && (
-                        <span className="text-11 font-normal text-muted">{resultMissingCaption(row.result)}</span>
-                      )}
-                      {isPreliminary(row.result) && (
-                        <span className="text-11 font-normal text-muted">без СОЧ</span>
-                      )}
-                    </span>
-                  ) : (
-                    formatAverage(row.average)
-                  )}
+                <td className="px-6 py-4 text-center font-semibold text-slate-900">
+                  {byPolicy ? <PercentCell row={row} onOpen={actions.onOpenBreakdown} /> : formatAverage(row.average)}
                 </td>
-
-                <td className="px-6 py-3">
-                  <span className="flex justify-center">
-                    {row.recommendedValue != null ? (
-                      <span className="flex flex-col items-center gap-0.5">
-                        <span className="flex size-[26px] items-center justify-center rounded-lg bg-slate-100 text-13 font-bold text-slate-600">
-                          {row.recommendedValue}
+                <td className="px-6 py-4">
+                  <RecommendationCell row={row} />
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex flex-col items-center gap-2">
+                    <GradeCell row={row} finals={finals} numeric={numeric} editMode={editMode} busy={busy} actions={actions} />
+                    {row.canConfirmPublication && (
+                      <span className="flex flex-col items-center gap-1">
+                        <span className="flex items-center gap-1 text-11 text-brand-600">
+                          <AlertTriangle className="size-3.5" aria-hidden />
+                          Рекомендация теперь {row.recommendedValue}
                         </span>
-                        {isPreliminary(row.result) && (
-                          <span
-                            title="Расчёт без СОЧ: это не итог четверти и ученику он не виден"
-                            className="text-10 font-semibold uppercase text-muted"
-                          >
-                            {PRELIMINARY_LABEL}
-                          </span>
-                        )}
-                      </span>
-                    ) : (
-                      <span
-                        className="text-slate-400"
-                        title={resultStatusHint(row.result) ?? 'Рекомендации нет: не хватает оценок за четверть'}
-                      >
-                        —
+                        <Button variant="secondary" size="sm" disabled={busy} onClick={() => actions.onRepublish(row)}>
+                          Подтвердить и опубликовать
+                        </Button>
                       </span>
                     )}
-                  </span>
+                    {rowError?.studentProfileId === studentId && (
+                      <p role="alert" className="max-w-xs text-center text-11 font-semibold text-danger-fg">{rowError.message}</p>
+                    )}
+                  </div>
                 </td>
-
-                <td className="px-6 py-3">
-                  <FinalResultCell
-                    row={row}
-                    finals={finals}
-                    scope={scope}
-                    options={options}
-                    busy={busyStudentId === studentId}
-                    error={rowError?.studentProfileId === studentId ? rowError.message : null}
-                    onPick={onPick}
-                    onPickResult={onPickResult}
-                    onRequestStatus={onRequestStatus}
-                    onRepublish={onRepublish}
-                    onOpenHistory={onOpenHistory}
-                    onCorrect={onCorrect}
-                  />
-                </td>
+                {numeric && (
+                  <td className="px-6 py-4">
+                    <AttestationCell row={row} editMode={editMode} busy={busy} actions={actions} />
+                  </td>
+                )}
               </tr>
             );
           })}
@@ -227,259 +169,170 @@ export function QuarterFinalsTable({
   );
 }
 
-/**
- * Ячейка итога: выбор, состояние публикации, что видит семья и что ждёт подтверждения.
- *
- * Кнопки — по признакам строки от сервера, без своих правил:
- * - числа — `canEditResult`; у администрации — только снятие статуса числом, то есть при
- *   `canChangeAttestation` и статусе в самой строке (не в ожидающем изменении);
- * - ВНА/НА — `canChangeAttestation`, только в итоге четверти: годовой ВНА живёт прежней
- *   кнопкой результата;
- * - «Не изучался», зачёт — `canEditResult` и пока итог не опубликован.
- * Выбор со статусом до или после идёт через окно с причиной (`onRequestStatus`), остальное
- * сохраняется сразу (`onPick`).
- */
-function FinalResultCell({
-  row,
-  finals,
-  scope,
-  options,
-  busy,
-  error,
-  onPick,
-  onPickResult,
-  onRequestStatus,
-  onRepublish,
-  onOpenHistory,
-  onCorrect,
-}: {
-  row: ClassFinalGradeRow;
-  finals: ClassFinalGrades;
-  scope: FinalGrade['scope'];
-  options: number[];
-  busy: boolean;
-  error: string | null;
-  onPick: (row: ClassFinalGradeRow, value: number) => void;
-  onPickResult?: (row: ClassFinalGradeRow, kind: NonNullable<FinalGrade['resultKind']>) => void;
-  onRequestStatus?: (row: ClassFinalGradeRow, target: ResultValue) => void;
-  onRepublish?: (row: ClassFinalGradeRow) => void;
-  onOpenHistory?: (row: ClassFinalGradeRow) => void;
-  onCorrect?: (row: ClassFinalGradeRow) => void;
-}) {
-  const grade = row.finalGrade ?? null;
-  const decided = decidedResult(grade);
-  const published = grade?.status === 'PUBLISHED';
-  const periodScope = scope === 'PERIOD';
-  const kinds = finals.allowedResultKinds ?? [];
-  const statusKinds = periodScope ? kinds.filter(isAttestationStatus) : [];
-  const otherKinds = kinds.filter((kind) => kind !== 'NUMERIC' && (!periodScope || !isAttestationStatus(kind)));
-  const numbersEnabled = Boolean(row.canEditResult)
-    || (Boolean(row.canChangeAttestation) && isAttestationStatus(grade?.resultKind));
-  const statusesEnabled = Boolean(row.canChangeAttestation) && statusKinds.length > 0;
-  const showNumbers = dataModeNumeric(finals) && numbersEnabled;
-  const selectable = showNumbers || statusesEnabled;
-  // Пилот 3.1/3.2: опубликованный ВНА снимается только положительным итогом — сервер это
-  // проверит, а выбор не предлагает заведомо отклоняемого.
-  const numberOptions = published && grade?.resultKind === 'TEMP_UNATTESTED' ? positiveFinalValues(options) : options;
-  const badge = publicationBadge(grade);
-  const family = familySees(grade);
-  const pending = grade?.pendingChange ?? null;
-  const events = row.historyCount ?? 0;
-  // Техисправление у итога четверти статусы не трогает и не идёт поверх ожидающего
-  // изменения — сервер отказал бы 409; ВНА/НА меняются своим окном (контракт §12.4).
-  const correctable = Boolean(finals.canCorrectTechnicalErrors) && published
-    && !(periodScope && (isAttestationStatus(grade?.resultKind) || pending != null));
+function Th({ children, className }: { children: ReactNode; className?: string }) {
+  return <th className={cx('px-6 py-3 text-center text-11 font-bold uppercase text-slate-400', className)}>{children}</th>;
+}
 
-  function chooseNumber(value: number) {
-    if (decided?.kind === 'NUMERIC' && decided.value === value) return;
-    if (needsReason(decided?.kind, 'NUMERIC', published ? grade?.resultKind : null)) {
-      onRequestStatus?.(row, { kind: 'NUMERIC', value });
-    } else {
-      onPick(row, value);
-    }
-  }
-
-  function chooseStatus(kind: AttestationKind) {
-    if (decided?.kind === kind) return;
-    onRequestStatus?.(row, { kind, value: null });
-  }
-
+/** «80%» с расшифровкой по нажатию; «Нет СОЧ» — чего не хватает расчёту (Т1). */
+function PercentCell({ row, onOpen }: { row: ClassFinalGradeRow; onOpen?: (row: ClassFinalGradeRow) => void }) {
+  const caption = resultMissingCaption(row.result);
   return (
-    <div className="flex flex-col items-center gap-2">
-      <span className="flex items-center justify-center gap-3">
-        {selectable ? (
-          <span
-            role="group"
-            aria-label={`Итог: ${row.studentName ?? ''}`}
-            className={cx(
-              'inline-flex items-center gap-1 rounded-lg border border-slate-200 p-0.5',
-              busy && 'pointer-events-none opacity-60',
-            )}
-          >
-            {showNumbers && numberOptions.map((option) => (
-              <ResultButton
-                key={option}
-                label={String(option)}
-                selected={decided?.kind === 'NUMERIC' && decided.value === option}
-                onClick={() => chooseNumber(option)}
-              />
-            ))}
-            {/* Числа менять нельзя (опубликованное число), а решение — не статус: оно всё равно
-                стоит в ряду выбранным, иначе ячейка показывала бы только «ВНА НА» без итога. */}
-            {!showNumbers && decided && !isAttestationStatus(decided.kind) && (
-              <span
-                title={fullResultLabel(decided)}
-                className="flex h-[26px] min-w-[26px] items-center justify-center rounded-md bg-navy-700 px-1 text-13 font-bold text-white"
-              >
-                {shortResultLabel(decided)}
-              </span>
-            )}
-            {(showNumbers || (decided && !isAttestationStatus(decided.kind))) && statusesEnabled && (
-              <span aria-hidden className="mx-0.5 h-5 w-px bg-slate-200" />
-            )}
-            {statusesEnabled && statusKinds.map((kind) => (
-              <ResultButton
-                key={kind}
-                label={ATTESTATION_SHORT[kind]}
-                title={FINAL_RESULT_LABELS[kind]}
-                ariaLabel={`${ATTESTATION_SHORT[kind]} — ${FINAL_RESULT_LABELS[kind]}`}
-                selected={decided?.kind === kind}
-                onClick={() => chooseStatus(kind)}
-              />
-            ))}
-          </span>
-        ) : (
-          <span
-            className="flex items-center gap-2 text-15 font-bold text-slate-900"
-            title={decided ? fullResultLabel(decided) : undefined}
-          >
-            {row.yearLocked && <Lock className="size-4 text-slate-500" aria-label="Предмет закрыт за год" />}
-            {shortResultLabel(decided)}
-          </span>
-        )}
-        {row.recommendationChanged && (
-          <span title="Оценки изменили после выставления итога — рекомендация сейчас другая" className="text-brand-600">
-            <AlertTriangle className="size-4" />
-          </span>
-        )}
-      </span>
+    <span className="flex flex-col items-center gap-0.5">
+      <button
+        type="button"
+        onClick={() => onOpen?.(row)}
+        title={resultStatusHint(row.result) ?? componentsLine(row)}
+        className="rounded-lg px-2 py-1 transition hover:bg-navy-50 hover:text-navy-700"
+      >
+        {row.result?.percent != null ? formatPercent(row.result.percent) : '—'}
+      </button>
+      {isPreliminary(row.result) ? (
+        <>
+          <span className="rounded bg-info-bg px-1.5 py-0.5 text-10 font-bold uppercase text-info-fg">{PRELIMINARY_LABEL}</span>
+          <span className="text-11 font-normal text-muted">без СОЧ</span>
+        </>
+      ) : caption && <span className="text-11 font-normal text-muted">{caption}</span>}
+    </span>
+  );
+}
 
-      {(badge || (row.canEditResult && !published && otherKinds.length > 0)) && (
-        <span className="flex flex-wrap items-center justify-center gap-2">
-          {badge && <Badge appearance="label" tone={badge.tone}>{badge.label}</Badge>}
-          {row.canEditResult && !published && otherKinds.map((kind) => (
-            // Выбранный «Не изучался» обязан выглядеть выбранным, как число в ряду (D-2).
-            <Button
-              key={kind}
-              variant={decided?.kind === kind ? 'navy' : 'secondary'}
-              size="sm"
-              disabled={busy}
-              aria-pressed={decided?.kind === kind}
-              onClick={() => onPickResult?.(row, kind)}
-            >
-              {FINAL_RESULT_LABELS[kind]}
-            </Button>
-          ))}
+function RecommendationCell({ row }: { row: ClassFinalGradeRow }) {
+  return (
+    <span className="flex justify-center">
+      {row.recommendedValue != null ? (
+        <span className="flex size-[26px] items-center justify-center rounded-lg bg-slate-100 text-13 font-bold text-slate-600">
+          {row.recommendedValue}
         </span>
+      ) : (
+        <span className="text-slate-300" title={resultStatusHint(row.result) ?? 'Рекомендации нет: не хватает оценок за четверть'}>—</span>
       )}
-
-      {error && (
-        <p role="alert" className="max-w-xs text-center text-11 font-semibold text-danger-fg">{error}</p>
-      )}
-
-      {pending && family && (
-        <p className="max-w-xs text-center text-11 text-muted">
-          Ученик видит «{fullResultLabel(family)}». Ждёт подтверждения: «{fullResultLabel(decided)}»
-          {' — '}{authorLabel(pending.changedByName, pending.changedByRole)}
-        </p>
-      )}
-
-      {row.canConfirmPublication ? (
-        <span className="flex flex-col items-center gap-1">
-          {!pending && (
-            <span className="max-w-xs text-center text-11 text-brand-600">
-              Требуется повторное подтверждение: рекомендация теперь {row.recommendedValue}, ученик видит {finalResultLabel(grade)}
-            </span>
-          )}
-          <Button variant="secondary" size="sm" disabled={busy} onClick={() => onRepublish?.(row)}>
-            Подтвердить и опубликовать
-          </Button>
-        </span>
-      ) : pending ? (
-        <span className="text-11 font-semibold text-amber-700">Подтверждает учитель предмета</span>
-      ) : null}
-
-      {(pending && row.canChangeAttestation) || grade?.id ? (
-        <span className="flex flex-wrap justify-center gap-2">
-          {pending && row.canChangeAttestation && grade && (
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={busy}
-              onClick={() => onRequestStatus?.(row, { kind: grade.resultKind ?? 'NUMERIC', value: grade.value ?? null })}
-            >
-              Отменить изменение
-            </Button>
-          )}
-          {grade?.id && (
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={<History className="size-4" />}
-              aria-label={events > 1 ? `История итога — событий: ${events}` : 'История итога'}
-              onClick={() => onOpenHistory?.(row)}
-            >
-              История итога
-              {/* ТЗ-2 §4: индикатор — у строки есть что-то кроме создания. */}
-              {events > 1 && (
-                <span aria-hidden className="rounded-full bg-slate-100 px-1.5 text-10 font-bold text-slate-600">{events}</span>
-              )}
-            </Button>
-          )}
-          {correctable && (
-            <Button variant="ghost" size="sm" onClick={() => onCorrect?.(row)}>Исправить техническую ошибку</Button>
-          )}
-        </span>
-      ) : null}
-
-      {(!grade?.resultKind || grade.resultKind === 'NUMERIC') && row.publicationIssues?.map((issue) => (
-        <p key={issue} className="max-w-sm text-center text-11 text-danger-fg">{issue}</p>
-      ))}
-    </div>
+    </span>
   );
 }
 
 /**
- * Кнопка выбора итога (макет 2098:1382): число или ВНА/НА в одном ряду. Выбранная — navy,
- * как у выбора оценки урока; повторное нажатие по выбранной ничего не меняет.
+ * Колонка «Итоговая оценка».
+ * - черновик (или итога нет), `canEditResult`: ряд шкалы; у строки со статусом — прочерк (Т1),
+ *   статус снимается из колонки аттестации («Изменить итог»);
+ * - опубликованный ВНА в режиме изменения: положительные оценки — каждая открывает «Изменить итог» (Т5а, Т6);
+ * - иначе — значение, у опубликованного с замком (Т5).
  */
-function ResultButton({
-  label,
-  title,
-  ariaLabel,
-  selected,
-  onClick,
-}: {
-  label: string;
-  title?: string;
-  ariaLabel?: string;
-  selected: boolean;
-  onClick: () => void;
+function GradeCell({ row, finals, numeric, editMode, busy, actions }: {
+  row: ClassFinalGradeRow; finals: ClassFinalGrades; numeric: boolean; editMode: boolean; busy: boolean;
+  actions: QuarterFinalsActions;
 }) {
+  const grade = row.finalGrade ?? null;
+  const current = currentResult(grade);
+  const published = grade?.status === 'PUBLISHED';
+  const status = isAttestationStatus(current?.kind);
+
+  if (row.canEditResult && published && editMode) {
+    const positive = finals.positiveValues?.length ? finals.positiveValues : finalValueOptions(finals);
+    return (
+      <SegmentedChoice
+        ariaLabel={`Оценка вместо «${fullResultLabel(current)}»: ${row.studentName ?? ''}`}
+        options={positive.map((value) => ({ value, label: String(value) }))}
+        selected={null}
+        disabled={busy}
+        onChoose={(value) => actions.onRequestChange(row, { kind: 'NUMERIC', value })}
+      />
+    );
+  }
+
+  if (row.canEditResult && !published && !status) {
+    const otherKinds = (finals.allowedResultKinds ?? [])
+      .filter((kind) => kind !== 'NUMERIC' && !isAttestationStatus(kind) && (numeric || kind === 'NOT_STUDIED'));
+    const otherSelected = current != null && current.kind !== 'NUMERIC' && otherKinds.includes(current.kind);
+    const base = numeric
+      ? finalValueOptions(finals).map((value) => ({ value: value as number | ResultKind | typeof MORE, label: String(value) }))
+      : (['PASS', 'FAIL'] as const).map((kind) => ({ value: kind as number | ResultKind | typeof MORE, label: FINAL_RESULT_LABELS[kind] }));
+    const more = otherKinds.length > 0
+      ? [{ value: MORE as number | ResultKind | typeof MORE, label: otherSelected ? shortResultLabel(current) : '…', title: 'Другой результат: ' + otherKinds.map((kind) => FINAL_RESULT_LABELS[kind].toLowerCase()).join(', ') }]
+      : [];
+    const selected = otherSelected ? MORE : current?.kind === 'NUMERIC' ? current.value : current?.kind ?? null;
+    return (
+      <SegmentedChoice
+        ariaLabel={`Итоговая оценка: ${row.studentName ?? ''}`}
+        options={[...base, ...more]}
+        selected={selected}
+        disabled={busy}
+        onChoose={(value) => {
+          if (value === MORE) {
+            actions.onRequestChange(row, otherSelected ? current : null);
+          } else if (typeof value === 'number') {
+            if (!(current?.kind === 'NUMERIC' && current.value === value)) actions.onPickValue(row, value);
+          } else if (current?.kind !== value) {
+            actions.onPickResult(row, value);
+          }
+        }}
+      />
+    );
+  }
+
+  if (!current || status || (current.kind === 'NUMERIC' && current.value == null)) {
+    return <span className="text-15 text-slate-300">—</span>;
+  }
   return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      aria-label={ariaLabel}
-      title={title}
-      onClick={onClick}
-      className={cx(
-        'h-[26px] min-w-[26px] rounded-md px-1 text-13 font-bold transition',
-        selected ? 'bg-navy-700 text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-navy-700',
+    <span className="flex items-center gap-1.5 text-15 font-bold text-slate-900" title={fullResultLabel(current)}>
+      {shortResultLabel(current)}
+      {(published || row.yearLocked) && <Lock className="size-4 text-slate-400" aria-label="Итог закрыт для правки" />}
+    </span>
+  );
+}
+
+/**
+ * Колонка «Аттестация»: выбор ВНА | НА до публикации, плашка статуса после неё, значок причины
+ * (подсказка «Причина …»), значок истории и «Исправить» у администрации.
+ */
+function AttestationCell({ row, editMode, busy, actions }: {
+  row: ClassFinalGradeRow; editMode: boolean; busy: boolean; actions: QuarterFinalsActions;
+}) {
+  const grade = row.finalGrade ?? null;
+  const status = isAttestationStatus(grade?.resultKind) ? grade!.resultKind as AttestationKind : null;
+  const published = grade?.status === 'PUBLISHED';
+
+  return (
+    <span className="flex items-center gap-2">
+      {row.canChangeAttestation ? (
+        <SegmentedChoice
+          ariaLabel={`Аттестация: ${row.studentName ?? ''}`}
+          options={ATTESTATION_KINDS.map((kind) => ({
+            value: kind, label: ATTESTATION_SHORT[kind], title: FINAL_RESULT_LABELS[kind], tone: STATUS_TONE[kind],
+          }))}
+          selected={status}
+          disabled={busy}
+          onChoose={(kind) => (kind === status ? actions.onRequestChange(row, null) : actions.onRequestStatus(row, kind))}
+        />
+      ) : status ? (
+        <span
+          title={FINAL_RESULT_LABELS[status]}
+          className={cx('inline-flex rounded-lg', editMode && row.canEditResult && 'ring-2 ring-amber-200 ring-offset-1')}
+        >
+          <Badge appearance="solid" tone={STATUS_BADGE[status]}>{ATTESTATION_SHORT[status]}</Badge>
+        </span>
+      ) : null}
+      {status && published && status === 'NOT_ATTESTED' && (
+        <Lock className="size-4 text-slate-400" aria-label="Исправляет администратор" />
       )}
-    >
-      {label}
-    </button>
+      {status && grade?.resultReason && (
+        <HoverCard trigger={<MessageSquareText className="size-4" aria-hidden />} label="Причина статуса" title={reasonCaption(status)}>
+          {grade.resultReason}
+        </HoverCard>
+      )}
+      {hasNotableHistory(row) && (
+        <Button variant="ghost" size="icon-sm" aria-label="История итога" title="История итога"
+          icon={<History className="size-4 text-slate-400" />} onClick={() => actions.onOpenHistory(row)} />
+      )}
+      {row.canCorrectTechnicalError && (
+        // Макет А0 рисует «Исправить» у ВНА/НА; у числа то же действие проявляется при наведении на
+        // строку и при фокусе — иначе каждая строка таблицы кричала бы одной и той же ссылкой.
+        <Button variant="link" size="text"
+          className={cx('ml-auto font-semibold', !status && 'opacity-0 focus-visible:opacity-100 group-hover:opacity-100')}
+          onClick={() => actions.onCorrect(row)}>
+          Исправить
+        </Button>
+      )}
+    </span>
   );
 }
 
@@ -489,8 +342,4 @@ function componentsLine(row: ClassFinalGradeRow): string {
     .filter((component) => component.workCount)
     .map((component) => `${component.code ? COMPONENT_SHORT[component.code] : ''} ${formatPercent(component.percent)}`)
     .join(' · ');
-}
-
-function dataModeNumeric(finals: ClassFinalGrades) {
-  return !finals.assessmentMode || finals.assessmentMode === 'NUMERIC';
 }

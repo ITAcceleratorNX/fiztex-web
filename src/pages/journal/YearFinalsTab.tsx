@@ -8,7 +8,8 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock
 import { useClassYearFinals, usePublishClassYearFinals, useSetFinalGrade } from '@/hooks/queries';
 import type { ClassFinalGradeRow, FinalGrade, YearFinalsQuery } from '@/lib/gradebookApi';
 import { ApiError } from '@/lib/api';
-import { finalValueOptions, QuarterFinalsTable } from './QuarterFinalsTable';
+import { finalValueOptions } from './QuarterFinalsTable';
+import { YearFinalsTable } from './YearFinalsTable';
 import { FinalGradeCorrectionModal, FinalGradeHistoryModal } from './FinalGradeCorrectionModal';
 
 const SCOPES = { YEAR: 'Годовая оценка', EXAM: 'Экзаменационная оценка', FINAL: 'Окончательная оценка' } as const;
@@ -63,7 +64,7 @@ export function YearFinalsTab({ query }: { query: Omit<YearFinalsQuery, 'scope'>
       : data?.assessmentMode === 'NO_ASSESSMENT' ? <EmptyBlock title="В 1 классе учебные достижения не оцениваются" description="Годовые и экзаменационные оценки не выставляются." />
       : data?.assessmentMode === 'NO_EXAM' ? <EmptyBlock title="В 2–4 классах экзаменационная оценка не выставляется" description="Итог года определяется по четвертным оценкам. Выберите годовую оценку." />
       : rows.length === 0 ? <EmptyBlock title="В классе нет учеников" /> : <>
-        <div className="card overflow-hidden p-0"><QuarterFinalsTable finals={data!} scope={scope} highlighted={new Set()} busyStudentId={busyId}
+        <div className="card overflow-hidden p-0"><YearFinalsTable finals={data!} scope={scope} busyStudentId={busyId}
           rowError={rowError} onPick={(row, value) => void pick(row, value)} onPickResult={(row, kind) => {
             if (kind === 'NOT_STUDIED') { setReasonRow(row); setReason(''); } else void pick(row, null, kind);
           }} onCorrect={setCorrecting} onOpenHistory={setHistory} /></div>

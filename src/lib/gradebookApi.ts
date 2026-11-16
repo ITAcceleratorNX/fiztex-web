@@ -110,18 +110,17 @@ export const finalGradesApi = {
   },
 
   /**
-   * «Подтвердить и опубликовать повторно» (контракт §3, §12.3). Есть ожидающее изменение
-   * ВНА/НА — публикуется оно, `value` не нужен. Нет — опубликованное число после правки баллов
-   * (ТЗ №9): `value` — выбранное учителем. Прежнее и новое значение пишутся в историю.
+   * «Подтвердить и опубликовать повторно» (ТЗ №9): опубликованное число после правки баллов,
+   * `value` — выбранное учителем. Прежнее и новое значение пишутся в историю.
    */
-  republish(finalGradeId: number, body: { value?: number; expectedVersion: number }): Promise<FinalGrade> {
+  republish(finalGradeId: number, body: { value: number; expectedVersion: number }): Promise<FinalGrade> {
     return request<FinalGrade>(`/final-grades/${finalGradeId}/republish`, { method: 'POST', body });
   },
 
   /**
-   * Правка результата учителем. У опубликованного итога изменение со статусом ВНА/НА не
-   * публикуется само — ждёт `republish` (§12.3). `resultReason` обязателен у всего, что ставит
-   * или снимает статус; `expectedVersion` — защита от правки устаревшей строки.
+   * Правка результата учителем. У опубликованного итога учителю можно только заменить ВНА
+   * положительной оценкой — сразу (§12.3). `resultReason` обязателен у всего, что ставит или
+   * снимает статус; `expectedVersion` — защита от правки устаревшей строки.
    */
   changeValue(
     finalGradeId: number,
@@ -134,22 +133,6 @@ export const finalGradesApi = {
       method: 'PATCH',
       body: { value, resultKind, resultReason, expectedVersion },
     });
-  },
-
-  /** Статус ВНА/НА от имени администрации ученику без итога — черновиком (§12.4). */
-  createAttestationAsAdministration(body: Schema<'CreateAttestationStatusRequest'>): Promise<FinalGrade> {
-    return request<FinalGrade>('/admin/final-grades/attestation', { method: 'POST', body });
-  },
-
-  /**
-   * Сменить или снять статус от имени администрации (§12.4). У опубликованного — ожидающее
-   * изменение, подтверждает учитель; число — только как снятие статуса.
-   */
-  changeAttestationAsAdministration(
-    finalGradeId: number,
-    body: Schema<'ChangeAttestationStatusRequest'>,
-  ): Promise<FinalGrade> {
-    return request<FinalGrade>(`/admin/final-grades/${finalGradeId}/attestation`, { method: 'PATCH', body });
   },
 
   /**
