@@ -8,8 +8,10 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock
 import { StatCard } from '@/components/ui/StatCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useMyClassContext, useMyClassRoster, useMyClassSummary } from '@/hooks/queries';
+import { useReportPerformance } from '@/hooks/reportingQueries';
 import { ApiError } from '@/lib/api';
 import type { Schema } from '@/lib/apiSchemas';
+import { reportAverageDisplay } from '@/lib/reportingModel';
 import { MyClassAttendanceTab } from './MyClassAttendanceTab';
 import { MyClassGradesTab } from './MyClassGradesTab';
 import { MyClassReportTab } from './MyClassReportTab';
@@ -103,6 +105,17 @@ export function MyClassPage() {
 
   const roster = useMyClassRoster(classId);
   const summary = useMyClassSummary(classId, periodId);
+  // Средняя оценка класса — сводная успеваемость отчётности (тот же расчёт, что у рейтингов и
+  // вкладки «Отчётность»): шкальный средний сводки под политикой оценивания пуст всегда.
+  const performance = useReportPerformance(
+    { kind: 'homeroom', classId: classId ?? 0 },
+    classId == null || periodId == null || context.data?.academicYearId == null
+      ? null : { academicYearId: context.data.academicYearId, academicPeriodId: periodId },
+  );
+  const classPerformance = performance.data?.performance;
+  const average = classPerformance?.state === 'AVAILABLE' && classPerformance.value != null
+    ? reportAverageDisplay(undefined, classPerformance) : null;
+  const averageMissing = average == null && summary.data?.averageGrade == null;
   const accessRevoked = (classId != null && forbiddenClassId === classId) || [roster.error, summary.error].some(
     (error) => error instanceof ApiError && error.status === 403,
   );
@@ -196,9 +209,10 @@ export function MyClassPage() {
           <div className="grid gap-4 md:grid-cols-3">
             <StatCard variant="compact" icon={UsersRound} label="Учеников" value={roster.isPending ? '…' : totalStudents} />
             <StatCard variant="compact" icon={ChartNoAxesColumnIncreasing} label="Средняя оценка" value={
-              summary.isPending && periodId != null ? '…'
+              average ? average.text
+                : (summary.isPending || performance.isLoading) && periodId != null ? '…'
                 : summary.data?.averageGrade == null ? '—' : oneDecimal.format(summary.data.averageGrade)
-            } />
+            } hint={average?.hint} />
             <StatCard variant="compact" icon={CalendarCheck2} tone="success" label="Посещаемость за месяц" value={
               summary.isPending && periodId != null ? '…'
                 : summary.data?.monthlyAttendancePercent == null
@@ -214,11 +228,11 @@ export function MyClassPage() {
               <span>Не удалось загрузить показатели класса.</span>
               <Button variant="secondary" size="sm" onClick={() => void summary.refetch()}>Повторить</Button>
             </div>
-          ) : summary.data && (summary.data.averageGrade == null || summary.data.monthlyAttendancePercent == null) ? (
+          ) : summary.data && !performance.isLoading && (averageMissing || summary.data.monthlyAttendancePercent == null) ? (
             <p className="text-sm text-muted">
-              {summary.data.averageGrade == null && summary.data.monthlyAttendancePercent == null
+              {averageMissing && summary.data.monthlyAttendancePercent == null
                 ? 'Общая средняя оценка не рассчитана. Балльные результаты смотрите по предметам во вкладке «Оценки». За месяц пока нет опубликованных отметок посещаемости.'
-                : summary.data.averageGrade == null
+                : averageMissing
                   ? 'Общая средняя оценка не рассчитана. Балльные результаты смотрите по предметам во вкладке «Оценки».'
                   : 'За месяц пока нет опубликованных отметок посещаемости.'}
             </p>

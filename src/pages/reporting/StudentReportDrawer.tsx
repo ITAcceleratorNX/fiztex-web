@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
-import { GradeChip } from '@/components/ui/GradeChip';
 import { Modal } from '@/components/ui/Modal';
 import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import {
   useReportBreakdown,
   useReportFinals,
+  useReportPerformance,
   useReportSummary,
   type ReportFilter,
   type ReportOwner,
@@ -14,13 +14,13 @@ import {
 import { cx } from '@/lib/format';
 import {
   attendanceDisplay,
-  averageDisplay,
   countDisplay,
+  reportAverageDisplay,
   periodFinalsBySubject,
   type MetricDisplay,
   type ReportReference,
 } from '@/lib/reportingModel';
-import { MetricCell } from './ReportTable';
+import { FinalValue, MetricCell } from './ReportTable';
 
 /**
  * Боковая карточка ученика (Figma «Шторка ученика» 2196:22570): сводка за выбранный
@@ -38,6 +38,7 @@ export function StudentReportDrawer({
   context,
   students,
   highlightSubjectId,
+  keepSubject = false,
   onSelect,
   onClose,
 }: {
@@ -52,12 +53,21 @@ export function StudentReportDrawer({
   students: ReportReference[];
   /** Предмет детализации, из которой открыли карточку, — подсвечивается в таблице. */
   highlightSubjectId?: number | null;
+  /**
+   * Не расширять карточку до всех предметов. Учителю-предметнику положен только его
+   * предмет (ТЗ Frontend §4), и сервер без предмета ему не ответит.
+   */
+  keepSubject?: boolean;
   onSelect: (studentId: number) => void;
   onClose: () => void;
 }) {
-  // Предмет страницы карточку не сужает: в ней все предметы ученика.
-  const scope: ReportFilter = { ...filter, subjectId: null, teacherProfileId: null, studentProfileId: student.id };
+  // Предмет страницы карточку не сужает: в ней все предметы ученика — кроме предметника.
+  const scope: ReportFilter = {
+    ...filter, subjectId: keepSubject ? filter.subjectId : null, teacherProfileId: null, studentProfileId: student.id,
+  };
   const summary = useReportSummary(owner, scope);
+  // Средний ученика — тот же, что в рейтинге: шкальный средний сводки при баллах ФО пуст.
+  const performance = useReportPerformance(owner, scope);
   const subjects = useReportBreakdown(owner, scope, 'SUBJECT');
   const finals = useReportFinals(owner, scope);
   const index = students.findIndex((item) => item.id === student.id);
@@ -105,7 +115,7 @@ export function StudentReportDrawer({
       ) : (
         <>
           <dl className="mt-4 grid grid-cols-4 gap-2">
-            <Stat label="Ср. балл" value={averageDisplay(summary.data?.metrics)} />
+            <Stat label="Ср. балл" value={reportAverageDisplay(summary.data?.metrics, performance.data?.performance)} />
             <Stat label="Пропуски" value={countDisplay(attendance?.missedCount)} />
             <Stat label="Опоздания" value={countDisplay(attendance?.lateCount)} />
             <Stat label="Посещ." value={attendanceDisplay(summary.data?.metrics)} />
@@ -133,12 +143,10 @@ export function StudentReportDrawer({
                     <tr key={subjectId} className={cx('border-t border-line', highlighted && 'bg-info-bg')}>
                       <th scope="row" className={cx('px-4 py-3 text-left font-semibold text-navy-700',
                         highlighted && 'border-l-2 border-navy-700')}>{row.key?.name}</th>
-                      <td className="px-3 py-3 text-right tabular-nums"><MetricCell value={averageDisplay(row.metrics)} /></td>
+                      <td className="px-3 py-3 text-right tabular-nums"><MetricCell value={reportAverageDisplay(row.metrics, row.performance)} /></td>
                       <td className="px-3 py-3">
                         <span className="flex justify-center">
-                          {final == null
-                            ? <span className="text-slate-400" title="Итог за период не опубликован">—</span>
-                            : <GradeChip size="sm" value={String(final)} />}
+                          <FinalValue value={final} />
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums">

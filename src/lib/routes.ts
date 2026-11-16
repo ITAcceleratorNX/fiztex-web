@@ -69,6 +69,12 @@ export const ROUTES = {
    */
   reporting: '/reporting',
   /**
+   * Отчётность учителя-предметника: свои классы по своему предмету, рейтинг и динамика.
+   * Отдельно от `/reporting` — тот читает `/api/admin/academic-reports`, а учителю туда
+   * нельзя; здесь — `/api/teacher/academic-reports`.
+   */
+  myReporting: '/my-reporting',
+  /**
    * Политика оценивания школы (GRADES-003) — администрации. Не под `/grades`: тот префикс
    * открыт учителю, а экран читает `/api/admin/grading-policies`, и учительский токен
    * получил бы 401 и разлогинился.
@@ -293,6 +299,7 @@ const TEACHER_ROUTE_PREFIXES = [
   ROUTES.currentLesson,
   ROUTES.myAvailability,
   ROUTES.journal,
+  ROUTES.myReporting,
   ROUTES.serviceRequests,
   ROUTES.teacherRequests,
   '/lesson-schedule/lessons/',

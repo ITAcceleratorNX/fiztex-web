@@ -3,13 +3,15 @@ import { useSearchParams } from 'react-router-dom';
 import { ArrowLeft, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { FilterSelect } from '@/components/ui/FilterSelect';
-import { GradeChip } from '@/components/ui/GradeChip';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import {
   useReportBreakdown,
+  useReportDynamics,
   useReportFinals,
+  useReportPerformance,
   useReportSummary,
+  useStudentRating,
   type ReportFilter,
   type ReportOwner,
 } from '@/hooks/reportingQueries';
@@ -17,7 +19,8 @@ import { ApiError } from '@/lib/api';
 import type { Schema } from '@/lib/apiSchemas';
 import {
   attendanceDisplay,
-  averageDisplay,
+  anyAcademicPerformance,
+  reportAverageDisplay,
   counted,
   countDisplay,
   hasPartialData,
@@ -28,15 +31,21 @@ import {
   performanceDisplay,
   periodFinalsByStudent,
   periodLabel,
+  reportFileName,
   SUBJECTS,
+  type FinalCell,
+  type ReportPerformance,
   type ReportRow,
 } from '@/lib/reportingModel';
 import { ReportHeaderCard } from '../reporting/ReportHeaderCard';
-import { MetricCell, PartialDataNotice, ReportTable, StudentName, type ReportColumn } from '../reporting/ReportTable';
+import { FinalValue, MetricCell, PartialDataNotice, ReportTable, StudentName, type ReportColumn } from '../reporting/ReportTable';
+import { DynamicsPanel, ExportButton, PerformanceStrip, StudentRatingTable } from '../reporting/ReportInsights';
 import { StudentReportDrawer } from '../reporting/StudentReportDrawer';
 
 type Period = Schema<'MyClassContextPeriodView'>;
 type View = 'subjects' | 'students';
+/** Раздел вкладки: показатели, рейтинг учеников класса или динамика по периодам. */
+type Section = 'metrics' | 'rating' | 'dynamics';
 
 const collator = new Intl.Collator('ru-RU');
 
@@ -82,6 +91,8 @@ export function MyClassReportTab({
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const view: View = searchParams.get('reportView') === 'students' ? 'students' : 'subjects';
+  const sectionValue = searchParams.get('reportSection');
+  const section: Section = sectionValue === 'rating' || sectionValue === 'dynamics' ? sectionValue : 'metrics';
   const subjectId = idParam(searchParams.get('reportSubject'));
   const studentId = idParam(searchParams.get('reportStudent'));
   const period = periods.find((item) => item.id === periodId);
@@ -95,10 +106,14 @@ export function MyClassReportTab({
   const subjectRows = useReportBreakdown(owner, filter, 'SUBJECT');
   const studentRows = useReportBreakdown(owner, subjectFilter ?? filter, subjectId != null || view === 'students' ? 'STUDENT' : null);
   const finals = useReportFinals(owner, subjectFilter);
+  const performance = useReportPerformance(owner, subjectFilter ?? filter);
+  const rating = useStudentRating(owner, section === 'rating' ? subjectFilter ?? filter : null);
+  const dynamics = useReportDynamics(owner, section === 'dynamics' ? subjectFilter ?? filter : null);
 
   useEffect(() => {
-    if ([summary.error, subjectRows.error, studentRows.error, finals.error].some(isForbidden)) onForbidden();
-  }, [finals.error, onForbidden, studentRows.error, subjectRows.error, summary.error]);
+    if ([summary.error, subjectRows.error, studentRows.error, finals.error, performance.error, rating.error, dynamics.error]
+      .some(isForbidden)) onForbidden();
+  }, [dynamics.error, finals.error, onForbidden, performance.error, rating.error, studentRows.error, subjectRows.error, summary.error]);
 
   function update(changes: Record<string, string | null>) {
     const next = new URLSearchParams(searchParams);
@@ -116,7 +131,10 @@ export function MyClassReportTab({
   const queries = subjectId != null ? [summary, studentRows, subjectRows] : [summary, view === 'students' ? studentRows : subjectRows];
   const pending = queries.some((query) => query.isPending);
   const failed = queries.some((query) => query.isError);
-  const studentRefs = students.map((row) => row.key!).filter((key) => key?.id != null);
+  // Карточка листается по тому списку, из которого её открыли: таблица или рейтинг.
+  const studentRefs = section === 'rating'
+    ? (rating.data?.items ?? []).map((row) => row.student!).filter((key) => key?.id != null)
+    : students.map((row) => row.key!).filter((key) => key?.id != null);
   const openStudent = studentRefs.find((item) => item.id === studentId);
   const previousPeriod = period ? periods
     .filter((item) => item.startDate && period.startDate && item.startDate < period.startDate)
@@ -138,6 +156,7 @@ export function MyClassReportTab({
               ? null : counted(summary.data.metrics.lessons.completedLessonCount, LESSONS)]
             .filter(Boolean).join(' · ')}
           metrics={summary.data?.metrics}
+          performance={performance.data?.performance}
         />
       )}
 
@@ -152,7 +171,13 @@ export function MyClassReportTab({
             <option key={item.id} value={item.id}>{periodLabel(item)}</option>
           ))}
         </FilterSelect>
-        {subjectId == null && (
+        <SegmentedTabs
+          value={section}
+          ariaLabel="Раздел отчётности класса"
+          onChange={(value) => update({ reportSection: value === 'metrics' ? null : value, reportStudent: null })}
+          options={[{ value: 'metrics', label: 'Показатели' }, { value: 'rating', label: 'Рейтинг' }, { value: 'dynamics', label: 'Динамика' }]}
+        />
+        {section === 'metrics' && subjectId == null && (
           <SegmentedTabs
             value={view}
             ariaLabel="Представление отчётности"
@@ -160,6 +185,9 @@ export function MyClassReportTab({
             options={[{ value: 'subjects', label: 'По предметам' }, { value: 'students', label: 'По ученикам' }]}
           />
         )}
+        <div className="ml-auto">
+          <ExportButton owner={owner} filter={subjectFilter ?? filter} fileName={reportFileName(yearName, period?.name)} />
+        </div>
       </div>
 
       {filter == null ? (
@@ -188,10 +216,21 @@ export function MyClassReportTab({
               ? `Ученики ${className} по предмету «${subjectRow?.key?.name ?? ''}»`
               : view === 'students' ? `Ученики ${className} по всем предметам` : `${className} по предметам`}
           </p>
-          {hasPartialData(subjectId != null || view === 'students' ? students : subjects) && (
+          <PerformanceStrip performance={performance.data?.performance} pending={performance.isPending}
+            failed={performance.isError} attendance={attendanceDisplay(summary.data?.metrics)} />
+          {section === 'rating' && (
+            <StudentRatingTable rating={rating.data} pending={rating.isPending} error={rating.error}
+              onRetry={() => void rating.refetch()} showClass={false} selectedId={studentId}
+              onOpen={(row) => row.student?.id != null && update({ reportStudent: String(row.student.id) })} />
+          )}
+          {section === 'dynamics' && (
+            <DynamicsPanel points={dynamics.data?.points} pending={dynamics.isPending} error={dynamics.error}
+              onRetry={() => void dynamics.refetch()} />
+          )}
+          {section === 'metrics' && hasPartialData(subjectId != null || view === 'students' ? students : subjects) && (
             <PartialDataNotice subject={subjectId != null || view === 'students' ? 'учеников' : 'предметов'} />
           )}
-          {subjectId != null ? (
+          {section !== 'metrics' ? null : subjectId != null ? (
             <SubjectStudentsTable rows={students} finals={periodFinalsByStudent(finals.data ?? [], subjectId)}
               finalsReady={!finals.isPending} periodName={period?.name}
               selectedId={studentId} onOpen={(id) => update({ reportStudent: String(id) })} />
@@ -204,7 +243,7 @@ export function MyClassReportTab({
               selectedKey={studentId}
               onOpen={(row) => update({ reportStudent: String(row.key?.id) })}
               total={{ caption: 'итого', title: 'Весь класс' }}
-              columns={studentColumns(summary.data?.metrics)}
+              columns={studentColumns(summary.data?.metrics, performance.data?.performance)}
             />
           ) : (
             <ReportTable
@@ -214,7 +253,8 @@ export function MyClassReportTab({
               rowLabel={(row) => `Открыть предмет ${row.key?.name}`}
               onOpen={(row) => update({ reportSubject: String(row.key?.id), reportStudent: null })}
               total={{ caption: 'итого', title: 'Весь класс' }}
-              columns={subjectColumns(summary.data?.metrics, subjectRows.data?.total ?? subjects.length)}
+              columns={subjectColumns(summary.data?.metrics, subjectRows.data?.total ?? subjects.length,
+                performance.data?.performance, subjects)}
             />
           )}
         </>
@@ -237,8 +277,9 @@ export function MyClassReportTab({
   );
 }
 
-function subjectColumns(total: ReportRow['metrics'], subjectCount: number): ReportColumn<ReportRow>[] {
-  return [
+function subjectColumns(total: ReportRow['metrics'], subjectCount: number,
+  totalPerformance: ReportPerformance | null | undefined, rows: ReportRow[]): ReportColumn<ReportRow>[] {
+  const columns: ReportColumn<ReportRow>[] = [
     { key: 'subject', header: 'Предмет', className: 'w-56', cell: (row) => row.key?.name },
     {
       key: 'teacher', header: 'Учитель', cell: (row) => namesLabel(row.attributes?.teachers) || <span className="text-slate-400">—</span>,
@@ -246,20 +287,24 @@ function subjectColumns(total: ReportRow['metrics'], subjectCount: number): Repo
     },
     { key: 'lessons', header: 'Уроков', align: 'right', cell: (row) => <MetricCell value={lessonsDisplay(row.metrics)} />,
       total: <MetricCell value={lessonsDisplay(total)} strong /> },
-    { key: 'average', header: 'Ср. балл', align: 'right', cell: (row) => <MetricCell value={averageDisplay(row.metrics)} />,
-      total: <MetricCell value={averageDisplay(total)} strong /> },
+    { key: 'average', header: 'Ср. балл', align: 'right', cell: (row) => <MetricCell value={reportAverageDisplay(row.metrics, row.performance)} />,
+      total: <MetricCell value={reportAverageDisplay(total, totalPerformance)} strong /> },
     { key: 'performance', header: 'Успеваемость', align: 'right', cell: (row) => <MetricCell value={performanceDisplay(row.metrics)} />,
       total: <MetricCell value={performanceDisplay(total)} strong /> },
     { key: 'attendance', header: 'Посещаемость', align: 'right', cell: (row) => <MetricCell value={attendanceDisplay(row.metrics)} />,
       total: <MetricCell value={attendanceDisplay(total)} strong /> },
   ];
+  // Процент успеваемости сервер пока не считает — пустая колонка не рисуется.
+  return anyAcademicPerformance([total, ...rows.map((row) => row.metrics)])
+    ? columns : columns.filter((column) => column.key !== 'performance');
 }
 
-export function studentColumns(total: ReportRow['metrics']): ReportColumn<ReportRow>[] {
+export function studentColumns(total: ReportRow['metrics'],
+  totalPerformance: ReportPerformance | null | undefined): ReportColumn<ReportRow>[] {
   return [
     { key: 'student', header: 'Ученик', className: 'w-72', cell: (row) => <StudentName name={row.key?.name ?? ''} /> },
-    { key: 'average', header: 'Ср. балл', align: 'right', cell: (row) => <MetricCell value={averageDisplay(row.metrics)} />,
-      total: <MetricCell value={averageDisplay(total)} strong /> },
+    { key: 'average', header: 'Ср. балл', align: 'right', cell: (row) => <MetricCell value={reportAverageDisplay(row.metrics, row.performance)} />,
+      total: <MetricCell value={reportAverageDisplay(total, totalPerformance)} strong /> },
     { key: 'missed', header: 'Пропуски', align: 'right', cell: (row) => <MetricCell value={countDisplay(row.metrics?.attendance?.missedCount)} />,
       total: <MetricCell value={countDisplay(total?.attendance?.missedCount)} strong /> },
     { key: 'late', header: 'Опоздания', align: 'right', cell: (row) => <MetricCell value={countDisplay(row.metrics?.attendance?.lateCount)} />,
@@ -279,7 +324,7 @@ export function SubjectStudentsTable({
   onOpen,
 }: {
   rows: ReportRow[];
-  finals: Map<number, number>;
+  finals: Map<number, FinalCell>;
   finalsReady: boolean;
   periodName?: string;
   selectedId: number | null;
@@ -296,15 +341,13 @@ export function SubjectStudentsTable({
       columns={[
         { key: 'student', header: 'Ученик', className: 'w-72', cell: (row) => <StudentName name={row.key?.name ?? ''} /> },
         { key: 'grades', header: 'Оценок', align: 'right', cell: (row) => <MetricCell value={countDisplay(row.metrics?.grades?.gradeCount)} /> },
-        { key: 'average', header: 'Ср. балл', align: 'right', cell: (row) => <MetricCell value={averageDisplay(row.metrics)} /> },
+        { key: 'average', header: 'Ср. балл', align: 'right', cell: (row) => <MetricCell value={reportAverageDisplay(row.metrics, row.performance)} /> },
         {
           key: 'final', header: periodName ? `Итог за ${periodName.replace(/^\d+\s*/, '')}` : 'Итог', align: 'right',
           cell: (row) => {
             const value = row.key?.id == null ? undefined : finals.get(row.key.id);
             if (!finalsReady) return <span className="text-slate-400">…</span>;
-            return value == null
-              ? <span className="text-slate-400" title="Итог за период не опубликован">—</span>
-              : <span className="flex justify-end"><GradeChip size="sm" value={String(value)} /></span>;
+            return <span className="flex justify-end"><FinalValue value={value} /></span>;
           },
         },
         { key: 'missed', header: 'Пропуски', align: 'right', cell: (row) => <MetricCell value={countDisplay(row.metrics?.attendance?.missedCount)} /> },
