@@ -152,6 +152,8 @@ describe('AdminReportingPage', () => {
     expect(location().get('student')).toBe('31');
     const drawer = screen.getByRole('dialog');
     expect(within(drawer).getByText(/ученик 2 из 2/)).toBeInTheDocument();
+    // Средний ученика — сводная успеваемость, как в рейтинге, а не шкальный средний сводки.
+    expect(within(drawer).getAllByText('Ср. балл')[0].nextElementSibling).toHaveTextContent('4,25');
     await user.click(within(drawer).getByRole('button', { name: 'Закрыть окно' }));
     expect(location().get('student')).toBeNull();
     expect(location().get('view')).toBe('students');

@@ -6,6 +6,7 @@ import { ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import {
   useReportBreakdown,
   useReportFinals,
+  useReportPerformance,
   useReportSummary,
   type ReportFilter,
   type ReportOwner,
@@ -15,6 +16,7 @@ import {
   attendanceDisplay,
   averageDisplay,
   countDisplay,
+  headerAverageDisplay,
   periodFinalsBySubject,
   type MetricDisplay,
   type ReportReference,
@@ -65,6 +67,8 @@ export function StudentReportDrawer({
     ...filter, subjectId: keepSubject ? filter.subjectId : null, teacherProfileId: null, studentProfileId: student.id,
   };
   const summary = useReportSummary(owner, scope);
+  // Средний ученика — тот же, что в рейтинге: шкальный средний сводки при баллах ФО пуст.
+  const performance = useReportPerformance(owner, scope);
   const subjects = useReportBreakdown(owner, scope, 'SUBJECT');
   const finals = useReportFinals(owner, scope);
   const index = students.findIndex((item) => item.id === student.id);
@@ -112,7 +116,7 @@ export function StudentReportDrawer({
       ) : (
         <>
           <dl className="mt-4 grid grid-cols-4 gap-2">
-            <Stat label="Ср. балл" value={averageDisplay(summary.data?.metrics)} />
+            <Stat label="Ср. балл" value={headerAverageDisplay(summary.data?.metrics, performance.data?.performance)} />
             <Stat label="Пропуски" value={countDisplay(attendance?.missedCount)} />
             <Stat label="Опоздания" value={countDisplay(attendance?.lateCount)} />
             <Stat label="Посещ." value={attendanceDisplay(summary.data?.metrics)} />
