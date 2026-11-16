@@ -326,7 +326,7 @@ export interface paths {
         };
         get: operations["list_28"];
         put?: never;
-        post: operations["create_25"];
+        post: operations["create_26"];
         delete?: never;
         options?: never;
         head?: never;
@@ -566,7 +566,7 @@ export interface paths {
         };
         get: operations["list_27"];
         put?: never;
-        post: operations["create_24"];
+        post: operations["create_25"];
         delete?: never;
         options?: never;
         head?: never;
@@ -710,7 +710,7 @@ export interface paths {
         };
         get: operations["list_26"];
         put?: never;
-        post: operations["create_23"];
+        post: operations["create_24"];
         delete?: never;
         options?: never;
         head?: never;
@@ -886,7 +886,7 @@ export interface paths {
         };
         get: operations["list_25"];
         put?: never;
-        post: operations["create_22"];
+        post: operations["create_23"];
         delete?: never;
         options?: never;
         head?: never;
@@ -941,6 +941,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/attestation-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAttestationSettings"];
+        put?: never;
+        post: operations["saveAttestationSetting"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/attestation-settings/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAttestationSettingHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/attestation-settings/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["previewAttestationSetting"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/attestation-settings/{settingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAttestationSetting"];
+        put?: never;
+        post?: never;
+        delete: operations["cancelAttestationSetting"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/attestation-settings/{settingId}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["retireAttestationSetting"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/bell-templates": {
         parameters: {
             query?: never;
@@ -950,7 +1030,7 @@ export interface paths {
         };
         get: operations["list_24"];
         put?: never;
-        post: operations["create_21"];
+        post: operations["create_22"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1110,7 +1190,7 @@ export interface paths {
         };
         get: operations["list_23"];
         put?: never;
-        post: operations["create_20"];
+        post: operations["create_21"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1174,7 +1254,7 @@ export interface paths {
         };
         get: operations["list_22"];
         put?: never;
-        post: operations["create_19"];
+        post: operations["create_20"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1333,6 +1413,38 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/admin/final-grades/attestation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["create_19"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/final-grades/{finalGradeId}/attestation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["change"];
         trace?: never;
     };
     "/api/admin/final-grades/{id}/technical-corrections": {
@@ -3895,6 +4007,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attestation-settings/effective": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getEffectiveAttestation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/admin/activate": {
         parameters: {
             query?: never;
@@ -4453,6 +4581,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["changeValue"];
+        trace?: never;
+    };
+    "/api/final-grades/{finalGradeId}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirmFinalGrade"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/final-grades/{finalGradeId}/history": {
@@ -9787,7 +9931,7 @@ export interface components {
              * @description Вид итога: число или статус аттестации (ВНА/НА); у статуса value = null
              * @enum {string}
              */
-            resultKind?: "NUMERIC" | "TEMPORARILY_UNATTESTED" | "NOT_ATTESTED" | "NOT_NUMERIC";
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             sourceClass?: components["schemas"]["ReportReferenceView"];
             student?: components["schemas"]["ReportReferenceView"];
             /** Format: int64 */
@@ -10779,6 +10923,97 @@ export interface components {
             /** Format: date */
             startDate?: string;
         };
+        AttestationHistoryView: {
+            /** @enum {string} */
+            action?: "CREATE" | "UPDATE" | "RETIRE" | "CANCEL";
+            /** Format: int64 */
+            actorId?: number;
+            actorName?: string;
+            after?: components["schemas"]["JsonNode"];
+            before?: components["schemas"]["JsonNode"];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            settingId?: number;
+        };
+        AttestationInfoView: {
+            configured?: boolean;
+            confirmationRequired?: boolean;
+            finalAllowed?: boolean;
+            finalNotAllowedReason?: string;
+            halfYear?: components["schemas"]["HalfYearView"];
+            /** @enum {string} */
+            periodicity?: "QUARTER" | "HALF_YEAR";
+            /** @enum {string} */
+            resultFormat?: "NUMERIC" | "PASS_FAIL";
+            /** Format: int64 */
+            settingId?: number;
+            sochProvided?: boolean;
+        };
+        AttestationPeriodRefView: {
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+        };
+        AttestationPreviewView: {
+            canSave?: boolean;
+            conflicts?: components["schemas"]["AttestationSettingView"][];
+            earliestAllowed?: components["schemas"]["AttestationPeriodRefView"];
+            effectiveFrom?: components["schemas"]["AttestationPeriodRefView"];
+            /** Format: int64 */
+            endsSettingId?: number;
+            /** Format: int64 */
+            finalsInScope?: number;
+            replacesSettingIds?: number[];
+        };
+        AttestationSettingRequest: {
+            /** Format: int64 */
+            academicYearId: number;
+            /** Format: int64 */
+            classId?: number;
+            /** Format: int64 */
+            effectiveFromPeriodId?: number;
+            parallel?: string;
+            /** @enum {string} */
+            periodicity: "QUARTER" | "HALF_YEAR";
+            /** @enum {string} */
+            resultFormat: "NUMERIC" | "PASS_FAIL";
+            sochProvided: boolean;
+            /** Format: int64 */
+            subjectId: number;
+        };
+        AttestationSettingView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            effectiveFrom?: components["schemas"]["AttestationPeriodRefView"];
+            effectiveTo?: components["schemas"]["AttestationPeriodRefView"];
+            /** Format: int64 */
+            id?: number;
+            parallel?: string;
+            /** @enum {string} */
+            periodicity?: "QUARTER" | "HALF_YEAR";
+            /** @enum {string} */
+            resultFormat?: "NUMERIC" | "PASS_FAIL";
+            sochProvided?: boolean;
+            /** @enum {string} */
+            state?: "SCHEDULED" | "ACTIVE" | "ENDED" | "CANCELLED";
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int64 */
+            version?: number;
+        };
         AutoSplitRequest: {
             firstName?: string;
             secondName?: string;
@@ -10869,9 +11104,20 @@ export interface components {
             /** Format: int32 */
             versionNumber: number;
         };
-        ChangeFinalGradeValueRequest: {
+        ChangeAttestationStatusRequest: {
+            /** Format: int64 */
+            expectedVersion: number;
+            reason?: string;
             /** @enum {string} */
-            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultKind: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
+            /** Format: int32 */
+            value?: number;
+        };
+        ChangeFinalGradeValueRequest: {
+            /** Format: int64 */
+            expectedVersion?: number;
+            /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             resultReason?: string;
             /** Format: int32 */
             value?: number;
@@ -11013,13 +11259,21 @@ export interface components {
         };
         ClassFinalGradeRowView: {
             average?: number;
+            canChangeAttestation?: boolean;
+            canConfirmPublication?: boolean;
+            canEditResult?: boolean;
             currentMember?: boolean;
             finalGrade?: components["schemas"]["FinalGradeView"];
+            /** Format: int64 */
+            historyCount?: number;
             publicationIssues?: string[];
+            recommendation?: components["schemas"]["RecommendationOutcome"];
             recommendationChanged?: boolean;
             /** Format: int32 */
             recommendedValue?: number;
             result?: components["schemas"]["PeriodResultSummaryView"];
+            /** @enum {string} */
+            state?: "NOT_CALCULATED" | "RECOMMENDATION" | "DRAFT" | "CONFIRMED" | "PUBLISHED" | "CHANGED_AFTER_PUBLICATION";
             studentName?: string;
             /** Format: int64 */
             studentProfileId?: number;
@@ -11030,11 +11284,13 @@ export interface components {
             academicPeriodId?: number;
             /** Format: int64 */
             academicYearId?: number;
-            allowedResultKinds?: ("NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED")[];
+            allowedResultKinds?: ("NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED")[];
             allowedValues?: number[];
             assessmentMode?: string;
+            attestation?: components["schemas"]["AttestationInfoView"];
             canCorrectTechnicalErrors?: boolean;
             canManage?: boolean;
+            canManageAttestation?: boolean;
             /** Format: int64 */
             classId?: number;
             gradingPolicy?: components["schemas"]["PolicySummaryView"];
@@ -11231,6 +11487,11 @@ export interface components {
             adminComment?: string;
             /** Format: double */
             finalScore: number;
+        };
+        ConfirmFinalGradeRequest: {
+            /** Format: int64 */
+            expectedVersion: number;
+            reason?: string;
         };
         ConfirmResultRequest: {
             internalComment?: string;
@@ -11444,7 +11705,7 @@ export interface components {
             expectedVersion: number;
             reason?: string;
             /** @enum {string} */
-            resultKind: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultKind: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             /** Format: int32 */
             value?: number;
         };
@@ -11494,6 +11755,17 @@ export interface components {
             /** Format: int32 */
             reminderDaysBefore?: number;
         };
+        CreateAttestationStatusRequest: {
+            /** Format: int64 */
+            academicPeriodId: number;
+            reason?: string;
+            /** @enum {string} */
+            resultKind: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
+            /** Format: int64 */
+            studentProfileId: number;
+            /** Format: int64 */
+            subjectId: number;
+        };
         CreateBellTemplateRequest: {
             /** Format: int64 */
             academicYearId: number;
@@ -11530,7 +11802,7 @@ export interface components {
             /** Format: int64 */
             academicYearId?: number;
             /** @enum {string} */
-            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             resultReason?: string;
             /** @enum {string} */
             scope: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
@@ -11927,6 +12199,26 @@ export interface components {
             /** @enum {string} */
             type?: "WEEK" | "MONTH" | "QUARTER" | "YEAR";
         };
+        EffectiveAttestationView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            classId?: number;
+            configured?: boolean;
+            finalAllowed?: boolean;
+            finalNotAllowedReason?: string;
+            halfYear?: components["schemas"]["HalfYearView"];
+            next?: components["schemas"]["AttestationSettingView"];
+            /** @enum {string} */
+            periodicity?: "QUARTER" | "HALF_YEAR";
+            /** @enum {string} */
+            resultFormat?: "NUMERIC" | "PASS_FAIL";
+            /** Format: int64 */
+            settingId?: number;
+            sochProvided?: boolean;
+            /** Format: int64 */
+            subjectId?: number;
+        };
         Entry: {
             decision?: string;
             /** Format: int64 */
@@ -12142,16 +12434,19 @@ export interface components {
         };
         FinalGradeHistoryView: {
             /** @enum {string} */
-            action?: "CREATE" | "UPDATE" | "PUBLISH" | "REPUBLISH";
+            action?: "CREATE" | "UPDATE" | "PUBLISH" | "REPUBLISH" | "CONFIRM" | "PENDING_CHANGE";
             /** Format: int64 */
             actorId?: number;
             actorName?: string;
+            /** @enum {string} */
+            actorRole?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
             after?: components["schemas"]["JsonNode"];
             before?: components["schemas"]["JsonNode"];
             /** Format: date-time */
             createdAt?: string;
             /** Format: int64 */
             id?: number;
+            reason?: string;
         };
         FinalGradeLockView: {
             finalLocked?: boolean;
@@ -12167,15 +12462,28 @@ export interface components {
             academicPeriodId?: number;
             /** Format: int64 */
             academicYearId?: number;
+            /** @enum {string} */
+            attestationPeriod?: "QUARTER" | "HALF_YEAR";
             /** Format: int64 */
             classId?: number;
+            confirmed?: boolean;
+            /** Format: date-time */
+            confirmedAt?: string;
+            /** @enum {string} */
+            confirmedRecommendedKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
+            /** Format: int32 */
+            confirmedRecommendedValue?: number;
             correctionReference?: string;
+            deviationReason?: string;
             /** Format: int64 */
             id?: number;
+            pendingChange?: components["schemas"]["PendingChangeView"];
+            /** @enum {string} */
+            publicationState?: "DRAFT" | "PUBLISHED" | "CHANGED_AFTER_PUBLICATION";
             /** Format: date-time */
             publishedAt?: string;
             /** @enum {string} */
-            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED";
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             resultReason?: string;
             /** @enum {string} */
             scope?: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
@@ -12568,6 +12876,13 @@ export interface components {
             name?: string;
             /** Format: int64 */
             subjectId?: number;
+        };
+        HalfYearView: {
+            closing?: components["schemas"]["AttestationPeriodRefView"];
+            name?: string;
+            /** Format: int32 */
+            number?: number;
+            opening?: components["schemas"]["AttestationPeriodRefView"];
         };
         HomeroomAssignmentView: {
             /** Format: int64 */
@@ -15117,6 +15432,8 @@ export interface components {
             finalGradeId?: number;
             /** Format: date-time */
             publishedAt?: string;
+            /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             /** Format: int64 */
             sourceClassId?: number;
             sourceClassName?: string;
@@ -15381,6 +15698,12 @@ export interface components {
             studentProfileId?: number;
             subjects?: components["schemas"]["MySubjectFinalsView"][];
         };
+        MyFinalResultView: {
+            /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
+            /** Format: int32 */
+            value?: number;
+        };
         MyGradeCorrectionView: {
             comment?: string;
             /** Format: date */
@@ -15439,21 +15762,36 @@ export interface components {
             teacher?: components["schemas"]["TeacherPart"];
         };
         MySubjectFinalsView: {
+            examResult?: components["schemas"]["MyFinalResultView"];
             /** Format: int32 */
             examValue?: number;
+            finalResult?: components["schemas"]["MyFinalResultView"];
             /** Format: int32 */
             finalValue?: number;
+            periodAttestation?: {
+                [key: string]: "QUARTER" | "HALF_YEAR";
+            };
+            periodResultKinds?: {
+                [key: string]: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
+            };
+            periodResults?: {
+                [key: string]: components["schemas"]["MyFinalResultView"];
+            };
             periodValues?: {
                 [key: string]: number;
             };
             /** Format: int64 */
             subjectId?: number;
             subjectName?: string;
+            yearResult?: components["schemas"]["MyFinalResultView"];
+            /** @enum {string} */
+            yearResultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             /** Format: int32 */
             yearValue?: number;
         };
         MySubjectGradesRowView: {
             average?: components["schemas"]["GradeAverageView"];
+            finalResult?: components["schemas"]["MyFinalResultView"];
             grades?: components["schemas"]["GradeView"][];
             result?: components["schemas"]["PeriodResultSummaryView"];
             /** Format: int64 */
@@ -16706,6 +17044,20 @@ export interface components {
             /** Format: int64 */
             subjectId?: number;
         };
+        PendingChangeView: {
+            /** Format: date-time */
+            changedAt?: string;
+            /** Format: int64 */
+            changedById?: number;
+            changedByName?: string;
+            /** @enum {string} */
+            changedByRole?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
+            reason?: string;
+            /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
+            /** Format: int32 */
+            value?: number;
+        };
         Period: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -17078,6 +17430,17 @@ export interface components {
             text?: string;
             unclear?: string[];
         };
+        RecommendationOutcome: {
+            available?: boolean;
+            basis?: string;
+            /** @enum {string} */
+            resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
+            sufficientData?: boolean;
+            unavailableMessage?: string;
+            unavailableReason?: string;
+            /** Format: int32 */
+            value?: number;
+        };
         ReconcileReceipt: {
             /** Format: int64 */
             bindingId?: number;
@@ -17303,8 +17666,9 @@ export interface components {
         RepublishFinalGradeRequest: {
             /** Format: int64 */
             expectedVersion: number;
+            reason?: string;
             /** Format: int32 */
-            value: number;
+            value?: number;
         };
         RequestClassView: {
             active?: boolean;
@@ -20645,7 +21009,7 @@ export interface operations {
             };
         };
     };
-    create_25: {
+    create_26: {
         parameters: {
             query?: never;
             header?: never;
@@ -21074,7 +21438,7 @@ export interface operations {
             };
         };
     };
-    create_24: {
+    create_25: {
         parameters: {
             query?: {
                 force?: boolean;
@@ -21300,7 +21664,7 @@ export interface operations {
             };
         };
     };
-    create_23: {
+    create_24: {
         parameters: {
             query?: never;
             header?: never;
@@ -21584,7 +21948,7 @@ export interface operations {
             };
         };
     };
-    create_22: {
+    create_23: {
         parameters: {
             query?: never;
             header?: never;
@@ -21709,6 +22073,165 @@ export interface operations {
             };
         };
     };
+    listAttestationSettings: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                subjectId?: number;
+                includeCancelled?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttestationSettingView"][];
+                };
+            };
+        };
+    };
+    saveAttestationSetting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttestationSettingRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttestationSettingView"];
+                };
+            };
+        };
+    };
+    getAttestationSettingHistory: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                subjectId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttestationHistoryView"][];
+                };
+            };
+        };
+    };
+    previewAttestationSetting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttestationSettingRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttestationPreviewView"];
+                };
+            };
+        };
+    };
+    getAttestationSetting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                settingId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttestationSettingView"];
+                };
+            };
+        };
+    };
+    cancelAttestationSetting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                settingId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    retireAttestationSetting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                settingId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttestationSettingView"];
+                };
+            };
+        };
+    };
     list_24: {
         parameters: {
             query: {
@@ -21733,7 +22256,7 @@ export interface operations {
             };
         };
     };
-    create_21: {
+    create_22: {
         parameters: {
             query?: never;
             header?: never;
@@ -22068,7 +22591,7 @@ export interface operations {
             };
         };
     };
-    create_20: {
+    create_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -22229,7 +22752,7 @@ export interface operations {
             };
         };
     };
-    create_19: {
+    create_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -22685,6 +23208,56 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EventSnapshotRunView"];
+                };
+            };
+        };
+    };
+    create_19: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAttestationStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinalGradeView"];
+                };
+            };
+        };
+    };
+    change: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                finalGradeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeAttestationStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinalGradeView"];
                 };
             };
         };
@@ -27489,6 +28062,30 @@ export interface operations {
             };
         };
     };
+    getEffectiveAttestation: {
+        parameters: {
+            query: {
+                classId: number;
+                subjectId: number;
+                academicPeriodId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EffectiveAttestationView"];
+                };
+            };
+        };
+    };
     activateAdmin: {
         parameters: {
             query?: never;
@@ -28378,6 +28975,32 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ChangeFinalGradeValueRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinalGradeView"];
+                };
+            };
+        };
+    };
+    confirmFinalGrade: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                finalGradeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmFinalGradeRequest"];
             };
         };
         responses: {

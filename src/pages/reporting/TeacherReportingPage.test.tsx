@@ -41,7 +41,7 @@ vi.mock('@/hooks/reportingQueries', () => ({
       : ok({ rows: [row(31, 'Абаев Арман')], total: 1 });
   },
   useReportFinals: (_owner: ReportOwner, filter: ReportFilter | null) => filter
-    ? ok([{ finalScope: 'PERIOD', value: null, resultKind: 'TEMPORARILY_UNATTESTED', student: { id: 31 }, subject: { id: 7 } }])
+    ? ok([{ finalScope: 'PERIOD', value: null, resultKind: 'TEMP_UNATTESTED', student: { id: 31 }, subject: { id: 7 } }])
     : idleQuery(),
   useStudentRating: (owner: ReportOwner, filter: ReportFilter | null) => {
     track('rating', owner, filter);

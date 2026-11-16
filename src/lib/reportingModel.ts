@@ -1,4 +1,6 @@
 import type { Schema } from '@/lib/apiSchemas';
+import { ATTESTATION_SHORT, isAttestationStatus } from '@/lib/attestationModel';
+import { FINAL_RESULT_LABELS } from '@/lib/finalGradeResult';
 
 export type ReportMetrics = Schema<'ReportMetricsView'>;
 export type ReportRow = Schema<'ReportBreakdownRow'>;
@@ -124,14 +126,14 @@ export type AttestationLabel = 'ВНА' | 'НА';
 /** Итог в клетке: число шкалы или статус аттестации. */
 export type FinalCell = number | AttestationLabel;
 
+/** Слова — из `attestationModel`/`finalGradeResult`: статус называется одинаково на всех экранах. */
 export const ATTESTATION_TITLES: Record<AttestationLabel, string> = {
-  ВНА: 'Временно не аттестован',
-  НА: 'Не аттестован',
-};
+  [ATTESTATION_SHORT.TEMP_UNATTESTED]: FINAL_RESULT_LABELS.TEMP_UNATTESTED,
+  [ATTESTATION_SHORT.NOT_ATTESTED]: FINAL_RESULT_LABELS.NOT_ATTESTED,
+} as Record<AttestationLabel, string>;
 
 function finalCell(final: ReportFinal): FinalCell | null {
-  if (final.resultKind === 'TEMPORARILY_UNATTESTED') return 'ВНА';
-  if (final.resultKind === 'NOT_ATTESTED') return 'НА';
+  if (isAttestationStatus(final.resultKind)) return ATTESTATION_SHORT[final.resultKind] as AttestationLabel;
   return final.value ?? null;
 }
 

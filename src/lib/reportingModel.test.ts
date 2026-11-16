@@ -116,15 +116,15 @@ describe('reportingModel', () => {
 
   it('shows attestation statuses as words, never as zero', () => {
     const finals = periodFinalsByStudent([
-      { finalScope: 'PERIOD', value: null, resultKind: 'TEMPORARILY_UNATTESTED', student: { id: 1 }, subject: { id: 9 } },
+      { finalScope: 'PERIOD', value: null, resultKind: 'TEMP_UNATTESTED', student: { id: 1 }, subject: { id: 9 } },
       { finalScope: 'PERIOD', value: null, resultKind: 'NOT_ATTESTED', student: { id: 2 }, subject: { id: 9 } },
       { finalScope: 'PERIOD', value: 4, resultKind: 'NUMERIC', student: { id: 3 }, subject: { id: 9 } },
       // Зачёт без числа — не статус аттестации и не ноль: клетки нет.
-      { finalScope: 'PERIOD', value: null, resultKind: 'NOT_NUMERIC', student: { id: 4 }, subject: { id: 9 } },
+      { finalScope: 'PERIOD', value: null, resultKind: 'PASS', student: { id: 4 }, subject: { id: 9 } },
     ], 9);
     expect([...finals.entries()]).toEqual([[1, 'ВНА'], [2, 'НА'], [3, 4]]);
     expect([...periodFinalsBySubject([
-      { finalScope: 'PERIOD', value: null, resultKind: 'TEMPORARILY_UNATTESTED', subject: { id: 9 } },
+      { finalScope: 'PERIOD', value: null, resultKind: 'TEMP_UNATTESTED', subject: { id: 9 } },
     ]).entries()]).toEqual([[9, 'ВНА']]);
   });
 
