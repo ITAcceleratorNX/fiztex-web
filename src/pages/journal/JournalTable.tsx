@@ -5,13 +5,14 @@ import type { ClassFinalGradeRow, Gradebook, GradebookColumn, GradebookRow } fro
 import { GRADE_TYPE_LABELS, gradeValueLabel } from '@/lib/gradesModel';
 import type { GradeType } from '@/lib/gradesApi';
 import { COMPONENT_SHORT, componentsByCode, formatPercent, resultStatusHint } from '@/lib/gradingModel';
+import { decidedResult, fullResultLabel, shortResultLabel } from '@/lib/attestationModel';
+import { finalResultLabel } from '@/lib/finalGradeResult';
 import {
   assessmentScoreLabel,
   assessmentTitle,
   cellsByColumn,
   columnCaption,
   columnHref,
-  finalValueLabel,
   formatAverage,
   inactiveColumnHint,
   isAssessmentColumn,
@@ -212,11 +213,7 @@ export function JournalTable({
                   </td>
                 )}
                 <td className={cx(STICKY, 'right-0 w-24 min-w-24 px-2 py-2 text-center font-semibold text-slate-900')}>
-                  {finals.get(studentId)?.finalGrade?.resultKind === 'TEMP_UNATTESTED' ? (
-                    <span title="Временно не аттестован">ВНА</span>
-                  ) : (
-                    finalValueLabel(finals.get(studentId))
-                  )}
+                  <FinalColumnValue grade={finals.get(studentId)?.finalGrade} />
                 </td>
               </tr>
             );
@@ -425,4 +422,22 @@ const FINAL_WIDTH_PX = 96;
 /** Отступ справа для i-го компонента: за ним остальные компоненты, «Итог %» и «Итог. четв.». */
 function componentOffset(index: number, count: number): number {
   return FINAL_WIDTH_PX * 2 + COMPONENT_WIDTH_PX * (count - 1 - index);
+}
+
+/**
+ * «Итог. четв.» в журнале — то, что решено сейчас: ВНА/НА коротко, полная подпись под курсором.
+ * Изменение после публикации помечено: ученик пока видит прежнее (ATTESTATION-001).
+ */
+function FinalColumnValue({ grade }: { grade: ClassFinalGradeRow['finalGrade'] }) {
+  const decided = decidedResult(grade);
+  if (!decided) return <>{finalResultLabel(grade)}</>;
+  const pending = grade?.pendingChange != null;
+  return (
+    <span
+      title={pending ? `${fullResultLabel(decided)} — ждёт подтверждения` : fullResultLabel(decided)}
+      className={cx(pending && 'text-amber-700')}
+    >
+      {shortResultLabel(decided)}{pending && '*'}
+    </span>
+  );
 }

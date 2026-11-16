@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { PointsPicker } from './PointsPicker';
@@ -56,7 +56,7 @@ describe('PointsPicker', () => {
       onSubmit={onSubmit}
       onClose={() => undefined}
     />);
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Вид работы' }), 'INTERMEDIATE_ASSESSMENT');
+    await user.click(screen.getByRole('button', { name: /Промежуточное оценивание/ }));
     expect(screen.getByRole('textbox', { name: /Макс/ })).toHaveValue('14');
     expect(screen.getByRole('textbox', { name: /Балл/ })).toHaveValue('');
     fireEvent.change(screen.getByRole('textbox', { name: /Балл/ }), { target: { value: '13' } });
@@ -105,6 +105,32 @@ describe('PointsPicker', () => {
     fireEvent.change(score, { target: { value: '20' } });
     fireEvent.submit(score.closest('form')!);
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('picks the work type from the same list as the scale picker, not a native select', async () => {
+    const user = userEvent.setup();
+    const onSubmit = setup('FORMATIVE');
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    const types = within(screen.getByRole('group', { name: 'Вид работы' }));
+    expect(types.getByRole('button', { name: /Формативная оценка/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(types.getByRole('button', { name: /СОЧ/ })).toHaveAttribute('aria-pressed', 'false');
+
+    await user.click(types.getByRole('button', { name: /СОЧ/ }));
+    expect(types.getByRole('button', { name: /СОЧ/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('textbox', { name: /Балл/ })).toHaveValue('');
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('names the component once and marks types outside the calculation', () => {
+    render(<PointsPicker workTypes={[
+      { type: 'FORMATIVE', component: 'FORMATIVE', scoring: 'TEN_POINT' },
+      { type: 'SUMMATIVE_TERM', component: 'SOCH', scoring: 'RAW_POINTS' },
+      { type: 'ORAL_ANSWER', scoring: 'TEN_POINT' },
+    ]} defaultType="FORMATIVE" onSubmit={() => undefined} onClose={() => undefined} />);
+    const types = within(screen.getByRole('group', { name: 'Вид работы' }));
+    expect(types.getByRole('button', { name: 'Формативная оценка ФО' })).toBeInTheDocument();
+    expect(types.getByRole('button', { name: 'СОЧ — суммативное за четверть' })).toBeInTheDocument();
+    expect(types.getByRole('button', { name: 'Устный ответ не учитывается' })).toBeInTheDocument();
   });
 
   it('offers only 1–10 for formative grades', async () => {

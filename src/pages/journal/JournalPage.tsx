@@ -53,7 +53,16 @@ import { JournalTable, type ScoreEditor } from './JournalTable';
 import { PeriodBreakdownModal } from './PeriodBreakdownModal';
 import { YearFinalsTab } from './YearFinalsTab';
 import { FinalGradeCorrectionModal, FinalGradeHistoryModal, RepublishFinalModal } from './FinalGradeCorrectionModal';
-import { FINAL_VALUES, QuarterFinalsTable } from './QuarterFinalsTable';
+import { AttestationStatusModal } from './AttestationStatusModal';
+import {
+  ATTESTATION_HINT,
+  ATTESTATION_KINDS,
+  ATTESTATION_SHORT,
+  isAttestationStatus,
+  type ResultValue,
+} from '@/lib/attestationModel';
+import { FINAL_RESULT_LABELS } from '@/lib/finalGradeResult';
+import { finalValueOptions, QuarterFinalsTable } from './QuarterFinalsTable';
 
 type JournalTab = 'JOURNAL' | 'FINALS' | 'YEAR_FINALS';
 
@@ -438,12 +447,15 @@ function FinalsTab({
   const publish = usePublishClassFinals();
   const [busyStudentId, setBusyStudentId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Отказ действия в ячейке — под строкой ученика, а не внизу страницы (D-3).
+  const [rowError, setRowError] = useState<{ studentProfileId: number; message: string } | null>(null);
   const [missing, setMissing] = useState<ReadonlySet<number>>(new Set());
   const [confirmPublish, setConfirmPublish] = useState(false);
   const [reasonRow, setReasonRow] = useState<ClassFinalGradeRow | null>(null);
   const [correctionRow, setCorrectionRow] = useState<ClassFinalGradeRow | null>(null);
   const [historyRow, setHistoryRow] = useState<ClassFinalGradeRow | null>(null);
   const [republishRow, setRepublishRow] = useState<ClassFinalGradeRow | null>(null);
+  const [statusRequest, setStatusRequest] = useState<{ row: ClassFinalGradeRow; target: ResultValue } | null>(null);
   const [reason, setReason] = useState('');
   const [breakdown, setBreakdown] = useState<{ studentProfileId: number; name: string } | null>(null);
 
@@ -478,6 +490,7 @@ function FinalsTab({
 
   async function pick(row: ClassFinalGradeRow, value: number | null, resultKind: FinalGrade['resultKind'] = 'NUMERIC', resultReason?: string) {
     setError(null);
+    setRowError(null);
     setBusyStudentId(row.studentProfileId as number);
     try {
       await setFinal.mutateAsync({
@@ -493,13 +506,14 @@ function FinalsTab({
         return next;
       });
     } catch (failure) {
-      setError(
-        failure instanceof ApiError && failure.code === FINAL_GRADE_ERRORS.yearLocked
+      setRowError({
+        studentProfileId: row.studentProfileId as number,
+        message: failure instanceof ApiError && failure.code === FINAL_GRADE_ERRORS.yearLocked
           ? 'Годовая оценка опубликована — четвертные по этому предмету закрыты'
           : failure instanceof ApiError
             ? failure.message
             : 'Не удалось сохранить итоговую оценку',
-      );
+      });
     } finally {
       setBusyStudentId(null);
     }
@@ -546,6 +560,7 @@ function FinalsTab({
   return (
     <div className="flex flex-col gap-4">
       <FinalsScaleNote finals={data} />
+      {data.canManageAttestation && <AttestationLegend />}
       {missingResults && missingResults.students > 0 && (
         <p role="status" className="rounded-lg bg-info-bg p-4 text-13 text-info-fg">
           Итог за четверть не посчитан у {missingResults.students} из {rows.length}{' '}
@@ -559,10 +574,12 @@ function FinalsTab({
           finals={data}
           highlighted={missing}
           busyStudentId={busyStudentId}
+          rowError={rowError}
           onPick={(row, value) => void pick(row, value)}
           onCorrect={setCorrectionRow}
           onOpenHistory={setHistoryRow}
           onRepublish={setRepublishRow}
+          onRequestStatus={(row, target) => setStatusRequest({ row, target })}
           onPickResult={(row, kind) => {
             if (kind === 'NOT_STUDIED') { setReasonRow(row); setReason(''); }
             else void pick(row, null, kind);
@@ -574,11 +591,15 @@ function FinalsTab({
       </div>
 
       {correctionRow?.finalGrade && <FinalGradeCorrectionModal grade={correctionRow.finalGrade}
-        studentName={correctionRow.studentName ?? ''} allowedKinds={data.allowedResultKinds ?? ['NUMERIC']}
-        onClose={() => setCorrectionRow(null)} />}
-      {republishRow?.finalGrade && republishRow.recommendedValue != null && <RepublishFinalModal grade={republishRow.finalGrade}
-        recommended={republishRow.recommendedValue} studentName={republishRow.studentName ?? ''}
-        options={data.allowedValues && data.allowedValues.length > 0 ? data.allowedValues : [...FINAL_VALUES]}
+        studentName={correctionRow.studentName ?? ''}
+        allowedKinds={(data.allowedResultKinds ?? ['NUMERIC']).filter((kind) => !isAttestationStatus(kind))}
+        allowedValues={finalValueOptions(data)} onClose={() => setCorrectionRow(null)} />}
+      {statusRequest && <AttestationStatusModal row={statusRequest.row} target={statusRequest.target}
+        author={canManage ? 'TEACHER' : 'ADMINISTRATION'} subjectId={finalsKey.subjectId}
+        academicPeriodId={finalsKey.academicPeriodId} onClose={() => setStatusRequest(null)} />}
+      {republishRow?.finalGrade && <RepublishFinalModal grade={republishRow.finalGrade}
+        recommended={republishRow.recommendedValue ?? null} studentName={republishRow.studentName ?? ''}
+        options={finalValueOptions(data)}
         onClose={() => setRepublishRow(null)} />}
       {historyRow?.finalGrade?.id != null && <FinalGradeHistoryModal id={historyRow.finalGrade.id}
         studentName={historyRow.studentName ?? ''} onClose={() => setHistoryRow(null)} />}
@@ -639,7 +660,7 @@ function FinalsTab({
       <ConfirmDialog
         open={confirmPublish}
         title="Опубликовать итоги четверти?"
-        message="После публикации итоговые оценки увидят ученики и родители. Обычная правка будет закрыта. Техническую ошибку исправляет администратор по документам и протоколу; временная неаттестация завершается после сдачи обязательных работ."
+        message="После публикации итоговые оценки увидят ученики и родители. Число после публикации обычной правкой не меняется: техническую ошибку исправляет администратор по документам и протоколу. Статусы ВНА и НА можно менять и после публикации — с причиной, ученик увидит изменение после повторного подтверждения."
         confirmLabel="Опубликовать"
         loading={publish.isPending}
         onConfirm={() => void publishAll()}
@@ -706,6 +727,23 @@ function FinalsScaleNote({ finals }: { finals: ClassFinalGrades }) {
         )}
       </span>
     </p>
+  );
+}
+
+/**
+ * Расшифровка статусов рядом со шкалой итога (ТЗ-1, «UI»: «понятная подпись и расшифровка
+ * ВНА/НА»). Показывается тем, кто статусы ставит: учителю предмета и администрации.
+ */
+function AttestationLegend() {
+  return (
+    <ul className="flex flex-col gap-1 px-1 text-13 text-slate-500">
+      {ATTESTATION_KINDS.map((kind) => (
+        <li key={kind}>
+          <span className="font-semibold text-slate-700">{ATTESTATION_SHORT[kind]}</span>
+          {' — '}{FINAL_RESULT_LABELS[kind].toLowerCase()}. {ATTESTATION_HINT[kind]}
+        </li>
+      ))}
+    </ul>
   );
 }
 
