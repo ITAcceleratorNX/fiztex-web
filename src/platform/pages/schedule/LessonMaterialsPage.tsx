@@ -25,13 +25,15 @@ import { lessonMaterialsApi, type LessonMaterial } from '@/lib/homeworkAiApi';
 import { formatWeekdayDayMonth } from '@/lib/format';
 import { LessonTextbookSection } from './LessonTextbookSection';
 import { LessonSummarySection } from './LessonSummarySection';
+import { LessonHomeworkSection } from './LessonHomeworkSection';
 
 /**
  * Материалы урока — модуль карточки урока (ТЗ HOMEWORK-BE-006, LESSON-MAT-001).
  *
- * <p>С KSP-FE-001 страница собирает всё, что видят ученики, тремя разделами (Figma 2212:9448,
- * 2212:9521): учебник, конспект урока, файлы и ссылки. У каждого подписано, когда его видят
- * ученики. Учебник и конспект переехали сюда с карточки урока; права и публикация не менялись.
+ * <p>С KSP-FE-001 страница собирает всё, что видят ученики (Figma 2212:9448, 2212:9521): учебник,
+ * домашнее задание, конспект урока, файлы и ссылки. У каждого раздела подписано, когда его видят
+ * ученики. Учебник, задания и конспект переехали сюда с карточки урока; права, публикация и
+ * отметка «ДЗ не задано» не менялись.
  *
  * Отдельная страница, а не блок в карточке: посещаемость, домашние задания и оценки
  * открываются с плиток своими экранами, и материалы обязаны вести себя так же — иначе
@@ -146,6 +148,8 @@ export function LessonMaterialsPage() {
       </div>
 
       {valid && <LessonTextbookSection lessonId={id} locked={periodClosed} />}
+      {/* ДЗ — сразу после учебника: с карточки урока сюда переехал отдельный блок заданий. */}
+      {lesson && <LessonHomeworkSection lesson={lesson} locked={periodClosed} />}
       {valid && <LessonSummarySection lessonId={id} />}
 
       <h2 className="text-base font-semibold text-ink">Файлы и ссылки</h2>
