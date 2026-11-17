@@ -181,6 +181,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/academic-reports/dynamics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Динамика по периодам */
+        get: operations["getAdminAcademicReportDynamics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/academic-reports/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Выгрузка отчёта в Excel */
+        get: operations["exportAdminAcademicReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/academic-reports/final-grades": {
         parameters: {
             query?: never;
@@ -207,6 +241,57 @@ export interface paths {
         };
         /** Исходные оценки учебной отчётности */
         get: operations["getAdminAcademicReportGrades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/academic-reports/performance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Сводная успеваемость */
+        get: operations["getAdminAcademicReportPerformance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/academic-reports/ratings/classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Рейтинг классов */
+        get: operations["getAdminAcademicReportClassRating"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/academic-reports/ratings/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Рейтинг учеников */
+        get: operations["getAdminAcademicReportStudentRating"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7302,6 +7387,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/academic-reports/dynamics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Динамика по периодам */
+        get: operations["getHomeroomAcademicReportDynamics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/academic-reports/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Выгрузка отчёта в Excel */
+        get: operations["exportHomeroomAcademicReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/academic-reports/final-grades": {
         parameters: {
             query?: never;
@@ -7328,6 +7447,40 @@ export interface paths {
         };
         /** Исходные оценки учебной отчётности */
         get: operations["getHomeroomAcademicReportGrades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/academic-reports/performance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Сводная успеваемость */
+        get: operations["getHomeroomAcademicReportPerformance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/academic-reports/ratings/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Рейтинг учеников */
+        get: operations["getHomeroomAcademicReportStudentRating"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8067,6 +8220,159 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["submit_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/academic-reports/breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Разрез учебной отчётности */
+        get: operations["getTeacherAcademicReportBreakdown"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/academic-reports/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Фильтры отчётности учителя-предметника */
+        get: operations["getTeacherAcademicReportContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/academic-reports/dynamics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Динамика по периодам */
+        get: operations["getTeacherAcademicReportDynamics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/academic-reports/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Выгрузка отчёта в Excel */
+        get: operations["exportTeacherAcademicReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/academic-reports/final-grades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Опубликованные итоги учебной отчётности */
+        get: operations["getTeacherAcademicReportFinalGrades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/academic-reports/performance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Сводная успеваемость */
+        get: operations["getTeacherAcademicReportPerformance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/academic-reports/ratings/classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Рейтинг классов */
+        get: operations["getTeacherAcademicReportClassRating"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/academic-reports/ratings/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Рейтинг учеников */
+        get: operations["getTeacherAcademicReportStudentRating"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/academic-reports/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Сводка учебной отчётности */
+        get: operations["getTeacherAcademicReportSummary"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -9650,6 +9956,24 @@ export interface components {
             paging?: components["schemas"]["ReportPageInfo"];
             scope?: components["schemas"]["ReportScopeView"];
         };
+        AcademicReportClassRatingView: {
+            /** Format: date-time */
+            asOf?: string;
+            /** @enum {string} */
+            basis?: "CURRENT" | "PUBLISHED";
+            comparable?: boolean;
+            items?: components["schemas"]["ClassRatingRow"][];
+            /** Format: int64 */
+            leaderClassId?: number | null;
+            preliminary?: boolean;
+            scope?: components["schemas"]["ReportScopeView"];
+        };
+        AcademicReportDynamicsView: {
+            /** Format: date-time */
+            asOf?: string;
+            points?: components["schemas"]["DynamicsPoint"][];
+            scope?: components["schemas"]["ReportScopeView"];
+        };
         AcademicReportFinalGradePageView: {
             /** Format: date-time */
             asOf?: string;
@@ -9667,7 +9991,10 @@ export interface components {
             finalScope?: "PERIOD" | "YEAR" | "EXAM" | "FINAL";
             /** Format: date-time */
             publishedAt?: string;
-            /** @enum {string} */
+            /**
+             * @description Вид итога: число или статус аттестации (ВНА/НА); у статуса value = null
+             * @enum {string}
+             */
             resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             sourceClass?: components["schemas"]["ReportReferenceView"];
             student?: components["schemas"]["ReportReferenceView"];
@@ -9676,7 +10003,7 @@ export interface components {
             subject?: components["schemas"]["ReportReferenceView"];
             teacher?: components["schemas"]["ReportReferenceView"];
             /** Format: int32 */
-            value?: number;
+            value?: number | null;
         };
         AcademicReportGradePageView: {
             /** Format: date-time */
@@ -9711,6 +10038,46 @@ export interface components {
             subject?: components["schemas"]["ReportReferenceView"];
             teacher?: components["schemas"]["ReportReferenceView"] | null;
             weight?: number;
+        };
+        AcademicReportPerformanceResponse: {
+            /** Format: date-time */
+            asOf?: string;
+            performance?: components["schemas"]["AcademicReportPerformanceView"];
+            scope?: components["schemas"]["ReportScopeView"];
+        };
+        AcademicReportPerformanceView: {
+            /** @enum {string} */
+            basis?: "CURRENT" | "PUBLISHED";
+            /** Format: int64 */
+            notAttestedCount?: number;
+            preliminary?: boolean;
+            /** @enum {string} */
+            state?: "AVAILABLE" | "NO_DATA" | "DEPENDENCY_MISSING" | "SCOPE_NOT_SUPPORTED";
+            /** Format: int64 */
+            studentsExcluded?: number;
+            /** Format: int64 */
+            studentsWithResult?: number;
+            /** Format: int64 */
+            temporarilyUnattestedCount?: number;
+            value?: number | null;
+        };
+        AcademicReportStudentRatingView: {
+            /** Format: date-time */
+            asOf?: string;
+            /** @enum {string} */
+            basis?: "CURRENT" | "PUBLISHED";
+            items?: components["schemas"]["StudentRatingRow"][];
+            /** Format: int64 */
+            notAttestedCount?: number;
+            preliminary?: boolean;
+            previousPeriod?: components["schemas"]["ReportPeriodView"];
+            /** Format: int64 */
+            rankedCount?: number;
+            scope?: components["schemas"]["ReportScopeView"];
+            /** Format: int64 */
+            temporarilyUnattestedCount?: number;
+            /** Format: int64 */
+            unrankedCount?: number;
         };
         AcademicReportSummaryView: {
             /** Format: date-time */
@@ -11060,6 +11427,23 @@ export interface components {
             letter?: string;
             name?: string;
         };
+        ClassRatingRow: {
+            complete?: boolean;
+            /** Format: int64 */
+            currentStudentCount?: number;
+            /** Format: int64 */
+            notAttestedCount?: number;
+            /** Format: int32 */
+            place?: number | null;
+            /** Format: int64 */
+            rankedStudentCount?: number;
+            schoolClass?: components["schemas"]["ReportReferenceView"];
+            /** Format: int64 */
+            studentsWithResult?: number;
+            /** Format: int64 */
+            temporarilyUnattestedCount?: number;
+            value?: number | null;
+        };
         ClassScheduleView: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -11317,6 +11701,25 @@ export interface components {
              * @description IMAGE: ширина того, что показывается по url, — место под картинку до загрузки
              */
             width?: number;
+        };
+        ContextPeriod: {
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+        };
+        ContextYear: {
+            current?: boolean;
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
         };
         CopyBellTemplateRequest: {
             name?: string;
@@ -11784,6 +12187,14 @@ export interface components {
             previous?: components["schemas"]["IndicatorView"];
             /** @enum {string} */
             trend?: "GROWTH" | "DECLINE" | "STABLE" | "INSUFFICIENT_DATA";
+        };
+        DynamicsPoint: {
+            attendanceChange?: number | null;
+            attendancePercent?: components["schemas"]["ReportDecimalMetric"];
+            performance?: components["schemas"]["AcademicReportPerformanceView"];
+            performanceChange?: number | null;
+            period?: components["schemas"]["ScopePeriod"];
+            started?: boolean;
         };
         DynamicsPointView: {
             /** Format: int64 */
@@ -17284,6 +17695,8 @@ export interface components {
             attributes?: components["schemas"]["ReportRowAttributesView"];
             key?: components["schemas"]["ReportReferenceView"];
             metrics?: components["schemas"]["ReportMetricsView"];
+            /** @description Сводная успеваемость строки — тот же расчёт, что у /performance и рейтингов */
+            performance?: components["schemas"]["AcademicReportPerformanceView"];
         };
         ReportDecimalMetric: {
             reason?: ("NO_SCALE_GRADES" | "NO_PUBLISHED_ATTENDANCE" | "ACADEMIC_PERFORMANCE_NOT_IMPLEMENTED" | "SINGLE_STUDENT_SUBJECT_PERIOD_REQUIRED" | "TEACHER_FILTER" | "INCOMPLETE_CLASS_INPUT" | "PARTICIPANT_SNAPSHOT_MISSING") | null;
@@ -17410,7 +17823,7 @@ export interface components {
             /** Format: int64 */
             teacherProfileId?: number | null;
             /** @enum {string} */
-            visibility?: "SCHOOL" | "SELECTED_CLASS" | "HOMEROOM_CLASS";
+            visibility?: "SCHOOL" | "SELECTED_CLASS" | "HOMEROOM_CLASS" | "SUBJECT_TEACHER";
         };
         ReportYearView: {
             /** Format: date */
@@ -17918,6 +18331,15 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        ScopePeriod: {
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+        };
         SelectLessonTextbookRequest: {
             /** Format: int64 */
             bindingId: number;
@@ -18319,6 +18741,24 @@ export interface components {
             text?: string;
             /** @enum {string} */
             type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT";
+        };
+        StudentRatingRow: {
+            change?: number | null;
+            /** Format: int32 */
+            notAttestedCount?: number;
+            /** Format: int32 */
+            place?: number | null;
+            schoolClass?: components["schemas"]["ReportReferenceView"];
+            /** @enum {string} */
+            state?: "RANKED" | "NO_DATA" | "MISSING_SUBJECTS" | "ATTESTATION_STATUS";
+            student?: components["schemas"]["ReportReferenceView"];
+            /** Format: int32 */
+            subjectsExpected?: number;
+            /** Format: int32 */
+            subjectsWithResult?: number;
+            /** Format: int32 */
+            temporarilyUnattestedCount?: number;
+            value?: number | null;
         };
         StudentResultView: {
             inAudience?: boolean;
@@ -18726,6 +19166,13 @@ export interface components {
             classId: number;
             /** Format: int64 */
             subgroupId?: number;
+        };
+        TeacherAcademicReportContextView: {
+            /** Format: int64 */
+            academicYearId?: number | null;
+            assignments?: components["schemas"]["TeachingPair"][];
+            periods?: components["schemas"]["ContextPeriod"][];
+            years?: components["schemas"]["ContextYear"][];
         };
         TeacherAnswerView: {
             aiRationale?: string;
@@ -19215,6 +19662,10 @@ export interface components {
             /** Format: int64 */
             subjectId?: number;
             subjectName?: string;
+        };
+        TeachingPair: {
+            schoolClass?: components["schemas"]["ReportReferenceView"];
+            subject?: components["schemas"]["ReportReferenceView"];
         };
         TemplateUsageView: {
             /** Format: int64 */
@@ -20201,6 +20652,132 @@ export interface operations {
             };
         };
     };
+    getAdminAcademicReportDynamics: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId?: number;
+                teacherProfileId?: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Успеваемость и посещаемость по периодам года */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportDynamicsView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    exportAdminAcademicReport: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId?: number;
+                teacherProfileId?: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Excel открытого отчёта по тем же фильтрам и правам */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     getAdminAcademicReportFinalGrades: {
         parameters: {
             query: {
@@ -20291,6 +20868,195 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AcademicReportGradePageView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getAdminAcademicReportPerformance: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId?: number;
+                teacherProfileId?: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Сводная успеваемость: ученик → предметы → ученики; ВНА/НА отдельно */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportPerformanceResponse"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getAdminAcademicReportClassRating: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId?: number;
+                teacherProfileId?: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Сравнение классов; победитель — только при сопоставимых данных */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportClassRatingView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getAdminAcademicReportStudentRating: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId?: number;
+                teacherProfileId?: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Полный рейтинг учеников среза */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportStudentRatingView"];
                 };
             };
             /** @description Неверные фильтры, разрез, страница или превышен предел области */
@@ -33570,6 +34336,132 @@ export interface operations {
             };
         };
     };
+    getHomeroomAcademicReportDynamics: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                subjectId?: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Успеваемость и посещаемость по периодам года */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportDynamicsView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    exportHomeroomAcademicReport: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                subjectId?: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Excel открытого отчёта по тем же фильтрам и правам */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     getHomeroomAcademicReportFinalGrades: {
         parameters: {
             query: {
@@ -33660,6 +34552,132 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AcademicReportGradePageView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getHomeroomAcademicReportPerformance: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                subjectId?: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Сводная успеваемость: ученик → предметы → ученики; ВНА/НА отдельно */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportPerformanceResponse"];
+                };
+            };
+            /** @description Неверные фильтры, разрез, страница или превышен предел области */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Отчётность или класс недоступны */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getHomeroomAcademicReportStudentRating: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                subjectId?: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Полный рейтинг учеников среза */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportStudentRatingView"];
                 };
             };
             /** @description Неверные фильтры, разрез, страница или превышен предел области */
@@ -35211,6 +36229,565 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SurveyTakingView"];
+                };
+            };
+        };
+    };
+    getTeacherAcademicReportBreakdown: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId: number;
+                studentProfileId?: number;
+                dimension: "CLASS" | "STUDENT" | "SUBJECT";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Без класса — его классы (CLASS), в классе — ученики (STUDENT) и его предмет (SUBJECT) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportBreakdownView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез или страница */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс или предмет не назначены учителю */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getTeacherAcademicReportContext: {
+        parameters: {
+            query?: {
+                academicYearId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Годы, периоды и пары «класс × предмет» учителя */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherAcademicReportContextView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез или страница */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс или предмет не назначены учителю */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getTeacherAcademicReportDynamics: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Успеваемость и посещаемость класса по периодам */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportDynamicsView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез или страница */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс или предмет не назначены учителю */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    exportTeacherAcademicReport: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Excel открытого отчёта по тем же фильтрам и правам */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description Неверные фильтры, разрез или страница */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс или предмет не назначены учителю */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getTeacherAcademicReportFinalGrades: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId: number;
+                studentProfileId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Опубликованные итоги класса учителя по его предмету */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportFinalGradePageView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез или страница */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс или предмет не назначены учителю */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getTeacherAcademicReportPerformance: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Сводная успеваемость: ученик → предметы → ученики; ВНА/НА отдельно */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportPerformanceResponse"];
+                };
+            };
+            /** @description Неверные фильтры, разрез или страница */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс или предмет не назначены учителю */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getTeacherAcademicReportClassRating: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Сравнение классов учителя по одному предмету */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportClassRatingView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез или страница */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс или предмет не назначены учителю */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getTeacherAcademicReportStudentRating: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Рейтинг учеников по предмету учителя */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportStudentRatingView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез или страница */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс или предмет не назначены учителю */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getTeacherAcademicReportSummary: {
+        parameters: {
+            query: {
+                academicYearId: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId: number;
+                studentProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Сводка по одному классу учителя */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicReportSummaryView"];
+                };
+            };
+            /** @description Неверные фильтры, разрез или страница */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет действующей сессии */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс или предмет не назначены учителю */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Не найден допустимый справочный объект */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };

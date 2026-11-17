@@ -149,6 +149,8 @@ describe('маршрутизация по роли', () => {
       '/my-class',
       '/my-availability',
       '/grades',
+      // Отчётность предметника — свои классы по своему предмету на `/api/teacher/*`.
+      '/my-reporting',
       '/homework',
       // «Посещаемость (QR)» — свои уроки дня и журнал месяца на ролевых адресах
       // (ATTENDANCE-TEACHER-001); админский журнал школы `/attendance` учителю закрыт.
@@ -167,6 +169,7 @@ describe('маршрутизация по роли', () => {
     expect(admin).not.toContain('/feedback');
     expect(admin).not.toContain('/my-schedule');
     expect(admin).not.toContain('/my-class');
+    expect(admin).not.toContain('/my-reporting');
     expect(admin).toContain('/dashboard');
   });
 

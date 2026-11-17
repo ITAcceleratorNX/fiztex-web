@@ -1,4 +1,6 @@
 import type { Schema } from '@/lib/apiSchemas';
+import { ATTESTATION_SHORT, isAttestationStatus } from '@/lib/attestationModel';
+import { FINAL_RESULT_LABELS } from '@/lib/finalGradeResult';
 
 export type ReportMetrics = Schema<'ReportMetricsView'>;
 export type ReportRow = Schema<'ReportBreakdownRow'>;
@@ -118,25 +120,134 @@ export function hasPartialData(rows: ReportRow[]): boolean {
   return gaps.length > 0 && gaps.length < rows.length;
 }
 
+/** Статус аттестации вместо числа итога — текстом, никогда не нулём (ТЗ §5). */
+export type AttestationLabel = 'ВНА' | 'НА';
+
+/** Итог в клетке: число шкалы или статус аттестации. */
+export type FinalCell = number | AttestationLabel;
+
+/** Слова — из `attestationModel`/`finalGradeResult`: статус называется одинаково на всех экранах. */
+export const ATTESTATION_TITLES: Record<AttestationLabel, string> = {
+  [ATTESTATION_SHORT.TEMP_UNATTESTED]: FINAL_RESULT_LABELS.TEMP_UNATTESTED,
+  [ATTESTATION_SHORT.NOT_ATTESTED]: FINAL_RESULT_LABELS.NOT_ATTESTED,
+} as Record<AttestationLabel, string>;
+
+function finalCell(final: ReportFinal): FinalCell | null {
+  if (isAttestationStatus(final.resultKind)) return ATTESTATION_SHORT[final.resultKind] as AttestationLabel;
+  return final.value ?? null;
+}
+
 /** Итог ученика по предмету за период из опубликованных итогов. */
-export function periodFinalsByStudent(finals: ReportFinal[], subjectId?: number | null): Map<number, number> {
-  const result = new Map<number, number>();
+export function periodFinalsByStudent(finals: ReportFinal[], subjectId?: number | null): Map<number, FinalCell> {
+  const result = new Map<number, FinalCell>();
   for (const final of finals) {
-    if (final.finalScope !== 'PERIOD' || final.value == null || final.student?.id == null) continue;
+    const cell = finalCell(final);
+    if (final.finalScope !== 'PERIOD' || cell == null || final.student?.id == null) continue;
     if (subjectId != null && final.subject?.id !== subjectId) continue;
-    result.set(final.student.id, final.value);
+    result.set(final.student.id, cell);
   }
   return result;
 }
 
 /** Итог по предмету за период у одного ученика — шторка. */
-export function periodFinalsBySubject(finals: ReportFinal[]): Map<number, number> {
-  const result = new Map<number, number>();
+export function periodFinalsBySubject(finals: ReportFinal[]): Map<number, FinalCell> {
+  const result = new Map<number, FinalCell>();
   for (const final of finals) {
-    if (final.finalScope !== 'PERIOD' || final.value == null || final.subject?.id == null) continue;
-    result.set(final.subject.id, final.value);
+    const cell = finalCell(final);
+    if (final.finalScope !== 'PERIOD' || cell == null || final.subject?.id == null) continue;
+    result.set(final.subject.id, cell);
   }
   return result;
+}
+
+export type ReportPerformance = Schema<'AcademicReportPerformanceView'>;
+export type StudentRating = Schema<'AcademicReportStudentRatingView'>;
+export type StudentRatingRow = Schema<'StudentRatingRow'>;
+export type ClassRating = Schema<'AcademicReportClassRatingView'>;
+export type ClassRatingRow = Schema<'ClassRatingRow'>;
+export type DynamicsPoint = Schema<'DynamicsPoint'>;
+
+/** Значение, которое прислал сервер, — с двумя знаками; пустое не становится нулём. */
+export function decimalDisplay(value: number | null | undefined, hint: string): MetricDisplay {
+  return value == null ? missing(hint) : { text: decimal.format(value), missing: false };
+}
+
+/**
+ * Сводная успеваемость: среднее предметов каждого ученика, затем среднее учеников.
+ * Пустая — «нет данных», а не 0.
+ */
+export function performanceValueDisplay(performance: ReportPerformance | null | undefined): MetricDisplay {
+  if (performance?.state === 'AVAILABLE' && performance.value != null) {
+    return { text: decimal.format(performance.value), missing: false };
+  }
+  return missing(performance?.basis === 'PUBLISHED'
+    ? 'Итоги за период не опубликованы'
+    : 'Недостаточно данных для расчёта');
+}
+
+/**
+ * «Ср. балл» отчётности — в шапке, шторке и в каждой строке таблиц. Это сводная успеваемость
+ * того же среза (`performance` строки или ответа `/performance`): то же число, что в карточке
+ * «Сводная успеваемость» и в рейтингах, поэтому строка класса совпадает с рейтингом классов, а
+ * строка ученика — с рейтингом учеников. Шкальный средний сводки — запасной путь, пока
+ * сводной успеваемости нет. Процент периода по политике (у пары «ученик × предмет») не
+ * пропадает — он в подсказке.
+ */
+export function reportAverageDisplay(metrics: ReportMetrics | undefined,
+  performance: ReportPerformance | null | undefined): MetricDisplay {
+  if (performance?.state === 'AVAILABLE' && performance.value != null) {
+    const percent = metrics?.grades?.periodResult;
+    const policy = percent?.state === 'AVAILABLE' && percent.mode === 'POINTS' && percent.result?.roundedPercent != null
+      ? ` · процент периода по политике: ${percent.result.roundedPercent}%` : '';
+    return {
+      text: decimal.format(performance.value),
+      hint: basisLabel(performance.basis, performance.preliminary) + policy,
+      missing: false,
+    };
+  }
+  return averageDisplay(metrics);
+}
+
+/** Нужна ли колонка «Успеваемость»: процент сервер пока не считает, пустая колонка не рисуется. */
+export function anyAcademicPerformance(metrics: (ReportMetrics | undefined)[]): boolean {
+  return metrics.some(hasAcademicPerformance);
+}
+
+/** Процент успеваемости сервер пока не считает — пустую колонку шапка не показывает. */
+export function hasAcademicPerformance(metrics: ReportMetrics | undefined): boolean {
+  return metrics?.academicPerformance?.state === 'AVAILABLE' && metrics.academicPerformance.value != null;
+}
+
+/**
+ * Подпись основы расчёта. Текущий средний — не четвертная оценка, поэтому он всегда
+ * подписан, и «Предварительно» стоит у незавершённого периода (ТЗ Frontend §5–6).
+ */
+export function basisLabel(basis: string | null | undefined, preliminary: boolean | null | undefined): string {
+  if (basis === 'PUBLISHED') return 'Опубликованные итоги';
+  return preliminary ? 'Текущая успеваемость · Предварительно' : 'Текущая успеваемость';
+}
+
+/** Почему у строки рейтинга нет места — пояснение к прочерку. */
+export function ratingStateHint(row: Pick<StudentRatingRow, 'state' | 'subjectsWithResult' | 'subjectsExpected'>): string | undefined {
+  switch (row.state) {
+    case 'NO_DATA': return 'Нет результатов за период';
+    case 'MISSING_SUBJECTS': return `Результаты по ${row.subjectsWithResult ?? 0} из ${row.subjectsExpected ?? 0} предметов — место не присваивается`;
+    case 'ATTESTATION_STATUS': return 'ВНА/НА: в средние не входит, место не присваивается';
+    default: return undefined;
+  }
+}
+
+const signed = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'exceptZero' });
+
+/** Изменение к прошлому периоду: «+0,40», «−0,20»; без сравнения — прочерк, а не ноль. */
+export function changeDisplay(value: number | null | undefined): MetricDisplay & { trend: 'up' | 'down' | 'flat' | null } {
+  if (value == null) return { ...missing('Нет предыдущего периода с данными'), trend: null };
+  return { text: signed.format(value), missing: false, trend: value > 0 ? 'up' : value < 0 ? 'down' : 'flat' };
+}
+
+/** Имя файла выгрузки — запасное: сервер называет файл сам, браузер берёт это имя. */
+export function reportFileName(yearName: string | null | undefined, periodName: string | null | undefined): string {
+  return `Отчётность ${yearName ?? ''} ${periodName ?? 'год'}.xlsx`.replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, ' ');
 }
 
 /** Склонение по числу: `plural(3, ['учитель', 'учителя', 'учителей'])`. */
