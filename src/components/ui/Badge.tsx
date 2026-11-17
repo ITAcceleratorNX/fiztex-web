@@ -34,8 +34,11 @@ export function Badge({
    * (Figma 2209:2164). Заливка есть у `amber` (ВНА) и `red` (НА), остальные тона — navy.
    */
   appearance?: 'pill' | 'label' | 'chip' | 'solid';
-  /** `md` is used for the larger status badges in request detail headers. */
-  size?: 'sm' | 'md';
+  /**
+   * `md` is used for the larger status badges in request detail headers. `xs` — плашка источника
+   * и статуса КСП (Figma `КСП / Бейдж` 2212:7962…7970): 11/600 на радиусе 6, с `appearance="label"`.
+   */
+  size?: 'xs' | 'sm' | 'md';
   children: ReactNode;
 }) {
   const t = tones[tone];
@@ -45,7 +48,10 @@ export function Badge({
     <span
       className={cx(
         'inline-flex items-center',
-        appearance === 'solid' ? 'px-2.5 py-1.5 text-13' : size === 'md' ? 'px-3 py-1.5 text-sm' : 'px-2.5 py-1 text-xs',
+        appearance === 'solid' ? 'px-2.5 py-1.5 text-13'
+          : size === 'md' ? 'px-3 py-1.5 text-sm'
+          : size === 'xs' ? 'whitespace-nowrap px-2 py-0.5 text-11 leading-4'
+          : 'px-2.5 py-1 text-xs',
         appearance === 'chip' ? 'gap-1' : 'gap-1.5',
         appearance === 'solid'
           ? `rounded-lg font-bold leading-4 text-white ${solidTones[tone] ?? 'bg-navy-700'}`

@@ -12,6 +12,9 @@ import type { FormulaProfile } from '@/lib/formulaProfiles';
 import {
   lessonSummaryApi, summaryRunning, type LessonSummary, type SummaryGeneration, type SummarySave,
 } from '@/lib/lessonSummaryApi';
+import {
+  kspApi, kspJobRunning, type KspExportFormat, type KspGenerateRequest, type KspJob, type KspSaveRequest, type KspView,
+} from '@/lib/kspApi';
 import { ApiError, api, pageQuery, request, type CopyTestRequest } from '@/lib/api';
 import { accessRequestsApi, type AccessRequestFilters } from '@/lib/accessRequestsApi';
 import { teacherAccessCodesApi } from '@/lib/teacherAccessCodesApi';
@@ -175,6 +178,11 @@ export const keys = {
   preparationAiOverview: ['teacher-workspace', 'preparation-ai', 'overview'] as const,
   preparationAiSource: (type: string, id: number) => ['teacher-workspace', 'preparation-ai', 'source', type, id] as const,
   lessonSummary: (id: number, childId?: number) => ['lessons', id, 'summary', childId] as const,
+  // КСП урока: всё под одним корнем — сохранение и исход задачи меняют и контекст (карточку), и документ.
+  ksp: (lessonId: number) => ['lessons', lessonId, 'ksp'] as const,
+  kspContext: (lessonId: number) => ['lessons', lessonId, 'ksp', 'context'] as const,
+  kspDocument: (lessonId: number) => ['lessons', lessonId, 'ksp', 'document'] as const,
+  kspJob: (lessonId: number, jobId: number) => ['lessons', lessonId, 'ksp', 'jobs', jobId] as const,
   summarySource: (id: number, type: string, sourceId: number) => ['lessons', id, 'summary-source', type, sourceId] as const,
   summaryLibrary: (subjectId: number, query: string) => ['summary-library', subjectId, query] as const,
   // Техника: всё пространство раздела под одним корнем — любая команда меняет и таблицу,
@@ -2946,6 +2954,70 @@ export function useUploadSummarySource(id: number) {
       void qc.invalidateQueries({ queryKey: keys.lesson(id) });
     },
   });
+}
+
+// ---- КСП урока (KSP-FE-001) ----
+
+/**
+ * Контекст КСП: реквизиты урока, источники темы и состояние карточки (`entryState`). Пока
+ * идёт генерация, перечитывается сам — карточка урока переходит «ИИ составляет план…» →
+ * «Результат готов» без перезагрузки.
+ */
+export function useKspContext(lessonId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: keys.kspContext(lessonId ?? 0),
+    queryFn: ({ signal }) => kspApi.context(lessonId as number, signal),
+    enabled: lessonId != null && enabled,
+    refetchInterval: (query) => query.state.data?.entryState === 'GENERATING' ? 4000 : false,
+  });
+}
+
+export function useKspDocument(lessonId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: keys.kspDocument(lessonId ?? 0),
+    queryFn: ({ signal }) => kspApi.get(lessonId as number, signal),
+    enabled: lessonId != null && enabled,
+  });
+}
+
+/** Задача генерации: опрос раз в 2 с, пока она идёт (контракт §4, шаг 4). */
+export function useKspJob(lessonId: number, jobId: number | null) {
+  return useQuery({
+    queryKey: keys.kspJob(lessonId, jobId ?? 0),
+    queryFn: ({ signal }) => kspApi.job(lessonId, jobId as number, signal),
+    enabled: jobId != null,
+    refetchInterval: (query) => kspJobRunning(query.state.data) ? 2000 : false,
+    refetchIntervalInBackground: true,
+  });
+}
+
+export function useKspCommands(lessonId: number) {
+  const qc = useQueryClient();
+  const putJob = (job: KspJob) => {
+    if (job.id != null) qc.setQueryData(keys.kspJob(lessonId, job.id), job);
+    void qc.invalidateQueries({ queryKey: keys.kspContext(lessonId) });
+  };
+  const start = useMutation({
+    mutationFn: ({ key, body }: { key: string; body: KspGenerateRequest }) => kspApi.start(lessonId, key, body),
+    onSuccess: putJob,
+  });
+  const dismiss = useMutation({
+    mutationFn: (jobId: number) => kspApi.dismiss(lessonId, jobId),
+    onSuccess: putJob,
+  });
+  const save = useMutation({
+    mutationFn: ({ key, body }: { key: string; body: KspSaveRequest }) => kspApi.save(lessonId, key, body),
+    onSuccess: (view: KspView, { body }) => {
+      qc.setQueryData(keys.kspDocument(lessonId), view);
+      if (body.generationId != null) void qc.invalidateQueries({ queryKey: keys.kspJob(lessonId, body.generationId) });
+      void qc.invalidateQueries({ queryKey: keys.kspContext(lessonId) });
+    },
+  });
+  /** Файл всегда по последней сохранённой версии — экспорт читает только сохранённое. */
+  const exportFile = useMutation({
+    mutationFn: (format: KspExportFormat) => kspApi.export(lessonId, format),
+  });
+  return { start, dismiss, save, exportFile };
 }
 
 // ---- Материалы урока и AI-задание (HOMEWORK-BE-006) ----

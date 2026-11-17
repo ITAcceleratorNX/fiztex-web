@@ -17,7 +17,7 @@ import {
   UserCheck,
   Users,
 } from 'lucide-react';
-import { Button, buttonClassName } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { TextArea, TextInput } from '@/components/ui/Field';
 import { RichText } from '@/components/ui/RichText';
 import { RichTextField } from '@/components/ui/RichTextField';
@@ -34,9 +34,10 @@ import {
   useLessonGradeSheet,
   useLessonHistory,
   useLessonHomework,
+  useLessonSummary,
+  useLessonTextbooks,
   useSaveLessonComment,
   useSaveLessonTopic,
-  useSetHomeworkNotAssigned,
 } from '@/hooks/queries';
 import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
@@ -48,18 +49,11 @@ import { cx, formatDateTime, formatWeekdayDayMonth, pluralRu } from '@/lib/forma
 import type { Homework } from '@/lib/homeworkApi';
 import type { LessonGradeSheet } from '@/lib/gradesApi';
 import type { Lesson, LessonCapability } from '@/lib/lessonsApi';
-import {
-  homeworkNeedsTeacherAction,
-  homeworkStateLabel,
-  homeworkStateTone,
-} from '@/lib/lessonHomeworkState';
-import { LessonHomeworkRows } from '@/pages/homework/LessonHomeworkRows';
-import { CopyHomeworkToLessonModal } from '@/pages/workspace/CopyHomeworkToLessonModal';
+import { homeworkCountLabel, homeworkStateLabel } from '@/lib/lessonHomeworkState';
 import { LessonManagementCard, SubstituteGradeAccessCard } from './LessonManagementCard';
 import { describeHistoryActor, describeHistoryEntry, hhmm } from './lessonHistory';
 import { AssessmentWorkPanel } from './AssessmentWorkPanel';
-import { LessonTextbookField } from './LessonTextbookField';
-import { LessonSummaryEntry } from './LessonSummaryEntry';
+import { KspEntryCard } from './ksp/KspEntryCard';
 import { CopyLessonPreparationModal } from './CopyLessonPreparationModal';
 import { LessonKtpTopicField } from '@/pages/ktp/LessonKtpTopicField';
 
@@ -207,11 +201,6 @@ export function LessonCardPage() {
             textClassName="block text-sm leading-relaxed text-slate-600" />
         </TeachingField>
 
-        <hr className="border-slate-200" />
-
-        {/* Учебник — та же учебная часть урока, что тема и комментарий (Figma 2149:4458). */}
-        <LessonTextbookField lessonId={id} locked={periodClosed} />
-
         {lesson.comment?.createdByName && (
           <>
             <hr className="border-slate-200" />
@@ -222,13 +211,14 @@ export function LessonCardPage() {
         )}
       </section>
 
-      <LessonHomeworkCard
-        lesson={lesson}
-        canManage={canEditTeaching}
-        canCreate={canEditTeaching && !periodClosed}
-      />
-
-      <LessonSummaryEntry lesson={lesson} />
+      {/*
+        «Поурочный план (КСП)» — на месте прежней карточки конспекта (Figma К1–К4). Учебник и
+        конспект переехали в «Материалы урока»: плитки с подборками на карточке перестали работать.
+        КСП — рабочий документ учителя урока: администратору эндпоинты КСП отвечают 403.
+      */}
+      {admin?.role === 'TEACHER' && hasAny(lesson, ['VIEW_TEACHER_HISTORY']) && lesson.id != null && (
+        <KspEntryCard lessonId={lesson.id} />
+      )}
       <LessonModules lesson={lesson} />
 
       {/*
@@ -474,14 +464,24 @@ function TeachingField({
 }
 
 /**
- * Подпись плитки материалов. Счётчик приходит с карточкой урока
- * (`LessonView.materialCount`) и уже посчитан по правам смотрящего: ученик и родитель
- * видят только то, что учитель открыл классу. Отдельного запроса за списком плитке
- * не нужно — у большинства уроков материалов нет вовсе.
+ * Подпись плитки материалов: что внутри — учебник, конспект, число файлов (Figma К1,
+ * «Учебник, конспект, 2 файла»). Учебник и конспект живут в «Материалах урока» с этой
+ * задачи, и плитка — единственное место на карточке, где видно, что они есть.
+ *
+ * Счётчик файлов приходит с карточкой (`LessonView.materialCount`, уже по правам смотрящего),
+ * учебник и конспект — из тех же запросов, что и раньше спрашивала карточка, поэтому лишних
+ * обращений к серверу у плитки нет.
  */
-function materialsTileValue(count: number | undefined): string {
-  if (!count) return 'Ничего не приложено';
-  return `${count} ${pluralRu(count, ['материал', 'материала', 'материалов'])}`;
+export function materialsTileValue(
+  { textbook, summary, files }: { textbook: boolean; summary: boolean; files: number | undefined },
+): string {
+  const parts: string[] = [];
+  if (textbook) parts.push('учебник');
+  if (summary) parts.push('конспект');
+  if (files) parts.push(`${files} ${pluralRu(files, ['файл', 'файла', 'файлов'])}`);
+  if (parts.length === 0) return 'Ничего не приложено';
+  const text = parts.join(', ');
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 /**
@@ -519,170 +519,6 @@ function attendanceTileValue(
 }
 
 /**
- * Домашние задания урока прямо на карточке (HOMEWORK-005.1 §4 с фильтром по уроку).
- *
- * По уроку в расписании кликают, чтобы узнать «что задано», — и до сих пор ответом была
- * плитка с постоянной подписью, то есть ещё один переход вслепую. Список здесь короткий и
- * весь про один урок, поэтому живёт на карточке, а не за нажатием.
- *
- * Над списком стоит состояние блока целиком (`homeworkState`): по ТЗ «статусы ДЗ» урок
- * обязан различать «учитель ничего не сделал» и «учитель решил не задавать», а список
- * заданий на этот вопрос не отвечает — он в обоих случаях пуст.
- *
- * Экран заданий урока никуда не делся: он остаётся местом, где задание создают, и ссылка
- * ведёт туда же, куда вела плитка.
- *
- * Права не вычисляются: `VIEW_STUDENTS` — то самое право, которым бэкенд отличает
- * администратора и учителей урока от ученика с родителем (см. `useLessonHomework`).
- */
-function LessonHomeworkCard({
-  lesson,
-  canManage,
-  canCreate,
-}: {
-  lesson: Lesson;
-  canManage: boolean;
-  canCreate: boolean;
-}) {
-  const canRead = hasAny(lesson, ['VIEW_STUDENTS']);
-  const query = useLessonHomework(lesson.id ?? null, canRead);
-  const navigate = useNavigate();
-  const [reuseId, setReuseId] = useState<number | null>(null);
-  const rows = query.data ?? [];
-  const lessonPath = `/lesson-schedule/lessons/${lesson.id}`;
-  const state = lesson.homeworkState;
-
-  return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-8 shadow-soft">
-      <div className="flex items-center justify-between gap-4">
-        <p className="flex items-center gap-2 text-11 font-bold uppercase text-slate-400">
-          <BookOpen className="size-4 text-slate-400" />
-          Домашнее задание
-          {rows.length > 0 && <span className="text-slate-500">· {rows.length}</span>}
-        </p>
-        {canRead && (
-          <Link
-            to={`${lessonPath}/homework`}
-            className="text-13 font-semibold text-navy-700 hover:text-navy-800"
-          >
-            {canCreate ? 'Все задания и создание' : 'Все задания'}
-          </Link>
-        )}
-      </div>
-
-      <LessonHomeworkStateRow lesson={lesson} canDecide={canCreate} />
-
-      {!canRead ? (
-        <p className="text-sm text-slate-400">Задания урока видны его учителю и администратору</p>
-      ) : query.isPending ? (
-        <p className="text-sm text-slate-400">Загружаем задания…</p>
-      ) : query.isError ? (
-        <p className="flex items-center gap-3 text-sm text-slate-500">
-          Не удалось загрузить задания урока
-          <button
-            type="button"
-            onClick={() => void query.refetch()}
-            className="font-semibold text-navy-700 underline hover:text-navy-800"
-          >
-            Повторить
-          </button>
-        </p>
-      ) : rows.length === 0 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          {/* Пустой список при отметке «ДЗ не задано» — не «заданий нет», а решение
-              учителя, и повторять его здесь второй раз незачем: оно уже стоит строкой выше. */}
-          <p className="text-sm text-slate-400">
-            {state === 'NOT_ASSIGNED' ? 'Заданий по этому уроку не будет' : 'К этому уроку заданий нет'}
-          </p>
-          {canCreate && (
-            <Link
-              to={`/homework/new?lessonId=${lesson.id}`}
-              className={buttonClassName({ variant: 'secondary', size: 'sm' })}
-            >
-              Создать задание
-            </Link>
-          )}
-        </div>
-      ) : (
-        <div className="overflow-hidden rounded-xl border border-line">
-          <LessonHomeworkRows rows={rows} lessonId={lesson.id} canOpen={canManage}
-            onReuse={canManage ? (row) => setReuseId(row.id ?? null) : undefined} />
-        </div>
-      )}
-
-      {/* «Использовать повторно» у ДЗ и теста: копия-черновик в другой урок сразу
-          открывается в обычной форме задания — там её правят и публикуют. */}
-      {reuseId != null && (
-        <CopyHomeworkToLessonModal
-          sourceId={reuseId}
-          onClose={() => setReuseId(null)}
-          onCopied={(copyId) => {
-            setReuseId(null);
-            navigate(`/homework/${copyId}/edit`);
-          }}
-        />
-      )}
-    </section>
-  );
-}
-
-/**
- * Состояние блока ДЗ и единственное действие, которого у урока раньше не было, —
- * «ДЗ не задано».
- *
- * Кнопка стоит рядом с состоянием, а не среди действий карточки: она отвечает на тот же
- * вопрос, что и надпись слева, и разносить их значило бы заставить учителя искать, чем
- * закрыть напоминание.
- *
- * Показывается только там, где есть что решать. При выданном ДЗ бэкенд отвечает 409
- * (два финальных состояния одновременно ТЗ запрещает), и предлагать заведомо
- * невозможное нажатие нельзя.
- */
-function LessonHomeworkStateRow({ lesson, canDecide }: { lesson: Lesson; canDecide: boolean }) {
-  const toast = useToast();
-  const mutation = useSetHomeworkNotAssigned(lesson.id ?? 0);
-  const state = lesson.homeworkState;
-  if (!state) return null;
-
-  const decide = (notAssigned: boolean) =>
-    mutation.mutate(notAssigned, {
-      onError: (error) =>
-        toast.error(
-          error instanceof ApiError ? error.message : 'Не удалось изменить состояние ДЗ',
-        ),
-    });
-
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <span className="flex items-center gap-2">
-        <span
-          className={cx(
-            'inline-flex items-center rounded px-2 py-0.5 text-11 font-medium',
-            homeworkStateTone(state),
-          )}
-        >
-          {homeworkStateLabel(state)}
-        </span>
-        {homeworkNeedsTeacherAction(state) && canDecide && (
-          <span className="text-13 text-slate-400">Действие по ДЗ не завершено</span>
-        )}
-      </span>
-
-      {canDecide && state !== 'ASSIGNED' && (
-        <Button
-          variant="secondary"
-          size="sm"
-          disabled={mutation.isPending}
-          onClick={() => decide(state !== 'NOT_ASSIGNED')}
-        >
-          {state === 'NOT_ASSIGNED' ? 'Отменить отметку' : 'ДЗ не задано'}
-        </Button>
-      )}
-    </div>
-  );
-}
-
-/**
  * Подпись плитки ДЗ. Первым словом — состояние урока, а не число заданий: плитку читают,
  * чтобы понять, закрыт ли вопрос с домашним заданием, и «3 задания» на уроке, где всё
  * лежит в черновиках, отвечало на другой вопрос.
@@ -692,9 +528,7 @@ function LessonHomeworkStateRow({ lesson, canDecide }: { lesson: Lesson; canDeci
 function homeworkTileValue(lesson: Lesson, rows: Homework[]): string {
   const label = homeworkStateLabel(lesson.homeworkState);
   if (rows.length === 0) return label || 'Заданий нет';
-  const drafts = rows.filter((row) => row.status === 'DRAFT').length;
-  const total = `${rows.length} ${pluralRu(rows.length, ['задание', 'задания', 'заданий'])}`;
-  const counts = drafts > 0 ? `${total} · ${drafts} в черновике` : total;
+  const counts = homeworkCountLabel(rows);
   return label ? `${label} · ${counts}` : counts;
 }
 
@@ -709,6 +543,8 @@ function LessonModules({ lesson }: { lesson: Lesson }) {
   // Тот же запрос, что у секции выше: react-query отдаёт обеим один кэш, а не два ответа.
   const homeworkQuery = useLessonHomework(lesson.id ?? null, canReadHomework);
   const gradesQuery = useLessonGradeSheet(lesson.id ?? null, canViewGrades);
+  const textbooksQuery = useLessonTextbooks(lesson.id ?? null);
+  const summaryQuery = useLessonSummary(lesson.id ?? null);
 
   return (
     <div className="flex flex-wrap items-stretch gap-4">
@@ -743,7 +579,11 @@ function LessonModules({ lesson }: { lesson: Lesson }) {
         icon={<Paperclip className="size-[18px]" />}
         tone="violet"
         title="Материалы"
-        value={materialsTileValue(lesson.materialCount)}
+        value={materialsTileValue({
+          textbook: Boolean(textbooksQuery.data?.selected),
+          summary: Boolean(summaryQuery.data?.content),
+          files: lesson.materialCount,
+        })}
         onClick={() => navigate(`/lesson-schedule/lessons/${lesson.id}/materials`)}
       />
       <ModuleTile

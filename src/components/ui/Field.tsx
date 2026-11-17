@@ -66,6 +66,7 @@ export function TextInput({
   className,
   error,
   appearance = 'default',
+  density = 'default',
   id,
   required,
   'aria-label': ariaLabel,
@@ -78,6 +79,8 @@ export function TextInput({
   error?: boolean;
   /** `filled` — серое поле без рамки высотой 54, как на экранах входа (2460:4665). */
   appearance?: 'default' | 'filled';
+  /** `compact` — 13 px на радиусе 10: ячейки таблицы «Ход урока» КСП (Figma 2212:8042). */
+  density?: 'default' | 'compact';
 }) {
   const fieldProps = useFieldControlProps({
     id,
@@ -92,6 +95,7 @@ export function TextInput({
     <input
       className={cx(
         appearance === 'filled' ? 'input-filled' : 'input-base',
+        density === 'compact' && 'input-compact',
         error && (appearance === 'filled' ? 'input-filled-invalid' : 'border-red-300 focus:border-red-400 focus:ring-red-300/30'),
         className,
       )}
@@ -110,6 +114,7 @@ export function TextInput({
 export function TextArea({
   className,
   error,
+  density = 'default',
   id,
   required,
   'aria-label': ariaLabel,
@@ -118,7 +123,11 @@ export function TextArea({
   'aria-invalid': ariaInvalid,
   'aria-required': ariaRequired,
   ...props
-}: TextareaHTMLAttributes<HTMLTextAreaElement> & { error?: boolean }) {
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  error?: boolean;
+  /** `compact` — ячейка таблицы «Ход урока» КСП: 13 px, без ручного растягивания, высоту задаёт строка. */
+  density?: 'default' | 'compact';
+}) {
   const fieldProps = useFieldControlProps({
     id,
     ariaLabel,
@@ -131,7 +140,7 @@ export function TextArea({
   return (
     <textarea
       className={cx(
-        'input-base min-h-[92px] resize-y',
+        density === 'compact' ? 'input-base input-compact resize-none' : 'input-base min-h-[92px] resize-y',
         error && 'border-red-300 focus:border-red-400 focus:ring-red-300/30',
         className,
       )}

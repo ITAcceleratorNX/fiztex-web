@@ -12,8 +12,8 @@ const useLessonHomework = vi.fn();
 const useLessonGradeSheet = vi.fn();
 const useGradePermission = vi.fn();
 const useLessonTextbooks = vi.fn();
-const selectTextbook = vi.fn();
-const setHomeworkNotAssigned = vi.fn();
+const useLessonSummary = vi.fn();
+const useKspContext = vi.fn();
 const session = vi.hoisted(() => ({ role: 'ADMIN' }));
 
 // Роль нужна карточке только ради ссылки «К расписанию»: у учителя она ведёт на его
@@ -33,9 +33,6 @@ vi.mock('@/platform/hooks/useTeacherAvailability', () => ({
 }));
 
 // Окна «Использовать повторно» проверяются своими тестами; здесь — только кто и откуда их открывает.
-vi.mock('@/pages/workspace/CopyHomeworkToLessonModal', () => ({
-  CopyHomeworkToLessonModal: ({ sourceId }: { sourceId: number }) => <p>Копия задания {sourceId}</p>,
-}));
 vi.mock('./CopyLessonPreparationModal', () => ({
   CopyLessonPreparationModal: () => <p>Перенос подготовки</p>,
 }));
@@ -51,7 +48,8 @@ vi.mock('@/hooks/queries', () => ({
   useKtpTeaching: () => ({ data: {}, isPending: false }),
   useKtpTeachingHistory: () => ({ data: undefined, isPending: false }),
   useKtpProgress: () => ({ data: undefined, isPending: false }),
-  useLessonSummary: () => ({ data: { canEdit: true }, isPending: false }),
+  useLessonSummary: (...args: unknown[]) => useLessonSummary(...args),
+  useKspContext: (...args: unknown[]) => useKspContext(...args),
   useLesson: (...args: unknown[]) => useLesson(...args),
   useLessonHistory: (...args: unknown[]) => useLessonHistory(...args),
   useAttendanceSheet: (...args: unknown[]) => useAttendanceSheet(...args),
@@ -65,10 +63,7 @@ vi.mock('@/hooks/queries', () => ({
   useSetGradePermission: () => idleMutation(),
   useSaveLessonTopic: () => idleMutation(),
   useSaveLessonComment: () => idleMutation(),
-  useSetHomeworkNotAssigned: () => ({ mutate: setHomeworkNotAssigned, isPending: false }),
   useLessonTextbooks: (...args: unknown[]) => useLessonTextbooks(...args),
-  useSelectLessonTextbook: () => ({ mutate: selectTextbook, isPending: false }),
-  useClearLessonTextbook: () => idleMutation(),
 }));
 
 /** Учебник урока в том виде, в каком его отдаёт GET /api/lessons/{id}/textbooks. */
@@ -137,14 +132,16 @@ describe('LessonCardPage', () => {
     useLessonGradeSheet.mockReturnValue({ data: undefined, isPending: false, isError: false });
     useGradePermission.mockReset();
     useGradePermission.mockReturnValue({ data: undefined, isPending: false, isError: false });
-    setHomeworkNotAssigned.mockReset();
     useLessonTextbooks.mockReset();
     useLessonTextbooks.mockReturnValue({
       data: { canSelect: false, selected: null, available: [] },
       isPending: false,
       isError: false,
     });
-    selectTextbook.mockReset();
+    useLessonSummary.mockReset();
+    useLessonSummary.mockReturnValue({ data: { canEdit: true }, isPending: false });
+    useKspContext.mockReset();
+    useKspContext.mockReturnValue({ data: undefined, isPending: true, isError: false });
   });
 
   it('возвращает учителя к неделе, с которой открыта карточка', () => {
@@ -158,75 +155,42 @@ describe('LessonCardPage', () => {
     );
   });
 
-  describe('учебник урока', () => {
-    it('учитель выбирает из назначенного классу; пока не выбрал — подсказка из макета', async () => {
-      const user = userEvent.setup();
+  describe('КСП и материалы (KSP-FE-001)', () => {
+    it('учитель урока видит карточку КСП в состоянии с сервера, она ведёт на страницу КСП', () => {
+      session.role = 'TEACHER';
       useLesson.mockReturnValue({
-        data: lesson({ capabilities: TEACHING }),
-        isPending: false,
-        isError: false,
-        error: null,
+        data: lesson({ capabilities: [...TEACHING, 'VIEW_TEACHER_HISTORY'] }), isPending: false, isError: false, error: null,
       });
-      useLessonTextbooks.mockReturnValue({
-        data: { canSelect: true, selected: null, available: [textbook()] },
-        isPending: false,
-        isError: false,
-      });
+      useKspContext.mockReturnValue({ data: { entryState: 'UNSAVED' }, isPending: false, isError: false });
       renderCard();
 
-      expect(screen.getByText(/Ученики всё равно смогут открыть учебники/)).toBeInTheDocument();
-      await user.click(screen.getByRole('button', { name: 'Учебник' }));
-      await user.click(screen.getByRole('option', { name: 'Spotlight 5. Student’s Book' }));
-
-      // Выбор уходит назначением, а не учебником: учебник действует у класса через него.
-      expect(selectTextbook).toHaveBeenCalledWith({ bindingId: 7 }, expect.anything());
+      const card = screen.getByRole('link', { name: /Поурочный план \(КСП\)/ });
+      expect(card).toHaveAttribute('href', '/lesson-schedule/lessons/6/ksp');
+      expect(card).toHaveTextContent('Результат готов, но не сохранён. Проверьте и сохраните');
     });
 
-    it('страницы у PDF сохраняются диапазоном, когда фокус уходит из обоих полей', async () => {
-      const user = userEvent.setup();
-      useLesson.mockReturnValue({
-        data: lesson({ capabilities: TEACHING }),
-        isPending: false,
-        isError: false,
-        error: null,
-      });
-      useLessonTextbooks.mockReturnValue({
-        data: { canSelect: true, selected: textbook(), available: [textbook()] },
-        isPending: false,
-        isError: false,
-      });
-      renderCard();
-
-      await user.type(screen.getByRole('textbox', { name: 'С какой страницы' }), '24');
-      await user.click(screen.getByRole('textbox', { name: 'По какую страницу' }));
-      expect(selectTextbook).not.toHaveBeenCalled();
-
-      await user.keyboard('26');
-      await user.click(document.body);
-      expect(selectTextbook).toHaveBeenCalledTimes(1);
-      expect(selectTextbook).toHaveBeenCalledWith(
-        { bindingId: 7, pageFrom: 24, pageTo: 26 },
-        expect.anything(),
-      );
-    });
-
-    it('у администратора — только чтение выбранного учителем', () => {
+    it('администратору карточки КСП нет и КСП не спрашивается', () => {
       useLesson.mockReturnValue({ data: lesson(), isPending: false, isError: false, error: null });
-      useLessonTextbooks.mockReturnValue({
-        data: {
-          canSelect: false,
-          selected: textbook({ pageFrom: 24, pageTo: 26, active: false }),
-          available: [],
-        },
-        isPending: false,
-        isError: false,
-      });
       renderCard();
 
-      expect(screen.getByText('Spotlight 5. Student’s Book · стр. 24–26')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Открыть' })).toBeInTheDocument();
-      expect(screen.getByText(/больше не назначен классу/)).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /Поурочный план/ })).not.toBeInTheDocument();
+      expect(useKspContext).not.toHaveBeenCalled();
+    });
+
+    it('учебника и конспекта на карточке нет — плитка «Материалы» называет, что внутри', () => {
+      session.role = 'TEACHER';
+      useLesson.mockReturnValue({
+        data: lesson({ capabilities: TEACHING, materialCount: 2 }), isPending: false, isError: false, error: null,
+      });
+      useLessonTextbooks.mockReturnValue({
+        data: { canSelect: true, selected: textbook(), available: [textbook()] }, isPending: false, isError: false,
+      });
+      useLessonSummary.mockReturnValue({ data: { canEdit: true, content: { title: 'Конспект' } }, isPending: false });
+      renderCard();
+
       expect(screen.queryByRole('button', { name: 'Учебник' })).not.toBeInTheDocument();
+      expect(screen.queryByText('Конспект урока')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Материалы/ })).toHaveTextContent('Учебник, конспект, 2 файла');
     });
   });
 
@@ -313,7 +277,11 @@ describe('LessonCardPage', () => {
     expect(screen.getByText('Урок отменен')).toBeInTheDocument();
     expect(screen.getByText('Учитель на курсах')).toBeInTheDocument();
   });
-  it('задания урока видны прямо на карточке, а плитка называет их число', () => {
+  /*
+   * Список заданий, состояние ДЗ и «Использовать повторно» у задания переехали в «Материалы урока»
+   * (`LessonHomeworkSection`, тесты в LessonMaterialsPage.test). На карточке остаётся плитка.
+   */
+  it('задания урока на карточке — только плиткой с их числом', () => {
     useLesson.mockReturnValue({
       data: lesson({ capabilities: ['VIEW_CARD', 'VIEW_STUDENTS', 'MANAGE_STRUCTURE'] }),
       isPending: false,
@@ -322,57 +290,24 @@ describe('LessonCardPage', () => {
     });
     useLessonHomework.mockReturnValue({
       data: [
-        {
-          id: 12,
-          title: 'Параграф 12, упражнения 1–5',
-          status: 'PUBLISHED',
-          dueType: 'NEXT_LESSON',
-          dueAt: null,
-          lesson: { id: 6 },
-          progress: { submitted: 3, total: 25 },
-        },
-        // Задание без привязки: к уроку его относит срок (LessonHomeworkScope).
-        {
-          id: 13,
-          title: 'Задано из раздела',
-          status: 'PUBLISHED',
-          dueType: 'EXACT',
-          dueAt: '2026-08-03T09:00:00Z',
-          progress: { submitted: 0, total: 25 },
-        },
-        { id: 14, title: 'Черновик', status: 'DRAFT', dueType: 'NONE', dueAt: null, lesson: { id: 6 } },
+        { id: 12, title: 'Параграф 12, упражнения 1–5', status: 'PUBLISHED', lesson: { id: 6 } },
+        { id: 13, title: 'Задано из раздела', status: 'PUBLISHED' },
+        { id: 14, title: 'Черновик', status: 'DRAFT', lesson: { id: 6 } },
       ],
       isPending: false,
       isError: false,
     });
     renderCard();
 
-    expect(screen.getByText('Параграф 12, упражнения 1–5')).toBeInTheDocument();
-    // Срок «до следующего урока» до публикации даты не имеет — но и «без срока» это не он.
-    expect(screen.getByText('До следующего урока')).toBeInTheDocument();
-    expect(screen.getByText('3 / 25')).toBeInTheDocument();
-    expect(screen.getByText('3 задания · 1 в черновике')).toBeInTheDocument();
-
-    // Привязанное к уроку показано без оговорок, пришедшее по сроку — с пояснением.
-    expect(screen.getByText(/срок на этом уроке/)).toBeInTheDocument();
-
-    // Карточку задания бэкенд отдаёт только учителю урока: у админа строка не ведёт никуда.
-    expect(screen.getByRole('button', { name: /Параграф 12/ })).toBeDisabled();
+    expect(screen.queryByText('Параграф 12, упражнения 1–5')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Домашнее задание/ })).toHaveTextContent('3 задания · 1 в черновике');
   });
 
-  it('учитель урока использует повторно и подготовку, и каждое задание', async () => {
+  it('учитель урока использует повторно подготовку урока', async () => {
     session.role = 'TEACHER';
     useLesson.mockReturnValue({ data: lesson({ capabilities: TEACHING }), isPending: false, isError: false, error: null });
-    useLessonHomework.mockReturnValue({
-      data: [{ id: 12, title: 'Тест по дробям', status: 'PUBLISHED', answerFormat: 'TEST',
-        dueType: 'NONE', dueAt: null, lesson: { id: 6 }, progress: { submitted: 3, total: 25 } }],
-      isPending: false,
-      isError: false,
-    });
     renderCard();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Использовать повторно: Тест по дробям' }));
-    expect(screen.getByText('Копия задания 12')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Использовать повторно' }));
     expect(screen.getByText('Перенос подготовки')).toBeInTheDocument();
   });
@@ -382,35 +317,11 @@ describe('LessonCardPage', () => {
       data: lesson({ capabilities: ['VIEW_CARD', 'VIEW_STUDENTS', 'MANAGE_STRUCTURE'] }),
       isPending: false, isError: false, error: null,
     });
-    useLessonHomework.mockReturnValue({
-      data: [{ id: 12, title: 'Тест по дробям', status: 'PUBLISHED', dueType: 'NONE', dueAt: null, lesson: { id: 6 } }],
-      isPending: false,
-      isError: false,
-    });
     renderCard();
     expect(screen.queryByRole('button', { name: /Использовать повторно/ })).not.toBeInTheDocument();
   });
 
-  it('урок без заданий говорит об этом, а не молчит', () => {
-    useLesson.mockReturnValue({
-      data: lesson({ capabilities: ['VIEW_CARD', 'VIEW_STUDENTS'] }),
-      isPending: false,
-      isError: false,
-      error: null,
-    });
-    renderCard();
-    expect(screen.getByText('К этому уроку заданий нет')).toBeInTheDocument();
-    expect(screen.getByText('Заданий нет')).toBeInTheDocument();
-  });
-
-
-  /* --- состояния ДЗ (ТЗ «Статусы домашнего задания») --------------------------- */
-
-  /**
-   * Блок ДЗ отвечает не только «что задано», но и «закрыт ли вопрос»: пустой список
-   * одинаков у урока, до которого не дошли руки, и у урока, на который решили не задавать.
-   */
-  it('говорит учителю, что действие по ДЗ не завершено, и предлагает его закрыть', async () => {
+  it('плитка ДЗ называет состояние урока, а «ДЗ не задано» на карточке больше не ставится', () => {
     useLesson.mockReturnValue({
       data: lesson({ capabilities: TEACHING, homeworkState: 'NOT_SPECIFIED' }),
       isPending: false,
@@ -419,73 +330,8 @@ describe('LessonCardPage', () => {
     });
     renderCard();
 
-    expect(screen.getAllByText('Домашнее задание пока не указано').length).toBeGreaterThan(0);
-    await userEvent.click(screen.getByRole('button', { name: 'ДЗ не задано' }));
-    expect(setHomeworkNotAssigned).toHaveBeenCalledWith(true, expect.anything());
-  });
-
-  it('после отметки предлагает передумать, а не отметить второй раз', async () => {
-    useLesson.mockReturnValue({
-      data: lesson({ capabilities: TEACHING, homeworkState: 'NOT_ASSIGNED' }),
-      isPending: false,
-      isError: false,
-      error: null,
-    });
-    renderCard();
-
-    expect(screen.getAllByText('ДЗ не задано').length).toBeGreaterThan(0);
-    await userEvent.click(screen.getByRole('button', { name: 'Отменить отметку' }));
-    expect(setHomeworkNotAssigned).toHaveBeenCalledWith(false, expect.anything());
-  });
-
-  it('не предлагает «ДЗ не задано» поверх выданного задания', () => {
-    useLesson.mockReturnValue({
-      data: lesson({ capabilities: TEACHING, homeworkState: 'ASSIGNED' }),
-      isPending: false,
-      isError: false,
-      error: null,
-    });
-    useLessonHomework.mockReturnValue({
-      data: [{ id: 12, title: 'Упражнения 1–5', status: 'PUBLISHED', lesson: { id: 6 } }],
-      isPending: false,
-      isError: false,
-    });
-    renderCard();
-
-    // Бэкенд ответил бы 409: два финальных состояния одновременно ТЗ запрещает.
+    expect(screen.getByRole('button', { name: /Домашнее задание/ })).toHaveTextContent('Домашнее задание пока не указано');
     expect(screen.queryByRole('button', { name: 'ДЗ не задано' })).toBeNull();
-    expect(screen.getAllByText(/ДЗ задано/).length).toBeGreaterThan(0);
-  });
-
-  it('черновик показывает учителю как незакрытое действие', () => {
-    useLesson.mockReturnValue({
-      data: lesson({ capabilities: TEACHING, homeworkState: 'DRAFT' }),
-      isPending: false,
-      isError: false,
-      error: null,
-    });
-    useLessonHomework.mockReturnValue({
-      data: [{ id: 14, title: 'Черновик', status: 'DRAFT', lesson: { id: 6 } }],
-      isPending: false,
-      isError: false,
-    });
-    renderCard();
-
-    expect(screen.getAllByText(/Черновик\. Не опубликовано/).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: 'ДЗ не задано' })).toBeInTheDocument();
-  });
-
-  it('ученику состояние показывает, а действий не предлагает', () => {
-    useLesson.mockReturnValue({
-      data: lesson({ capabilities: ['VIEW_CARD'], homeworkState: 'NOT_ASSIGNED' }),
-      isPending: false,
-      isError: false,
-      error: null,
-    });
-    renderCard();
-
-    expect(screen.getAllByText('ДЗ не задано').length).toBeGreaterThan(0);
-    expect(screen.queryByRole('button', { name: 'Отменить отметку' })).toBeNull();
   });
 
   it('без права видеть состав урока за заданиями не ходим', () => {
@@ -498,9 +344,6 @@ describe('LessonCardPage', () => {
     renderCard();
 
     expect(useLessonHomework).toHaveBeenCalledWith(6, false);
-    expect(
-      screen.getByText('Задания урока видны его учителю и администратору'),
-    ).toBeInTheDocument();
   });
 
   it('замену и отмену предлагает только администратор', () => {

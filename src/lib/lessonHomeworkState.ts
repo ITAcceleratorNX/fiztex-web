@@ -1,4 +1,6 @@
+import type { Homework } from '@/lib/homeworkApi';
 import type { Lesson } from '@/lib/lessonsApi';
+import { pluralRu } from '@/lib/format';
 
 export type LessonHomeworkState = NonNullable<Lesson['homeworkState']>;
 
@@ -54,4 +56,16 @@ export function homeworkStateTone(state: LessonHomeworkState | undefined): strin
  */
 export function homeworkNeedsTeacherAction(state: LessonHomeworkState | undefined): boolean {
   return state === 'NOT_SPECIFIED' || state === 'DRAFT';
+}
+
+/**
+ * Сколько заданий у урока: «3 задания · 1 в черновике». Черновики названы отдельно, потому что
+ * для учеников их пока не существует. Пустой список — пустая строка: что сказать вместо числа,
+ * решает место показа (плитка, раздел «Материалов урока»).
+ */
+export function homeworkCountLabel(rows: Homework[]): string {
+  if (rows.length === 0) return '';
+  const drafts = rows.filter((row) => row.status === 'DRAFT').length;
+  const total = `${rows.length} ${pluralRu(rows.length, ['задание', 'задания', 'заданий'])}`;
+  return drafts > 0 ? `${total} · ${drafts} в черновике` : total;
 }

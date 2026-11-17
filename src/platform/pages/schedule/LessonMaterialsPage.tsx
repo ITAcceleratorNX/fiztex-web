@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, FolderOpen, Link2, Trash2, Upload } from 'lucide-react';
+import { ArrowLeft, FolderOpen, Trash2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Switch } from '@/components/ui/Switch';
@@ -23,9 +23,17 @@ import { useToast } from '@/context/ToastContext';
 import { ApiError } from '@/lib/api';
 import { lessonMaterialsApi, type LessonMaterial } from '@/lib/homeworkAiApi';
 import { formatWeekdayDayMonth } from '@/lib/format';
+import { LessonTextbookSection } from './LessonTextbookSection';
+import { LessonSummarySection } from './LessonSummarySection';
+import { LessonHomeworkSection } from './LessonHomeworkSection';
 
 /**
  * Материалы урока — модуль карточки урока (ТЗ HOMEWORK-BE-006, LESSON-MAT-001).
+ *
+ * <p>С KSP-FE-001 страница собирает всё, что видят ученики (Figma 2212:9448, 2212:9521): учебник,
+ * домашнее задание, конспект урока, файлы и ссылки. У каждого раздела подписано, когда его видят
+ * ученики. Учебник, задания и конспект переехали сюда с карточки урока; права, публикация и
+ * отметка «ДЗ не задано» не менялись.
  *
  * Отдельная страница, а не блок в карточке: посещаемость, домашние задания и оценки
  * открываются с плиток своими экранами, и материалы обязаны вести себя так же — иначе
@@ -59,6 +67,7 @@ export function LessonMaterialsPage() {
   const lesson = lessonQuery.data;
   const materials = materialsQuery.data ?? [];
   const canManage = lesson?.capabilities?.includes('EDIT_TEACHING_PART') ?? false;
+  const periodClosed = lesson?.academicPeriodStatus != null && lesson.academicPeriodStatus !== 'ACTIVE';
   const busy = addFile.isPending || addLink.isPending;
 
   function report(error: unknown, fallback: string) {
@@ -113,19 +122,18 @@ export function LessonMaterialsPage() {
   }
 
   return (
-    <div className="flex max-w-4xl flex-col gap-5">
-      <div className="flex items-center gap-3">
-        <Link
-          to={`/lesson-schedule/lessons/${id}`}
-          aria-label="К уроку"
-          className="text-subtle transition hover:text-ink"
-        >
-          <ArrowLeft className="size-5" />
-        </Link>
-        <div className="min-w-0">
+    <div className="flex flex-col gap-6">
+      <Link
+        to={`/lesson-schedule/lessons/${id}`}
+        className="inline-flex items-center gap-1 self-start text-sm font-semibold text-navy-700 hover:text-navy-800"
+      >
+        <ArrowLeft className="size-4" aria-hidden="true" />
+        К уроку
+      </Link>
+      <div className="-mt-2 flex flex-col gap-1">
           <h1 className="text-28 font-bold text-ink">Материалы урока</h1>
           {lesson && (
-            <p className="text-13 text-muted">
+            <p className="text-sm text-planning-muted">
               {[
                 lesson.subjectName,
                 lesson.subgroupName
@@ -137,33 +145,39 @@ export function LessonMaterialsPage() {
                 .join(' · ')}
             </p>
           )}
-        </div>
       </div>
 
+      {valid && <LessonTextbookSection lessonId={id} locked={periodClosed} />}
+      {/* ДЗ — сразу после учебника: с карточки урока сюда переехал отдельный блок заданий. */}
+      {lesson && <LessonHomeworkSection lesson={lesson} locked={periodClosed} />}
+      {valid && <LessonSummarySection lessonId={id} />}
+
+      <h2 className="text-base font-semibold text-ink">Файлы и ссылки</h2>
+
       {materialsQuery.isPending ? (
-        <div className="card">
+        <div className="rounded-2xl border border-slate-200 bg-white">
           <LoadingBlock label="Загрузка материалов…" />
         </div>
       ) : materialsQuery.isError ? (
-        <div className="card">
+        <div className="rounded-2xl border border-slate-200 bg-white">
           <ErrorBlock
             message="Не удалось загрузить материалы урока"
             onRetry={() => void materialsQuery.refetch()}
           />
         </div>
       ) : materials.length === 0 ? (
-        <div className="card">
+        <div className="rounded-2xl border border-slate-200 bg-white">
           <EmptyBlock
-            title="Материалов пока нет"
+            title="Файлов и ссылок пока нет"
             description={
               canManage
-                ? 'Приложите конспект, презентацию или ссылку. По этим материалам можно будет сгенерировать домашнее задание.'
+                ? 'Приложите презентацию, документ или ссылку. По этим материалам можно будет сгенерировать домашнее задание.'
                 : 'Материалы к уроку прикладывает учитель.'
             }
           />
         </div>
       ) : (
-        <ul className="card flex flex-col divide-y divide-slate-100 p-0">
+        <ul className="rounded-2xl border border-slate-200 bg-white flex flex-col divide-y divide-slate-100 p-0">
           {materials.map((material) => (
             <MaterialRow
               key={material.id}
@@ -178,7 +192,7 @@ export function LessonMaterialsPage() {
       )}
 
       {canManage && (
-        <div className="card flex flex-col gap-4 p-5">
+        <div className="rounded-2xl border border-slate-200 bg-white flex flex-col gap-4 p-5">
           <div className="flex flex-wrap items-center gap-3">
             <input
               ref={fileInput}
@@ -190,28 +204,28 @@ export function LessonMaterialsPage() {
               variant="secondary"
               disabled={busy}
               onClick={() => fileInput.current?.click()}
+              icon={<Upload className="size-4" aria-hidden />}
             >
-              <Upload className="size-4" aria-hidden />
               Загрузить файл
             </Button>
-            <Button variant="secondary" disabled={busy} onClick={() => setWorkspacePickerOpen(true)}>
-              <FolderOpen className="size-4" aria-hidden />
+            <Button variant="secondary" disabled={busy} onClick={() => setWorkspacePickerOpen(true)}
+              icon={<FolderOpen className="size-4" aria-hidden />}>
               Выбрать из рабочего пространства
             </Button>
-            <span className="text-11 text-subtle">Документ, PDF или фотография, до 50 МБ</span>
+            <span className="text-xs text-planning-muted">Документ, PDF или фотография, до 50 МБ</span>
           </div>
 
           {/* Одно поле не стоит модального окна — форма живёт прямо на странице. */}
-          <form className="flex flex-wrap items-center gap-3" onSubmit={onAddLink}>
-            <Link2 className="size-4 text-subtle" aria-hidden />
+          <form className="flex items-center gap-3" onSubmit={onAddLink}>
             <TextInput
+              aria-label="Ссылка"
               value={url}
               onChange={(event) => setUrl(event.target.value)}
-              placeholder="https://…"
-              className="min-w-[260px] flex-1"
+              placeholder="Ссылка на видео, сайт или документ"
+              className="min-w-0 flex-1"
             />
             <Button type="submit" variant="secondary" disabled={busy || !url.trim()}>
-              Добавить ссылку
+              Добавить
             </Button>
           </form>
         </div>
@@ -280,14 +294,14 @@ function MaterialRow({
         {/* Подпись словом, а не иконкой глаза: иконка требует догадки, слово — нет. */}
         {!visible && (
           <span className="ml-2 align-middle">
-            <Badge tone="gray">Только для учителя</Badge>
+            <Badge appearance="label" size="xs" tone="gray">Только для учителя</Badge>
           </span>
         )}
       </div>
 
       {canManage && (
         <div className="flex items-center gap-3">
-          <span className="text-11 text-subtle">
+          <span className="text-13 text-planning-muted">
             {visible ? 'Видно ученикам' : 'Скрыт'}
           </span>
           <Switch checked={visible} onChange={(next) => onToggleVisibility(material, next)} />

@@ -47,6 +47,16 @@
    * слева от подсказок; после решения — итог слева от очереди 380. */
   --grid-access-request: minmax(0, 400px) minmax(0, 1fr);
   --grid-access-decision: minmax(0, 1fr) minmax(0, 380px);
+  /* КСП по приказу №130 (Figma «КСП», 2212:8116…9164). Панель ИИ-генерации — бледно-синяя
+   * с синей рамкой и полосами-заглушками (`КСП / Прогресс ИИ`). Сетки: строка данных урока
+   * (метка 180, значение, источник), шапка документа (метка 260), «Ход урока» в просмотре и
+   * в редакторе (с колонками ⠿ и «Удалить этап» по 28). */
+  --color-ai-panel: #f5f7fd;
+  --color-ai-panel-line: #dbe3f6;
+  --grid-data-row: 180px minmax(0, 1fr) auto;
+  --grid-ksp-header: 260px minmax(0, 1fr);
+  --grid-ksp-stages: 180px minmax(0, 1.65fr) minmax(0, 1.65fr) minmax(0, 1fr) minmax(0, 1fr);
+  --grid-ksp-stages-edit: 28px 180px minmax(0, 1.45fr) minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, 1fr) 28px;
   /* Вход сотрудников (Figma `phyztex` 2460:4665 W1 … 2460:4833 W4): серый фон страницы,
    * белая карточка на радиусе 44 с синей панелью на радиусе 32, «залитые» поля 54 на
    * радиусе 14 — серые без рамки, при ошибке розовые с красной рамкой. */
@@ -233,6 +243,12 @@
     @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800
       placeholder:text-slate-400 outline-none transition
       focus:border-brand-400 focus:ring-2 focus:ring-brand-400/30;
+  }
+
+  /* Компактное поле — ячейки «Хода урока» КСП (Figma 2212:8042): 13 px на радиусе 10. Стоит
+   * после `.input-base` в том же слое и перекрывает его отступы и кегль. */
+  .input-compact {
+    @apply rounded-action px-3 py-2 text-13 leading-5;
   }
 
   .label-base {

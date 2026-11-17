@@ -18,7 +18,7 @@ const variants: Record<Variant, string> = {
     'bg-brand-500 text-white shadow-sm hover:bg-brand-600 active:bg-brand-700 disabled:bg-brand-300',
   secondary:
     'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 active:bg-slate-100 disabled:text-slate-400',
-  ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 active:bg-slate-200',
+  ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 active:bg-slate-200 disabled:text-slate-400 disabled:hover:bg-transparent',
   danger: 'bg-red-500 text-white hover:bg-red-600 active:bg-red-700 disabled:bg-red-300',
   'danger-ghost': 'bg-transparent text-red-600 hover:bg-red-50 active:bg-red-100 disabled:text-slate-400',
   // Разрушительное действие в шапке, которое не главное на экране (Figma `phyztex` 2460:2129
