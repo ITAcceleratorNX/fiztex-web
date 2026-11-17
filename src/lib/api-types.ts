@@ -3879,6 +3879,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assessment-works/{workId}/results/{studentProfileId}/not-taken": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["markNotTaken"];
+        post?: never;
+        delete: operations["clearNotTaken"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/attendance/my-marks": {
         parameters: {
             query?: never;
@@ -3934,7 +3950,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["summary"];
+        get: operations["summary_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4719,6 +4735,54 @@ export interface paths {
             cookie?: never;
         };
         get: operations["context_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gradebook/fill-control/filters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["filters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gradebook/fill-control/lessons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["lessons"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gradebook/fill-control/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["summary"];
         put?: never;
         post?: never;
         delete?: never;
@@ -10639,9 +10703,34 @@ export interface components {
             /** Format: int32 */
             sorUsed?: number;
         };
+        AssessmentProblemView: {
+            canEdit?: boolean;
+            editBlockedCode?: string;
+            editBlockedMessage?: string;
+            /** Format: int32 */
+            expected?: number;
+            /** @enum {string} */
+            kind?: "SOR" | "SOCH";
+            /** Format: int32 */
+            missing?: number;
+            /** Format: int32 */
+            notTaken?: number;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            scored?: number;
+            /** @enum {string} */
+            status?: "NOT_FILLED" | "PARTIAL";
+            /** Format: int64 */
+            workId?: number;
+        };
         AssessmentResultsView: {
             canCorrect?: boolean;
+            canFill?: boolean;
             canManage?: boolean;
+            fill?: components["schemas"]["ResultsFillView"];
+            fillBlockedCode?: string;
+            fillBlockedMessage?: string;
             students?: components["schemas"]["StudentResultView"][];
             work?: components["schemas"]["AssessmentWorkView"];
         };
@@ -10863,6 +10952,21 @@ export interface components {
             reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
             /** @enum {string} */
             status?: "NOT_MARKED" | "PRESENT" | "ABSENT";
+        };
+        AttendanceProblemView: {
+            canEdit?: boolean;
+            editBlockedCode?: string;
+            editBlockedMessage?: string;
+            /** Format: int32 */
+            expected?: number;
+            /** Format: int32 */
+            filled?: number;
+            /** Format: int32 */
+            missing?: number;
+            /** @enum {string} */
+            sheetState?: "NOT_FILLED" | "DRAFT" | "PUBLISHED" | "ANNULLED";
+            /** @enum {string} */
+            status?: "NOT_FILLED" | "PARTIAL";
         };
         AttendanceQrScanRequest: {
             payload?: string;
@@ -12477,6 +12581,63 @@ export interface components {
             fullName?: string;
             /** Format: int64 */
             studentProfileId?: number;
+        };
+        FillControlFiltersView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            classes?: components["schemas"]["NamedOption"][];
+            periods?: components["schemas"]["PeriodOption"][];
+            subjects?: components["schemas"]["NamedOption"][];
+            teacherFilterAllowed?: boolean;
+            teachers?: components["schemas"]["NamedOption"][];
+            years?: components["schemas"]["YearOption"][];
+        };
+        FillControlLessonView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            attendance?: components["schemas"]["AttendanceProblemView"];
+            canEdit?: boolean;
+            canView?: boolean;
+            /** Format: int64 */
+            classId?: number;
+            className?: string;
+            editBlockedCode?: string;
+            editBlockedMessage?: string;
+            /** @example 14:30:00 */
+            endTime?: string;
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int32 */
+            lessonNumber?: number;
+            problems?: ("ATTENDANCE" | "ASSESSMENT")[];
+            /** @example 14:30:00 */
+            startTime?: string;
+            /** @enum {string} */
+            status?: "NOT_FILLED" | "PARTIAL";
+            /** Format: int64 */
+            subgroupId?: number;
+            subgroupName?: string;
+            /** Format: int64 */
+            subjectId?: number;
+            subjectName?: string;
+            teacherName?: string;
+            /** Format: int64 */
+            teacherProfileId?: number;
+            works?: components["schemas"]["AssessmentProblemView"][];
+        };
+        FillControlSummaryView: {
+            /** Format: int32 */
+            assessmentLessons?: number;
+            /** Format: int32 */
+            assessmentWorks?: number;
+            /** Format: int32 */
+            attendanceLessons?: number;
+            /** Format: int32 */
+            bothLessons?: number;
+            /** Format: int32 */
+            lessons?: number;
         };
         FinalGradeHistoryView: {
             /** @enum {string} */
@@ -16024,6 +16185,11 @@ export interface components {
             canSubmit?: boolean;
             lastDecision?: components["schemas"]["TeacherAvailabilityProposalView"];
         };
+        NamedOption: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
         NextLessonView: {
             /** Format: date */
             lessonDate?: string;
@@ -16344,6 +16510,24 @@ export interface components {
         };
         PageEquipmentEventView: {
             content?: components["schemas"]["EquipmentEventView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        PageFillControlLessonView: {
+            content?: components["schemas"]["FillControlLessonView"][];
             empty?: boolean;
             first?: boolean;
             last?: boolean;
@@ -17936,6 +18120,8 @@ export interface components {
             scoreAfter?: number;
             /** Format: int32 */
             scoreBefore?: number;
+            statusAfter?: string;
+            statusBefore?: string;
             studentName?: string;
             /** Format: int64 */
             studentProfileId?: number;
@@ -17955,6 +18141,16 @@ export interface components {
             testTitle?: string;
             /** Format: double */
             totalScore?: number;
+        };
+        ResultsFillView: {
+            /** Format: int32 */
+            expected?: number;
+            /** Format: int32 */
+            missing?: number;
+            /** Format: int32 */
+            notTaken?: number;
+            /** Format: int32 */
+            scored?: number;
         };
         ReturnEquipmentRequest: {
             comment?: string;
@@ -18766,6 +18962,8 @@ export interface components {
             resultId?: number;
             /** Format: int32 */
             score?: number;
+            /** @enum {string} */
+            state?: "SCORED" | "NOT_TAKEN" | "MISSING";
             studentName?: string;
             /** Format: int64 */
             studentProfileId?: number;
@@ -20334,6 +20532,12 @@ export interface components {
             publishedPeriodCount?: number;
             /** Format: int32 */
             recommendedValue?: number;
+        };
+        YearOption: {
+            active?: boolean;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
         };
         YearTransitionStudent: {
             blockers?: string[];
@@ -28047,6 +28251,52 @@ export interface operations {
             };
         };
     };
+    markNotTaken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentResultView"];
+                };
+            };
+        };
+    };
+    clearNotTaken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentResultView"];
+                };
+            };
+        };
+    };
     myMarks: {
         parameters: {
             query: {
@@ -28118,7 +28368,7 @@ export interface operations {
             };
         };
     };
-    summary: {
+    summary_1: {
         parameters: {
             query?: {
                 month?: string;
@@ -29389,6 +29639,84 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GradebookContextView"];
+                };
+            };
+        };
+    };
+    filters: {
+        parameters: {
+            query?: {
+                academicYearId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FillControlFiltersView"];
+                };
+            };
+        };
+    };
+    lessons: {
+        parameters: {
+            query?: {
+                academicYearId?: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId?: number;
+                teacherProfileId?: number;
+                problem?: "ATTENDANCE" | "ASSESSMENT";
+                order?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageFillControlLessonView"];
+                };
+            };
+        };
+    };
+    summary: {
+        parameters: {
+            query?: {
+                academicYearId?: number;
+                academicPeriodId?: number;
+                classId?: number;
+                subjectId?: number;
+                teacherProfileId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FillControlSummaryView"];
                 };
             };
         };
