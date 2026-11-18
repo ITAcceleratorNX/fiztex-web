@@ -4007,6 +4007,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attestation-settings/periods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAttestationPeriods"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/admin/activate": {
         parameters: {
             query?: never;
@@ -11120,6 +11136,27 @@ export interface components {
             settingId?: number;
             sochProvided?: boolean;
         };
+        AttestationPeriodOptionView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            configured?: boolean;
+            current?: boolean;
+            /** Format: date */
+            endDate?: string;
+            /** Format: int32 */
+            halfYearNumber?: number;
+            name?: string;
+            /** @enum {string} */
+            periodicity?: "QUARTER" | "HALF_YEAR";
+            periods?: components["schemas"]["AttestationPeriodRefView"][];
+            /** @enum {string} */
+            resultFormat?: "NUMERIC" | "PASS_FAIL";
+            sochProvided?: boolean;
+            /** Format: date */
+            startDate?: string;
+            /** Format: int64 */
+            viewPeriodId?: number;
+        };
         AttestationPeriodRefView: {
             /** Format: date */
             endDate?: string;
@@ -11128,6 +11165,17 @@ export interface components {
             name?: string;
             /** Format: date */
             startDate?: string;
+            /** @enum {string} */
+            type?: "QUARTER" | "TRIMESTER" | "SEMESTER" | "CUSTOM";
+        };
+        AttestationPeriodsView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            /** Format: int64 */
+            classId?: number;
+            periods?: components["schemas"]["AttestationPeriodOptionView"][];
+            /** Format: int64 */
+            subjectId?: number;
         };
         AttestationPreviewView: {
             canSave?: boolean;
@@ -11136,8 +11184,10 @@ export interface components {
             effectiveFrom?: components["schemas"]["AttestationPeriodRefView"];
             /** Format: int64 */
             endsSettingId?: number;
+            finalsClassNames?: string[];
             /** Format: int64 */
             finalsInScope?: number;
+            periods?: components["schemas"]["EffectiveFromOptionView"][];
             replacesSettingIds?: number[];
         };
         AttestationSettingRequest: {
@@ -11162,6 +11212,7 @@ export interface components {
             /** Format: int64 */
             classId?: number;
             className?: string;
+            classNames?: string[];
             effectiveFrom?: components["schemas"]["AttestationPeriodRefView"];
             effectiveTo?: components["schemas"]["AttestationPeriodRefView"];
             /** Format: int64 */
@@ -11273,6 +11324,8 @@ export interface components {
             versionNumber: number;
         };
         ChangeFinalGradeValueRequest: {
+            confirm?: boolean;
+            confirmationReason?: string;
             /** Format: int64 */
             expectedVersion?: number;
             /** @enum {string} */
@@ -11427,6 +11480,7 @@ export interface components {
             /** Format: int64 */
             historyCount?: number;
             publicationIssues?: string[];
+            quarterResults?: components["schemas"]["QuarterResultView"][];
             recommendation?: components["schemas"]["RecommendationOutcome"];
             recommendationChanged?: boolean;
             /** Format: int32 */
@@ -11951,6 +12005,8 @@ export interface components {
             academicPeriodId?: number;
             /** Format: int64 */
             academicYearId?: number;
+            confirm?: boolean;
+            confirmationReason?: string;
             /** @enum {string} */
             resultKind?: "NUMERIC" | "PASS" | "FAIL" | "TEMP_UNATTESTED" | "NOT_STUDIED" | "NOT_ATTESTED";
             resultReason?: string;
@@ -12368,6 +12424,13 @@ export interface components {
             sochProvided?: boolean;
             /** Format: int64 */
             subjectId?: number;
+        };
+        EffectiveFromOptionView: {
+            available?: boolean;
+            message?: string;
+            period?: components["schemas"]["AttestationPeriodRefView"];
+            /** @enum {string} */
+            unavailableReason?: "STARTED" | "NOT_HALF_YEAR_START";
         };
         Entry: {
             decision?: string;
@@ -15619,6 +15682,19 @@ export interface components {
             studentProfileId?: number;
             subjectName?: string;
         };
+        MyAttestationSlotView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            finalAllowed?: boolean;
+            /** Format: int64 */
+            finalPeriodId?: number;
+            /** Format: int32 */
+            halfYearNumber?: number;
+            /** @enum {string} */
+            periodicity?: "QUARTER" | "HALF_YEAR";
+            /** @enum {string} */
+            resultFormat?: "NUMERIC" | "PASS_FAIL";
+        };
         MyClassAttendanceCellView: {
             /** Format: int64 */
             lessonId?: number;
@@ -16039,6 +16115,7 @@ export interface components {
         MyFinalGradesView: {
             /** Format: int64 */
             academicYearId?: number;
+            attestation?: components["schemas"]["MySubjectAttestationView"][];
             periods?: components["schemas"]["PeriodRefView"][];
             /** Format: int64 */
             studentProfileId?: number;
@@ -16106,6 +16183,11 @@ export interface components {
             role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
             student?: components["schemas"]["StudentPart"];
             teacher?: components["schemas"]["TeacherPart"];
+        };
+        MySubjectAttestationView: {
+            periods?: components["schemas"]["MyAttestationSlotView"][];
+            /** Format: int64 */
+            subjectId?: number;
         };
         MySubjectFinalsView: {
             examResult?: components["schemas"]["MyFinalResultView"];
@@ -17698,6 +17780,12 @@ export interface components {
             /** Format: int64 */
             version?: number;
             workingDays: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
+        };
+        QuarterResultView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            name?: string;
+            result?: components["schemas"]["PeriodResultSummaryView"];
         };
         Question: {
             maxScore?: number;
@@ -28455,6 +28543,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EffectiveAttestationView"];
+                };
+            };
+        };
+    };
+    getAttestationPeriods: {
+        parameters: {
+            query: {
+                classId: number;
+                subjectId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttestationPeriodsView"];
                 };
             };
         };

@@ -9,13 +9,18 @@ interface Toast {
   id: number;
   kind: ToastKind;
   message: string;
+  /**
+   * Заголовок над текстом — «Настройка сохранена» / «Вступит в силу с 3 четверти» (Figma
+   * «Итоговая аттестация» А5 2224:2443, А10 2224:3717). Без него тост — одна строка, как раньше.
+   */
+  title?: string;
 }
 
 interface ToastContextValue {
-  push: (kind: ToastKind, message: string) => void;
-  success: (message: string) => void;
-  error: (message: string) => void;
-  info: (message: string) => void;
+  push: (kind: ToastKind, message: string, title?: string) => void;
+  success: (message: string, title?: string) => void;
+  error: (message: string, title?: string) => void;
+  info: (message: string, title?: string) => void;
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -30,9 +35,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const push = useCallback(
-    (kind: ToastKind, message: string) => {
+    (kind: ToastKind, message: string, title?: string) => {
       const id = (counter += 1);
-      setToasts((prev) => [...prev, { id, kind, message }]);
+      setToasts((prev) => [...prev, { id, kind, message, title }]);
     },
     [],
   );
@@ -40,9 +45,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ToastContextValue>(
     () => ({
       push,
-      success: (m) => push('success', m),
-      error: (m) => push('error', m),
-      info: (m) => push('info', m),
+      success: (m, title) => push('success', m, title),
+      error: (m, title) => push('error', m, title),
+      info: (m, title) => push('info', m, title),
     }),
     [push],
   );
@@ -163,9 +168,16 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: (id: number) => 
         className="flex min-w-0 flex-1 items-start gap-2.5 py-1"
       >
         <Icon className={cx('mt-0.5 shrink-0', config.iconClass)} aria-hidden="true" />
-        <p className={cx('min-w-0 flex-1 whitespace-pre-wrap break-words text-13 font-semibold', config.text)}>
-          {toast.message}
-        </p>
+        {toast.title ? (
+          <div className={cx('min-w-0 flex-1 break-words', config.text)}>
+            <p className="text-15 font-bold">{toast.title}</p>
+            <p className="mt-0.5 whitespace-pre-wrap text-13">{toast.message}</p>
+          </div>
+        ) : (
+          <p className={cx('min-w-0 flex-1 whitespace-pre-wrap break-words text-13 font-semibold', config.text)}>
+            {toast.message}
+          </p>
+        )}
       </div>
       <button
         type="button"

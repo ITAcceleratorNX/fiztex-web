@@ -45,10 +45,12 @@ describe('attestationModel', () => {
 
     it('«было → стало» полными словами у каждого действия', () => {
       expect(historyEventTitle(event({ action: 'CREATE', after: { resultKind: 'TEMP_UNATTESTED' } })))
-        .toBe('Создание: — → Временно не аттестован');
+        .toBe('Выставлен итог: Временно не аттестован');
       expect(historyEventTitle(event({
         action: 'PUBLISH', before: { resultKind: 'TEMP_UNATTESTED' }, after: { resultKind: 'TEMP_UNATTESTED' },
-      }))).toBe('Публикация: Временно не аттестован → Временно не аттестован');
+      }))).toBe('Публикация: Временно не аттестован');
+      expect(historyEventTitle(event({ action: 'REPUBLISH', before: { resultKind: 'PASS' }, after: { resultKind: 'FAIL' } })))
+        .toBe('Повторная публикация: Зачёт → Незачёт');
       expect(historyEventTitle(event({ action: 'UPDATE', before: { resultKind: 'TEMP_UNATTESTED' }, after: { value: 4 } })))
         .toBe('Изменение: Временно не аттестован → 4');
     });

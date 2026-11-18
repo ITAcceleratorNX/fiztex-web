@@ -26,6 +26,8 @@ vi.mock('@/hooks/queries', () => ({
   useCorrectFinalGrade: () => ({ mutateAsync: correctFinal, isPending: false }),
   useRepublishFinalGrade: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useFinalGradeHistory: () => ({ isPending: true, data: undefined }),
+  // Предмет без настройки аттестации: периоды фильтра — четверти журнала, как раньше.
+  useAttestationPeriods: () => ({ isPending: false, data: { periods: [] } }),
 }));
 
 function context() {
@@ -385,15 +387,16 @@ describe('JournalPage', () => {
 
     await user.click(screen.getByRole('button', { name: '5' }));
 
-    expect(setFinal).toHaveBeenCalledWith({
+    expect(setFinal).toHaveBeenCalledWith(expect.objectContaining({
       finalGradeId: null,
       studentProfileId: 19,
       subjectId: 2,
       academicPeriodId: 7,
       value: 5,
       resultKind: 'NUMERIC',
-      resultReason: undefined,
-    });
+      // Предмет без «Итоговой аттестации»: подтверждать к публикации нечего.
+      confirm: false,
+    }));
   });
 
   /** §8: админ экран открывает, но выставлять не может — решает сервер, а не роль на клиенте. */

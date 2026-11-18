@@ -12,6 +12,8 @@ export type GradebookSubgroup = Schema<'GradebookSubgroupView'>;
 
 export type ClassFinalGrades = Schema<'ClassFinalGradesView'>;
 export type ClassFinalGradeRow = Schema<'ClassFinalGradeRowView'>;
+export type QuarterResult = Schema<'QuarterResultView'>;
+export type RecommendationOutcome = Schema<'RecommendationOutcome'>;
 export type FinalGrade = Schema<'FinalGradeView'>;
 
 /** Координаты журнала: класс, предмет и период обязательны (gradebook-read-contract §2). */
@@ -32,6 +34,9 @@ export const FINAL_GRADE_ERRORS = {
   alreadyExists: 'FINAL_GRADE_ALREADY_EXISTS',
   notAccessible: 'FINAL_GRADE_NOT_ACCESSIBLE',
   periodNotEnded: 'FINAL_GRADE_PERIOD_NOT_ENDED',
+  /** У настроенного предмета публикуется только подтверждённое (`details.studentProfileIds`). */
+  setNotConfirmed: 'FINAL_GRADE_SET_NOT_CONFIRMED',
+  deviationReasonRequired: 'FINAL_GRADE_DEVIATION_REASON_REQUIRED',
 } as const;
 
 /**
@@ -102,6 +107,9 @@ export const finalGradesApi = {
     value: number | null;
     resultKind?: FinalGrade['resultKind'];
     resultReason?: string;
+    /** Подтвердить выбор к публикации той же командой (настроенный предмет). */
+    confirm?: boolean;
+    confirmationReason?: string;
   }): Promise<FinalGrade> {
     return request<FinalGrade>('/final-grades', {
       method: 'POST',
@@ -113,7 +121,7 @@ export const finalGradesApi = {
    * «Подтвердить и опубликовать повторно» (ТЗ №9): опубликованное число после правки баллов,
    * `value` — выбранное учителем. Прежнее и новое значение пишутся в историю.
    */
-  republish(finalGradeId: number, body: { value: number; expectedVersion: number }): Promise<FinalGrade> {
+  republish(finalGradeId: number, body: { value: number; expectedVersion: number; reason?: string }): Promise<FinalGrade> {
     return request<FinalGrade>(`/final-grades/${finalGradeId}/republish`, { method: 'POST', body });
   },
 
@@ -128,10 +136,11 @@ export const finalGradesApi = {
     resultKind?: FinalGrade['resultKind'],
     resultReason?: string,
     expectedVersion?: number,
+    confirmation?: { confirm: true; confirmationReason?: string },
   ): Promise<FinalGrade> {
     return request<FinalGrade>(`/final-grades/${finalGradeId}`, {
       method: 'PATCH',
-      body: { value, resultKind, resultReason, expectedVersion },
+      body: { value, resultKind, resultReason, expectedVersion, ...confirmation },
     });
   },
 
