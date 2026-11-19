@@ -7586,6 +7586,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/assessment-results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Работы СОР/СОЧ предмета за период и баллы текущего состава, включая «Не выполнял работу» */
+        get: operations["getMyClassAssessmentResults"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/attendance": {
         parameters: {
             query?: never;
@@ -12323,6 +12340,7 @@ export interface components {
             entries?: components["schemas"]["DiaryEntryView"][];
             /** Format: int64 */
             studentProfileId?: number;
+            works?: components["schemas"]["LearnerWorkResultView"][];
         };
         DuplicateCheckRequest: {
             sha256?: string;
@@ -12935,6 +12953,7 @@ export interface components {
         GradebookAssessmentResultView: {
             /** Format: int32 */
             maxScore?: number;
+            notTaken?: boolean;
             /** Format: int64 */
             resultId?: number;
             /** Format: int32 */
@@ -14944,6 +14963,27 @@ export interface components {
             /** Format: int32 */
             score?: number;
         };
+        LearnerWorkResultView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** @enum {string} */
+            kind?: "SOR" | "SOCH";
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int32 */
+            maxScore?: number;
+            /** Format: int32 */
+            number?: number | null;
+            /** Format: int32 */
+            score?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            title?: string;
+            /** Format: int64 */
+            workId?: number;
+        };
         LessonCommentView: {
             body?: string;
             /** Format: date-time */
@@ -15695,6 +15735,16 @@ export interface components {
             /** @enum {string} */
             resultFormat?: "NUMERIC" | "PASS_FAIL";
         };
+        MyClassAssessmentResultsView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            classId?: number;
+            results?: components["schemas"]["Result"][];
+            /** Format: int64 */
+            subjectId?: number;
+            works?: components["schemas"]["Work"][];
+        };
         MyClassAttendanceCellView: {
             /** Format: int64 */
             lessonId?: number;
@@ -16225,6 +16275,7 @@ export interface components {
             /** Format: int64 */
             subjectId?: number;
             subjectName?: string;
+            works?: components["schemas"]["LearnerWorkResultView"][];
         };
         MySubjectGradesView: {
             /** Format: int64 */
@@ -18158,6 +18209,15 @@ export interface components {
             expectedActiveYearId?: number;
             makeActive?: boolean;
             reason?: string;
+        };
+        Result: {
+            notTaken?: boolean;
+            /** Format: int32 */
+            score?: number | null;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            workId?: number;
         };
         ResultDetailResponse: {
             answers?: components["schemas"]["AnswerReviewItem"][];
@@ -20482,6 +20542,23 @@ export interface components {
         VerifyCodeResponse: {
             accessToken?: string;
             applicant?: components["schemas"]["ApplicantView"];
+        };
+        Work: {
+            /** @enum {string} */
+            kind?: "SOR" | "SOCH";
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int32 */
+            maxScore?: number;
+            /** Format: int32 */
+            number?: number | null;
+            /** @enum {string} */
+            status?: "PLANNED" | "CONDUCTED" | "CANCELLED";
+            subgroupName?: string | null;
+            /** Format: int64 */
+            workId?: number;
         };
         WorkHistoryEventView: {
             action?: string;
@@ -29758,6 +29835,7 @@ export interface operations {
         parameters: {
             query?: {
                 academicYearId?: number;
+                classId?: number;
             };
             header?: never;
             path?: never;
@@ -35211,6 +35289,40 @@ export interface operations {
             };
             /** @description Не найден допустимый справочный объект */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getMyClassAssessmentResults: {
+        parameters: {
+            query: {
+                periodId?: number;
+                subjectId: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Работы и результаты */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyClassAssessmentResultsView"];
+                };
+            };
+            /** @description Класс недоступен */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

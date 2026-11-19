@@ -10,6 +10,8 @@ import {
   gradeTitle,
   periodLabel,
   periodNoun,
+  workCellLabel,
+  workTitle,
 } from './myClassGradesModel';
 
 type Grade = Schema<'MyClassGradeItemView'>;
@@ -36,6 +38,44 @@ const students = [
 ];
 
 describe('buildMyClassJournal', () => {
+  it('shows assessment works exactly like the teacher journal: 0 is a score, «н/в» is a status', () => {
+    const journal = buildMyClassJournal({
+      students,
+      grades: [grade({ gradeId: 1, sourceDate: '2026-11-12' })],
+      finals: [],
+      results: [],
+      assessment: {
+        works: [{ workId: 71, kind: 'SOR', number: 2, maxScore: 20, status: 'CONDUCTED', lessonId: 100, lessonDate: '2026-11-12' }],
+        results: [
+          { workId: 71, studentProfileId: 10, score: 0, notTaken: false },
+          { workId: 71, studentProfileId: 11, score: undefined, notTaken: true },
+        ],
+      },
+    });
+    const column = journal.columns.find((item) => item.work)!;
+    expect(journal.columns.map((item) => item.key)).toEqual(['LESSON:100', 'WORK:71']);
+    expect(workTitle(column)).toBe('СОР 2');
+    expect(isSummative(column.kind)).toBe(true);
+    expect(workCellLabel(journal.rows[0].works.get('WORK:71'), 20)).toBe('0/20');
+    expect(workCellLabel(journal.rows[1].works.get('WORK:71'), 20)).toBe('н/в');
+    expect(workCellLabel(undefined, 20)).toBeNull();
+  });
+
+  it('keeps works inside the month window only', () => {
+    const journal = buildMyClassJournal({
+      students,
+      grades: [],
+      finals: [],
+      results: [],
+      assessment: {
+        works: [{ workId: 72, kind: 'SOCH', maxScore: 40, status: 'CONDUCTED', lessonId: 101, lessonDate: '2026-10-20' }],
+        results: [],
+      },
+      window: { from: '2026-11-01', to: '2026-11-30' },
+    });
+    expect(journal.columns).toHaveLength(0);
+  });
+
   it('marks intermediate assessment as ПО in the homeroom journal', () => {
     const journal = buildMyClassJournal({
       students,

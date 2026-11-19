@@ -7,6 +7,7 @@ import { Select } from '@/components/ui/Select';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { StatCard } from '@/components/ui/StatCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { FillControlPanel } from '@/components/fillControl/FillControlPanel';
 import { useMyClassContext, useMyClassRoster, useMyClassSummary } from '@/hooks/queries';
 import { useReportPerformance } from '@/hooks/reportingQueries';
 import { ApiError } from '@/lib/api';
@@ -33,6 +34,9 @@ function yearName(context: Schema<'MyClassContextView'>): string {
 /** Параметры вкладки «Отчётность»: принадлежат классу и при его смене сбрасываются. */
 const REPORT_PARAMS = ['reportView', 'reportSubject', 'reportStudent'];
 
+/** Фильтры «Заполнения журнала» (`FillControlPanel`): предмет и учитель принадлежат классу. */
+const FILL_PARAMS = ['fcSubject', 'fcTeacher', 'fcPage'];
+
 function classLabel(name: string): string {
   const trimmed = name.trim();
   if (!trimmed) return 'Класс';
@@ -48,7 +52,7 @@ function noClassTitle(state: Schema<'MyClassContextView'>['state']): string {
   }
 }
 
-const TABS = ['students', 'grades', 'attendance', 'schedule', 'report'] as const;
+const TABS = ['students', 'grades', 'attendance', 'fill', 'schedule', 'report'] as const;
 type Tab = (typeof TABS)[number];
 
 function tabOf(value: string | null): Tab {
@@ -179,7 +183,7 @@ export function MyClassPage() {
                     onChange={(event) => {
                       const next = new URLSearchParams(searchParams);
                       next.set('classId', event.target.value);
-                      [...REPORT_PARAMS, ...DYNAMICS_PARAMS].forEach((name) => next.delete(name));
+                      [...REPORT_PARAMS, ...FILL_PARAMS, ...DYNAMICS_PARAMS].forEach((name) => next.delete(name));
                       setSearchParams(next);
                     }}
                   >
@@ -243,6 +247,7 @@ export function MyClassPage() {
               <TabsTrigger value="students">Ученики</TabsTrigger>
               <TabsTrigger value="grades">Оценки</TabsTrigger>
               <TabsTrigger value="attendance">Посещаемость</TabsTrigger>
+              <TabsTrigger value="fill">Заполнение журнала</TabsTrigger>
               <TabsTrigger value="schedule">Расписание</TabsTrigger>
               <TabsTrigger value="report">Отчётность</TabsTrigger>
             </TabsList>
@@ -267,6 +272,11 @@ export function MyClassPage() {
                 onSelectPeriod={(value) => updateParam('periodId', value)}
                 onForbidden={reportForbidden}
               />
+            </TabsContent>
+            <TabsContent value="fill" className="mt-4">
+              {/* Класс задан вкладкой; предметы других учителей видны только на просмотр —
+                  это решает сервер (`canEdit`), экран лишь называет причину. */}
+              <FillControlPanel key={classId} showTeacherFilter lockedClassId={classId} backLabel="← К заполнению журнала" />
             </TabsContent>
             <TabsContent value="report" className="mt-4">
               <MyClassReportTab

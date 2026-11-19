@@ -12,9 +12,16 @@ const publishFinals = vi.fn();
 
 const useAssessmentSheets = vi.fn();
 const saveScores = vi.fn();
+const markNotTaken = vi.fn();
 const correctFinal = vi.fn();
 vi.mock('@/context/ToastContext', () => ({ useToast: () => ({ success: vi.fn(), error: vi.fn() }) }));
+vi.mock('@/hooks/fillControlQueries', () => ({
+  useFillControlSummary: () => ({ data: undefined }),
+  useFillControlLessons: () => ({ data: undefined, isLoading: true }),
+  useFillControlFilters: () => ({ data: undefined }),
+}));
 vi.mock('@/hooks/queries', () => ({
+  useMarkNotTaken: () => ({ mutate: markNotTaken, isPending: false }),
   useAssessmentSheets: (...args: unknown[]) => useAssessmentSheets(...args),
   useSaveAssessmentScores: () => ({ mutateAsync: saveScores, isPending: false }),
   useGradebookContext: (...args: unknown[]) => useGradebookContext(...args),
@@ -236,8 +243,9 @@ describe('JournalPage', () => {
 
     const header = screen.getByRole('columnheader', { name: /09\.09\s*СОР 1/ });
     expect(within(header).getByRole('link')).toHaveAttribute('href', '/lesson-schedule/lessons/449');
-    // Ноль — полноценный балл, и с одним баллом работы журнал уже не «пустой».
-    expect(screen.getByRole('button', { name: 'Оценка 0/20' })).toBeInTheDocument();
+    // Ноль — полноценный балл, и с одним баллом работы журнал уже не «пустой». Максимум — в заголовке
+    // колонки, в клетке только балл: так же выглядит и старая СОР-оценка урока.
+    expect(screen.getByRole('button', { name: 'Оценка 0' })).toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
@@ -254,9 +262,9 @@ describe('JournalPage', () => {
       const studentId = data.rows[0].studentProfileId as number;
       useAssessmentSheets.mockReturnValue([{
         data: {
-          canManage, canCorrect: canManage,
+          canManage, canCorrect: canManage, canFill: canManage,
           work: { id: 71, kind, maxScore: 20 },
-          students: [{ studentProfileId: studentId, studentName: 'Иванов Арсен', score: saved, version: saved == null ? null : 3, inAudience: true }],
+          students: [{ studentProfileId: studentId, studentName: 'Иванов Арсен', score: saved, version: saved == null ? null : 3, inAudience: true, state: saved == null ? 'MISSING' : 'SCORED' }],
         },
       }]);
       return studentId;
@@ -272,6 +280,53 @@ describe('JournalPage', () => {
       withWork('SOR', false);
       renderPage();
       expect(screen.queryByRole('button', { name: /поставить балл/ })).toBeNull();
+    });
+
+    function sheetOf(studentId: number, overrides: { canFill?: boolean; state: string; score?: number | null }) {
+      useAssessmentSheets.mockReturnValue([{
+        data: {
+          canManage: true, canCorrect: false, canFill: overrides.canFill ?? true,
+          fillBlockedMessage: overrides.canFill === false ? 'Учебная четверть закрыта' : undefined,
+          work: { id: 71, kind: 'SOR', maxScore: 20 },
+          students: [{ studentProfileId: studentId, studentName: 'Иванов Арсен', score: overrides.score ?? null, version: null, inAudience: true, state: overrides.state }],
+        },
+      }]);
+    }
+
+    it('«н/в» — отдельное состояние клетки: не балл и не «+»', () => {
+      const studentId = withWork('SOR', true);
+      sheetOf(studentId, { state: 'NOT_TAKEN' });
+      renderPage();
+
+      const cell = screen.getByRole('button', { name: /не выполнял работу/ });
+      expect(cell).toHaveTextContent('н/в');
+      expect(screen.queryByRole('button', { name: /поставить балл/ })).toBeNull();
+    });
+
+    it('«Не выполнял работу» ставится только явным выбором в открытой клетке', async () => {
+      const user = userEvent.setup();
+      const studentId = withWork('SOR', true);
+      sheetOf(studentId, { state: 'MISSING' });
+      renderPage();
+
+      await user.click(screen.getByRole('button', { name: /поставить балл/ }));
+      await user.click(screen.getByRole('button', { name: 'Не выполнял работу' }));
+
+      expect(markNotTaken).toHaveBeenCalledWith(
+        { workId: 71, studentProfileId: studentId },
+        expect.any(Object),
+      );
+    });
+
+    it('закрытая четверть: пустая клетка не редактируется, «н/в» остаётся видна', () => {
+      const studentId = withWork('SOR', true);
+      sheetOf(studentId, { state: 'MISSING', canFill: false });
+      renderPage();
+      expect(screen.queryByRole('button', { name: /поставить балл/ })).toBeNull();
+
+      sheetOf(studentId, { state: 'NOT_TAKEN', canFill: false });
+      renderPage();
+      expect(screen.getAllByText('н/в').length).toBeGreaterThan(0);
     });
 
     it('копит правки, показывает «Изменено N» и сохраняет явным действием', async () => {

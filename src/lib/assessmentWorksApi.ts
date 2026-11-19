@@ -59,6 +59,24 @@ export const assessmentWorksApi = {
     });
   },
 
+  /**
+   * «Не выполнял работу»: явное решение учителя в проведённой работе. Не балл и не ноль; повтор
+   * идемпотентен. Новый балл снимает статус сам.
+   */
+  markNotTaken(workId: number, studentProfileId: number): Promise<AssessmentStudentResult> {
+    return request<AssessmentStudentResult>(
+      `/assessment-works/${workId}/results/${studentProfileId}/not-taken`,
+      { method: 'PUT', body: {} },
+    );
+  },
+
+  clearNotTaken(workId: number, studentProfileId: number): Promise<AssessmentStudentResult> {
+    return request<AssessmentStudentResult>(
+      `/assessment-works/${workId}/results/${studentProfileId}/not-taken`,
+      { method: 'DELETE' },
+    );
+  },
+
   results(workId: number, signal?: AbortSignal): Promise<AssessmentResults> {
     return request<AssessmentResults>(`/assessment-works/${workId}/results`, { signal });
   },

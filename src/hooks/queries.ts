@@ -2118,6 +2118,8 @@ function useAttendanceCommand<TVars>(
       // инвалидация тут же перезапросила бы то, что мы только что положили.
       qc.setQueryData(keys.attendanceSheet(lessonId), sheet);
       qc.invalidateQueries({ queryKey: keys.attendanceHistory(lessonId) });
+      // Список «Незаполненное» и его счётчики считает сервер — перечитываем после любой записи листа.
+      qc.invalidateQueries({ queryKey: ['fill-control'] });
     },
   });
 }
@@ -3778,13 +3780,16 @@ export function useMyClassSubjectJournal(
     queryFn: async ({ signal }) => {
       const root = `/my-class/classes/${classId}`;
       const scope = `periodId=${periodId}&subjectId=${subjectId}`;
-      const [students, grades, finals, results] = await Promise.all([
+      // Баллы СОР/СОЧ с V142 — результаты работ, а не оценки: без пятого запроса классный руководитель
+      // видел бы меньше, чем учитель, который их поставил.
+      const [students, grades, finals, results, assessment] = await Promise.all([
         allMyClassPages<Schema<'MyClassStudentView'>>(`${root}/students`, signal),
         allMyClassPages<Schema<'MyClassGradeItemView'>>(`${root}/grades?${scope}`, signal),
         allMyClassPages<Schema<'MyClassFinalGradeItemView'>>(`${root}/final-grades?${scope}`, signal),
         request<Schema<'MyClassGradeResultsView'>>(`${root}/grade-results?${scope}`, { signal }),
+        request<Schema<'MyClassAssessmentResultsView'>>(`${root}/assessment-results?${scope}`, { signal }),
       ]);
-      return { students, grades, finals, results };
+      return { students, grades, finals, results, assessment };
     },
     staleTime: 0,
     refetchOnWindowFocus: true,
@@ -4169,6 +4174,22 @@ export function useSaveAssessmentScores() {
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: ['assessment-works'] });
       void qc.invalidateQueries({ queryKey: ['gradebook'] });
+      // Проблемный список и счётчики считает сервер: после записи их перечитывают, а не досчитывают.
+      void qc.invalidateQueries({ queryKey: ['fill-control'] });
+    },
+  });
+}
+
+/** «Не выполнял работу»: отдельная команда, а не балл — после неё перечитываются лист, журнал и контроль. */
+export function useMarkNotTaken() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { workId: number; studentProfileId: number }) =>
+      assessmentWorksApi.markNotTaken(vars.workId, vars.studentProfileId),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: ['assessment-works'] });
+      void qc.invalidateQueries({ queryKey: ['gradebook'] });
+      void qc.invalidateQueries({ queryKey: ['fill-control'] });
     },
   });
 }

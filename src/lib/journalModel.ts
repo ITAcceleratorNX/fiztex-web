@@ -120,6 +120,18 @@ export function assessmentScoreLabel(result: GradebookCell['assessmentResult']):
   return result.maxScore != null ? `${result.score}/${result.maxScore}` : String(result.score);
 }
 
+/**
+ * Балл СОР/СОЧ в клетке — без максимума, если он уже стоит в заголовке колонки («СОР 1 / 20» → «14»),
+ * как в клетке, которую правит учитель. Максимум, отличный от заголовка, пишется целиком.
+ */
+export function summativeScoreLabel(score: number | null | undefined, maxScore: number | null | undefined,
+                                    columnMax: number | null | undefined): string | null {
+  if (score == null) return null;
+  const value = String(Number(score));
+  if (maxScore == null || (columnMax != null && Number(maxScore) === Number(columnMax))) return value;
+  return `${value}/${Number(maxScore)}`;
+}
+
 /** Есть ли в строках журнала хоть что-то выставленное — оценка или балл работы. */
 export function hasAnyMarks(rows: GradebookRow[]): boolean {
   return rows.some((row) =>

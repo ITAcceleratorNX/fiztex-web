@@ -14,9 +14,26 @@ export type WorkSheet = {
   kind: AssessmentKind;
   maxScore: number;
   canManage: boolean;
-  /** studentProfileId → сохранённый балл и версия строки результата. */
-  students: Map<number, { score: number | null; version: number | null; inAudience: boolean }>;
+  /** Можно ли вносить первые баллы и ставить «н/в»: решает сервер (проведена ли работа, открыта ли четверть). */
+  canFill: boolean;
+  /** Почему нельзя — словами сервера; `null`, когда можно. */
+  fillBlockedMessage: string | null;
+  /** studentProfileId → сохранённый балл, версия строки результата и состояние ученика в работе. */
+  students: Map<number, { score: number | null; version: number | null; inAudience: boolean; state: ResultState }>;
 };
+
+/** Три разных состояния: балл (в том числе 0), «Не выполнял работу» и «нет результата». */
+export type ResultState = 'SCORED' | 'NOT_TAKEN' | 'MISSING';
+
+export function resultStateOf(value: string | null | undefined, score: number | null | undefined): ResultState {
+  if (value === 'NOT_TAKEN') return 'NOT_TAKEN';
+  if (value === 'SCORED' || score != null) return 'SCORED';
+  return 'MISSING';
+}
+
+/** Метка клетки у ученика со статусом: серая плашка, не балл и не ноль. */
+export const NOT_TAKEN_LABEL = 'н/в';
+export const NOT_TAKEN_TITLE = 'Не выполнял работу';
 
 export type ScoreChange = {
   key: string;

@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { barMessage, collectChanges, draftKey, needsReason, scoreDraftProblem, type WorkSheet } from './journalScoresModel';
+import { barMessage, collectChanges, draftKey, needsReason, resultStateOf, scoreDraftProblem, type WorkSheet } from './journalScoresModel';
 
 const sheet = (overrides: Partial<WorkSheet> = {}): WorkSheet => ({
-  workId: 71, kind: 'SOR', maxScore: 20, canManage: true,
-  students: new Map([[1, { score: 15, version: 2, inAudience: true }], [2, { score: null, version: null, inAudience: true }]]),
+  workId: 71, kind: 'SOR', maxScore: 20, canManage: true, canFill: true, fillBlockedMessage: null,
+  students: new Map<number, WorkSheet['students'] extends Map<number, infer V> ? V : never>([
+    [1, { score: 15, version: 2, inAudience: true, state: 'SCORED' }],
+    [2, { score: null, version: null, inAudience: true, state: 'MISSING' }],
+  ]),
   ...overrides,
 });
 
@@ -56,5 +59,19 @@ describe('ввод баллов в журнале', () => {
     expect(barMessage([], 0)).toBeNull();
     expect(barMessage([base, base, base], 0)).toBe('Изменено 3 балла · ещё не сохранены');
     expect(barMessage([{ ...base, before: 15 }], 0)).toBe('Изменён 1 балл · исправление попадёт в историю');
+  });
+
+  it('три состояния клетки: балл (в том числе 0), «н/в» и пусто', () => {
+    expect(resultStateOf('SCORED', 0)).toBe('SCORED');
+    expect(resultStateOf(undefined, 0)).toBe('SCORED');
+    expect(resultStateOf('NOT_TAKEN', null)).toBe('NOT_TAKEN');
+    expect(resultStateOf(undefined, null)).toBe('MISSING');
+  });
+
+  it('замена «н/в» баллом — обычная первичная выставка: балл 0 допустим, прежнего балла нет', () => {
+    const base = sheet();
+    base.students.set(2, { score: null, version: null, inAudience: true, state: 'NOT_TAKEN' });
+    const { changes } = collectChanges(new Map([[draftKey(71, 2), '0']]), new Map([[71, base]]));
+    expect(changes).toEqual([expect.objectContaining({ studentProfileId: 2, score: 0, before: null })]);
   });
 });
