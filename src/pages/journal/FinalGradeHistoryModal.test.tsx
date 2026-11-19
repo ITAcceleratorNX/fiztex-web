@@ -30,9 +30,9 @@ describe('FinalGradeHistoryModal (макет Т7, А2)', () => {
     expect(items[0]).toHaveTextContent('Изменение: Временно не аттестован → 4');
     expect(items[0]).toHaveTextContent('Причина: СОЧ сдан 12.01, работа оценена');
     expect(within(items[0]).getByText(/^Марина Демо · 13\.01\.2027/)).toBeInTheDocument();
-    expect(items[1]).toHaveTextContent('Публикация: Временно не аттестован → Временно не аттестован');
+    expect(items[1]).toHaveTextContent('Публикация: Временно не аттестован');
     expect(items[1]).not.toHaveTextContent('Причина');
-    expect(items[2]).toHaveTextContent('Создание: — → Временно не аттестован');
+    expect(items[2]).toHaveTextContent('Выставлен итог: Временно не аттестован');
   });
 
   it('техисправление показывает документ и протокол', () => {

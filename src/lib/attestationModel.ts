@@ -80,23 +80,25 @@ export function reasonCaption(kind: AttestationKind): string {
 }
 
 /**
- * Показывать ли значок истории: у строки со статусом всегда (Т1), у остальных — когда было что-то
- * кроме выставления и публикации. После снятия ВНА значок остаётся (Т7а): в истории есть изменение.
+ * Показывать ли значок истории: у строки со статусом всегда (Т1), у итога с основанием отличия от
+ * рекомендации — тоже (У8), у остальных — когда было что-то кроме выставления, подтверждения и
+ * публикации. После снятия ВНА значок остаётся (Т7а): в истории есть изменение.
  */
 export function hasNotableHistory(row: Pick<ClassFinalGradeRow, 'finalGrade' | 'historyCount'>): boolean {
   const grade = row.finalGrade;
   if (!grade?.id) return false;
-  if (isAttestationStatus(grade.resultKind)) return true;
-  const routine = grade.status === 'PUBLISHED' ? 2 : 1;
+  if (isAttestationStatus(grade.resultKind) || grade.deviationReason) return true;
+  // У предмета с «Итоговой аттестацией» выбор и есть подтверждение — событие CONFIRM рутинное.
+  const routine = (grade.status === 'PUBLISHED' ? 2 : 1) + (grade.confirmed ? 1 : 0);
   return (row.historyCount ?? 0) > routine;
 }
 
 const ACTION_LABELS: Record<NonNullable<FinalGradeHistoryEvent['action']>, string> = {
-  CREATE: 'Создание',
+  CREATE: 'Выставлен итог',
   UPDATE: 'Изменение',
   PUBLISH: 'Публикация',
   REPUBLISH: 'Повторная публикация',
-  CONFIRM: 'Подтверждение',
+  CONFIRM: 'Подтверждён к публикации',
   // Старые записи (до 16.11.2026): изменение ждало подтверждения учителя и семье не показывалось.
   PENDING_CHANGE: 'Изменение без публикации',
 };
@@ -134,14 +136,22 @@ export function isTechnicalCorrection(event: FinalGradeHistoryEvent): boolean {
     && after?.correctionReference !== before?.correctionReference;
 }
 
-/** «Изменение: Временно не аттестован → 4» — строка события (макет 2209:3481). */
+/**
+ * Строка события. Изменение — «было → стало» (макет 2209:3481: «Изменение: Временно не аттестован
+ * → 4»); выставление, подтверждение и публикация называют одно значение (У11 2224:8834:
+ * «Выставлен итог: Зачёт», «Публикация: Зачёт»). Повторная публикация со сменой значения — со
+ * стрелкой: иначе из строки не понять, что именно увидела семья.
+ */
 export function historyEventTitle(event: FinalGradeHistoryEvent): string {
   const label = isTechnicalCorrection(event)
     ? 'Исправление технической ошибки'
     : event.action ? ACTION_LABELS[event.action] : 'Событие';
   const after = historySnapshot(event.after);
-  const next = event.action === 'PENDING_CHANGE' ? decidedIn(after) : shownIn(after);
-  return `${label}: ${fullResultLabel(decidedIn(historySnapshot(event.before)))} → ${fullResultLabel(next)}`;
+  const next = fullResultLabel(event.action === 'PENDING_CHANGE' ? decidedIn(after) : shownIn(after));
+  const previous = fullResultLabel(decidedIn(historySnapshot(event.before)));
+  const single = event.action === 'CREATE' || event.action === 'PUBLISH' || event.action === 'CONFIRM'
+    || (event.action === 'REPUBLISH' && previous === next);
+  return single ? `${label}: ${next}` : `${label}: ${previous} → ${next}`;
 }
 
 /** «Марина Демо · 13.01.2027, 11:20:00» — кто и когда (макет 2209:3481). */

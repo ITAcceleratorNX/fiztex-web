@@ -1,4 +1,5 @@
 import { studentYearTransitionApi } from '@/lib/studentYearTransitionApi';
+import { attestationSettingsApi } from '@/lib/attestationSettingsApi';
 import { createPeriod, updatePeriod } from '@/platform/services/periods';
 import type { CreatePeriodInput, UpdatePeriodInput } from '@/platform/types';
 import { useInfiniteQuery, useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -124,6 +125,16 @@ export const keys = {
   myClassYearDecisions: (classId: number | null) => ['my-class', 'classes', classId, 'year-decisions'] as const,
   classYearFinals: (query: import('@/lib/gradebookApi').YearFinalsQuery | null) => ['gradebook', 'year-finals', query] as const,
   finalGradeHistory: (id: number | null) => ['gradebook', 'final-history', id] as const,
+  // «Итоговая аттестация по предметам»: настройки администрации и периоды аттестации журнала.
+  attestationSettings: (yearId: number | null, subjectId: number | null) =>
+    ['attestation-settings', yearId, subjectId ?? 'all'] as const,
+  attestationSettingsHistory: (yearId: number | null, subjectId: number | null) =>
+    ['attestation-settings', yearId, subjectId, 'history'] as const,
+  attestationPreview: (body: unknown) => ['attestation-settings', 'preview', body] as const,
+  attestationPeriods: (classId: number | null, subjectId: number | null) =>
+    ['attestation-periods', classId, subjectId] as const,
+  adminAcademicYears: ['admin', 'academic-years', 'all'] as const,
+  adminYearClasses: (yearId: number | null) => ['admin', 'classes', 'year', yearId] as const,
   assessmentResults: (workId: number | null) => ['assessment-works', workId, 'results'] as const,
   assessmentHistory: (workId: number | null) => ['assessment-works', workId, 'history'] as const,
   yearReadiness: (id: string | null) => ['academic-years', id, 'completion-readiness'] as const,
@@ -667,6 +678,109 @@ export function useSaveSchoolSubject() {
     onSuccess: () => { void client.invalidateQueries({queryKey:['school-subjects']}); void client.invalidateQueries({queryKey:keys.testSubjectContext}); },
   });
 }
+// ---- Итоговая аттестация по предметам: настройки (Admin) ----
+
+/** Учебные годы школы — выбор года в блоке «Итоговая аттестация» предмета. Новые сверху. */
+export function useAdminAcademicYears(enabled = true) {
+  return useQuery({
+    queryKey: keys.adminAcademicYears,
+    enabled,
+    staleTime: 5 * 60_000,
+    queryFn: async ({ signal }) => {
+      const page = await request<Schema<'PageAcademicYearView'>>(
+        `/admin/academic-years${pageQuery({ page: 0, size: 100 })}`, { signal },
+      );
+      return (page.content ?? []).filter((year) => year.id != null && year.status !== 'ARCHIVED')
+        .sort((a, b) => (b.startDate ?? '').localeCompare(a.startDate ?? ''));
+    },
+  });
+}
+
+/** Действующие классы года — «Кому применить»: параллели и классы берутся отсюда, а не константой. */
+export function useAdminYearClasses(yearId: number | null) {
+  return useQuery({
+    queryKey: keys.adminYearClasses(yearId),
+    enabled: yearId != null,
+    staleTime: 60_000,
+    queryFn: async ({ signal }) => {
+      const page = await request<Schema<'PageSchoolClassView'>>(
+        `/admin/classes${pageQuery({ academicYearId: yearId as number, status: 'ACTIVE', page: 0, size: 300 })}`, { signal },
+      );
+      return (page.content ?? []).filter((item) => item.id != null)
+        .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '', 'ru', { numeric: true }));
+    },
+  });
+}
+
+/** Версии настроек года: одного предмета или всех (колонка «Аттестация»). */
+export function useAttestationSettings(yearId: number | null, subjectId: number | null = null) {
+  return useQuery({
+    queryKey: keys.attestationSettings(yearId, subjectId),
+    enabled: yearId != null,
+    queryFn: ({ signal }) => attestationSettingsApi.list(yearId as number, subjectId, signal),
+    retry: (count, error) => !(error instanceof ApiError && [403, 404].includes(error.status)) && count < 1,
+  });
+}
+
+export function useAttestationSettingsHistory(yearId: number | null, subjectId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: keys.attestationSettingsHistory(yearId, subjectId),
+    enabled: enabled && yearId != null && subjectId != null,
+    queryFn: ({ signal }) => attestationSettingsApi.history(yearId as number, subjectId as number, signal),
+  });
+}
+
+/**
+ * Предпросмотр сохранения на каждое изменение формы. Ответ прежнего тела держится, пока едет
+ * новый: иначе предупреждения под формой мигали бы на каждом щелчке.
+ */
+export function useAttestationPreview(body: import('@/lib/attestationSettingsApi').AttestationSettingRequest | null) {
+  return useQuery<import('@/lib/attestationSettingsApi').AttestationPreview>({
+    queryKey: keys.attestationPreview(body),
+    enabled: body != null,
+    placeholderData: (previous) => previous,
+    staleTime: 0,
+    queryFn: ({ signal }) => attestationSettingsApi.preview(body!, signal),
+    retry: false,
+  });
+}
+
+/**
+ * Сохранение и отмена меняют и список версий, и то, что видит журнал (формат, полугодие, СОЧ),
+ * поэтому сбрасываются все три дерева.
+ */
+function useAttestationSettingCommand<TVars, TResult>(mutationFn: (vars: TVars) => Promise<TResult>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => Promise.all([
+      qc.invalidateQueries({ queryKey: ['attestation-settings'] }),
+      qc.invalidateQueries({ queryKey: ['attestation-periods'] }),
+      qc.invalidateQueries({ queryKey: ['gradebook'] }),
+    ]),
+  });
+}
+
+export function useSaveAttestationSetting() {
+  return useAttestationSettingCommand((body: import('@/lib/attestationSettingsApi').AttestationSettingRequest) =>
+    attestationSettingsApi.save(body));
+}
+
+export function useCancelAttestationSetting() {
+  return useAttestationSettingCommand((settingId: number) => attestationSettingsApi.cancel(settingId));
+}
+
+/** Периоды аттестации класса по предмету: «1 четверть» или «1 полугодие» в фильтре экрана итогов. */
+export function useAttestationPeriods(classId: number | null, subjectId: number | null) {
+  return useQuery({
+    queryKey: keys.attestationPeriods(classId, subjectId),
+    enabled: classId != null && subjectId != null,
+    staleTime: 60_000,
+    queryFn: ({ signal }) => attestationSettingsApi.periods(classId as number, subjectId as number, signal),
+    retry: (count, error) => !(error instanceof ApiError && [403, 404].includes(error.status)) && count < 1,
+  });
+}
+
 export function useArchiveSchoolSubject() {
   const client = useQueryClient();
   return useMutation({mutationFn:archiveSchoolSubject,onSuccess:() => {
@@ -2385,11 +2499,19 @@ export function useSetFinalGrade() {
       resultReason?: string;
       /** Версия строки, которую видел учитель: устаревшую сервер отклонит 409. */
       expectedVersion?: number;
+      /**
+       * «Итоговая аттестация по предметам»: выбор и есть подтверждение к публикации — одной
+       * транзакцией с основанием отличия от рекомендации. У предмета без настройки ничего не делает.
+       */
+      confirm?: boolean;
+      confirmationReason?: string;
     }) => vars.finalGradeId != null
-      ? finalGradesApi.changeValue(vars.finalGradeId, vars.value, vars.resultKind, vars.resultReason, vars.expectedVersion)
+      ? finalGradesApi.changeValue(vars.finalGradeId, vars.value, vars.resultKind, vars.resultReason, vars.expectedVersion,
+          vars.confirm ? { confirm: true, confirmationReason: vars.confirmationReason } : undefined)
       : finalGradesApi.create({ studentProfileId: vars.studentProfileId, subjectId: vars.subjectId,
           academicPeriodId: vars.academicPeriodId, academicYearId: vars.academicYearId, scope: vars.scope ?? 'PERIOD', value: vars.value,
-          resultKind: vars.resultKind, resultReason: vars.resultReason }),
+          resultKind: vars.resultKind, resultReason: vars.resultReason,
+          confirm: vars.confirm || undefined, confirmationReason: vars.confirm ? vars.confirmationReason : undefined }),
   );
 }
 
@@ -3891,8 +4013,8 @@ export function useFinalGradeHistory(id: number | null) {
 }
 /** «Подтвердить и опубликовать»: опубликованное число после правки баллов (ТЗ №9). */
 export function useRepublishFinalGrade() {
-  return useFinalGradeCommand((vars: { id: number; value: number; expectedVersion: number }) =>
-    finalGradesApi.republish(vars.id, { value: vars.value, expectedVersion: vars.expectedVersion }));
+  return useFinalGradeCommand((vars: { id: number; value: number; expectedVersion: number; reason?: string }) =>
+    finalGradesApi.republish(vars.id, { value: vars.value, expectedVersion: vars.expectedVersion, reason: vars.reason }));
 }
 
 export function useAssessmentResults(workId: number | null) {

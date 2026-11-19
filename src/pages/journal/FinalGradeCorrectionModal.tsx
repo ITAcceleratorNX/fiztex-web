@@ -86,11 +86,17 @@ export function FinalGradeCorrectionModal({ grade, studentName, allowedKinds, al
  * История итоговой оценки (макет Т7 2209:3481, А2 2209:5780): новое сверху, «было → стало»,
  * причина, кто и когда. У техисправления — документ и протокол.
  */
-export function FinalGradeHistoryModal({ id, studentName, onClose }: { id: number; studentName: string; onClose: () => void }) {
+export function FinalGradeHistoryModal({ id, studentName, context, onClose }: {
+  id: number;
+  studentName: string;
+  /** «Физическая культура · 1 полугодие» — что за итог, рядом с именем (У11 2224:8834). */
+  context?: string;
+  onClose: () => void;
+}) {
   const history = useFinalGradeHistory(id);
   const events = [...(history.data ?? [])].reverse();
   return (
-    <Modal open title="История итоговой оценки" subtitle={studentName} onClose={onClose}>
+    <Modal open title="История итога" subtitle={context ? `${studentName} · ${context}` : studentName} onClose={onClose}>
       {history.isPending ? <LoadingBlock /> : history.isError
         ? <ErrorBlock message="Не удалось загрузить историю итога" onRetry={() => void history.refetch()} />
         : events.length === 0
@@ -108,7 +114,9 @@ function HistoryEvent({ event }: { event: FinalGradeHistoryEvent }) {
   return (
     <li className="flex flex-col gap-0.5 border-b border-slate-200 py-4 text-13 first:pt-0 last:border-b-0">
       <p className="font-semibold text-ink">{historyEventTitle(event)}</p>
-      {(event.reason || basis) && <p className="text-slate-700">Причина: {event.reason ?? basis}</p>}
+      {(event.reason || basis) && (
+        <p className="text-slate-700">{event.action === 'CONFIRM' ? 'Основание' : 'Причина'}: {event.reason ?? basis}</p>
+      )}
       {isTechnicalCorrection(event) && <p className="text-slate-700">Документ: {after?.correctionReference}</p>}
       <p className="text-muted">{historyEventAuthor(event)}</p>
     </li>

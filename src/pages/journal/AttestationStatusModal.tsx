@@ -21,7 +21,12 @@ import {
 import { FINAL_RESULT_LABELS } from '@/lib/finalGradeResult';
 import type { ClassFinalGradeRow } from '@/lib/gradebookApi';
 
-type Placement = { subjectId: number; academicPeriodId: number };
+/**
+ * Где стоит итог. `confirm` — у предмета с «Итоговой аттестацией по предметам» выбор и есть
+ * подтверждение к публикации: причина статуса или изменения служит и основанием отличия от
+ * рекомендации (сервер проверит, нужно ли оно).
+ */
+type Placement = { subjectId: number; academicPeriodId: number; confirm?: boolean };
 
 /**
  * Окно статуса (макет Т2 2209:672, Т3 2209:1153): «Временно не аттестован» или «Не аттестован»,
@@ -198,6 +203,8 @@ function useSaveResult(row: ClassFinalGradeRow, placement: Placement) {
         resultKind: target.kind,
         resultReason: reason.trim(),
         expectedVersion: grade?.version,
+        confirm: placement.confirm,
+        confirmationReason: placement.confirm ? reason.trim() : undefined,
       });
       return true;
     } catch (failure) {

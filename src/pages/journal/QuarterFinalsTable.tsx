@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
-import { AlertTriangle, History, Lock, MessageSquareText } from 'lucide-react';
+import { AlertTriangle, ArrowDown, ArrowUp, History, Lock, MessageSquareText } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { HoverCard } from '@/components/ui/HoverCard';
 import { SegmentedChoice } from '@/components/ui/SegmentedChoice';
+import { ValuePicker } from '@/components/ui/ValuePicker';
 import {
   ATTESTATION_KINDS,
   ATTESTATION_SHORT,
@@ -19,7 +20,16 @@ import {
 } from '@/lib/attestationModel';
 import { FINAL_RESULT_LABELS } from '@/lib/finalGradeResult';
 import { cx } from '@/lib/format';
-import type { ClassFinalGradeRow, ClassFinalGrades } from '@/lib/gradebookApi';
+import type { ClassFinalGradeRow, ClassFinalGrades, QuarterResult } from '@/lib/gradebookApi';
+import {
+  deviationCaption,
+  finalColumnTitle,
+  isHalfYear,
+  isPassFail,
+  recommendationGap,
+  trendOf,
+} from '@/lib/finalsAttestationModel';
+import { periodGenitive, periodTitle } from '@/lib/subjectAttestationModel';
 import { formatAverage } from '@/lib/journalModel';
 import {
   COMPONENT_SHORT,
@@ -63,6 +73,11 @@ export interface QuarterFinalsActions {
   /** ТЗ №9: рекомендация разошлась с опубликованным числом. */
   onRepublish: (row: ClassFinalGradeRow) => void;
   onOpenBreakdown?: (row: ClassFinalGradeRow) => void;
+  /**
+   * Настроенный предмет (У10): в режиме изменения учитель выбирает итог строки с изменившейся
+   * рекомендацией прямо в таблице, а подтверждает все разом кнопкой внизу.
+   */
+  onStageRepublish?: (row: ClassFinalGradeRow, value: number) => void;
 }
 
 /**
@@ -84,6 +99,7 @@ export function QuarterFinalsTable({
   rowError = null,
   editMode = false,
   actions,
+  staged,
 }: {
   finals: ClassFinalGrades;
   /** Кого не хватило для публикации — сервер называет их поимённо. */
@@ -93,31 +109,45 @@ export function QuarterFinalsTable({
   rowError?: { studentProfileId: number; message: string } | null;
   editMode?: boolean;
   actions: QuarterFinalsActions;
+  /** Выбор итога для повторной публикации в режиме изменения (У10) — до нажатия кнопки внизу. */
+  staged?: ReadonlyMap<number, number>;
 }) {
   const rows = finals.rows ?? [];
   const byPolicy = finals.gradingPolicy != null;
   const numeric = !finals.assessmentMode || finals.assessmentMode === 'NUMERIC';
+  const passFail = isPassFail(finals);
+  const halfYear = isHalfYear(finals);
+  const configured = Boolean(finals.attestation?.configured);
+  const finalAllowed = finals.attestation?.finalAllowed !== false;
+  const half = finals.attestation?.halfYear;
+  // ВНА/НА с «Итоговой аттестацией» есть и у зачёта — колонка нужна, если сервер их разрешает или они уже стоят.
+  const showAttestation = numeric || Boolean(finals.canManageAttestation)
+    || rows.some((row) => isAttestationStatus(row.finalGrade?.resultKind));
+  const quarterTitles = [half?.opening, half?.closing].map((period) => periodTitle(period));
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-max border-collapse text-sm">
         <thead>
           <tr className="border-b border-slate-200">
-            <Th className="w-[300px] text-left">ФИО ученика</Th>
-            <Th>{byPolicy ? 'Процент за четверть' : 'Средний балл'}</Th>
-            <Th>Рекомендованная оценка</Th>
-            <Th>Итоговая оценка</Th>
-            {numeric && <Th className="text-left">Аттестация</Th>}
+            <Th className="w-[260px] text-left">ФИО ученика</Th>
+            {halfYear && quarterTitles.map((title) => <Th key={title}>{title}</Th>)}
+            <Th>{halfYear ? 'Учебные результаты' : byPolicy ? 'Процент за четверть' : 'Средний балл'}</Th>
+            <Th>{passFail ? 'Рекомендация системы' : halfYear ? 'Рекомендация' : 'Рекомендованная оценка'}</Th>
+            <Th>{finalColumnTitle(finals)}</Th>
+            {showAttestation && <Th className="text-left">Аттестация</Th>}
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => {
             const studentId = row.studentProfileId as number;
             const busy = busyStudentId === studentId;
+            const changed = configured && (row.canConfirmPublication || row.state === 'CHANGED_AFTER_PUBLICATION');
             return (
               <tr
                 key={studentId}
-                className={cx('group border-b border-slate-200 last:border-b-0', highlighted.has(studentId) && 'bg-danger-bg/60')}
+                className={cx('group border-b border-slate-200 last:border-b-0',
+                  highlighted.has(studentId) ? 'bg-danger-bg/60' : changed && 'bg-amber-50/60')}
               >
                 <td className="px-6 py-4 text-slate-900">
                   <span className="flex items-center gap-2">
@@ -130,16 +160,48 @@ export function QuarterFinalsTable({
                     )}
                   </span>
                 </td>
+                {halfYear && [0, 1].map((index) => (
+                  <td key={index} className="px-4 py-4 text-center">
+                    <QuarterCell quarter={row.quarterResults?.[index]}
+                      previous={index === 1 ? row.quarterResults?.[0] : undefined} />
+                  </td>
+                ))}
                 <td className="px-6 py-4 text-center font-semibold text-slate-900">
-                  {byPolicy ? <PercentCell row={row} onOpen={actions.onOpenBreakdown} /> : formatAverage(row.average)}
+                  {halfYear
+                    ? finalAllowed ? <HalfYearResultCell row={row} onOpen={actions.onOpenBreakdown} /> : <span className="text-slate-300">—</span>
+                    : byPolicy ? <PercentCell row={row} onOpen={actions.onOpenBreakdown} /> : formatAverage(row.average)}
                 </td>
                 <td className="px-6 py-4">
-                  <RecommendationCell row={row} />
+                  <RecommendationCell row={row} passFail={passFail} />
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-col items-center gap-2">
-                    <GradeCell row={row} finals={finals} numeric={numeric} editMode={editMode} busy={busy} actions={actions} />
-                    {row.canConfirmPublication && (
+                    {!finalAllowed ? (
+                      <span className="flex items-center gap-1.5 text-13 text-muted">
+                        <Lock className="size-4 text-slate-400" aria-hidden />
+                        в конце {periodGenitive(periodTitle(half?.closing))}
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <GradeCell row={row} finals={finals} numeric={numeric} editMode={editMode} busy={busy} actions={actions}
+                          compact={halfYear} staged={staged?.get(studentId)} />
+                        {row.finalGrade?.deviationReason && !isAttestationStatus(row.finalGrade.resultKind) && (
+                          <HoverCard trigger={<MessageSquareText className="size-4" aria-hidden />} label={deviationCaption(row)}
+                            title={deviationCaption(row)}>
+                            {row.finalGrade.deviationReason}
+                          </HoverCard>
+                        )}
+                      </span>
+                    )}
+                    {changed && !(editMode && row.canConfirmPublication) && (
+                      <span className="text-11 font-semibold text-brand-600">Рекомендация изменилась</span>
+                    )}
+                    {configured && row.state === 'DRAFT' && row.canEditResult && (
+                      <span className="text-11 text-muted" title="Итог сохранён черновиком без подтверждения — выберите значение ещё раз">
+                        черновик · не подтверждён
+                      </span>
+                    )}
+                    {!configured && row.canConfirmPublication && (
                       <span className="flex flex-col items-center gap-1">
                         <span className="flex items-center gap-1 text-11 text-brand-600">
                           <AlertTriangle className="size-3.5" aria-hidden />
@@ -155,7 +217,7 @@ export function QuarterFinalsTable({
                     )}
                   </div>
                 </td>
-                {numeric && (
+                {showAttestation && (
                   <td className="px-6 py-4">
                     <AttestationCell row={row} editMode={editMode} busy={busy} actions={actions} />
                   </td>
@@ -196,16 +258,70 @@ function PercentCell({ row, onOpen }: { row: ClassFinalGradeRow; onOpen?: (row: 
   );
 }
 
-function RecommendationCell({ row }: { row: ClassFinalGradeRow }) {
+/** Процент четверти полугодия (Б2, Б3): «79%», у второй — стрелка к первой и «нет СОЧ» под ним. */
+function QuarterCell({ quarter, previous }: { quarter: QuarterResult | undefined; previous?: QuarterResult }) {
+  const percent = quarter?.result?.roundedPercent ?? null;
+  const trend = previous ? trendOf(previous.result?.roundedPercent, percent) : null;
+  const missing = quarter?.result?.missingComponents?.includes('SOCH') && quarter.result.status !== 'NO_WORKS';
   return (
-    <span className="flex justify-center">
-      {row.recommendedValue != null ? (
-        <span className="flex size-[26px] items-center justify-center rounded-lg bg-slate-100 text-13 font-bold text-slate-600">
-          {row.recommendedValue}
+    <span className="flex flex-col items-center gap-0.5">
+      <span className={cx('flex items-center gap-1', percent != null ? 'font-semibold text-slate-900' : 'text-slate-300')}>
+        {percent != null ? `${percent}%` : '—'}
+        {trend === 'up' && <ArrowUp className="size-3.5 text-emerald-600" aria-label="выше первой четверти" />}
+        {trend === 'down' && <ArrowDown className="size-3.5 text-red-600" aria-label="ниже первой четверти" />}
+      </span>
+      {missing && <span className="text-11 text-muted">нет СОЧ</span>}
+    </span>
+  );
+}
+
+/** Совокупный результат полугодия: процент и состав под ним — «ФО 81% · СОР 72%» (Б3, У3). */
+function HalfYearResultCell({ row, onOpen }: { row: ClassFinalGradeRow; onOpen?: (row: ClassFinalGradeRow) => void }) {
+  const caption = row.result?.percent == null ? resultMissingCaption(row.result) : componentsLine(row);
+  return (
+    <span className="flex flex-col items-center gap-0.5">
+      <button type="button" onClick={() => onOpen?.(row)} title={resultStatusHint(row.result) ?? undefined}
+        className="rounded-lg px-2 py-0.5 transition hover:bg-navy-50 hover:text-navy-700">
+        {row.result?.roundedPercent != null ? `${row.result.roundedPercent}%` : '—'}
+      </button>
+      {caption && <span className="text-11 font-normal text-muted">{caption}</span>}
+    </span>
+  );
+}
+
+/**
+ * Рекомендация: число (серый квадрат), «Зачёт»/«Незачёт» (зелёная/красная плашка) с основанием —
+ * или прочерк и почему её нет (У3, У6). Полный текст причины — под курсором.
+ */
+function RecommendationCell({ row, passFail }: { row: ClassFinalGradeRow; passFail: boolean }) {
+  const recommendation = row.recommendation;
+  const value = recommendation?.available ? recommendation.value ?? row.recommendedValue : row.recommendedValue;
+  if (passFail && recommendation?.available && (recommendation.resultKind === 'PASS' || recommendation.resultKind === 'FAIL')) {
+    return (
+      <span className="flex flex-col items-center gap-1">
+        <Badge appearance="label" tone={recommendation.resultKind === 'PASS' ? 'green' : 'red'}>
+          {FINAL_RESULT_LABELS[recommendation.resultKind]}
+        </Badge>
+        {recommendation.basis && <span className="max-w-[180px] text-center text-11 text-muted">{recommendation.basis}</span>}
+      </span>
+    );
+  }
+  if (!passFail && value != null) {
+    return (
+      <span className="flex justify-center">
+        <span title={recommendation?.basis ?? undefined}
+          className="flex size-[26px] items-center justify-center rounded-lg bg-slate-100 text-13 font-bold text-slate-600">
+          {value}
         </span>
-      ) : (
-        <span className="text-slate-300" title={resultStatusHint(row.result) ?? 'Рекомендации нет: не хватает оценок за четверть'}>—</span>
-      )}
+      </span>
+    );
+  }
+  const gap = recommendationGap(recommendation);
+  return (
+    <span className="flex flex-col items-center gap-0.5"
+      title={recommendation?.unavailableMessage ?? resultStatusHint(row.result) ?? 'Рекомендации нет: не хватает оценок за четверть'}>
+      <span className="text-slate-300">—</span>
+      {gap && <span className="max-w-[180px] text-center text-11 text-muted">{gap}</span>}
     </span>
   );
 }
@@ -217,14 +333,46 @@ function RecommendationCell({ row }: { row: ClassFinalGradeRow }) {
  * - опубликованный ВНА в режиме изменения: положительные оценки — каждая открывает «Изменить итог» (Т5а, Т6);
  * - иначе — значение, у опубликованного с замком (Т5).
  */
-function GradeCell({ row, finals, numeric, editMode, busy, actions }: {
+function GradeCell({ row, finals, numeric, editMode, busy, actions, compact = false, staged }: {
   row: ClassFinalGradeRow; finals: ClassFinalGrades; numeric: boolean; editMode: boolean; busy: boolean;
   actions: QuarterFinalsActions;
+  /** Полугодие (Б3): число — компактным полем, ряд из десяти кнопок рядом с четвертями не помещается. */
+  compact?: boolean;
+  staged?: number;
 }) {
   const grade = row.finalGrade ?? null;
   const current = currentResult(grade);
   const published = grade?.status === 'PUBLISHED';
   const status = isAttestationStatus(current?.kind);
+  const configured = Boolean(finals.attestation?.configured);
+  // Черновик без подтверждения у настроенного предмета: повторный выбор того же значения подтверждает его.
+  const repick = configured && row.state === 'DRAFT';
+
+  // У10: рекомендация разошлась с опубликованным числом — выбор здесь, подтверждение кнопкой внизу.
+  if (configured && editMode && row.canConfirmPublication && numeric && actions.onStageRepublish) {
+    const recommended = row.recommendation?.available ? row.recommendation.value ?? null : row.recommendedValue ?? null;
+    return (
+      <ValuePicker
+        ariaLabel={`Итог после изменения рекомендации: ${row.studentName ?? ''}`}
+        options={finalValueOptions(finals).map((value) => ({ value, label: String(value) }))}
+        value={staged ?? recommended ?? current?.value ?? null}
+        disabled={busy}
+        onChoose={(value) => actions.onStageRepublish!(row, value)}
+      />
+    );
+  }
+
+  if (row.canEditResult && published && editMode && !numeric) {
+    return (
+      <SegmentedChoice
+        ariaLabel={`Итог вместо «${fullResultLabel(current)}»: ${row.studentName ?? ''}`}
+        options={[{ value: 'PASS' as const, label: FINAL_RESULT_LABELS.PASS }]}
+        selected={null}
+        disabled={busy}
+        onChoose={() => actions.onRequestChange(row, { kind: 'PASS', value: null })}
+      />
+    );
+  }
 
   if (row.canEditResult && published && editMode) {
     const positive = finals.positiveValues?.length ? finals.positiveValues : finalValueOptions(finals);
@@ -235,6 +383,20 @@ function GradeCell({ row, finals, numeric, editMode, busy, actions }: {
         selected={null}
         disabled={busy}
         onChoose={(value) => actions.onRequestChange(row, { kind: 'NUMERIC', value })}
+      />
+    );
+  }
+
+  if (row.canEditResult && !published && !status && numeric && compact) {
+    return (
+      <ValuePicker
+        ariaLabel={`Итоговая оценка: ${row.studentName ?? ''}`}
+        options={finalValueOptions(finals).map((value) => ({ value, label: String(value) }))}
+        value={current?.kind === 'NUMERIC' ? current.value : null}
+        disabled={busy}
+        onChoose={(value) => {
+          if (repick || !(current?.kind === 'NUMERIC' && current.value === value)) actions.onPickValue(row, value);
+        }}
       />
     );
   }
@@ -260,8 +422,8 @@ function GradeCell({ row, finals, numeric, editMode, busy, actions }: {
           if (value === MORE) {
             actions.onRequestChange(row, otherSelected ? current : null);
           } else if (typeof value === 'number') {
-            if (!(current?.kind === 'NUMERIC' && current.value === value)) actions.onPickValue(row, value);
-          } else if (current?.kind !== value) {
+            if (repick || !(current?.kind === 'NUMERIC' && current.value === value)) actions.onPickValue(row, value);
+          } else if (repick || current?.kind !== value) {
             actions.onPickResult(row, value);
           }
         }}

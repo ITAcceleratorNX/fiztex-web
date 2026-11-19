@@ -12,13 +12,31 @@ import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
   useAssessmentSheets,
+  useAttestationPeriods,
   useClassFinals,
   useGradebookContext,
   useJournal,
   usePublishClassFinals,
+  useRepublishFinalGrade,
   useSaveAssessmentScores,
   useSetFinalGrade,
 } from '@/hooks/queries';
+import type { AttestationPeriodOption } from '@/lib/attestationSettingsApi';
+import {
+  attestationNote,
+  deviationDialog,
+  DEVIATION_REASONS,
+  finalsBanner,
+  finalsTabLabel,
+  matchesRecommendation,
+  NO_RECOMMENDATION_REASONS,
+  optionOfPeriod,
+  scopeWord,
+} from '@/lib/finalsAttestationModel';
+import { StatusNotice } from '@/components/ui/StatusNotice';
+import { DeviationReasonModal } from './DeviationReasonModal';
+import { periodGenitive } from '@/lib/subjectAttestationModel';
+import { saveErrorText } from './AttestationStatusModal';
 import { StickyActionBar } from '@/components/ui/StickyActionBar';
 import { useToast } from '@/context/ToastContext';
 import { hasMeaningfulReason, REASON_MAX_LENGTH } from '@/lib/assessmentCorrectionModel';
@@ -111,6 +129,19 @@ export function JournalPage() {
         periods[0]?.id ??
         null);
 
+  // «Итоговая аттестация по предметам»: у полугодового предмета фильтр «Период» на вкладке итогов —
+  // полугодия, и открывается та четверть пары, где сейчас работа (`viewPeriodId` от сервера).
+  const attestationPeriods = useAttestationPeriods(classId, subjectId);
+  const attestationOptions = useMemo(() => attestationPeriods.data?.periods ?? [], [attestationPeriods.data]);
+  const periodOption = optionOfPeriod(attestationOptions, periodId);
+  const finalsPeriodId = tab === 'FINALS' && periodOption?.viewPeriodId != null ? periodOption.viewPeriodId : periodId;
+  const finalsPeriodRefs = useMemo(() => attestationOptions
+    .filter((option) => option.viewPeriodId != null)
+    .map((option) => ({ id: option.viewPeriodId, name: option.name, startDate: option.startDate, endDate: option.endDate })),
+  [attestationOptions]);
+  const finalsFilter = tab === 'FINALS' && finalsPeriodRefs.length > 0;
+  const subjectName = scopes.find((scope) => scope.classId === classId && scope.subjectId === subjectId)?.subjectName ?? '';
+
   const ready = classId != null && subjectId != null && periodId != null;
   const journalQuery: JournalQuery | null = ready
     ? {
@@ -122,8 +153,8 @@ export function JournalPage() {
         dateTo: window === 'MONTH' ? month?.dateTo : null,
       }
     : null;
-  const finalsKey = ready
-    ? { classId, subjectId, academicPeriodId: periodId, subgroupId }
+  const finalsKey = ready && finalsPeriodId != null
+    ? { classId, subjectId, academicPeriodId: finalsPeriodId, subgroupId }
     : null;
 
   const journal = useJournal(tab === 'JOURNAL' ? journalQuery : null);
@@ -142,7 +173,7 @@ export function JournalPage() {
 
   if (contextQuery.isError) {
     return (
-      <JournalShell tab={tab} onTab={(next) => patch({ tab: next === 'FINALS' ? 'finals' : next === 'YEAR_FINALS' ? 'year-finals' : null })}>
+      <JournalShell tab={tab} finalsLabel={finalsTabLabel(periodOption)} onTab={(next) => patch({ tab: next === 'FINALS' ? 'finals' : next === 'YEAR_FINALS' ? 'year-finals' : null })}>
         <div className="card">
           <ErrorBlock
             message={
@@ -172,7 +203,7 @@ export function JournalPage() {
 
   if (scopes.length === 0) {
     return (
-      <JournalShell tab={tab} onTab={(next) => patch({ tab: next === 'FINALS' ? 'finals' : next === 'YEAR_FINALS' ? 'year-finals' : null })}>
+      <JournalShell tab={tab} finalsLabel={finalsTabLabel(periodOption)} onTab={(next) => patch({ tab: next === 'FINALS' ? 'finals' : next === 'YEAR_FINALS' ? 'year-finals' : null })}>
         {yearPicker}
         <div className="card">
           <EmptyBlock
@@ -190,17 +221,17 @@ export function JournalPage() {
   }
 
   return (
-    <JournalShell tab={tab} onTab={(next) => patch({ tab: next === 'FINALS' ? 'finals' : next === 'YEAR_FINALS' ? 'year-finals' : null })}>
+    <JournalShell tab={tab} finalsLabel={finalsTabLabel(periodOption)} onTab={(next) => patch({ tab: next === 'FINALS' ? 'finals' : next === 'YEAR_FINALS' ? 'year-finals' : null })}>
       {yearPicker}
       <JournalFilters
         scopes={scopes}
-        periods={periods}
+        periods={finalsFilter ? finalsPeriodRefs : periods}
         months={months}
         subgroups={journal.data?.availableSubgroups ?? []}
         classId={classId}
         subjectId={subjectId}
         subgroupId={subgroupId}
-        periodId={periodId}
+        periodId={finalsFilter ? periodOption?.viewPeriodId ?? periodId : periodId}
         monthKey={monthKey}
         window={window}
         showWindowToggle={tab === 'JOURNAL'}
@@ -219,7 +250,8 @@ export function JournalPage() {
         <YearFinalsTab key={`${context?.academicYear?.id}:${classId}:${subjectId}`} query={classId != null && subjectId != null && context?.academicYear?.id != null
           ? { classId, subjectId, academicYearId: context.academicYear.id } : null} />
       ) : (
-        <FinalsTab key={`${classId}:${subjectId}:${periodId}`} finalsKey={finalsKey} finals={finals} />
+        <FinalsTab key={`${classId}:${subjectId}:${finalsPeriodId}`} finalsKey={finalsKey} finals={finals}
+          subjectName={subjectName} periodOption={periodOption} />
       )}
     </JournalShell>
   );
@@ -437,19 +469,25 @@ function JournalTab({
 function FinalsTab({
   finalsKey,
   finals,
+  subjectName,
+  periodOption,
 }: {
   finalsKey: { classId: number; subjectId: number; academicPeriodId: number; subgroupId: number | null } | null;
   finals: ReturnType<typeof useClassFinals>;
+  subjectName: string;
+  periodOption: AttestationPeriodOption | null;
 }) {
+  const toast = useToast();
   const setFinal = useSetFinalGrade();
   const publish = usePublishClassFinals();
+  const republish = useRepublishFinalGrade();
   const [busyStudentId, setBusyStudentId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Отказ действия в ячейке — под строкой ученика, а не внизу страницы (D-3).
   const [rowError, setRowError] = useState<{ studentProfileId: number; message: string } | null>(null);
   const [missing, setMissing] = useState<ReadonlySet<number>>(new Set());
   const [confirmPublish, setConfirmPublish] = useState(false);
-  // «Редактировать» после публикации (макет Т5а): открывает замену ВНА оценкой.
+  // «Редактировать» после публикации (макет Т5а, У10): замена ВНА оценкой и повторное подтверждение.
   const [editMode, setEditMode] = useState(false);
   const [statusRequest, setStatusRequest] = useState<{ row: ClassFinalGradeRow; kind: AttestationKind } | null>(null);
   const [changeRequest, setChangeRequest] = useState<{ row: ClassFinalGradeRow; initial: ResultValue | null } | null>(null);
@@ -457,6 +495,13 @@ function FinalsTab({
   const [historyRow, setHistoryRow] = useState<ClassFinalGradeRow | null>(null);
   const [republishRow, setRepublishRow] = useState<ClassFinalGradeRow | null>(null);
   const [breakdown, setBreakdown] = useState<{ studentProfileId: number; name: string } | null>(null);
+  // У4/У6: выбор, отличающийся от рекомендации (или без неё), ждёт основания.
+  const [deviation, setDeviation] = useState<{
+    row: ClassFinalGradeRow; kind: FinalGrade['resultKind'] & string; value: number | null; mode: 'pick' | 'republish';
+  } | null>(null);
+  const [deviationError, setDeviationError] = useState<string | null>(null);
+  // У10: выбранный итог строки с изменившейся рекомендацией и основание, если он с ней не совпал.
+  const [staged, setStaged] = useState<ReadonlyMap<number, { value: number; reason?: string }>>(new Map());
 
   if (finalsKey == null || finals.isPending) return <TableSkeleton />;
 
@@ -478,36 +523,53 @@ function FinalsTab({
   const data = finals.data!;
   const rows = data.rows ?? [];
   const canManage = Boolean(data.canManage);
-  const placement = { subjectId: finalsKey.subjectId, academicPeriodId: finalsKey.academicPeriodId };
+  const configured = Boolean(data.attestation?.configured);
+  const confirmationRequired = Boolean(data.attestation?.confirmationRequired);
+  const placement = { subjectId: finalsKey.subjectId, academicPeriodId: finalsKey.academicPeriodId, confirm: confirmationRequired };
   const filled = rows.filter((row) => row.finalGrade != null).length;
   const allFilled = rows.length > 0 && filled === rows.length;
   const hasPublicationIssues = rows.some(row => (!row.finalGrade?.resultKind || row.finalGrade.resultKind === 'NUMERIC') && (row.publicationIssues?.length ?? 0) > 0);
   const allPublished = rows.length > 0 && rows.every((row) => row.finalGrade?.status === 'PUBLISHED');
-  // Сервер разрешает строке замену опубликованного ВНА — значит, «Редактировать» есть что.
-  const editable = rows.some((row) => row.canEditResult && row.finalGrade?.status === 'PUBLISHED');
+  const toReconfirm = configured ? rows.filter((row) => row.canConfirmPublication) : [];
+  // Сервер разрешает строке замену опубликованного ВНА или повторное подтверждение — «Редактировать» есть что.
+  const editable = rows.some((row) => row.canEditResult && row.finalGrade?.status === 'PUBLISHED') || toReconfirm.length > 0;
   const inEditMode = editMode && allPublished && editable;
-  // Публиковать итоги можно только после окончания четверти — дату считает сервер.
+  // Публиковать итоги можно только после окончания периода — дату считает сервер.
   const publicationOpen = data.publicationOpen !== false;
   const publishableFrom = data.publishableFrom ? formatShortDate(data.publishableFrom) : null;
+  const scope = scopeWord(data);
+  const periodName = periodOption?.name ?? (scope === 'полугодие' ? 'полугодия' : 'четверти');
+
+  async function save(row: ClassFinalGradeRow, value: number | null, resultKind: FinalGrade['resultKind'], confirmationReason?: string) {
+    await setFinal.mutateAsync({
+      finalGradeId: row.finalGrade?.id ?? null,
+      studentProfileId: row.studentProfileId as number,
+      subjectId: finalsKey!.subjectId,
+      academicPeriodId: finalsKey!.academicPeriodId,
+      value, resultKind,
+      expectedVersion: row.finalGrade?.version,
+      confirm: confirmationRequired,
+      confirmationReason,
+    });
+    setMissing((current) => {
+      const next = new Set(current);
+      next.delete(row.studentProfileId as number);
+      return next;
+    });
+  }
 
   async function pick(row: ClassFinalGradeRow, value: number | null, resultKind: FinalGrade['resultKind'] = 'NUMERIC') {
     setError(null);
     setRowError(null);
+    // Настроенный предмет: итог не как у рекомендации (или её нет) — сначала основание (У4, У6).
+    if (confirmationRequired && !matchesRecommendation(row.recommendation, resultKind ?? 'NUMERIC', value)) {
+      setDeviationError(null);
+      setDeviation({ row, kind: resultKind ?? 'NUMERIC', value, mode: 'pick' });
+      return;
+    }
     setBusyStudentId(row.studentProfileId as number);
     try {
-      await setFinal.mutateAsync({
-        finalGradeId: row.finalGrade?.id ?? null,
-        studentProfileId: row.studentProfileId as number,
-        subjectId: finalsKey!.subjectId,
-        academicPeriodId: finalsKey!.academicPeriodId,
-        value, resultKind,
-        expectedVersion: row.finalGrade?.version,
-      });
-      setMissing((current) => {
-        const next = new Set(current);
-        next.delete(row.studentProfileId as number);
-        return next;
-      });
+      await save(row, value, resultKind);
     } catch (failure) {
       setRowError({
         studentProfileId: row.studentProfileId as number,
@@ -520,6 +582,59 @@ function FinalsTab({
     } finally {
       setBusyStudentId(null);
     }
+  }
+
+  async function saveDeviation(reason: string) {
+    if (!deviation) return;
+    setDeviationError(null);
+    if (deviation.mode === 'republish') {
+      setStaged((current) => new Map(current).set(deviation.row.studentProfileId as number, { value: deviation.value as number, reason }));
+      setDeviation(null);
+      return;
+    }
+    setBusyStudentId(deviation.row.studentProfileId as number);
+    try {
+      await save(deviation.row, deviation.value, deviation.kind, reason);
+      setDeviation(null);
+    } catch (failure) {
+      setDeviationError(saveErrorText(failure));
+    } finally {
+      setBusyStudentId(null);
+    }
+  }
+
+  function stageRepublish(row: ClassFinalGradeRow, value: number) {
+    const id = row.studentProfileId as number;
+    if (matchesRecommendation(row.recommendation, 'NUMERIC', value)) {
+      setStaged((current) => new Map(current).set(id, { value }));
+      return;
+    }
+    setDeviationError(null);
+    setDeviation({ row, kind: 'NUMERIC', value, mode: 'republish' });
+  }
+
+  /** У10: «Подтвердить и опубликовать повторно» — все строки с изменившейся рекомендацией по очереди. */
+  async function republishAll() {
+    setError(null);
+    const failures: string[] = [];
+    for (const row of toReconfirm) {
+      const grade = row.finalGrade;
+      const choice = staged.get(row.studentProfileId as number);
+      const value = choice?.value ?? (row.recommendation?.available ? row.recommendation.value : row.recommendedValue);
+      if (grade?.id == null || grade.version == null || value == null) continue;
+      try {
+        await republish.mutateAsync({ id: grade.id, value, expectedVersion: grade.version, reason: choice?.reason });
+      } catch (failure) {
+        failures.push(`${row.studentName ?? ''}: ${saveErrorText(failure)}`);
+      }
+    }
+    if (failures.length > 0) {
+      setError(failures.join('\n'));
+      return;
+    }
+    setStaged(new Map());
+    setEditMode(false);
+    toast.success('Итоги подтверждены и опубликованы повторно — ученик и родитель видят новые значения');
   }
 
   async function publishAll() {
@@ -535,7 +650,12 @@ function FinalsTab({
       }
       if (failure instanceof ApiError && failure.code === FINAL_GRADE_ERRORS.setIncomplete) {
         setMissing(new Set(incompleteStudentIdsFrom(failure.details)));
-        setError('Итоги выставлены не всем ученикам — опубликовать четверть нельзя');
+        setError(`Итоги выставлены не всем ученикам — опубликовать ${scope} нельзя`);
+        return;
+      }
+      if (failure instanceof ApiError && failure.code === FINAL_GRADE_ERRORS.setNotConfirmed) {
+        setMissing(new Set(incompleteStudentIdsFrom(failure.details)));
+        setError('Не все итоги подтверждены: у отмеченных учеников выберите итог ещё раз — выбор и есть подтверждение');
         return;
       }
       setError(failure instanceof ApiError ? failure.message : 'Не удалось опубликовать итоги');
@@ -558,19 +678,35 @@ function FinalsTab({
     );
   }
 
-  const missingResults = data.gradingPolicy ? missingResultsSummary(rows.map((row) => row.result)) : null;
+  const note = attestationNote(data, subjectName);
+  const banner = finalsBanner(data);
+  // У кого уже стоит ВНА/НА, вопрос «чего не хватает расчёту» закрыт — их в сводке нет.
+  const missingResults = !banner && data.gradingPolicy && data.attestation?.finalAllowed !== false
+    ? missingResultsSummary(rows.filter((row) => !isAttestationStatus(row.finalGrade?.resultKind)).map((row) => row.result))
+    : null;
   // Особые результаты без числа — «…» в ряду оценок и окно «Изменить итог» (Т4).
   const otherKinds = (data.allowedResultKinds ?? []).filter((kind) => kind !== 'NUMERIC' && !isAttestationStatus(kind)
     && (data.assessmentMode !== 'PASS_FAIL' || kind === 'NOT_STUDIED'));
   const changeRow = changeRequest?.row ?? null;
   const changingPublished = changeRow?.finalGrade?.status === 'PUBLISHED';
+  const deviationText = deviation ? deviationDialog(deviation.row, deviation.kind, deviation.value) : null;
 
   return (
     <div className="flex flex-col gap-4">
-      <FinalsScaleNote finals={data} />
+      {note ? (
+        <p className="flex items-start gap-2 px-1 text-13 text-slate-500">
+          <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>{note}</span>
+        </p>
+      ) : <FinalsScaleNote finals={data} />}
+      {banner && (banner.tone === 'warning' ? (
+        <StatusNotice tone="warning"><strong>{banner.strong}</strong> {banner.text}</StatusNotice>
+      ) : (
+        <p role="status" className="rounded-lg bg-info-bg p-4 text-13 text-info-fg">{banner.text}</p>
+      ))}
       {missingResults && missingResults.students > 0 && (
         <p role="status" className="rounded-lg bg-info-bg p-4 text-13 text-info-fg">
-          Итог за четверть не посчитан у {missingResults.students} из {rows.length}{' '}
+          Итог за {scope} не посчитан у {missingResults.students} из {rows.length}{' '}
           {pluralRu(rows.length, ['ученика', 'учеников', 'учеников'])}
           {missingResults.components.length > 0 ? `: нет ${missingResults.components.join(', ')}` : ': нет работ'}.
           {' '}Внесите работы на уроках или, если обязательная работа не сдана, выберите «Временно не аттестован».
@@ -583,6 +719,7 @@ function FinalsTab({
           busyStudentId={busyStudentId}
           rowError={rowError}
           editMode={inEditMode}
+          staged={new Map([...staged].map(([id, choice]) => [id, choice.value]))}
           actions={{
             onPickValue: (row, value) => void pick(row, value),
             onPickResult: (row, kind) => void pick(row, null, kind),
@@ -591,6 +728,7 @@ function FinalsTab({
             onOpenHistory: setHistoryRow,
             onCorrect: setCorrectionRow,
             onRepublish: setRepublishRow,
+            onStageRepublish: stageRepublish,
             onOpenBreakdown: (row) =>
               setBreakdown({ studentProfileId: row.studentProfileId as number, name: row.studentName ?? '' }),
           }}
@@ -600,10 +738,26 @@ function FinalsTab({
       {statusRequest && <AttestationStatusModal row={statusRequest.row} kind={statusRequest.kind}
         placement={placement} onClose={() => setStatusRequest(null)} />}
       {changeRow && <ChangeFinalResultModal row={changeRow} initial={changeRequest?.initial}
-        values={changingPublished ? (data.positiveValues?.length ? data.positiveValues : finalValueOptions(data))
+        values={changingPublished
+          ? data.assessmentMode === 'PASS_FAIL' ? [] : (data.positiveValues?.length ? data.positiveValues : finalValueOptions(data))
           : data.assessmentMode === 'PASS_FAIL' ? [] : finalValueOptions(data)}
-        otherKinds={changingPublished ? [] : data.assessmentMode === 'PASS_FAIL' ? ['PASS', 'FAIL', ...otherKinds] : otherKinds}
+        otherKinds={changingPublished
+          ? data.assessmentMode === 'PASS_FAIL' ? ['PASS'] : []
+          : data.assessmentMode === 'PASS_FAIL' ? ['PASS', 'FAIL', ...otherKinds] : otherKinds}
         placement={placement} onClose={() => setChangeRequest(null)} />}
+      {deviation && deviationText && (
+        <DeviationReasonModal
+          title={deviationText.title}
+          subtitle={deviationText.subtitle}
+          reasons={deviation.row.recommendation?.available ? DEVIATION_REASONS : NO_RECOMMENDATION_REASONS}
+          placeholder={deviation.row.recommendation?.available
+            ? 'Например: СОР 2 пересдан устно, есть справка' : 'Например: все работы сданы, нормативы выполнены'}
+          busy={busyStudentId === deviation.row.studentProfileId}
+          error={deviationError}
+          onCancel={() => setDeviation(null)}
+          onSave={(reason) => void saveDeviation(reason)}
+        />
+      )}
       {correctionRow?.finalGrade && <FinalGradeCorrectionModal grade={correctionRow.finalGrade}
         studentName={correctionRow.studentName ?? ''}
         allowedKinds={data.allowedResultKinds ?? ['NUMERIC']}
@@ -613,7 +767,9 @@ function FinalsTab({
         options={finalValueOptions(data)}
         onClose={() => setRepublishRow(null)} />}
       {historyRow?.finalGrade?.id != null && <FinalGradeHistoryModal id={historyRow.finalGrade.id}
-        studentName={historyRow.studentName ?? ''} onClose={() => setHistoryRow(null)} />}
+        studentName={historyRow.studentName ?? ''}
+        context={[subjectName, periodOption?.name].filter(Boolean).join(' · ') || undefined}
+        onClose={() => setHistoryRow(null)} />}
       <PeriodBreakdownModal
         query={
           breakdown
@@ -629,7 +785,7 @@ function FinalsTab({
       />
 
       {error && (
-        <p className="rounded-xl bg-danger-bg px-4 py-3 text-13 font-semibold text-red-600">
+        <p className="whitespace-pre-line rounded-xl bg-danger-bg px-4 py-3 text-13 font-semibold text-red-600">
           {error}
         </p>
       )}
@@ -638,29 +794,45 @@ function FinalsTab({
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-6 py-5">
           <p className="flex items-center gap-3 text-13 text-slate-600">
             <span
-              className={`size-2 shrink-0 rounded-full ${allPublished ? 'bg-green-500' : allFilled && publicationOpen ? 'bg-brand-500' : 'bg-slate-300'}`}
+              className={`size-2 shrink-0 rounded-full ${allPublished
+                ? toReconfirm.length > 0 ? 'bg-brand-500' : 'bg-green-500'
+                : allFilled && publicationOpen ? 'bg-navy-700' : 'bg-slate-300'}`}
             />
             {allPublished
-              ? inEditMode ? PUBLISHED_EDIT_RULE : 'Итоги четверти опубликованы — их видят ученик и родитель'
+              ? inEditMode
+                ? toReconfirm.length > 0
+                  ? 'Режим изменения: подтвердите итог с новой рекомендацией или замените ВНА на оценку'
+                  : PUBLISHED_EDIT_RULE
+                : toReconfirm.length > 0
+                  ? `Итоги опубликованы. У ${toReconfirm.length} ${pluralRu(toReconfirm.length, ['ученика', 'учеников', 'учеников'])} изменилась рекомендация — подтвердите итог повторно`
+                  : configured ? `Итоги ${periodOption?.name ? periodGenitive(periodOption.name) : periodName} опубликованы — их видят ученик и родитель`
+                    : 'Итоги четверти опубликованы — их видят ученик и родитель'
               : !publicationOpen
-                ? `Итоги можно выставлять уже сейчас, а опубликовать — после окончания четверти${publishableFrom ? `, с ${publishableFrom}` : ''} (${filled} из ${rows.length} выставлено)`
+                ? `Итоги можно выставлять уже сейчас, а опубликовать — после окончания ${scope === 'полугодие' ? 'полугодия' : 'четверти'}${publishableFrom ? `, с ${publishableFrom}` : ''} (${filled} из ${rows.length} выставлено)`
                 : hasPublicationIssues
                   ? 'Внесите обязательные результаты работ или выберите особый результат для ученика'
                 : allFilled
-                  ? `Все итоги выставлены (${filled} из ${rows.length}) — можно публиковать`
-                  : `Выставьте оценку всем ученикам, чтобы опубликовать итоги четверти (${filled} из ${rows.length} оценено)`}
+                  ? configured
+                    ? 'Все итоги выставлены — можно публиковать. После публикации их увидят ученик и родитель'
+                    : `Все итоги выставлены (${filled} из ${rows.length}) — можно публиковать`
+                  : `Выставьте оценку всем ученикам, чтобы опубликовать итоги ${scope === 'полугодие' ? 'полугодия' : 'четверти'} (${filled} из ${rows.length} оценено)`}
           </p>
           {allPublished ? (
-            inEditMode
-              ? <Button onClick={() => setEditMode(false)}>Готово</Button>
-              : <Button disabled={!editable} onClick={() => setEditMode(true)}>Редактировать</Button>
+            inEditMode ? (
+              <span className="flex gap-3">
+                {toReconfirm.length > 0 && <Button variant="secondary" onClick={() => { setEditMode(false); setStaged(new Map()); }}>Отмена</Button>}
+                {toReconfirm.length > 0
+                  ? <Button loading={republish.isPending} onClick={() => void republishAll()}>Подтвердить и опубликовать повторно</Button>
+                  : <Button onClick={() => setEditMode(false)}>Готово</Button>}
+              </span>
+            ) : <Button disabled={!editable} onClick={() => setEditMode(true)}>Редактировать</Button>
           ) : (
             <Button
               onClick={() => setConfirmPublish(true)}
               disabled={!allFilled || !publicationOpen || hasPublicationIssues}
               loading={publish.isPending}
             >
-              Опубликовать итоги четверти
+              {scope === 'полугодие' ? 'Опубликовать итоги полугодия' : 'Опубликовать итоги четверти'}
             </Button>
           )}
         </div>
@@ -668,7 +840,7 @@ function FinalsTab({
 
       <ConfirmDialog
         open={confirmPublish}
-        title="Опубликовать итоги четверти?"
+        title={scope === 'полугодие' ? 'Опубликовать итоги полугодия?' : 'Опубликовать итоги четверти?'}
         message="После публикации итоговые оценки увидят ученики и родители. Изменить после публикации можно только «Временно не аттестован» на оценку — с причиной. Остальные итоги исправляет администратор по документам и протоколу."
         confirmLabel="Опубликовать"
         loading={publish.isPending}
@@ -681,10 +853,13 @@ function FinalsTab({
 
 function JournalShell({
   tab,
+  finalsLabel = 'Итоги четверти',
   onTab,
   children,
 }: {
   tab: JournalTab;
+  /** «Итоги полугодия» у полугодового предмета (макет Б1). */
+  finalsLabel?: string;
   onTab: (tab: JournalTab) => void;
   children: React.ReactNode;
 }) {
@@ -700,7 +875,7 @@ function JournalShell({
       <Tabs value={tab} onValueChange={(next) => onTab(next as JournalTab)}>
         <TabsList>
           <TabsTrigger value="JOURNAL">Журнал</TabsTrigger>
-          <TabsTrigger value="FINALS">Итоги четверти</TabsTrigger>
+          <TabsTrigger value="FINALS">{finalsLabel}</TabsTrigger>
           <TabsTrigger value="YEAR_FINALS">Итоги года и экзамены</TabsTrigger>
         </TabsList>
         {/* Отступ между фильтрами и таблицей: без него карточка таблицы прилипала к полям. */}
