@@ -20022,6 +20022,7 @@ export interface components {
             /** Format: int64 */
             classId?: number;
             className?: string;
+            extended?: boolean;
             /** Format: int64 */
             subgroupId?: number;
             subgroupName?: string;
@@ -29048,7 +29049,9 @@ export interface operations {
     };
     journalOptions: {
         parameters: {
-            query?: never;
+            query?: {
+                academicYearId?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
