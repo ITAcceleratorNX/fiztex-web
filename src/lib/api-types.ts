@@ -19789,6 +19789,8 @@ export interface components {
             /** Format: int64 */
             academicYearId?: number | null;
             assignments?: components["schemas"]["TeachingPair"][];
+            extendedClasses?: components["schemas"]["ReportReferenceView"][];
+            extendedPairs?: components["schemas"]["TeachingPair"][];
             periods?: components["schemas"]["ContextPeriod"][];
             years?: components["schemas"]["ContextYear"][];
         };
@@ -37259,7 +37261,7 @@ export interface operations {
                 academicYearId: number;
                 academicPeriodId?: number;
                 classId?: number;
-                subjectId: number;
+                subjectId?: number;
                 studentProfileId?: number;
                 dimension: "CLASS" | "STUDENT" | "SUBJECT";
                 page?: number;
@@ -37382,7 +37384,7 @@ export interface operations {
                 academicYearId: number;
                 academicPeriodId?: number;
                 classId?: number;
-                subjectId: number;
+                subjectId?: number;
                 studentProfileId?: number;
             };
             header?: never;
@@ -37444,7 +37446,7 @@ export interface operations {
                 academicYearId: number;
                 academicPeriodId?: number;
                 classId?: number;
-                subjectId: number;
+                subjectId?: number;
                 studentProfileId?: number;
             };
             header?: never;
@@ -37506,7 +37508,7 @@ export interface operations {
                 academicYearId: number;
                 academicPeriodId?: number;
                 classId?: number;
-                subjectId: number;
+                subjectId?: number;
                 studentProfileId?: number;
                 page?: number;
                 size?: number;
@@ -37570,7 +37572,7 @@ export interface operations {
                 academicYearId: number;
                 academicPeriodId?: number;
                 classId?: number;
-                subjectId: number;
+                subjectId?: number;
                 studentProfileId?: number;
             };
             header?: never;
@@ -37632,7 +37634,7 @@ export interface operations {
                 academicYearId: number;
                 academicPeriodId?: number;
                 classId?: number;
-                subjectId: number;
+                subjectId?: number;
                 studentProfileId?: number;
             };
             header?: never;
@@ -37694,7 +37696,7 @@ export interface operations {
                 academicYearId: number;
                 academicPeriodId?: number;
                 classId?: number;
-                subjectId: number;
+                subjectId?: number;
                 studentProfileId?: number;
             };
             header?: never;
@@ -37756,7 +37758,7 @@ export interface operations {
                 academicYearId: number;
                 academicPeriodId?: number;
                 classId?: number;
-                subjectId: number;
+                subjectId?: number;
                 studentProfileId?: number;
             };
             header?: never;
