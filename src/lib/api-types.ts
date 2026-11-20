@@ -404,7 +404,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_17"];
+        get: operations["history_18"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1290,7 +1290,7 @@ export interface paths {
          * Назначить или заменить классного руководителя
          * @description expectedCurrentAssignmentId обязателен: null — свободный класс, ID — увиденное назначение. Несовпадение даёт 409 HOMEROOM_ASSIGNMENT_CHANGED.
          */
-        put: operations["put_2"];
+        put: operations["put_3"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1306,7 +1306,7 @@ export interface paths {
             cookie?: never;
         };
         /** История классных руководителей, включая архивный класс */
-        get: operations["history_16"];
+        get: operations["history_17"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2158,7 +2158,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_15"];
+        get: operations["history_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2366,7 +2366,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_14"];
+        get: operations["history_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2654,7 +2654,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["history_13"];
+        get: operations["history_14"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2689,7 +2689,93 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["revoke"];
+        delete: operations["revoke_1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/study-data-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Реестр учителей с дополнительными правами */
+        get: operations["registry"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/study-data-access/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Годы, классы и параллели, которые можно выбрать в области */
+        get: operations["options_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/study-data-access/teachers/{teacherProfileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Карточка дополнительных прав учителя; без версий — NOT_ASSIGNED */
+        get: operations["card"];
+        /** Назначить или заменить конфигурацию целиком */
+        put: operations["put_2"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/study-data-access/teachers/{teacherProfileId}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Все версии конфигурации, новые сверху */
+        get: operations["history_13"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/study-data-access/teachers/{teacherProfileId}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Отозвать; без действующих прав — актуальная карточка без изменений */
+        post: operations["revoke"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3454,7 +3540,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["card_3"];
+        get: operations["card_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6192,7 +6278,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["card_1"];
+        get: operations["card_2"];
         put?: never;
         post?: never;
         delete: operations["deleteUnit"];
@@ -6272,7 +6358,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["card_2"];
+        get: operations["card_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7578,6 +7664,23 @@ export interface paths {
         };
         /** Сводка учебной отчётности */
         get: operations["getHomeroomAcademicReportSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/assessment-results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Работы СОР/СОЧ предмета за период и баллы текущего состава, включая «Не выполнял работу» */
+        get: operations["getMyClassAssessmentResults"];
         put?: never;
         post?: never;
         delete?: never;
@@ -9479,7 +9582,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["card"];
+        get: operations["card_1"];
         put?: never;
         post?: never;
         delete: operations["delete_3"];
@@ -10230,7 +10333,7 @@ export interface components {
             /** @enum {string} */
             subjectRole?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
             /** @enum {string} */
-            type?: "REQUEST_DRAFT_SAVED" | "REQUEST_SUBMITTED" | "REQUEST_RESUBMITTED" | "REQUEST_APPROVED_LINKED" | "REQUEST_APPROVED_CREATED" | "REQUEST_REJECTED" | "PARENT_LINK_ADDED" | "LOGIN_METHOD_ENABLED" | "STUDENT_CODE_ISSUED" | "STUDENT_CODE_REISSUED" | "STUDENT_PIN_RESET" | "ACCESS_RESET" | "TEMP_PASSWORD_ISSUED" | "PASSWORD_CHANGED" | "PHONE_CHANGED" | "CODE_GRANT_ADDED" | "CODE_GRANT_REVOKED";
+            type?: "REQUEST_DRAFT_SAVED" | "REQUEST_SUBMITTED" | "REQUEST_RESUBMITTED" | "REQUEST_APPROVED_LINKED" | "REQUEST_APPROVED_CREATED" | "REQUEST_REJECTED" | "PARENT_LINK_ADDED" | "LOGIN_METHOD_ENABLED" | "STUDENT_CODE_ISSUED" | "STUDENT_CODE_REISSUED" | "STUDENT_PIN_RESET" | "ACCESS_RESET" | "TEMP_PASSWORD_ISSUED" | "PASSWORD_CHANGED" | "PHONE_CHANGED" | "CODE_GRANT_ADDED" | "CODE_GRANT_REVOKED" | "STUDY_ACCESS_GRANTED" | "STUDY_ACCESS_CHANGED" | "STUDY_ACCESS_REVOKED" | "STUDY_ACCESS_EXPIRED";
         };
         AccessRequestClassOptionsView: {
             grades?: components["schemas"]["GradeOption"][];
@@ -12323,6 +12426,7 @@ export interface components {
             entries?: components["schemas"]["DiaryEntryView"][];
             /** Format: int64 */
             studentProfileId?: number;
+            works?: components["schemas"]["LearnerWorkResultView"][];
         };
         DuplicateCheckRequest: {
             sha256?: string;
@@ -12935,6 +13039,7 @@ export interface components {
         GradebookAssessmentResultView: {
             /** Format: int32 */
             maxScore?: number;
+            notTaken?: boolean;
             /** Format: int64 */
             resultId?: number;
             /** Format: int32 */
@@ -13800,7 +13905,7 @@ export interface components {
             /** Format: date-time */
             occurredAt?: string;
             /** @enum {string} */
-            type?: "REQUEST_DRAFT_SAVED" | "REQUEST_SUBMITTED" | "REQUEST_RESUBMITTED" | "REQUEST_APPROVED_LINKED" | "REQUEST_APPROVED_CREATED" | "REQUEST_REJECTED" | "PARENT_LINK_ADDED" | "LOGIN_METHOD_ENABLED" | "STUDENT_CODE_ISSUED" | "STUDENT_CODE_REISSUED" | "STUDENT_PIN_RESET" | "ACCESS_RESET" | "TEMP_PASSWORD_ISSUED" | "PASSWORD_CHANGED" | "PHONE_CHANGED" | "CODE_GRANT_ADDED" | "CODE_GRANT_REVOKED";
+            type?: "REQUEST_DRAFT_SAVED" | "REQUEST_SUBMITTED" | "REQUEST_RESUBMITTED" | "REQUEST_APPROVED_LINKED" | "REQUEST_APPROVED_CREATED" | "REQUEST_REJECTED" | "PARENT_LINK_ADDED" | "LOGIN_METHOD_ENABLED" | "STUDENT_CODE_ISSUED" | "STUDENT_CODE_REISSUED" | "STUDENT_PIN_RESET" | "ACCESS_RESET" | "TEMP_PASSWORD_ISSUED" | "PASSWORD_CHANGED" | "PHONE_CHANGED" | "CODE_GRANT_ADDED" | "CODE_GRANT_REVOKED" | "STUDY_ACCESS_GRANTED" | "STUDY_ACCESS_CHANGED" | "STUDY_ACCESS_REVOKED" | "STUDY_ACCESS_EXPIRED";
         };
         JsonNode: Record<string, never>;
         KeyActorView: {
@@ -14944,6 +15049,27 @@ export interface components {
             /** Format: int32 */
             score?: number;
         };
+        LearnerWorkResultView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** @enum {string} */
+            kind?: "SOR" | "SOCH";
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int32 */
+            maxScore?: number;
+            /** Format: int32 */
+            number?: number | null;
+            /** Format: int32 */
+            score?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            title?: string;
+            /** Format: int64 */
+            workId?: number;
+        };
         LessonCommentView: {
             body?: string;
             /** Format: date-time */
@@ -15695,6 +15821,16 @@ export interface components {
             /** @enum {string} */
             resultFormat?: "NUMERIC" | "PASS_FAIL";
         };
+        MyClassAssessmentResultsView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            classId?: number;
+            results?: components["schemas"]["Result"][];
+            /** Format: int64 */
+            subjectId?: number;
+            works?: components["schemas"]["Work"][];
+        };
         MyClassAttendanceCellView: {
             /** Format: int64 */
             lessonId?: number;
@@ -16225,6 +16361,7 @@ export interface components {
             /** Format: int64 */
             subjectId?: number;
             subjectName?: string;
+            works?: components["schemas"]["LearnerWorkResultView"][];
         };
         MySubjectGradesView: {
             /** Format: int64 */
@@ -17076,6 +17213,24 @@ export interface components {
             /** Format: int32 */
             totalPages?: number;
         };
+        PageStudyAccessRegistryRowView: {
+            content?: components["schemas"]["StudyAccessRegistryRowView"][];
+            empty?: boolean;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
         PageSurveyListItemView: {
             content?: components["schemas"]["SurveyListItemView"][];
             empty?: boolean;
@@ -17773,6 +17928,16 @@ export interface components {
             /** Format: int64 */
             teacherProfileId: number;
         };
+        PutStudyDataAccessRequest: {
+            /** Format: int32 */
+            expectedRevision?: number | null;
+            /** @description Основание изменения */
+            reason?: string | null;
+            scope: components["schemas"]["StudyDataAccessScopeRequest"];
+            sections: ("GRADES" | "ATTENDANCE" | "ANALYTICS")[];
+            /** Format: date */
+            validUntil?: string | null;
+        };
         PutTeacherAvailabilityRequest: {
             intervals: components["schemas"]["PutAvailabilityIntervalRequest"][];
             /** @enum {string} */
@@ -18159,6 +18324,15 @@ export interface components {
             makeActive?: boolean;
             reason?: string;
         };
+        Result: {
+            notTaken?: boolean;
+            /** Format: int32 */
+            score?: number | null;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            workId?: number;
+        };
         ResultDetailResponse: {
             answers?: components["schemas"]["AnswerReviewItem"][];
             applicantName?: string;
@@ -18271,6 +18445,9 @@ export interface components {
             photos?: components["schemas"]["SubmissionAttachmentView"][];
             /** Format: int64 */
             teacherProfileId?: number;
+        };
+        RevokeStudyDataAccessRequest: {
+            reason?: string | null;
         };
         RoleScheduleAssessmentWorkView: {
             /** @enum {string} */
@@ -19156,6 +19333,132 @@ export interface components {
             students?: components["schemas"]["YearTransitionStudent"][];
             targets?: components["schemas"]["YearTransitionTarget"][];
             yearEnded?: boolean;
+        };
+        StudyAccessActorView: {
+            /** Format: int64 */
+            accountId?: number;
+            fullName?: string;
+        };
+        StudyAccessCardView: {
+            effective?: boolean;
+            ended?: components["schemas"]["StudyAccessEndView"];
+            /** Format: date */
+            expiredOn?: string | null;
+            granted?: components["schemas"]["StudyAccessChangeView"];
+            inactiveReason?: string | null;
+            /** Format: int32 */
+            revision?: number;
+            scope?: components["schemas"]["StudyAccessScopeView"];
+            sections?: ("GRADES" | "ATTENDANCE" | "ANALYTICS")[];
+            /** @enum {string} */
+            state?: "NOT_ASSIGNED" | "ACTIVE" | "EXPIRED" | "REVOKED";
+            teacher?: components["schemas"]["StudyAccessTeacherView"];
+            /** Format: date */
+            validUntil?: string | null;
+        };
+        StudyAccessChangeView: {
+            /** Format: date-time */
+            at?: string;
+            by?: components["schemas"]["StudyAccessActorView"];
+            reason?: string | null;
+        };
+        StudyAccessClassView: {
+            academicYear?: components["schemas"]["StudyAccessYearRefView"];
+            demo?: boolean;
+            grade?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
+        StudyAccessEndView: {
+            /** Format: date-time */
+            at?: string;
+            by?: components["schemas"]["StudyAccessActorView"];
+            /** @enum {string} */
+            cause?: "ADMIN" | "TEACHER_DEACTIVATED" | "ROLE_CHANGED";
+            /** @enum {string} */
+            kind?: "REPLACED" | "REVOKED";
+            reason?: string | null;
+        };
+        StudyAccessHistoryView: {
+            teacher?: components["schemas"]["StudyAccessTeacherView"];
+            versions?: components["schemas"]["StudyAccessVersionView"][];
+        };
+        StudyAccessOptionsView: {
+            parallels?: string[];
+            years?: components["schemas"]["StudyAccessOptionsYearView"][];
+        };
+        StudyAccessOptionsYearView: {
+            classes?: components["schemas"]["StudyAccessClassView"][];
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            parallels?: string[];
+            /** Format: date */
+            startDate?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "ACTIVE" | "ARCHIVED";
+        };
+        StudyAccessRegistryRowView: {
+            /** Format: date-time */
+            changedAt?: string;
+            effective?: boolean;
+            /** Format: int32 */
+            revision?: number;
+            /** Format: int32 */
+            scopeSize?: number;
+            /** @enum {string} */
+            scopeType?: "CLASSES" | "PARALLELS" | "SCHOOL";
+            sections?: ("GRADES" | "ATTENDANCE" | "ANALYTICS")[];
+            /** @enum {string} */
+            state?: "NOT_ASSIGNED" | "ACTIVE" | "EXPIRED" | "REVOKED";
+            teacher?: components["schemas"]["StudyAccessTeacherView"];
+            /** Format: date */
+            validUntil?: string | null;
+        };
+        StudyAccessScopeView: {
+            classes?: components["schemas"]["StudyAccessClassView"][];
+            parallels?: string[];
+            /** @enum {string} */
+            type?: "CLASSES" | "PARALLELS" | "SCHOOL";
+        };
+        StudyAccessTeacherView: {
+            /** Format: int64 */
+            accountId?: number;
+            /** @enum {string} */
+            accountStatus?: "NOT_ACTIVATED" | "ACTIVE" | "BLOCKED" | "ARCHIVED";
+            fullName?: string;
+            /** Format: int64 */
+            teacherProfileId?: number;
+        };
+        StudyAccessVersionView: {
+            ended?: components["schemas"]["StudyAccessEndView"];
+            /** @description Срок вышел, пока версия действовала */
+            expired?: boolean;
+            granted?: components["schemas"]["StudyAccessChangeView"];
+            /** Format: int32 */
+            revision?: number;
+            scope?: components["schemas"]["StudyAccessScopeView"];
+            sections?: ("GRADES" | "ATTENDANCE" | "ANALYTICS")[];
+            /** Format: date */
+            validUntil?: string | null;
+        };
+        StudyAccessYearRefView: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "ACTIVE" | "ARCHIVED";
+        };
+        StudyDataAccessScopeRequest: {
+            /** @description ID классов учебного года — только для CLASSES */
+            classIds?: number[];
+            /** @description Номера параллелей (grade класса) — только для PARALLELS */
+            parallels?: string[];
+            /** @enum {string} */
+            type: "CLASSES" | "PARALLELS" | "SCHOOL";
         };
         Subgroup: {
             /** Format: int64 */
@@ -20483,6 +20786,23 @@ export interface components {
             accessToken?: string;
             applicant?: components["schemas"]["ApplicantView"];
         };
+        Work: {
+            /** @enum {string} */
+            kind?: "SOR" | "SOCH";
+            /** Format: date */
+            lessonDate?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** Format: int32 */
+            maxScore?: number;
+            /** Format: int32 */
+            number?: number | null;
+            /** @enum {string} */
+            status?: "PLANNED" | "CONDUCTED" | "CANCELLED";
+            subgroupName?: string | null;
+            /** Format: int64 */
+            workId?: number;
+        };
         WorkHistoryEventView: {
             action?: string;
             /** Format: int64 */
@@ -21610,7 +21930,7 @@ export interface operations {
             };
         };
     };
-    history_17: {
+    history_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -21711,7 +22031,7 @@ export interface operations {
             query: {
                 accountId?: number;
                 requestId?: number;
-                type?: "REQUEST_DRAFT_SAVED" | "REQUEST_SUBMITTED" | "REQUEST_RESUBMITTED" | "REQUEST_APPROVED_LINKED" | "REQUEST_APPROVED_CREATED" | "REQUEST_REJECTED" | "PARENT_LINK_ADDED" | "LOGIN_METHOD_ENABLED" | "STUDENT_CODE_ISSUED" | "STUDENT_CODE_REISSUED" | "STUDENT_PIN_RESET" | "ACCESS_RESET" | "TEMP_PASSWORD_ISSUED" | "PASSWORD_CHANGED" | "PHONE_CHANGED" | "CODE_GRANT_ADDED" | "CODE_GRANT_REVOKED";
+                type?: "REQUEST_DRAFT_SAVED" | "REQUEST_SUBMITTED" | "REQUEST_RESUBMITTED" | "REQUEST_APPROVED_LINKED" | "REQUEST_APPROVED_CREATED" | "REQUEST_REJECTED" | "PARENT_LINK_ADDED" | "LOGIN_METHOD_ENABLED" | "STUDENT_CODE_ISSUED" | "STUDENT_CODE_REISSUED" | "STUDENT_PIN_RESET" | "ACCESS_RESET" | "TEMP_PASSWORD_ISSUED" | "PASSWORD_CHANGED" | "PHONE_CHANGED" | "CODE_GRANT_ADDED" | "CODE_GRANT_REVOKED" | "STUDY_ACCESS_GRANTED" | "STUDY_ACCESS_CHANGED" | "STUDY_ACCESS_REVOKED" | "STUDY_ACCESS_EXPIRED";
                 from?: string;
                 to?: string;
                 query?: string;
@@ -23314,7 +23634,7 @@ export interface operations {
             };
         };
     };
-    put_2: {
+    put_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -23385,7 +23705,7 @@ export interface operations {
             };
         };
     };
-    history_16: {
+    history_17: {
         parameters: {
             query?: {
                 page?: number;
@@ -25098,7 +25418,7 @@ export interface operations {
             };
         };
     };
-    history_15: {
+    history_16: {
         parameters: {
             query: {
                 entityType: "BELL_TEMPLATE" | "WORKING_DAYS" | "CALENDAR_EVENT" | "TEACHER_AVAILABILITY" | "GROUP_SET" | "SUBGROUP" | "LESSON_GENERATION";
@@ -25450,7 +25770,7 @@ export interface operations {
             };
         };
     };
-    history_14: {
+    history_15: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -26028,7 +26348,7 @@ export interface operations {
             };
         };
     };
-    history_13: {
+    history_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -26098,7 +26418,7 @@ export interface operations {
             };
         };
     };
-    revoke: {
+    revoke_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -26116,6 +26436,200 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    registry: {
+        parameters: {
+            query: {
+                state?: "NOT_ASSIGNED" | "ACTIVE" | "EXPIRED" | "REVOKED";
+                query?: string;
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageStudyAccessRegistryRowView"];
+                };
+            };
+        };
+    };
+    options_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyAccessOptionsView"];
+                };
+            };
+        };
+    };
+    card: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                teacherProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyAccessCardView"];
+                };
+            };
+            /** @description STUDY_ACCESS_TEACHER_NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    put_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                teacherProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutStudyDataAccessRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyAccessCardView"];
+                };
+            };
+            /** @description STUDY_ACCESS_INVALID — все нарушения в details */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description STUDY_ACCESS_TEACHER_NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description STUDY_ACCESS_TEACHER_INACTIVE | STUDY_ACCESS_REVISION_CONFLICT (карточка в details) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    history_13: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                teacherProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyAccessHistoryView"];
+                };
+            };
+        };
+    };
+    revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                teacherProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RevokeStudyDataAccessRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyAccessCardView"];
+                };
+            };
+            /** @description STUDY_ACCESS_INVALID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description STUDY_ACCESS_TEACHER_NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
             };
         };
     };
@@ -27608,7 +28122,7 @@ export interface operations {
             };
         };
     };
-    card_3: {
+    card_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -29758,6 +30272,7 @@ export interface operations {
         parameters: {
             query?: {
                 academicYearId?: number;
+                classId?: number;
             };
             header?: never;
             path?: never;
@@ -32291,7 +32806,7 @@ export interface operations {
             };
         };
     };
-    card_1: {
+    card_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -32464,7 +32979,7 @@ export interface operations {
             };
         };
     };
-    card_2: {
+    card_3: {
         parameters: {
             query?: {
                 childId?: number;
@@ -35211,6 +35726,40 @@ export interface operations {
             };
             /** @description Не найден допустимый справочный объект */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getMyClassAssessmentResults: {
+        parameters: {
+            query: {
+                periodId?: number;
+                subjectId: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Работы и результаты */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyClassAssessmentResultsView"];
+                };
+            };
+            /** @description Класс недоступен */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -39064,7 +39613,7 @@ export interface operations {
             };
         };
     };
-    card: {
+    card_1: {
         parameters: {
             query?: never;
             header?: never;
