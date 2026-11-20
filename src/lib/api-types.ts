@@ -3828,7 +3828,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["mine"];
+        get: operations["mine_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -9457,6 +9457,23 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["issueCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/study-data-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Действующие дополнительные права: разделы, область, срок и учебные годы */
+        get: operations["mine"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -19384,6 +19401,16 @@ export interface components {
             teacher?: components["schemas"]["StudyAccessTeacherView"];
             versions?: components["schemas"]["StudyAccessVersionView"][];
         };
+        StudyAccessMineView: {
+            effective?: boolean;
+            scope?: components["schemas"]["StudyAccessScopeView"];
+            sections?: ("GRADES" | "ATTENDANCE" | "ANALYTICS")[];
+            /** @enum {string} */
+            state?: "NOT_ASSIGNED" | "ACTIVE" | "EXPIRED" | "REVOKED";
+            /** Format: date */
+            validUntil?: string | null;
+            years?: components["schemas"]["StudyAccessYearRefView"][];
+        };
         StudyAccessOptionsView: {
             parallels?: string[];
             years?: components["schemas"]["StudyAccessOptionsYearView"][];
@@ -28608,7 +28635,7 @@ export interface operations {
             };
         };
     };
-    mine: {
+    mine_1: {
         parameters: {
             query?: {
                 childId?: number;
@@ -39385,6 +39412,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IssuedCodeResponse"];
+                };
+            };
+        };
+    };
+    mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyAccessMineView"];
                 };
             };
         };
