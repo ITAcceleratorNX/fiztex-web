@@ -13153,10 +13153,12 @@ export interface components {
             studentProfileId?: number;
         };
         GradebookScopeView: {
+            canEdit?: boolean;
             classDemo?: boolean;
             /** Format: int64 */
             classId?: number;
             className?: string;
+            extended?: boolean;
             /** Format: int64 */
             subjectId?: number;
             subjectName?: string;
