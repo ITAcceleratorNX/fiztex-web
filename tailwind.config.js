@@ -223,6 +223,7 @@ export default {
         'auth-card': 'var(--size-auth-card)',
         'auth-form': 'var(--size-auth-form)',
         drawer: 'var(--size-drawer)',
+        'drawer-narrow': 'var(--size-drawer-narrow)',
       },
       maxHeight: {
         // Скролл-список классов в модалке события (2015:10760).
