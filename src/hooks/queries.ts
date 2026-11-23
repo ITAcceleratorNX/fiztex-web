@@ -151,6 +151,13 @@ export const keys = {
   lessonParentComments: (lessonId: number | null) => ['lesson-parent-comments', lessonId] as const,
   schoolSubjects: (status: SchoolRecordStatus | 'ALL') => ['school-subjects', status] as const,
   myClassContext: ['my-class', 'context'] as const,
+  // Причины отсутствий класса: список, его счётчики и день — под одним префиксом, чтобы команда дня
+  // перечитывала все виды класса одним `invalidateQueries`.
+  myClassAbsenceDays: (classId: number) => ['my-class', 'classes', classId, 'absence-days'] as const,
+  myClassAbsenceList: (classId: number, params: Record<string, string | number | null>) =>
+    ['my-class', 'classes', classId, 'absence-days', 'list', params] as const,
+  myClassAbsenceDay: (classId: number, studentProfileId: number, date: string) =>
+    ['my-class', 'classes', classId, 'absence-days', 'day', studentProfileId, date] as const,
   myClassRoster: (classId: number) => ['my-class', 'classes', classId, 'students'] as const,
   myClassSummary: (classId: number, periodId: number) => ['my-class', 'classes', classId, 'summary', periodId] as const,
   myClassSubjects: (classId: number, periodId: number) => ['my-class', 'classes', classId, 'subjects', periodId] as const,
@@ -259,6 +266,9 @@ export const keys = {
   homeworkList: (params: HomeworkListParams) => ['homework', 'list', params] as const,
   lessonHomework: (lessonId: number) => ['homework', 'lesson', lessonId, 'all'] as const,
   attendanceHistory: (lessonId: number) => ['lessons', lessonId, 'attendance', 'history'] as const,
+  // Под ключом листа: смена причины дня у отсутствовавших перечитывает лист вместе с этой лентой.
+  attendanceDayReasonHistory: (lessonId: number) =>
+    ['lessons', lessonId, 'attendance', 'day-reason-history'] as const,
   attendanceQr: (lessonId: number) => ['lessons', lessonId, 'attendance', 'qr'] as const,
   // Раздел «Посещаемость (QR)» учителя: свои уроки на сегодня и журнал месяца. Журнал
   // живёт под 'attendance', а не под уроком: он собран из многих уроков сразу.

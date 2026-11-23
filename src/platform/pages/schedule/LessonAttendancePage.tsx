@@ -26,6 +26,8 @@ import {
   usePublishAttendance,
   useSaveAttendanceDraft,
 } from '@/hooks/queries';
+import { useAttendanceDayReasonHistory } from '@/hooks/absenceReasonQueries';
+import { describeDayReasonEvent } from '@/lib/absenceReasonModel';
 import { ApiError } from '@/lib/api';
 import { scansByStudent } from '@/lib/attendanceQrApi';
 import {
@@ -33,7 +35,6 @@ import {
   unmarkedIdsFrom,
   type AttendanceEntryChange,
   type AttendanceMarking,
-  type AttendanceReason,
   type AttendanceStatus,
 } from '@/lib/attendanceApi';
 import {
@@ -44,7 +45,6 @@ import {
   sheetBadge,
   withComment,
   withMarkToggled,
-  withReason,
   withStatus,
 } from '@/lib/attendanceModel';
 import { cx, formatDateTime } from '@/lib/format';
@@ -53,6 +53,11 @@ import { LessonDatePicker } from './LessonDatePicker';
 import { hhmm } from './lessonHistory';
 
 const COMMENT_MAX = 500;
+
+function time(iso: string | null | undefined): number {
+  const value = iso ? Date.parse(iso) : NaN;
+  return Number.isNaN(value) ? 0 : value;
+}
 
 /**
  * Лист посещаемости урока (Figma «Посещаемость», node 2086:5291 и соседние состояния).
@@ -104,6 +109,20 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
     ),
   );
   const historyQuery = useAttendanceHistory(validId, canSeeHistory);
+  // Причину дня ведёт классный руководитель: её подтверждение посещаемость заново не публикует,
+  // поэтому у истории урока вторая лента, а здесь они склеиваются по времени (макет П3).
+  const reasonHistoryQuery = useAttendanceDayReasonHistory(validId, canSeeHistory);
+  const historyLines = useMemo(() => [
+    ...(historyQuery.data?.content ?? []).map((entry) => ({
+      key: `attendance-${entry.id}`, text: describeAttendanceHistory(entry), at: entry.createdAt,
+    })),
+    ...(reasonHistoryQuery.data ?? []).map((event, index) => ({
+      key: `reason-${event.studentProfileId}-${index}`, text: describeDayReasonEvent(event), at: event.occurredAt,
+    })),
+  ].sort((a, b) => time(b.at) - time(a.at)), [historyQuery.data, reasonHistoryQuery.data]);
+  const historyTotal = historyQuery.data
+    ? (historyQuery.data.totalElements ?? 0) + (reasonHistoryQuery.data?.length ?? 0)
+    : null;
 
   // Право показать код — то же, что право заполнять лист, поэтому лишний запрос не
   // уходит там, где кнопки всё равно не будет.
@@ -132,6 +151,7 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
       studentProfileId: entry.studentProfileId as number,
       fullName: entry.fullName ?? '',
       marking: drafts[entry.studentProfileId as number] ?? entry.draft ?? NOT_MARKED,
+      dayReason: entry.dayReason ?? null,
     }));
   }, [sheet, drafts]);
 
@@ -400,6 +420,14 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
         </p>
       )}
 
+      {editing && canFill && !cancelled && (
+        <p className="flex items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-13 leading-relaxed text-slate-600">
+          <LockKeyhole className="mt-0.5 size-4 shrink-0 text-slate-400" aria-hidden="true" />
+          Причину отсутствия указывает классный руководитель. Здесь она только для просмотра; если поменять
+          «Отсутствовал» на «Присутствовал», причина у этого урока пропадёт.
+        </p>
+      )}
+
       <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-raised">
         <div className="flex min-h-[28px] items-center justify-between gap-4">
           <h2 className="text-base font-bold text-slate-900">Список учеников</h2>
@@ -450,9 +478,6 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
               editRow(studentId, (marking) => withStatus(marking, status))
             }
             onMarkToggle={(studentId) => editRow(studentId, withMarkToggled)}
-            onReasonChange={(studentId, reason: AttendanceReason | null) =>
-              editRow(studentId, (marking) => withReason(marking, reason))
-            }
             onCommentOpen={setCommentFor}
           />
         )}
@@ -502,7 +527,7 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
 
       <CollapsibleCard
         icon={<Clock className="size-[18px] text-slate-900" />}
-        title={`История изменений${historyQuery.data ? ` (${historyQuery.data.totalElements ?? 0})` : ''}`}
+        title={`История изменений${historyTotal != null ? ` (${historyTotal})` : ''}`}
         disabled={!canSeeHistory}
         defaultOpen
       >
@@ -510,21 +535,17 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
           <p className="py-3 text-13 text-slate-400">Загружаем журнал…</p>
         ) : historyQuery.isError ? (
           <p className="py-3 text-13 text-slate-500">Не удалось загрузить историю изменений</p>
-        ) : (historyQuery.data?.content ?? []).length === 0 ? (
+        ) : historyLines.length === 0 ? (
           <p className="py-3 text-13 text-slate-400">Изменений пока не было</p>
         ) : (
           <ul className="flex flex-col">
-            {(historyQuery.data?.content ?? []).map((entry) => (
+            {historyLines.map((line) => (
               <li
-                key={entry.id}
+                key={line.key}
                 className="flex items-center justify-between gap-4 border-b border-slate-200 py-2.5 last:border-b-0"
               >
-                <span className="min-w-0 text-13 text-slate-900">
-                  {describeAttendanceHistory(entry)}
-                </span>
-                <span className="shrink-0 text-xs text-slate-400">
-                  {formatDateTime(entry.createdAt)}
-                </span>
+                <span className="min-w-0 text-13 text-slate-900">{line.text}</span>
+                <span className="shrink-0 text-xs text-slate-400">{formatDateTime(line.at)}</span>
               </li>
             ))}
           </ul>

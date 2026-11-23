@@ -1,11 +1,12 @@
-import { MessageSquare } from 'lucide-react';
+import { Info, MessageSquare } from 'lucide-react';
 import { QrSourceChip } from '@/components/ui/QrSourceChip';
 import { Select } from '@/components/ui/Select';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { cx } from '@/lib/format';
-import type { AttendanceMarking, AttendanceReason, AttendanceStatus } from '@/lib/attendanceApi';
+import type { AttendanceMarking, AttendanceStatus } from '@/lib/attendanceApi';
+import type { Schema } from '@/lib/apiSchemas';
 import type { AttendanceQrScan } from '@/lib/attendanceQrApi';
 import {
-  REASON_OPTIONS,
   STATUS_OPTIONS,
   markToggleFor,
   reasonLabel,
@@ -18,6 +19,8 @@ export interface AttendanceRow {
   studentProfileId: number;
   fullName: string;
   marking: AttendanceMarking;
+  /** Подтверждённая причина дня — только у опубликованного «Отсутствовал» (ABSENCE-REASON-001). */
+  dayReason?: Schema<'DayReasonView'> | null;
 }
 
 /** Тона чипа статуса из макета: заливка, рамка и текст одного семейства. */
@@ -104,36 +107,19 @@ function DetailCell({
   );
 }
 
-/** Причина разрешена только у отсутствия — у присутствия бэкенд её не примет. */
-function ReasonCell({
-  marking,
-  editable,
-  onChange,
-}: {
-  marking: AttendanceMarking;
-  editable: boolean;
-  onChange: (reason: AttendanceReason | null) => void;
-}) {
+/**
+ * Причина — только для чтения (Figma `phyztex` П1–П3): её за день указывает классный руководитель,
+ * а лист показывает подтверждённую. Видна, пока у ученика в листе «Отсутствовал»: исправление на
+ * «Присутствовал» убирает её у этого урока, у других уроков дня она остаётся.
+ */
+function ReasonCell({ marking, dayReason }: { marking: AttendanceMarking; dayReason?: AttendanceRow['dayReason'] }) {
   if (statusOf(marking) !== 'ABSENT') return null;
-
-  if (!editable) {
-    return marking.reason ? (
-      <span className="text-13 text-slate-600">{reasonLabel(marking.reason)}</span>
-    ) : null;
-  }
-
+  if (!dayReason?.reason) return <span className="text-13 text-slate-400">Не указана</span>;
   return (
-    <Select
-      value={marking.reason ?? ''}
-      onChange={(event) => onChange((event.target.value || null) as AttendanceReason | null)}
-      className="h-[26px] rounded-md px-2.5 py-0 text-13"
-    >
-      {REASON_OPTIONS.map((option) => (
-        <option key={option.value ?? 'none'} value={option.value ?? ''}>
-          {option.label}
-        </option>
-      ))}
-    </Select>
+    <span className="flex flex-col leading-tight" title={dayReason.comment || undefined}>
+      <span className="text-13 font-semibold text-slate-900">{reasonLabel(dayReason.reason)}</span>
+      <span className="text-11 text-slate-400">подтверждена</span>
+    </span>
   );
 }
 
@@ -155,7 +141,6 @@ export function AttendanceTable({
   qrScans,
   onStatusChange,
   onMarkToggle,
-  onReasonChange,
   onCommentOpen,
 }: {
   rows: AttendanceRow[];
@@ -165,7 +150,6 @@ export function AttendanceTable({
   qrScans: ReadonlyMap<number, AttendanceQrScan>;
   onStatusChange: (studentProfileId: number, status: AttendanceStatus) => void;
   onMarkToggle: (studentProfileId: number) => void;
-  onReasonChange: (studentProfileId: number, reason: AttendanceReason | null) => void;
   onCommentOpen: (studentProfileId: number) => void;
 }) {
   return (
@@ -189,7 +173,14 @@ export function AttendanceTable({
             Доп. отметка
           </th>
           <th scope="col" className="py-2.5 text-left">
-            Причина
+            <span className="inline-flex items-center gap-1">
+              Причина
+              <Tooltip label="Указывает классный руководитель">
+                <span tabIndex={0} className="inline-flex text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700">
+                  <Info className="size-3.5" aria-label="Кто указывает причину" />
+                </span>
+              </Tooltip>
+            </span>
           </th>
           <th scope="col" className="py-2.5 text-center">
             Комментарий
@@ -231,11 +222,7 @@ export function AttendanceTable({
                 />
               </td>
               <td className="pr-4">
-                <ReasonCell
-                  marking={row.marking}
-                  editable={editable}
-                  onChange={(reason) => onReasonChange(row.studentProfileId, reason)}
-                />
+                <ReasonCell marking={row.marking} dayReason={row.dayReason} />
               </td>
               <td className="text-center">
                 <button

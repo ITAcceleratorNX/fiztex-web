@@ -18,6 +18,7 @@ import { MyClassGradesTab } from './MyClassGradesTab';
 import { MyClassReportTab } from './MyClassReportTab';
 import { MyClassScheduleTab } from './MyClassScheduleTab';
 import { DYNAMICS_PARAMS, MyClassStudentsTab } from './MyClassStudentsTab';
+import { ABSENCE_PARAMS } from './absence/AbsenceReasonsPanel';
 
 function academicYearLabel(context: Schema<'MyClassContextView'>): string {
   const start = context.yearStartDate?.slice(0, 4);
@@ -183,7 +184,7 @@ export function MyClassPage() {
                     onChange={(event) => {
                       const next = new URLSearchParams(searchParams);
                       next.set('classId', event.target.value);
-                      [...REPORT_PARAMS, ...FILL_PARAMS, ...DYNAMICS_PARAMS].forEach((name) => next.delete(name));
+                      [...REPORT_PARAMS, ...FILL_PARAMS, ...DYNAMICS_PARAMS, ...ABSENCE_PARAMS].forEach((name) => next.delete(name));
                       setSearchParams(next);
                     }}
                   >
@@ -267,6 +268,7 @@ export function MyClassPage() {
             <TabsContent value="attendance" className="mt-4">
               <MyClassAttendanceTab
                 classId={classId}
+                className={classLabel(selectedClass.name ?? '')}
                 periods={periods}
                 periodId={periodId}
                 onSelectPeriod={(value) => updateParam('periodId', value)}

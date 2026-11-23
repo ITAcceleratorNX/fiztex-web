@@ -33,6 +33,13 @@ describe('centerLink — словарь маршрутов уведомлени�
     expect(centerLink('survey-results', { surveyId: 44 }, 'ADMIN')).toBe('/surveys/44?tab=results');
   });
 
+  it('ответ родителя ведёт классного руководителя в карточку дня отсутствия', () => {
+    expect(centerLink('absence-day', { date: '2026-11-17', classId: 5, studentProfileId: 89 }, 'TEACHER'))
+      .toBe('/my-class?classId=5&tab=attendance&attendanceView=reasons&absenceDate=2026-11-17&absenceDayStudent=89');
+    expect(centerLink('absence-day', { date: '2026-11-17' }, 'TEACHER')).toBeNull();
+    expect(centerLink('absence-day', { date: '2026-11-17', classId: 5, studentProfileId: 89 }, 'ADMIN')).toBeNull();
+  });
+
   it('незнакомый маршрут и неполные параметры — без перехода, а не «куда-нибудь»', () => {
     expect(centerLink('survey-take', { surveyId: 1 })).toBeNull();
     expect(centerLink('lesson', {})).toBeNull();

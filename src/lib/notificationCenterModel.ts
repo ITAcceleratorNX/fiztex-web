@@ -72,6 +72,18 @@ export function centerLink(route: string | undefined, params: Params | undefined
       const surveyId = id(p, 'surveyId');
       return surveyId ? `/surveys/${surveyId}?tab=results` : null;
     }
+    case 'absence-day': {
+      // Классному руководителю — карточка дня в «Мой класс → Посещаемость → Причины отсутствий».
+      const classId = id(p, 'classId');
+      const studentProfileId = id(p, 'studentProfileId');
+      const date = typeof p.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p.date) ? p.date : null;
+      if (role !== 'TEACHER' || !classId || !studentProfileId || !date) return null;
+      const query = new URLSearchParams({
+        classId: String(classId), tab: 'attendance', attendanceView: 'reasons',
+        absenceDate: date, absenceDayStudent: String(studentProfileId),
+      });
+      return `${ROUTES.myClass}?${query.toString()}`;
+    }
     case 'homework':
       return '/homework';
     case 'grades':
