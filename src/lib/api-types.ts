@@ -8062,6 +8062,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications/collections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["collections"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications/devices/{installationId}": {
         parameters: {
             query?: never;
@@ -16852,6 +16868,7 @@ export interface components {
             childName?: string;
             /** Format: int64 */
             childProfileId?: number;
+            collection?: string;
             /** Format: date-time */
             createdAt?: string;
             /** Format: uuid */
@@ -16873,6 +16890,17 @@ export interface components {
         NotificationCenterUnreadView: {
             /** Format: int64 */
             count?: number;
+        };
+        NotificationCollectionView: {
+            collection?: string;
+            latest?: components["schemas"]["NotificationCenterItemView"];
+            /** Format: int64 */
+            unreadCount?: number;
+        };
+        NotificationCollectionsView: {
+            collections?: components["schemas"]["NotificationCollectionView"][];
+            /** Format: int64 */
+            unreadCount?: number;
         };
         NotificationDiagnosticsItemView: {
             body?: string;
@@ -37144,6 +37172,7 @@ export interface operations {
     page: {
         parameters: {
             query?: {
+                collection?: "ATTENDANCE" | "LESSONS" | "HOMEWORK" | "GRADES" | "SCHEDULE" | "REQUESTS" | "FEEDBACK" | "SURVEYS" | "ACTIONS";
                 before?: string;
                 limit?: number;
             };
@@ -37160,6 +37189,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NotificationCenterPageView"];
+                };
+            };
+        };
+    };
+    collections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationCollectionsView"];
                 };
             };
         };
@@ -37211,6 +37260,7 @@ export interface operations {
     markAllRead: {
         parameters: {
             query?: {
+                collection?: "ATTENDANCE" | "LESSONS" | "HOMEWORK" | "GRADES" | "SCHEDULE" | "REQUESTS" | "FEEDBACK" | "SURVEYS" | "ACTIONS";
                 upTo?: string;
             };
             header?: never;
