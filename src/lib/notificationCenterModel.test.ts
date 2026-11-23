@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  centerLink, centerTone, hasNotificationCenter, pendingActions, pendingTotal,
-} from './notificationCenterModel';
+import { centerLink, centerTone, hasNotificationCenter, pendingActions, pendingTotal, collectionLabel, collectionMoment } from './notificationCenterModel';
 import type { CenterItem } from './notificationCenterApi';
 
 describe('centerLink — словарь маршрутов уведомлений в адреса панели', () => {
@@ -85,5 +83,20 @@ describe('тип строки и роли с лентой', () => {
     expect(['TEACHER', 'ADMIN', 'SUPER_ADMIN'].every(hasNotificationCenter)).toBe(true);
     expect(hasNotificationCenter('PSYCHOLOGIST')).toBe(false);
     expect(hasNotificationCenter(undefined)).toBe(false);
+  });
+});
+
+describe('подборки колокольчика', () => {
+  it('название подборки — словом, незнакомая — «Уведомления»', () => {
+    expect(collectionLabel('ATTENDANCE')).toBe('Посещаемость');
+    expect(collectionLabel('LESSONS')).toBe('Уроки');
+    expect(collectionLabel('NEW_ONE')).toBe('Уведомления');
+  });
+
+  it('время подборки: сегодня — часы, вчера — словом, раньше — дата', () => {
+    const now = new Date(2026, 10, 18, 15, 0);
+    expect(collectionMoment(new Date(2026, 10, 18, 12, 40).toISOString(), now)).toBe('12:40');
+    expect(collectionMoment(new Date(2026, 10, 17, 9, 5).toISOString(), now)).toBe('Вчера');
+    expect(collectionMoment(new Date(2026, 10, 12, 9, 5).toISOString(), now)).toBe('12 ноя.');
   });
 });

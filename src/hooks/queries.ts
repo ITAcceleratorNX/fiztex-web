@@ -303,7 +303,8 @@ export const keys = {
     ['lessons', lessonId, 'materials', childId ?? 'self'] as const,
   /** Свой профиль: один ключ на экран профиля и на `accountId` в карточке заявки. */
   myProfile: ['me', 'profile'] as const,
-  notificationCenter: ['notifications', 'page'] as const,
+  notificationCenter: (collection: string | null) => ['notifications', 'page', collection ?? 'all'] as const,
+  notificationCollections: ['notifications', 'collections'] as const,
   notificationUnread: ['notifications', 'unread'] as const,
   // Одно пространство на весь раздел: создание, отмена и возврат меняют оба списка
   // сразу — заявка уходит из «Моих» в «Историю», — и сбрасывать их порознь значило бы
@@ -1026,11 +1027,22 @@ export function useNotificationUnread(enabled: boolean) {
   });
 }
 
-/** Лента читается, пока панель открыта: закрытой ей обновляться незачем. */
-export function useNotificationCenter(enabled: boolean) {
+/** Лента читается, пока панель открыта: закрытой ей обновляться незачем. `collection` — одна подборка. */
+export function useNotificationCenter(enabled: boolean, collection: string | null = null) {
   return useQuery({
-    queryKey: keys.notificationCenter,
-    queryFn: ({ signal }) => notificationCenterApi.page(signal),
+    queryKey: keys.notificationCenter(collection),
+    queryFn: ({ signal }) => notificationCenterApi.page(signal, collection),
+    enabled,
+    staleTime: 0,
+    refetchInterval: enabled ? CENTER_REFRESH_MS : false,
+  });
+}
+
+/** Подборки колокольчика — первый экран панели. */
+export function useNotificationCollections(enabled: boolean) {
+  return useQuery({
+    queryKey: keys.notificationCollections,
+    queryFn: ({ signal }) => notificationCenterApi.collections(signal),
     enabled,
     staleTime: 0,
     refetchInterval: enabled ? CENTER_REFRESH_MS : false,
@@ -1050,7 +1062,8 @@ export function useMarkCenterRead() {
 export function useMarkCenterAllRead() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (upTo?: string) => notificationCenterApi.markAllRead(upTo),
+    mutationFn: ({ upTo, collection }: { upTo?: string; collection?: string | null } = {}) =>
+      notificationCenterApi.markAllRead(upTo, collection),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['notifications'] });
     },
