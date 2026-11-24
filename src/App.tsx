@@ -4,6 +4,7 @@ import { AuthenticatedLoginRedirect } from '@/components/auth/AuthenticatedLogin
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { LoginPage } from '@/pages/LoginPage';
+import { ActivatePage } from '@/pages/auth/ActivatePage';
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
 import { NewPasswordPage } from '@/pages/auth/NewPasswordPage';
 import { EntranceFlow } from '@/pages/entrance/EntranceFlow';
@@ -131,6 +132,10 @@ export function App() {
         уводит, и вложенность замкнула бы редирект сам на себя.
       */}
       <Route path={ROUTES.staffForgotPassword} element={<ForgotPasswordPage />} />
+      <Route
+        path={ROUTES.staffActivate}
+        element={isAuthenticated ? <AuthenticatedLoginRedirect /> : <ActivatePage />}
+      />
       <Route path={ROUTES.staffNewPassword} element={<NewPasswordPage />} />
 
       <Route
