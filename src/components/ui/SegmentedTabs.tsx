@@ -15,6 +15,9 @@ import { useFieldControlProps } from './fieldContext';
  * `outlined` — переключатель в строке фильтров над таблицей (Figma `phyztex` 2460:1979,
  * «Новые / Одобрены / Отклонены»): белая дорожка с рамкой высотой с поле поиска (44),
  * сегменты 32 на радиусе 8, активный — фирменный navy.
+ *
+ * `count` у варианта — оранжевый счётчик дел рядом с подписью (Figma `phyztex` К1 2236:1079,
+ * «Причины отсутствий 4»): сколько ждёт действия в соседнем наборе. Ноль не рисуется.
  */
 export function SegmentedTabs<T extends string>({
   value,
@@ -25,7 +28,7 @@ export function SegmentedTabs<T extends string>({
   appearance = 'default',
 }: {
   value: T;
-  options: ReadonlyArray<{ value: T; label: string; disabled?: boolean }>;
+  options: ReadonlyArray<{ value: T; label: string; disabled?: boolean; count?: number | null }>;
   onChange: (value: T) => void;
   ariaLabel: string;
   className?: string;
@@ -83,7 +86,14 @@ export function SegmentedTabs<T extends string>({
                   : selected ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink',
             )}
           >
-            {option.label}
+            {option.count ? (
+              <span className="inline-flex items-center gap-2">
+                {option.label}
+                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-400 px-1.5 text-11 font-bold leading-none text-white">
+                  <span className="sr-only">, требуют действия: </span>{option.count}
+                </span>
+              </span>
+            ) : option.label}
           </button>
         );
       })}

@@ -4,6 +4,57 @@
  */
 
 export interface paths {
+    "/api/absence-days/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Дни отсутствия ребёнка за диапазон */
+        get: operations["listMyChildAbsenceDays"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/absence-days/my/{date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** День отсутствия ребёнка: уроки, итог, запрос и свои ответы */
+        get: operations["getMyChildAbsenceDay"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/absence-days/my/{date}/responses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Сообщить причину отсутствия — по запросу, без запроса или уточнение после отклонения */
+        post: operations["submitMyChildAbsenceReason"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/access-requests/classes": {
         parameters: {
             query?: never;
@@ -94,6 +145,40 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["submit_4"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/absence-days": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Дни отсутствия класса и состояние причин */
+        get: operations["listAdminAbsenceDays"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/absence-days/students/{studentProfileId}/dates/{date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** День отсутствия ученика с историей, без действий */
+        get: operations["getAdminAbsenceDay"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6313,6 +6398,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/attendance/day-reason-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["dayReasonHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/attendance/entries": {
         parameters: {
             query?: never;
@@ -7450,6 +7551,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/absence-days": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Дни отсутствия класса: ученик + дата, состояние причины и требуемое действие */
+        get: operations["listMyClassAbsenceDays"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/academic-reports/breakdown": {
         parameters: {
             query?: never;
@@ -7758,6 +7876,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/students/{studentProfileId}/absence-days/{date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** День отсутствия ученика: причина, уроки, запросы, ответы родителей, история и действия */
+        get: operations["getMyClassAbsenceDay"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/students/{studentProfileId}/absence-days/{date}/reason": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Установить или изменить итоговую причину самому — в том числе после закрытия четверти */
+        put: operations["setAbsenceReason"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/students/{studentProfileId}/absence-days/{date}/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Запросить причину у родителей — первый или повторный запрос, уведомление обоим */
+        post: operations["askParentsForAbsenceReason"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/students/{studentProfileId}/absence-days/{date}/responses/{responseId}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Подтвердить ответ родителя: его причина становится итоговой, прочие ответы — «не выбран» */
+        post: operations["confirmAbsenceResponse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/students/{studentProfileId}/absence-days/{date}/responses/{responseId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Отклонить ответ родителя; итоговая причина не меняется, родитель может уточнить */
+        post: operations["rejectAbsenceResponse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/students/{studentProfileId}/grade-dynamics": {
         parameters: {
             query?: never;
@@ -7851,6 +8054,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["page"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/collections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["collections"];
         put?: never;
         post?: never;
         delete?: never;
@@ -10021,6 +10240,199 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AbsenceDayActionsView: {
+            canConfirmResponses?: boolean;
+            canRejectResponses?: boolean;
+            canRequestParent?: boolean;
+            canSetReason?: boolean;
+            /** @enum {string} */
+            requestBlockedReason?: "NO_ABSENCE" | "NO_LINKED_PARENT" | "RESPONSES_PENDING" | "ALREADY_CONFIRMED" | "RESPONSE_PENDING";
+            /** @enum {string} */
+            setReasonBlockedReason?: "NO_ABSENCE" | "NO_LINKED_PARENT" | "RESPONSES_PENDING" | "ALREADY_CONFIRMED" | "RESPONSE_PENDING";
+        };
+        AbsenceDayCountsView: {
+            /** Format: int64 */
+            actionRequired?: number;
+            /** Format: int64 */
+            all?: number;
+            /** Format: int64 */
+            awaitingParent?: number;
+            /** Format: int64 */
+            confirmed?: number;
+        };
+        AbsenceDayDetailView: {
+            absentLessons?: components["schemas"]["AbsenceLessonView"][];
+            actions?: components["schemas"]["AbsenceDayActionsView"];
+            /** Format: date */
+            date?: string;
+            guardians?: components["schemas"]["AbsenceGuardianView"][];
+            history?: components["schemas"]["AbsenceHistoryEntryView"][];
+            /** Format: int32 */
+            pendingResponseCount?: number;
+            periodClosure?: components["schemas"]["AbsencePeriodClosureView"];
+            reason?: components["schemas"]["AbsenceReasonView"];
+            requests?: components["schemas"]["AbsenceRequestView"][];
+            responses?: components["schemas"]["AbsenceResponseView"][];
+            /** @enum {string} */
+            status?: "NOT_SPECIFIED" | "AWAITING_PARENT" | "AWAITING_CONFIRMATION" | "CLARIFICATION_NEEDED" | "CONFIRMED";
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            version?: number;
+        };
+        AbsenceDayItemView: {
+            /** Format: int32 */
+            absentLessonCount?: number;
+            actionRequired?: boolean;
+            comment?: string;
+            /** Format: date */
+            date?: string;
+            /** @enum {string} */
+            group?: "ACTION_REQUIRED" | "AWAITING_PARENT" | "CONFIRMED";
+            latestResponse?: components["schemas"]["AbsenceLatestResponseView"];
+            /** Format: int32 */
+            pendingResponseCount?: number;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** @enum {string} */
+            status?: "NOT_SPECIFIED" | "AWAITING_PARENT" | "AWAITING_CONFIRMATION" | "CLARIFICATION_NEEDED" | "CONFIRMED";
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            version?: number;
+        };
+        AbsenceDayPageView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            classId?: number;
+            counts?: components["schemas"]["AbsenceDayCountsView"];
+            /** Format: date */
+            from?: string;
+            hasMore?: boolean;
+            items?: components["schemas"]["AbsenceDayItemView"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: date */
+            to?: string;
+            /** Format: int64 */
+            totalItems?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        AbsenceGuardianView: {
+            parentName?: string;
+            /** Format: int64 */
+            parentProfileId?: number;
+            reachable?: boolean;
+            /** @enum {string} */
+            relationType?: "MOTHER" | "FATHER" | "GUARDIAN" | "OTHER";
+        };
+        AbsenceHistoryEntryView: {
+            /** @enum {string} */
+            action?: "REQUEST_SENT" | "RESPONSE_SUBMITTED" | "RESPONSE_CONFIRMED" | "RESPONSE_REJECTED" | "REASON_SET" | "REASON_CHANGED";
+            actorName?: string;
+            /** @enum {string} */
+            actorRelationType?: "MOTHER" | "FATHER" | "GUARDIAN" | "OTHER";
+            /** @enum {string} */
+            actorRole?: "HOMEROOM_TEACHER" | "PARENT";
+            /** Format: int64 */
+            eventId?: number;
+            newComment?: string;
+            /** @enum {string} */
+            newReason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            note?: string;
+            /** Format: date-time */
+            occurredAt?: string;
+            oldComment?: string;
+            /** @enum {string} */
+            oldReason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** Format: int64 */
+            requestId?: number;
+            /** Format: int64 */
+            responseId?: number;
+        };
+        AbsenceLatestResponseView: {
+            parentName?: string;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** Format: int64 */
+            responseId?: number;
+            /** @enum {string} */
+            status?: "PENDING" | "CONFIRMED" | "REJECTED" | "NOT_SELECTED";
+            /** Format: date-time */
+            submittedAt?: string;
+        };
+        AbsenceLessonView: {
+            /** @example 14:30:00 */
+            endTime?: string;
+            lessonComment?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** @enum {string} */
+            lessonReason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** @enum {string} */
+            mark?: "LATE" | "EXCUSED";
+            /** @example 14:30:00 */
+            startTime?: string;
+            subjectName?: string;
+            teacherName?: string;
+        };
+        AbsencePeriodClosureView: {
+            periodName?: string;
+        };
+        AbsenceReasonView: {
+            comment?: string;
+            /** Format: int64 */
+            confirmedResponseId?: number;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** Format: date-time */
+            setAt?: string;
+            setByName?: string;
+            /** @enum {string} */
+            source?: "HOMEROOM_TEACHER" | "PARENT_RESPONSE";
+        };
+        AbsenceRecipientView: {
+            parentName?: string;
+            /** Format: int64 */
+            parentProfileId?: number;
+        };
+        AbsenceRequestView: {
+            message?: string;
+            recipients?: components["schemas"]["AbsenceRecipientView"][];
+            /** Format: int64 */
+            requestId?: number;
+            /** Format: date-time */
+            requestedAt?: string;
+            requestedByName?: string;
+        };
+        AbsenceResponseView: {
+            comment?: string;
+            /** Format: date-time */
+            decidedAt?: string;
+            decidedByName?: string;
+            decisionComment?: string;
+            parentName?: string;
+            /** Format: int64 */
+            parentProfileId?: number;
+            /** @enum {string} */
+            parentRelationType?: "MOTHER" | "FATHER" | "GUARDIAN" | "OTHER";
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** Format: int64 */
+            requestId?: number;
+            /** Format: int64 */
+            responseId?: number;
+            /** @enum {string} */
+            status?: "PENDING" | "CONFIRMED" | "REJECTED" | "NOT_SELECTED";
+            /** Format: date-time */
+            submittedAt?: string;
+        };
         AcademicPeriodView: {
             /** Format: int64 */
             academicYearId?: number;
@@ -10451,6 +10863,7 @@ export interface components {
         };
         AdminJournalCellView: {
             attendance?: components["schemas"]["AttendanceMarkingView"];
+            dayReason?: components["schemas"]["DayReasonView"];
             /** Format: int64 */
             lessonId?: number;
         };
@@ -10722,6 +11135,11 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        AskParentsRequest: {
+            /** Format: int64 */
+            expectedVersion?: number;
+            message?: string;
+        };
         AssessmentHistoryView: {
             results?: components["schemas"]["ResultHistoryEventView"][];
             work?: components["schemas"]["WorkHistoryEventView"][];
@@ -10941,6 +11359,20 @@ export interface components {
             /** Format: date-time */
             submittedAt?: string;
         };
+        AttendanceDayReasonEventView: {
+            actorName?: string;
+            /** @enum {string} */
+            kind?: "SET" | "CONFIRMED" | "CHANGED";
+            /** @enum {string} */
+            newReason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** Format: date-time */
+            occurredAt?: string;
+            /** @enum {string} */
+            oldReason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
         AttendanceEntryChange: {
             comment?: string;
             /** @enum {string} */
@@ -10953,6 +11385,7 @@ export interface components {
             studentProfileId: number;
         };
         AttendanceEntryView: {
+            dayReason?: components["schemas"]["DayReasonView"];
             draft?: components["schemas"]["AttendanceMarkingView"];
             fullName?: string;
             published?: components["schemas"]["AttendanceMarkingView"];
@@ -11086,6 +11519,7 @@ export interface components {
         };
         AttendanceSummaryLessonView: {
             attendance?: components["schemas"]["AttendanceMarkingView"];
+            dayReason?: components["schemas"]["DayReasonView"];
             /** @example 14:30:00 */
             endTime?: string;
             /** Format: date */
@@ -11715,6 +12149,10 @@ export interface components {
             /** Format: int32 */
             workCount?: number;
         };
+        ConfirmAbsenceResponseRequest: {
+            /** Format: int64 */
+            expectedVersion?: number;
+        };
         ConfirmAnswerScoreRequest: {
             adminComment?: string;
             /** Format: double */
@@ -12312,6 +12750,13 @@ export interface components {
             openResults?: number;
             /** Format: int64 */
             totalApplicants?: number;
+        };
+        DayReasonView: {
+            comment?: string;
+            /** Format: date-time */
+            confirmedAt?: string;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
         };
         DeclinedSubjectView: {
             change?: number;
@@ -13162,6 +13607,84 @@ export interface components {
             name?: string;
             /** Format: int64 */
             subjectId?: number;
+        };
+        GuardianAbsenceDayItemView: {
+            /** Format: int32 */
+            absentLessonCount?: number;
+            canRespond?: boolean;
+            comment?: string;
+            /** Format: date */
+            date?: string;
+            myResponsePending?: boolean;
+            needsReason?: boolean;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            requested?: boolean;
+            /** @enum {string} */
+            status?: "NOT_SPECIFIED" | "AWAITING_PARENT" | "AWAITING_CONFIRMATION" | "CLARIFICATION_NEEDED" | "CONFIRMED";
+        };
+        GuardianAbsenceDayView: {
+            absentLessons?: components["schemas"]["GuardianAbsentLessonView"][];
+            canRespond?: boolean;
+            /** Format: date */
+            date?: string;
+            myResponses?: components["schemas"]["GuardianResponseView"][];
+            openRequest?: components["schemas"]["GuardianRequestView"];
+            reason?: components["schemas"]["GuardianReasonView"];
+            /** @enum {string} */
+            respondBlockedReason?: "NO_ABSENCE" | "NO_LINKED_PARENT" | "RESPONSES_PENDING" | "ALREADY_CONFIRMED" | "RESPONSE_PENDING";
+            /** @enum {string} */
+            status?: "NOT_SPECIFIED" | "AWAITING_PARENT" | "AWAITING_CONFIRMATION" | "CLARIFICATION_NEEDED" | "CONFIRMED";
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
+        GuardianAbsenceDaysView: {
+            /** Format: date */
+            from?: string;
+            items?: components["schemas"]["GuardianAbsenceDayItemView"][];
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: date */
+            to?: string;
+        };
+        GuardianAbsentLessonView: {
+            /** @example 14:30:00 */
+            endTime?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** @enum {string} */
+            mark?: "LATE" | "EXCUSED";
+            /** @example 14:30:00 */
+            startTime?: string;
+            subjectName?: string;
+        };
+        GuardianReasonView: {
+            comment?: string;
+            /** Format: date-time */
+            confirmedAt?: string;
+            confirmedByName?: string;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+        };
+        GuardianRequestView: {
+            message?: string;
+            /** Format: date-time */
+            requestedAt?: string;
+            requestedByName?: string;
+        };
+        GuardianResponseView: {
+            comment?: string;
+            /** Format: date-time */
+            decidedAt?: string;
+            decisionComment?: string;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** Format: int64 */
+            responseId?: number;
+            /** @enum {string} */
+            status?: "PENDING" | "CONFIRMED" | "REJECTED" | "NOT_SELECTED";
+            /** Format: date-time */
+            submittedAt?: string;
         };
         HalfYearView: {
             closing?: components["schemas"]["AttestationPeriodRefView"];
@@ -15708,6 +16231,7 @@ export interface components {
         };
         MyAttendanceView: {
             attendance?: components["schemas"]["AttendanceMarkingView"];
+            dayReason?: components["schemas"]["DayReasonView"];
             /** @example 14:30:00 */
             endTime?: string;
             /** Format: date */
@@ -16344,6 +16868,7 @@ export interface components {
             childName?: string;
             /** Format: int64 */
             childProfileId?: number;
+            collection?: string;
             /** Format: date-time */
             createdAt?: string;
             /** Format: uuid */
@@ -16365,6 +16890,17 @@ export interface components {
         NotificationCenterUnreadView: {
             /** Format: int64 */
             count?: number;
+        };
+        NotificationCollectionView: {
+            collection?: string;
+            latest?: components["schemas"]["NotificationCenterItemView"];
+            /** Format: int64 */
+            unreadCount?: number;
+        };
+        NotificationCollectionsView: {
+            collections?: components["schemas"]["NotificationCollectionView"][];
+            /** Format: int64 */
+            unreadCount?: number;
         };
         NotificationDiagnosticsItemView: {
             body?: string;
@@ -17969,6 +18505,11 @@ export interface components {
             platform: "IOS" | "ANDROID";
             token: string;
         };
+        RejectAbsenceResponseRequest: {
+            comment?: string;
+            /** Format: int64 */
+            expectedVersion?: number;
+        };
         RejectAccessRequestRequest: {
             reason?: string;
             /** Format: int64 */
@@ -18791,6 +19332,13 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        SetAbsenceReasonRequest: {
+            comment?: string;
+            /** Format: int64 */
+            expectedVersion?: number;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+        };
         SetAnswerScoresRequest: {
             items: components["schemas"]["AnswerScoreRequest"][];
         };
@@ -19290,6 +19838,11 @@ export interface components {
             studentProfileId?: number;
             testResult?: components["schemas"]["TestResultView"];
         };
+        SubmitAbsenceReasonRequest: {
+            comment?: string;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+        };
         SubmitAnswersRequest: {
             answers: components["schemas"]["AnswerRequest"][];
             clientToken?: string;
@@ -19713,6 +20266,7 @@ export interface components {
         };
         TeacherJournalEntryView: {
             attendance?: components["schemas"]["AttendanceMarkingView"];
+            dayReason?: components["schemas"]["DayReasonView"];
             /** Format: int64 */
             studentProfileId?: number;
         };
@@ -20731,6 +21285,145 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listMyChildAbsenceDays: {
+        parameters: {
+            query: {
+                childId?: number;
+                from: string;
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Дни, свежие сверху */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianAbsenceDaysView"];
+                };
+            };
+            /** @description Неверный диапазон */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Ребёнок не связан с родителем */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getMyChildAbsenceDay: {
+        parameters: {
+            query?: {
+                childId?: number;
+            };
+            header?: never;
+            path: {
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description День */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianAbsenceDayView"];
+                };
+            };
+            /** @description Ребёнок не связан с родителем */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Ни отсутствия, ни истории на эту дату */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    submitMyChildAbsenceReason: {
+        parameters: {
+            query?: {
+                childId?: number;
+            };
+            header?: never;
+            path: {
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitAbsenceReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description День после ответа */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianAbsenceDayView"];
+                };
+            };
+            /** @description Причины нет в справочнике или текст длиннее 500 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Ребёнок не связан с родителем */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет отсутствия на дату или ответ уже на рассмотрении */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     classes: {
         parameters: {
             query?: never;
@@ -20865,6 +21558,85 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccessRequestTicketView"];
+                };
+            };
+        };
+    };
+    listAdminAbsenceDays: {
+        parameters: {
+            query: {
+                classId: number;
+                from: string;
+                to: string;
+                status?: "NOT_SPECIFIED" | "AWAITING_PARENT" | "AWAITING_CONFIRMATION" | "CLARIFICATION_NEEDED" | "CONFIRMED";
+                actionRequired?: boolean;
+                group?: "ACTION_REQUIRED" | "AWAITING_PARENT" | "CONFIRMED";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница дней, свежие сверху */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceDayPageView"];
+                };
+            };
+            /** @description Неверный диапазон или страница */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getAdminAbsenceDay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentProfileId: number;
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description День целиком */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceDayDetailView"];
+                };
+            };
+            /** @description Ни отсутствия, ни истории на эту дату */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -32614,6 +33386,28 @@ export interface operations {
             };
         };
     };
+    dayReasonHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceDayReasonEventView"][];
+                };
+            };
+        };
+    };
     saveDraft_1: {
         parameters: {
             query?: never;
@@ -34787,6 +35581,65 @@ export interface operations {
             };
         };
     };
+    listMyClassAbsenceDays: {
+        parameters: {
+            query?: {
+                periodId?: number;
+                from?: string;
+                to?: string;
+                status?: "NOT_SPECIFIED" | "AWAITING_PARENT" | "AWAITING_CONFIRMATION" | "CLARIFICATION_NEEDED" | "CONFIRMED";
+                studentProfileId?: number;
+                actionRequired?: boolean;
+                group?: "ACTION_REQUIRED" | "AWAITING_PARENT" | "CONFIRMED";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница дней, свежие сверху */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceDayPageView"];
+                };
+            };
+            /** @description Неверный период, диапазон или страница */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс или ученик недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Неоднозначный текущий период */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     getHomeroomAcademicReportBreakdown: {
         parameters: {
             query: {
@@ -35837,6 +36690,270 @@ export interface operations {
             };
         };
     };
+    getMyClassAbsenceDay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+                studentProfileId: number;
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description День целиком */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceDayDetailView"];
+                };
+            };
+            /** @description Класс или ученик недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Ни отсутствия, ни истории на эту дату */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    setAbsenceReason: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+                studentProfileId: number;
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetAbsenceReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description День с подтверждённой причиной */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceDayDetailView"];
+                };
+            };
+            /** @description Причины нет в справочнике или текст длиннее 500 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс или ученик недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет отсутствия или версия устарела */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    askParentsForAbsenceReason: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+                studentProfileId: number;
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AskParentsRequest"];
+            };
+        };
+        responses: {
+            /** @description День после запроса, с новой версией */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceDayDetailView"];
+                };
+            };
+            /** @description Класс или ученик недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Дата вне учебного года */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет отсутствия, нет родителя с активным аккаунтом, есть ответы без решения, причина уже подтверждена или версия устарела */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    confirmAbsenceResponse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+                studentProfileId: number;
+                date: string;
+                responseId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmAbsenceResponseRequest"];
+            };
+        };
+        responses: {
+            /** @description День с подтверждённой причиной */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceDayDetailView"];
+                };
+            };
+            /** @description Класс или ученик недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Ответ не из этого дня */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет отсутствия, решение уже принято или версия устарела */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    rejectAbsenceResponse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+                studentProfileId: number;
+                date: string;
+                responseId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectAbsenceResponseRequest"];
+            };
+        };
+        responses: {
+            /** @description День после отклонения */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceDayDetailView"];
+                };
+            };
+            /** @description Класс или ученик недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Ответ не из этого дня */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Решение уже принято или версия устарела */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     getMyClassStudentGradeDynamics: {
         parameters: {
             query: {
@@ -36055,6 +37172,7 @@ export interface operations {
     page: {
         parameters: {
             query?: {
+                collection?: "ATTENDANCE" | "LESSONS" | "HOMEWORK" | "GRADES" | "SCHEDULE" | "REQUESTS" | "FEEDBACK" | "SURVEYS" | "ACTIONS";
                 before?: string;
                 limit?: number;
             };
@@ -36071,6 +37189,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NotificationCenterPageView"];
+                };
+            };
+        };
+    };
+    collections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationCollectionsView"];
                 };
             };
         };
@@ -36122,6 +37260,7 @@ export interface operations {
     markAllRead: {
         parameters: {
             query?: {
+                collection?: "ATTENDANCE" | "LESSONS" | "HOMEWORK" | "GRADES" | "SCHEDULE" | "REQUESTS" | "FEEDBACK" | "SURVEYS" | "ACTIONS";
                 upTo?: string;
             };
             header?: never;

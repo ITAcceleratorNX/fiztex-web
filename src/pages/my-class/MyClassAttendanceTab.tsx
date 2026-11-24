@@ -1,13 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CalendarCheck2 } from 'lucide-react';
 import { AttendanceDot, AttendanceLegend } from '@/components/ui/AttendanceDot';
+import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
+import { useMyClassAbsenceCounts } from '@/hooks/absenceReasonQueries';
 import { useMyClassAttendanceJournal } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import type { Schema } from '@/lib/apiSchemas';
 import { cx } from '@/lib/format';
 import { buildAttendanceJournal, type AttendanceColumn, type AttendanceRow } from '@/lib/myClassAttendanceModel';
+import { AbsenceReasonsPanel } from './absence/AbsenceReasonsPanel';
 import { PeriodFilter, SubjectFilter, useMyClassSubject } from './myClassFilters';
 
 type Period = Schema<'MyClassContextPeriodView'>;
@@ -24,19 +27,81 @@ function isForbidden(error: unknown): boolean {
  * <p>Колонки — уже начавшиеся уроки, а не весь период: будущий урок отмечать нечем, и
  * серая точка «не опубликовано» на нём читалась бы как долг учителя. Пустая клетка —
  * урок не этого ученика (чужая подгруппа), а не отсутствие данных.
+ *
+ * <p>Внутри вкладки — переключатель «Отметки | Причины отсутствий» (Figma `phyztex` К1–К2): ТЗ
+ * просит причины без отдельного раздела. Пока открыты «Отметки», на переключателе видно число
+ * дней, требующих действия; в «Причинах» его показывает фильтр «Состояние».
  */
 export function MyClassAttendanceTab({
   classId,
+  className,
   periods,
   periodId,
   onSelectPeriod,
   onForbidden,
 }: {
   classId: number;
+  className: string;
   periods: Period[];
   periodId: number | null;
   onSelectPeriod: (periodId: string) => void;
   onForbidden: () => void;
+}) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const view = searchParams.get('attendanceView') === 'reasons' ? 'reasons' : 'marks';
+  const counts = useMyClassAbsenceCounts(classId, periodId);
+
+  const toggle = (
+    <SegmentedTabs
+      ariaLabel="Что показать"
+      value={view}
+      options={[
+        { value: 'marks', label: 'Отметки' },
+        { value: 'reasons', label: 'Причины отсутствий', count: view === 'marks' ? counts.data?.actionRequired : null },
+      ]}
+      onChange={(next) => {
+        const params = new URLSearchParams(searchParams);
+        if (next === 'reasons') params.set('attendanceView', 'reasons');
+        else params.delete('attendanceView');
+        setSearchParams(params);
+      }}
+    />
+  );
+
+  if (view === 'reasons') {
+    return (
+      <div className="space-y-4">
+        {toggle}
+        <AbsenceReasonsPanel
+          classId={classId}
+          className={className}
+          periods={periods}
+          periodId={periodId}
+          onSelectPeriod={onSelectPeriod}
+          onForbidden={onForbidden}
+        />
+      </div>
+    );
+  }
+
+  return <MarksView classId={classId} periods={periods} periodId={periodId} onSelectPeriod={onSelectPeriod}
+    onForbidden={onForbidden} toggle={toggle} />;
+}
+
+function MarksView({
+  classId,
+  periods,
+  periodId,
+  onSelectPeriod,
+  onForbidden,
+  toggle,
+}: {
+  classId: number;
+  periods: Period[];
+  periodId: number | null;
+  onSelectPeriod: (periodId: string) => void;
+  onForbidden: () => void;
+  toggle: ReactNode;
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { query: subjectsQuery, subjects, subjectId, selectSubject, correctSubject } = useMyClassSubject(classId, periodId);
@@ -59,6 +124,7 @@ export function MyClassAttendanceTab({
 
   return (
     <div className="space-y-4">
+      {toggle}
       <div className="flex flex-wrap items-end gap-3">
         <SubjectFilter subjects={subjects} subjectId={subjectId} onChange={selectSubject} />
         <PeriodFilter periods={periods} periodId={periodId} onChange={onSelectPeriod} />
