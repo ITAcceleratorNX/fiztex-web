@@ -21,6 +21,7 @@ import { accessRequestsApi, type AccessRequestFilters } from '@/lib/accessReques
 import { teacherAccessCodesApi } from '@/lib/teacherAccessCodesApi';
 import { accessJournalApi, type AccessJournalFilters } from '@/lib/accessJournalApi';
 import { studentCodeGrantsApi } from '@/lib/studentCodeGrantsApi';
+import { studyAccessApi, type CreateStudyAccessGrant, type UpdateStudyAccessGrant } from '@/lib/studyAccessApi';
 import {
   lessonAdminApi,
   lessonTeachingApi,
@@ -227,7 +228,13 @@ export const keys = {
   teacherStudentAccess: ['teacher', 'student-access-codes'] as const,
   studentCodeGrants: ['student-code-grants'] as const,
   studentCodeGrant: (studentProfileId: number) => ['student-code-grants', studentProfileId] as const,
+  accessJournals: ['access-journal'] as const,
   accessJournal: (filters: AccessJournalFilters) => ['access-journal', filters] as const,
+  studyAccess: ['study-access'] as const,
+  studyAccessTeacher: (teacherProfileId: number) => ['study-access', 'teacher', teacherProfileId] as const,
+  studyAccessOptions: ['study-access', 'options'] as const,
+  studyAccessHistory: (grantId: number) => ['study-access', 'history', grantId] as const,
+  studyAccessMine: ['study-access', 'mine'] as const,
   subjects: ['subjects'] as const,
   tests: (useAiGeneration?: boolean) =>
     useAiGeneration === true
@@ -1352,6 +1359,86 @@ export function useRevokeStudentCodeAccess() {
       void client.invalidateQueries({ queryKey: keys.studentCodeGrant(variables.studentProfileId) });
       void client.invalidateQueries({ queryKey: keys.teacherStudentAccess });
     },
+  });
+}
+
+// ---- Дополнительные права учителя на учебные данные (STUDY-ACCESS-002) ----
+
+/** Права учителя для карточки: действующие и истёкшие/отозванные отдельно. */
+export function useTeacherStudyAccess(teacherProfileId: number | null | undefined) {
+  return useQuery({
+    queryKey: keys.studyAccessTeacher(teacherProfileId ?? 0),
+    enabled: teacherProfileId != null,
+    queryFn: ({ signal }) => studyAccessApi.teacherGrants(teacherProfileId as number, signal),
+  });
+}
+
+/** Годы с классами, параллелями и счётчиками — справочник формы, открывается вместе с ней. */
+export function useStudyAccessOptions(enabled = true) {
+  return useQuery({
+    queryKey: keys.studyAccessOptions,
+    enabled,
+    queryFn: ({ signal }) => studyAccessApi.options(signal),
+  });
+}
+
+export function useStudyAccessHistory(grantId: number | null) {
+  return useQuery({
+    queryKey: keys.studyAccessHistory(grantId ?? 0),
+    enabled: grantId != null,
+    queryFn: ({ signal }) => studyAccessApi.history(grantId as number, signal),
+  });
+}
+
+/**
+ * Свои права учителя. Без кэша между заходами: отзыв и истечение должны быть видны при
+ * следующем открытии журнала (ТЗ §7), а не через пять минут.
+ */
+export function useMyStudyAccess(enabled = true) {
+  return useQuery({
+    queryKey: keys.studyAccessMine,
+    enabled,
+    staleTime: 0,
+    queryFn: ({ signal }) => studyAccessApi.mine(signal),
+  });
+}
+
+/**
+ * Любая команда меняет и карточку учителя, и реестр, и сводку «что останется после отзыва» у
+ * соседних прав (`retainedElsewhere`), поэтому перечитывается весь раздел, а не одна строка.
+ */
+function useInvalidateStudyAccess() {
+  const client = useQueryClient();
+  return () => {
+    void client.invalidateQueries({ queryKey: keys.studyAccess });
+    void client.invalidateQueries({ queryKey: keys.accessJournals });
+  };
+}
+
+/** Выдача: ключ выбирает экран — новый на новую отправку, тот же на «Повторить». */
+export function useCreateStudyAccessGrant(teacherProfileId: number) {
+  const invalidate = useInvalidateStudyAccess();
+  return useMutation({
+    mutationFn: ({ body, idempotencyKey }: { body: CreateStudyAccessGrant; idempotencyKey: string }) =>
+      studyAccessApi.create(teacherProfileId, body, idempotencyKey),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateStudyAccessGrant() {
+  const invalidate = useInvalidateStudyAccess();
+  return useMutation({
+    mutationFn: ({ grantId, body }: { grantId: number; body: UpdateStudyAccessGrant }) =>
+      studyAccessApi.update(grantId, body),
+    onSuccess: invalidate,
+  });
+}
+
+export function useRevokeStudyAccessGrant() {
+  const invalidate = useInvalidateStudyAccess();
+  return useMutation({
+    mutationFn: (grantId: number) => studyAccessApi.revoke(grantId),
+    onSuccess: invalidate,
   });
 }
 
