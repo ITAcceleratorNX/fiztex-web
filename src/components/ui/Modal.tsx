@@ -18,13 +18,14 @@ interface ModalProps {
   subtitle?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'comment' | 'planning' | 'planning-version-upload' | 'planning-confirm' | 'planning-topic' | 'drawer';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'comment' | 'planning' | 'planning-version-upload' | 'planning-confirm' | 'planning-topic' | 'drawer' | 'drawer-narrow';
   /**
    * Compact composer layout from Figma: no separator between header and field.
    *
    * `drawer` — шторка по макету `phyztex` T1–T3 (2460:3543): с `placement="right"` и `size="drawer"`
    * панель 780 со скруглением 16 сверху слева, ровная вуаль без размытия, поля 24/28, шапка по
-   * центру строки и простой «×» без рамки.
+   * центру строки и простой «×» без рамки. `size="drawer-narrow"` — та же шторка в 640 (день
+   * отсутствия, К3–К14).
    */
   appearance?: 'standard' | 'composer' | 'planning' | 'planning-wide' | 'drawer';
   /** Keep the header/footer visible and scroll only the contents of a long editor. */
@@ -49,7 +50,7 @@ type ModalEntry = {
   close: () => void;
 };
 
-const sizes = { sm: 'max-w-md', md: 'max-w-xl', lg: 'max-w-3xl', xl: 'max-w-4xl', '2xl': 'max-w-5xl', comment: 'max-w-comment-dialog', planning: 'max-w-planning-dialog', 'planning-version-upload': 'max-w-planning-version-upload', 'planning-confirm': 'max-w-planning-confirm', 'planning-topic': 'max-w-planning-topic', drawer: 'max-w-drawer' };
+const sizes = { sm: 'max-w-md', md: 'max-w-xl', lg: 'max-w-3xl', xl: 'max-w-4xl', '2xl': 'max-w-5xl', comment: 'max-w-comment-dialog', planning: 'max-w-planning-dialog', 'planning-version-upload': 'max-w-planning-version-upload', 'planning-confirm': 'max-w-planning-confirm', 'planning-topic': 'max-w-planning-topic', drawer: 'max-w-drawer', 'drawer-narrow': 'max-w-drawer-narrow' };
 const focusableSelector = [
   'a[href]',
   'button',

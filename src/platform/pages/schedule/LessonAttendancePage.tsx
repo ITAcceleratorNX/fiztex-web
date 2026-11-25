@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { backTarget } from '@/lib/fillControlModel';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -12,7 +13,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { CollapsibleCard } from '@/components/ui/CollapsibleCard';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Modal } from '@/components/ui/Modal';
 import { NoticeBar } from '@/components/ui/NoticeBar';
 import { AttendanceQrOverlay } from './AttendanceQrOverlay';
@@ -23,19 +23,18 @@ import {
   useCloseAttendanceQr,
   useAttendanceSheet,
   useLesson,
-  useMarkAllPresent,
   usePublishAttendance,
   useSaveAttendanceDraft,
 } from '@/hooks/queries';
+import { useAttendanceDayReasonHistory } from '@/hooks/absenceReasonQueries';
+import { describeDayReasonEvent } from '@/lib/absenceReasonModel';
 import { ApiError } from '@/lib/api';
 import { scansByStudent } from '@/lib/attendanceQrApi';
 import {
   ATTENDANCE_ERRORS,
-  affectedCountFrom,
   unmarkedIdsFrom,
   type AttendanceEntryChange,
   type AttendanceMarking,
-  type AttendanceReason,
   type AttendanceStatus,
 } from '@/lib/attendanceApi';
 import {
@@ -46,7 +45,6 @@ import {
   sheetBadge,
   withComment,
   withMarkToggled,
-  withReason,
   withStatus,
 } from '@/lib/attendanceModel';
 import { cx, formatDateTime } from '@/lib/format';
@@ -55,6 +53,11 @@ import { LessonDatePicker } from './LessonDatePicker';
 import { hhmm } from './lessonHistory';
 
 const COMMENT_MAX = 500;
+
+function time(iso: string | null | undefined): number {
+  const value = iso ? Date.parse(iso) : NaN;
+  return Number.isNaN(value) ? 0 : value;
+}
 
 /**
  * Лист посещаемости урока (Figma «Посещаемость», node 2086:5291 и соседние состояния).
@@ -92,6 +95,7 @@ export function LessonAttendancePage() {
 
 function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
   const navigate = useNavigate();
+  const back = backTarget(useLocation().state);
   const validId = id;
 
   const lessonQuery = useLesson(validId);
@@ -105,6 +109,20 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
     ),
   );
   const historyQuery = useAttendanceHistory(validId, canSeeHistory);
+  // Причину дня ведёт классный руководитель: её подтверждение посещаемость заново не публикует,
+  // поэтому у истории урока вторая лента, а здесь они склеиваются по времени (макет П3).
+  const reasonHistoryQuery = useAttendanceDayReasonHistory(validId, canSeeHistory);
+  const historyLines = useMemo(() => [
+    ...(historyQuery.data?.content ?? []).map((entry) => ({
+      key: `attendance-${entry.id}`, text: describeAttendanceHistory(entry), at: entry.createdAt,
+    })),
+    ...(reasonHistoryQuery.data ?? []).map((event, index) => ({
+      key: `reason-${event.studentProfileId}-${index}`, text: describeDayReasonEvent(event), at: event.occurredAt,
+    })),
+  ].sort((a, b) => time(b.at) - time(a.at)), [historyQuery.data, reasonHistoryQuery.data]);
+  const historyTotal = historyQuery.data
+    ? (historyQuery.data.totalElements ?? 0) + (reasonHistoryQuery.data?.length ?? 0)
+    : null;
 
   // Право показать код — то же, что право заполнять лист, поэтому лишний запрос не
   // уходит там, где кнопки всё равно не будет.
@@ -115,7 +133,6 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
 
   const saveDraft = useSaveAttendanceDraft(id);
   const publish = usePublishAttendance(id);
-  const markAll = useMarkAllPresent(id);
 
   const [editing, setEditing] = useState(false);
   // Правки живут отдельно от листа: лист правят несколько человек, и слить своё в
@@ -123,7 +140,6 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
   const [drafts, setDrafts] = useState<Record<number, AttendanceMarking>>({});
   const [unmarked, setUnmarked] = useState<ReadonlySet<number>>(new Set());
   const [conflict, setConflict] = useState<string | null>(null);
-  const [bulkConfirm, setBulkConfirm] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [commentFor, setCommentFor] = useState<number | null>(null);
   // Оверлей и есть сессия: он открыт, пока код действует.
@@ -135,6 +151,7 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
       studentProfileId: entry.studentProfileId as number,
       fullName: entry.fullName ?? '',
       marking: drafts[entry.studentProfileId as number] ?? entry.draft ?? NOT_MARKED,
+      dayReason: entry.dayReason ?? null,
     }));
   }, [sheet, drafts]);
 
@@ -175,11 +192,13 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
 
   const cancelled = lesson.status === 'CANCELLED' || sheet.state === 'ANNULLED';
   const canFill = Boolean(sheet.canFill);
-  const busy = saveDraft.isPending || publish.isPending || markAll.isPending;
+  const busy = saveDraft.isPending || publish.isPending;
   // Заполнять нельзя, а урок ещё не начался — единственная причина, о которой стоит
   // сказать: она пройдёт сама. Остальные («нет прав», «урок отменён») уже названы
   // бейджем и телом страницы.
   const notStartedYet = !canFill && !cancelled && lesson.temporalStatus === 'UPCOMING';
+  // Закрытая четверть: причину называет сервер (`canFill = false`), экрану остаётся объяснить её словами.
+  const closedPeriod = !canFill && !cancelled && lesson.academicPeriodStatus != null && lesson.academicPeriodStatus !== 'ACTIVE';
 
   const qr = qrQuery.data;
   const qrScans = scansByStudent(qr);
@@ -256,9 +275,6 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
         setUnmarked(new Set(unmarkedIdsFrom(error.details)));
         setActionError(error.message);
         return;
-      case ATTENDANCE_ERRORS.bulkOverwrite:
-        setBulkConfirm(affectedCountFrom(error.details));
-        return;
       default:
         setActionError(error.message);
     }
@@ -268,7 +284,6 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
     setDrafts({});
     setUnmarked(new Set());
     setConflict(null);
-    setBulkConfirm(null);
     setActionError(null);
   }
 
@@ -307,16 +322,15 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
     }
   }
 
-  async function onMarkAll(confirmOverwrite: boolean) {
+  /**
+   * «Все присутствуют» отмечает только тех, у кого отметки ещё нет (ТЗ «Контроль заполнения
+   * журнала»): ранее указанные отсутствия и опоздания не перезаписываются, поэтому и подтверждения
+   * замены нет. Правки остаются в форме — дальше обычные «Сохранить» и «Опубликовать».
+   */
+  function onMarkAll() {
     setActionError(null);
-    try {
-      await markAll.mutateAsync({
-        expectedVersion: sheet?.version ?? null,
-        confirmOverwrite,
-      });
-      accept();
-    } catch (error) {
-      handleFailure(error);
+    for (const row of rows) {
+      if (!isMarked(row.marking)) editRow(row.studentProfileId, (marking) => withStatus(marking, 'PRESENT'));
     }
   }
 
@@ -332,11 +346,12 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
+        {/* Пришли из «Незаполненного» — возвращаемся в тот же список с теми же фильтрами и страницей. */}
         <Link
-          to={lessonPath(id)}
+          to={back?.to ?? lessonPath(id)}
           className="inline-flex items-center gap-1 text-sm font-semibold text-navy-700 hover:text-navy-800"
         >
-          <ArrowLeft className="size-4" />К уроку
+          <ArrowLeft className="size-4" />{back ? back.label.replace(/^←\s*/, '') : 'К уроку'}
         </Link>
         {/* Переключатель дат того же занятия: посещаемость смотрят и за прошлые
             недели, а уходить ради этого в расписание — терять контекст урока. */}
@@ -381,6 +396,10 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
           Урок отменён — посещаемость недоступна
           {lesson.cancellationComment ? ` · Причина: ${lesson.cancellationComment}` : ''}
         </NoticeBar>
+      ) : closedPeriod ? (
+        <NoticeBar icon={<Info className="size-5 shrink-0 text-navy-700" />}>
+          Четверть закрыта — посещаемость доступна только для просмотра
+        </NoticeBar>
       ) : sheet.restoredAt ? (
         <NoticeBar icon={<AlertTriangle className="size-4 text-brand-600" />}>
           Урок восстановлен — посещаемость требует повторной публикации
@@ -401,6 +420,14 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
         </p>
       )}
 
+      {editing && canFill && !cancelled && (
+        <p className="flex items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-13 leading-relaxed text-slate-600">
+          <LockKeyhole className="mt-0.5 size-4 shrink-0 text-slate-400" aria-hidden="true" />
+          Причину отсутствия указывает классный руководитель. Здесь она только для просмотра; если поменять
+          «Отсутствовал» на «Присутствовал», причина у этого урока пропадёт.
+        </p>
+      )}
+
       <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-raised">
         <div className="flex min-h-[28px] items-center justify-between gap-4">
           <h2 className="text-base font-bold text-slate-900">Список учеников</h2>
@@ -410,7 +437,7 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => void onMarkAll(false)}
+                onClick={onMarkAll}
                 disabled={busy}
               >
                 Все присутствуют
@@ -451,9 +478,6 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
               editRow(studentId, (marking) => withStatus(marking, status))
             }
             onMarkToggle={(studentId) => editRow(studentId, withMarkToggled)}
-            onReasonChange={(studentId, reason: AttendanceReason | null) =>
-              editRow(studentId, (marking) => withReason(marking, reason))
-            }
             onCommentOpen={setCommentFor}
           />
         )}
@@ -503,7 +527,7 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
 
       <CollapsibleCard
         icon={<Clock className="size-[18px] text-slate-900" />}
-        title={`История изменений${historyQuery.data ? ` (${historyQuery.data.totalElements ?? 0})` : ''}`}
+        title={`История изменений${historyTotal != null ? ` (${historyTotal})` : ''}`}
         disabled={!canSeeHistory}
         defaultOpen
       >
@@ -511,21 +535,17 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
           <p className="py-3 text-13 text-slate-400">Загружаем журнал…</p>
         ) : historyQuery.isError ? (
           <p className="py-3 text-13 text-slate-500">Не удалось загрузить историю изменений</p>
-        ) : (historyQuery.data?.content ?? []).length === 0 ? (
+        ) : historyLines.length === 0 ? (
           <p className="py-3 text-13 text-slate-400">Изменений пока не было</p>
         ) : (
           <ul className="flex flex-col">
-            {(historyQuery.data?.content ?? []).map((entry) => (
+            {historyLines.map((line) => (
               <li
-                key={entry.id}
+                key={line.key}
                 className="flex items-center justify-between gap-4 border-b border-slate-200 py-2.5 last:border-b-0"
               >
-                <span className="min-w-0 text-13 text-slate-900">
-                  {describeAttendanceHistory(entry)}
-                </span>
-                <span className="shrink-0 text-xs text-slate-400">
-                  {formatDateTime(entry.createdAt)}
-                </span>
+                <span className="min-w-0 text-13 text-slate-900">{line.text}</span>
+                <span className="shrink-0 text-xs text-slate-400">{formatDateTime(line.at)}</span>
               </li>
             ))}
           </ul>
@@ -560,25 +580,6 @@ function AttendanceSheetScreen({ lessonId: id }: { lessonId: number }) {
           if (commentFor != null) editRow(commentFor, (marking) => withComment(marking, value));
           setCommentFor(null);
         }}
-      />
-
-      <ConfirmDialog
-        open={bulkConfirm != null}
-        title="Все присутствуют?"
-        message={
-          <>
-            Все индивидуальные отметки будут заменены на «Присутствовал». Продолжить?
-            {bulkConfirm ? (
-              <span className="mt-2 block text-slate-500">
-                Затронуто отметок: {bulkConfirm}
-              </span>
-            ) : null}
-          </>
-        }
-        confirmLabel="Продолжить"
-        loading={markAll.isPending}
-        onClose={() => setBulkConfirm(null)}
-        onConfirm={() => void onMarkAll(true)}
       />
     </div>
   );

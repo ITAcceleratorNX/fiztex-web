@@ -16,7 +16,9 @@ import {
   formatAverage,
   inactiveColumnHint,
   isAssessmentColumn,
+  summativeScoreLabel,
 } from '@/lib/journalModel';
+import { NOT_TAKEN_LABEL, NOT_TAKEN_TITLE, type ResultState } from '@/lib/journalScoresModel';
 
 /**
  * Таблица журнала (Figma 2098:468).
@@ -49,6 +51,14 @@ export type ScoreEditor = {
   saved: (column: GradebookColumn, studentProfileId: number) => number | null;
   change: (column: GradebookColumn, studentProfileId: number, text: string) => void;
   blur: (column: GradebookColumn, studentProfileId: number) => void;
+  /** Балл, «н/в» или пусто — три разных состояния клетки. */
+  state: (column: GradebookColumn, studentProfileId: number) => ResultState;
+  /** Можно ли сейчас вносить первые баллы и ставить «н/в» (проведена ли работа, открыта ли четверть). */
+  canFill: (column: GradebookColumn) => boolean;
+  /** Почему нельзя — словами сервера. */
+  fillBlockedMessage: (column: GradebookColumn) => string | null;
+  /** Явный выбор учителя «Не выполнял работу»; по пустой клетке система его не ставит. */
+  markNotTaken: (column: GradebookColumn, studentProfileId: number) => void;
 };
 
 export function JournalTable({
@@ -161,9 +171,17 @@ export function JournalTable({
                           studentName={row.studentName ?? ''}
                           editor={editor}
                         />
+                      ) : cell?.assessmentResult?.notTaken ? (
+                        <NotTakenChip title={NOT_TAKEN_TITLE} />
                       ) : score ? (
                         <span className="flex items-center justify-center">
-                          <GradeChip size="sm" value={score} title={assessmentTitle(column)} />
+                          {/* Балл работы — в рамке и без максимума: он в заголовке колонки. */}
+                          <GradeChip
+                            size="sm"
+                            tone="outline"
+                            value={summativeScoreLabel(cell?.assessmentResult?.score, cell?.assessmentResult?.maxScore, column.maxScore) ?? score}
+                            title={assessmentTitle(column)}
+                          />
                         </span>
                       ) : grades.length > 0 ? (
                         <span className="flex items-center justify-center gap-1">
@@ -241,28 +259,54 @@ function ScoreCell({
 }) {
   const draft = editor.draft(column, studentProfileId);
   const saved = editor.saved(column, studentProfileId);
+  const state = editor.state(column, studentProfileId);
+  const canFill = editor.canFill(column);
   const label = `Балл ${assessmentTitle(column)}: ${studentName}`;
+
+  // Первый балл и «н/в» — обычное заполнение: закрытая четверть и непроведённая работа его не дают.
+  // Клетка остаётся видимой, а причину называет сервер.
+  if (saved == null && !canFill && draft === undefined) {
+    const reason = editor.fillBlockedMessage(column);
+    return state === 'NOT_TAKEN' ? (
+      <NotTakenChip title={NOT_TAKEN_TITLE} />
+    ) : (
+      <span className="text-slate-300" title={reason ?? undefined}>
+        ·
+      </span>
+    );
+  }
 
   if (draft === undefined) {
     return (
       <button
         type="button"
-        aria-label={saved != null ? `${label}, сейчас ${saved}` : `${label}: поставить балл`}
+        aria-label={
+          state === 'NOT_TAKEN'
+            ? `${label}, не выполнял работу`
+            : saved != null
+              ? `${label}, сейчас ${saved}`
+              : `${label}: поставить балл`
+        }
         onClick={() => editor.change(column, studentProfileId, saved != null ? String(saved) : '')}
         className={cx(
           'mx-auto flex h-[26px] min-w-[34px] items-center justify-center rounded-lg px-1 text-13 transition',
-          saved != null
-            ? 'border border-navy-700 font-bold text-navy-700 hover:bg-navy-50'
-            : 'border border-dashed border-slate-300 text-slate-400 hover:border-navy-700 hover:text-navy-700',
+          state === 'NOT_TAKEN'
+            ? 'bg-slate-100 text-xs font-semibold text-slate-500 hover:bg-slate-200'
+            : saved != null
+              ? 'border border-navy-700 font-bold text-navy-700 hover:bg-navy-50'
+              : 'border border-dashed border-slate-300 text-slate-400 hover:border-navy-700 hover:text-navy-700',
         )}
+        title={state === 'NOT_TAKEN' ? NOT_TAKEN_TITLE : undefined}
       >
-        {saved != null ? saved : '+'}
+        {state === 'NOT_TAKEN' ? NOT_TAKEN_LABEL : saved != null ? saved : '+'}
       </button>
     );
   }
 
   const problem = editor.problem(column, studentProfileId);
   const changed = saved != null && draft.trim() !== '' && draft.trim() !== String(saved);
+  // Подсказка при замене статуса баллом: «Было «н/в»» — как «Было 15» при правке балла.
+  const replacesNotTaken = state === 'NOT_TAKEN' && draft.trim() !== '';
   return (
     <span className="relative mx-auto flex w-[44px] justify-center">
       <input
@@ -291,6 +335,34 @@ function ScoreCell({
           Было {saved}
         </span>
       )}
+      {!problem && replacesNotTaken && (
+        <span className="absolute left-1/2 top-full z-20 mt-1 -translate-x-1/2 whitespace-nowrap rounded bg-slate-900 px-2 py-1 text-10 font-semibold text-white">
+          Было «{NOT_TAKEN_LABEL}»
+        </span>
+      )}
+      {/* Статус ставит только учитель и только явным выбором. mouseDown не отдаёт фокус кнопке,
+          иначе поле закрылось бы раньше нажатия. */}
+      {!problem && saved == null && state !== 'NOT_TAKEN' && canFill && draft.trim() === '' && (
+        <button
+          type="button"
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => editor.markNotTaken(column, studentProfileId)}
+          className="absolute left-1/2 top-full z-20 mt-1 -translate-x-1/2 whitespace-nowrap rounded-lg border border-line bg-white px-2.5 py-1.5 text-11 font-semibold text-ink shadow-popover hover:bg-slate-50"
+        >
+          {NOT_TAKEN_TITLE}
+        </button>
+      )}
+    </span>
+  );
+}
+
+function NotTakenChip({ title }: { title: string }) {
+  return (
+    <span
+      title={title}
+      className="mx-auto flex h-[26px] min-w-[34px] items-center justify-center rounded-lg bg-slate-100 px-1 text-xs font-semibold text-slate-500"
+    >
+      {NOT_TAKEN_LABEL}
     </span>
   );
 }

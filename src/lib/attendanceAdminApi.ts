@@ -7,8 +7,6 @@ export type AdminJournalLesson = Schema<'AdminJournalLessonView'>;
 export type AdminJournalRow = Schema<'AdminJournalRowView'>;
 export type AdminJournalCell = Schema<'AdminJournalCellView'>;
 export type AdminJournalSummary = Schema<'AdminJournalSummaryView'>;
-export type UnfilledLesson = Schema<'UnfilledLessonView'>;
-type UnfilledLessonPage = Schema<'PageUnfilledLessonView'>;
 
 export type AdminJournalFilters = {
   /** `YYYY-MM`; пусто — текущий месяц по календарю сервера. */
@@ -21,13 +19,6 @@ export type AdminJournalFilters = {
   studentProfileId?: number | null;
   status?: AttendanceStatus | null;
   reason?: AttendanceReason | null;
-};
-
-export type UnfilledLessonFilters = {
-  month?: string | null;
-  classId?: number | null;
-  page?: number;
-  size?: number;
 };
 
 /**
@@ -54,22 +45,6 @@ export const attendanceAdminApi = {
         studentProfileId: filters.studentProfileId ?? undefined,
         status: filters.status ?? undefined,
         reason: filters.reason ?? undefined,
-      })}`,
-      { signal },
-    );
-  },
-
-  /**
-   * Закончившиеся уроки без публикации — по всей школе, поэтому постранично.
-   * Класс здесь необязателен: это как раз тот список, который смотрят целиком.
-   */
-  unfilled(filters: UnfilledLessonFilters, signal?: AbortSignal): Promise<UnfilledLessonPage> {
-    return request<UnfilledLessonPage>(
-      `/admin/attendance/unfilled${pageQuery({
-        month: filters.month || undefined,
-        classId: filters.classId ?? undefined,
-        page: filters.page ?? 0,
-        size: filters.size ?? 20,
       })}`,
       { signal },
     );

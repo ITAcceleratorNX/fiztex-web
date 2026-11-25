@@ -90,9 +90,7 @@ function LessonHead({ lesson }: { lesson: AdminJournalLesson }) {
 }
 
 function StudentRow({ row, lessons }: { row: AdminJournalRow; lessons: AdminJournalLesson[] }) {
-  const byLesson = new Map(
-    (row.cells ?? []).map((cell) => [cell.lessonId, cell.attendance ?? null]),
-  );
+  const byLesson = new Map((row.cells ?? []).map((cell) => [cell.lessonId, cell]));
 
   return (
     <tr className="border-b border-line last:border-b-0">
@@ -106,7 +104,8 @@ function StudentRow({ row, lessons }: { row: AdminJournalRow; lessons: AdminJour
         <Cell
           key={lesson.lessonId}
           lessonId={lesson.lessonId}
-          marking={byLesson.get(lesson.lessonId) ?? null}
+          marking={byLesson.get(lesson.lessonId)?.attendance ?? null}
+          dayReason={byLesson.get(lesson.lessonId)?.dayReason?.reason ?? null}
         />
       ))}
       <Total value={row.attendedCount} />
@@ -120,15 +119,19 @@ function StudentRow({ row, lessons }: { row: AdminJournalRow; lessons: AdminJour
 function Cell({
   lessonId,
   marking,
+  dayReason,
 }: {
   lessonId: number | undefined;
   marking: AttendanceMarking | null;
+  /** Подтверждённая причина дня (ABSENCE-REASON-001) — главнее поурочной причины предметника. */
+  dayReason: AttendanceMarking['reason'] | null;
 }) {
   const chip = statusChip(marking);
   const parts = [chip.label];
   if (marking?.mark === 'LATE') parts.push('опоздал');
   if (marking?.mark === 'EXCUSED') parts.push('освобождён');
-  if (marking?.reason) parts.push(reasonLabel(marking.reason));
+  if (dayReason) parts.push(`${reasonLabel(dayReason)} (подтверждена)`);
+  else if (marking?.reason) parts.push(reasonLabel(marking.reason));
 
   return (
     <td className="px-1 py-1.5 text-center">

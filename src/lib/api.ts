@@ -191,6 +191,55 @@ export async function requestMultipart<T>(path: string, formData: FormData, sign
 }
 
 /**
+ * Тот же {@link requestMultipart}, но с прогрессом отправки — `fetch` его не сообщает, поэтому
+ * под капотом XHR. Ошибки, 401 и смена сессии разбираются теми же правилами, что и у
+ * остальных запросов: экрану не нужно знать, каким транспортом ушёл файл.
+ *
+ * `onProgress` получает долю отправленного (0…1); когда байты ушли, а ответа ещё нет, это 1.
+ */
+export function uploadMultipart<T>(
+  path: string,
+  formData: FormData,
+  { method = 'POST', onProgress, signal }: { method?: 'POST' | 'PUT'; onProgress?: (fraction: number) => void; signal?: AbortSignal } = {},
+): Promise<T> {
+  const assertCurrentSession = guardSession();
+  return new Promise<T>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, `/api${path}`);
+    if (authToken) xhr.setRequestHeader('Authorization', `Bearer ${authToken}`);
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && event.total > 0) onProgress?.(Math.min(1, event.loaded / event.total));
+    };
+    xhr.onload = () => {
+      try {
+        assertCurrentSession();
+        if (xhr.status === 401) handleUnauthorized();
+        const data = xhr.responseText ? safeParse(xhr.responseText) : undefined;
+        if (xhr.status < 200 || xhr.status >= 300) {
+          reject(toApiError(xhr.status, data));
+          return;
+        }
+        resolve(data as T);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    const fail = () => {
+      try {
+        assertCurrentSession();
+        reject(new ApiError(0, NO_CONNECTION));
+      } catch (error) {
+        reject(error);
+      }
+    };
+    xhr.onerror = fail;
+    xhr.onabort = () => reject(new DOMException('Aborted', 'AbortError'));
+    signal?.addEventListener('abort', () => xhr.abort(), { once: true });
+    xhr.send(formData);
+  });
+}
+
+/**
  * Бинарный ответ под авторизацией — вложения работ и фотографии проверки.
  *
  * Эти эндпоинты отдают поток байтов, а не ссылку, поэтому `<img src>` на них не
@@ -281,6 +330,8 @@ type AccountLoginResponse = {
   mustChangePassword?: boolean;
 };
 
+const ACTIVATION_PATHS = ['/auth/teacher/activate', '/auth/admin/activate', '/auth/staff/activate'] as const;
+
 export const api = {
   /**
    * Единая точка входа (AUTH-BE-001 §9): сервер сам решает по форме логина, спрашивать
@@ -299,6 +350,40 @@ export const api = {
       role: res.role,
       mustChangePassword: res.mustChangePassword ?? false,
     };
+  },
+
+  /**
+   * Первый вход по коду активации, который выдал администратор («Сбросить доступ» и выдача
+   * нового сотрудника). У бэкенда три пути по роли — учитель, администратор/психолог и
+   * служебные сотрудники, — а человек свою роль в запросе не называет.
+   *
+   * Пути перебираются по очереди, и это безопасно: аккаунт ищется вместе с ожидаемой ролью
+   * ещё до проверки кода, поэтому чужой путь отвечает отказом, **не засчитывая неудачную
+   * попытку** — счётчик блокировки растёт только на том пути, чья роль совпала. Дальше
+   * идём только после отказа 400: связь, 429 и 5xx не повод стучаться ещё раз.
+   * Ученик и родитель сюда не попадают — их активация в мобильном приложении.
+   */
+  activate: async (login: string, code: string, password: string): Promise<Admin> => {
+    let lastError: unknown;
+    for (const path of ACTIVATION_PATHS) {
+      try {
+        const res = await request<AccountLoginResponse>(path, {
+          method: 'POST',
+          body: { phone: login, code, password },
+        });
+        return {
+          token: res.token,
+          email: login,
+          fullName: res.fullName,
+          role: res.role,
+          mustChangePassword: res.mustChangePassword ?? false,
+        };
+      } catch (err) {
+        lastError = err;
+        if (!(err instanceof ApiError) || err.status !== 400) throw err;
+      }
+    }
+    throw lastError;
   },
 
   /** Смена своего пароля. Сервер отзывает сессии и отдаёт новый токен. */

@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { CalendarX2, ClipboardList } from 'lucide-react';
+import { ClipboardList } from 'lucide-react';
 import { Select } from '@/components/ui/Field';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/ui/StateBlock';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { cx, personShortName } from '@/lib/format';
-import type { AdminJournalSummary, UnfilledLesson } from '@/lib/attendanceAdminApi';
+import type { AdminJournalSummary } from '@/lib/attendanceAdminApi';
 import type { AttendanceReason, AttendanceStatus } from '@/lib/attendanceApi';
 import {
   defaultMonthValue,
@@ -15,10 +15,7 @@ import {
 } from '@/lib/attendanceAdminModel';
 import { REASON_OPTIONS, STATUS_OPTIONS } from '@/lib/attendanceModel';
 import { groupClassesByGrade } from '@/lib/platformCoreApi';
-import {
-  useAdminAttendanceJournal,
-  useUnfilledLessons,
-} from '@/platform/hooks/useAttendanceAdmin';
+import { useAdminAttendanceJournal } from '@/platform/hooks/useAttendanceAdmin';
 import {
   useAcademicYears,
   useAllTeachers,
@@ -26,8 +23,8 @@ import {
   useSchoolClasses,
 } from '@/platform/hooks/useScheduleSettings';
 import { useClassSubgroups, useSchoolSubjects } from '@/platform/hooks/useSubgroups';
+import { FillControlPanel } from '@/components/fillControl/FillControlPanel';
 import { AdminJournalTable } from './AdminJournalTable';
-import { UnfilledLessonsTable } from './UnfilledLessonsTable';
 
 const FILTER_CONTROL =
   'w-auto min-w-40 rounded-lg border-line bg-gray-50 px-3 py-2 text-13 font-medium text-ink';
@@ -105,7 +102,6 @@ export function AttendanceAdminPage() {
 
   const status = (params.get('status') as AttendanceStatus | null) ?? null;
   const reason = (params.get('reason') as AttendanceReason | null) ?? null;
-  const page = numberParam(params.get('page')) ?? 0;
 
   function patch(next: Record<string, string | number | null>) {
     const updated = new URLSearchParams(params);
@@ -130,7 +126,6 @@ export function AttendanceAdminPage() {
         }
       : null,
   );
-  const unfilledQuery = useUnfilledLessons({ month, classId, page, size: 20 });
 
   return (
     <div className="flex flex-col gap-5">
@@ -142,7 +137,7 @@ export function AttendanceAdminPage() {
         </p>
       </div>
 
-      <Tabs value={tab} onValueChange={(next) => patch({ tab: next, page: null })}>
+      <Tabs value={tab} onValueChange={(next) => patch({ tab: next })}>
         <TabsList>
           <TabsTrigger value="journal">Журнал класса</TabsTrigger>
           <TabsTrigger value="unfilled">Незаполненные уроки</TabsTrigger>
@@ -150,6 +145,7 @@ export function AttendanceAdminPage() {
         <TabsContent value={tab} className="mt-5">
           <div className="flex flex-col gap-5">
 
+            {tab === 'journal' && (
             <div className="flex flex-wrap items-center gap-2.5">
               <Select
                 aria-label="Учебный год"
@@ -297,6 +293,7 @@ export function AttendanceAdminPage() {
           </>
         )}
       </div>
+            )}
 
       {tab === 'journal' ? (
         <JournalTab
@@ -307,15 +304,7 @@ export function AttendanceAdminPage() {
           journal={journalQuery.data}
         />
       ) : (
-        <UnfilledTab
-          loading={unfilledQuery.isLoading}
-          error={unfilledQuery.isError ? errorText(unfilledQuery.error) : null}
-          onRetry={() => void unfilledQuery.refetch()}
-          lessons={unfilledQuery.data?.content ?? []}
-          page={page}
-          totalPages={unfilledQuery.data?.totalPages ?? 0}
-          onPageChange={(next) => patch({ page: next > 0 ? next : null })}
-        />
+        <FillControlPanel showTeacherFilter />
       )}
           </div>
         </TabsContent>
@@ -435,67 +424,6 @@ function Stat({
       <span className="text-11 text-muted">{label}</span>
       <span className="text-base font-bold tabular-nums text-ink">{value ?? 0}</span>
     </span>
-  );
-}
-
-function UnfilledTab({
-  loading,
-  error,
-  onRetry,
-  lessons,
-  page,
-  totalPages,
-  onPageChange,
-}: {
-  loading: boolean;
-  error: string | null;
-  onRetry: () => void;
-  lessons: UnfilledLesson[];
-  page: number;
-  totalPages: number;
-  onPageChange: (next: number) => void;
-}) {
-  if (loading) return <LoadingBlock label="Загрузка уроков…" />;
-  if (error) return <ErrorBlock message={error} onRetry={onRetry} />;
-  if (lessons.length === 0) {
-    return (
-      <EmptyBlock
-        icon={<CalendarX2 className="size-7" />}
-        title="Незаполненных уроков нет"
-        description="Все закончившиеся уроки выбранного месяца опубликованы."
-      />
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="rounded-2xl border border-line bg-white">
-        <UnfilledLessonsTable lessons={lessons} />
-      </div>
-      {totalPages > 1 && (
-        <div className="flex items-center justify-end gap-3">
-          <button
-            type="button"
-            disabled={page <= 0}
-            onClick={() => onPageChange(page - 1)}
-            className="rounded-lg border border-line px-3 py-1.5 text-13 text-muted transition hover:bg-gray-50 disabled:opacity-40"
-          >
-            Назад
-          </button>
-          <span className="text-11 text-muted">
-            Стр. {page + 1} из {totalPages}
-          </span>
-          <button
-            type="button"
-            disabled={page + 1 >= totalPages}
-            onClick={() => onPageChange(page + 1)}
-            className="rounded-lg border border-line px-3 py-1.5 text-13 text-muted transition hover:bg-gray-50 disabled:opacity-40"
-          >
-            Вперёд
-          </button>
-        </div>
-      )}
-    </div>
   );
 }
 

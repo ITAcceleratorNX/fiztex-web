@@ -10,6 +10,7 @@ type FinalGrade = Schema<'MyClassFinalGradeItemView'>;
 type GradeResult = Schema<'MyClassGradeResultView'>;
 type Period = Schema<'MyClassContextPeriodView'>;
 type Subject = Schema<'MyClassSubjectView'>;
+type AssessmentResults = Schema<'MyClassAssessmentResultsView'>;
 
 /**
  * Вкладка «Оценки» классного руководителя (Figma 2200:3502).
@@ -26,6 +27,14 @@ export interface JournalColumn {
   key: string;
   date: string;
   kind: ColumnKind;
+  /** Колонка работы СОР/СОЧ (с V142 балл работы — не оценка): номер СОР и максимум. */
+  work?: { workId: number; number: number | null; maxScore: number };
+}
+
+/** Результат ученика в работе: балл (в том числе 0) или «Не выполнял работу». Нет записи — пусто. */
+export interface WorkResult {
+  score: number | null;
+  notTaken: boolean;
 }
 
 export interface JournalRow {
@@ -33,6 +42,8 @@ export interface JournalRow {
   fullName: string;
   shortName: string;
   cells: Map<string, Grade[]>;
+  /** Клетки колонок работ: ключ колонки → результат. */
+  works: Map<string, WorkResult>;
   result: GradeResult | null;
   finals: FinalGrade[];
 }
@@ -70,6 +81,23 @@ function columnKind(grades: Grade[]): ColumnKind {
   return grades[0]?.sourceType === 'HOMEWORK' ? 'HOMEWORK' : 'LESSON';
 }
 
+function workKey(workId: number): string {
+  return `WORK:${workId}`;
+}
+
+/** Подпись работы в шапке: «СОР 2», «СОЧ». */
+export function workTitle(column: JournalColumn): string {
+  const base = columnEvent(column.kind);
+  return column.work?.number ? `${base} ${column.work.number}` : base;
+}
+
+/** Клетка работы: «18/20», «0/20» или «н/в»; пусто — `null`. */
+export function workCellLabel(result: WorkResult | undefined, maxScore: number): string | null {
+  if (!result) return null;
+  if (result.notTaken) return 'н/в';
+  return result.score == null ? null : `${result.score}/${maxScore}`;
+}
+
 function sourceKey(grade: Grade): string {
   return `${grade.sourceType}:${grade.sourceId}`;
 }
@@ -89,12 +117,18 @@ export function buildMyClassJournal({
   grades,
   finals,
   results,
+  assessment,
   window,
 }: {
   students: Student[];
   grades: Grade[];
   finals: FinalGrade[];
   results: GradeResult[];
+  /**
+   * Работы СОР/СОЧ и их результаты — тот же источник, что колонки работ в журнале учителя. Без него
+   * классный руководитель не видел бы баллов, внесённых как работа, и «н/в».
+   */
+  assessment?: AssessmentResults | null;
   /** Месяц внутри периода: оценки вне окна в сетку не попадают, средние и итоги — как есть. */
   window?: { from: string; to: string } | null;
 }): MyClassJournal {
@@ -107,13 +141,35 @@ export function buildMyClassJournal({
     const key = sourceKey(grade);
     bySource.set(key, [...(bySource.get(key) ?? []), grade]);
   }
-  const columns = [...bySource].map(([key, items]) => ({
+  const columns: Array<JournalColumn & { sourceType: string; sourceId: number }> = [...bySource].map(([key, items]) => ({
     key,
     date: items[0]?.sourceDate ?? '',
     kind: columnKind(items),
     sourceType: items[0]?.sourceType ?? 'LESSON',
     sourceId: items[0]?.sourceId ?? 0,
   }));
+  const works = (assessment?.works ?? []).filter((work) => !window
+    || ((work.lessonDate ?? '') >= window.from && (work.lessonDate ?? '') <= window.to));
+  for (const work of works) {
+    columns.push({
+      key: workKey(work.workId as number),
+      date: work.lessonDate ?? '',
+      kind: work.kind === 'SOCH' ? 'SOCH' : 'SOR',
+      // После уроков того же дня: работа пишется на уроке, как и в журнале учителя.
+      sourceType: 'WORK',
+      sourceId: work.workId as number,
+      work: { workId: work.workId as number, number: work.number ?? null, maxScore: work.maxScore ?? 0 },
+    });
+  }
+  const shownWorks = new Set(works.map((work) => work.workId));
+  const workResults = new Map<number, Map<string, WorkResult>>();
+  for (const result of assessment?.results ?? []) {
+    if (!shownWorks.has(result.workId)) continue;
+    const studentId = result.studentProfileId as number;
+    const map = workResults.get(studentId) ?? new Map<string, WorkResult>();
+    map.set(workKey(result.workId as number), { score: result.score ?? null, notTaken: result.notTaken === true });
+    workResults.set(studentId, map);
+  }
   columns.sort((a, b) => a.date.localeCompare(b.date)
     || a.sourceType.localeCompare(b.sourceType)
     || a.sourceId - b.sourceId);
@@ -136,13 +192,14 @@ export function buildMyClassJournal({
       fullName: names[index],
       shortName: short[index],
       cells,
+      works: workResults.get(student.studentProfileId as number) ?? new Map<string, WorkResult>(),
       result: resultsById.get(student.studentProfileId) ?? null,
       finals: finals.filter((final) => final.studentProfileId === student.studentProfileId),
     };
   });
 
   return {
-    columns: columns.map(({ key, date, kind }) => ({ key, date, kind })),
+    columns: columns.map(({ key, date, kind, work }) => (work ? { key, date, kind, work } : { key, date, kind })),
     rows,
   };
 }

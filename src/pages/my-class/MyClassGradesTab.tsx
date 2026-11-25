@@ -14,6 +14,8 @@ import { COMPONENT_SHORT, componentsByCode, formatPercent, resultStatusHint } fr
 import { formatAverage, shortDate } from '@/lib/journalModel';
 import {
   buildMyClassJournal,
+  workCellLabel,
+  workTitle,
   capitalize,
   columnEvent,
   defaultMonth,
@@ -187,6 +189,7 @@ function JournalBody({
     grades: data.grades,
     finals: data.finals,
     results: data.results.items ?? [],
+    assessment: data.assessment,
     window: month ? { from: month.dateFrom, to: month.dateTo } : null,
   });
   if (journal.rows.length === 0) return <EmptyBlock title="В классе пока нет учеников" />;
@@ -250,7 +253,7 @@ function JournalTable({
               >
                 <span className="block text-slate-400">{shortDate(column.date)}</span>
                 <span className={cx('block normal-case', isSummative(column.kind) ? 'text-navy-700' : 'font-normal text-slate-500')}>
-                  {columnEvent(column.kind)}
+                  {column.work ? workTitle(column) : columnEvent(column.kind)}
                 </span>
               </th>
             ))}
@@ -281,6 +284,23 @@ function JournalTable({
               </th>
               {columns.map((column) => {
                 const grades = row.cells.get(column.key) ?? [];
+                if (column.work) {
+                  const result = row.works.get(column.key);
+                  const label = workCellLabel(result, column.work.maxScore);
+                  return (
+                    <td key={column.key} className="border-r border-line bg-info-bg px-1 py-2 text-center align-middle">
+                      {result?.notTaken ? (
+                        <span title="Не выполнял работу" className="mx-auto inline-flex h-6 min-w-8 items-center justify-center rounded-lg bg-slate-100 px-1 text-xs font-semibold text-slate-500">
+                          н/в
+                        </span>
+                      ) : label ? (
+                        <GradeChip size="sm" tone="outline" value={label} title={workTitle(column)} />
+                      ) : (
+                        <span className="text-slate-400" aria-label="Нет результата">—</span>
+                      )}
+                    </td>
+                  );
+                }
                 return (
                   <td
                     key={column.key}

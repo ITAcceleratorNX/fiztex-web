@@ -33,6 +33,8 @@ export const ROUTES = {
    * в раздел, где его встретят одни отказы, нельзя.
    */
   staffNewPassword: '/staff/new-password',
+  /** Первый вход по коду активации, который выдал администратор. */
+  staffActivate: '/staff/activate',
   /** «Забыли пароль?» — пароль восстанавливает школа, самостоятельного сброса нет. */
   staffForgotPassword: '/staff/forgot-password',
   /** Домашний экран администратора (раньше был на `/`). */

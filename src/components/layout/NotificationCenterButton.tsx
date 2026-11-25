@@ -1,24 +1,43 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, Bell, CheckCheck, ChevronRight, Info, X } from 'lucide-react';
+import {
+  AlertTriangle, Bell, BookOpen, CalendarCheck2, CalendarDays, CheckCheck, ChevronLeft, ChevronRight, Clock, ClipboardList,
+  Info, ListChecks, MessageSquareText, Award, Wrench, X, type LucideIcon,
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import {
   useMarkCenterAllRead,
   useMarkCenterRead,
   useNotificationCenter,
+  useNotificationCollections,
   useNotificationUnread,
 } from '@/hooks/queries';
 import { Spinner } from '@/components/ui/StateBlock';
 import { cx, formatDateTime } from '@/lib/format';
-import type { CenterItem } from '@/lib/notificationCenterApi';
+import type { CenterCollection, CenterItem } from '@/lib/notificationCenterApi';
 import {
   PENDING_ACTIONS_KIND,
   centerLink,
   centerTone,
+  collectionLabel,
+  collectionMoment,
   pendingActions,
   pendingTotal,
 } from '@/lib/notificationCenterModel';
+
+/** Значок и подложка подборки (В1): цвет — раздел, а не важность строки. */
+const COLLECTION_ICONS: Record<string, { icon: LucideIcon; tile: string }> = {
+  ATTENDANCE: { icon: CalendarCheck2, tile: 'bg-emerald-50 text-emerald-600' },
+  LESSONS: { icon: Clock, tile: 'bg-indigo-50 text-navy-700' },
+  HOMEWORK: { icon: BookOpen, tile: 'bg-orange-50 text-orange-600' },
+  GRADES: { icon: Award, tile: 'bg-sky-50 text-sky-700' },
+  SCHEDULE: { icon: CalendarDays, tile: 'bg-indigo-50 text-navy-700' },
+  REQUESTS: { icon: Wrench, tile: 'bg-slate-100 text-slate-600' },
+  FEEDBACK: { icon: MessageSquareText, tile: 'bg-violet-50 text-violet-700' },
+  SURVEYS: { icon: ClipboardList, tile: 'bg-violet-50 text-violet-700' },
+  ACTIONS: { icon: ListChecks, tile: 'bg-amber-50 text-amber-700' },
+};
 
 const FOCUS_RING =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-navy-700';
@@ -29,6 +48,9 @@ const FOCUS_RING =
  * Живёт в подвале меню, а не над страницей: у страниц панели свои кнопки в правом верхнем углу, и плавающий значок
  * поверх них закрывал бы «Сохранить». Лента открывается рядом с меню, порталом — панель меню режет всё, что из неё
  * выступает.
+ *
+ * Лента разложена по подборкам (Figma `phyztex` «Уведомления по подборкам»): первый экран — разделы с последней
+ * строкой и числом непрочитанного, нажатие открывает строки раздела. Раздел строки решает сервер (`collection`).
  *
  * Карточки ленты не копятся: «урок через 10 минут» пропадает со звонком, «работы на проверку» — после проверки.
  * Решает это сервер; экран только перечитывает ленту, пока она открыта. «Незавершённые действия» не уводят со
@@ -42,13 +64,34 @@ export function NotificationCenterButton({ wide }: { wide: boolean }) {
   const navigate = useNavigate();
   const role = useAuth().admin?.role;
 
+  const [collection, setCollection] = useState<string | null>(null);
   const unread = useNotificationUnread(true);
-  const feed = useNotificationCenter(open);
+  const collections = useNotificationCollections(open && collection == null);
+  const feed = useNotificationCenter(open && collection != null, collection);
   const markRead = useMarkCenterRead();
   const markAllRead = useMarkCenterAllRead();
 
-  const count = open ? (feed.data?.unreadCount ?? unread.data?.count ?? 0) : (unread.data?.count ?? 0);
+  const count = open
+    ? (collection == null ? collections.data?.unreadCount : feed.data?.unreadCount) ?? unread.data?.count ?? 0
+    : (unread.data?.count ?? 0);
   const items = feed.data?.items ?? [];
+  const groups = collections.data?.collections ?? [];
+  const sectionUnread = collection == null
+    ? count
+    : groups.find((group) => group.collection === collection)?.unreadCount ?? items.filter((item) => !item.read).length;
+
+  useEffect(() => {
+    if (!open) setCollection(null);
+  }, [open]);
+
+  function readAll() {
+    if (collection == null) {
+      const newest = groups.map((group) => group.latest?.createdAt ?? '').sort().pop();
+      markAllRead.mutate({ upTo: newest || undefined });
+    } else {
+      markAllRead.mutate({ upTo: items[0]?.createdAt, collection });
+    }
+  }
 
   useLayoutEffect(() => {
     if (!open || !buttonRef.current) return;
@@ -127,12 +170,23 @@ export function NotificationCenterButton({ wide }: { wide: boolean }) {
           className="fixed z-50 flex max-h-[min(640px,calc(100vh-32px))] w-[min(400px,calc(100vw-32px))] flex-col overflow-hidden rounded-2xl bg-surface shadow-pop ring-1 ring-slate-200/80 animate-scale-in"
         >
           <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
-            <p className="text-15 font-semibold text-ink">Уведомления</p>
+            {collection == null ? (
+              <p className="text-15 font-semibold text-ink">Уведомления</p>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setCollection(null)}
+                className="-ml-1 inline-flex items-center gap-1 rounded-lg px-1 py-0.5 text-15 font-semibold text-ink transition hover:bg-slate-100"
+              >
+                <ChevronLeft className="size-4" aria-hidden />
+                {collectionLabel(collection)}
+              </button>
+            )}
             <div className="flex items-center gap-1">
-              {count > 0 && (
+              {sectionUnread > 0 && (
                 <button
                   type="button"
-                  onClick={() => markAllRead.mutate(items[0]?.createdAt)}
+                  onClick={readAll}
                   disabled={markAllRead.isPending}
                   className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-13 font-medium text-brand-600 transition hover:bg-brand-50 disabled:opacity-50"
                 >
@@ -152,7 +206,27 @@ export function NotificationCenterButton({ wide }: { wide: boolean }) {
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto">
-            {feed.isLoading ? (
+            {collection == null ? (
+              collections.isLoading ? (
+                <div className="flex justify-center py-10">
+                  <Spinner className="size-6 text-brand-500" />
+                </div>
+              ) : collections.isError ? (
+                <p className="px-4 py-8 text-center text-13 text-muted">
+                  Не удалось загрузить уведомления. Попробуйте открыть ещё раз.
+                </p>
+              ) : groups.length === 0 ? (
+                <p className="px-4 py-8 text-center text-13 text-muted">Новых уведомлений нет.</p>
+              ) : (
+                <ul className="divide-y divide-line">
+                  {groups.map((group) => (
+                    <li key={group.collection}>
+                      <CollectionRow group={group} onOpen={() => setCollection(group.collection ?? null)} />
+                    </li>
+                  ))}
+                </ul>
+              )
+            ) : feed.isLoading ? (
               <div className="flex justify-center py-10">
                 <Spinner className="size-6 text-brand-500" />
               </div>
@@ -186,6 +260,37 @@ export function NotificationCenterButton({ wide }: { wide: boolean }) {
         document.body,
       )}
     </>
+  );
+}
+
+/** Подборка на первом экране (В1): значок раздела, название, последняя строка, время и непрочитанное. */
+function CollectionRow({ group, onOpen }: { group: CenterCollection; onOpen: () => void }) {
+  const meta = COLLECTION_ICONS[group.collection ?? ''] ?? { icon: Bell, tile: 'bg-slate-100 text-slate-600' };
+  const Icon = meta.icon;
+  const unread = group.unreadCount ?? 0;
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50"
+    >
+      <span className={cx('flex size-10 shrink-0 items-center justify-center rounded-xl', meta.tile)}>
+        <Icon className="size-5" aria-hidden />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-semibold text-ink">{collectionLabel(group.collection)}</span>
+        <span className="mt-0.5 block truncate text-13 text-muted">{group.latest?.title}</span>
+      </span>
+      <span className="flex shrink-0 flex-col items-end gap-1">
+        <span className="text-11 text-muted">{collectionMoment(group.latest?.createdAt)}</span>
+        {unread > 0 ? (
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-400 px-1.5 text-11 font-bold text-white">
+            <span className="sr-only">непрочитанных: </span>{unread}
+          </span>
+        ) : <span className="h-5" />}
+      </span>
+      <ChevronRight className="size-4 shrink-0 text-muted" aria-hidden />
+    </button>
   );
 }
 

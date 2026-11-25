@@ -31,6 +31,8 @@ interface AuthContextValue {
   temporarySecret: string | null;
   login: (email: string, password: string) => Promise<Admin>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<Admin>;
+  /** Первый вход по коду активации: человек сам задаёт пароль, временного секрета нет. */
+  activate: (login: string, code: string, password: string) => Promise<Admin>;
   logout: () => void;
 }
 
@@ -145,6 +147,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return result;
   }, [replaceSession]);
 
+  const activate = useCallback(async (login: string, code: string, password: string) => {
+    const result = await api.activate(login, code, password);
+    // Пути активации — только для сотрудников, но роль проверяем и здесь: сессию ученика
+    // или родителя панель не заводит ни при каком входе.
+    if (isMobileOnlyRole(result.role)) {
+      throw new ApiError(403, MOBILE_ONLY_MESSAGE, 'MOBILE_ONLY_ROLE');
+    }
+    setExpiredAccountEmail(null);
+    // Пароль человек только что придумал сам — менять его не требуют.
+    setTemporarySecret(null);
+    persist(result);
+    replaceSession(result);
+    return result;
+  }, [replaceSession]);
+
   const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
     const email = sessionRef.current.admin?.email ?? '';
     const result = await api.changePassword(email, currentPassword, newPassword);
@@ -183,9 +200,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       temporarySecret,
       login,
       changePassword,
+      activate,
       logout,
     }),
-    [admin, expiredAccountEmail, temporarySecret, login, changePassword, logout],
+    [admin, expiredAccountEmail, temporarySecret, login, changePassword, activate, logout],
   );
 
   return (

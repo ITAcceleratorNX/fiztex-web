@@ -151,6 +151,13 @@ export const keys = {
   lessonParentComments: (lessonId: number | null) => ['lesson-parent-comments', lessonId] as const,
   schoolSubjects: (status: SchoolRecordStatus | 'ALL') => ['school-subjects', status] as const,
   myClassContext: ['my-class', 'context'] as const,
+  // Причины отсутствий класса: список, его счётчики и день — под одним префиксом, чтобы команда дня
+  // перечитывала все виды класса одним `invalidateQueries`.
+  myClassAbsenceDays: (classId: number) => ['my-class', 'classes', classId, 'absence-days'] as const,
+  myClassAbsenceList: (classId: number, params: Record<string, string | number | null>) =>
+    ['my-class', 'classes', classId, 'absence-days', 'list', params] as const,
+  myClassAbsenceDay: (classId: number, studentProfileId: number, date: string) =>
+    ['my-class', 'classes', classId, 'absence-days', 'day', studentProfileId, date] as const,
   myClassRoster: (classId: number) => ['my-class', 'classes', classId, 'students'] as const,
   myClassSummary: (classId: number, periodId: number) => ['my-class', 'classes', classId, 'summary', periodId] as const,
   myClassSubjects: (classId: number, periodId: number) => ['my-class', 'classes', classId, 'subjects', periodId] as const,
@@ -259,6 +266,9 @@ export const keys = {
   homeworkList: (params: HomeworkListParams) => ['homework', 'list', params] as const,
   lessonHomework: (lessonId: number) => ['homework', 'lesson', lessonId, 'all'] as const,
   attendanceHistory: (lessonId: number) => ['lessons', lessonId, 'attendance', 'history'] as const,
+  // Под ключом листа: смена причины дня у отсутствовавших перечитывает лист вместе с этой лентой.
+  attendanceDayReasonHistory: (lessonId: number) =>
+    ['lessons', lessonId, 'attendance', 'day-reason-history'] as const,
   attendanceQr: (lessonId: number) => ['lessons', lessonId, 'attendance', 'qr'] as const,
   // Раздел «Посещаемость (QR)» учителя: свои уроки на сегодня и журнал месяца. Журнал
   // живёт под 'attendance', а не под уроком: он собран из многих уроков сразу.
@@ -293,7 +303,8 @@ export const keys = {
     ['lessons', lessonId, 'materials', childId ?? 'self'] as const,
   /** Свой профиль: один ключ на экран профиля и на `accountId` в карточке заявки. */
   myProfile: ['me', 'profile'] as const,
-  notificationCenter: ['notifications', 'page'] as const,
+  notificationCenter: (collection: string | null) => ['notifications', 'page', collection ?? 'all'] as const,
+  notificationCollections: ['notifications', 'collections'] as const,
   notificationUnread: ['notifications', 'unread'] as const,
   // Одно пространство на весь раздел: создание, отмена и возврат меняют оба списка
   // сразу — заявка уходит из «Моих» в «Историю», — и сбрасывать их порознь значило бы
@@ -1016,11 +1027,22 @@ export function useNotificationUnread(enabled: boolean) {
   });
 }
 
-/** Лента читается, пока панель открыта: закрытой ей обновляться незачем. */
-export function useNotificationCenter(enabled: boolean) {
+/** Лента читается, пока панель открыта: закрытой ей обновляться незачем. `collection` — одна подборка. */
+export function useNotificationCenter(enabled: boolean, collection: string | null = null) {
   return useQuery({
-    queryKey: keys.notificationCenter,
-    queryFn: ({ signal }) => notificationCenterApi.page(signal),
+    queryKey: keys.notificationCenter(collection),
+    queryFn: ({ signal }) => notificationCenterApi.page(signal, collection),
+    enabled,
+    staleTime: 0,
+    refetchInterval: enabled ? CENTER_REFRESH_MS : false,
+  });
+}
+
+/** Подборки колокольчика — первый экран панели. */
+export function useNotificationCollections(enabled: boolean) {
+  return useQuery({
+    queryKey: keys.notificationCollections,
+    queryFn: ({ signal }) => notificationCenterApi.collections(signal),
     enabled,
     staleTime: 0,
     refetchInterval: enabled ? CENTER_REFRESH_MS : false,
@@ -1040,7 +1062,8 @@ export function useMarkCenterRead() {
 export function useMarkCenterAllRead() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (upTo?: string) => notificationCenterApi.markAllRead(upTo),
+    mutationFn: ({ upTo, collection }: { upTo?: string; collection?: string | null } = {}) =>
+      notificationCenterApi.markAllRead(upTo, collection),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['notifications'] });
     },
@@ -2118,6 +2141,8 @@ function useAttendanceCommand<TVars>(
       // инвалидация тут же перезапросила бы то, что мы только что положили.
       qc.setQueryData(keys.attendanceSheet(lessonId), sheet);
       qc.invalidateQueries({ queryKey: keys.attendanceHistory(lessonId) });
+      // Список «Незаполненное» и его счётчики считает сервер — перечитываем после любой записи листа.
+      qc.invalidateQueries({ queryKey: ['fill-control'] });
     },
   });
 }
@@ -3778,13 +3803,16 @@ export function useMyClassSubjectJournal(
     queryFn: async ({ signal }) => {
       const root = `/my-class/classes/${classId}`;
       const scope = `periodId=${periodId}&subjectId=${subjectId}`;
-      const [students, grades, finals, results] = await Promise.all([
+      // Баллы СОР/СОЧ с V142 — результаты работ, а не оценки: без пятого запроса классный руководитель
+      // видел бы меньше, чем учитель, который их поставил.
+      const [students, grades, finals, results, assessment] = await Promise.all([
         allMyClassPages<Schema<'MyClassStudentView'>>(`${root}/students`, signal),
         allMyClassPages<Schema<'MyClassGradeItemView'>>(`${root}/grades?${scope}`, signal),
         allMyClassPages<Schema<'MyClassFinalGradeItemView'>>(`${root}/final-grades?${scope}`, signal),
         request<Schema<'MyClassGradeResultsView'>>(`${root}/grade-results?${scope}`, { signal }),
+        request<Schema<'MyClassAssessmentResultsView'>>(`${root}/assessment-results?${scope}`, { signal }),
       ]);
-      return { students, grades, finals, results };
+      return { students, grades, finals, results, assessment };
     },
     staleTime: 0,
     refetchOnWindowFocus: true,
@@ -4169,6 +4197,22 @@ export function useSaveAssessmentScores() {
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: ['assessment-works'] });
       void qc.invalidateQueries({ queryKey: ['gradebook'] });
+      // Проблемный список и счётчики считает сервер: после записи их перечитывают, а не досчитывают.
+      void qc.invalidateQueries({ queryKey: ['fill-control'] });
+    },
+  });
+}
+
+/** «Не выполнял работу»: отдельная команда, а не балл — после неё перечитываются лист, журнал и контроль. */
+export function useMarkNotTaken() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { workId: number; studentProfileId: number }) =>
+      assessmentWorksApi.markNotTaken(vars.workId, vars.studentProfileId),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: ['assessment-works'] });
+      void qc.invalidateQueries({ queryKey: ['gradebook'] });
+      void qc.invalidateQueries({ queryKey: ['fill-control'] });
     },
   });
 }

@@ -21,6 +21,15 @@ vi.mock('@/hooks/reportingQueries', async (importOriginal) => ({
   useReportPerformance: (...args: unknown[]) => useReportPerformance(...args),
 }));
 
+// Причины отсутствий — свой модуль хуков; на вкладке «Отметки» нужен только счётчик дел.
+vi.mock('@/hooks/absenceReasonQueries', () => ({
+  useMyClassAbsenceCounts: () => ({ data: { actionRequired: 0 } }),
+  useMyClassAbsenceDays: () => ({ isPending: true }),
+  useMyClassStudentOptions: () => ({ data: [] }),
+  useMyClassAbsenceDay: () => ({ isPending: true }),
+  useAbsenceDayCommand: () => ({ isPending: false, mutateAsync: vi.fn() }),
+}));
+
 vi.mock('@/hooks/dynamicsQueries', () => ({
   useClassGradeDynamics: (...args: unknown[]) => useClassGradeDynamics(...args),
   useStudentGradeDynamics: () => ({ isPending: true }),

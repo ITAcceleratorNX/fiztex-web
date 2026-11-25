@@ -7,6 +7,7 @@ import { NotificationCenterButton } from './NotificationCenterButton';
 
 const api = vi.hoisted(() => ({
   page: vi.fn(),
+  collections: vi.fn(),
   unread: vi.fn(),
   markRead: vi.fn(),
   markAllRead: vi.fn(),
@@ -29,6 +30,7 @@ const PAGE = {
       createdAt: '2026-10-14T10:00:00Z',
       read: false,
       route: 'home',
+      collection: 'ACTIONS',
       params: {
         groups: [{ type: 'ATTENDANCE', count: 2 }, { type: 'TEST_REVIEW', count: 1 }],
         actions: [
@@ -44,10 +46,31 @@ const PAGE = {
       createdAt: '2026-10-14T10:20:00Z',
       read: true,
       route: 'lesson',
+      collection: 'LESSONS',
       params: { lessonId: 91 },
     },
   ],
 };
+
+/** Подборки первого экрана: строки ленты, разложенные по разделам сервера. */
+function collectionsOf(page: typeof PAGE) {
+  const groups = new Map<string, { collection: string; unreadCount: number; latest: (typeof PAGE.items)[number] }>();
+  for (const item of page.items) {
+    const key = (item as { collection?: string }).collection ?? 'OTHER';
+    const group = groups.get(key);
+    if (!group) groups.set(key, { collection: key, unreadCount: item.read ? 0 : 1, latest: item });
+    else group.unreadCount += item.read ? 0 : 1;
+  }
+  return { unreadCount: page.unreadCount, collections: [...groups.values()] };
+}
+
+/** Открыть колокольчик и раздел. */
+async function openSection(label: RegExp) {
+  await userEvent.click(await screen.findByRole('button', { name: /Уведомления/ }));
+  const dialog = await screen.findByRole('dialog', { name: 'Уведомления' });
+  await userEvent.click(await within(dialog).findByRole('button', { name: label }));
+  return dialog;
+}
 
 function Where() {
   const location = useLocation();
@@ -75,7 +98,10 @@ describe('NotificationCenterButton — лента учителя', () => {
     vi.clearAllMocks();
     role.current = 'TEACHER';
     api.unread.mockResolvedValue({ count: 2 });
-    api.page.mockResolvedValue(PAGE);
+    api.page.mockImplementation((_signal: unknown, collection?: string) => Promise.resolve({
+      ...PAGE, items: PAGE.items.filter((item) => !collection || item.collection === collection),
+    }));
+    api.collections.mockResolvedValue(collectionsOf(PAGE));
     api.markRead.mockResolvedValue(undefined);
   });
 
@@ -85,12 +111,34 @@ describe('NotificationCenterButton — лента учителя', () => {
     expect(await screen.findByRole('button', { name: 'Уведомления, непрочитанных: 2' })).toHaveTextContent('2');
   });
 
-  it('«Незавершённые действия» разворачиваются списком, и действие ведёт к своему уроку', async () => {
+  it('первый экран — подборки с последней строкой и числом непрочитанного', async () => {
     renderButton();
     await userEvent.click(await screen.findByRole('button', { name: /Уведомления/ }));
-
     const dialog = await screen.findByRole('dialog', { name: 'Уведомления' });
-    expect(within(dialog).getByText('Незавершённые действия: 3')).toBeInTheDocument();
+
+    const actions = await within(dialog).findByRole('button', { name: /Незавершённые действия/ });
+    expect(actions).toHaveTextContent('Незавершённые действия: 3');
+    expect(actions).toHaveTextContent('непрочитанных: 1');
+    expect(within(dialog).getByRole('button', { name: /Уроки/ })).toHaveTextContent('Скоро урок: Математика, 5А');
+    expect(api.page).not.toHaveBeenCalled();
+  });
+
+  it('«Прочитать все» внутри раздела отмечает только его', async () => {
+    api.markAllRead.mockResolvedValue(undefined);
+    renderButton();
+    const dialog = await openSection(/Незавершённые действия/);
+    await within(dialog).findByText('Незавершённые действия: 3');
+
+    await userEvent.click(within(dialog).getByRole('button', { name: /Прочитать все/ }));
+
+    expect(api.markAllRead).toHaveBeenCalledWith('2026-10-14T10:00:00Z', 'ACTIONS');
+  });
+
+  it('«Незавершённые действия» разворачиваются списком, и действие ведёт к своему уроку', async () => {
+    renderButton();
+    const dialog = await openSection(/Незавершённые действия/);
+
+    expect(await within(dialog).findByText('Незавершённые действия: 3')).toBeInTheDocument();
     // Перечислено одно действие из трёх — остальное в разделах.
     expect(within(dialog).getByText('И ещё 2 — в разделах панели.')).toBeInTheDocument();
 
@@ -103,10 +151,9 @@ describe('NotificationCenterButton — лента учителя', () => {
 
   it('событие урока открывает урок; прочитанное второй раз не отмечается', async () => {
     renderButton();
-    await userEvent.click(await screen.findByRole('button', { name: /Уведомления/ }));
-    const dialog = await screen.findByRole('dialog');
+    const dialog = await openSection(/Уроки/);
 
-    await userEvent.click(within(dialog).getByRole('button', { name: /Скоро урок: Математика, 5А/ }));
+    await userEvent.click(await within(dialog).findByRole('button', { name: /Скоро урок: Математика, 5А/ }));
 
     expect(screen.getByTestId('where')).toHaveTextContent('/lesson-schedule/lessons/91');
     expect(api.markRead).not.toHaveBeenCalled();
@@ -124,28 +171,34 @@ describe('NotificationCenterButton — лента учителя', () => {
 
   it('администрация: Warning ведёт в расписание периода, Info — в результаты опроса', async () => {
     role.current = 'ADMIN';
-    api.page.mockResolvedValue({
+    const adminPage = {
       unreadCount: 2,
       hasMore: false,
       items: [
         {
           id: 'period', kind: 'ADMIN_SCHEDULE_UNPUBLISHED', read: false, createdAt: '2026-10-14T10:00:00Z',
           title: 'Расписание на «2 четверть» не опубликовано', body: 'До начала периода осталось 14 дней',
-          route: 'schedule', params: { periodId: 31 },
+          route: 'schedule', params: { periodId: 31 }, collection: 'SCHEDULE',
         },
         {
           id: 'survey', kind: 'ADMIN_SURVEY_CLOSED', read: false, createdAt: '2026-10-14T09:00:00Z',
           title: 'Опрос «Обратная связь о школе» завершён', body: 'Опрос прошли: 47 пользователей.',
-          route: 'survey-results', params: { surveyId: 44 },
+          route: 'survey-results', params: { surveyId: 44 }, collection: 'SURVEYS',
         },
       ],
-    });
+    };
+    api.page.mockImplementation((_signal: unknown, collection?: string) => Promise.resolve({
+      ...adminPage, items: adminPage.items.filter((item) => !collection || item.collection === collection),
+    }));
+    api.collections.mockResolvedValue(collectionsOf(adminPage as unknown as typeof PAGE));
     renderButton();
-    await userEvent.click(await screen.findByRole('button', { name: /Уведомления/ }));
-    const dialog = await screen.findByRole('dialog');
+    let dialog = await openSection(/Опросы/);
+    expect(await within(dialog).findByLabelText('Информация')).toBeInTheDocument();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Опросы' }));
 
-    expect(within(dialog).getByLabelText('Предупреждение')).toBeInTheDocument();
-    expect(within(dialog).getByLabelText('Информация')).toBeInTheDocument();
+    dialog = screen.getByRole('dialog');
+    await userEvent.click(await within(dialog).findByRole('button', { name: /Расписание/ }));
+    expect(await within(dialog).findByLabelText('Предупреждение')).toBeInTheDocument();
 
     await userEvent.click(within(dialog).getByRole('button', { name: /Расписание на «2 четверть»/ }));
     expect(screen.getByTestId('where')).toHaveTextContent('/lesson-schedule');

@@ -4,6 +4,7 @@ import { AuthenticatedLoginRedirect } from '@/components/auth/AuthenticatedLogin
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { LoginPage } from '@/pages/LoginPage';
+import { ActivatePage } from '@/pages/auth/ActivatePage';
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
 import { NewPasswordPage } from '@/pages/auth/NewPasswordPage';
 import { EntranceFlow } from '@/pages/entrance/EntranceFlow';
@@ -56,6 +57,7 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { WorkspaceHomePage } from '@/pages/workspace/WorkspaceHomePage';
 import { KtpListPage, KtpSectionRedirect } from '@/pages/ktp/KtpListPage';
+import { AchievementsSectionRedirect, TeacherAchievementsPage } from '@/pages/achievements/TeacherAchievementsPage';
 import { KtpImportPage } from '@/pages/ktp/KtpImportPage';
 import { KtpDraftPage } from '@/pages/ktp/KtpDraftPage';
 import { KtpBindingPage } from '@/pages/ktp/KtpBindingPage';
@@ -131,6 +133,10 @@ export function App() {
         уводит, и вложенность замкнула бы редирект сам на себя.
       */}
       <Route path={ROUTES.staffForgotPassword} element={<ForgotPasswordPage />} />
+      <Route
+        path={ROUTES.staffActivate}
+        element={isAuthenticated ? <AuthenticatedLoginRedirect /> : <ActivatePage />}
+      />
       <Route path={ROUTES.staffNewPassword} element={<NewPasswordPage />} />
 
       <Route
@@ -259,6 +265,8 @@ export function App() {
         <Route path="/workspace/ktp/drafts/:draftId" element={<KtpDraftPage />} />
         <Route path="/workspace/ktp/bindings/:bindingId" element={<KtpBindingPage />} />
         <Route path="/workspace/sections/CURRICULUM_PLANS" element={<KtpSectionRedirect />} />
+        <Route path="/workspace/achievements" element={<TeacherAchievementsPage />} />
+        <Route path="/workspace/sections/ACHIEVEMENTS" element={<AchievementsSectionRedirect />} />
         <Route path={ROUTES.workspaceTestNew} element={<WorkspaceTestEditorPage mode="create" />} />
         <Route path="/workspace/tests/:templateId/edit" element={<WorkspaceTestEditorPage mode="edit" />} />
         <Route path="/workspace/sections/:sectionCode" element={<WorkspaceCollectionPage kind="section" />} />

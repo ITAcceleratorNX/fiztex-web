@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Award, CalendarRange, Info } from 'lucide-react';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Award, CalendarRange, Info } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
@@ -8,10 +8,14 @@ import { TextArea } from '@/components/ui/Field';
 import type { FinalGrade } from '@/lib/gradebookApi';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { backTarget } from '@/lib/fillControlModel';
+import { FillControlPanel } from '@/components/fillControl/FillControlPanel';
+import { useFillControlSummary } from '@/hooks/fillControlQueries';
 import { EmptyBlock, ErrorBlock } from '@/components/ui/StateBlock';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
   useAssessmentSheets,
+  useMarkNotTaken,
   useAttestationPeriods,
   useClassFinals,
   useGradebookContext,
@@ -45,6 +49,7 @@ import {
   collectChanges,
   draftKey,
   needsReason,
+  resultStateOf,
   scoreDraftProblem,
   type WorkSheet,
 } from '@/lib/journalScoresModel';
@@ -80,7 +85,7 @@ import {
 } from '@/lib/attestationModel';
 import { finalValueOptions, QuarterFinalsTable } from './QuarterFinalsTable';
 
-type JournalTab = 'JOURNAL' | 'FINALS' | 'YEAR_FINALS';
+type JournalTab = 'JOURNAL' | 'FINALS' | 'YEAR_FINALS' | 'UNFILLED';
 
 /**
  * Журнал оценок и итоги четверти (Figma 2098:428, 2098:1324).
@@ -108,7 +113,7 @@ export function JournalPage() {
   const periods = useMemo(() => context?.periods ?? [], [context]);
   const months = useMemo(() => monthOptionsOf(periods), [periods]);
 
-  const tab: JournalTab = params.get('tab') === 'year-finals' ? 'YEAR_FINALS' : params.get('tab') === 'finals' ? 'FINALS' : 'JOURNAL';
+  const tab: JournalTab = params.get('tab') === 'year-finals' ? 'YEAR_FINALS' : params.get('tab') === 'finals' ? 'FINALS' : params.get('tab') === 'unfilled' ? 'UNFILLED' : 'JOURNAL';
   // «Месяц» — окно внутри четверти, поэтому у итогов его нет: итог выставляют за четверть.
   const window: JournalWindow = params.get('window') === 'month' ? 'MONTH' : 'PERIOD';
 
@@ -169,11 +174,24 @@ export function JournalPage() {
     setParams(updated, { replace: true });
   }
 
+  const onTab = (next: JournalTab) =>
+    patch({ tab: next === 'FINALS' ? 'finals' : next === 'YEAR_FINALS' ? 'year-finals' : next === 'UNFILLED' ? 'unfilled' : null });
+
+  // «Незаполненное» не зависит от выбора класса и предмета журнала: список приходит от сервера
+  // по области пользователя, поэтому ждать контекст журнала ему незачем.
+  if (tab === 'UNFILLED') {
+    return (
+      <JournalShell tab={tab} onTab={onTab}>
+        <FillControlPanel />
+      </JournalShell>
+    );
+  }
+
   if (contextQuery.isPending) return <JournalSkeleton />;
 
   if (contextQuery.isError) {
     return (
-      <JournalShell tab={tab} finalsLabel={finalsTabLabel(periodOption)} onTab={(next) => patch({ tab: next === 'FINALS' ? 'finals' : next === 'YEAR_FINALS' ? 'year-finals' : null })}>
+      <JournalShell tab={tab} finalsLabel={finalsTabLabel(periodOption)} onTab={onTab}>
         <div className="card">
           <ErrorBlock
             message={
@@ -203,7 +221,7 @@ export function JournalPage() {
 
   if (scopes.length === 0) {
     return (
-      <JournalShell tab={tab} finalsLabel={finalsTabLabel(periodOption)} onTab={(next) => patch({ tab: next === 'FINALS' ? 'finals' : next === 'YEAR_FINALS' ? 'year-finals' : null })}>
+      <JournalShell tab={tab} finalsLabel={finalsTabLabel(periodOption)} onTab={onTab}>
         {yearPicker}
         <div className="card">
           <EmptyBlock
@@ -221,7 +239,7 @@ export function JournalPage() {
   }
 
   return (
-    <JournalShell tab={tab} finalsLabel={finalsTabLabel(periodOption)} onTab={(next) => patch({ tab: next === 'FINALS' ? 'finals' : next === 'YEAR_FINALS' ? 'year-finals' : null })}>
+    <JournalShell tab={tab} finalsLabel={finalsTabLabel(periodOption)} onTab={onTab}>
       {yearPicker}
       <JournalFilters
         scopes={scopes}
@@ -269,6 +287,7 @@ function JournalTab({
   const [breakdown, setBreakdown] = useState<{ studentProfileId: number; name: string } | null>(null);
   const toast = useToast();
   const saveScores = useSaveAssessmentScores();
+  const markNotTaken = useMarkNotTaken();
   /** Несохранённые баллы работ: ключ «работа:ученик» → текст поля. */
   const [drafts, setDrafts] = useState<ReadonlyMap<string, string>>(new Map());
   const [reasonOpen, setReasonOpen] = useState(false);
@@ -288,10 +307,17 @@ function JournalTab({
       kind: data.work?.kind ?? 'SOR',
       maxScore: data.work?.maxScore ?? 0,
       canManage: Boolean(data.canManage),
+      canFill: data.canFill === true,
+      fillBlockedMessage: data.fillBlockedMessage ?? null,
       students: new Map(
         (data.students ?? []).map((row) => [
           row.studentProfileId as number,
-          { score: row.score ?? null, version: row.version ?? null, inAudience: row.inAudience !== false },
+          {
+            score: row.score ?? null,
+            version: row.version ?? null,
+            inAudience: row.inAudience !== false,
+            state: resultStateOf(row.state, row.score),
+          },
         ]),
       ),
     });
@@ -316,6 +342,22 @@ function JournalTab({
       return sheet && text !== undefined ? scoreDraftProblem(text, sheet.maxScore) : null;
     },
     saved: (column, studentId) => sheets.get(column.sourceId as number)?.students.get(studentId)?.score ?? null,
+    state: (column, studentId) => sheets.get(column.sourceId as number)?.students.get(studentId)?.state ?? 'MISSING',
+    canFill: (column) => sheets.get(column.sourceId ?? -1)?.canFill === true,
+    fillBlockedMessage: (column) => sheets.get(column.sourceId ?? -1)?.fillBlockedMessage ?? null,
+    // Одна команда на одного ученика: ошибка («работа не проведена», «четверть закрыта») идёт тостом,
+    // клетка не меняется, а набранное в других клетках остаётся.
+    markNotTaken: (column, studentId) => {
+      setDraft(draftKey(column.sourceId as number, studentId), null);
+      markNotTaken.mutate(
+        { workId: column.sourceId as number, studentProfileId: studentId },
+        {
+          onSuccess: () => toast.success('Отмечено: не выполнял работу'),
+          onError: (error) =>
+            toast.error(error instanceof ApiError ? error.message : 'Не удалось отметить ученика'),
+        },
+      );
+    },
     change: (column, studentId, text) => setDraft(draftKey(column.sourceId as number, studentId), text),
     // Пустое или совпавшее с сохранённым поле — не правка: поле закрывается без следа.
     blur: (column, studentId) => {
@@ -863,8 +905,21 @@ function JournalShell({
   onTab: (tab: JournalTab) => void;
   children: React.ReactNode;
 }) {
+  // Число уроков на вкладке — тот же счётчик сервера, что внутри списка; без ответа вкладка без числа.
+  const unfilled = useFillControlSummary({});
+  // Пришли из «Незаполненного» — «← К незаполненным» возвращает тот же список с теми же фильтрами.
+  const back = backTarget(useLocation().state);
   return (
     <div className="flex flex-col gap-5">
+      {back && (
+        <Link
+          to={back.to}
+          className="inline-flex items-center gap-1 self-start text-sm font-semibold text-navy-700 hover:text-navy-800"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          {back.label.replace(/^←\s*/, '')}
+        </Link>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-28 font-bold text-ink">Журнал</h1>
         <span className="rounded-lg bg-slate-100 px-3 py-1.5 text-13 font-medium text-slate-600">
@@ -877,6 +932,7 @@ function JournalShell({
           <TabsTrigger value="JOURNAL">Журнал</TabsTrigger>
           <TabsTrigger value="FINALS">{finalsLabel}</TabsTrigger>
           <TabsTrigger value="YEAR_FINALS">Итоги года и экзамены</TabsTrigger>
+          <TabsTrigger value="UNFILLED" count={unfilled.data?.lessons}>Незаполненное</TabsTrigger>
         </TabsList>
         {/* Отступ между фильтрами и таблицей: без него карточка таблицы прилипала к полям. */}
         <TabsContent value={tab} className="mt-5 flex flex-col gap-5">

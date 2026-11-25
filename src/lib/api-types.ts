@@ -4,6 +4,57 @@
  */
 
 export interface paths {
+    "/api/absence-days/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Дни отсутствия ребёнка за диапазон */
+        get: operations["listMyChildAbsenceDays"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/absence-days/my/{date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** День отсутствия ребёнка: уроки, итог, запрос и свои ответы */
+        get: operations["getMyChildAbsenceDay"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/absence-days/my/{date}/responses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Сообщить причину отсутствия — по запросу, без запроса или уточнение после отклонения */
+        post: operations["submitMyChildAbsenceReason"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/access-requests/classes": {
         parameters: {
             query?: never;
@@ -94,6 +145,40 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["submit_4"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/absence-days": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Дни отсутствия класса и состояние причин */
+        get: operations["listAdminAbsenceDays"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/absence-days/students/{studentProfileId}/dates/{date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** День отсутствия ученика с историей, без действий */
+        get: operations["getAdminAbsenceDay"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -871,6 +956,70 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["markNotificationRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/ai-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAdminAiReports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/ai-reports/{reportId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAdminAiReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/ai-reports/{reportId}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAdminAiReportHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/ai-reports/{reportId}/versions/{versionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAdminAiReportVersion"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3789,6 +3938,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ai-reports/children/{childId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listChildAiReports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai-reports/children/{childId}/{reportId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getChildAiReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/assessment-works": {
         parameters: {
             query?: never;
@@ -4263,6 +4444,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["activateTeacher"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/children/{childId}/teachers/{teacherProfileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["childTeacherProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/children/{childId}/teachers/{teacherProfileId}/achievements/{achievementId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["childTeacherAchievementContent"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6399,6 +6612,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/attendance/day-reason-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["dayReasonHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/attendance/entries": {
         parameters: {
             query?: never;
@@ -7536,6 +7765,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/absence-days": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Дни отсутствия класса: ученик + дата, состояние причины и требуемое действие */
+        get: operations["listMyClassAbsenceDays"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/academic-reports/breakdown": {
         parameters: {
             query?: never;
@@ -7844,6 +8090,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/my-class/classes/{classId}/students/{studentProfileId}/absence-days/{date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** День отсутствия ученика: причина, уроки, запросы, ответы родителей, история и действия */
+        get: operations["getMyClassAbsenceDay"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/students/{studentProfileId}/absence-days/{date}/reason": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Установить или изменить итоговую причину самому — в том числе после закрытия четверти */
+        put: operations["setAbsenceReason"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/students/{studentProfileId}/absence-days/{date}/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Запросить причину у родителей — первый или повторный запрос, уведомление обоим */
+        post: operations["askParentsForAbsenceReason"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/students/{studentProfileId}/absence-days/{date}/responses/{responseId}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Подтвердить ответ родителя: его причина становится итоговой, прочие ответы — «не выбран» */
+        post: operations["confirmAbsenceResponse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/my-class/classes/{classId}/students/{studentProfileId}/absence-days/{date}/responses/{responseId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Отклонить ответ родителя; итоговая причина не меняется, родитель может уточнить */
+        post: operations["rejectAbsenceResponse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-class/classes/{classId}/students/{studentProfileId}/grade-dynamics": {
         parameters: {
             query?: never;
@@ -7937,6 +8268,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["page"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/collections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["collections"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8556,6 +8903,310 @@ export interface paths {
         get: operations["getTeacherAcademicReportSummary"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/achievements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listMyAchievements"];
+        put?: never;
+        post: operations["createAchievement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/achievements/audience-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["achievementAudienceOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/achievements/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMyAchievement"];
+        put: operations["updateAchievement"];
+        post?: never;
+        delete: operations["deleteAchievement"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/achievements/{id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["achievementContent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/achievements/{id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["replaceAchievementFile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/achievements/{id}/visibility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateAchievementVisibility"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listTeacherAiReports"];
+        put?: never;
+        post: operations["createAiReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["aiReportContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/context/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["aiReportContextStudents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/generations/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAiReportGeneration"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTeacherAiReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}/generations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["regenerateAiReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTeacherAiReportHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}/parent-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["saveAiReportParentSummary"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}/parent-summary/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirmAiReportParentSummary"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}/publication": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["publishAiReport"];
+        delete: operations["unpublishAiReport"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}/text": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["saveAiReportText"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}/versions/{versionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTeacherAiReportVersion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}/versions/{versionId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approveAiReportVersion"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10124,6 +10775,199 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AbsenceDayActionsView: {
+            canConfirmResponses?: boolean;
+            canRejectResponses?: boolean;
+            canRequestParent?: boolean;
+            canSetReason?: boolean;
+            /** @enum {string} */
+            requestBlockedReason?: "NO_ABSENCE" | "NO_LINKED_PARENT" | "RESPONSES_PENDING" | "ALREADY_CONFIRMED" | "RESPONSE_PENDING";
+            /** @enum {string} */
+            setReasonBlockedReason?: "NO_ABSENCE" | "NO_LINKED_PARENT" | "RESPONSES_PENDING" | "ALREADY_CONFIRMED" | "RESPONSE_PENDING";
+        };
+        AbsenceDayCountsView: {
+            /** Format: int64 */
+            actionRequired?: number;
+            /** Format: int64 */
+            all?: number;
+            /** Format: int64 */
+            awaitingParent?: number;
+            /** Format: int64 */
+            confirmed?: number;
+        };
+        AbsenceDayDetailView: {
+            absentLessons?: components["schemas"]["AbsenceLessonView"][];
+            actions?: components["schemas"]["AbsenceDayActionsView"];
+            /** Format: date */
+            date?: string;
+            guardians?: components["schemas"]["AbsenceGuardianView"][];
+            history?: components["schemas"]["AbsenceHistoryEntryView"][];
+            /** Format: int32 */
+            pendingResponseCount?: number;
+            periodClosure?: components["schemas"]["AbsencePeriodClosureView"];
+            reason?: components["schemas"]["AbsenceReasonView"];
+            requests?: components["schemas"]["AbsenceRequestView"][];
+            responses?: components["schemas"]["AbsenceResponseView"][];
+            /** @enum {string} */
+            status?: "NOT_SPECIFIED" | "AWAITING_PARENT" | "AWAITING_CONFIRMATION" | "CLARIFICATION_NEEDED" | "CONFIRMED";
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            version?: number;
+        };
+        AbsenceDayItemView: {
+            /** Format: int32 */
+            absentLessonCount?: number;
+            actionRequired?: boolean;
+            comment?: string;
+            /** Format: date */
+            date?: string;
+            /** @enum {string} */
+            group?: "ACTION_REQUIRED" | "AWAITING_PARENT" | "CONFIRMED";
+            latestResponse?: components["schemas"]["AbsenceLatestResponseView"];
+            /** Format: int32 */
+            pendingResponseCount?: number;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** @enum {string} */
+            status?: "NOT_SPECIFIED" | "AWAITING_PARENT" | "AWAITING_CONFIRMATION" | "CLARIFICATION_NEEDED" | "CONFIRMED";
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            version?: number;
+        };
+        AbsenceDayPageView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: int64 */
+            classId?: number;
+            counts?: components["schemas"]["AbsenceDayCountsView"];
+            /** Format: date */
+            from?: string;
+            hasMore?: boolean;
+            items?: components["schemas"]["AbsenceDayItemView"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: date */
+            to?: string;
+            /** Format: int64 */
+            totalItems?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        AbsenceGuardianView: {
+            parentName?: string;
+            /** Format: int64 */
+            parentProfileId?: number;
+            reachable?: boolean;
+            /** @enum {string} */
+            relationType?: "MOTHER" | "FATHER" | "GUARDIAN" | "OTHER";
+        };
+        AbsenceHistoryEntryView: {
+            /** @enum {string} */
+            action?: "REQUEST_SENT" | "RESPONSE_SUBMITTED" | "RESPONSE_CONFIRMED" | "RESPONSE_REJECTED" | "REASON_SET" | "REASON_CHANGED";
+            actorName?: string;
+            /** @enum {string} */
+            actorRelationType?: "MOTHER" | "FATHER" | "GUARDIAN" | "OTHER";
+            /** @enum {string} */
+            actorRole?: "HOMEROOM_TEACHER" | "PARENT";
+            /** Format: int64 */
+            eventId?: number;
+            newComment?: string;
+            /** @enum {string} */
+            newReason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            note?: string;
+            /** Format: date-time */
+            occurredAt?: string;
+            oldComment?: string;
+            /** @enum {string} */
+            oldReason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** Format: int64 */
+            requestId?: number;
+            /** Format: int64 */
+            responseId?: number;
+        };
+        AbsenceLatestResponseView: {
+            parentName?: string;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** Format: int64 */
+            responseId?: number;
+            /** @enum {string} */
+            status?: "PENDING" | "CONFIRMED" | "REJECTED" | "NOT_SELECTED";
+            /** Format: date-time */
+            submittedAt?: string;
+        };
+        AbsenceLessonView: {
+            /** @example 14:30:00 */
+            endTime?: string;
+            lessonComment?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** @enum {string} */
+            lessonReason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** @enum {string} */
+            mark?: "LATE" | "EXCUSED";
+            /** @example 14:30:00 */
+            startTime?: string;
+            subjectName?: string;
+            teacherName?: string;
+        };
+        AbsencePeriodClosureView: {
+            periodName?: string;
+        };
+        AbsenceReasonView: {
+            comment?: string;
+            /** Format: int64 */
+            confirmedResponseId?: number;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** Format: date-time */
+            setAt?: string;
+            setByName?: string;
+            /** @enum {string} */
+            source?: "HOMEROOM_TEACHER" | "PARENT_RESPONSE";
+        };
+        AbsenceRecipientView: {
+            parentName?: string;
+            /** Format: int64 */
+            parentProfileId?: number;
+        };
+        AbsenceRequestView: {
+            message?: string;
+            recipients?: components["schemas"]["AbsenceRecipientView"][];
+            /** Format: int64 */
+            requestId?: number;
+            /** Format: date-time */
+            requestedAt?: string;
+            requestedByName?: string;
+        };
+        AbsenceResponseView: {
+            comment?: string;
+            /** Format: date-time */
+            decidedAt?: string;
+            decidedByName?: string;
+            decisionComment?: string;
+            parentName?: string;
+            /** Format: int64 */
+            parentProfileId?: number;
+            /** @enum {string} */
+            parentRelationType?: "MOTHER" | "FATHER" | "GUARDIAN" | "OTHER";
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** Format: int64 */
+            requestId?: number;
+            /** Format: int64 */
+            responseId?: number;
+            /** @enum {string} */
+            status?: "PENDING" | "CONFIRMED" | "REJECTED" | "NOT_SELECTED";
+            /** Format: date-time */
+            submittedAt?: string;
+        };
         AcademicPeriodView: {
             /** Format: int64 */
             academicYearId?: number;
@@ -10521,6 +11365,15 @@ export interface components {
             /** @enum {string} */
             status?: "NOT_ACTIVATED" | "ACTIVE" | "BLOCKED" | "ARCHIVED";
         };
+        AchievementAudienceOptionsView: {
+            classes?: components["schemas"]["AchievementClassView"][];
+        };
+        AchievementClassView: {
+            active?: boolean;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
         ActivateByCodeRequest: {
             code?: string;
             password?: string;
@@ -10554,6 +11407,7 @@ export interface components {
         };
         AdminJournalCellView: {
             attendance?: components["schemas"]["AttendanceMarkingView"];
+            dayReason?: components["schemas"]["DayReasonView"];
             /** Format: int64 */
             lessonId?: number;
         };
@@ -10620,6 +11474,290 @@ export interface components {
             outputTokens?: number;
             question?: components["schemas"]["QuestionRequest"];
             solution?: string;
+        };
+        AiReportActionsView: {
+            canApprove?: boolean;
+            canConfirmParentSummary?: boolean;
+            canEdit?: boolean;
+            canEditParentSummary?: boolean;
+            canPublish?: boolean;
+            canRegenerate?: boolean;
+            canUnpublish?: boolean;
+        };
+        AiReportApproveRequest: {
+            /** Format: int64 */
+            revision: number;
+        };
+        AiReportConfirmParentSummaryRequest: {
+            /** Format: int64 */
+            parentSummaryId: number;
+            /** Format: int64 */
+            revision: number;
+        };
+        AiReportContextPeriod: {
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+            type?: string;
+        };
+        AiReportContextStudent: {
+            hasParent?: boolean;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
+        AiReportContextView: {
+            generationEnabled?: boolean;
+            homeroomClasses?: components["schemas"]["AiReportRef"][];
+            owners?: components["schemas"]["AiReportOwnerOption"][];
+            parentPublicationEnabled?: boolean;
+            periodKinds?: ("MONTH" | "ACADEMIC_PERIOD" | "CUSTOM")[];
+            periods?: components["schemas"]["AiReportContextPeriod"][];
+            /** Format: int64 */
+            selectedYearId?: number;
+            subjectPairs?: components["schemas"]["AiReportTeachingPair"][];
+            years?: components["schemas"]["AiReportContextYear"][];
+        };
+        AiReportContextYear: {
+            current?: boolean;
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+        };
+        AiReportCreateReportRequest: {
+            /** Format: int64 */
+            academicYearId: number;
+            /** Format: int64 */
+            classId?: number;
+            classIds?: number[];
+            /** @enum {string} */
+            owner: "SUBJECT_TEACHER" | "HOMEROOM";
+            period: components["schemas"]["AiReportPeriodRequest"];
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            /** @enum {string} */
+            type: "STUDENT" | "CLASS" | "CLASSES";
+        };
+        AiReportDetailView: {
+            actions?: components["schemas"]["AiReportActionsView"];
+            current?: components["schemas"]["AiReportVersionView"];
+            latestJob?: components["schemas"]["AiReportJobView"];
+            parentPublicationEnabled?: boolean;
+            parentSummary?: components["schemas"]["AiReportParentSummaryView"];
+            previousPeriod?: components["schemas"]["AiReportPeriodView"];
+            publication?: components["schemas"]["AiReportPublicationView"];
+            report?: components["schemas"]["AiReportSummaryView"];
+            sourcesChanged?: boolean;
+            versions?: components["schemas"]["AiReportVersionListItem"][];
+        };
+        AiReportEventView: {
+            actor?: components["schemas"]["AiReportRef"];
+            details?: {
+                [key: string]: Record<string, never>;
+            };
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            jobId?: number;
+            kind?: string;
+            /** Format: date-time */
+            occurredAt?: string;
+            /** Format: int64 */
+            parentSummaryId?: number;
+            /** Format: int64 */
+            versionId?: number;
+        };
+        AiReportJobView: {
+            /** Format: date-time */
+            createdAt?: string;
+            errorCode?: string;
+            errorMessage?: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            /** Format: int64 */
+            jobId?: number;
+            /** Format: int64 */
+            reportId?: number;
+            status?: string;
+            /** Format: int64 */
+            versionId?: number;
+        };
+        AiReportOwnerOption: {
+            /** @enum {string} */
+            owner?: "SUBJECT_TEACHER" | "HOMEROOM";
+            reportTypes?: ("STUDENT" | "CLASS" | "CLASSES")[];
+        };
+        AiReportPage: {
+            hasNext?: boolean;
+            items?: components["schemas"]["AiReportSummaryView"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+        };
+        AiReportParentReportView: {
+            authorName?: string;
+            /** @enum {string} */
+            authorRole?: "SUBJECT_TEACHER" | "HOMEROOM";
+            period?: components["schemas"]["AiReportPeriodView"];
+            /** Format: date-time */
+            publishedAt?: string;
+            /** Format: int64 */
+            reportId?: number;
+            subject?: components["schemas"]["AiReportRef"];
+            text?: string;
+        };
+        AiReportParentReportsView: {
+            items?: components["schemas"]["AiReportParentReportView"][];
+        };
+        AiReportParentSummaryRequest: {
+            /** Format: int64 */
+            revision?: number;
+            text?: string;
+        };
+        AiReportParentSummaryView: {
+            /** Format: date-time */
+            confirmedAt?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int32 */
+            number?: number;
+            outdated?: boolean;
+            /** Format: int64 */
+            revision?: number;
+            /** Format: int64 */
+            sourceVersionId?: number;
+            status?: string;
+            text?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        AiReportPeriodRequest: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: date */
+            from?: string;
+            /** @enum {string} */
+            kind: "MONTH" | "ACADEMIC_PERIOD" | "CUSTOM";
+            /** @example 2025-03 */
+            month?: string;
+            /** Format: date */
+            to?: string;
+        };
+        AiReportPeriodView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: date */
+            from?: string;
+            /** @enum {string} */
+            kind?: "MONTH" | "ACADEMIC_PERIOD" | "CUSTOM";
+            label?: string;
+            /** Format: date */
+            to?: string;
+        };
+        AiReportPublicationView: {
+            active?: boolean;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            parentSummaryId?: number;
+            /** Format: date-time */
+            publishedAt?: string;
+            publishedBy?: components["schemas"]["AiReportRef"];
+            /** Format: date-time */
+            withdrawnAt?: string;
+            withdrawnBy?: components["schemas"]["AiReportRef"];
+        };
+        AiReportPublishRequest: {
+            /** Format: int64 */
+            parentSummaryId: number;
+        };
+        AiReportRef: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
+        AiReportSaveTextRequest: {
+            /** Format: int64 */
+            baseVersionId: number;
+            /** Format: int64 */
+            revision: number;
+            text?: string;
+        };
+        AiReportSummaryView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            author?: components["schemas"]["AiReportRef"];
+            classes?: components["schemas"]["AiReportRef"][];
+            /** Format: date-time */
+            createdAt?: string;
+            generationStatus?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int32 */
+            latestVersionNumber?: number;
+            /** @enum {string} */
+            owner?: "SUBJECT_TEACHER" | "HOMEROOM";
+            period?: components["schemas"]["AiReportPeriodView"];
+            published?: boolean;
+            state?: string;
+            student?: components["schemas"]["AiReportRef"];
+            subject?: components["schemas"]["AiReportRef"];
+            /** @enum {string} */
+            type?: "STUDENT" | "CLASS" | "CLASSES";
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        AiReportTeachingPair: {
+            schoolClass?: components["schemas"]["AiReportRef"];
+            subject?: components["schemas"]["AiReportRef"];
+        };
+        AiReportVersionListItem: {
+            /** Format: date-time */
+            approvedAt?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int32 */
+            number?: number;
+            origin?: string;
+            status?: string;
+        };
+        AiReportVersionView: {
+            /** Format: date-time */
+            approvedAt?: string;
+            approvedBy?: components["schemas"]["AiReportRef"];
+            /** Format: int64 */
+            baseVersionId?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            createdBy?: components["schemas"]["AiReportRef"];
+            /** Format: date-time */
+            dataAsOf?: string;
+            /** Format: int64 */
+            id?: number;
+            limitations?: string[];
+            /** Format: int32 */
+            number?: number;
+            origin?: string;
+            parentSuggestion?: string;
+            /** Format: int64 */
+            revision?: number;
+            status?: string;
+            teacherText?: string;
         };
         AnnouncementListItem: {
             /** Format: date-time */
@@ -10824,6 +11962,11 @@ export interface components {
             relationType?: "MOTHER" | "FATHER" | "GUARDIAN" | "OTHER";
             /** Format: int64 */
             version: number;
+        };
+        AskParentsRequest: {
+            /** Format: int64 */
+            expectedVersion?: number;
+            message?: string;
         };
         AssessmentHistoryView: {
             results?: components["schemas"]["ResultHistoryEventView"][];
@@ -11044,6 +12187,20 @@ export interface components {
             /** Format: date-time */
             submittedAt?: string;
         };
+        AttendanceDayReasonEventView: {
+            actorName?: string;
+            /** @enum {string} */
+            kind?: "SET" | "CONFIRMED" | "CHANGED";
+            /** @enum {string} */
+            newReason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** Format: date-time */
+            occurredAt?: string;
+            /** @enum {string} */
+            oldReason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
         AttendanceEntryChange: {
             comment?: string;
             /** @enum {string} */
@@ -11056,6 +12213,7 @@ export interface components {
             studentProfileId: number;
         };
         AttendanceEntryView: {
+            dayReason?: components["schemas"]["DayReasonView"];
             draft?: components["schemas"]["AttendanceMarkingView"];
             fullName?: string;
             published?: components["schemas"]["AttendanceMarkingView"];
@@ -11189,6 +12347,7 @@ export interface components {
         };
         AttendanceSummaryLessonView: {
             attendance?: components["schemas"]["AttendanceMarkingView"];
+            dayReason?: components["schemas"]["DayReasonView"];
             /** @example 14:30:00 */
             endTime?: string;
             /** Format: date */
@@ -11818,6 +12977,10 @@ export interface components {
             /** Format: int32 */
             workCount?: number;
         };
+        ConfirmAbsenceResponseRequest: {
+            /** Format: int64 */
+            expectedVersion?: number;
+        };
         ConfirmAnswerScoreRequest: {
             adminComment?: string;
             /** Format: double */
@@ -12415,6 +13578,13 @@ export interface components {
             openResults?: number;
             /** Format: int64 */
             totalApplicants?: number;
+        };
+        DayReasonView: {
+            comment?: string;
+            /** Format: date-time */
+            confirmedAt?: string;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
         };
         DeclinedSubjectView: {
             change?: number;
@@ -13267,6 +14437,84 @@ export interface components {
             name?: string;
             /** Format: int64 */
             subjectId?: number;
+        };
+        GuardianAbsenceDayItemView: {
+            /** Format: int32 */
+            absentLessonCount?: number;
+            canRespond?: boolean;
+            comment?: string;
+            /** Format: date */
+            date?: string;
+            myResponsePending?: boolean;
+            needsReason?: boolean;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            requested?: boolean;
+            /** @enum {string} */
+            status?: "NOT_SPECIFIED" | "AWAITING_PARENT" | "AWAITING_CONFIRMATION" | "CLARIFICATION_NEEDED" | "CONFIRMED";
+        };
+        GuardianAbsenceDayView: {
+            absentLessons?: components["schemas"]["GuardianAbsentLessonView"][];
+            canRespond?: boolean;
+            /** Format: date */
+            date?: string;
+            myResponses?: components["schemas"]["GuardianResponseView"][];
+            openRequest?: components["schemas"]["GuardianRequestView"];
+            reason?: components["schemas"]["GuardianReasonView"];
+            /** @enum {string} */
+            respondBlockedReason?: "NO_ABSENCE" | "NO_LINKED_PARENT" | "RESPONSES_PENDING" | "ALREADY_CONFIRMED" | "RESPONSE_PENDING";
+            /** @enum {string} */
+            status?: "NOT_SPECIFIED" | "AWAITING_PARENT" | "AWAITING_CONFIRMATION" | "CLARIFICATION_NEEDED" | "CONFIRMED";
+            /** Format: int64 */
+            studentProfileId?: number;
+        };
+        GuardianAbsenceDaysView: {
+            /** Format: date */
+            from?: string;
+            items?: components["schemas"]["GuardianAbsenceDayItemView"][];
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: date */
+            to?: string;
+        };
+        GuardianAbsentLessonView: {
+            /** @example 14:30:00 */
+            endTime?: string;
+            /** Format: int64 */
+            lessonId?: number;
+            /** @enum {string} */
+            mark?: "LATE" | "EXCUSED";
+            /** @example 14:30:00 */
+            startTime?: string;
+            subjectName?: string;
+        };
+        GuardianReasonView: {
+            comment?: string;
+            /** Format: date-time */
+            confirmedAt?: string;
+            confirmedByName?: string;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+        };
+        GuardianRequestView: {
+            message?: string;
+            /** Format: date-time */
+            requestedAt?: string;
+            requestedByName?: string;
+        };
+        GuardianResponseView: {
+            comment?: string;
+            /** Format: date-time */
+            decidedAt?: string;
+            decisionComment?: string;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+            /** Format: int64 */
+            responseId?: number;
+            /** @enum {string} */
+            status?: "PENDING" | "CONFIRMED" | "REJECTED" | "NOT_SELECTED";
+            /** Format: date-time */
+            submittedAt?: string;
         };
         HalfYearView: {
             closing?: components["schemas"]["AttestationPeriodRefView"];
@@ -15813,6 +17061,7 @@ export interface components {
         };
         MyAttendanceView: {
             attendance?: components["schemas"]["AttendanceMarkingView"];
+            dayReason?: components["schemas"]["DayReasonView"];
             /** @example 14:30:00 */
             endTime?: string;
             /** Format: date */
@@ -16449,6 +17698,7 @@ export interface components {
             childName?: string;
             /** Format: int64 */
             childProfileId?: number;
+            collection?: string;
             /** Format: date-time */
             createdAt?: string;
             /** Format: uuid */
@@ -16470,6 +17720,17 @@ export interface components {
         NotificationCenterUnreadView: {
             /** Format: int64 */
             count?: number;
+        };
+        NotificationCollectionView: {
+            collection?: string;
+            latest?: components["schemas"]["NotificationCenterItemView"];
+            /** Format: int64 */
+            unreadCount?: number;
+        };
+        NotificationCollectionsView: {
+            collections?: components["schemas"]["NotificationCollectionView"][];
+            /** Format: int64 */
+            unreadCount?: number;
         };
         NotificationDiagnosticsItemView: {
             body?: string;
@@ -17502,6 +18763,21 @@ export interface components {
             sort?: components["schemas"]["SortObject"];
             unpaged?: boolean;
         };
+        ParentAchievementView: {
+            /** @enum {string} */
+            category?: "DIPLOMA" | "CERTIFICATE" | "LETTER_OF_MERIT" | "MEDAL" | "QUALIFICATION" | "OTHER";
+            categoryLabel?: string;
+            description?: string;
+            fileName?: string;
+            /** Format: int64 */
+            id?: number;
+            organization?: string;
+            /** Format: date */
+            receivedOn?: string;
+            /** Format: int64 */
+            sizeBytes?: number;
+            title?: string;
+        };
         ParentChildView: {
             academicYearName?: string;
             className?: string;
@@ -17609,6 +18885,13 @@ export interface components {
             status?: "ACTIVE" | "ARCHIVED";
             /** Format: date-time */
             updatedAt?: string;
+        };
+        ParentTeacherProfileView: {
+            achievements?: components["schemas"]["ParentAchievementView"][];
+            fullName?: string;
+            subjects?: string[];
+            /** Format: int64 */
+            teacherProfileId?: number;
         };
         ParsedKtp: {
             candidates?: components["schemas"]["KtpRowCandidate"][];
@@ -18101,6 +19384,11 @@ export interface components {
             /** @enum {string} */
             platform: "IOS" | "ANDROID";
             token: string;
+        };
+        RejectAbsenceResponseRequest: {
+            comment?: string;
+            /** Format: int64 */
+            expectedVersion?: number;
         };
         RejectAccessRequestRequest: {
             reason?: string;
@@ -18927,6 +20215,13 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        SetAbsenceReasonRequest: {
+            comment?: string;
+            /** Format: int64 */
+            expectedVersion?: number;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+        };
         SetAnswerScoresRequest: {
             items: components["schemas"]["AnswerScoreRequest"][];
         };
@@ -19562,6 +20857,11 @@ export interface components {
             studentProfileId?: number;
             testResult?: components["schemas"]["TestResultView"];
         };
+        SubmitAbsenceReasonRequest: {
+            comment?: string;
+            /** @enum {string} */
+            reason?: "ILLNESS" | "FAMILY" | "SCHOOL_EVENT" | "COMPETITION" | "TRANSPORT" | "UNEXCUSED" | "OTHER";
+        };
         SubmitAnswersRequest: {
             answers: components["schemas"]["AnswerRequest"][];
             clientToken?: string;
@@ -19794,6 +21094,29 @@ export interface components {
             periods?: components["schemas"]["ContextPeriod"][];
             years?: components["schemas"]["ContextYear"][];
         };
+        TeacherAchievementView: {
+            /** @enum {string} */
+            category?: "DIPLOMA" | "CERTIFICATE" | "LETTER_OF_MERIT" | "MEDAL" | "QUALIFICATION" | "OTHER";
+            categoryLabel?: string;
+            classes?: components["schemas"]["AchievementClassView"][];
+            /** Format: date-time */
+            createdAt?: string;
+            description?: string;
+            fileName?: string;
+            /** Format: int64 */
+            id?: number;
+            organization?: string;
+            /** Format: date */
+            receivedOn?: string;
+            /** Format: int64 */
+            sizeBytes?: number;
+            title?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** @enum {string} */
+            visibility?: "PRIVATE" | "SELECTED_CLASSES" | "ALL_CLASSES";
+            visibleToParents?: boolean;
+        };
         TeacherAnswerView: {
             aiRationale?: string;
             aiSuggestedScore?: number;
@@ -19987,6 +21310,7 @@ export interface components {
         };
         TeacherJournalEntryView: {
             attendance?: components["schemas"]["AttendanceMarkingView"];
+            dayReason?: components["schemas"]["DayReasonView"];
             /** Format: int64 */
             studentProfileId?: number;
         };
@@ -20585,6 +21909,11 @@ export interface components {
             /** Format: date */
             startDate?: string;
         };
+        UpdateAchievementVisibilityRequest: {
+            classIds?: number[];
+            /** @enum {string} */
+            visibility?: "PRIVATE" | "SELECTED_CLASSES" | "ALL_CLASSES";
+        };
         UpdateAssessmentWorkRequest: {
             /** Format: int64 */
             expectedVersion?: number;
@@ -20765,6 +22094,15 @@ export interface components {
             mode: "NAMED" | "ANONYMOUS";
             /** Format: date-time */
             startAt?: string;
+            title?: string;
+        };
+        UpdateTeacherAchievementRequest: {
+            /** @enum {string} */
+            category?: "DIPLOMA" | "CERTIFICATE" | "LETTER_OF_MERIT" | "MEDAL" | "QUALIFICATION" | "OTHER";
+            description?: string;
+            organization?: string;
+            /** Format: date */
+            receivedOn?: string;
             title?: string;
         };
         UpdateTeacherRequest: {
@@ -21006,6 +22344,145 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listMyChildAbsenceDays: {
+        parameters: {
+            query: {
+                childId?: number;
+                from: string;
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Дни, свежие сверху */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianAbsenceDaysView"];
+                };
+            };
+            /** @description Неверный диапазон */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Ребёнок не связан с родителем */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getMyChildAbsenceDay: {
+        parameters: {
+            query?: {
+                childId?: number;
+            };
+            header?: never;
+            path: {
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description День */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianAbsenceDayView"];
+                };
+            };
+            /** @description Ребёнок не связан с родителем */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Ни отсутствия, ни истории на эту дату */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    submitMyChildAbsenceReason: {
+        parameters: {
+            query?: {
+                childId?: number;
+            };
+            header?: never;
+            path: {
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitAbsenceReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description День после ответа */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardianAbsenceDayView"];
+                };
+            };
+            /** @description Причины нет в справочнике или текст длиннее 500 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Ребёнок не связан с родителем */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет отсутствия на дату или ответ уже на рассмотрении */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     classes: {
         parameters: {
             query?: never;
@@ -21140,6 +22617,85 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccessRequestTicketView"];
+                };
+            };
+        };
+    };
+    listAdminAbsenceDays: {
+        parameters: {
+            query: {
+                classId: number;
+                from: string;
+                to: string;
+                status?: "NOT_SPECIFIED" | "AWAITING_PARENT" | "AWAITING_CONFIRMATION" | "CLARIFICATION_NEEDED" | "CONFIRMED";
+                actionRequired?: boolean;
+                group?: "ACTION_REQUIRED" | "AWAITING_PARENT" | "CONFIRMED";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница дней, свежие сверху */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceDayPageView"];
+                };
+            };
+            /** @description Неверный диапазон или страница */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getAdminAbsenceDay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentProfileId: number;
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description День целиком */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceDayDetailView"];
+                };
+            };
+            /** @description Ни отсутствия, ни истории на эту дату */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -22742,6 +24298,101 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    listAdminAiReports: {
+        parameters: {
+            query?: {
+                academicYearId?: number;
+                type?: "STUDENT" | "CLASS" | "CLASSES";
+                classId?: number;
+                subjectId?: number;
+                studentProfileId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportPage"];
+                };
+            };
+        };
+    };
+    getAdminAiReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportDetailView"];
+                };
+            };
+        };
+    };
+    getAdminAiReportHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportEventView"][];
+                };
+            };
+        };
+    };
+    getAdminAiReportVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+                versionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportVersionView"];
+                };
             };
         };
     };
@@ -28589,6 +30240,51 @@ export interface operations {
             };
         };
     };
+    listChildAiReports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                childId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportParentReportsView"];
+                };
+            };
+        };
+    };
+    getChildAiReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                childId: number;
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportParentReportView"];
+                };
+            };
+        };
+    };
     list_35: {
         parameters: {
             query: {
@@ -29348,6 +31044,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccountLoginResponse"];
+                };
+            };
+        };
+    };
+    childTeacherProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                childId: number;
+                teacherProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParentTeacherProfileView"];
+                };
+            };
+        };
+    };
+    childTeacherAchievementContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                childId: number;
+                teacherProfileId: number;
+                achievementId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description PDF документа */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };
@@ -33085,6 +34828,28 @@ export interface operations {
             };
         };
     };
+    dayReasonHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceDayReasonEventView"][];
+                };
+            };
+        };
+    };
     saveDraft_1: {
         parameters: {
             query?: never;
@@ -35258,6 +37023,65 @@ export interface operations {
             };
         };
     };
+    listMyClassAbsenceDays: {
+        parameters: {
+            query?: {
+                periodId?: number;
+                from?: string;
+                to?: string;
+                status?: "NOT_SPECIFIED" | "AWAITING_PARENT" | "AWAITING_CONFIRMATION" | "CLARIFICATION_NEEDED" | "CONFIRMED";
+                studentProfileId?: number;
+                actionRequired?: boolean;
+                group?: "ACTION_REQUIRED" | "AWAITING_PARENT" | "CONFIRMED";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                classId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Страница дней, свежие сверху */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceDayPageView"];
+                };
+            };
+            /** @description Неверный период, диапазон или страница */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс или ученик недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Неоднозначный текущий период */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     getHomeroomAcademicReportBreakdown: {
         parameters: {
             query: {
@@ -36308,6 +38132,270 @@ export interface operations {
             };
         };
     };
+    getMyClassAbsenceDay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+                studentProfileId: number;
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description День целиком */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceDayDetailView"];
+                };
+            };
+            /** @description Класс или ученик недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Ни отсутствия, ни истории на эту дату */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    setAbsenceReason: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+                studentProfileId: number;
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetAbsenceReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description День с подтверждённой причиной */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceDayDetailView"];
+                };
+            };
+            /** @description Причины нет в справочнике или текст длиннее 500 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Класс или ученик недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет отсутствия или версия устарела */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    askParentsForAbsenceReason: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+                studentProfileId: number;
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AskParentsRequest"];
+            };
+        };
+        responses: {
+            /** @description День после запроса, с новой версией */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceDayDetailView"];
+                };
+            };
+            /** @description Класс или ученик недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Дата вне учебного года */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет отсутствия, нет родителя с активным аккаунтом, есть ответы без решения, причина уже подтверждена или версия устарела */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    confirmAbsenceResponse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+                studentProfileId: number;
+                date: string;
+                responseId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmAbsenceResponseRequest"];
+            };
+        };
+        responses: {
+            /** @description День с подтверждённой причиной */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceDayDetailView"];
+                };
+            };
+            /** @description Класс или ученик недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Ответ не из этого дня */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Нет отсутствия, решение уже принято или версия устарела */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    rejectAbsenceResponse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classId: number;
+                studentProfileId: number;
+                date: string;
+                responseId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectAbsenceResponseRequest"];
+            };
+        };
+        responses: {
+            /** @description День после отклонения */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceDayDetailView"];
+                };
+            };
+            /** @description Класс или ученик недоступен */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Ответ не из этого дня */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Решение уже принято или версия устарела */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     getMyClassStudentGradeDynamics: {
         parameters: {
             query: {
@@ -36526,6 +38614,7 @@ export interface operations {
     page: {
         parameters: {
             query?: {
+                collection?: "ATTENDANCE" | "LESSONS" | "HOMEWORK" | "GRADES" | "SCHEDULE" | "REQUESTS" | "FEEDBACK" | "SURVEYS" | "ACTIONS";
                 before?: string;
                 limit?: number;
             };
@@ -36542,6 +38631,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NotificationCenterPageView"];
+                };
+            };
+        };
+    };
+    collections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationCollectionsView"];
                 };
             };
         };
@@ -36593,6 +38702,7 @@ export interface operations {
     markAllRead: {
         parameters: {
             query?: {
+                collection?: "ATTENDANCE" | "LESSONS" | "HOMEWORK" | "GRADES" | "SCHEDULE" | "REQUESTS" | "FEEDBACK" | "SURVEYS" | "ACTIONS";
                 upTo?: string;
             };
             header?: never;
@@ -37810,6 +39920,591 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    listMyAchievements: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherAchievementView"][];
+                };
+            };
+        };
+    };
+    createAchievement: {
+        parameters: {
+            query: {
+                title: string;
+                category?: "DIPLOMA" | "CERTIFICATE" | "LETTER_OF_MERIT" | "MEDAL" | "QUALIFICATION" | "OTHER";
+                receivedOn?: string;
+                organization?: string;
+                description?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherAchievementView"];
+                };
+            };
+        };
+    };
+    achievementAudienceOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AchievementAudienceOptionsView"];
+                };
+            };
+        };
+    };
+    getMyAchievement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherAchievementView"];
+                };
+            };
+        };
+    };
+    updateAchievement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTeacherAchievementRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherAchievementView"];
+                };
+            };
+        };
+    };
+    deleteAchievement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    achievementContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description PDF документа */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
+    replaceAchievementFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherAchievementView"];
+                };
+            };
+        };
+    };
+    updateAchievementVisibility: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAchievementVisibilityRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherAchievementView"];
+                };
+            };
+        };
+    };
+    listTeacherAiReports: {
+        parameters: {
+            query?: {
+                academicYearId?: number;
+                type?: "STUDENT" | "CLASS" | "CLASSES";
+                classId?: number;
+                subjectId?: number;
+                studentProfileId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportPage"];
+                };
+            };
+        };
+    };
+    createAiReport: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiReportCreateReportRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportJobView"];
+                };
+            };
+        };
+    };
+    aiReportContext: {
+        parameters: {
+            query?: {
+                academicYearId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportContextView"];
+                };
+            };
+        };
+    };
+    aiReportContextStudents: {
+        parameters: {
+            query: {
+                owner: "SUBJECT_TEACHER" | "HOMEROOM";
+                academicYearId: number;
+                classId: number;
+                subjectId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportContextStudent"][];
+                };
+            };
+        };
+    };
+    getAiReportGeneration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportJobView"];
+                };
+            };
+        };
+    };
+    getTeacherAiReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportDetailView"];
+                };
+            };
+        };
+    };
+    regenerateAiReport: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportJobView"];
+                };
+            };
+        };
+    };
+    getTeacherAiReportHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportEventView"][];
+                };
+            };
+        };
+    };
+    saveAiReportParentSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiReportParentSummaryRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportDetailView"];
+                };
+            };
+        };
+    };
+    confirmAiReportParentSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiReportConfirmParentSummaryRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportDetailView"];
+                };
+            };
+        };
+    };
+    publishAiReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiReportPublishRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportDetailView"];
+                };
+            };
+        };
+    };
+    unpublishAiReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportDetailView"];
+                };
+            };
+        };
+    };
+    saveAiReportText: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiReportSaveTextRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportDetailView"];
+                };
+            };
+        };
+    };
+    getTeacherAiReportVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+                versionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportVersionView"];
+                };
+            };
+        };
+    };
+    approveAiReportVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+                versionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiReportApproveRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportDetailView"];
                 };
             };
         };

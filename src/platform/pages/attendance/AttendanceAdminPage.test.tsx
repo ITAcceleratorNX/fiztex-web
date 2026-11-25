@@ -2,17 +2,25 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AdminJournal, UnfilledLesson } from '@/lib/attendanceAdminApi';
+import type { AdminJournal } from '@/lib/attendanceAdminApi';
+import type { FillControlLesson } from '@/lib/fillControlApi';
 import { AttendanceAdminPage } from './AttendanceAdminPage';
 
 const journalHook = vi.fn();
-const unfilledHook = vi.fn();
+const fillLessons = vi.fn();
+const fillSummary = vi.fn();
+const fillFilters = vi.fn();
 const classStudents = vi.fn();
 const classSubgroups = vi.fn();
 
 vi.mock('@/platform/hooks/useAttendanceAdmin', () => ({
   useAdminAttendanceJournal: (...args: unknown[]) => journalHook(...args),
-  useUnfilledLessons: (...args: unknown[]) => unfilledHook(...args),
+}));
+
+vi.mock('@/hooks/fillControlQueries', () => ({
+  useFillControlLessons: (...args: unknown[]) => fillLessons(...args),
+  useFillControlSummary: (...args: unknown[]) => fillSummary(...args),
+  useFillControlFilters: (...args: unknown[]) => fillFilters(...args),
 }));
 
 vi.mock('@/platform/hooks/useScheduleSettings', () => ({
@@ -100,17 +108,28 @@ function journal(overrides: Partial<AdminJournal> = {}): AdminJournal {
   };
 }
 
-function unfilled(): UnfilledLesson[] {
+function unfilled(): FillControlLesson[] {
   return [
     {
       lessonId: 52,
       lessonDate: '2026-09-04',
       startTime: '08:00:00',
       className: '5 «А»',
-      subgroupName: undefined,
       subjectName: 'Математика',
       teacherName: 'Искаков А.М.',
-      state: 'NOT_FILLED',
+      attendance: {
+        status: 'PARTIAL',
+        sheetState: 'DRAFT',
+        expected: 10,
+        filled: 7,
+        missing: 3,
+        canEdit: false,
+        editBlockedCode: 'ADMIN_READ_ONLY',
+        editBlockedMessage: 'Администратор просматривает контроль: посещаемость отмечает учитель',
+      },
+      works: [],
+      canView: true,
+      canEdit: false,
     },
   ];
 }
@@ -146,9 +165,26 @@ describe('AttendanceAdminPage', () => {
       isLoading: false,
     });
     journalHook.mockReturnValue({ data: journal(), isLoading: false, isError: false, refetch: vi.fn() });
-    unfilledHook.mockReturnValue({
-      data: { content: unfilled(), totalPages: 1 },
+    fillLessons.mockReturnValue({
+      data: { content: unfilled(), totalPages: 1, totalElements: 1 },
       isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+    fillSummary.mockReturnValue({
+      data: { lessons: 1, attendanceLessons: 1, assessmentLessons: 0, bothLessons: 0, assessmentWorks: 0 },
+      refetch: vi.fn(),
+    });
+    fillFilters.mockReturnValue({
+      data: {
+        academicYearId: 3,
+        years: [{ id: 3, name: '2026/2027', active: true }],
+        periods: [],
+        classes: [{ id: 11, name: '5 «А»' }],
+        subjects: [{ id: 1, name: 'Математика' }],
+        teachers: [{ id: 9, name: 'Искаков А.М.' }],
+        teacherFilterAllowed: true,
+      },
       isError: false,
       refetch: vi.fn(),
     });
@@ -278,7 +314,6 @@ describe('AttendanceAdminPage', () => {
 
     // Внутри выбранного года — текущий месяц, вне его — последний доступный.
     expect(journalHook).toHaveBeenCalledWith(expect.objectContaining({ month: expected }));
-    expect(unfilledHook).toHaveBeenCalledWith(expect.objectContaining({ month: expected }));
   });
 
   it('месяц из адреса имеет приоритет над текущей датой', () => {
@@ -344,26 +379,27 @@ describe('AttendanceAdminPage', () => {
     expect(screen.getByText('За этот месяц уроков нет')).toBeInTheDocument();
   });
 
-  it('вкладка незаполненных уроков живёт в адресе и класс ей не обязателен', async () => {
+  it('вкладка незаполненных уроков показывает проблему и ведёт в урок только на просмотр', async () => {
     const user = userEvent.setup();
     renderPage();
 
     await user.click(screen.getByRole('tab', { name: 'Незаполненные уроки' }));
 
-    expect(unfilledHook).toHaveBeenLastCalledWith(
-      expect.objectContaining({ classId: null, page: 0 }),
-    );
     expect(screen.getByText('Математика')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Открыть →' })).toHaveAttribute(
+    expect(screen.getByText('Не отмечено: 3 из 10')).toBeInTheDocument();
+    // Админ первично не заполняет: ссылка названа «Открыть», а не «Отметить».
+    expect(screen.getByRole('link', { name: /Открыть: Посещаемость/ })).toHaveAttribute(
       'href',
       '/lesson-schedule/lessons/52/attendance',
     );
+    expect(screen.queryByText(/Отметить →/)).not.toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Посещаемость 1/ })).toBeInTheDocument();
   });
 
-  it('пустой список незакрытых уроков — это хорошая новость, а не ошибка', async () => {
+  it('пустой список — «Незаполненных данных нет», а не ошибка', async () => {
     const user = userEvent.setup();
-    unfilledHook.mockReturnValue({
-      data: { content: [], totalPages: 0 },
+    fillLessons.mockReturnValue({
+      data: { content: [], totalPages: 0, totalElements: 0 },
       isLoading: false,
       isError: false,
       refetch: vi.fn(),
@@ -372,6 +408,36 @@ describe('AttendanceAdminPage', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Незаполненные уроки' }));
 
-    expect(screen.getByText('Незаполненных уроков нет')).toBeInTheDocument();
+    expect(screen.getByText('Незаполненных данных нет')).toBeInTheDocument();
+  });
+
+  it('ошибка списка предлагает «Повторить»', async () => {
+    const user = userEvent.setup();
+    fillLessons.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch: vi.fn() });
+    renderPage();
+
+    await user.click(screen.getByRole('tab', { name: 'Незаполненные уроки' }));
+
+    expect(screen.getByRole('button', { name: 'Повторить' })).toBeInTheDocument();
+  });
+
+  it('урок, который пользователю не открыть (canView = false), показывается без ссылки', async () => {
+    const user = userEvent.setup();
+    fillLessons.mockReturnValue({
+      data: {
+        content: [{ ...unfilled()[0], canView: false }],
+        totalPages: 1,
+        totalElements: 1,
+      },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+    renderPage();
+
+    await user.click(screen.getByRole('tab', { name: 'Незаполненные уроки' }));
+
+    expect(screen.getByText('Только список')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Посещаемость/ })).toBeNull();
   });
 });

@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  centerLink, centerTone, hasNotificationCenter, pendingActions, pendingTotal,
-} from './notificationCenterModel';
+import { centerLink, centerTone, hasNotificationCenter, pendingActions, pendingTotal, collectionLabel, collectionMoment } from './notificationCenterModel';
 import type { CenterItem } from './notificationCenterApi';
 
 describe('centerLink — словарь маршрутов уведомлений в адреса панели', () => {
@@ -31,6 +29,13 @@ describe('centerLink — словарь маршрутов уведомлени�
 
   it('результаты опроса — вкладка «Результаты» его карточки', () => {
     expect(centerLink('survey-results', { surveyId: 44 }, 'ADMIN')).toBe('/surveys/44?tab=results');
+  });
+
+  it('ответ родителя ведёт классного руководителя в карточку дня отсутствия', () => {
+    expect(centerLink('absence-day', { date: '2026-11-17', classId: 5, studentProfileId: 89 }, 'TEACHER'))
+      .toBe('/my-class?classId=5&tab=attendance&attendanceView=reasons&absenceDate=2026-11-17&absenceDayStudent=89');
+    expect(centerLink('absence-day', { date: '2026-11-17' }, 'TEACHER')).toBeNull();
+    expect(centerLink('absence-day', { date: '2026-11-17', classId: 5, studentProfileId: 89 }, 'ADMIN')).toBeNull();
   });
 
   it('незнакомый маршрут и неполные параметры — без перехода, а не «куда-нибудь»', () => {
@@ -78,5 +83,20 @@ describe('тип строки и роли с лентой', () => {
     expect(['TEACHER', 'ADMIN', 'SUPER_ADMIN'].every(hasNotificationCenter)).toBe(true);
     expect(hasNotificationCenter('PSYCHOLOGIST')).toBe(false);
     expect(hasNotificationCenter(undefined)).toBe(false);
+  });
+});
+
+describe('подборки колокольчика', () => {
+  it('название подборки — словом, незнакомая — «Уведомления»', () => {
+    expect(collectionLabel('ATTENDANCE')).toBe('Посещаемость');
+    expect(collectionLabel('LESSONS')).toBe('Уроки');
+    expect(collectionLabel('NEW_ONE')).toBe('Уведомления');
+  });
+
+  it('время подборки: сегодня — часы, вчера — словом, раньше — дата', () => {
+    const now = new Date(2026, 10, 18, 15, 0);
+    expect(collectionMoment(new Date(2026, 10, 18, 12, 40).toISOString(), now)).toBe('12:40');
+    expect(collectionMoment(new Date(2026, 10, 17, 9, 5).toISOString(), now)).toBe('Вчера');
+    expect(collectionMoment(new Date(2026, 10, 12, 9, 5).toISOString(), now)).toBe('12 ноя.');
   });
 });

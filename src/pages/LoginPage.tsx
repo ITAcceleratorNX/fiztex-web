@@ -104,7 +104,13 @@ export function LoginPage() {
         </Callout>
 
         <p className="mt-5 text-center text-sm text-planning-subtle">
-          Доступ выдаёт администратор школы.
+          Доступ выдаёт администратор школы.{' '}
+          <Link
+            to={ROUTES.staffActivate}
+            className="font-medium text-brand-500 transition hover:text-brand-600"
+          >
+            Есть код активации?
+          </Link>
         </p>
       </form>
     </StaffAuthLayout>

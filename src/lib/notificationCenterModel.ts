@@ -72,6 +72,18 @@ export function centerLink(route: string | undefined, params: Params | undefined
       const surveyId = id(p, 'surveyId');
       return surveyId ? `/surveys/${surveyId}?tab=results` : null;
     }
+    case 'absence-day': {
+      // Классному руководителю — карточка дня в «Мой класс → Посещаемость → Причины отсутствий».
+      const classId = id(p, 'classId');
+      const studentProfileId = id(p, 'studentProfileId');
+      const date = typeof p.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p.date) ? p.date : null;
+      if (role !== 'TEACHER' || !classId || !studentProfileId || !date) return null;
+      const query = new URLSearchParams({
+        classId: String(classId), tab: 'attendance', attendanceView: 'reasons',
+        absenceDate: date, absenceDayStudent: String(studentProfileId),
+      });
+      return `${ROUTES.myClass}?${query.toString()}`;
+    }
     case 'homework':
       return '/homework';
     case 'grades':
@@ -131,4 +143,38 @@ export function pendingTotal(item: CenterItem): number {
     const count = (group as Params | null)?.count;
     return sum + (typeof count === 'number' ? count : 0);
   }, 0);
+}
+
+/**
+ * Подборки колокольчика (Figma `phyztex` «Уведомления по подборкам»): раздел строки приходит с сервера
+ * (`collection`), здесь — только его название. Одна подборка у учителя и администрации — «Уроки», у семьи
+ * она же называлась бы «Расписание»; панель открывают только сотрудники.
+ */
+const COLLECTION_LABELS: Record<string, string> = {
+  ATTENDANCE: 'Посещаемость',
+  LESSONS: 'Уроки',
+  HOMEWORK: 'Задания',
+  GRADES: 'Оценки',
+  SCHEDULE: 'Расписание',
+  REQUESTS: 'Заявки',
+  FEEDBACK: 'Отзывы',
+  SURVEYS: 'Опросы',
+  ACTIONS: 'Незавершённые действия',
+};
+
+export function collectionLabel(collection: string | null | undefined): string {
+  return (collection && COLLECTION_LABELS[collection]) || 'Уведомления';
+}
+
+/** «12:40» — сегодня, «Вчера», иначе «18 ноя.»: время справа от подборки (В1). */
+export function collectionMoment(iso: string | null | undefined, now: Date = new Date()): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const day = (value: Date) => new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime();
+  const diff = Math.round((day(now) - day(date)) / 86_400_000);
+  if (diff === 0) return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  if (diff === 1) return 'Вчера';
+  const months = ['янв.', 'фев.', 'мар.', 'апр.', 'мая', 'июн.', 'июл.', 'авг.', 'сен.', 'окт.', 'ноя.', 'дек.'];
+  return `${date.getDate()} ${months[date.getMonth()]}`;
 }

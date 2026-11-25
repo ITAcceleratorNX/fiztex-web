@@ -15,6 +15,11 @@ const saveDraft = vi.fn();
 const publish = vi.fn();
 const markAll = vi.fn();
 
+// Лента причин дня — свой модуль хуков; в этих сценариях причин нет.
+vi.mock('@/hooks/absenceReasonQueries', () => ({
+  useAttendanceDayReasonHistory: () => ({ data: [], isPending: false, isError: false }),
+}));
+
 vi.mock('@/hooks/queries', () => ({
   useLesson: (...args: unknown[]) => useLesson(...args),
   useAttendanceSheet: (...args: unknown[]) => useAttendanceSheet(...args),

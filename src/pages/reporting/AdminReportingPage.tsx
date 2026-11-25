@@ -330,9 +330,20 @@ export function AdminReportingPage() {
         <>
           <PerformanceStrip performance={performance.data?.performance} pending={performance.isPending}
             failed={performance.isError} attendance={attendanceDisplay(summary.data?.metrics)} />
-          <SegmentedTabs value={section} ariaLabel="Раздел отчётности"
-            onChange={(value) => update({ section: value === 'metrics' ? null : value, student: null })}
-            options={[{ value: 'metrics', label: 'Показатели' }, { value: 'rating', label: 'Рейтинг' }, { value: 'dynamics', label: 'Динамика' }]} />
+          {/* Раздел и разрез — одна строка с зазором: впритык две группы читались как один переключатель. */}
+          <div className="flex flex-wrap items-center gap-3">
+            <SegmentedTabs value={section} ariaLabel="Раздел отчётности"
+              onChange={(value) => update({ section: value === 'metrics' ? null : value, student: null })}
+              options={[{ value: 'metrics', label: 'Показатели' }, { value: 'rating', label: 'Рейтинг' }, { value: 'dynamics', label: 'Динамика' }]} />
+            {section === 'metrics' && mode === 'school' && (
+              <SegmentedTabs value={schoolView} ariaLabel="Разрез отчётности" onChange={(value) => update({ view: value === 'classes' ? null : value })}
+                options={[{ value: 'classes', label: 'По классам' }, { value: 'subjects', label: 'По предметам' }, { value: 'teachers', label: 'По учителям' }]} />
+            )}
+            {section === 'metrics' && mode === 'class' && (
+              <SegmentedTabs value={classView} ariaLabel="Представление класса" onChange={(value) => update({ view: value === 'students' ? 'students' : null, student: null })}
+                options={[{ value: 'subjects', label: 'По предметам' }, { value: 'students', label: 'По ученикам' }]} />
+            )}
+          </div>
           {section === 'rating' && (
             <div className="space-y-6">
               {classId == null && (
@@ -354,14 +365,6 @@ export function AdminReportingPage() {
           {section === 'dynamics' && (
             <DynamicsPanel points={dynamics.data?.points} pending={dynamics.isPending} error={dynamics.error}
               onRetry={() => void dynamics.refetch()} />
-          )}
-          {section === 'metrics' && mode === 'school' && (
-            <SegmentedTabs value={schoolView} ariaLabel="Разрез отчётности" onChange={(value) => update({ view: value === 'classes' ? null : value })}
-              options={[{ value: 'classes', label: 'По классам' }, { value: 'subjects', label: 'По предметам' }, { value: 'teachers', label: 'По учителям' }]} />
-          )}
-          {section === 'metrics' && mode === 'class' && (
-            <SegmentedTabs value={classView} ariaLabel="Представление класса" onChange={(value) => update({ view: value === 'students' ? 'students' : null, student: null })}
-              options={[{ value: 'subjects', label: 'По предметам' }, { value: 'students', label: 'По ученикам' }]} />
           )}
           {section === 'metrics' && hasPartialData(sorted) && <PartialDataNotice subject={partialSubject(dimension)} />}
           {section === 'metrics' && <ReportBody
