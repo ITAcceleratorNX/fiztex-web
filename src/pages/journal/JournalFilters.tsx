@@ -1,9 +1,11 @@
-import { Select } from '@/components/ui/Select';
+import { Eye } from 'lucide-react';
+import { Select, SelectGroup } from '@/components/ui/Select';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import type { GradebookPeriodRef, GradebookScope, GradebookSubgroup } from '@/lib/gradebookApi';
 import type { MonthOption } from '@/lib/journalModel';
 import { shortDate } from '@/lib/journalModel';
 import { withDemoMark } from '@/lib/demoClass';
+import { extendedUntilLabel } from '@/lib/studyAccessModel';
 
 export type JournalWindow = 'MONTH' | 'PERIOD';
 
@@ -13,6 +15,12 @@ export type JournalWindow = 'MONTH' | 'PERIOD';
  * <p>Класс и подгруппа — <b>один</b> фильтр, как в макете: подгруппа не существует сама по
  * себе, а без класса не выбирается. Список подгрупп приходит вместе с журналом
  * (`availableSubgroups`) — он же знает, идёт предмет всем классом или по подгруппам.
+ *
+ * <p>Классы, открытые администратором только для просмотра (STUDY-ACCESS, Figma `phyztex` У3),
+ * идут отдельной группой «Только просмотр» со сроком; свои — группой «Мои классы». Пока
+ * дополнительных нет, групп нет вовсе — список выглядит как раньше. Класс, доступ к которому
+ * закончился (`lockedClass`), остаётся в списке выбранным, чтобы «нет доступа» под фильтром
+ * относилось к нему, а не к пустому полю.
  *
  * <p>«Месяц» — не отдельный период, а окно внутри четверти (gradebook-read-contract §2),
  * поэтому в режиме месяца тот же фильтр «Период» показывает месяцы: выбор месяца задаёт
@@ -37,6 +45,7 @@ export function JournalFilters({
   onChangePeriod,
   onChangeMonth,
   onChangeWindow,
+  lockedClass,
 }: {
   scopes: GradebookScope[];
   periods: GradebookPeriodRef[];
@@ -56,8 +65,17 @@ export function JournalFilters({
   onChangePeriod: (periodId: number) => void;
   onChangeMonth: (key: string) => void;
   onChangeWindow: (window: JournalWindow) => void;
+  lockedClass?: { id: number; name: string } | null;
 }) {
   const classes = uniqueClasses(scopes);
+  const own = classes.filter((item) => !item.extended);
+  const extended = classes.filter((item) => item.extended);
+  const grouped = extended.length > 0 || lockedClass != null;
+  const classOption = (item: (typeof classes)[number]) => (
+    <option key={item.id} value={`class:${item.id}`} data-hint={item.extended ? extendedUntilLabel(item.until) : undefined}>
+      {withDemoMark(item.name, item.demo)}
+    </option>
+  );
   const subjects = scopes.filter((scope) => scope.classId === classId);
   const className = classes.find((item) => item.id === classId)?.name ?? '';
 
@@ -75,11 +93,13 @@ export function JournalFilters({
             }
           }}
         >
-          {classes.map((item) => (
-            <option key={item.id} value={`class:${item.id}`}>
-              {withDemoMark(item.name, item.demo)}
-            </option>
-          ))}
+          {grouped ? [
+            own.length > 0 && <SelectGroup key="own" label="Мои классы">{own.map(classOption)}</SelectGroup>,
+            <SelectGroup key="extended" label="Только просмотр" icon={<Eye className="size-4 text-navy-700" aria-hidden />}>
+              {extended.map(classOption)}
+              {lockedClass && <option value={`class:${lockedClass.id}`}>{lockedClass.name}</option>}
+            </SelectGroup>,
+          ] : classes.map(classOption)}
           {subgroups.map((subgroup) => (
             <option key={subgroup.id} value={`sub:${subgroup.id}`}>
               {`${className} · ${subgroup.name}`}
@@ -165,12 +185,23 @@ function periodLabel(period: GradebookPeriodRef): string {
   return `${period.name ?? ''}${range}`;
 }
 
-function uniqueClasses(scopes: GradebookScope[]): Array<{ id: number; name: string; demo: boolean }> {
-  const map = new Map<number, { name: string; demo: boolean }>();
+/**
+ * Классы из областей журнала. Класс «дополнительный», только если **все** его предметы
+ * открыты просмотром: свой предмет в том же классе делает класс своим, и он не уходит в группу
+ * «Только просмотр» (ТЗ §5 — свои редактируемые данные не становятся read-only).
+ */
+function uniqueClasses(scopes: GradebookScope[]): Array<{ id: number; name: string; demo: boolean; extended: boolean; until: string | null }> {
+  const map = new Map<number, { name: string; demo: boolean; extended: boolean; until: string | null }>();
   for (const scope of scopes) {
-    if (scope.classId != null) {
-      map.set(scope.classId, { name: scope.className ?? '', demo: Boolean(scope.classDemo) });
-    }
+    if (scope.classId == null) continue;
+    const known = map.get(scope.classId);
+    const extended = Boolean(scope.extended) && (known?.extended ?? true);
+    map.set(scope.classId, {
+      name: scope.className ?? '',
+      demo: Boolean(scope.classDemo),
+      extended,
+      until: extended ? scope.extendedUntil ?? known?.until ?? null : null,
+    });
   }
   return [...map].map(([id, item]) => ({ id, ...item }));
 }

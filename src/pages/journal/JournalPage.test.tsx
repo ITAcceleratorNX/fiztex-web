@@ -14,7 +14,9 @@ const useAssessmentSheets = vi.fn();
 const saveScores = vi.fn();
 const markNotTaken = vi.fn();
 const correctFinal = vi.fn();
+const useMyStudyAccess = vi.fn();
 vi.mock('@/context/ToastContext', () => ({ useToast: () => ({ success: vi.fn(), error: vi.fn() }) }));
+vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ admin: { role: 'TEACHER' } }) }));
 vi.mock('@/hooks/fillControlQueries', () => ({
   useFillControlSummary: () => ({ data: undefined }),
   useFillControlLessons: () => ({ data: undefined, isLoading: true }),
@@ -35,6 +37,7 @@ vi.mock('@/hooks/queries', () => ({
   useFinalGradeHistory: () => ({ isPending: true, data: undefined }),
   // Предмет без настройки аттестации: периоды фильтра — четверти журнала, как раньше.
   useAttestationPeriods: () => ({ isPending: false, data: { periods: [] } }),
+  useMyStudyAccess: (...args: unknown[]) => useMyStudyAccess(...args),
 }));
 
 function context() {
@@ -144,6 +147,7 @@ function renderPage(search = '') {
 function resetMocks() {
   vi.clearAllMocks();
   useAssessmentSheets.mockReturnValue([]);
+  useMyStudyAccess.mockReturnValue({ data: undefined, isPending: false });
   useGradebookContext.mockReturnValue({
     data: context(),
     isPending: false,
@@ -737,3 +741,66 @@ describe('School assessment constraints', () => {
     expect(useGradebookContext).toHaveBeenLastCalledWith(true, 4);
   });
 });
+
+describe('JournalPage: дополнительный просмотр (STUDY-ACCESS)', () => {
+  beforeEach(resetMocks);
+
+  function withExtended8A() {
+    const data = context();
+    useGradebookContext.mockReturnValue({
+      data: {
+        ...data,
+        scopes: [
+          ...data.scopes,
+          { classId: 30, className: '8А', subjectId: 2, subjectName: 'Математика', extended: true, canEdit: false, extendedUntil: '2027-05-31' },
+        ],
+      },
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+  }
+
+  it('чужой класс — плашка «только чтение» со сроком и клетки без «+» (У1)', () => {
+    withExtended8A();
+    renderPage('?classId=30&subjectId=2');
+
+    expect(screen.getByText('Дополнительный просмотр · только чтение.')).toBeInTheDocument();
+    expect(screen.getByText(/Администратор открыл вам оценки 8А до 31\.05\.2027/)).toBeInTheDocument();
+    expect(screen.queryAllByRole('link').some((node) => node.textContent === '+')).toBe(false);
+  });
+
+  it('свой класс по-прежнему редактируется — без плашки и с «+»', () => {
+    withExtended8A();
+    renderPage();
+
+    expect(screen.queryByText('Дополнительный просмотр · только чтение.')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link').some((node) => node.textContent === '+')).toBe(true);
+  });
+
+  it('классы в фильтре разделены на свои и «Только просмотр» со сроком (У3)', async () => {
+    withExtended8A();
+    renderPage();
+
+    await userEvent.click(screen.getAllByRole('button').find((node) => node.getAttribute('aria-haspopup') === 'listbox' && node.textContent?.includes('7 «А»'))!);
+    expect(screen.getByText('Мои классы')).toBeInTheDocument();
+    expect(screen.getByText('Только просмотр')).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /8А/ })).toHaveTextContent('до 31.05.2027');
+  });
+
+  it('просмотр закончился — «Нет доступа к данным» вместо отказа и пустого журнала (У4)', () => {
+    useMyStudyAccess.mockReturnValue({
+      isPending: false,
+      data: {
+        grants: [],
+        ended: [{ id: 9, state: 'EXPIRED', sections: ['GRADES'], coveredClasses: [{ id: 40, name: '6А' }], endedOn: '2026-10-31' }],
+      },
+    });
+    renderPage('?classId=40&subjectId=2');
+
+    expect(screen.getByText('Нет доступа к данным 6А')).toBeInTheDocument();
+    expect(screen.getByText(/Дополнительный просмотр этого класса закончился 31\.10\.2026/)).toBeInTheDocument();
+    expect(useJournal).toHaveBeenLastCalledWith(null);
+  });
+});
+

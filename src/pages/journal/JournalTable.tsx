@@ -67,12 +67,15 @@ export function JournalTable({
   today,
   onOpenBreakdown,
   editor,
+  readOnly = false,
 }: {
   journal: Gradebook;
   finals: Map<number, ClassFinalGradeRow>;
   today: string;
   onOpenBreakdown?: (row: GradebookRow) => void;
   editor?: ScoreEditor;
+  /** Дополнительный просмотр чужого класса (Figma `phyztex` У1): пустая клетка — точка, не «+». */
+  readOnly?: boolean;
 }) {
   const columns = journal.columns ?? [];
   const rows = journal.rows ?? [];
@@ -203,7 +206,7 @@ export function JournalTable({
                         <span className="text-slate-300" title={inactiveHint}>
                           ·
                         </span>
-                      ) : column.type === 'LESSON' && column.sourceId != null ? (
+                      ) : !readOnly && column.type === 'LESSON' && column.sourceId != null ? (
                         <Link
                           to={`/lesson-schedule/lessons/${column.sourceId}/grades`}
                           className="text-slate-300 transition hover:text-navy-700"

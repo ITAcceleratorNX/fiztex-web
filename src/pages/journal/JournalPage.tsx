@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Award, CalendarRange, Info } from 'lucide-react';
+import { ArrowLeft, Award, CalendarRange, Eye, Info, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
@@ -20,6 +20,7 @@ import {
   useClassFinals,
   useGradebookContext,
   useJournal,
+  useMyStudyAccess,
   usePublishClassFinals,
   useRepublishFinalGrade,
   useSaveAssessmentScores,
@@ -54,6 +55,8 @@ import {
   type WorkSheet,
 } from '@/lib/journalScoresModel';
 import { ApiError } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
+import { dotDate, endedAccessTo, extendedJournalNotice } from '@/lib/studyAccessModel';
 import { formatWeekdayDayMonth, pluralRu } from '@/lib/format';
 import {
   FINAL_GRADE_ERRORS,
@@ -108,6 +111,10 @@ export function JournalPage() {
   const [params, setParams] = useSearchParams();
   const contextQuery = useGradebookContext(true, numberParam(params.get('yearId')));
   const context = contextQuery.data;
+  // Свои дополнительные права нужны журналу только у учителя: объяснить, почему класс
+  // недоступен (просмотр закончился), а не показать отказ как «другой учитель» (У4).
+  const { admin } = useAuth();
+  const myAccess = useMyStudyAccess(admin?.role === 'TEACHER');
 
   const scopes = useMemo(() => context?.scopes ?? [], [context]);
   const periods = useMemo(() => context?.periods ?? [], [context]);
@@ -146,8 +153,15 @@ export function JournalPage() {
   [attestationOptions]);
   const finalsFilter = tab === 'FINALS' && finalsPeriodRefs.length > 0;
   const subjectName = scopes.find((scope) => scope.classId === classId && scope.subjectId === subjectId)?.subjectName ?? '';
+  const scope = scopes.find((item) => item.classId === classId && item.subjectId === subjectId);
+  // Чужой класс из дополнительного права: только чтение и плашка со сроком (У1).
+  const extendedScope = scope?.extended === true && scope.canEdit !== true ? scope : null;
+  // Класс из адреса, которого больше нет в области журнала, а право на него закончилось (У4).
+  const lockedAccess = classId != null && scopes.length > 0 && !scopes.some((item) => item.classId === classId)
+    ? endedAccessTo(myAccess.data, classId, 'GRADES')
+    : null;
 
-  const ready = classId != null && subjectId != null && periodId != null;
+  const ready = classId != null && subjectId != null && periodId != null && lockedAccess == null;
   const journalQuery: JournalQuery | null = ready
     ? {
         classId,
@@ -212,7 +226,11 @@ export function JournalPage() {
         <Select aria-label="Учебный год журнала" value={String(context?.academicYear?.id ?? '')}
           onChange={event => patch({ yearId: event.target.value, classId: null, subjectId: null, periodId: null, subgroupId: null, month: null })}>
           {!context?.academicYear && <option value="">Выберите год</option>}
-          {context?.academicYears?.map(year => <option key={year.id} value={year.id}>{`${year.name}${year.status === 'ARCHIVED' ? ' · Архив' : ''}`}</option>)}
+          {context?.academicYears?.map(year => (
+            <option key={year.id} value={year.id} data-hint={year.extendedOnly ? 'только просмотр' : undefined}>
+              {`${year.name}${year.status === 'ARCHIVED' ? ' · Архив' : ''}`}
+            </option>
+          ))}
         </Select>
       </label>
       {context?.academicYear?.status === 'ARCHIVED' && <p className="text-13 text-muted">Архивный журнал: только просмотр</p>}
@@ -260,10 +278,26 @@ export function JournalPage() {
         onChangePeriod={(next) => patch({ periodId: next })}
         onChangeMonth={(next) => patch({ month: next })}
         onChangeWindow={(next) => patch({ window: next === 'MONTH' ? 'month' : null })}
+        lockedClass={lockedAccess && classId != null ? { id: classId, name: lockedAccess.className } : null}
       />
 
-      {tab === 'JOURNAL' ? (
-        <JournalTab query={journalQuery} journal={journal} finals={finals} />
+      {extendedScope && tab !== 'YEAR_FINALS' && (
+        <StatusNotice tone="navy" icon={Eye}>
+          <strong className="font-bold">Дополнительный просмотр · только чтение.</strong>
+          {extendedJournalNotice(extendedScope.className ?? '', extendedScope.extendedUntil)}
+        </StatusNotice>
+      )}
+
+      {lockedAccess ? (
+        <div className="card">
+          <EmptyBlock
+            icon={<Lock className="size-7" />}
+            title={`Нет доступа к данным ${lockedAccess.className}`}
+            description={`Дополнительный просмотр этого класса закончился ${dotDate(lockedAccess.grant.endedOn)}. Чтобы снова видеть оценки, обратитесь к администратору школы.`}
+          />
+        </div>
+      ) : tab === 'JOURNAL' ? (
+        <JournalTab query={journalQuery} journal={journal} finals={finals} readOnly={extendedScope != null} />
       ) : tab === 'YEAR_FINALS' ? (
         <YearFinalsTab key={`${context?.academicYear?.id}:${classId}:${subjectId}`} query={classId != null && subjectId != null && context?.academicYear?.id != null
           ? { classId, subjectId, academicYearId: context.academicYear.id } : null} />
@@ -279,10 +313,13 @@ function JournalTab({
   query,
   journal,
   finals,
+  readOnly = false,
 }: {
   query: JournalQuery | null;
   journal: ReturnType<typeof useJournal>;
   finals: ReturnType<typeof useClassFinals>;
+  /** Дополнительный просмотр: пустые клетки без «+» — выставить оценку здесь нельзя. */
+  readOnly?: boolean;
 }) {
   const [breakdown, setBreakdown] = useState<{ studentProfileId: number; name: string } | null>(null);
   const toast = useToast();
@@ -444,7 +481,8 @@ function JournalTab({
 
   return (
     <div className="flex flex-col gap-3">
-      {!hasAnyMarks(rows) && (
+      {/* В доп. просмотре оценки здесь не выставляют — приглашение к этому было бы неправдой. */}
+      {!readOnly && !hasAnyMarks(rows) && (
         <p role="status" className="rounded-lg bg-info-bg p-4 text-13 text-info-fg">
           Оценок пока нет. Откройте урок по дате в заголовке таблицы, чтобы выставить первые оценки.
         </p>
@@ -455,6 +493,7 @@ function JournalTab({
           finals={finalsByStudent(finals.data?.rows ?? [])}
           today={todayIso()}
           editor={editor}
+          readOnly={readOnly}
           onOpenBreakdown={(row) =>
             setBreakdown({ studentProfileId: row.studentProfileId as number, name: row.studentName ?? '' })
           }
