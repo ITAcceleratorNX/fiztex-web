@@ -37,3 +37,11 @@ describe('SegmentedTabs block', () => {
     expect(screen.getByRole('radio', { name: 'Вся школа' })).toHaveClass('flex-1');
   });
 });
+
+describe('Badge tag', () => {
+  it('плоская плашка своего тона и кегля', async () => {
+    const { Badge } = await import('./Badge');
+    render(<Badge appearance="tag" tone="navy" size="md">Оценки</Badge>);
+    expect(screen.getByText('Оценки')).toHaveClass('bg-navy-50', 'text-navy-700', 'text-13', 'rounded-md');
+  });
+});

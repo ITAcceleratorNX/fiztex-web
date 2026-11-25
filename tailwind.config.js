@@ -159,6 +159,8 @@ export default {
         'ksp-header': 'var(--grid-ksp-header)',
         'ksp-stages': 'var(--grid-ksp-stages)',
         'ksp-stages-edit': 'var(--grid-ksp-stages-edit)',
+        'teacher-card': 'var(--grid-teacher-card)',
+        'study-access-row': 'var(--grid-study-access-row)',
       },
       width: {
         // Переключатель нескольких классов учителя (2200:4727).

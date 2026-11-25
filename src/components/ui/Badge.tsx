@@ -32,15 +32,32 @@ export function Badge({
    * высотой 24, кегль 12/600 (Figma `phyztex` 2460:3420, плашки совпадений «✓ ФИО»);
    * `solid` — залитая, белый 13/700 на радиусе 8: решённый статус ВНА/НА в итоге четверти
    * (Figma 2209:2164). Заливка есть у `amber` (ВНА) и `red` (НА), остальные тона — navy.
+   * `tag` — плоская плашка на радиусе 6 без обводки, 600, с бледной заливкой своего тона:
+   * предмет и раздел права — `navy`, класс — `amber` (фирменный оранжевый), прошедшее — `gray`
+   * (Figma `phyztex` А1/А7 2243:23515, 2243:27381). Кегль задаёт размер: `sm` 12, `md` 13, `lg` 14.
    */
-  appearance?: 'pill' | 'label' | 'chip' | 'solid';
+  appearance?: 'pill' | 'label' | 'chip' | 'solid' | 'tag';
   /**
    * `md` is used for the larger status badges in request detail headers. `xs` — плашка источника
    * и статуса КСП (Figma `КСП / Бейдж` 2212:7962…7970): 11/600 на радиусе 6, с `appearance="label"`.
    */
-  size?: 'xs' | 'sm' | 'md';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   children: ReactNode;
 }) {
+  if (appearance === 'tag') {
+    const tagTones: Record<Tone, string> = {
+      navy: 'bg-navy-50 text-navy-700', blue: 'bg-navy-50 text-navy-700', amber: 'bg-brand-50 text-brand-500',
+      gray: 'bg-neutral-bg text-muted', green: 'bg-emerald-50 text-emerald-700', red: 'bg-red-50 text-red-600',
+      purple: 'bg-violet-50 text-violet-700',
+    };
+    const tagSizes = { xs: 'px-2 py-0.5 text-11 leading-4', sm: 'px-2 py-0.5 text-xs leading-4', md: 'px-2 py-0.5 text-13 leading-normal', lg: 'px-2.5 py-1.5 text-sm leading-5' };
+    return (
+      <span className={cx('inline-flex items-center gap-1 whitespace-nowrap rounded-md font-semibold', tagSizes[size], tagTones[tone])}>
+        {icon}
+        {children}
+      </span>
+    );
+  }
   const t = tones[tone];
   const solidTones: Partial<Record<Tone, string>> = { amber: 'bg-amber-500', red: 'bg-red-600', green: 'bg-emerald-600' };
   const labelTones: Record<Tone, string> = { green: 'bg-planning-success text-planning-success-fg', gray: 'bg-planning-row-line text-slate-600', amber: 'bg-orange-50 text-amber-700', blue: 'bg-indigo-50 text-navy-700', red: 'bg-red-50 text-red-600', purple: 'bg-violet-50 text-violet-700', navy: 'bg-indigo-50 text-navy-700' };
@@ -49,7 +66,7 @@ export function Badge({
       className={cx(
         'inline-flex items-center',
         appearance === 'solid' ? 'px-2.5 py-1.5 text-13'
-          : size === 'md' ? 'px-3 py-1.5 text-sm'
+          : size === 'md' || size === 'lg' ? 'px-3 py-1.5 text-sm'
           : size === 'xs' ? 'whitespace-nowrap px-2 py-0.5 text-11 leading-4'
           : 'px-2.5 py-1 text-xs',
         appearance === 'chip' ? 'gap-1' : 'gap-1.5',
