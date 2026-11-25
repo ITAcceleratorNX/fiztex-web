@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { ApiError } from './api';
-import type { StudyAccessGrant, StudyAccessOptions } from './studyAccessApi';
+import type { StudyAccessGrant, StudyAccessMine, StudyAccessOptions } from './studyAccessApi';
 import {
   FORM_ERROR,
+  endedAccessTo,
+  extendedJournalNotice,
+  extendedUntilLabel,
   emptyGrantForm,
   grantForm,
   grantRequest,
@@ -53,9 +56,10 @@ describe('подписи', () => {
   });
 
   it('предупреждение «Вся школа» — цифры сервера', () => {
-    expect(schoolScopeNotice(options.years![0])).toBe(
-      'Все классы школы за выбранный год — 12 классов, 284 ученика. Новые классы этого года попадут в доступ автоматически.',
-    );
+    expect(schoolScopeNotice(options.years![0])).toEqual({
+      lead: 'Все классы школы за выбранный год — 12 классов, 284 ученика.',
+      rest: ' Новые классы этого года попадут в доступ автоматически.',
+    });
   });
 
   it('короткое имя учителя', () => {
@@ -146,3 +150,30 @@ describe('форма', () => {
     expect(serverGrantErrors(new ApiError(0, 'нет связи'))).toBeNull();
   });
 });
+
+describe('журнал учителя', () => {
+  const mine: StudyAccessMine = {
+    effective: true,
+    grants: [{ id: 1, sections: ['GRADES'], coveredClasses: [{ id: 8, name: '8А' }], validUntil: '2027-05-31' }],
+    ended: [
+      { id: 2, sections: ['GRADES'], coveredClasses: [{ id: 6, name: '6А' }], endedOn: '2026-10-31', state: 'EXPIRED' },
+      { id: 3, sections: ['ATTENDANCE'], coveredClasses: [{ id: 7, name: '7А' }], endedOn: '2026-10-31', state: 'REVOKED' },
+    ],
+  };
+
+  it('называет срок и плашку как в макете', () => {
+    expect(extendedUntilLabel('2027-05-31')).toBe('до 31.05.2027');
+    expect(extendedUntilLabel(null)).toBe('бессрочно');
+    expect(extendedJournalNotice('8А', '2027-05-31'))
+      .toBe(' Администратор открыл вам оценки 8А до 31.05.2027 — ставить и менять оценки здесь нельзя.');
+  });
+
+  it('находит закончившееся право на раздел класса', () => {
+    expect(endedAccessTo(mine, 6, 'GRADES')).toMatchObject({ className: '6А', grant: { id: 2 } });
+    // Право на другой раздел этого класса не объясняет отказ в оценках.
+    expect(endedAccessTo(mine, 7, 'GRADES')).toBeNull();
+    // Класс по-прежнему открыт действующим правом — значит, отказ не из-за истечения.
+    expect(endedAccessTo({ ...mine, ended: [{ ...mine.ended![0]!, coveredClasses: [{ id: 8, name: '8А' }] }] }, 8, 'GRADES')).toBeNull();
+  });
+});
+

@@ -3,6 +3,8 @@ import { personShortName, pluralRu } from './format';
 import type {
   CreateStudyAccessGrant,
   StudyAccessGrant,
+  StudyAccessMine,
+  StudyAccessMyGrant,
   StudyAccessOptions,
   StudyAccessOptionsYear,
   StudyAccessScope,
@@ -249,12 +251,14 @@ export function yearOptionLabel(year: { name?: string; current?: boolean }): str
  * Предупреждение режима «Вся школа» (А5): масштаб в цифрах сервера и то, что область живая —
  * новые классы этого года войдут сами, а в следующий год доступ не переносится.
  */
-export function schoolScopeNotice(year: StudyAccessOptionsYear | undefined): string {
+export function schoolScopeNotice(year: StudyAccessOptionsYear | undefined): { lead: string; rest: string } {
   const classes = year?.classCount ?? 0;
   const students = year?.studentCount ?? 0;
-  return `Все классы школы за выбранный год — ${classes} ${pluralRu(classes, ['класс', 'класса', 'классов'])}, `
-    + `${students} ${pluralRu(students, ['ученик', 'ученика', 'учеников'])}. `
-    + 'Новые классы этого года попадут в доступ автоматически.';
+  return {
+    lead: `Все классы школы за выбранный год — ${classes} ${pluralRu(classes, ['класс', 'класса', 'классов'])}, `
+      + `${students} ${pluralRu(students, ['ученик', 'ученика', 'учеников'])}.`,
+    rest: ' Новые классы этого года попадут в доступ автоматически.',
+  };
 }
 
 export function grantRequest(form: GrantForm): CreateStudyAccessGrant {
@@ -317,3 +321,36 @@ function formField(field: string | undefined): GrantFormField | null {
 export function isConnectionFailure(error: unknown): boolean {
   return error instanceof ApiError && error.status === 0;
 }
+
+// ── Учитель: свои права в журнале (У1–У4) ───────────────────────────────────
+
+/** «до 31.05.2027» рядом с классом доп. просмотра; бессрочный — «бессрочно». */
+export function extendedUntilLabel(until: string | null | undefined): string {
+  return until ? `до ${dotDate(until)}` : 'бессрочно';
+}
+
+/** Плашка над журналом чужого класса (У1). */
+export function extendedJournalNotice(className: string, until: string | null | undefined): string {
+  const term = until ? ` до ${dotDate(until)}` : '';
+  return ` Администратор открыл вам оценки ${className}${term} — ставить и менять оценки здесь нельзя.`;
+}
+
+/**
+ * Закончившееся право, которое открывало учителю раздел этого класса (У4). Нужно, чтобы
+ * «нет доступа» после истечения или отзыва не выглядело ни пустым журналом, ни сбоем: ищем
+ * среди `ended` своей сводки, а действующее право того же класса означает, что дело не в нём.
+ */
+export function endedAccessTo(
+  mine: StudyAccessMine | undefined,
+  classId: number,
+  section: StudyDataSection,
+): { grant: StudyAccessMyGrant; className: string } | null {
+  const covers = (grant: StudyAccessMyGrant) => (grant.sections ?? []).includes(section)
+    && (grant.coveredClasses ?? []).some((item) => item.id === classId);
+  if ((mine?.grants ?? []).some(covers)) return null;
+  const grant = (mine?.ended ?? []).find(covers);
+  if (!grant) return null;
+  const className = grant.coveredClasses?.find((item) => item.id === classId)?.name ?? '';
+  return { grant, className };
+}
+
