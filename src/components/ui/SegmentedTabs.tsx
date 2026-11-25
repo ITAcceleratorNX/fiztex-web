@@ -16,6 +16,10 @@ import { useFieldControlProps } from './fieldContext';
  * «Новые / Одобрены / Отклонены»): белая дорожка с рамкой высотой с поле поиска (44),
  * сегменты 32 на радиусе 8, активный — фирменный navy.
  *
+ * `block` — переключатель режима поля формы на всю её ширину (Figma `phyztex` А2 2243:23980,
+ * «Классы / Параллели / Вся школа», «До даты / Бессрочно»): серая дорожка с рамкой, сегменты
+ * делят ширину поровну, выбранный — фирменный navy, подпись 13 px medium.
+ *
  * `count` у варианта — оранжевый счётчик дел рядом с подписью (Figma `phyztex` К1 2236:1079,
  * «Причины отсутствий 4»): сколько ждёт действия в соседнем наборе. Ноль не рисуется.
  */
@@ -32,7 +36,7 @@ export function SegmentedTabs<T extends string>({
   onChange: (value: T) => void;
   ariaLabel: string;
   className?: string;
-  appearance?: 'default' | 'planning' | 'outlined';
+  appearance?: 'default' | 'planning' | 'outlined' | 'block';
 }) {
   const selectedEnabled = options.some((option) => option.value === value && !option.disabled);
   const tabStopValue = selectedEnabled ? value : options.find((option) => !option.disabled)?.value;
@@ -54,7 +58,9 @@ export function SegmentedTabs<T extends string>({
           ? 'self-start bg-planning-row-line'
           : appearance === 'outlined'
             ? 'h-11 shrink-0 items-center border border-line bg-surface'
-            : 'bg-neutral-bg',
+            : appearance === 'block'
+              ? 'w-full border border-line bg-canvas'
+              : 'bg-neutral-bg',
         className,
       )}
     >
@@ -77,13 +83,17 @@ export function SegmentedTabs<T extends string>({
               'rounded-lg transition',
               appearance === 'outlined'
                 ? 'h-8 whitespace-nowrap px-3.5 text-sm'
-                : cx('py-2 font-semibold', appearance === 'planning' ? 'px-3 text-13' : 'px-4 text-sm'),
+                : appearance === 'block'
+                  ? 'min-w-0 flex-1 px-3 py-2 text-13 font-medium leading-5'
+                  : cx('py-2 font-semibold', appearance === 'planning' ? 'px-3 text-13' : 'px-4 text-sm'),
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50 disabled:cursor-not-allowed disabled:opacity-50',
               appearance === 'planning'
                 ? selected ? 'bg-white text-navy-700 shadow-sm' : 'text-planning-muted hover:text-navy-700'
                 : appearance === 'outlined'
                   ? selected ? 'bg-navy-700 font-semibold text-white' : 'font-medium text-slate-600 hover:text-navy-700'
-                  : selected ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink',
+                  : appearance === 'block'
+                    ? selected ? 'bg-navy-700 text-white' : 'text-slate-500 hover:text-navy-700'
+                    : selected ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink',
             )}
           >
             {option.count ? (
