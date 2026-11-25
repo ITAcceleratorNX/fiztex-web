@@ -409,9 +409,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_28"];
+        get: operations["list_29"];
         put?: never;
-        post: operations["create_25"];
+        post: operations["create_26"];
         delete?: never;
         options?: never;
         head?: never;
@@ -537,7 +537,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_41"];
+        get: operations["list_42"];
         put?: never;
         post?: never;
         delete?: never;
@@ -553,7 +553,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_40"];
+        get: operations["list_41"];
         put?: never;
         post?: never;
         delete?: never;
@@ -649,9 +649,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_27"];
+        get: operations["list_28"];
         put?: never;
-        post: operations["create_24"];
+        post: operations["create_25"];
         delete?: never;
         options?: never;
         head?: never;
@@ -793,9 +793,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_26"];
+        get: operations["list_27"];
         put?: never;
-        post: operations["create_23"];
+        post: operations["create_24"];
         delete?: never;
         options?: never;
         head?: never;
@@ -962,6 +962,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/ai-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAdminAiReports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/ai-reports/{reportId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAdminAiReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/ai-reports/{reportId}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAdminAiReportHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/ai-reports/{reportId}/versions/{versionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAdminAiReportVersion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/applicants": {
         parameters: {
             query?: never;
@@ -969,9 +1033,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_25"];
+        get: operations["list_26"];
         put?: never;
-        post: operations["create_22"];
+        post: operations["create_23"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1113,9 +1177,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_24"];
+        get: operations["list_25"];
         put?: never;
-        post: operations["create_21"];
+        post: operations["create_22"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1273,9 +1337,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_23"];
+        get: operations["list_24"];
         put?: never;
-        post: operations["create_20"];
+        post: operations["create_21"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1337,9 +1401,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_22"];
+        get: operations["list_23"];
         put?: never;
-        post: operations["create_19"];
+        post: operations["create_20"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1429,7 +1493,7 @@ export interface paths {
         };
         get: operations["preview_1"];
         put?: never;
-        post: operations["apply_2"];
+        post: operations["apply_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1603,9 +1667,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_21"];
+        get: operations["list_22"];
         put?: never;
-        post: operations["create_18"];
+        post: operations["create_19"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1955,9 +2019,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_20"];
+        get: operations["list_21"];
         put?: never;
-        post: operations["create_17"];
+        post: operations["create_18"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2019,9 +2083,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_19"];
+        get: operations["list_20"];
         put?: never;
-        post: operations["create_16"];
+        post: operations["create_17"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2179,7 +2243,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_25"];
+        get: operations["get_26"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2275,9 +2339,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_18"];
+        get: operations["list_19"];
         put?: never;
-        post: operations["create_15"];
+        post: operations["create_16"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2515,9 +2579,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_17"];
+        get: operations["list_18"];
         put?: never;
-        post: operations["create_14"];
+        post: operations["create_15"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2627,9 +2691,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_15"];
+        get: operations["list_16"];
         put?: never;
-        post: operations["create_13"];
+        post: operations["create_14"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2755,7 +2819,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_16"];
+        get: operations["list_17"];
         put?: never;
         post: operations["grant"];
         delete?: never;
@@ -2787,9 +2851,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_14"];
+        get: operations["list_15"];
         put?: never;
-        post: operations["create_12"];
+        post: operations["create_13"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2899,9 +2963,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_13"];
+        get: operations["list_14"];
         put?: never;
-        post: operations["create_11"];
+        post: operations["create_12"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3075,9 +3139,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_12"];
+        get: operations["list_13"];
         put?: never;
-        post: operations["create_10"];
+        post: operations["create_11"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3123,7 +3187,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_39"];
+        get: operations["list_40"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3139,7 +3203,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_24"];
+        get: operations["get_25"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3155,7 +3219,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_38"];
+        get: operations["list_39"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3171,7 +3235,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_23"];
+        get: operations["get_24"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3267,9 +3331,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_11"];
+        get: operations["list_12"];
         put?: never;
-        post: operations["create_9"];
+        post: operations["create_10"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3427,9 +3491,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_10"];
+        get: operations["list_11"];
         put?: never;
-        post: operations["create_8"];
+        post: operations["create_9"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3491,7 +3555,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["questions_1"];
+        get: operations["questions_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3523,7 +3587,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_37"];
+        get: operations["list_38"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3603,7 +3667,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_36"];
+        get: operations["list_37"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3635,7 +3699,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_22"];
+        get: operations["get_23"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3685,7 +3749,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["start_3"];
+        post: operations["start_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3788,6 +3852,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ai-reports/children/{childId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listChildAiReports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai-reports/children/{childId}/{reportId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getChildAiReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/assessment-works": {
         parameters: {
             query?: never;
@@ -3795,7 +3891,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_35"];
+        get: operations["list_36"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4517,7 +4613,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["create_7"];
+        post: operations["create_8"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4949,7 +5045,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["create_6"];
+        post: operations["create_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5125,7 +5221,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_8"];
+        get: operations["list_9"];
         put?: never;
         post: operations["create_5"];
         delete?: never;
@@ -5301,7 +5397,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_21"];
+        get: operations["get_22"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5365,9 +5461,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_9"];
+        get: operations["list_10"];
         put?: never;
-        post: operations["start_2"];
+        post: operations["start_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5399,7 +5495,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["apply_1"];
+        post: operations["apply_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5486,6 +5582,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/homework/{homeworkId}/difficulty-analyses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["start_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/difficulty-analyses/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_21"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/difficulty-analyses/{jobId}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["apply_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/homework/{homeworkId}/grades": {
         parameters: {
             query?: never;
@@ -5544,7 +5688,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["delete_10"];
+        delete: operations["delete_11"];
         options?: never;
         head?: never;
         patch?: never;
@@ -5669,13 +5813,29 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list"];
+        get: operations["list_1"];
         put: operations["replace"];
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/questions/{questionId}/difficulty": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["setDifficulty"];
         trace?: never;
     };
     "/api/homework/{homeworkId}/questions/{questionId}/regenerate": {
@@ -5896,6 +6056,102 @@ export interface paths {
         get: operations["getTestTemplateTargetState"];
         put?: never;
         post: operations["applyTestTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/variant-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list"];
+        put: operations["confirmTest"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/variant-assignments/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["previewTest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/variant-assignments/{studentProfileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["change"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/variants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["variants"];
+        put?: never;
+        post: operations["create_6"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/variants/{variantId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_10"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/homework/{homeworkId}/variants/{variantId}/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["questions"];
+        put: operations["replaceQuestions"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6325,7 +6581,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_32"];
+        get: operations["list_33"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6549,7 +6805,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_7"];
+        get: operations["list_8"];
         put?: never;
         post: operations["create_3"];
         delete?: never;
@@ -6789,7 +7045,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_34"];
+        get: operations["list_35"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7150,6 +7406,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lessons/{lessonId}/test-distribution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["confirmLesson"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/test-distribution/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["previewLesson"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lessons/{lessonId}/tests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["lessonTests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/lessons/{lessonId}/textbook": {
         parameters: {
             query?: never;
@@ -7189,7 +7493,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_33"];
+        get: operations["list_34"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7238,7 +7542,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_6"];
+        get: operations["list_7"];
         put?: never;
         post: operations["upload_2"];
         delete?: never;
@@ -8517,7 +8821,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["questions"];
+        get: operations["questions_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8695,6 +8999,214 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/teacher/ai-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listTeacherAiReports"];
+        put?: never;
+        post: operations["createAiReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["aiReportContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/context/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["aiReportContextStudents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/generations/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAiReportGeneration"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTeacherAiReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}/generations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["regenerateAiReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTeacherAiReportHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}/parent-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["saveAiReportParentSummary"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}/parent-summary/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirmAiReportParentSummary"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}/publication": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["publishAiReport"];
+        delete: operations["unpublishAiReport"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}/text": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["saveAiReportText"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}/versions/{versionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTeacherAiReportVersion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher/ai-reports/{reportId}/versions/{versionId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approveAiReportVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/teacher/availability": {
         parameters: {
             query?: never;
@@ -8734,7 +9246,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_31"];
+        get: operations["list_32"];
         put?: never;
         post?: never;
         delete?: never;
@@ -9090,7 +9602,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_30"];
+        get: operations["list_31"];
         put?: never;
         post?: never;
         delete?: never;
@@ -9202,7 +9714,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_5"];
+        get: operations["list_6"];
         put?: never;
         post: operations["upload_1"];
         delete?: never;
@@ -9331,7 +9843,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_4"];
+        get: operations["list_5"];
         put?: never;
         post: operations["create_2"];
         delete?: never;
@@ -9475,7 +9987,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_3"];
+        get: operations["list_4"];
         put?: never;
         post: operations["create_1"];
         delete?: never;
@@ -9603,7 +10115,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_2"];
+        get: operations["list_3"];
         put?: never;
         post: operations["create"];
         delete?: never;
@@ -9683,7 +10195,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_1"];
+        get: operations["list_2"];
         put?: never;
         post: operations["upload"];
         delete?: never;
@@ -9859,7 +10371,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_29"];
+        get: operations["list_30"];
         put?: never;
         post?: never;
         delete?: never;
@@ -10931,6 +11443,290 @@ export interface components {
             question?: components["schemas"]["QuestionRequest"];
             solution?: string;
         };
+        AiReportActionsView: {
+            canApprove?: boolean;
+            canConfirmParentSummary?: boolean;
+            canEdit?: boolean;
+            canEditParentSummary?: boolean;
+            canPublish?: boolean;
+            canRegenerate?: boolean;
+            canUnpublish?: boolean;
+        };
+        AiReportApproveRequest: {
+            /** Format: int64 */
+            revision: number;
+        };
+        AiReportConfirmParentSummaryRequest: {
+            /** Format: int64 */
+            parentSummaryId: number;
+            /** Format: int64 */
+            revision: number;
+        };
+        AiReportContextPeriod: {
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+            type?: string;
+        };
+        AiReportContextStudent: {
+            hasParent?: boolean;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
+        AiReportContextView: {
+            generationEnabled?: boolean;
+            homeroomClasses?: components["schemas"]["AiReportRef"][];
+            owners?: components["schemas"]["AiReportOwnerOption"][];
+            parentPublicationEnabled?: boolean;
+            periodKinds?: ("MONTH" | "ACADEMIC_PERIOD" | "CUSTOM")[];
+            periods?: components["schemas"]["AiReportContextPeriod"][];
+            /** Format: int64 */
+            selectedYearId?: number;
+            subjectPairs?: components["schemas"]["AiReportTeachingPair"][];
+            years?: components["schemas"]["AiReportContextYear"][];
+        };
+        AiReportContextYear: {
+            current?: boolean;
+            /** Format: date */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date */
+            startDate?: string;
+        };
+        AiReportCreateReportRequest: {
+            /** Format: int64 */
+            academicYearId: number;
+            /** Format: int64 */
+            classId?: number;
+            classIds?: number[];
+            /** @enum {string} */
+            owner: "SUBJECT_TEACHER" | "HOMEROOM";
+            period: components["schemas"]["AiReportPeriodRequest"];
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** Format: int64 */
+            subjectId?: number;
+            /** @enum {string} */
+            type: "STUDENT" | "CLASS" | "CLASSES";
+        };
+        AiReportDetailView: {
+            actions?: components["schemas"]["AiReportActionsView"];
+            current?: components["schemas"]["AiReportVersionView"];
+            latestJob?: components["schemas"]["AiReportJobView"];
+            parentPublicationEnabled?: boolean;
+            parentSummary?: components["schemas"]["AiReportParentSummaryView"];
+            previousPeriod?: components["schemas"]["AiReportPeriodView"];
+            publication?: components["schemas"]["AiReportPublicationView"];
+            report?: components["schemas"]["AiReportSummaryView"];
+            sourcesChanged?: boolean;
+            versions?: components["schemas"]["AiReportVersionListItem"][];
+        };
+        AiReportEventView: {
+            actor?: components["schemas"]["AiReportRef"];
+            details?: {
+                [key: string]: Record<string, never>;
+            };
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            jobId?: number;
+            kind?: string;
+            /** Format: date-time */
+            occurredAt?: string;
+            /** Format: int64 */
+            parentSummaryId?: number;
+            /** Format: int64 */
+            versionId?: number;
+        };
+        AiReportJobView: {
+            /** Format: date-time */
+            createdAt?: string;
+            errorCode?: string;
+            errorMessage?: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            /** Format: int64 */
+            jobId?: number;
+            /** Format: int64 */
+            reportId?: number;
+            status?: string;
+            /** Format: int64 */
+            versionId?: number;
+        };
+        AiReportOwnerOption: {
+            /** @enum {string} */
+            owner?: "SUBJECT_TEACHER" | "HOMEROOM";
+            reportTypes?: ("STUDENT" | "CLASS" | "CLASSES")[];
+        };
+        AiReportPage: {
+            hasNext?: boolean;
+            items?: components["schemas"]["AiReportSummaryView"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+        };
+        AiReportParentReportView: {
+            authorName?: string;
+            /** @enum {string} */
+            authorRole?: "SUBJECT_TEACHER" | "HOMEROOM";
+            period?: components["schemas"]["AiReportPeriodView"];
+            /** Format: date-time */
+            publishedAt?: string;
+            /** Format: int64 */
+            reportId?: number;
+            subject?: components["schemas"]["AiReportRef"];
+            text?: string;
+        };
+        AiReportParentReportsView: {
+            items?: components["schemas"]["AiReportParentReportView"][];
+        };
+        AiReportParentSummaryRequest: {
+            /** Format: int64 */
+            revision?: number;
+            text?: string;
+        };
+        AiReportParentSummaryView: {
+            /** Format: date-time */
+            confirmedAt?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int32 */
+            number?: number;
+            outdated?: boolean;
+            /** Format: int64 */
+            revision?: number;
+            /** Format: int64 */
+            sourceVersionId?: number;
+            status?: string;
+            text?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        AiReportPeriodRequest: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: date */
+            from?: string;
+            /** @enum {string} */
+            kind: "MONTH" | "ACADEMIC_PERIOD" | "CUSTOM";
+            /** @example 2025-03 */
+            month?: string;
+            /** Format: date */
+            to?: string;
+        };
+        AiReportPeriodView: {
+            /** Format: int64 */
+            academicPeriodId?: number;
+            /** Format: date */
+            from?: string;
+            /** @enum {string} */
+            kind?: "MONTH" | "ACADEMIC_PERIOD" | "CUSTOM";
+            label?: string;
+            /** Format: date */
+            to?: string;
+        };
+        AiReportPublicationView: {
+            active?: boolean;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            parentSummaryId?: number;
+            /** Format: date-time */
+            publishedAt?: string;
+            publishedBy?: components["schemas"]["AiReportRef"];
+            /** Format: date-time */
+            withdrawnAt?: string;
+            withdrawnBy?: components["schemas"]["AiReportRef"];
+        };
+        AiReportPublishRequest: {
+            /** Format: int64 */
+            parentSummaryId: number;
+        };
+        AiReportRef: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+        };
+        AiReportSaveTextRequest: {
+            /** Format: int64 */
+            baseVersionId: number;
+            /** Format: int64 */
+            revision: number;
+            text?: string;
+        };
+        AiReportSummaryView: {
+            /** Format: int64 */
+            academicYearId?: number;
+            author?: components["schemas"]["AiReportRef"];
+            classes?: components["schemas"]["AiReportRef"][];
+            /** Format: date-time */
+            createdAt?: string;
+            generationStatus?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int32 */
+            latestVersionNumber?: number;
+            /** @enum {string} */
+            owner?: "SUBJECT_TEACHER" | "HOMEROOM";
+            period?: components["schemas"]["AiReportPeriodView"];
+            published?: boolean;
+            state?: string;
+            student?: components["schemas"]["AiReportRef"];
+            subject?: components["schemas"]["AiReportRef"];
+            /** @enum {string} */
+            type?: "STUDENT" | "CLASS" | "CLASSES";
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        AiReportTeachingPair: {
+            schoolClass?: components["schemas"]["AiReportRef"];
+            subject?: components["schemas"]["AiReportRef"];
+        };
+        AiReportVersionListItem: {
+            /** Format: date-time */
+            approvedAt?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int32 */
+            number?: number;
+            origin?: string;
+            status?: string;
+        };
+        AiReportVersionView: {
+            /** Format: date-time */
+            approvedAt?: string;
+            approvedBy?: components["schemas"]["AiReportRef"];
+            /** Format: int64 */
+            baseVersionId?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            createdBy?: components["schemas"]["AiReportRef"];
+            /** Format: date-time */
+            dataAsOf?: string;
+            /** Format: int64 */
+            id?: number;
+            limitations?: string[];
+            /** Format: int32 */
+            number?: number;
+            origin?: string;
+            parentSuggestion?: string;
+            /** Format: int64 */
+            revision?: number;
+            status?: string;
+            teacherText?: string;
+        };
         AnnouncementListItem: {
             /** Format: date-time */
             createdAt?: string;
@@ -11121,6 +11917,10 @@ export interface components {
             /** Format: int64 */
             id?: number;
             parentFullName?: string;
+        };
+        ApplyDifficultyRequest: {
+            overrideQuestionIds?: number[];
+            questionIds?: number[];
         };
         ApproveAccessRequestRequest: {
             /** Format: int64 */
@@ -11358,6 +12158,8 @@ export interface components {
             reviews?: components["schemas"]["ReviewView"][];
             /** Format: date-time */
             submittedAt?: string;
+            /** Format: int32 */
+            variantNumber?: number;
         };
         AttendanceDayReasonEventView: {
             actorName?: string;
@@ -11789,6 +12591,14 @@ export interface components {
             currentPassword?: string;
             newPassword?: string;
         };
+        ChangeVariantRequest: {
+            /** @enum {string} */
+            gradeAction?: "KEEP" | "REMOVE";
+            reason?: string;
+            resetStarted?: boolean;
+            /** Format: int64 */
+            variantId: number;
+        };
         ChangedSubjectView: {
             change?: number;
             /** Format: int64 */
@@ -11892,6 +12702,8 @@ export interface components {
             teacherName?: string;
             title?: string;
             updatedAfterPublish?: boolean;
+            /** Format: int32 */
+            variantNumber?: number;
             work?: components["schemas"]["ChildWorkView"];
         };
         ChildReviewView: {
@@ -12547,6 +13359,7 @@ export interface components {
             lessonId?: number;
             /** @enum {string} */
             recipientType?: "CLASS" | "SUBGROUP" | "TEMP_GROUP" | "STUDENTS";
+            showDifficultyToStudents?: boolean;
             studentIds?: number[];
             /** Format: int64 */
             subgroupId?: number;
@@ -12733,6 +13546,11 @@ export interface components {
             /** Format: int64 */
             textbookId: number;
         };
+        CreateVariantRequest: {
+            /** Format: int64 */
+            copyFromVariantId?: number;
+            shuffleQuestions?: boolean;
+        };
         CurrentLessonView: {
             lesson?: components["schemas"]["LessonView"];
             message?: string;
@@ -12786,6 +13604,53 @@ export interface components {
             /** Format: int64 */
             studentProfileId?: number;
             works?: components["schemas"]["LearnerWorkResultView"][];
+        };
+        DifficultyAnalysisView: {
+            job?: components["schemas"]["HomeworkAiJobView"];
+            proposals?: components["schemas"]["DifficultyProposalView"][];
+        };
+        DifficultyApplyView: {
+            appliedQuestionIds?: number[];
+            skipped?: components["schemas"]["SkippedProposal"][];
+        };
+        DifficultyMix: {
+            /** Format: int32 */
+            easy: number;
+            /** Format: int32 */
+            hard: number;
+            /** Format: int32 */
+            medium: number;
+        };
+        DifficultyMixView: {
+            /** Format: int32 */
+            easy?: number;
+            /** Format: int32 */
+            hard?: number;
+            /** Format: int32 */
+            medium?: number;
+            /** Format: int32 */
+            undefined?: number;
+        };
+        DifficultyProposalView: {
+            changedSinceAnalysis?: boolean;
+            /** @enum {string} */
+            current?: "EASY" | "MEDIUM" | "HARD";
+            /** @enum {string} */
+            currentSource?: "MANUAL" | "AI";
+            /** @enum {string} */
+            proposed?: "EASY" | "MEDIUM" | "HARD";
+            /** Format: int64 */
+            questionId?: number;
+            reason?: string;
+            /** Format: int32 */
+            variantPosition?: number;
+        };
+        DistributionPreview: {
+            keptStudentIds?: number[];
+            /** @enum {string} */
+            mode?: "ONE_TEST_PER_STUDENT" | "EVERY_TEST";
+            tests?: components["schemas"]["TestPlanView"][];
+            unplacedStudentIds?: number[];
         };
         DuplicateCheckRequest: {
             sha256?: string;
@@ -13764,7 +14629,7 @@ export interface components {
             /** Format: int32 */
             inputTokens?: number;
             /** @enum {string} */
-            kind?: "MATERIAL" | "TEST" | "GRADE_SUGGESTION" | "QUESTION";
+            kind?: "MATERIAL" | "TEST" | "GRADE_SUGGESTION" | "QUESTION" | "DIFFICULTY";
             language?: string;
             model?: string;
             /** Format: int32 */
@@ -13777,6 +14642,8 @@ export interface components {
             progressTotal?: number;
             /** @enum {string} */
             status?: "PENDING" | "RUNNING" | "DONE" | "FAILED";
+            /** Format: int64 */
+            variantId?: number;
             warningMessage?: string;
         };
         HomeworkAiQuotaView: {
@@ -13825,9 +14692,10 @@ export interface components {
             /** Format: int64 */
             jobId?: number;
             /** @enum {string} */
-            kind?: "MATERIAL" | "TEST" | "GRADE_SUGGESTION" | "QUESTION";
+            kind?: "MATERIAL" | "TEST" | "GRADE_SUGGESTION" | "QUESTION" | "DIFFICULTY";
             questions?: components["schemas"]["Question"][];
             text?: string;
+            variants?: components["schemas"]["VariantPreview"][];
         };
         HomeworkGroupSetView: {
             /** Format: int64 */
@@ -13860,7 +14728,7 @@ export interface components {
         };
         HomeworkHistoryEntryView: {
             /** @enum {string} */
-            action?: "CREATED" | "UPDATED" | "MATERIALS_CHANGED" | "TEST_TEMPLATE_APPLIED" | "PUBLISHED" | "COMPLETED" | "REOPENED" | "CANCELLED" | "DELETED" | "COPIED" | "RECIPIENTS_CHANGED" | "RECIPIENTS_DISTRIBUTED" | "RECIPIENTS_SNAPSHOT" | "RECIPIENTS_LOCKED" | "RECIPIENT_DEACTIVATED" | "SUBMITTED" | "RESUBMITTED" | "SUBMISSION_FAILED" | "REVIEW_DONE" | "REVIEW_RETURNED" | "GROUP_CREATED" | "GROUP_RENAMED" | "GROUP_ARCHIVED" | "GROUP_DELETED" | "GROUP_STUDENTS_CHANGED" | "GROUP_SET_CREATED" | "GROUP_SET_RENAMED" | "GROUP_SET_ARCHIVED";
+            action?: "CREATED" | "UPDATED" | "MATERIALS_CHANGED" | "TEST_TEMPLATE_APPLIED" | "PUBLISHED" | "COMPLETED" | "REOPENED" | "CANCELLED" | "DELETED" | "COPIED" | "RECIPIENTS_CHANGED" | "RECIPIENTS_DISTRIBUTED" | "RECIPIENTS_SNAPSHOT" | "RECIPIENTS_LOCKED" | "RECIPIENT_DEACTIVATED" | "SUBMITTED" | "RESUBMITTED" | "SUBMISSION_FAILED" | "REVIEW_DONE" | "REVIEW_RETURNED" | "GROUP_CREATED" | "GROUP_RENAMED" | "GROUP_ARCHIVED" | "GROUP_DELETED" | "GROUP_STUDENTS_CHANGED" | "GROUP_SET_CREATED" | "GROUP_SET_RENAMED" | "GROUP_SET_ARCHIVED" | "VARIANT_CREATED" | "VARIANT_DELETED" | "VARIANT_QUESTIONS_CHANGED" | "QUESTION_DIFFICULTY_CHANGED" | "VARIANTS_DISTRIBUTED" | "VARIANT_CHANGED" | "ATTEMPT_RESET";
             /** Format: int64 */
             actorAccountId?: number;
             /** Format: date-time */
@@ -13914,6 +14782,13 @@ export interface components {
         HomeworkQuestionView: {
             aiGenerated?: boolean;
             allowPhoto?: boolean;
+            /**
+             * @description Уровень сложности; null — не определён
+             * @enum {string}
+             */
+            difficulty?: "EASY" | "MEDIUM" | "HARD";
+            /** @enum {string} */
+            difficultySource?: "MANUAL" | "AI";
             /** @description Рисунки и файлы из текста вопроса (CONTENT-EMBED-001) */
             embeds?: components["schemas"]["ContentEmbedView"][];
             formulaIssues?: components["schemas"]["QuestionFormulaIssue"][];
@@ -13933,6 +14808,11 @@ export interface components {
             text?: string;
             /** @enum {string} */
             type?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "OPEN_TEXT";
+            /**
+             * Format: int64
+             * @description Вариант теста, которому принадлежит вопрос (TEST-GEN-002)
+             */
+            variantId?: number;
         };
         HomeworkRecipientsView: {
             /** Format: int32 */
@@ -14023,6 +14903,11 @@ export interface components {
         HomeworkTestTemplateApplyRequest: {
             confirmReplace?: boolean;
             expectedQuestionRevision: string;
+            /**
+             * Format: int64
+             * @description Вариант, в который ложится шаблон; пусто — единственный вариант (TEST-GEN-002)
+             */
+            variantId?: number;
             /** Format: int32 */
             version: number;
             /** Format: int64 */
@@ -14052,6 +14937,11 @@ export interface components {
         HomeworkTestTemplateNewVersionRequest: {
             /** Format: int64 */
             sourceHomeworkId: number;
+            /**
+             * Format: int64
+             * @description Вариант теста-источника; пусто — единственный вариант (TEST-GEN-002)
+             */
+            sourceVariantId?: number;
         };
         HomeworkTestTemplateOption: {
             correct?: boolean;
@@ -14060,6 +14950,13 @@ export interface components {
         HomeworkTestTemplateQuestion: {
             aiGenerated?: boolean;
             allowPhoto?: boolean;
+            /**
+             * @description Уровень сложности; пусто — не определён (TEST-GEN-002)
+             * @enum {string}
+             */
+            difficulty?: "EASY" | "MEDIUM" | "HARD";
+            /** @enum {string} */
+            difficultySource?: "MANUAL" | "AI";
             gradingCriteria?: string;
             /** Format: uuid */
             imageId?: string;
@@ -14079,6 +14976,11 @@ export interface components {
         HomeworkTestTemplateSaveRequest: {
             /** Format: int64 */
             sourceHomeworkId: number;
+            /**
+             * Format: int64
+             * @description Вариант теста-источника; пусто — единственный вариант (TEST-GEN-002)
+             */
+            sourceVariantId?: number;
             title: string;
         };
         HomeworkTestTemplateSummaryView: {
@@ -14112,6 +15014,11 @@ export interface components {
             templateId?: number;
             /** Format: int32 */
             templateVersion?: number;
+            /**
+             * Format: int64
+             * @description Вариант, к которому относится состояние (TEST-GEN-002)
+             */
+            variantId?: number;
         };
         HomeworkTestTemplateVersionFromQuestionsRequest: {
             /** Format: int64 */
@@ -14183,6 +15090,7 @@ export interface components {
             /** Format: int32 */
             questionCount?: number;
             recipients?: components["schemas"]["HomeworkRecipientsView"];
+            showDifficultyToStudents?: boolean;
             /** @enum {string} */
             status?: "DRAFT" | "PUBLISHED" | "COMPLETED" | "CANCELLED";
             subgroupName?: string;
@@ -14195,6 +15103,8 @@ export interface components {
             updatedAfterPublish?: boolean;
             /** Format: date-time */
             updatedAt?: string;
+            /** Format: int32 */
+            variantCount?: number;
         };
         ImportCommitRequest: {
             /** @enum {string} */
@@ -15525,6 +16435,19 @@ export interface components {
             /** Format: int64 */
             version?: number;
         };
+        LessonDistributionPreviewRequest: {
+            homeworkIds?: number[];
+            keepAssigned?: boolean;
+            /** @enum {string} */
+            mode: "ONE_TEST_PER_STUDENT" | "EVERY_TEST";
+            studentIds?: number[];
+        };
+        LessonDistributionRequest: {
+            automatic?: boolean;
+            /** @enum {string} */
+            mode: "ONE_TEST_PER_STUDENT" | "EVERY_TEST";
+            tests?: components["schemas"]["TestPlan"][];
+        };
         LessonGenerationRunErrorView: {
             /** Format: int64 */
             academicPeriodId?: number;
@@ -16017,6 +16940,32 @@ export interface components {
             remainingCalls?: number;
             /** Format: int64 */
             revision?: number;
+        };
+        LessonTestView: {
+            /** Format: int64 */
+            homeworkId?: number;
+            /**
+             * Format: int32
+             * @description Получатели (до публикации — по правилу теста)
+             */
+            recipientCount?: number;
+            /** @enum {string} */
+            recipientType?: "CLASS" | "SUBGROUP" | "TEMP_GROUP" | "STUDENTS";
+            /** @enum {string} */
+            status?: "DRAFT" | "PUBLISHED" | "COMPLETED" | "CANCELLED";
+            title?: string;
+            /**
+             * Format: int32
+             * @description Получатели без варианта
+             */
+            unassignedCount?: number;
+            variants?: components["schemas"]["TestVariantView"][];
+            warnings?: ("QUESTION_COUNT_DIFFERS" | "DIFFICULTY_MIX_DIFFERS" | "MAX_SCORE_DIFFERS")[];
+        };
+        LessonTestsView: {
+            /** Format: int64 */
+            lessonId?: number;
+            tests?: components["schemas"]["LessonTestView"][];
         };
         LessonTextbookView: {
             active?: boolean;
@@ -18375,6 +19324,8 @@ export interface components {
             result?: components["schemas"]["PeriodResultSummaryView"];
         };
         Question: {
+            /** @enum {string} */
+            difficulty?: "EASY" | "MEDIUM" | "HARD";
             maxScore?: number;
             options?: string[];
             text?: string;
@@ -18399,6 +19350,16 @@ export interface components {
         };
         QuestionRequest: {
             allowPhoto?: boolean;
+            /**
+             * @description Уровень сложности; пусто — «не определено». Сохранение заменяет набор целиком, поэтому клиент присылает уровень обратно вместе с вопросом
+             * @enum {string}
+             */
+            difficulty?: "EASY" | "MEDIUM" | "HARD";
+            /**
+             * @description Кто поставил уровень; пусто при заданном уровне — учитель (MANUAL)
+             * @enum {string}
+             */
+            difficultySource?: "MANUAL" | "AI";
             gradingCriteria?: string;
             /** Format: uuid */
             imageId?: string;
@@ -18487,6 +19448,9 @@ export interface components {
             sourceId?: number;
         };
         RegenerateQuestionRequest: {
+            awaitConfirmation?: boolean;
+            /** @enum {string} */
+            difficulty?: "EASY" | "MEDIUM" | "HARD";
             teacherPrompt?: string;
         };
         RegisterAccessRequestDeviceRequest: {
@@ -18997,6 +19961,10 @@ export interface components {
             studentProfileId?: number;
             /** Format: int64 */
             submissionId?: number;
+            /** Format: int32 */
+            variantNumber?: number;
+            /** Format: date-time */
+            variantStartedAt?: string;
         };
         RosterView: {
             /** Format: int32 */
@@ -19057,6 +20025,11 @@ export interface components {
             progress?: components["schemas"]["FeedbackProgressView"];
         };
         SaveHomeworkQuestionsRequest: {
+            /**
+             * Format: int32
+             * @description Ревизия варианта, которую видел клиент (TestVariantView.revision). Задана и разошлась с текущей — 409 HOMEWORK_VARIANT_REVISION_CHANGED: вопросы успели поменять из другого окна
+             */
+            expectedRevision?: number;
             questions?: components["schemas"]["QuestionRequest"][];
         };
         SaveLessonSummaryRequest: {
@@ -19355,6 +20328,10 @@ export interface components {
             /** @enum {string} */
             type: "LOST" | "DAMAGED" | "UNAVAILABLE";
         };
+        SetQuestionDifficultyRequest: {
+            /** @enum {string} */
+            difficulty?: "EASY" | "MEDIUM" | "HARD";
+        };
         SetRecipientsRequest: {
             studentIds?: number[];
             /** Format: int64 */
@@ -19417,6 +20394,12 @@ export interface components {
             applicantName?: string;
             reason?: string;
         };
+        SkippedProposal: {
+            /** Format: int64 */
+            questionId?: number;
+            /** @enum {string} */
+            reason?: "NO_PROPOSAL" | "MANUAL_LEVEL" | "CHANGED" | "REMOVED" | "UNCHANGED";
+        };
         SnapshotSourceResult: {
             /** Format: int32 */
             published?: number;
@@ -19431,9 +20414,15 @@ export interface components {
             /** Format: int64 */
             assignmentId: number;
         };
+        StartDifficultyAnalysisRequest: {
+            questionIds?: number[];
+            /** Format: int64 */
+            variantId?: number;
+        };
         StartHomeworkAiGenerationRequest: {
+            difficultyMix?: components["schemas"]["DifficultyMix"];
             /** @enum {string} */
-            kind: "MATERIAL" | "TEST" | "GRADE_SUGGESTION" | "QUESTION";
+            kind: "MATERIAL" | "TEST" | "GRADE_SUGGESTION" | "QUESTION" | "DIFFICULTY";
             language?: string;
             materialIds?: number[];
             /** Format: int32 */
@@ -19441,6 +20430,11 @@ export interface components {
             /** Format: int32 */
             questionCount?: number;
             teacherPrompt?: string;
+            topic?: string;
+            /** Format: int32 */
+            variantCount?: number;
+            /** Format: int64 */
+            variantId?: number;
         };
         StartLessonSummaryGenerationRequest: {
             /** @enum {string} */
@@ -19555,6 +20549,8 @@ export interface components {
             teacherName?: string;
             title?: string;
             updatedAfterPublish?: boolean;
+            /** Format: int32 */
+            variantNumber?: number;
         };
         StudentLoginRequest: {
             code?: string;
@@ -19619,6 +20615,11 @@ export interface components {
         };
         StudentQuestionView: {
             allowPhoto?: boolean;
+            /**
+             * @description Уровень сложности. Только если учитель включил показ в настройке теста; иначе null всегда (TEST-GEN-002)
+             * @enum {string}
+             */
+            difficulty?: "EASY" | "MEDIUM" | "HARD";
             /** @description Рисунки и файлы из текста вопроса (CONTENT-EMBED-001) */
             embeds?: components["schemas"]["ContentEmbedView"][];
             /** Format: int64 */
@@ -20608,6 +21609,17 @@ export interface components {
             /** Format: int32 */
             versionNumber?: number;
         };
+        TestPlan: {
+            /** Format: int64 */
+            homeworkId: number;
+            variants?: components["schemas"]["VariantSlot"][];
+        };
+        TestPlanView: {
+            /** Format: int64 */
+            homeworkId?: number;
+            title?: string;
+            variants?: components["schemas"]["VariantSlotView"][];
+        };
         TestPushDeviceResultView: {
             errorCode?: string;
             errorMessage?: string;
@@ -20692,6 +21704,33 @@ export interface components {
         TestResultView: {
             maxScore?: number;
             score?: number;
+        };
+        TestVariantView: {
+            /** Format: int32 */
+            assignedCount?: number;
+            difficulty?: components["schemas"]["DifficultyMixView"];
+            /** Format: int64 */
+            id?: number;
+            locked?: boolean;
+            /** Format: date-time */
+            lockedAt?: string;
+            maxScore?: number;
+            /** Format: int32 */
+            position?: number;
+            /** Format: int32 */
+            questionCount?: number;
+            /** Format: int32 */
+            revision?: number;
+            /** Format: int32 */
+            startedCount?: number;
+        };
+        TestVariantsView: {
+            /** Format: int64 */
+            homeworkId?: number;
+            /** @description Показывать ли ученику уровень сложности вопросов */
+            showDifficultyToStudents?: boolean;
+            variants?: components["schemas"]["TestVariantView"][];
+            warnings?: ("QUESTION_COUNT_DIFFERS" | "DIFFICULTY_MIX_DIFFERS" | "MAX_SCORE_DIFFERS")[];
         };
         TestVersionSummary: {
             /** Format: date-time */
@@ -20916,6 +21955,7 @@ export interface components {
             dueAt?: string;
             /** @enum {string} */
             dueType: "EXACT" | "NEXT_LESSON" | "NONE";
+            showDifficultyToStudents?: boolean;
             title?: string;
         };
         UpdateKeyGroupRequest: {
@@ -21089,6 +22129,65 @@ export interface components {
             body?: string;
             /** Format: date */
             dueDate?: string;
+        };
+        VariantAssignmentView: {
+            active?: boolean;
+            /** Format: int32 */
+            attemptCount?: number;
+            fullName?: string;
+            /** Format: int32 */
+            resetCount?: number;
+            /** @enum {string} */
+            source?: "MANUAL" | "AUTO";
+            /** Format: date-time */
+            startedAt?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
+            /** @enum {string} */
+            submissionStatus?: "NOT_SUBMITTED" | "SUBMITTED" | "RETURNED" | "DONE";
+            /** Format: int64 */
+            variantId?: number;
+            /** Format: int32 */
+            variantPosition?: number;
+        };
+        VariantAssignmentsView: {
+            /** Format: int64 */
+            homeworkId?: number;
+            recipientsFixed?: boolean;
+            students?: components["schemas"]["VariantAssignmentView"][];
+            /** Format: int32 */
+            unassignedCount?: number;
+        };
+        VariantChangeView: {
+            assignment?: components["schemas"]["VariantAssignmentView"];
+            /** @description За тест у ученика стоит оценка: она осталась или снята по gradeAction */
+            gradeExists?: boolean;
+            reset?: boolean;
+        };
+        VariantDistributionPreviewRequest: {
+            keepAssigned?: boolean;
+            studentIds?: number[];
+        };
+        VariantDistributionRequest: {
+            automatic?: boolean;
+            variants?: components["schemas"]["VariantSlot"][];
+        };
+        VariantPreview: {
+            /** Format: int32 */
+            position?: number;
+            questions?: components["schemas"]["Question"][];
+        };
+        VariantSlot: {
+            studentIds: number[];
+            /** Format: int64 */
+            variantId: number;
+        };
+        VariantSlotView: {
+            /** Format: int32 */
+            position?: number;
+            studentIds?: number[];
+            /** Format: int64 */
+            variantId?: number;
         };
         VerifyCodeRequest: {
             code?: string;
@@ -22301,7 +23400,7 @@ export interface operations {
             };
         };
     };
-    list_28: {
+    list_29: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -22323,7 +23422,7 @@ export interface operations {
             };
         };
     };
-    create_25: {
+    create_26: {
         parameters: {
             query?: never;
             header?: never;
@@ -22555,7 +23654,7 @@ export interface operations {
             };
         };
     };
-    list_41: {
+    list_42: {
         parameters: {
             query: {
                 accountId?: number;
@@ -22583,7 +23682,7 @@ export interface operations {
             };
         };
     };
-    list_40: {
+    list_41: {
         parameters: {
             query: {
                 stage?: "DRAFT" | "PENDING" | "APPROVED_PENDING_ACTIVATION" | "ACTIVE" | "REJECTED";
@@ -22727,7 +23826,7 @@ export interface operations {
             };
         };
     };
-    list_27: {
+    list_28: {
         parameters: {
             query: {
                 role?: "SUPER_ADMIN" | "ADMIN" | "TEACHER" | "STUDENT" | "PARENT" | "CLEANING" | "TECHNICIAN" | "SECURITY" | "PSYCHOLOGIST";
@@ -22752,7 +23851,7 @@ export interface operations {
             };
         };
     };
-    create_24: {
+    create_25: {
         parameters: {
             query?: {
                 force?: boolean;
@@ -22954,7 +24053,7 @@ export interface operations {
             };
         };
     };
-    list_26: {
+    list_27: {
         parameters: {
             query: {
                 status?: "DRAFT" | "PUBLISHED" | "HIDDEN";
@@ -22978,7 +24077,7 @@ export interface operations {
             };
         };
     };
-    create_23: {
+    create_24: {
         parameters: {
             query?: never;
             header?: never;
@@ -23242,7 +24341,102 @@ export interface operations {
             };
         };
     };
-    list_25: {
+    listAdminAiReports: {
+        parameters: {
+            query?: {
+                academicYearId?: number;
+                type?: "STUDENT" | "CLASS" | "CLASSES";
+                classId?: number;
+                subjectId?: number;
+                studentProfileId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportPage"];
+                };
+            };
+        };
+    };
+    getAdminAiReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportDetailView"];
+                };
+            };
+        };
+    };
+    getAdminAiReportHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportEventView"][];
+                };
+            };
+        };
+    };
+    getAdminAiReportVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+                versionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportVersionView"];
+                };
+            };
+        };
+    };
+    list_26: {
         parameters: {
             query?: never;
             header?: never;
@@ -23262,7 +24456,7 @@ export interface operations {
             };
         };
     };
-    create_22: {
+    create_23: {
         parameters: {
             query?: never;
             header?: never;
@@ -23546,7 +24740,7 @@ export interface operations {
             };
         };
     };
-    list_24: {
+    list_25: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -23570,7 +24764,7 @@ export interface operations {
             };
         };
     };
-    create_21: {
+    create_22: {
         parameters: {
             query?: never;
             header?: never;
@@ -23875,7 +25069,7 @@ export interface operations {
             };
         };
     };
-    list_23: {
+    list_24: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -23905,7 +25099,7 @@ export interface operations {
             };
         };
     };
-    create_20: {
+    create_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -24041,7 +25235,7 @@ export interface operations {
             };
         };
     };
-    list_22: {
+    list_23: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -24066,7 +25260,7 @@ export interface operations {
             };
         };
     };
-    create_19: {
+    create_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -24388,7 +25582,7 @@ export interface operations {
             };
         };
     };
-    apply_2: {
+    apply_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -24734,7 +25928,7 @@ export interface operations {
             };
         };
     };
-    list_21: {
+    list_22: {
         parameters: {
             query: {
                 classId: number;
@@ -24759,7 +25953,7 @@ export interface operations {
             };
         };
     };
-    create_18: {
+    create_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -25396,7 +26590,7 @@ export interface operations {
             };
         };
     };
-    list_20: {
+    list_21: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -25423,7 +26617,7 @@ export interface operations {
             };
         };
     };
-    create_17: {
+    create_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -25541,7 +26735,7 @@ export interface operations {
             };
         };
     };
-    list_19: {
+    list_20: {
         parameters: {
             query: {
                 phone?: string;
@@ -25565,7 +26759,7 @@ export interface operations {
             };
         };
     };
-    create_16: {
+    create_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -25850,7 +27044,7 @@ export interface operations {
             };
         };
     };
-    get_25: {
+    get_26: {
         parameters: {
             query?: never;
             header?: never;
@@ -26017,7 +27211,7 @@ export interface operations {
             };
         };
     };
-    list_18: {
+    list_19: {
         parameters: {
             query: {
                 academicYearId?: number;
@@ -26043,7 +27237,7 @@ export interface operations {
             };
         };
     };
-    create_15: {
+    create_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -26445,7 +27639,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_18: {
         parameters: {
             query: {
                 name?: string;
@@ -26469,7 +27663,7 @@ export interface operations {
             };
         };
     };
-    create_14: {
+    create_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -26666,7 +27860,7 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    list_16: {
         parameters: {
             query: {
                 classId?: number;
@@ -26692,7 +27886,7 @@ export interface operations {
             };
         };
     };
-    create_13: {
+    create_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -26899,7 +28093,7 @@ export interface operations {
             };
         };
     };
-    list_16: {
+    list_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -26968,7 +28162,7 @@ export interface operations {
             };
         };
     };
-    list_14: {
+    list_15: {
         parameters: {
             query?: {
                 classId?: number;
@@ -26992,7 +28186,7 @@ export interface operations {
             };
         };
     };
-    create_12: {
+    create_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -27228,7 +28422,7 @@ export interface operations {
             };
         };
     };
-    list_13: {
+    list_14: {
         parameters: {
             query: {
                 status?: "DRAFT" | "ACTIVE" | "COMPLETED";
@@ -27251,7 +28445,7 @@ export interface operations {
             };
         };
     };
-    create_11: {
+    create_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -27584,7 +28778,7 @@ export interface operations {
             };
         };
     };
-    list_12: {
+    list_13: {
         parameters: {
             query: {
                 teacherProfileId?: number;
@@ -27611,7 +28805,7 @@ export interface operations {
             };
         };
     };
-    create_10: {
+    create_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -27677,7 +28871,7 @@ export interface operations {
             };
         };
     };
-    list_39: {
+    list_40: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -27703,7 +28897,7 @@ export interface operations {
             };
         };
     };
-    get_24: {
+    get_25: {
         parameters: {
             query: {
                 academicYearId: number;
@@ -27727,7 +28921,7 @@ export interface operations {
             };
         };
     };
-    list_38: {
+    list_39: {
         parameters: {
             query: {
                 status?: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
@@ -27750,7 +28944,7 @@ export interface operations {
             };
         };
     };
-    get_23: {
+    get_24: {
         parameters: {
             query?: never;
             header?: never;
@@ -27889,7 +29083,7 @@ export interface operations {
             };
         };
     };
-    list_11: {
+    list_12: {
         parameters: {
             query: {
                 phone?: string;
@@ -27913,7 +29107,7 @@ export interface operations {
             };
         };
     };
-    create_9: {
+    create_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -28215,7 +29409,7 @@ export interface operations {
             };
         };
     };
-    list_10: {
+    list_11: {
         parameters: {
             query?: {
                 useAiGeneration?: boolean;
@@ -28238,7 +29432,7 @@ export interface operations {
             };
         };
     };
-    create_8: {
+    create_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -28382,7 +29576,7 @@ export interface operations {
             };
         };
     };
-    questions_1: {
+    questions_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -28431,7 +29625,7 @@ export interface operations {
             };
         };
     };
-    list_37: {
+    list_38: {
         parameters: {
             query: {
                 teacherProfileId?: number;
@@ -28572,7 +29766,7 @@ export interface operations {
             };
         };
     };
-    list_36: {
+    list_37: {
         parameters: {
             query?: {
                 grade?: string;
@@ -28614,7 +29808,7 @@ export interface operations {
             };
         };
     };
-    get_22: {
+    get_23: {
         parameters: {
             query?: never;
             header?: never;
@@ -28682,7 +29876,7 @@ export interface operations {
             };
         };
     };
-    start_3: {
+    start_4: {
         parameters: {
             query?: never;
             header: {
@@ -28892,7 +30086,52 @@ export interface operations {
             };
         };
     };
-    list_35: {
+    listChildAiReports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                childId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportParentReportsView"];
+                };
+            };
+        };
+    };
+    getChildAiReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                childId: number;
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportParentReportView"];
+                };
+            };
+        };
+    };
+    list_36: {
         parameters: {
             query: {
                 classId: number;
@@ -30077,7 +31316,7 @@ export interface operations {
             };
         };
     };
-    create_7: {
+    create_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -30758,7 +31997,7 @@ export interface operations {
             };
         };
     };
-    create_6: {
+    create_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -31044,7 +32283,7 @@ export interface operations {
             };
         };
     };
-    list_8: {
+    list_9: {
         parameters: {
             query: {
                 scope?: "ACTUAL" | "HISTORY";
@@ -31412,7 +32651,7 @@ export interface operations {
             };
         };
     };
-    get_21: {
+    get_22: {
         parameters: {
             query?: never;
             header?: never;
@@ -31504,7 +32743,7 @@ export interface operations {
             };
         };
     };
-    list_9: {
+    list_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -31526,7 +32765,7 @@ export interface operations {
             };
         };
     };
-    start_2: {
+    start_3: {
         parameters: {
             query?: never;
             header: {
@@ -31577,7 +32816,7 @@ export interface operations {
             };
         };
     };
-    apply_1: {
+    apply_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -31716,6 +32955,84 @@ export interface operations {
             };
         };
     };
+    start_2: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["StartDifficultyAnalysisRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkAiJobView"];
+                };
+            };
+        };
+    };
+    get_21: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DifficultyAnalysisView"];
+                };
+            };
+        };
+    };
+    apply_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ApplyDifficultyRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DifficultyApplyView"];
+                };
+            };
+        };
+    };
     grades_1: {
         parameters: {
             query?: never;
@@ -31814,7 +33131,7 @@ export interface operations {
             };
         };
     };
-    delete_10: {
+    delete_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -32029,9 +33346,11 @@ export interface operations {
             };
         };
     };
-    list: {
+    list_1: {
         parameters: {
-            query?: never;
+            query?: {
+                variantId?: number;
+            };
             header?: never;
             path: {
                 homeworkId: number;
@@ -32053,7 +33372,9 @@ export interface operations {
     };
     replace: {
         parameters: {
-            query?: never;
+            query?: {
+                variantId?: number;
+            };
             header?: never;
             path: {
                 homeworkId: number;
@@ -32073,6 +33394,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HomeworkQuestionView"][];
+                };
+            };
+        };
+    };
+    setDifficulty: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                questionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetQuestionDifficultyRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkQuestionView"];
                 };
             };
         };
@@ -32432,7 +33780,9 @@ export interface operations {
     };
     getTestTemplateTargetState: {
         parameters: {
-            query?: never;
+            query?: {
+                variantId?: number;
+            };
             header?: never;
             path: {
                 homeworkId: number;
@@ -32476,6 +33826,228 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HomeworkTestTemplateApplicationView"];
+                };
+            };
+        };
+    };
+    list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VariantAssignmentsView"];
+                };
+            };
+        };
+    };
+    confirmTest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VariantDistributionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VariantAssignmentsView"];
+                };
+            };
+        };
+    };
+    previewTest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["VariantDistributionPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DistributionPreview"];
+                };
+            };
+        };
+    };
+    change: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                studentProfileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeVariantRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VariantChangeView"];
+                };
+            };
+        };
+    };
+    variants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestVariantsView"];
+                };
+            };
+        };
+    };
+    create_6: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CreateVariantRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestVariantsView"];
+                };
+            };
+        };
+    };
+    delete_10: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                variantId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestVariantsView"];
+                };
+            };
+        };
+    };
+    questions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                variantId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkQuestionView"][];
+                };
+            };
+        };
+    };
+    replaceQuestions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                homeworkId: number;
+                variantId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveHomeworkQuestionsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeworkQuestionView"][];
                 };
             };
         };
@@ -33263,7 +34835,7 @@ export interface operations {
             };
         };
     };
-    list_32: {
+    list_33: {
         parameters: {
             query: {
                 dateFrom?: string;
@@ -33646,7 +35218,7 @@ export interface operations {
             };
         };
     };
-    list_7: {
+    list_8: {
         parameters: {
             query?: {
                 includeClosed?: boolean;
@@ -34114,7 +35686,7 @@ export interface operations {
             };
         };
     };
-    list_34: {
+    list_35: {
         parameters: {
             query?: {
                 childId?: number;
@@ -34849,6 +36421,80 @@ export interface operations {
             };
         };
     };
+    confirmLesson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonDistributionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonTestsView"];
+                };
+            };
+        };
+    };
+    previewLesson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonDistributionPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DistributionPreview"];
+                };
+            };
+        };
+    };
+    lessonTests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonTestsView"];
+                };
+            };
+        };
+    };
     select: {
         parameters: {
             query?: never;
@@ -34924,7 +36570,7 @@ export interface operations {
             };
         };
     };
-    list_33: {
+    list_34: {
         parameters: {
             query?: {
                 childId?: number;
@@ -35024,7 +36670,7 @@ export interface operations {
             };
         };
     };
-    list_6: {
+    list_7: {
         parameters: {
             query: {
                 subjectId: number;
@@ -37875,7 +39521,7 @@ export interface operations {
             };
         };
     };
-    questions: {
+    questions_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -38482,6 +40128,373 @@ export interface operations {
             };
         };
     };
+    listTeacherAiReports: {
+        parameters: {
+            query?: {
+                academicYearId?: number;
+                type?: "STUDENT" | "CLASS" | "CLASSES";
+                classId?: number;
+                subjectId?: number;
+                studentProfileId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportPage"];
+                };
+            };
+        };
+    };
+    createAiReport: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiReportCreateReportRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportJobView"];
+                };
+            };
+        };
+    };
+    aiReportContext: {
+        parameters: {
+            query?: {
+                academicYearId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportContextView"];
+                };
+            };
+        };
+    };
+    aiReportContextStudents: {
+        parameters: {
+            query: {
+                owner: "SUBJECT_TEACHER" | "HOMEROOM";
+                academicYearId: number;
+                classId: number;
+                subjectId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportContextStudent"][];
+                };
+            };
+        };
+    };
+    getAiReportGeneration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportJobView"];
+                };
+            };
+        };
+    };
+    getTeacherAiReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportDetailView"];
+                };
+            };
+        };
+    };
+    regenerateAiReport: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportJobView"];
+                };
+            };
+        };
+    };
+    getTeacherAiReportHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportEventView"][];
+                };
+            };
+        };
+    };
+    saveAiReportParentSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiReportParentSummaryRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportDetailView"];
+                };
+            };
+        };
+    };
+    confirmAiReportParentSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiReportConfirmParentSummaryRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportDetailView"];
+                };
+            };
+        };
+    };
+    publishAiReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiReportPublishRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportDetailView"];
+                };
+            };
+        };
+    };
+    unpublishAiReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportDetailView"];
+                };
+            };
+        };
+    };
+    saveAiReportText: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiReportSaveTextRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportDetailView"];
+                };
+            };
+        };
+    };
+    getTeacherAiReportVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+                versionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportVersionView"];
+                };
+            };
+        };
+    };
+    approveAiReportVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: number;
+                versionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiReportApproveRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReportDetailView"];
+                };
+            };
+        };
+    };
     get_19: {
         parameters: {
             query?: never;
@@ -38546,7 +40559,7 @@ export interface operations {
             };
         };
     };
-    list_31: {
+    list_32: {
         parameters: {
             query?: {
                 cursor?: number;
@@ -39122,7 +41135,7 @@ export interface operations {
             };
         };
     };
-    list_30: {
+    list_31: {
         parameters: {
             query?: {
                 cursor?: number;
@@ -39323,7 +41336,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_6: {
         parameters: {
             query?: {
                 cursor?: number;
@@ -39578,7 +41591,7 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_5: {
         parameters: {
             query?: {
                 page?: number;
@@ -39857,7 +41870,7 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_4: {
         parameters: {
             query: {
                 status?: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
@@ -40091,7 +42104,7 @@ export interface operations {
             };
         };
     };
-    list_2: {
+    list_3: {
         parameters: {
             query?: {
                 academicYearId?: number;
@@ -40235,7 +42248,7 @@ export interface operations {
             };
         };
     };
-    list_1: {
+    list_2: {
         parameters: {
             query: {
                 subjectId?: number;
@@ -40661,7 +42674,7 @@ export interface operations {
             };
         };
     };
-    list_29: {
+    list_30: {
         parameters: {
             query?: {
                 page?: number;
