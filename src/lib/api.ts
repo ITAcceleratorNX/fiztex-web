@@ -191,6 +191,55 @@ export async function requestMultipart<T>(path: string, formData: FormData, sign
 }
 
 /**
+ * Тот же {@link requestMultipart}, но с прогрессом отправки — `fetch` его не сообщает, поэтому
+ * под капотом XHR. Ошибки, 401 и смена сессии разбираются теми же правилами, что и у
+ * остальных запросов: экрану не нужно знать, каким транспортом ушёл файл.
+ *
+ * `onProgress` получает долю отправленного (0…1); когда байты ушли, а ответа ещё нет, это 1.
+ */
+export function uploadMultipart<T>(
+  path: string,
+  formData: FormData,
+  { method = 'POST', onProgress, signal }: { method?: 'POST' | 'PUT'; onProgress?: (fraction: number) => void; signal?: AbortSignal } = {},
+): Promise<T> {
+  const assertCurrentSession = guardSession();
+  return new Promise<T>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, `/api${path}`);
+    if (authToken) xhr.setRequestHeader('Authorization', `Bearer ${authToken}`);
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && event.total > 0) onProgress?.(Math.min(1, event.loaded / event.total));
+    };
+    xhr.onload = () => {
+      try {
+        assertCurrentSession();
+        if (xhr.status === 401) handleUnauthorized();
+        const data = xhr.responseText ? safeParse(xhr.responseText) : undefined;
+        if (xhr.status < 200 || xhr.status >= 300) {
+          reject(toApiError(xhr.status, data));
+          return;
+        }
+        resolve(data as T);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    const fail = () => {
+      try {
+        assertCurrentSession();
+        reject(new ApiError(0, NO_CONNECTION));
+      } catch (error) {
+        reject(error);
+      }
+    };
+    xhr.onerror = fail;
+    xhr.onabort = () => reject(new DOMException('Aborted', 'AbortError'));
+    signal?.addEventListener('abort', () => xhr.abort(), { once: true });
+    xhr.send(formData);
+  });
+}
+
+/**
  * Бинарный ответ под авторизацией — вложения работ и фотографии проверки.
  *
  * Эти эндпоинты отдают поток байтов, а не ссылку, поэтому `<img src>` на них не
