@@ -372,5 +372,7 @@ export function ExportButton({ owner, filter, fileName }: {
 
 function errorText(error: unknown, fallback: string): string {
   if (error instanceof ApiError && error.status === 403) return 'Нет доступа к этим данным.';
+  // Неверные фильтры (QA REPO-12): сервер говорит, что не так, — файла при этом нет.
+  if (error instanceof ApiError && error.status === 400 && error.message) return error.message;
   return fallback;
 }
