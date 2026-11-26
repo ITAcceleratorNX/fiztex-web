@@ -12,6 +12,7 @@ import {
   useReportPerformance,
   useReportSummary,
   useStudentRating,
+  useTeacherReportContext,
   type ReportFilter,
   type ReportOwner,
 } from '@/hooks/reportingQueries';
@@ -40,12 +41,14 @@ import {
 import { ReportHeaderCard } from '../reporting/ReportHeaderCard';
 import { FinalValue, MetricCell, PartialDataNotice, ReportTable, StudentName, type ReportColumn } from '../reporting/ReportTable';
 import { DynamicsPanel, ExportButton, PerformanceStrip, StudentRatingTable } from '../reporting/ReportInsights';
+import { SpecialReportSection } from '../reporting/special/SpecialReportSection';
+import { isSpecialSection, SECTION_OPTIONS, type Section } from '../reporting/special/sections';
 import { StudentReportDrawer } from '../reporting/StudentReportDrawer';
 
 type Period = Schema<'MyClassContextPeriodView'>;
 type View = 'subjects' | 'students';
-/** Раздел вкладки: показатели, рейтинг учеников класса или динамика по периодам. */
-type Section = 'metrics' | 'rating' | 'dynamics';
+/** Разделы вкладки: у классного руководителя нет «Учителю по предмету» — это форма учителя. */
+const HOMEROOM_SECTIONS = SECTION_OPTIONS.filter((option) => option.value !== 'teacherPerformance');
 
 const collator = new Intl.Collator('ru-RU');
 
@@ -92,7 +95,10 @@ export function MyClassReportTab({
   const [searchParams, setSearchParams] = useSearchParams();
   const view: View = searchParams.get('reportView') === 'students' ? 'students' : 'subjects';
   const sectionValue = searchParams.get('reportSection');
-  const section: Section = sectionValue === 'rating' || sectionValue === 'dynamics' ? sectionValue : 'metrics';
+  const section: Section = HOMEROOM_SECTIONS.some((option) => option.value === sectionValue) ? sectionValue as Section : 'metrics';
+  const special = isSpecialSection(section) ? section : null;
+  const wholeYear = special != null && searchParams.get('reportWholeYear') === 'true';
+  const subgroupId = idParam(searchParams.get('reportSubgroup'));
   const subjectId = idParam(searchParams.get('reportSubject'));
   const studentId = idParam(searchParams.get('reportStudent'));
   const period = periods.find((item) => item.id === periodId);
@@ -100,15 +106,20 @@ export function MyClassReportTab({
   const filter: ReportFilter | null = academicYearId == null || periodId == null
     ? null
     : { academicYearId, academicPeriodId: periodId };
-  const subjectFilter = filter && subjectId != null ? { ...filter, subjectId } : null;
+  // Класс — только для выбора подгруппы: в запрос классного руководителя он не уходит.
+  const specialFilter = academicYearId == null || (!wholeYear && periodId == null) ? null
+    : { academicYearId, academicPeriodId: wholeYear ? null : periodId, classId, subjectId, subgroupId };
+  // Специальные формы читают свои адреса: сводка и разрезы вкладки в это время не нужны.
+  const metricsFilter = special ? null : filter;
+  const subjectFilter = metricsFilter && subjectId != null ? { ...metricsFilter, subjectId } : null;
 
-  const summary = useReportSummary(owner, subjectFilter ?? filter);
-  const subjectRows = useReportBreakdown(owner, filter, 'SUBJECT');
-  const studentRows = useReportBreakdown(owner, subjectFilter ?? filter, subjectId != null || view === 'students' ? 'STUDENT' : null);
+  const summary = useReportSummary(owner, subjectFilter ?? metricsFilter);
+  const subjectRows = useReportBreakdown(owner, metricsFilter, 'SUBJECT');
+  const studentRows = useReportBreakdown(owner, subjectFilter ?? metricsFilter, subjectId != null || view === 'students' ? 'STUDENT' : null);
   const finals = useReportFinals(owner, subjectFilter);
-  const performance = useReportPerformance(owner, subjectFilter ?? filter);
-  const rating = useStudentRating(owner, section === 'rating' ? subjectFilter ?? filter : null);
-  const dynamics = useReportDynamics(owner, section === 'dynamics' ? subjectFilter ?? filter : null);
+  const performance = useReportPerformance(owner, subjectFilter ?? metricsFilter);
+  const rating = useStudentRating(owner, section === 'rating' ? subjectFilter ?? metricsFilter : null);
+  const dynamics = useReportDynamics(owner, section === 'dynamics' ? subjectFilter ?? metricsFilter : null);
 
   useEffect(() => {
     if ([summary.error, subjectRows.error, studentRows.error, finals.error, performance.error, rating.error, dynamics.error]
@@ -148,7 +159,7 @@ export function MyClassReportTab({
           <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Ко всем предметам
         </button>
       )}
-      {subjectId != null && (
+      {subjectId != null && !special && (
         <ReportHeaderCard
           title={subjectRow?.key?.name ?? 'Предмет'}
           subtitle={[namesLabel(subjectRow?.attributes?.teachers), className,
@@ -164,8 +175,20 @@ export function MyClassReportTab({
         <FilterSelect label="Учебный год" className="w-44" value="current" disabled onChange={() => undefined}>
           <option value="current">{yearName}</option>
         </FilterSelect>
-        <FilterSelect label="Период" className="w-64" value={periodId == null ? '' : String(periodId)}
-          disabled={periods.length === 0} onChange={(value) => { update({ reportStudent: null }); onSelectPeriod(value); }}>
+        <FilterSelect label="Период" className="w-64" value={wholeYear ? 'year' : periodId == null ? '' : String(periodId)}
+          disabled={!special && periods.length === 0} onChange={(value) => {
+            if (value === 'year') update({ reportWholeYear: 'true', reportStudent: null, reportSubgroup: null });
+            else if (!special) onSelectPeriod(value);
+            else {
+              const next = new URLSearchParams(searchParams);
+              next.delete('reportWholeYear');
+              next.delete('reportStudent');
+              next.delete('reportSubgroup');
+              next.set('periodId', value);
+              setSearchParams(next);
+            }
+          }}>
+          {special && <option value="year">Учебный год</option>}
           {periodId == null && <option value="">Выберите период</option>}
           {periods.filter((item) => item.id != null).map((item) => (
             <option key={item.id} value={item.id}>{periodLabel(item)}</option>
@@ -175,8 +198,10 @@ export function MyClassReportTab({
           value={section}
           ariaLabel="Раздел отчётности класса"
           onChange={(value) => update({ reportSection: value === 'metrics' ? null : value, reportStudent: null })}
-          options={[{ value: 'metrics', label: 'Показатели' }, { value: 'rating', label: 'Рейтинг' }, { value: 'dynamics', label: 'Динамика' }]}
+          options={HOMEROOM_SECTIONS}
         />
+        {special && academicYearId != null && <HomeroomSubjectFilter yearId={academicYearId} classId={classId}
+          form={special} subjectId={subjectId} onChange={(value) => update({ reportSubject: value || null, reportSubgroup: null })} />}
         {section === 'metrics' && subjectId == null && (
           <SegmentedTabs
             value={view}
@@ -185,15 +210,25 @@ export function MyClassReportTab({
             options={[{ value: 'subjects', label: 'По предметам' }, { value: 'students', label: 'По ученикам' }]}
           />
         )}
-        <div className="ml-auto">
-          <ExportButton owner={owner} filter={subjectFilter ?? filter} fileName={reportFileName(yearName, period?.name)} />
-        </div>
+        {!special && (
+          <div className="ml-auto">
+            <ExportButton owner={owner} filter={subjectFilter ?? filter} fileName={reportFileName(yearName, period?.name)} />
+          </div>
+        )}
       </div>
 
-      {filter == null ? (
+      {(special ? specialFilter : filter) == null ? (
         <EmptyBlock icon={<CalendarDays className="h-7 w-7" />} title={periods.length === 0
           ? 'Учебные периоды пока не настроены'
           : 'Выберите учебный период, чтобы увидеть отчётность'} />
+      ) : special ? (
+        <SpecialReportSection
+          owner={owner}
+          form={special}
+          filter={specialFilter}
+          fileParts={[yearName, wholeYear ? 'Год' : period?.name, className, subjectRow?.key?.name]}
+          onSubgroup={(id) => update({ reportSubgroup: id == null ? null : String(id) })}
+        />
       ) : pending ? <LoadingBlock label="Загрузка отчётности…" /> : failed ? (
         <ErrorBlock message="Не удалось загрузить отчётность." onRetry={() => queries.forEach((query) => void query.refetch())} />
       ) : isEmptyReport(summary.data?.metrics) ? (
@@ -275,6 +310,19 @@ export function MyClassReportTab({
       )}
     </div>
   );
+}
+
+function HomeroomSubjectFilter({ yearId, classId, form, subjectId, onChange }: {
+  yearId: number; classId: number; form: string; subjectId: number | null; onChange: (value: string) => void;
+}) {
+  const context = useTeacherReportContext(yearId, form === 'assessment' ? 'ASSESSMENT' : 'CLASS_PERFORMANCE');
+  const subjects = context.data?.assignments?.filter(pair => pair.schoolClass?.id === classId).map(pair => pair.subject) ?? [];
+  if (context.isError) return <ErrorBlock message="Не удалось загрузить предметы." onRetry={() => void context.refetch()} />;
+  return <FilterSelect label="Предмет" className="w-64" value={subjectId == null ? '' : String(subjectId)}
+    disabled={context.isPending} onChange={onChange}>
+    <option value="">Все предметы</option>
+    {subjects.filter(subject => subject?.id != null).map(subject => <option key={subject!.id} value={subject!.id}>{subject!.name}</option>)}
+  </FilterSelect>;
 }
 
 function subjectColumns(total: ReportRow['metrics'], subjectCount: number,

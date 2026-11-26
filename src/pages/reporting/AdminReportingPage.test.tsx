@@ -33,6 +33,13 @@ vi.mock('@/hooks/reportingQueries', () => ({
   downloadReportExcel: vi.fn(),
 }));
 
+const specialReport = vi.fn();
+vi.mock('@/hooks/specialReportQueries', () => ({
+  EXPORT_FORMATS: { assessment: ['XLSX', 'DOCX', 'PDF'], classPerformance: ['XLSX', 'PDF'], teacherPerformance: ['XLSX', 'PDF'] },
+  useSpecialReport: (_owner: unknown, form: string, filter: unknown) => specialReport(form, filter),
+  downloadSpecialReport: vi.fn(),
+}));
+
 function LocationProbe() {
   return <output data-testid="location">{useLocation().search}</output>;
 }
@@ -187,5 +194,23 @@ describe('AdminReportingPage', () => {
     expect(location().get('period')).toBe('11');
     await user.click(screen.getByRole('button', { name: 'Сбросить фильтры' }));
     expect(location().get('classId')).toBeNull();
+  });
+
+  it('opens a special form without loading the summary and asks for a teacher first', async () => {
+    specialReport.mockReset().mockImplementation((_form: string, filter: unknown) => filter == null ? disabledQuery() : ok({
+      form: 'TEACHER', methodology: { version: 'PERF-10-2026.1-draft', approved: false }, scope: {}, demo: false,
+      subgroupOptions: [], rows: [],
+    }));
+    renderPage('/reporting?period=11&section=teacherPerformance');
+
+    expect(screen.getByText('Выберите учителя')).toBeInTheDocument();
+    expect(summary).toHaveBeenLastCalledWith(null);
+    expect(screen.getByRole('radio', { name: 'Учителю по предмету' })).toHaveAttribute('aria-checked', 'true');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Учитель' }));
+    await userEvent.click(screen.getByRole('option', { name: 'Петров А.А.' }));
+    expect(location().get('teacherId')).toBe('21');
+    expect(specialReport).toHaveBeenLastCalledWith('teacherPerformance', expect.objectContaining({
+      academicYearId: 1, academicPeriodId: 11, teacherProfileId: 21 }));
   });
 });

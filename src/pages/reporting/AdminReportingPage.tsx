@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowLeft, CalendarDays, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -55,13 +55,14 @@ import { ReportHeaderCard } from './ReportHeaderCard';
 import { MetricCell, PartialDataNotice, ReportTable, type ReportColumn } from './ReportTable';
 import { ClassRatingTable, DynamicsPanel, ExportButton, PerformanceStrip, StudentRatingTable } from './ReportInsights';
 import { StudentReportDrawer } from './StudentReportDrawer';
+import { SpecialReportSection } from './special/SpecialReportSection';
+import { ReportGrantsModal } from './special/ReportGrantsModal';
+import { isSpecialSection, SECTION_OPTIONS, type Section } from './special/sections';
 
 const ADMIN: ReportOwner = { kind: 'admin' };
 const collator = new Intl.Collator('ru-RU', { numeric: true });
 
 type SchoolView = 'classes' | 'subjects' | 'teachers';
-/** Раздел страницы: таблицы показателей, рейтинги или динамика по периодам. */
-type Section = 'metrics' | 'rating' | 'dynamics';
 type Mode = 'school' | 'class' | 'subject' | 'teacher' | 'classSubject';
 
 function idParam(value: string | null): number | null {
@@ -79,10 +80,10 @@ function today(): string {
 }
 
 /** Параметры детализации — сбрасываются вместе, когда пользователь уходит на уровень выше. */
-const DRILL = ['classId', 'subjectId', 'teacherId', 'view', 'student'];
+const DRILL = ['classId', 'subjectId', 'teacherId', 'view', 'student', 'subgroupId'];
 
 function sectionParam(value: string | null): Section {
-  return value === 'rating' || value === 'dynamics' ? value : 'metrics';
+  return SECTION_OPTIONS.some((option) => option.value === value) ? value as Section : 'metrics';
 }
 
 /**
@@ -98,6 +99,7 @@ function sectionParam(value: string | null): Section {
  * сводка сервера по тому же срезу, а не сумма строк.
  */
 export function AdminReportingPage() {
+  const [grantsOpen, setGrantsOpen] = useState(false);
   useDocumentTitle('Отчётность');
   const [searchParams, setSearchParams] = useSearchParams();
   const years = useReportYears();
@@ -149,25 +151,29 @@ export function AdminReportingPage() {
       : mode === 'classSubject' ? 'STUDENT' : 'CLASS';
 
   const section = sectionParam(searchParams.get('section'));
-  const summary = useReportSummary(ADMIN, filter);
-  const performance = useReportPerformance(ADMIN, filter);
+  const special = isSpecialSection(section) ? section : null;
+  // Специальные формы читают свои адреса: сводка и разрезы раздела в это время не нужны.
+  const metricsFilter = special ? null : filter;
+  const subgroupId = classId == null ? null : idParam(searchParams.get('subgroupId'));
+  const summary = useReportSummary(ADMIN, metricsFilter);
+  const performance = useReportPerformance(ADMIN, metricsFilter);
   const studentRating = useStudentRating(ADMIN, section === 'rating' ? filter : null);
   // Классы сравниваются, пока класс не выбран: внутри класса сравнивать не с чем.
   const classRating = useClassRating(ADMIN, section === 'rating' && classId == null ? filter : null);
   const dynamics = useReportDynamics(ADMIN, section === 'dynamics' ? filter : null);
-  const rows = useReportBreakdown(ADMIN, filter, dimension);
+  const rows = useReportBreakdown(ADMIN, metricsFilter, dimension);
   // Учителя зависят от класса и предмета, а не от выбранного учителя (ТЗ §4.1).
   const teacherOptions = useReportBreakdown(ADMIN, filter && { ...filter, teacherProfileId: null }, 'TEACHER');
   // Шапки детализации: строка класса/учителя несёт кл. руководителя, состав, предметы.
-  const classRow = useReportBreakdown(ADMIN, filter && classId != null ? { ...filter, subjectId: null, teacherProfileId: null } : null,
+  const classRow = useReportBreakdown(ADMIN, metricsFilter && classId != null ? { ...metricsFilter, subjectId: null, teacherProfileId: null } : null,
     classId != null ? 'CLASS' : null);
-  const teacherRow = useReportBreakdown(ADMIN, filter && mode === 'teacher' ? filter : null, mode === 'teacher' ? 'TEACHER' : null);
+  const teacherRow = useReportBreakdown(ADMIN, metricsFilter && mode === 'teacher' ? metricsFilter : null, mode === 'teacher' ? 'TEACHER' : null);
   const totals = {
-    teachers: useReportDimensionTotal(ADMIN, filter, mode === 'school' && schoolView === 'subjects' ? 'TEACHER' : mode === 'subject' ? 'TEACHER' : null),
-    subjects: useReportDimensionTotal(ADMIN, filter, mode === 'school' && schoolView === 'teachers' ? 'SUBJECT' : null),
-    classes: useReportDimensionTotal(ADMIN, filter, mode === 'school' && schoolView === 'teachers' ? 'CLASS' : null),
+    teachers: useReportDimensionTotal(ADMIN, metricsFilter, mode === 'school' && schoolView === 'subjects' ? 'TEACHER' : mode === 'subject' ? 'TEACHER' : null),
+    subjects: useReportDimensionTotal(ADMIN, metricsFilter, mode === 'school' && schoolView === 'teachers' ? 'SUBJECT' : null),
+    classes: useReportDimensionTotal(ADMIN, metricsFilter, mode === 'school' && schoolView === 'teachers' ? 'CLASS' : null),
   };
-  const finals = useReportFinals(ADMIN, mode === 'classSubject' ? filter : null);
+  const finals = useReportFinals(ADMIN, mode === 'classSubject' ? metricsFilter : null);
 
   const teachers = byName(teacherOptions.data?.rows ?? []);
   const teacherName = teachers.find((row) => row.key?.id === teacherId)?.key?.name
@@ -206,6 +212,11 @@ export function AdminReportingPage() {
   const scopeText = [className, subjectName && `«${subjectName}»`, teacherName].filter(Boolean).join(' · ') || 'Вся школа';
   const previousPeriod = period ? [...periods].reverse().find((item) => (item.startDate ?? '') < (period.startDate ?? '')) : undefined;
   const loading = years.isPending || periodsQuery.isPending || summary.isPending || rows.isPending;
+  const sectionTabs = (
+    <SegmentedTabs value={section} ariaLabel="Раздел отчётности"
+      onChange={(value) => update({ section: value === 'metrics' ? null : value, student: null })}
+      options={SECTION_OPTIONS} />
+  );
   const failed = years.isError || periodsQuery.isError || summary.isError || rows.isError;
   const singleTeacher = classId != null && subjectId != null && teachers.length === 1 ? teachers[0] : null;
 
@@ -213,8 +224,12 @@ export function AdminReportingPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-28 font-bold text-ink">Отчётность</h1>
-        <ExportButton owner={ADMIN} filter={filter} fileName={reportFileName(yearText, period?.name)} />
+        <Button variant="secondary" disabled={yearId == null} onClick={() => setGrantsOpen(true)}>Доступ к аналитике</Button>
+        {!special && <ExportButton owner={ADMIN} filter={filter} fileName={reportFileName(yearText, period?.name)} />}
       </div>
+
+      {grantsOpen && yearId != null && <ReportGrantsModal yearId={yearId} yearName={yearText}
+        classes={classes.data?.content ?? []} onClose={() => setGrantsOpen(false)} />}
 
       {mode !== 'school' && (
         <button
@@ -227,7 +242,7 @@ export function AdminReportingPage() {
         </button>
       )}
 
-      {mode !== 'school' && summary.data && !isEmptyReport(summary.data.metrics) && (
+      {!special && mode !== 'school' && summary.data && !isEmptyReport(summary.data.metrics) && (
         <DetailHeader
           mode={mode}
           className={className}
@@ -249,18 +264,18 @@ export function AdminReportingPage() {
           {yearList.map((item) => <option key={item.id} value={item.id}>{yearLabel(item)}</option>)}
         </FilterSelect>
         <FilterSelect label="Период" value={period?.id == null ? 'all' : String(period.id)} disabled={yearId == null}
-          onChange={(value) => update({ period: value, student: null })}>
+          onChange={(value) => update({ period: value, student: null, subgroupId: null })}>
           <option value="all">Весь учебный год</option>
           {periods.map((item) => <option key={item.id} value={item.id}>{periodLabel(item)}</option>)}
         </FilterSelect>
         <FilterSelect label="Класс" value={classId == null ? '' : String(classId)}
-          onChange={(value) => update({ classId: value || null, student: null, view: null })}>
+          onChange={(value) => update({ classId: value || null, student: null, view: null, subgroupId: null })}>
           <option value="">Все классы</option>
           {[...(classes.data?.content ?? [])].sort((a, b) => collator.compare(a.name ?? '', b.name ?? ''))
             .map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
         </FilterSelect>
         <FilterSelect label="Предмет" value={subjectId == null ? '' : String(subjectId)}
-          onChange={(value) => update({ subjectId: value || null, student: null, view: null })}>
+          onChange={(value) => update({ subjectId: value || null, student: null, view: null, subgroupId: null })}>
           <option value="">Все предметы</option>
           {[...(subjectsCatalog.data?.content ?? [])].sort((a, b) => collator.compare(a.name ?? '', b.name ?? ''))
             .map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
@@ -286,7 +301,7 @@ export function AdminReportingPage() {
 
       {(classId != null || subjectId != null || teacherId != null) && (
         <div className="flex flex-wrap items-center gap-2">
-          {className && <Chip label={className} onRemove={() => update({ classId: null, student: null, view: null })} />}
+          {className && <Chip label={className} onRemove={() => update({ classId: null, student: null, view: null, subgroupId: null })} />}
           {subjectName && <Chip label={subjectName} onRemove={() => update({ subjectId: null, student: null })} />}
           {teacherName && <Chip label={teacherName} onRemove={() => update({ teacherId: null, student: null })} />}
           <button type="button" onClick={resetFilters} className="text-13 text-slate-500 hover:text-navy-700">Сбросить все</button>
@@ -297,6 +312,8 @@ export function AdminReportingPage() {
         Данные за <span className="font-semibold text-slate-700">{periodLabel(period)}</span> · {yearText} · {scopeText}
       </p>
 
+      {sectionTabs}
+
       {years.isPending ? <LoadingBlock label="Загрузка отчётности…" /> : years.isError ? (
         <ErrorBlock message="Не удалось загрузить учебные годы." onRetry={() => void years.refetch()} />
       ) : yearId == null ? (
@@ -304,6 +321,27 @@ export function AdminReportingPage() {
           description="Чтобы появилась отчётность, создайте учебный год в разделе «Учебный год»." />
       ) : periodsQuery.isError ? (
         <ErrorBlock message="Не удалось загрузить учебные периоды." onRetry={() => void periodsQuery.refetch()} />
+      ) : special ? (
+        <>
+          <SpecialReportSection
+            owner={ADMIN}
+            form={special}
+            filter={filter == null || (special === 'teacherPerformance' && teacherId == null) ? null : {
+              academicYearId: filter.academicYearId,
+              academicPeriodId: filter.academicPeriodId,
+              classId,
+              subgroupId,
+              subjectId,
+              teacherProfileId: teacherId,
+            }}
+            blocked={special === 'teacherPerformance'
+              ? { title: 'Выберите учителя', description: 'Форма «Учителю по предмету» строится по классам и предметам одного учителя.' }
+              : undefined}
+            fileParts={[yearText, period?.name ?? 'год', className, subjectName,
+              special === 'teacherPerformance' ? teacherName : null]}
+            onSubgroup={(id) => update({ subgroupId: id == null ? null : String(id) })}
+          />
+        </>
       ) : loading ? <LoadingBlock label="Загрузка отчётности…" /> : failed ? (
         <ErrorBlock message="Не удалось загрузить отчётность." onRetry={() => {
           void years.refetch(); void periodsQuery.refetch(); void summary.refetch(); void rows.refetch();
@@ -332,9 +370,6 @@ export function AdminReportingPage() {
             failed={performance.isError} attendance={attendanceDisplay(summary.data?.metrics)} />
           {/* Раздел и разрез — одна строка с зазором: впритык две группы читались как один переключатель. */}
           <div className="flex flex-wrap items-center gap-3">
-            <SegmentedTabs value={section} ariaLabel="Раздел отчётности"
-              onChange={(value) => update({ section: value === 'metrics' ? null : value, student: null })}
-              options={[{ value: 'metrics', label: 'Показатели' }, { value: 'rating', label: 'Рейтинг' }, { value: 'dynamics', label: 'Динамика' }]} />
             {section === 'metrics' && mode === 'school' && (
               <SegmentedTabs value={schoolView} ariaLabel="Разрез отчётности" onChange={(value) => update({ view: value === 'classes' ? null : value })}
                 options={[{ value: 'classes', label: 'По классам' }, { value: 'subjects', label: 'По предметам' }, { value: 'teachers', label: 'По учителям' }]} />

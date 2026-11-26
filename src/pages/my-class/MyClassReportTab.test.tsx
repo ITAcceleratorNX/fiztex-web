@@ -9,10 +9,16 @@ import { MyClassReportTab } from './MyClassReportTab';
 const summary = vi.fn();
 const breakdown = vi.fn();
 const owners: ReportOwner[] = [];
+const specialReport = vi.fn();
+
+vi.mock('../reporting/special/SpecialReportSection', () => ({
+  SpecialReportSection: (props: unknown) => { specialReport(props); return <div>Специальная форма</div>; },
+}));
 
 vi.mock('@/context/ToastContext', () => ({ useToast: () => ({ push: vi.fn(), success: vi.fn(), error: vi.fn(), info: vi.fn() }) }));
 
 vi.mock('@/hooks/reportingQueries', () => ({
+  useTeacherReportContext: () => ok({ assignments: [{ schoolClass: { id: 18 }, subject: { id: 7, name: 'Математика' } }] }),
   useReportSummary: (owner: ReportOwner, filter: ReportFilter | null) => {
     owners.push(owner);
     return summary(filter);
@@ -60,6 +66,19 @@ function renderTab(url = '/my-class?tab=report') {
 const location = () => new URLSearchParams(screen.getByTestId('location').textContent ?? '');
 
 describe('MyClassReportTab', () => {
+  it('allows a whole-year special report without changing the outer class period', async () => {
+    renderTab('/my-class?tab=report&reportSection=classPerformance');
+    await userEvent.click(screen.getByLabelText('Период'));
+    await userEvent.click(screen.getByRole('option', { name: 'Учебный год' }));
+    expect(location().get('reportWholeYear')).toBe('true');
+    expect(specialReport).toHaveBeenLastCalledWith(expect.objectContaining({ filter: expect.objectContaining({
+      academicYearId: 1, academicPeriodId: null, classId: 18,
+    }) }));
+    await userEvent.click(screen.getByLabelText('Предмет'));
+    await userEvent.click(screen.getByRole('option', { name: 'Математика' }));
+    expect(specialReport).toHaveBeenLastCalledWith(expect.objectContaining({ filter: expect.objectContaining({ subjectId: 7 }) }));
+  });
+
   beforeEach(() => {
     owners.length = 0;
     summary.mockReset().mockImplementation(() => ok({ metrics: metrics(), currentStudentCount: 24 }));
