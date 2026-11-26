@@ -53,7 +53,8 @@ export function ReportTable<T>({
   const [first, ...rest] = columns;
   return (
     <section aria-label={label} className="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
-      <div className="overflow-x-auto">
+      {/* relative: sr-only подписи (absolute) иначе вылезают из широкой таблицы и раздвигают каркас. */}
+      <div className="relative overflow-x-auto">
         <table className="w-full min-w-[760px] border-collapse text-sm">
           <thead>
             <tr>
