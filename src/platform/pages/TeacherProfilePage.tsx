@@ -360,7 +360,7 @@ export function TeacherProfilePage() {
               <TeacherStudyAccessCard
                 teacherProfileId={detail.id}
                 teacherName={name}
-                canGrant={detail.accountStatus !== 'BLOCKED' && detail.accountStatus !== 'ARCHIVED'}
+                canGrant={detail.accountStatus === 'ACTIVE'}
               />
             </div>
 

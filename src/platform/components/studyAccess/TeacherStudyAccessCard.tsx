@@ -37,7 +37,7 @@ export function TeacherStudyAccessCard({
 }: {
   teacherProfileId: number;
   teacherName: string;
-  /** Заблокированному и архивному учителю права не выдаются — сервер ответит 409. */
+  /** Права выдаются только действующему учителю (аккаунт «Активен») — иначе сервер ответит 409. */
   canGrant: boolean;
 }) {
   const toast = useToast();
