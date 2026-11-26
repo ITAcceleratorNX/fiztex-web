@@ -1,15 +1,17 @@
 import { useState, type ReactNode } from 'react';
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/context/ToastContext';
-import { ProfileCard, ProfileCardTitle, ProfileInfoField, SoftBadge } from './ProfileChrome';
+import { ProfileCard, ProfileCardTitle } from './ProfileChrome';
 import { IssuedSecretModal } from './IssuedSecretModal';
 import { issueTemporaryPassword, reissueCode, resetAccess, resetPin } from '../services';
 import type { AccountStatus } from '../types';
 import { platformErrorMessage } from '../platformErrorMessage';
 
 /**
- * Блок «Вход и восстановление» карточек ученика и родителя (макет D5 и D5-P).
+ * Блок «Вход и восстановление» карточек ученика и родителя (макет D5 и D5-P; с 26.11 —
+ * правая колонка новых карточек, Figma `phyztex` 2243:30309 и 2243:30581).
  *
  * Отдельная карточка, а не поля в «Основной информации»: здесь не сведения о человеке, а
  * действия с его доступом, и у каждого есть последствие, которое нужно прочитать до
@@ -19,6 +21,38 @@ import { platformErrorMessage } from '../platformErrorMessage';
  * выдачи кода админские вьюхи профиля не возвращают, поэтому блок говорит только то, что
  * знает: есть ли PIN у ученика и активирован ли аккаунт родителя.
  */
+
+/** Узкая карточка правой колонки: сведения строками, ниже действия и примечание. */
+function AccessCard({
+  facts,
+  actions,
+  note,
+  children,
+}: {
+  facts: Array<{ label: string; value: ReactNode }>;
+  actions: ReactNode;
+  note: string;
+  children: ReactNode;
+}) {
+  return (
+    <ProfileCard className="flex h-fit flex-col gap-4">
+      <ProfileCardTitle>Вход и восстановление</ProfileCardTitle>
+      <dl>
+        {facts.map((fact) => (
+          <div key={fact.label} className="flex items-center justify-between gap-3 border-b border-neutral-bg py-2.5 text-sm last:border-b-0">
+            <dt className="text-muted">{fact.label}</dt>
+            <dd className="text-right font-semibold text-ink">{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="flex flex-col gap-3 border-t border-neutral-bg pt-4">
+        {actions}
+        <p className="text-xs text-subtle">{note}</p>
+      </div>
+      {children}
+    </ProfileCard>
+  );
+}
 
 function ActionRow({
   title,
@@ -30,18 +64,14 @@ function ActionRow({
   action: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="min-w-0">
-        <p className="text-sm font-semibold text-[#1a1f36]">{title}</p>
-        <p className="mt-0.5 max-w-xl text-13 text-slate-500">{description}</p>
+    <div className="flex flex-col items-start gap-2">
+      <div>
+        <p className="text-13 font-semibold leading-normal text-ink">{title}</p>
+        <p className="mt-0.5 text-xs leading-normal text-subtle">{description}</p>
       </div>
-      <div className="shrink-0">{action}</div>
+      {action}
     </div>
   );
-}
-
-function Divider() {
-  return <div className="h-px w-full bg-slate-100" />;
 }
 
 export function StudentAccessCard({
@@ -80,47 +110,32 @@ export function StudentAccessCard({
   }
 
   return (
-    <ProfileCard className="flex flex-col gap-5">
-      <div>
-        <ProfileCardTitle>Вход и восстановление</ProfileCardTitle>
-        <p className="mt-1 max-w-2xl text-13 text-slate-500">
-          Текущий PIN не показывается. Если ученик забыл PIN, сбросьте его — новый он придумает сам.
-        </p>
-      </div>
-      <Divider />
-
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-        <ProfileInfoField label="Способ входа" value="Код и PIN" />
-        <ProfileInfoField
-          label="Персональный код"
-          value={<span className="text-slate-500">Скрыт</span>}
-        />
-        <ProfileInfoField
-          label="Статус PIN-кода"
-          value={pinSet ? <SoftBadge tone="green">Создан</SoftBadge> : <SoftBadge tone="gray">Не создан</SoftBadge>}
-        />
-      </div>
-      <Divider />
-
-      <ActionRow
-        title="Перевыпустить персональный код"
-        description="Если код потерян. Старый перестанет работать, новый передаст классный руководитель."
-        action={
-          <Button variant="secondary" onClick={() => setPending('reissue')}>
-            Перевыпустить
-          </Button>
-        }
-      />
-      <ActionRow
-        title="Сбросить PIN"
-        description="Ученик придумает новый PIN при следующем входе по коду. Код при этом не меняется."
-        action={
-          <Button variant="secondary" disabled={!pinSet} onClick={() => setPending('resetPin')}>
-            Сбросить PIN
-          </Button>
-        }
-      />
-
+    <AccessCard
+      facts={[
+        { label: 'Способ входа', value: 'Код и PIN' },
+        { label: 'Персональный код', value: 'Скрыт' },
+        { label: 'PIN', value: pinSet ? <Badge tone="green">Создан</Badge> : <Badge tone="gray">Не создан</Badge> },
+      ]}
+      note="Текущий PIN не показывается."
+      actions={
+        <>
+          <ActionRow
+            title="Перевыпустить персональный код"
+            description="Старый перестанет работать, новый передаст классный руководитель."
+            action={<Button variant="secondary" size="sm" onClick={() => setPending('reissue')}>Перевыпустить</Button>}
+          />
+          <ActionRow
+            title="Сбросить PIN"
+            description="Новый PIN ученик придумает при следующем входе."
+            action={(
+              <Button variant="secondary" size="sm" disabled={!pinSet} onClick={() => setPending('resetPin')}>
+                Сбросить PIN
+              </Button>
+            )}
+          />
+        </>
+      }
+    >
       <ConfirmDialog
         open={pending !== null}
         onClose={() => setPending(null)}
@@ -142,7 +157,7 @@ export function StudentAccessCard({
         note="Прежний код больше не работает. PIN у ученика остался прежним."
         onClose={() => setIssuedCode(null)}
       />
-    </ProfileCard>
+    </AccessCard>
   );
 }
 
@@ -198,43 +213,27 @@ export function ParentAccessCard({
   }
 
   return (
-    <ProfileCard className="flex flex-col gap-5">
-      <div>
-        <ProfileCardTitle>Вход и восстановление</ProfileCardTitle>
-        <p className="mt-1 max-w-2xl text-13 text-slate-500">
-          Текущий пароль не показывается. Выданный код или пароль покажется один раз.
-        </p>
-      </div>
-      <Divider />
-
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-        <ProfileInfoField label="Способ входа" value="Телефон и пароль" />
-        <ProfileInfoField
-          label="Пароль"
-          value={passwordSet ? <SoftBadge tone="green">Задан</SoftBadge> : <SoftBadge tone="gray">Не задан</SoftBadge>}
-        />
-      </div>
-      <Divider />
-
-      <ActionRow
-        title="Одноразовый код восстановления"
-        description="Родитель войдёт по нему и задаст новый пароль. Текущие сессии завершатся."
-        action={
-          <Button variant="secondary" onClick={() => setPending('code')}>
-            Выдать код
-          </Button>
-        }
-      />
-      <ActionRow
-        title="Временный пароль"
-        description="Родитель войдёт с ним по телефону, и система сразу попросит сменить пароль."
-        action={
-          <Button variant="secondary" onClick={() => setPending('password')}>
-            Выдать пароль
-          </Button>
-        }
-      />
-
+    <AccessCard
+      facts={[
+        { label: 'Способ входа', value: 'Телефон и пароль' },
+        { label: 'Пароль', value: passwordSet ? <Badge tone="green">Задан</Badge> : <Badge tone="gray">Не задан</Badge> },
+      ]}
+      note="Текущий пароль не показывается. Выданный код или пароль покажется один раз."
+      actions={
+        <>
+          <ActionRow
+            title="Одноразовый код восстановления"
+            description="Родитель войдёт по нему и задаст новый пароль. Текущие сессии завершатся."
+            action={<Button variant="secondary" size="sm" onClick={() => setPending('code')}>Выдать код</Button>}
+          />
+          <ActionRow
+            title="Временный пароль"
+            description="Система попросит сменить его при входе."
+            action={<Button variant="secondary" size="sm" onClick={() => setPending('password')}>Выдать пароль</Button>}
+          />
+        </>
+      }
+    >
       <ConfirmDialog
         open={pending !== null}
         onClose={() => setPending(null)}
@@ -257,6 +256,6 @@ export function ParentAccessCard({
         note={issued?.note ?? ''}
         onClose={() => setIssued(null)}
       />
-    </ProfileCard>
+    </AccessCard>
   );
 }

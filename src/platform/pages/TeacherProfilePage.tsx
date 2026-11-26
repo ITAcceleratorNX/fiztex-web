@@ -17,9 +17,8 @@ import {
   ProfileCard,
   ProfileCardTitle,
   ProfileEditButton,
-  ProfileInfoField,
+  ProfileHeaderCard,
   ProfileLinkAction,
-  ProfileStatusBadge,
 } from '../components/ProfileChrome';
 import { TeacherStudyAccessCard } from '../components/studyAccess/TeacherStudyAccessCard';
 import { CreateAssignmentModal } from '../modals/CreateAssignmentModal';
@@ -219,13 +218,11 @@ export function TeacherProfilePage() {
             ]}
           />
 
-          <ProfileCard className="flex flex-col gap-5">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                <h1 className="text-26 font-bold leading-none text-ink">{name}</h1>
-                <ProfileStatusBadge status={detail.accountStatus} />
-              </div>
-              <div className="flex items-center gap-3">
+          <ProfileHeaderCard
+            name={name}
+            status={detail.accountStatus}
+            actions={
+              <>
                 <ProfileEditButton onClick={() => setEditing((v) => !v)} />
                 <AccountActionsMenu
                   status={detail.accountStatus}
@@ -234,9 +231,41 @@ export function TeacherProfilePage() {
                   onArchive={() => setArchiveOpen(true)}
                   onResetAccess={() => void handleResetAccess()}
                 />
-              </div>
-            </div>
-
+              </>
+            }
+            fields={[
+              { label: 'Телефон', value: detail.phone },
+              { label: 'Email', value: <span className="break-all">{detail.email ?? '—'}</span> },
+              {
+                label: 'Код активации',
+                value: (<span className="flex items-center gap-2">
+                    <span className="font-semibold text-navy-700">{issuedCode ?? '—'}</span>
+                    <Button
+                      variant="secondary"
+                      size="icon-sm"
+                      title="Скопировать"
+                      aria-label="Скопировать код активации"
+                      disabled={!issuedCode}
+                      onClick={() => void handleCopyCode()}
+                    >
+                      <Copy className="size-3" aria-hidden />
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="icon-sm"
+                      title="Перевыпустить код"
+                      aria-label="Перевыпустить код активации"
+                      disabled={reissuing}
+                      onClick={() => void handleResetAccess()}
+                    >
+                      <RotateCw className={cx('size-3', reissuing && 'animate-spin')} aria-hidden />
+                    </Button>
+                  </span>),
+              },
+              { label: 'Последний вход', value: detail.lastLoginAt ? formatDate(detail.lastLoginAt) : '—' },
+              { label: 'В системе с', value: formatDate(detail.createdAt) },
+            ]}
+          >
             {editing && (
               <div className="grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="Фамилия" required>
@@ -261,42 +290,7 @@ export function TeacherProfilePage() {
                 </div>
               </div>
             )}
-
-            <div className="grid grid-cols-2 gap-6 border-t border-neutral-bg pt-5 md:grid-cols-3 xl:grid-cols-5">
-              <ProfileInfoField label="Телефон" value={detail.phone} />
-              <ProfileInfoField label="Email" value={<span className="break-all">{detail.email ?? '—'}</span>} />
-              <ProfileInfoField
-                label="Код активации"
-                value={
-                  <span className="flex items-center gap-2">
-                    <span className="font-semibold text-navy-700">{issuedCode ?? '—'}</span>
-                    <Button
-                      variant="secondary"
-                      size="icon-sm"
-                      title="Скопировать"
-                      aria-label="Скопировать код активации"
-                      disabled={!issuedCode}
-                      onClick={() => void handleCopyCode()}
-                    >
-                      <Copy className="size-3" aria-hidden />
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="icon-sm"
-                      title="Перевыпустить код"
-                      aria-label="Перевыпустить код активации"
-                      disabled={reissuing}
-                      onClick={() => void handleResetAccess()}
-                    >
-                      <RotateCw className={cx('size-3', reissuing && 'animate-spin')} aria-hidden />
-                    </Button>
-                  </span>
-                }
-              />
-              <ProfileInfoField label="Последний вход" value={detail.lastLoginAt ? formatDate(detail.lastLoginAt) : '—'} />
-              <ProfileInfoField label="В системе с" value={formatDate(detail.createdAt)} />
-            </div>
-          </ProfileCard>
+          </ProfileHeaderCard>
 
           <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-teacher-card">
             <div className="flex min-w-0 flex-col gap-6">
