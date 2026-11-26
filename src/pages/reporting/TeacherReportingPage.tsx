@@ -35,11 +35,12 @@ import { ReportHeaderCard } from './ReportHeaderCard';
 import { ClassRatingTable, DynamicsPanel, ExportButton, PerformanceStrip, StudentRatingTable } from './ReportInsights';
 import { MetricCell, ReportTable } from './ReportTable';
 import { StudentReportDrawer } from './StudentReportDrawer';
+import { SpecialReportSection } from './special/SpecialReportSection';
+import { isSpecialSection, SECTION_OPTIONS, type Section } from './special/sections';
 
 const TEACHER: ReportOwner = { kind: 'teacher' };
 const collator = new Intl.Collator('ru-RU', { numeric: true });
 
-type Section = 'metrics' | 'rating' | 'dynamics';
 
 function idParam(value: string | null): number | null {
   const id = Number(value);
@@ -66,7 +67,11 @@ export function TeacherReportingPage() {
   useDocumentTitle('Отчётность');
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedYear = idParam(searchParams.get('year'));
-  const context = useTeacherReportContext(requestedYear);
+  const selectedSection = searchParams.get('section');
+  const reportKind = selectedSection === 'assessment' ? 'ASSESSMENT'
+    : selectedSection === 'classPerformance' ? 'CLASS_PERFORMANCE'
+      : selectedSection === 'teacherPerformance' ? 'TEACHER_PERFORMANCE' : undefined;
+  const context = useTeacherReportContext(requestedYear, reportKind);
   const yearId = context.data?.academicYearId ?? null;
   const year = context.data?.years?.find((item) => item.id === yearId);
   const periods = useMemo(() => [...(context.data?.periods ?? [])]
@@ -96,14 +101,18 @@ export function TeacherReportingPage() {
       ?? periods.find((item) => item.startDate && item.endDate && item.startDate <= today() && today() <= item.endDate)
       ?? null;
   const sectionValue = searchParams.get('section');
-  const section: Section = sectionValue === 'rating' ? 'rating'
-    : sectionValue === 'dynamics' && classId != null ? 'dynamics' : 'metrics';
+  const section: Section = isSpecialSection(sectionValue) ? sectionValue
+    : sectionValue === 'rating' ? 'rating'
+      : sectionValue === 'dynamics' && classId != null ? 'dynamics' : 'metrics';
+  const special = isSpecialSection(section) ? section : null;
+  const subgroupId = classId == null ? null : idParam(searchParams.get('subgroupId'));
   const studentId = idParam(searchParams.get('student'));
 
   const filter: ReportFilter | null = yearId == null || subjectId == null ? null : {
     academicYearId: yearId, academicPeriodId: period?.id ?? null, classId, subjectId,
   };
-  const classFilter = filter && classId != null ? filter : null;
+  // Специальные формы читают свои адреса: сводка и разрезы раздела в это время не нужны.
+  const classFilter = filter && classId != null && !special ? filter : null;
 
   const summary = useReportSummary(TEACHER, classFilter);
   const performance = useReportPerformance(TEACHER, classFilter);
@@ -146,8 +155,14 @@ export function TeacherReportingPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-28 font-bold text-ink">Отчётность</h1>
-        <ExportButton owner={TEACHER} filter={filter} fileName={reportFileName(year?.name, period?.name)} />
+        {!special && <ExportButton owner={TEACHER} filter={filter} fileName={reportFileName(year?.name, period?.name)} />}
       </div>
+
+      <SegmentedTabs value={section} ariaLabel="Раздел отчётности"
+        onChange={(value) => update({ section: value === 'metrics' ? null : value, student: null, subgroupId: null })}
+        options={SECTION_OPTIONS.map((option) => option.value === 'metrics'
+          ? { ...option, label: classId == null ? 'Сравнение классов' : 'Ученики' }
+          : option.value === 'dynamics' ? { ...option, disabled: classId == null } : option)} />
 
       {context.isPending ? <LoadingBlock label="Загрузка отчётности…" /> : context.isError ? (
         <ErrorBlock message="Не удалось загрузить ваши классы и предметы." onRetry={() => void context.refetch()} />
@@ -156,7 +171,7 @@ export function TeacherReportingPage() {
           description="Отчётность учителя строится по классам и предметам, которые вам назначены в учебном году." />
       ) : (
         <>
-          {classId != null && summary.data && !isEmptyReport(summary.data.metrics) && (
+          {!special && classId != null && summary.data && !isEmptyReport(summary.data.metrics) && (
             <ReportHeaderCard title={`${subjectName ?? 'Предмет'} · ${className}`} metrics={summary.data.metrics}
               performance={performance.data?.performance}
               subtitle={[summary.data.currentStudentCount == null ? null : counted(summary.data.currentStudentCount, STUDENTS),
@@ -166,20 +181,20 @@ export function TeacherReportingPage() {
 
           <div className="grid gap-3 md:grid-cols-[minmax(0,10rem)_minmax(0,16rem)_minmax(0,14rem)_minmax(0,12rem)]">
             <FilterSelect label="Учебный год" value={String(yearId)} disabled={(context.data?.years ?? []).length < 2}
-              onChange={(value) => update({ year: value, period: null, classId: null, student: null })}>
+              onChange={(value) => update({ year: value, period: null, classId: null, student: null, subgroupId: null })}>
               {(context.data?.years ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
             </FilterSelect>
             <FilterSelect label="Период" value={period?.id == null ? 'all' : String(period.id)}
-              onChange={(value) => update({ period: value, student: null })}>
+              onChange={(value) => update({ period: value, student: null, subgroupId: null })}>
               <option value="all">Весь учебный год</option>
               {periods.map((item) => <option key={item.id} value={item.id}>{periodLabel(item)}</option>)}
             </FilterSelect>
             <FilterSelect label="Предмет" value={String(subjectId)}
-              onChange={(value) => update({ subjectId: value, classId: null, student: null })}>
+              onChange={(value) => update({ subjectId: value, classId: null, student: null, subgroupId: null })}>
               {subjects.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
             </FilterSelect>
             <FilterSelect label="Класс" value={classId == null ? '' : String(classId)}
-              onChange={(value) => update({ classId: value || null, student: null,
+              onChange={(value) => update({ classId: value || null, student: null, subgroupId: null,
                 // Динамика без класса не строится — уходим в сравнение классов.
                 ...(value || section !== 'dynamics' ? {} : { section: null }) })}>
               <option value="">Все мои классы</option>
@@ -191,19 +206,20 @@ export function TeacherReportingPage() {
             Данные за <span className="font-semibold text-slate-700">{periodLabel(period)}</span> · {year?.name} · {scopeText}
           </p>
 
-          {classId != null && (
+          {classId != null && !special && (
             <PerformanceStrip performance={performance.data?.performance} pending={performance.isPending}
               failed={performance.isError} attendance={attendanceDisplay(summary.data?.metrics)} />
           )}
 
-          <SegmentedTabs value={section} ariaLabel="Раздел отчётности"
-            onChange={(value) => update({ section: value === 'metrics' ? null : value, student: null })}
-            options={[
-              { value: 'metrics', label: classId == null ? 'Сравнение классов' : 'Ученики' },
-              { value: 'rating', label: 'Рейтинг' },
-              // Динамика — по одному классу: без класса сервер её не строит.
-              { value: 'dynamics', label: 'Динамика', disabled: classId == null },
-            ]} />
+          {special && filter && (
+            <SpecialReportSection
+              owner={TEACHER}
+              form={special}
+              filter={{ ...filter, subgroupId }}
+              fileParts={[year?.name, period?.name ?? 'год', className || null, subjectName]}
+              onSubgroup={(id) => update({ subgroupId: id == null ? null : String(id) })}
+            />
+          )}
 
           {section === 'metrics' && classId == null && (
             classRows.isPending ? <LoadingBlock label="Загрузка классов…" /> : classRows.isError ? (

@@ -33,7 +33,7 @@ function yearName(context: Schema<'MyClassContextView'>): string {
 }
 
 /** Параметры вкладки «Отчётность»: принадлежат классу и при его смене сбрасываются. */
-const REPORT_PARAMS = ['reportView', 'reportSubject', 'reportStudent'];
+const REPORT_PARAMS = ['reportView', 'reportSubject', 'reportStudent', 'reportSubgroup'];
 
 /** Фильтры «Заполнения журнала» (`FillControlPanel`): предмет и учитель принадлежат классу. */
 const FILL_PARAMS = ['fcSubject', 'fcTeacher', 'fcPage'];
@@ -145,6 +145,10 @@ export function MyClassPage() {
 
   function updateParam(name: string, value: string | null) {
     const next = new URLSearchParams(searchParams);
+    if (name === 'periodId') {
+      next.delete('reportSubgroup');
+      next.delete('reportStudent');
+    }
     if (value == null) next.delete(name);
     else next.set(name, value);
     setSearchParams(next);

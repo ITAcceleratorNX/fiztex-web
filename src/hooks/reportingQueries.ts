@@ -190,12 +190,14 @@ export async function downloadReportExcel(owner: ReportOwner, filter: ReportFilt
 }
 
 /** Годы, периоды и пары «класс × предмет» учителя-предметника — всё, из чего он выбирает. */
-export function useTeacherReportContext(academicYearId: number | null) {
+export function useTeacherReportContext(academicYearId: number | null, reportKind?: string) {
   return useQuery({
-    queryKey: ['academic-reports', 'teacher', 'context', academicYearId],
+    queryKey: ['academic-reports', 'teacher', 'context', academicYearId, reportKind],
     queryFn: ({ signal }) => request<Schema<'TeacherAcademicReportContextView'>>(
-      `/teacher/academic-reports/context${pageQuery({ academicYearId: academicYearId ?? undefined })}`, { signal }),
-    staleTime: 60_000,
+      `/teacher/academic-reports/${reportKind ? 'special-context' : 'context'}${pageQuery({
+        academicYearId: academicYearId ?? undefined, reportKind,
+      })}`, { signal }),
+    staleTime: reportKind ? 0 : 60_000,
   });
 }
 
