@@ -11930,6 +11930,12 @@ export interface components {
             /** Format: int64 */
             versionId?: number;
         };
+        AiReportFactView: {
+            code?: string;
+            label?: string;
+            note?: string;
+            value?: string;
+        };
         AiReportJobView: {
             /** Format: date-time */
             createdAt?: string;
@@ -12072,6 +12078,7 @@ export interface components {
             type?: "STUDENT" | "CLASS" | "CLASSES";
             /** Format: date-time */
             updatedAt?: string;
+            withdrawn?: boolean;
         };
         AiReportTeachingPair: {
             schoolClass?: components["schemas"]["AiReportRef"];
@@ -12100,6 +12107,7 @@ export interface components {
             createdBy?: components["schemas"]["AiReportRef"];
             /** Format: date-time */
             dataAsOf?: string;
+            facts?: components["schemas"]["AiReportFactView"][];
             /** Format: int64 */
             id?: number;
             limitations?: string[];
@@ -25442,6 +25450,13 @@ export interface operations {
                 classId?: number;
                 subjectId?: number;
                 studentProfileId?: number;
+                /** @description Начало периода: отчёты, окно которых пересекает from…to */
+                from?: string;
+                to?: string;
+                /** @description DRAFT, APPROVED, PUBLISHED, WITHDRAWN, FAILED */
+                state?: string;
+                /** @description Автор — профиль учителя */
+                authorTeacherProfileId?: number;
                 page?: number;
                 size?: number;
             };
@@ -41991,6 +42006,12 @@ export interface operations {
                 classId?: number;
                 subjectId?: number;
                 studentProfileId?: number;
+                /** @description Начало периода: отчёты, окно которых пересекает from…to */
+                from?: string;
+                to?: string;
+                /** @description DRAFT, APPROVED, PUBLISHED, WITHDRAWN, FAILED */
+                state?: string;
+                owner?: "SUBJECT_TEACHER" | "HOMEROOM";
                 page?: number;
                 size?: number;
             };

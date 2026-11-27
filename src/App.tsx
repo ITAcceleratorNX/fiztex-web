@@ -51,6 +51,7 @@ import { MySchedulePage } from '@/pages/schedule/MySchedulePage';
 import { MyClassPage } from '@/pages/my-class/MyClassPage';
 import { AdminReportingPage } from '@/pages/reporting/AdminReportingPage';
 import { TeacherReportingPage } from '@/pages/reporting/TeacherReportingPage';
+import { AiReportHistoryPage } from '@/pages/reporting/ai/AiReportHistoryPage';
 import { CurrentLessonPage } from '@/pages/schedule/CurrentLessonPage';
 import { HomeworkGroupsPage } from '@/pages/homework/HomeworkGroupsPage';
 import { DashboardPage } from '@/pages/DashboardPage';
@@ -193,6 +194,7 @@ export function App() {
         {/* Своё расписание учителя: ролевой экран, из него открывается урок. */}
         <Route path={ROUTES.mySchedule} element={<MySchedulePage />} />
         <Route path={ROUTES.myClass} element={<MyClassPage />} />
+        <Route path={`${ROUTES.myClass}/ai-reports`} element={<AiReportHistoryPage scope="homeroom" />} />
         {/* Не экран, а переход: резолвит актуальный урок и уводит на его карточку. */}
         <Route path={ROUTES.currentLesson} element={<CurrentLessonPage />} />
         <Route path={ROUTES.myAvailability} element={<MyAvailabilityPage />} />
@@ -255,7 +257,9 @@ export function App() {
         {/* Журнал класса и итоги четверти (GRADES-FE-001 §5.4, §9). */}
         <Route path={ROUTES.journal} element={<JournalPage />} />
         <Route path={ROUTES.reporting} element={<AdminReportingPage />} />
+        <Route path={`${ROUTES.reporting}/ai-reports`} element={<AiReportHistoryPage scope="admin" />} />
         <Route path={ROUTES.myReporting} element={<TeacherReportingPage />} />
+        <Route path={`${ROUTES.myReporting}/ai-reports`} element={<AiReportHistoryPage scope="teacher" />} />
         {/* Политика оценивания (GRADES-003): веса ФО/СОР/СОЧ, пороги, вес экзамена. */}
         <Route path={ROUTES.gradingPolicy} element={<GradingPolicyPage />} />
         <Route path={ROUTES.textbooks} element={<TextbooksPage />} />

@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { CalendarDays } from 'lucide-react';
 import { FilterSelect } from '@/components/ui/FilterSelect';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
@@ -35,6 +35,9 @@ import { ReportHeaderCard } from './ReportHeaderCard';
 import { ClassRatingTable, DynamicsPanel, ExportButton, PerformanceStrip, StudentRatingTable } from './ReportInsights';
 import { MetricCell, ReportTable } from './ReportTable';
 import { StudentReportDrawer } from './StudentReportDrawer';
+import { AiReportDrawer, type AiDrawerTarget } from './ai/AiReportDrawer';
+import { AiReportStrip } from './ai/AiReportStrip';
+import { ROUTES } from '@/lib/routes';
 import { SpecialReportSection } from './special/SpecialReportSection';
 import { isSpecialSection, SECTION_OPTIONS, type Section } from './special/sections';
 
@@ -66,6 +69,8 @@ function today(): string {
 export function TeacherReportingPage() {
   useDocumentTitle('Отчётность');
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const [aiTarget, setAiTarget] = useState<AiDrawerTarget | null>(null);
   const requestedYear = idParam(searchParams.get('year'));
   const selectedSection = searchParams.get('section');
   const reportKind = selectedSection === 'assessment' ? 'ASSESSMENT'
@@ -206,6 +211,17 @@ export function TeacherReportingPage() {
             Данные за <span className="font-semibold text-slate-700">{periodLabel(period)}</span> · {year?.name} · {scopeText}
           </p>
 
+          {!special && (
+            <AiReportStrip
+              description="По ученику, классу или всем вашим классам за выбранный период"
+              historyHref={`${ROUTES.myReporting}/ai-reports${classId != null ? `?classId=${classId}&subjectId=${subjectId}` : subjectId != null ? `?subjectId=${subjectId}` : ''}`}
+              historyState={{ back: `${location.pathname}${location.search}` }}
+              onCreate={() => setAiTarget({ kind: 'create', academicYearId: yearId, preset: {
+                owner: 'SUBJECT_TEACHER', classId, subjectId, academicPeriodId: period?.id ?? null,
+                type: classId == null && classes.length > 1 ? 'CLASSES' : 'CLASS',
+              } })} />
+          )}
+
           {classId != null && !special && (
             <PerformanceStrip performance={performance.data?.performance} pending={performance.isPending}
               failed={performance.isError} attendance={attendanceDisplay(summary.data?.metrics)} />
@@ -291,8 +307,14 @@ export function TeacherReportingPage() {
           keepSubject
           onSelect={(id) => update({ student: String(id) })}
           onClose={() => update({ student: null })}
+          onAiReport={() => setAiTarget({ kind: 'create', academicYearId: yearId, preset: {
+            owner: 'SUBJECT_TEACHER', type: 'STUDENT', classId, subjectId, studentProfileId: openStudent.id,
+            academicPeriodId: period?.id ?? null,
+          } })}
         />
       )}
+
+      {aiTarget && <AiReportDrawer reader="teacher" target={aiTarget} onClose={() => setAiTarget(null)} />}
     </div>
   );
 }
