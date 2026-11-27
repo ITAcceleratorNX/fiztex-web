@@ -6,8 +6,9 @@ react-router 6, TanStack Query 5, lucide-react. Тесты — Vitest + Testing 
 ```bash
 pnpm dev          # vite dev server
 pnpm build        # tsc -b && vite build
-pnpm lint         # tsc -p tsconfig.app.json --noEmit
-pnpm test         # vitest run
+pnpm lint            # tsc -p tsconfig.app.json --noEmit
+pnpm typecheck:test  # tsc -p tsconfig.test.json --noEmit — типы тестов; vitest их не проверяет, CI — да
+pnpm test            # vitest run
 ```
 
 ## Типы API

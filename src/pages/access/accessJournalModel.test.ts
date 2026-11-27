@@ -57,7 +57,7 @@ describe('права на учебные данные в журнале', () => 
       previous: { sections: ['ATTENDANCE', 'GRADES'], scope: { type: 'CLASSES', classes: [{ id: 1, name: '8А' }] }, validUntil: '2027-05-31' },
       current: { sections: ['GRADES'], scope: { type: 'PARALLELS', parallels: ['10', '9'] }, validUntil: null },
       cause: 'ROLE_CHANGED',
-    })).toEqual([
+    } as never)).toEqual([
       'право № 7',
       'учебный год 2026/2027',
       'бессрочно',
