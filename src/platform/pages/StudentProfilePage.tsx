@@ -4,23 +4,24 @@ import { StudentYearDecisionHistory } from '../components/StudentYearDecisionHis
 import { StudentYearDecisionCancellationModal } from '../modals/StudentYearDecisionCancellationModal';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Pencil } from 'lucide-react';
+import { ArrowRight, Pencil } from 'lucide-react';
+import { Avatar, AVATAR_SEQUENCE } from '@/components/ui/Avatar';
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '@/components/ui/StateBlock';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/context/ToastContext';
-import { formatDate } from '@/lib/format';
-import { ROLE_AVATAR_COLOR, SCHOOL_STATUS_LABELS } from '../labels';
+import { formatDate, pluralRu } from '@/lib/format';
+import { PARENT_RELATION_LABELS, SCHOOL_STATUS_LABELS } from '../labels';
 import { AccountActionsMenu } from '../components/AccountActionsMenu';
 import {
   ProfileBreadcrumb,
   ProfileCard,
   ProfileCardTitle,
   ProfileEditButton,
-  ProfileInfoField,
+  ProfileHeaderCard,
   ProfileLinkAction,
-  ProfileStatusBadge,
 } from '../components/ProfileChrome';
 import { StudentAccessCard } from '../components/AccessRecoveryCards';
 import { UnlinkRelationButton } from '../components/UnlinkRelationButton';
@@ -34,21 +35,8 @@ import {
   unblockUser,
   updateStudent,
 } from '../services';
-import type { SchoolClass, StudentProfileDetail } from '../types';
+import type { ClassMembership, SchoolClass, StudentProfileDetail } from '../types';
 import { formatPersonName } from '../types';
-import { initials } from '@/lib/format';
-
-/** Formats class name to Figma style: `5 «А» класс`. */
-function formatEnrollmentClass(className: string | null | undefined): string {
-  if (!className) return 'Не назначен';
-  const trimmed = className.trim();
-  const quoted = trimmed.match(/^(\d+)\s*[«"']\s*([A-Za-zА-Яа-яЁё])\s*[»"']/);
-  if (quoted) return `${quoted[1]} «${quoted[2].toUpperCase()}» класс`;
-  const plain = trimmed.match(/^(\d+)\s*([A-Za-zА-Яа-яЁё])(?:\s*класс)?$/i);
-  if (plain) return `${plain[1]} «${plain[2].toUpperCase()}» класс`;
-  if (/класс/i.test(trimmed)) return trimmed;
-  return `${trimmed} класс`;
-}
 
 export function StudentProfilePage() {
   const { accountId: accountIdParam } = useParams();
@@ -158,10 +146,9 @@ export function StudentProfilePage() {
   }
 
   const name = detail ? formatPersonName(detail.lastName, detail.firstName, detail.middleName) : '';
-  const shortName = detail ? `${detail.firstName} ${detail.lastName}`.trim() : '';
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       {loading ? (
         <ProfileCard>
           <LoadingBlock label="Загрузка ученика…" />
@@ -172,22 +159,19 @@ export function StudentProfilePage() {
         </ProfileCard>
       ) : (
         <>
-          <div className="flex flex-col gap-3">
-            <ProfileBreadcrumb
-              items={[
-                { label: 'Пользователи', to: '/admin/users' },
-                { label: 'Ученики', to: '/students' },
-                { label: shortName || name },
-              ]}
-            />
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex flex-wrap items-center gap-4">
-                <h1 className="text-[28px] font-bold leading-none text-[#1a1f36]">
-                  {shortName || name}
-                </h1>
-                <ProfileStatusBadge status={detail.accountStatus} />
-              </div>
-              <div className="flex items-center gap-3">
+          <ProfileBreadcrumb
+            items={[
+              { label: 'Пользователи', to: '/admin/users' },
+              { label: 'Ученики', to: '/students' },
+              { label: name },
+            ]}
+          />
+
+          <ProfileHeaderCard
+            name={name}
+            status={detail.accountStatus}
+            actions={
+              <>
                 <ProfileEditButton onClick={() => setEditing((v) => !v)} />
                 <AccountActionsMenu
                   status={detail.accountStatus}
@@ -195,87 +179,54 @@ export function StudentProfilePage() {
                   onUnblock={() => void handleUnblock()}
                   onArchive={() => setArchiveOpen(true)}
                 />
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_380px]">
-            <div className="flex flex-col gap-6">
-              <ProfileCard className="flex flex-col gap-5">
-                <ProfileCardTitle>Основная информация</ProfileCardTitle>
-                <div className="h-px w-full bg-slate-100" />
-
-                {editing ? (
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <Field label="Фамилия" required>
-                      <TextInput value={lastName} onChange={(e) => setLastName(e.target.value)} />
-                    </Field>
-                    <Field label="Имя" required>
-                      <TextInput value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-                    </Field>
-                    <Field label="Отчество">
-                      <TextInput value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
-                    </Field>
-                    <Field label="Дата рождения">
-                      <TextInput type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
-                    </Field>
-                    <div className="flex items-end gap-2 sm:col-span-2">
-                      <Button loading={saving} onClick={() => void handleSave()}>
-                        Сохранить
-                      </Button>
-                      <Button variant="secondary" onClick={() => setEditing(false)} disabled={saving}>
-                        Отмена
-                      </Button>
-                    </div>
-                  </div>
+              </>
+            }
+            fields={[
+              {
+                label: 'Класс',
+                value: detail.currentMembership ? (
+                  <span className="flex flex-wrap items-center gap-2">
+                    <Badge appearance="tag" tone="amber" size="base">{detail.currentMembership.className}</Badge>
+                    <ProfileLinkAction onClick={() => setAddToClassOpen(true)}>Изменить</ProfileLinkAction>
+                  </span>
                 ) : (
-                  <div className="flex flex-col gap-4">
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                      <ProfileInfoField label="ФИО ученика" value={name} />
-                      <ProfileInfoField
-                        label="Учебный год"
-                        value={detail.currentMembership?.academicYearName ?? '—'}
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                      <ProfileInfoField
-                        label="Текущий класс"
-                        value={
-                          detail.currentMembership ? (
-                            <span className="flex flex-wrap items-center gap-2">
-                              {formatEnrollmentClass(detail.currentMembership.className)}
-                              <button
-                                type="button"
-                                onClick={() => setAddToClassOpen(true)}
-                                className="font-medium text-brand-500 hover:text-brand-600"
-                              >
-                                Изменить
-                              </button>
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => setAddToClassOpen(true)}
-                              className="font-medium text-brand-500 hover:text-brand-600"
-                            >
-                              Назначить класс
-                            </button>
-                          )
-                        }
-                      />
-                    </div>
-                  </div>
-                )}
-              </ProfileCard>
+                  <ProfileLinkAction onClick={() => setAddToClassOpen(true)}>Назначить класс</ProfileLinkAction>
+                ),
+              },
+              { label: 'Дата рождения', value: formatDate(detail.birthDate) },
+              { label: 'Последний вход', value: detail.lastLoginAt ? formatDate(detail.lastLoginAt) : '—' },
+              { label: 'В системе с', value: formatDate(detail.createdAt) },
+            ]}
+          >
+            {editing && (
+              <div className="grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="Фамилия" required>
+                  <TextInput value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                </Field>
+                <Field label="Имя" required>
+                  <TextInput value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                </Field>
+                <Field label="Отчество">
+                  <TextInput value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
+                </Field>
+                <Field label="Дата рождения">
+                  <TextInput type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+                </Field>
+                <div className="flex items-end gap-2 sm:col-span-2">
+                  <Button loading={saving} onClick={() => void handleSave()}>
+                    Сохранить
+                  </Button>
+                  <Button variant="secondary" onClick={() => setEditing(false)} disabled={saving}>
+                    Отмена
+                  </Button>
+                </div>
+              </div>
+            )}
+          </ProfileHeaderCard>
 
-              {/* Доступ — отдельной карточкой (макет D5): это действия, а не сведения. */}
-              <StudentAccessCard
-                accountId={accountId}
-                pinSet={Boolean(detail.pinSet)}
-                onChanged={() => void reload(true)}
-              />
-
-              <ProfileCard className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-teacher-card">
+            <div className="flex min-w-0 flex-col gap-6">
+              <ProfileCard className="flex flex-col gap-3">
                 <ProfileCardTitle
                   action={
                     <ProfileLinkAction onClick={() => setLinkParentOpen(true)}>
@@ -283,9 +234,15 @@ export function StudentProfilePage() {
                     </ProfileLinkAction>
                   }
                 >
-                  Связанные родители
+                  <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span>Родители</span>
+                    {detail.linkedParents.length > 0 && (
+                      <span className="text-sm font-normal text-subtle">
+                        {detail.linkedParents.length} {pluralRu(detail.linkedParents.length, ['родитель', 'родителя', 'родителей'])}
+                      </span>
+                    )}
+                  </span>
                 </ProfileCardTitle>
-                <div className="h-px w-full bg-slate-100" />
 
                 {detail.linkedParents.length === 0 ? (
                   <EmptyBlock
@@ -294,23 +251,20 @@ export function StudentProfilePage() {
                   />
                 ) : (
                   <ul>
-                    {detail.linkedParents.map((p) => {
+                    {detail.linkedParents.map((p, index) => {
                       const parentName = formatPersonName(p.lastName, p.firstName, p.middleName);
-                      const color = ROLE_AVATAR_COLOR.PARENT;
                       return (
                         <li
                           key={p.parentProfileId}
-                          className="flex items-center gap-4 border-b border-[#f3f4f6] py-3 last:border-b-0"
+                          className="flex items-center gap-4 border-b border-neutral-bg py-3 last:border-b-0"
                         >
-                          <span
-                            className="inline-flex size-10 shrink-0 items-center justify-center rounded-[20px] text-sm font-bold text-white"
-                            style={{ backgroundColor: color.bg }}
-                          >
-                            {initials(parentName)}
-                          </span>
+                          <Avatar name={parentName} variant={AVATAR_SEQUENCE[index % AVATAR_SEQUENCE.length]} />
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-semibold text-[#1a1f36]">{parentName}</p>
-                            <p className="truncate text-xs text-[#9ca3af]">
+                            <p className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+                              <span className="truncate text-sm font-semibold text-ink">{parentName}</span>
+                              <span className="text-xs font-medium text-muted">{PARENT_RELATION_LABELS[p.relationType]}</span>
+                            </p>
+                            <p className="truncate text-xs text-subtle">
                               {p.phone}
                               {p.email ? ` · ${p.email}` : ''}
                             </p>
@@ -319,9 +273,10 @@ export function StudentProfilePage() {
                             type="button"
                             onClick={() => navigate(`/parents/${p.accountId}`)}
                             title="Открыть профиль родителя"
+                            aria-label={`Открыть профиль родителя ${parentName}`}
                             className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                           >
-                            <Pencil className="size-4" />
+                            <Pencil className="size-4" aria-hidden />
                           </button>
                           <UnlinkRelationButton
                             side="student"
@@ -338,46 +293,54 @@ export function StudentProfilePage() {
                 )}
               </ProfileCard>
 
-              <ProfileCard className="space-y-4">
-                <ProfileCardTitle>Перевод и выпуск</ProfileCardTitle>
-                {decisions.isPending ? <LoadingBlock label="Загрузка решений…" /> : decisions.isError
-                  ? <ErrorBlock message="Не удалось загрузить историю перевода и выпуска" onRetry={() => void decisions.refetch()} />
-                  : (decisions.data?.length ?? 0) > 0
-                    ? <StudentYearDecisionHistory decisions={decisions.data ?? []} onCancel={setCancelling} />
-                    : <p className="text-13 text-muted">Решения о переводе или выпуске ещё не оформлены.</p>}
-              </ProfileCard>
-              {detail.membershipHistory.length > 0 && (
-                <ProfileCard className="flex flex-col gap-4">
-                  <ProfileCardTitle>История классов</ProfileCardTitle>
-                  <ul className="divide-y divide-slate-100">
-                    {detail.membershipHistory.map((m) => (
-                      <li
-                        key={m.id}
-                        className="flex items-center justify-between py-2.5 text-sm first:pt-0"
-                      >
-                        <span className="font-medium text-slate-700">
-                          {formatEnrollmentClass(m.className)} · {m.academicYearName}
-                        </span>
-                        <span className="text-slate-400">{m.voided ? 'Отменено' : m.status === 'ACTIVE' && m.effectiveFrom && m.effectiveFrom > new Date().toLocaleDateString('en-CA') ? 'Запланирован' : m.status === 'ACTIVE' && m.academicYearStatus === 'DRAFT' ? 'В составе учебного года' : SCHOOL_STATUS_LABELS[m.status]}{m.effectiveFrom ? ` · с ${formatDate(m.effectiveFrom)}` : ''}{m.effectiveTo ? ` до ${formatDate(m.effectiveTo)}` : ''}</span>
-                      </li>
-                    ))}
+              <ProfileCard className="flex flex-col gap-3">
+                <ProfileCardTitle>История классов</ProfileCardTitle>
+                {detail.membershipHistory.length > 0 && (
+                  <ul>
+                    {detail.membershipHistory.map((m) => {
+                      const current = m.id === detail.currentMembership?.id;
+                      return (
+                        <li
+                          key={m.id}
+                          title={membershipPeriod(m) || undefined}
+                          className="flex items-center justify-between gap-3 border-b border-neutral-bg py-2.5 last:border-b-0"
+                        >
+                          <span className="flex min-w-0 items-center gap-3">
+                            <Badge appearance="tag" tone={current ? 'amber' : 'gray'} size="base">{m.className}</Badge>
+                            <span className="text-13 text-ink">{m.academicYearName}</span>
+                          </span>
+                          {current
+                            ? <Badge tone="green" dot>Текущий</Badge>
+                            : <span className="text-13 text-subtle">{membershipStatus(m)}</span>}
+                        </li>
+                      );
+                    })}
                   </ul>
-                </ProfileCard>
-              )}
+                )}
+                {decisions.isPending ? (
+                  <LoadingBlock label="Загрузка решений…" />
+                ) : decisions.isError ? (
+                  <ErrorBlock message="Не удалось загрузить историю перевода и выпуска" onRetry={() => void decisions.refetch()} />
+                ) : (decisions.data?.length ?? 0) > 0 ? (
+                  <div className="flex flex-col gap-3 border-t border-neutral-bg pt-4">
+                    <p className="text-sm font-semibold text-ink">Перевод и выпуск</p>
+                    <StudentYearDecisionHistory decisions={decisions.data ?? []} onCancel={setCancelling} />
+                  </div>
+                ) : (
+                  <p className="flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-3 text-13 text-muted">
+                    <ArrowRight className="size-4 shrink-0" aria-hidden />
+                    Перевод и выпуск: решения ещё не оформлены
+                  </p>
+                )}
+              </ProfileCard>
             </div>
 
-            <ProfileCard className="flex h-fit flex-col gap-5">
-              <ProfileCardTitle>Сводка</ProfileCardTitle>
-              <div className="flex flex-col gap-4">
-                {/* Код и PIN переехали в «Вход и восстановление»: в сводке они повторяли
-                    карточку доступа, а «Статус» и так стоит бейджем у имени. */}
-                <ProfileInfoField label="Дата создания" value={formatDate(detail.createdAt)} />
-                <ProfileInfoField
-                  label="Последняя активность"
-                  value={detail.lastLoginAt ? formatDate(detail.lastLoginAt) : '—'}
-                />
-              </div>
-            </ProfileCard>
+            {/* Доступ — отдельной карточкой справа: это действия, а не сведения. */}
+            <StudentAccessCard
+              accountId={accountId}
+              pinSet={Boolean(detail.pinSet)}
+              onChanged={() => void reload(true)}
+            />
           </div>
 
           <AddToClassModal
@@ -413,4 +376,19 @@ export function StudentProfilePage() {
       )}
     </div>
   );
+}
+
+/** Состояние строки истории классов — те же правила, что были у карточки до 26.11. */
+function membershipStatus(m: ClassMembership): string {
+  if (m.voided) return 'Отменено';
+  if (m.status === 'ACTIVE' && m.effectiveFrom && m.effectiveFrom > new Date().toLocaleDateString('en-CA')) return 'Запланирован';
+  if (m.status === 'ACTIVE' && m.academicYearStatus === 'DRAFT') return 'В составе учебного года';
+  return SCHOOL_STATUS_LABELS[m.status];
+}
+
+/** «с 1 сент. 2025 до 15 мар. 2026» — подсказка строки: в макете дат нет, но перевод посреди года должен читаться. */
+function membershipPeriod(m: ClassMembership): string {
+  return [m.effectiveFrom ? `с ${formatDate(m.effectiveFrom)}` : null, m.effectiveTo ? `до ${formatDate(m.effectiveTo)}` : null]
+    .filter(Boolean)
+    .join(' ');
 }

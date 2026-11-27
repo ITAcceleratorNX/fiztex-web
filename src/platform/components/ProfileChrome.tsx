@@ -187,3 +187,42 @@ export function IconActionButton({
     </button>
   );
 }
+
+/**
+ * Шапка карточки человека (Figma `phyztex` А1 2243:23474, ученик 2243:30200, родитель
+ * 2243:30504): ФИО со статусом и действия справа, под чертой — строка сведений. Колонки сведений
+ * одной ширины во всех трёх карточках, даже когда полей четыре, а не пять: так карточки
+ * выглядят одной системой. `children` — форма правки, она встаёт между ФИО и сведениями.
+ */
+export function ProfileHeaderCard({
+  name,
+  status,
+  actions,
+  fields,
+  children,
+}: {
+  name: string;
+  status: AccountStatus;
+  actions: ReactNode;
+  fields: Array<{ label: string; value: ReactNode }>;
+  children?: ReactNode;
+}) {
+  return (
+    <ProfileCard className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+          <h1 className="text-26 font-bold leading-none text-ink">{name}</h1>
+          <ProfileStatusBadge status={status} />
+        </div>
+        <div className="flex items-center gap-3">{actions}</div>
+      </div>
+      {children}
+      <div className="grid grid-cols-2 gap-6 border-t border-neutral-bg pt-5 md:grid-cols-3 xl:grid-cols-5">
+        {fields.map((field) => (
+          <ProfileInfoField key={field.label} label={field.label} value={field.value} />
+        ))}
+      </div>
+    </ProfileCard>
+  );
+}
+

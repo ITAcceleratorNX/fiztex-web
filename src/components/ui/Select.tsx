@@ -1,5 +1,6 @@
 import {
   Children,
+  Fragment,
   isValidElement,
   useEffect,
   useId,
@@ -16,7 +17,23 @@ import { Check, ChevronDown } from 'lucide-react';
 import { cx } from '@/lib/format';
 import { useFieldControlProps } from './fieldContext';
 
-type OptionItem = { value: string; label: string; disabled?: boolean };
+type OptionItem = {
+  value: string;
+  label: string;
+  disabled?: boolean;
+  /** Подпись справа — `data-hint` у `<option>` («до 31.05.2027» у класса доп. просмотра). */
+  hint?: string;
+  group?: { key: string; label: string; icon?: ReactNode };
+};
+
+/**
+ * Группа пунктов списка с подписью (Figma `phyztex` У3 2243:29815 — «Мои классы» /
+ * «Только просмотр»). Рисует только заголовок над своими пунктами: выбор, клавиатура и поиск
+ * по буквам идут по пунктам подряд, как без групп.
+ */
+export function SelectGroup(_props: { label: string; icon?: ReactNode; children: ReactNode }) {
+  return null;
+}
 
 /**
  * Текст пункта. `String(children)` годится только для одной строки: у
@@ -31,16 +48,22 @@ function optionText(node: ReactNode): string {
   return '';
 }
 
-function parseOptions(children: ReactNode): OptionItem[] {
+function parseOptions(children: ReactNode, group?: OptionItem['group']): OptionItem[] {
   return Children.toArray(children)
     .filter(isValidElement)
-    .map((child) => {
-      const el = child as ReactElement<{ value?: string | number; disabled?: boolean; children?: ReactNode }>;
-      return {
+    .flatMap((child, index) => {
+      if (child.type === SelectGroup) {
+        const props = (child as ReactElement<{ label: string; icon?: ReactNode; children?: ReactNode }>).props;
+        return parseOptions(props.children, { key: `${index}:${props.label}`, label: props.label, icon: props.icon });
+      }
+      const el = child as ReactElement<{ value?: string | number; disabled?: boolean; children?: ReactNode; 'data-hint'?: string }>;
+      return [{
         value: String(el.props.value ?? ''),
         label: optionText(el.props.children),
         disabled: el.props.disabled,
-      };
+        hint: el.props['data-hint'],
+        group,
+      }];
     });
 }
 
@@ -297,12 +320,25 @@ export function Select({
             variant === 'status' ? '' : className?.includes('w-auto') ? 'left-0' : 'inset-x-0 w-full',
           )}
         >
-          {options.map((option) => {
+          {options.map((option, index) => {
             const isSelected = option.value === currentValue;
             const isActive = option.value === activeOption?.value;
+            const groupStarts = option.group != null && option.group.key !== options[index - 1]?.group?.key;
             return (
+              <Fragment key={`${option.value}-${option.label}`}>
+              {groupStarts && (
+                <li
+                  role="presentation"
+                  className={cx(
+                    'flex items-center gap-1.5 px-3 pb-1 pt-2.5 text-11 font-semibold uppercase tracking-wider text-subtle',
+                    index > 0 && 'mx-2 mt-1 border-t border-neutral-bg px-1',
+                  )}
+                >
+                  {option.group?.icon}
+                  {option.group?.label}
+                </li>
+              )}
               <li
-                key={`${option.value}-${option.label}`}
                 ref={isActive ? activeOptionRef : undefined}
                 id={`${listboxId}-option-${options.indexOf(option)}`}
                 role="option"
@@ -326,8 +362,12 @@ export function Select({
                 )}
               >
                 <span className="truncate">{option.label}</span>
-                {isSelected && <Check className={cx('h-4 w-4 shrink-0', variant === 'classSwitcher' ? 'text-brand-navy' : 'text-brand-500')} aria-hidden />}
+                <span className="flex shrink-0 items-center gap-2">
+                  {option.hint && <span className="text-xs font-normal text-muted">{option.hint}</span>}
+                  {isSelected && <Check className={cx('h-4 w-4 shrink-0', variant === 'classSwitcher' ? 'text-brand-navy' : 'text-brand-500')} aria-hidden />}
+                </span>
               </li>
+              </Fragment>
             );
           })}
         </ul>

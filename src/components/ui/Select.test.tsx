@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Select } from './Select';
 
 function SelectHarness() {
@@ -108,5 +108,30 @@ describe('Select option labels', () => {
 
     await userEvent.click(trigger);
     expect(screen.getByRole('option', { name: 'Класс: все' })).toBeInTheDocument();
+  });
+});
+
+describe('Select: группы и подпись справа', () => {
+  it('рисует заголовки групп и подпись пункта, выбор идёт по пунктам подряд', async () => {
+    const { SelectGroup } = await import('./Select');
+    const onChange = vi.fn();
+    render(
+      <Select aria-label="Класс" value="1" onChange={(event) => onChange(event.target.value)}>
+        <SelectGroup label="Мои классы">
+          <option value="1">5А</option>
+        </SelectGroup>
+        <SelectGroup label="Только просмотр">
+          <option value="2" data-hint="до 31.05.2027">8А</option>
+        </SelectGroup>
+      </Select>,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Класс' }));
+    expect(screen.getByText('Мои классы')).toBeInTheDocument();
+    expect(screen.getByText('Только просмотр')).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /8А/ })).toHaveTextContent('до 31.05.2027');
+
+    await userEvent.click(screen.getByRole('option', { name: /8А/ }));
+    expect(onChange).toHaveBeenCalledWith('2');
   });
 });

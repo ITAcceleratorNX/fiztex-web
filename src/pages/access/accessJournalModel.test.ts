@@ -42,3 +42,29 @@ describe('подробности строки', () => {
     expect(detailsSummary(undefined)).toEqual([]);
   });
 });
+
+describe('права на учебные данные в журнале', () => {
+  it('называет событие и раскладывает снимки «было / стало» словами', () => {
+    expect(eventLabel('STUDY_ACCESS_CHANGED').label).toBe('Изменён просмотр учебных данных');
+    expect(detailsSummary({
+      school: 'Физтех',
+      teacherName: 'Сапарова Айгерим Кайратовна',
+      grantId: 7,
+      versionId: 15,
+      revision: 2,
+      academicYear: '2026/2027',
+      validUntil: null,
+      previous: { sections: ['ATTENDANCE', 'GRADES'], scope: { type: 'CLASSES', classes: [{ id: 1, name: '8А' }] }, validUntil: '2027-05-31' },
+      current: { sections: ['GRADES'], scope: { type: 'PARALLELS', parallels: ['10', '9'] }, validUntil: null },
+      cause: 'ROLE_CHANGED',
+    } as never)).toEqual([
+      'право № 7',
+      'учебный год 2026/2027',
+      'бессрочно',
+      'было: Оценки и Посещаемость · 8А · до 31.05.2027',
+      'стало: Оценки · Параллели 9, 10 · бессрочно',
+      'у учителя сменилась роль',
+    ]);
+  });
+});
+
