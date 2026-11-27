@@ -18047,6 +18047,9 @@ export interface components {
             overdue?: boolean;
             /** @enum {string} */
             status?: "REQUIRED" | "OVERDUE" | "COMPLETED" | "CANCELLED";
+            studentName?: string;
+            /** Format: int64 */
+            studentProfileId?: number;
             /** Format: int64 */
             subjectId?: number;
             subjectName?: string;
@@ -23570,9 +23573,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Нет действующей сессии */
@@ -23581,9 +23582,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Отчётность, класс или предмет недоступны */
@@ -23592,9 +23591,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Не найден год, период, класс, подгруппа, предмет или учитель */
@@ -23603,9 +23600,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -23769,8 +23764,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Нет действующей сессии */
@@ -23779,8 +23773,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Отчётность, класс или предмет недоступны */
@@ -23789,8 +23782,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Не найден год, период, класс, подгруппа, предмет или учитель */
@@ -23799,8 +23791,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -23899,7 +23890,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Нет действующей сессии */
@@ -23908,7 +23899,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Отчётность или класс недоступны */
@@ -23917,7 +23908,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Не найден допустимый справочный объект */
@@ -23926,7 +23917,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -24470,8 +24461,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Нет действующей сессии */
@@ -24480,8 +24470,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Отчётность, класс или предмет недоступны */
@@ -24490,8 +24479,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Не найден год, период, класс, подгруппа, предмет или учитель */
@@ -24500,8 +24488,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -38379,9 +38366,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Нет действующей сессии */
@@ -38390,9 +38375,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Отчётность, класс или предмет недоступны */
@@ -38401,9 +38384,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Не найден год, период, класс, подгруппа, предмет или учитель */
@@ -38412,9 +38393,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -38580,8 +38559,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Нет действующей сессии */
@@ -38590,8 +38568,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Отчётность, класс или предмет недоступны */
@@ -38600,8 +38577,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Не найден год, период, класс, подгруппа, предмет или учитель */
@@ -38610,8 +38586,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -38710,7 +38685,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Нет действующей сессии */
@@ -38719,7 +38694,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Отчётность или класс недоступны */
@@ -38728,7 +38703,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Не найден допустимый справочный объект */
@@ -38737,7 +38712,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -40926,9 +40901,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Нет действующей сессии */
@@ -40937,9 +40910,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Отчётность, класс или предмет недоступны */
@@ -40948,9 +40919,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Не найден год, период, класс, подгруппа, предмет или учитель */
@@ -40959,9 +40928,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -41124,8 +41091,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Нет действующей сессии */
@@ -41134,8 +41100,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Отчётность, класс или предмет недоступны */
@@ -41144,8 +41109,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Не найден год, период, класс, подгруппа, предмет или учитель */
@@ -41154,8 +41118,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -41310,7 +41273,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Нет действующей сессии */
@@ -41319,7 +41282,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Класс или предмет не назначены учителю */
@@ -41328,7 +41291,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Не найден допустимый справочный объект */
@@ -41337,7 +41300,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -41770,8 +41733,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Нет действующей сессии */
@@ -41780,8 +41742,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Отчётность, класс или предмет недоступны */
@@ -41790,8 +41751,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description Не найден год, период, класс, подгруппа, предмет или учитель */
@@ -41800,8 +41760,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/pdf": components["schemas"]["ApiErrorResponse"];
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
