@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, CalendarDays, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { FilterSelect } from '@/components/ui/FilterSelect';
@@ -53,6 +53,9 @@ import {
 import { studentColumns, SubjectStudentsTable } from '../my-class/MyClassReportTab';
 import { ReportHeaderCard } from './ReportHeaderCard';
 import { MetricCell, PartialDataNotice, ReportTable, type ReportColumn } from './ReportTable';
+import { AiReportStrip } from './ai/AiReportStrip';
+import { ROUTES } from '@/lib/routes';
+import { pageQuery } from '@/lib/api';
 import { ClassRatingTable, DynamicsPanel, ExportButton, PerformanceStrip, StudentRatingTable } from './ReportInsights';
 import { StudentReportDrawer } from './StudentReportDrawer';
 import { SpecialReportSection } from './special/SpecialReportSection';
@@ -99,6 +102,7 @@ function sectionParam(value: string | null): Section {
  * сводка сервера по тому же срезу, а не сумма строк.
  */
 export function AdminReportingPage() {
+  const location = useLocation();
   const [grantsOpen, setGrantsOpen] = useState(false);
   useDocumentTitle('Отчётность');
   const [searchParams, setSearchParams] = useSearchParams();
@@ -311,6 +315,12 @@ export function AdminReportingPage() {
       <p className="text-13 text-slate-500">
         Данные за <span className="font-semibold text-slate-700">{periodLabel(period)}</span> · {yearText} · {scopeText}
       </p>
+
+      <AiReportStrip admin description="Утверждённые и опубликованные сводки учителей вашей школы — только просмотр"
+        historyHref={`${ROUTES.reporting}/ai-reports${pageQuery({
+          year: yearId ?? undefined, period: period?.id ?? undefined, classId: classId ?? undefined, subjectId: subjectId ?? undefined,
+        })}`}
+        historyState={{ back: `${location.pathname}${location.search}` }} />
 
       {sectionTabs}
 

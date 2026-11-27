@@ -9,18 +9,24 @@ import { cx } from '@/lib/format';
  * на радиусе 16, выбранная — бледно-синяя с navy-рамкой. `check` — множественный выбор
  * (Figma `КСП / Подсказка` 2212:7971, «Пожелания к КСП»): круглая, выбранная — с галочкой,
  * чтобы выбор читался и без цвета.
+ *
+ * `disabled` — вариант, недоступный в этом контексте (Figma `phyztex` К3 2995:5294, «Мои классы»
+ * у классного руководителя): плашка погашена, а почему — говорит подпись под группой.
  */
-export function FilterChip({ label, selected, onClick, appearance = 'solid' }: {
+export function FilterChip({ label, selected, onClick, appearance = 'solid', disabled = false }: {
   label: string;
   selected: boolean;
   onClick: () => void;
   appearance?: 'solid' | 'outline' | 'check';
+  disabled?: boolean;
 }) {
   return <button
     type="button"
     aria-pressed={selected}
     onClick={onClick}
+    disabled={disabled}
     className={cx(
+      'disabled:cursor-not-allowed disabled:opacity-50',
       'shrink-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 focus-visible:ring-offset-2',
       appearance === 'check'
         ? cx('inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-13 leading-4',

@@ -1,3 +1,4 @@
+import { AiStudentEntry } from './ai/AiReportStrip';
 import type { ReactNode } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
@@ -41,6 +42,7 @@ export function StudentReportDrawer({
   keepSubject = false,
   onSelect,
   onClose,
+  onAiReport,
 }: {
   owner: ReportOwner;
   /** Фильтр страницы; ученик добавляется к нему здесь. Класс обязателен. */
@@ -60,6 +62,8 @@ export function StudentReportDrawer({
   keepSubject?: boolean;
   onSelect: (studentId: number) => void;
   onClose: () => void;
+  /** «AI-сводка по ученику за этот период» (Figma И1): форма с подставленным учеником. */
+  onAiReport?: () => void;
 }) {
   // Предмет страницы карточку не сужает: в ней все предметы ученика — кроме предметника.
   const scope: ReportFilter = {
@@ -120,6 +124,8 @@ export function StudentReportDrawer({
             <Stat label="Опоздания" value={countDisplay(attendance?.lateCount)} />
             <Stat label="Посещ." value={attendanceDisplay(summary.data?.metrics)} />
           </dl>
+
+          {onAiReport && <div className="mt-4"><AiStudentEntry onCreate={onAiReport} /></div>}
 
           <div className="mt-6 overflow-hidden rounded-2xl border border-line">
             <table className="w-full border-collapse text-sm">

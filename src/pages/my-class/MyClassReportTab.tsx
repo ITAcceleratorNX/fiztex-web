@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { FilterSelect } from '@/components/ui/FilterSelect';
@@ -44,6 +44,9 @@ import { DynamicsPanel, ExportButton, PerformanceStrip, StudentRatingTable } fro
 import { SpecialReportSection } from '../reporting/special/SpecialReportSection';
 import { isSpecialSection, SECTION_OPTIONS, type Section } from '../reporting/special/sections';
 import { StudentReportDrawer } from '../reporting/StudentReportDrawer';
+import { AiReportDrawer, type AiDrawerTarget } from '../reporting/ai/AiReportDrawer';
+import { AiReportStrip } from '../reporting/ai/AiReportStrip';
+import { ROUTES } from '@/lib/routes';
 
 type Period = Schema<'MyClassContextPeriodView'>;
 type View = 'subjects' | 'students';
@@ -93,6 +96,8 @@ export function MyClassReportTab({
   onForbidden: () => void;
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const [aiTarget, setAiTarget] = useState<AiDrawerTarget | null>(null);
   const view: View = searchParams.get('reportView') === 'students' ? 'students' : 'subjects';
   const sectionValue = searchParams.get('reportSection');
   const section: Section = HOMEROOM_SECTIONS.some((option) => option.value === sectionValue) ? sectionValue as Section : 'metrics';
@@ -217,6 +222,16 @@ export function MyClassReportTab({
         )}
       </div>
 
+      {!special && (
+        <AiReportStrip
+          description="По ученику или всему классу за выбранный период"
+          historyHref={`${ROUTES.myClass}/ai-reports`}
+          historyState={{ back: `${location.pathname}${location.search}` }}
+          onCreate={() => setAiTarget({ kind: 'create', academicYearId, preset: {
+            owner: 'HOMEROOM', fixedOwner: true, type: 'CLASS', classId, academicPeriodId: periodId,
+          } })} />
+      )}
+
       {(special ? specialFilter : filter) == null ? (
         <EmptyBlock icon={<CalendarDays className="h-7 w-7" />} title={periods.length === 0
           ? 'Учебные периоды пока не настроены'
@@ -306,8 +321,14 @@ export function MyClassReportTab({
           highlightSubjectId={subjectId}
           onSelect={(id) => update({ reportStudent: String(id) })}
           onClose={() => update({ reportStudent: null })}
+          onAiReport={() => setAiTarget({ kind: 'create', academicYearId, preset: {
+            owner: 'HOMEROOM', fixedOwner: true, type: 'STUDENT', classId, studentProfileId: openStudent.id,
+            academicPeriodId: periodId,
+          } })}
         />
       )}
+
+      {aiTarget && <AiReportDrawer reader="teacher" target={aiTarget} onClose={() => setAiTarget(null)} />}
     </div>
   );
 }
